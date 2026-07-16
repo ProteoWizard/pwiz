@@ -21,7 +21,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Osprey.Core;
@@ -30,18 +29,20 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// A seekable index over a <c>.spectra.bin</c> cache that groups the MS2
-    /// records by isolation-window key WITHOUT loading their peaks. Built with a
-    /// single header-only pass (read each record's fixed 48-byte prefix, then seek
-    /// past its variable peak blob), after which a window's spectra are decoded on
-    /// demand via <see cref="LoadWindow"/> and released once that window is scored.
-    /// This lets scoring hold only a few windows' peaks resident at a time instead
-    /// of the whole ~6 GB MS2 list.
+    /// records by isolation-window key WITHOUT loading their peaks. Built from the
+    /// cache's acquisition-order EOF index (one compact contiguous read, no record
+    /// walk), after which a window's spectra are decoded on demand via
+    /// <see cref="LoadWindow"/> and released once that window is scored. This lets
+    /// scoring hold only a few windows' peaks resident at a time instead of the
+    /// whole ~6 GB MS2 list. Because the v4 cache body is written window-grouped,
+    /// each window's records are contiguous, so <see cref="LoadWindow"/> reads a
+    /// window in one sequential run.
     ///
     /// The window key reproduces the in-memory grouping scoring uses exactly:
-    /// <c>(int)Math.Round(iso_center * 10.0)</c> taken from each record's
-    /// self-declared isolation center (no isolation-scheme model is inferred).
-    /// Decoding reuses <see cref="SpectraCache.ReadMs2Record"/>, so a streamed
-    /// window is byte-for-byte identical to the same records read by
+    /// <see cref="SpectraCache.WindowKey"/> of each record's self-declared isolation
+    /// center (no isolation-scheme model is inferred). Decoding reuses
+    /// <see cref="SpectraCache.ReadMs2Record"/>, so a streamed window is
+    /// byte-for-byte identical to the same records read by
     /// <see cref="SpectraCache.LoadSpectraCache"/>.
     ///
     /// Thread-safety: <see cref="LoadWindow"/> opens its own <see cref="FileStream"/>
@@ -72,8 +73,8 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// The MS1 spectra, loaded in full (small in DIA and needed resident for the global
-        /// precursor RT search). Read from the cache's MS1 section during the same header
-        /// pass, so streaming Stages 1-4 get MS1 without materializing the full MS2 list.
+        /// precursor RT search). Read from the cache's MS1 section (located via the EOF
+        /// index), so streaming Stages 1-4 get MS1 without materializing the full MS2 list.
         /// Byte-identical to <see cref="SpectraCache.LoadSpectraCache"/>'s MS1 (shared
         /// <see cref="SpectraCache.ReadMs1Record"/>).
         /// </summary>
@@ -83,7 +84,7 @@ namespace pwiz.Osprey.IO
         /// The first DIA cycle's isolation windows, deduplicated on the rounded center key
         /// and sorted by center -- reconstructed byte-identically to
         /// <c>ScoringTaskShared.ExtractIsolationWindows</c> (same first-appearance dedup,
-        /// same <c>Center</c> sort) from the header pass, so scoring's window fan-out is
+        /// same <c>Center</c> sort) from the index, so scoring's window fan-out is
         /// unchanged without materializing the full MS2 list.
         /// </summary>
         public IReadOnlyList<IsolationWindow> IsolationWindows { get; }
@@ -137,10 +138,16 @@ namespace pwiz.Osprey.IO
             using (var fs = new FileStream(cachePath, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(fs))
             {
-                // Validate + read counts identically to LoadSpectraCache. On
-                // success the reader is positioned at the first MS2 record.
+                // Validate + read counts identically to LoadSpectraCache.
                 if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1))
                     return null;
+
+                // Read the acquisition-order index in one compact contiguous EOF
+                // read -- no record walk. Everything the resident grouping derives is
+                // rebuilt from the index's per-record {offset, iso*, rt}, so the maps
+                // are byte-identical to the old header walk while touching only
+                // ~40 B/record instead of seeking across the whole 6 GB body.
+                SpectraCache.SpectraCacheIndex index = SpectraCache.ReadIndex(fs, r, nMs2);
 
                 var windowKeyToOffsets = new Dictionary<int, List<long>>();
                 var windowKeyToFirstIso = new Dictionary<int, IsolationWindow>();
@@ -150,27 +157,19 @@ namespace pwiz.Osprey.IO
                 // First DIA cycle's isolation windows, reproducing
                 // ScoringTaskShared.ExtractIsolationWindows: add each distinct rounded-center
                 // key's window in first-appearance order until a key repeats (the cycle
-                // wraps), then sort by center below. Read off this same header pass.
+                // wraps), then sort by center below.
                 var firstCycleWindows = new List<IsolationWindow>();
                 var firstCycleSeen = new HashSet<int>();
                 bool firstCycleDone = false;
 
                 for (uint i = 0; i < nMs2; i++)
                 {
-                    long recordOffset = fs.Position;
+                    double isoCenter = index.IsoCenters[i];
+                    double isoLower = index.IsoLowers[i];
+                    double isoUpper = index.IsoUppers[i];
+                    allMs2Rts[i] = index.Rts[i];
 
-                    r.ReadUInt32();                     // scan_number (unused here)
-                    double rt = r.ReadDouble();
-                    r.ReadDouble();                     // precursor_mz (unused here)
-                    double isoCenter = r.ReadDouble();
-                    double isoLower = r.ReadDouble();
-                    double isoUpper = r.ReadDouble();
-                    uint nPeaks = r.ReadUInt32();
-                    // Skip the variable-length peak blob (f64 m/z + f32 intensity
-                    // per peak) without reading it -- the whole point of the pass.
-                    fs.Seek((long)nPeaks * SpectraCache.PEAK_BYTES_PER_POINT, SeekOrigin.Current);
-
-                    int key = (int)Math.Round(isoCenter * 10.0);
+                    int key = SpectraCache.WindowKey(isoCenter);
                     if (!windowKeyToOffsets.TryGetValue(key, out var offsets))
                     {
                         offsets = new List<long>();
@@ -189,18 +188,17 @@ namespace pwiz.Osprey.IO
                         else
                             firstCycleWindows.Add(new IsolationWindow(isoCenter, isoLower, isoUpper));
                     }
-                    offsets.Add(recordOffset);
-                    allMs2Rts[i] = rt;
+                    offsets.Add(index.RecordOffsets[i]);
                 }
 
                 // Reproduce ExtractIsolationWindows' final sort by center.
                 firstCycleWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties (mirror of ExtractIsolationWindows)
 
-                // The reader is now at the MS1 section (the MS2 pass seeked past every peak
-                // blob; the layout is [header][MS2*][MS1*]). Read MS1 in full -- small in DIA
-                // and needed resident for the global precursor RT search -- so streaming
-                // Stages 1-4 get MS1 without ever building the full MS2 list. Same decode as
+                // MS1 in full from the recorded section offset (small in DIA and needed
+                // resident for the global precursor RT search) -- so streaming Stages 1-4
+                // get MS1 without ever building the full MS2 list. Same decode as
                 // LoadSpectraCache (shared ReadMs1Record).
+                fs.Seek(index.Ms1SectionOffset, SeekOrigin.Begin);
                 var ms1Spectra = new List<MS1Spectrum>((int)nMs1);
                 for (uint i = 0; i < nMs1; i++)
                     ms1Spectra.Add(SpectraCache.ReadMs1Record(r));
@@ -222,6 +220,9 @@ namespace pwiz.Osprey.IO
                 return new List<Spectrum>();
 
             var result = new List<Spectrum>(offsets.Count);
+            // Default FileStream buffer is deliberate on this hot per-window path: a
+            // larger explicit buffer SLOWS it (the >4 KB peak blobs would be copied
+            // through the buffer instead of read direct). See the NOTE in SpectraCache.cs.
             using (var fs = new FileStream(_cachePath, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(fs))
             {

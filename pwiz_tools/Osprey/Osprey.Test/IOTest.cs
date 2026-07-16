@@ -610,10 +610,11 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestSpectraWindowIndex()
         {
-            // Interleaved DIA-style cycling across three windows so each window's
-            // records are scattered through the file (exercises gathered seeks).
-            // 500.03 and 699.98 round to the same keys as 500.0 and 700.0, and one
-            // record has zero peaks.
+            // Interleaved DIA-style cycling across three windows in the INPUT (file /
+            // acquisition order), so the v4 writer's window grouping makes on-disk order
+            // differ from file order -- this exercises both the grouping and the readers'
+            // reconstruction of file-order membership. 500.03 and 699.98 round to the
+            // same keys as 500.0 and 700.0, and one record has zero peaks.
             var ms2 = new List<Spectrum>
             {
                 MakeIndexMs2(1, 10.0, 500.00, 3),
@@ -648,6 +649,19 @@ namespace pwiz.Osprey.Test
                 // Reference grouping = exactly what RunCoelutionScoring builds today.
                 SpectraCacheResult full = SpectraCache.LoadSpectraCache(path);
                 Assert.IsNotNull(full);
+
+                // LoadSpectraCache must return MS2 in ACQUISITION (file) order even
+                // though the v4 body is physically window-grouped -- Stage-6 rescore
+                // relies on a full resident load in file order, so grouping must not
+                // force it to stream. The interleaved input makes grouped order differ
+                // from file order, so this catches a loader that returns on-disk order.
+                Assert.AreEqual(ms2.Count, full.Ms2Spectra.Count);
+                for (int i = 0; i < ms2.Count; i++)
+                {
+                    Assert.AreEqual(ms2[i].ScanNumber, full.Ms2Spectra[i].ScanNumber);
+                    Assert.AreEqual(ms2[i].RetentionTime, full.Ms2Spectra[i].RetentionTime, 0.0);
+                }
+
                 var expected = GroupByWindowKey(full.Ms2Spectra);
 
                 SpectraWindowIndex index = SpectraWindowIndex.BuildFromCache(path);
@@ -676,7 +690,7 @@ namespace pwiz.Osprey.Test
                 for (int i = 0; i < full.Ms2Spectra.Count; i++)
                     Assert.AreEqual(full.Ms2Spectra[i].RetentionTime, index.AllMs2Rts[i], 0.0);
 
-                // MS1 loaded off the same header pass (after the MS2 records) is byte-identical
+                // MS1 loaded via the EOF index (its recorded section offset) is byte-identical
                 // to the full load's MS1 -- streaming Stages 1-4 get MS1 without the MS2 list.
                 Assert.AreEqual(full.Ms1Spectra.Count, index.Ms1Spectra.Count);
                 for (int i = 0; i < full.Ms1Spectra.Count; i++)
@@ -722,6 +736,30 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(SpectraWindowIndex.BuildFromCache(
                 Path.Combine(Path.GetTempPath(),
                     "osprey_no_such_" + Guid.NewGuid().ToString("N") + ".spectra.bin")));
+
+            // A cache written by the pre-grouping v3 format is rejected (the VERSION
+            // bump invalidates old caches so they re-populate window-grouped on first
+            // use) -- both readers return null on the version mismatch.
+            string v3Path = Path.GetTempFileName();
+            try
+            {
+                using (var fs = new FileStream(v3Path, FileMode.Create, FileAccess.Write))
+                using (var w = new BinaryWriter(fs))
+                {
+                    w.Write(System.Text.Encoding.ASCII.GetBytes("OSPRSPC\0"));
+                    w.Write((uint)3);   // pre-grouping version
+                    w.Write((ulong)0);  // source size (no fingerprint)
+                    w.Write((long)0);   // source mtime
+                    w.Write((uint)0);   // n_ms2
+                    w.Write((uint)0);   // n_ms1
+                }
+                Assert.IsNull(SpectraWindowIndex.BuildFromCache(v3Path));
+                Assert.IsNull(SpectraCache.LoadSpectraCache(v3Path));
+            }
+            finally
+            {
+                TryDeleteFile(v3Path);
+            }
         }
 
         // Distinct, non-round peak values per record so any field/peak mis-decode

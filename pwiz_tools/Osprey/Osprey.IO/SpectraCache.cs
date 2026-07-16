@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -32,25 +33,34 @@ namespace pwiz.Osprey.IO
     /// Binary spectra cache for fast re-loading of parsed MS2 and MS1 spectra.
     /// After parsing mzML (which can take minutes for large files), this writes a compact
     /// .spectra.bin file that can be reloaded in seconds.
-    /// Ported from osprey-io/src/mzml/spectra_cache.rs.
+    /// Ported from osprey-io/src/mzml/spectra_cache.rs (VERSION 1-3); VERSION 4
+    /// reorganizes the body for window streaming (see below).
     ///
-    /// Format (little-endian):
+    /// Format (little-endian), VERSION 4:
     /// [magic: 8 bytes "OSPRSPC\0"]
     /// [version: uint32]
     /// [source_size: uint64]   source file length, or 0 when unknown
-    /// [source_mtime: int64]   source last-write time, Unix milliseconds UTC,
-    ///                         or 0 when unknown. Unix-ms so Osprey and
-    ///                         Rust osprey compute identical values for the same
-    ///                         file and can share one cache (cross-impl gate).
+    /// [source_mtime: int64]   source last-write time, Unix milliseconds UTC, or 0.
     /// [n_ms2: uint32]
     /// [n_ms1: uint32]
-    /// For each MS2 spectrum:
+    /// [MS2 records -- GROUPED BY ISOLATION WINDOW: all records sharing a rounded
+    ///   iso-center key are written contiguously, so SpectraWindowIndex.LoadWindow
+    ///   reads a whole window in one sequential run. Each record:
     ///   [scan_number: uint32] [retention_time: float64] [precursor_mz: float64]
     ///   [iso_center: float64] [iso_lower: float64] [iso_upper: float64]
-    ///   [n_peaks: uint32] [mzs: float64 x n_peaks] [intensities: float32 x n_peaks]
-    /// For each MS1 spectrum:
+    ///   [n_peaks: uint32] [mzs: float64 x n_peaks] [intensities: float32 x n_peaks]]
+    /// [MS1 records, acquisition order. Each record:
     ///   [scan_number: uint32] [retention_time: float64]
-    ///   [n_peaks: uint32] [mzs: float64 x n_peaks] [intensities: float32 x n_peaks]
+    ///   [n_peaks: uint32] [mzs: float64 x n_peaks] [intensities: float32 x n_peaks]]
+    /// [index: n_ms2 entries in ACQUISITION order, 40 bytes each:
+    ///   [record_offset: int64] [iso_center: float64] [iso_lower: float64]
+    ///   [iso_upper: float64] [retention_time: float64]]
+    /// [footer: [ms1_section_offset: int64] [index_offset: int64]]  (16 bytes at EOF)
+    ///
+    /// The acquisition-order index lets a reader rebuild the window map, AllMs2Rts,
+    /// and the first-cycle isolation windows from one compact contiguous read (no
+    /// record walk), and restores acquisition order for the full LoadSpectraCache
+    /// read even though the body is physically window-grouped.
     /// </summary>
     public static class SpectraCache
     {
@@ -67,15 +77,32 @@ namespace pwiz.Osprey.IO
         // last-write-time (Unix ms) so a cache that lives apart from its data
         // file (--cache-dir / --output-dir) is rejected when the source changes.
         // Old caches re-populate on this bump.
-        private const uint VERSION = 3;
+        // VERSION 4 (2026-07-16): MS2 records are written GROUPED by isolation
+        // window (contiguous per window) followed by a per-record acquisition-order
+        // index and an EOF footer, so SpectraWindowIndex streams each window in one
+        // sequential read. This fixes a ~3x cold-HDD regression the file-order v3
+        // layout caused (scattered per-window reads during streamed scoring). Old
+        // v3 caches are invalidated (rejected) on this bump and re-populate on
+        // first use.
+        private const uint VERSION = 4;
 
-        // Fixed byte layout of one MS2 record's header prefix (48 bytes, everything
-        // before the variable-length peak blob): scan(4) + rt(8) + precursor_mz(8) +
-        // iso_center(8) + iso_lower(8) + iso_upper(8) + n_peaks(4). SpectraWindowIndex
-        // reads these fields individually during its header-only pass, then skips the
-        // peak blob using PEAK_BYTES_PER_POINT.
-        // Bytes per peak in a record's blob: one f64 m/z (8) + one f32 intensity (4).
-        internal const int PEAK_BYTES_PER_POINT = 12;
+        // Fixed EOF footer: [ms1_section_offset: int64][index_offset: int64].
+        private const int FOOTER_BYTES = 16;
+
+        // NOTE on FileStream buffering -- do NOT give these a larger explicit buffer
+        // thinking it reads faster. It measurably does not, and here is why:
+        // A record's peak blob (~31 KB avg on Astral) is LARGER than the default 4 KB
+        // FileStream buffer, so BinaryReader.ReadBytes reads it DIRECTLY into the
+        // caller's array (one copy), bypassing the internal buffer -- already optimal
+        // for the bulk data. A buffer bigger than the peak blob is counterproductive:
+        // it drags all ~6 GB of peaks THROUGH the buffer (OS cache -> buffer -> array,
+        // a double copy). Measured on Astral file 49: an explicit 64 KB or 1 MB buffer
+        // added ~5 s to WARM per-window coelution (42 -> 47 s; 40.6 K -> 35.6 K
+        // cand/s). COLD is disk-bound, so it HID the cost -- which is exactly the trap.
+        // The cold win comes entirely from the physical window GROUPING (contiguous
+        // per-window blocks + OS read-ahead = sequential reads), NOT from the app
+        // buffer. This applies to every cache FileStream: SaveSpectraCache/
+        // LoadSpectraCache here and SpectraWindowIndex.BuildFromCache/LoadWindow.
 
         /// <summary>
         /// Save spectra to a binary cache file.
@@ -90,6 +117,33 @@ namespace pwiz.Osprey.IO
 
             ComputeSourceFingerprint(sourcePath, out long sourceSize, out long sourceMtimeMs);
 
+            int nMs2 = ms2Spectra.Count;
+
+            // Group MS2 record indices by isolation-window key, preserving acquisition
+            // order within each window and first-encounter order across windows.
+            // Writing each window's records contiguously lets SpectraWindowIndex
+            // .LoadWindow read a whole window in one sequential run (the cold-HDD fix);
+            // the acquisition-order index written after the body restores file order
+            // for AllMs2Rts / first-cycle windows and for the full LoadSpectraCache read.
+            var windowKeyOrder = new List<int>();
+            var windowKeyToIndices = new Dictionary<int, List<int>>();
+            for (int i = 0; i < nMs2; i++)
+            {
+                int key = WindowKey(ms2Spectra[i].IsolationWindow.Center);
+                if (!windowKeyToIndices.TryGetValue(key, out var indices))
+                {
+                    indices = new List<int>();
+                    windowKeyToIndices[key] = indices;
+                    windowKeyOrder.Add(key);
+                }
+                indices.Add(i);
+            }
+
+            // Byte offset of each MS2 record within the grouped body, keyed by the
+            // record's acquisition index -- captured as it is written, then written
+            // in acquisition order into the index block.
+            var recordOffsets = new long[nMs2];
+
             using (var saver = new FileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
@@ -100,32 +154,39 @@ namespace pwiz.Osprey.IO
                     w.Write(VERSION);
                     w.Write((ulong)sourceSize);
                     w.Write(sourceMtimeMs);
-                    w.Write((uint)ms2Spectra.Count);
+                    w.Write((uint)nMs2);
                     w.Write((uint)ms1Spectra.Count);
 
-                    // MS2 spectra
-                    foreach (var s in ms2Spectra)
+                    // MS2 records, grouped by window (contiguous per window)
+                    foreach (int key in windowKeyOrder)
                     {
-                        w.Write(s.ScanNumber);
-                        w.Write(s.RetentionTime);
-                        w.Write(s.PrecursorMz);
+                        foreach (int i in windowKeyToIndices[key])
+                        {
+                            recordOffsets[i] = fs.Position;
+                            WriteMs2Record(w, ms2Spectra[i]);
+                        }
+                    }
+
+                    // MS1 records (acquisition order; every consumer reads them in full)
+                    long ms1SectionOffset = fs.Position;
+                    foreach (var s in ms1Spectra)
+                        WriteMs1Record(w, s);
+
+                    // Per-record index in ACQUISITION order: {offset, iso*, rt}
+                    long indexOffset = fs.Position;
+                    for (int i = 0; i < nMs2; i++)
+                    {
+                        var s = ms2Spectra[i];
+                        w.Write(recordOffsets[i]);
                         w.Write(s.IsolationWindow.Center);
                         w.Write(s.IsolationWindow.LowerOffset);
                         w.Write(s.IsolationWindow.UpperOffset);
-                        w.Write((uint)s.Mzs.Length);
-                        WriteDoubleArray(w, s.Mzs);
-                        WriteFloatArray(w, s.Intensities);
+                        w.Write(s.RetentionTime);
                     }
 
-                    // MS1 spectra
-                    foreach (var s in ms1Spectra)
-                    {
-                        w.Write(s.ScanNumber);
-                        w.Write(s.RetentionTime);
-                        w.Write((uint)s.Mzs.Length);
-                        WriteDoubleArray(w, s.Mzs);
-                        WriteFloatArray(w, s.Intensities);
-                    }
+                    // Footer at EOF: the "index at end" locators.
+                    w.Write(ms1SectionOffset);
+                    w.Write(indexOffset);
 
                     w.Flush();
                 }
@@ -134,7 +195,8 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load spectra from a binary cache file.
+        /// Load spectra from a binary cache file, returning MS2 in acquisition (file)
+        /// order even though the body is physically window-grouped.
         /// Returns null if the file does not exist or has invalid magic/version.
         /// </summary>
         public static SpectraCacheResult LoadSpectraCache(string path, string sourcePath = null)
@@ -145,24 +207,35 @@ namespace pwiz.Osprey.IO
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(fs))
             {
-                // Validate magic / version / source fingerprint and read the
-                // record counts. Shared with SpectraWindowIndex so the two
-                // readers accept/reject a cache identically. On success the
-                // reader is positioned at the first MS2 record.
+                // Validate magic / version / source fingerprint and read the record
+                // counts. Shared with SpectraWindowIndex so the two readers
+                // accept/reject a cache identically.
                 if (!TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1))
                     return null;
 
-                // Read MS2 spectra
-                var ms2 = new List<Spectrum>((int)nMs2);
-                for (uint i = 0; i < nMs2; i++)
-                    ms2.Add(ReadMs2Record(r));
+                // Read the acquisition-order index (record offsets into the
+                // window-grouped body), then decode MS2 records in ASCENDING FILE
+                // OFFSET order -- one sequential forward pass over the body, so a
+                // full load stays HDD-friendly -- while placing each into its
+                // acquisition-order slot. This keeps the full loader (Stage-6
+                // rescore) a resident load that returns spectra in the same order the
+                // file-order v3 cache did, so grouping needs no Stage-6 streaming.
+                SpectraCacheIndex index = ReadIndex(fs, r, nMs2);
 
-                // Read MS1 spectra
+                var ms2 = new Spectrum[nMs2];
+                foreach (int i in BuildOffsetReadOrder(index.RecordOffsets))
+                {
+                    fs.Seek(index.RecordOffsets[i], SeekOrigin.Begin);
+                    ms2[i] = ReadMs2Record(r);
+                }
+
+                // MS1 section: seek to its recorded start and read in full.
+                fs.Seek(index.Ms1SectionOffset, SeekOrigin.Begin);
                 var ms1 = new List<MS1Spectrum>((int)nMs1);
                 for (uint i = 0; i < nMs1; i++)
                     ms1.Add(ReadMs1Record(r));
 
-                return new SpectraCacheResult(ms2, ms1);
+                return new SpectraCacheResult(new List<Spectrum>(ms2), ms1);
             }
         }
 
@@ -180,6 +253,15 @@ namespace pwiz.Osprey.IO
         }
 
         #region Private helpers
+
+        // The isolation-window grouping key: the rounded iso-center that scoring and
+        // calibration use to bucket MS2 records into windows. Centralized so the
+        // writer's physical grouping, the index rebuild in SpectraWindowIndex, and
+        // the resident grouping all derive the identical key.
+        internal static int WindowKey(double isoCenter)
+        {
+            return (int)Math.Round(isoCenter * 10.0);
+        }
 
         // Read and validate the cache header (magic, version, source
         // fingerprint) and return the record counts. On success the reader is
@@ -222,10 +304,85 @@ namespace pwiz.Osprey.IO
             return true;
         }
 
+        // Read the EOF footer (MS1 section + index offsets) and the acquisition-order
+        // index block. Shared by LoadSpectraCache (to restore acquisition order) and
+        // SpectraWindowIndex (to rebuild the window map without a record walk).
+        // Throws InvalidDataException on a truncated/corrupt index; callers that can
+        // recover treat that as "re-parse the mzML".
+        internal static SpectraCacheIndex ReadIndex(FileStream fs, BinaryReader r, uint nMs2)
+        {
+            if (fs.Length < FOOTER_BYTES)
+                throw new InvalidDataException("Spectra cache too small to contain a v4 footer.");
+
+            fs.Seek(-FOOTER_BYTES, SeekOrigin.End);
+            long ms1SectionOffset = r.ReadInt64();
+            long indexOffset = r.ReadInt64();
+
+            var index = new SpectraCacheIndex
+            {
+                RecordOffsets = new long[nMs2],
+                IsoCenters = new double[nMs2],
+                IsoLowers = new double[nMs2],
+                IsoUppers = new double[nMs2],
+                Rts = new double[nMs2],
+                Ms1SectionOffset = ms1SectionOffset,
+            };
+
+            fs.Seek(indexOffset, SeekOrigin.Begin);
+            for (uint i = 0; i < nMs2; i++)
+            {
+                index.RecordOffsets[i] = r.ReadInt64();
+                index.IsoCenters[i] = r.ReadDouble();
+                index.IsoLowers[i] = r.ReadDouble();
+                index.IsoUppers[i] = r.ReadDouble();
+                index.Rts[i] = r.ReadDouble();
+            }
+            return index;
+        }
+
+        // Record indices ordered by ascending file offset, so a full load walks the
+        // window-grouped body as one forward pass instead of seeking in acquisition
+        // order (which, post-grouping, is scattered across the whole body). Stable
+        // OrderBy over the index (record offsets are unique, so ties never arise);
+        // Array.Sort is banned in production for cross-impl tie-stability
+        // (Osprey.Test.CodeInspectionTest.TestNoUnstableSort).
+        private static int[] BuildOffsetReadOrder(long[] recordOffsets)
+        {
+            return Enumerable.Range(0, recordOffsets.Length)
+                .OrderBy(i => recordOffsets[i])
+                .ToArray();
+        }
+
+        // Encode one MS2 record at the writer's current position. The inverse of
+        // ReadMs2Record; the two must stay byte-for-byte inverses so a streamed
+        // window load decodes identically to a full read.
+        private static void WriteMs2Record(BinaryWriter w, Spectrum s)
+        {
+            w.Write(s.ScanNumber);
+            w.Write(s.RetentionTime);
+            w.Write(s.PrecursorMz);
+            w.Write(s.IsolationWindow.Center);
+            w.Write(s.IsolationWindow.LowerOffset);
+            w.Write(s.IsolationWindow.UpperOffset);
+            w.Write((uint)s.Mzs.Length);
+            WriteDoubleArray(w, s.Mzs);
+            WriteFloatArray(w, s.Intensities);
+        }
+
+        // Encode one MS1 record at the writer's current position. Inverse of ReadMs1Record.
+        private static void WriteMs1Record(BinaryWriter w, MS1Spectrum s)
+        {
+            w.Write(s.ScanNumber);
+            w.Write(s.RetentionTime);
+            w.Write((uint)s.Mzs.Length);
+            WriteDoubleArray(w, s.Mzs);
+            WriteFloatArray(w, s.Intensities);
+        }
+
         // Decode one MS2 record from a reader positioned at its start. The
-        // inverse of the MS2 write loop in SaveSpectraCache; shared with
-        // SpectraWindowIndex.LoadWindow so a streamed window decodes
-        // byte-for-byte identically to a full LoadSpectraCache read.
+        // inverse of WriteMs2Record; shared with SpectraWindowIndex.LoadWindow so a
+        // streamed window decodes byte-for-byte identically to a full
+        // LoadSpectraCache read.
         internal static Spectrum ReadMs2Record(BinaryReader r)
         {
             var s = new Spectrum();
@@ -317,6 +474,23 @@ namespace pwiz.Osprey.IO
         }
 
         #endregion
+
+        /// <summary>
+        /// The per-record index read back from a v4 cache's EOF index block, in
+        /// acquisition order. <see cref="RecordOffsets"/>[i] locates MS2 record i's
+        /// peak blob within the window-grouped body; the iso/rt fields let a reader
+        /// rebuild the window map, AllMs2Rts, and first-cycle windows without
+        /// touching the body.
+        /// </summary>
+        internal sealed class SpectraCacheIndex
+        {
+            public long[] RecordOffsets;
+            public double[] IsoCenters;
+            public double[] IsoLowers;
+            public double[] IsoUppers;
+            public double[] Rts;
+            public long Ms1SectionOffset;
+        }
     }
 
     /// <summary>
