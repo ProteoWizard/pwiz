@@ -214,18 +214,28 @@ namespace pwiz.Osprey.IO
                     return null;
 
                 // Read the acquisition-order index (record offsets into the
-                // window-grouped body), then decode MS2 records in ASCENDING FILE
-                // OFFSET order -- one sequential forward pass over the body, so a
-                // full load stays HDD-friendly -- while placing each into its
-                // acquisition-order slot. This keeps the full loader (Stage-6
-                // rescore) a resident load that returns spectra in the same order the
-                // file-order v3 cache did, so grouping needs no Stage-6 streaming.
+                // window-grouped body), then decode the MS2 body as ONE forward
+                // sequential pass: seek once to the lowest-offset record and read
+                // straight through -- the grouped records are contiguous, so each
+                // ReadMs2Record leaves the stream at the next record (identical to the
+                // v3 file-order read; no per-record Seek). readOrder maps physical
+                // (offset) order back to each record's acquisition slot, so Stage-6
+                // rescore still gets a resident load in file order. The per-record
+                // position check asserts that contiguity -- a mis-grouped / non-
+                // contiguous cache faults here instead of decoding garbage.
                 SpectraCacheIndex index = ReadIndex(fs, r, nMs2);
 
                 var ms2 = new Spectrum[nMs2];
-                foreach (int i in BuildOffsetReadOrder(index.RecordOffsets))
+                int[] readOrder = BuildOffsetReadOrder(index.RecordOffsets);
+                if (readOrder.Length > 0)
+                    fs.Seek(index.RecordOffsets[readOrder[0]], SeekOrigin.Begin);
+                foreach (int i in readOrder)
                 {
-                    fs.Seek(index.RecordOffsets[i], SeekOrigin.Begin);
+                    if (fs.Position != index.RecordOffsets[i])
+                        throw new InvalidDataException(string.Format(
+                            "Spectra cache MS2 body is not contiguous in offset order " +
+                            "(expected record at {0} but stream is at {1}).",
+                            index.RecordOffsets[i], fs.Position));
                     ms2[i] = ReadMs2Record(r);
                 }
 

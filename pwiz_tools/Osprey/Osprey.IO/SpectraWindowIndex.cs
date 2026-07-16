@@ -226,9 +226,18 @@ namespace pwiz.Osprey.IO
             using (var fs = new FileStream(_cachePath, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(fs))
             {
+                // The window's records are written contiguously (v4 grouping) and its
+                // offsets ascend, so read them as ONE forward sequential pass: seek once,
+                // then read straight through. The per-record position check asserts that
+                // contiguity -- reads stay in-sequence within the group, and a mis-grouped
+                // cache faults instead of silently seeking out of the block.
+                fs.Seek(offsets[0], SeekOrigin.Begin);
                 foreach (long offset in offsets)
                 {
-                    fs.Seek(offset, SeekOrigin.Begin);
+                    if (fs.Position != offset)
+                        throw new InvalidDataException(string.Format(
+                            "Spectra cache window is not contiguous (expected record at " +
+                            "{0} but stream is at {1}).", offset, fs.Position));
                     result.Add(SpectraCache.ReadMs2Record(r));
                 }
             }
