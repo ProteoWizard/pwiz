@@ -69,6 +69,14 @@ namespace pwiz.Osprey.IO
         // Old caches re-populate on this bump.
         private const uint VERSION = 3;
 
+        // Fixed byte layout of one MS2 record's header prefix (everything before
+        // the variable-length peak blob): scan(4) + rt(8) + precursor_mz(8) +
+        // iso_center(8) + iso_lower(8) + iso_upper(8) + n_peaks(4). Used by
+        // SpectraWindowIndex to skip the peak blob during its header-only pass.
+        internal const int MS2_HEADER_PREFIX_BYTES = 48;
+        // Bytes per peak in a record's blob: one f64 m/z (8) + one f32 intensity (4).
+        internal const int PEAK_BYTES_PER_POINT = 12;
+
         /// <summary>
         /// Save spectra to a binary cache file.
         /// </summary>
@@ -137,68 +145,22 @@ namespace pwiz.Osprey.IO
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(fs))
             {
-                // Validate magic
-                byte[] magic = r.ReadBytes(8);
-                if (magic.Length != 8)
+                // Validate magic / version / source fingerprint and read the
+                // record counts. Shared with SpectraWindowIndex so the two
+                // readers accept/reject a cache identically. On success the
+                // reader is positioned at the first MS2 record.
+                if (!TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1))
                     return null;
-                for (int i = 0; i < 8; i++)
-                {
-                    if (magic[i] != MAGIC[i])
-                        return null;
-                }
-
-                // Validate version
-                uint version = r.ReadUInt32();
-                if (version != VERSION)
-                    return null;
-
-                // Validate source fingerprint: reject a cache whose data file
-                // changed since it was written. Skipped when the cache recorded
-                // no fingerprint (storedSize == 0) or the source is unavailable
-                // for comparison (e.g. a resume run whose mzML is not beside the
-                // cache) -- a within-run cache is trusted in that case.
-                ulong storedSize = r.ReadUInt64();
-                long storedMtimeMs = r.ReadInt64();
-                if (storedSize != 0 && !string.IsNullOrEmpty(sourcePath))
-                {
-                    ComputeSourceFingerprint(sourcePath, out long actualSize, out long actualMtimeMs);
-                    if (actualSize != 0 && ((ulong)actualSize != storedSize || actualMtimeMs != storedMtimeMs))
-                        return null;
-                }
-
-                uint nMs2 = r.ReadUInt32();
-                uint nMs1 = r.ReadUInt32();
 
                 // Read MS2 spectra
                 var ms2 = new List<Spectrum>((int)nMs2);
                 for (uint i = 0; i < nMs2; i++)
-                {
-                    var s = new Spectrum();
-                    s.ScanNumber = r.ReadUInt32();
-                    s.RetentionTime = r.ReadDouble();
-                    s.PrecursorMz = r.ReadDouble();
-                    double isoCenter = r.ReadDouble();
-                    double isoLower = r.ReadDouble();
-                    double isoUpper = r.ReadDouble();
-                    s.IsolationWindow = new IsolationWindow(isoCenter, isoLower, isoUpper);
-                    uint nPeaks = r.ReadUInt32();
-                    s.Mzs = ReadDoubleArray(r, (int)nPeaks);
-                    s.Intensities = ReadFloatArray(r, (int)nPeaks);
-                    ms2.Add(s);
-                }
+                    ms2.Add(ReadMs2Record(r));
 
                 // Read MS1 spectra
                 var ms1 = new List<MS1Spectrum>((int)nMs1);
                 for (uint i = 0; i < nMs1; i++)
-                {
-                    var s = new MS1Spectrum();
-                    s.ScanNumber = r.ReadUInt32();
-                    s.RetentionTime = r.ReadDouble();
-                    uint nPeaks = r.ReadUInt32();
-                    s.Mzs = ReadDoubleArray(r, (int)nPeaks);
-                    s.Intensities = ReadFloatArray(r, (int)nPeaks);
-                    ms1.Add(s);
-                }
+                    ms1.Add(ReadMs1Record(r));
 
                 return new SpectraCacheResult(ms2, ms1);
             }
@@ -218,6 +180,79 @@ namespace pwiz.Osprey.IO
         }
 
         #region Private helpers
+
+        // Read and validate the cache header (magic, version, source
+        // fingerprint) and return the record counts. On success the reader is
+        // left positioned at the first MS2 record; on any mismatch returns
+        // false. Shared by LoadSpectraCache and SpectraWindowIndex so both
+        // accept/reject a cache by identical rules.
+        internal static bool TryReadHeader(BinaryReader r, string sourcePath, out uint nMs2, out uint nMs1)
+        {
+            nMs2 = 0;
+            nMs1 = 0;
+
+            byte[] magic = r.ReadBytes(8);
+            if (magic.Length != 8)
+                return false;
+            for (int i = 0; i < 8; i++)
+            {
+                if (magic[i] != MAGIC[i])
+                    return false;
+            }
+
+            uint version = r.ReadUInt32();
+            if (version != VERSION)
+                return false;
+
+            // Source fingerprint: reject a cache whose data file changed since it
+            // was written. Skipped when the cache recorded no fingerprint
+            // (storedSize == 0) or the source is unavailable for comparison
+            // (e.g. a resume run whose mzML is not beside the cache).
+            ulong storedSize = r.ReadUInt64();
+            long storedMtimeMs = r.ReadInt64();
+            if (storedSize != 0 && !string.IsNullOrEmpty(sourcePath))
+            {
+                ComputeSourceFingerprint(sourcePath, out long actualSize, out long actualMtimeMs);
+                if (actualSize != 0 && ((ulong)actualSize != storedSize || actualMtimeMs != storedMtimeMs))
+                    return false;
+            }
+
+            nMs2 = r.ReadUInt32();
+            nMs1 = r.ReadUInt32();
+            return true;
+        }
+
+        // Decode one MS2 record from a reader positioned at its start. The
+        // inverse of the MS2 write loop in SaveSpectraCache; shared with
+        // SpectraWindowIndex.LoadWindow so a streamed window decodes
+        // byte-for-byte identically to a full LoadSpectraCache read.
+        internal static Spectrum ReadMs2Record(BinaryReader r)
+        {
+            var s = new Spectrum();
+            s.ScanNumber = r.ReadUInt32();
+            s.RetentionTime = r.ReadDouble();
+            s.PrecursorMz = r.ReadDouble();
+            double isoCenter = r.ReadDouble();
+            double isoLower = r.ReadDouble();
+            double isoUpper = r.ReadDouble();
+            s.IsolationWindow = new IsolationWindow(isoCenter, isoLower, isoUpper);
+            uint nPeaks = r.ReadUInt32();
+            s.Mzs = ReadDoubleArray(r, (int)nPeaks);
+            s.Intensities = ReadFloatArray(r, (int)nPeaks);
+            return s;
+        }
+
+        // Decode one MS1 record from a reader positioned at its start.
+        internal static MS1Spectrum ReadMs1Record(BinaryReader r)
+        {
+            var s = new MS1Spectrum();
+            s.ScanNumber = r.ReadUInt32();
+            s.RetentionTime = r.ReadDouble();
+            uint nPeaks = r.ReadUInt32();
+            s.Mzs = ReadDoubleArray(r, (int)nPeaks);
+            s.Intensities = ReadFloatArray(r, (int)nPeaks);
+            return s;
+        }
 
         // Source file fingerprint: length + last-write-time as Unix milliseconds
         // UTC. Unix-ms (not .NET ticks) so Osprey and Rust osprey derive the
