@@ -401,6 +401,40 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="chartbox" id="runHistChart"></div>
     <p class="note" id="runHistNote"></p>
   </div>
+  <div class="card" id="frontierCard" style="display:none">
+    <h2>Yield at fixed FDR vs required reproducibility</h2>
+    <p class="desc">Holding the measured FDP at the nominal target and <b>floating the q-cutoff upward</b> as the run-count
+      requirement rises: the <b>left axis</b> is the real precursors accepted at that FDR, the <b>right axis</b> is the
+      loosest q-cutoff (Q*) that still holds it. Demanding more reproducibility buys you a looser score gate, so yield
+      climbs to a peak, then falls once the run requirement discards more real precursors than the looser q recovers &mdash;
+      an efficient-frontier sweet spot that is neither one run nor every run. Follows the per-run / experiment-wide selector
+      above: the per-run gate loosens the run-level q, the experiment-wide gate loosens the best-peak q. Because best-peak q
+      says nothing about <i>how many</i> runs a precursor reproduces in, reproducibility is independent information &mdash; so
+      even the experiment-wide gate gains here, and the two routes converge on nearly the same peptides. The dashed line is the
+      experiment-wide q&le;target <b>standard</b> (best-peak, no run requirement); the frontier rising above it is the reproducible
+      detections that standard forgoes at the same entrapment-validated FDP. <b>Prototype &mdash; 1st pass only:</b> computed offline
+      from the un-gated <b>1st-pass</b> q distribution, so it reflects 1st-pass q-values and <b>does not change with the
+      Pass&nbsp;1 / Pass&nbsp;2 switch</b> &mdash; the loosen-q sweep needs the full pre-compaction candidate pool, which only the
+      1st pass carries (the 2nd pass is already FDR-compacted). Not yet part of the standard diagnostic data.</p>
+    <div class="kpis" id="frontierKpis"></div>
+    <div class="legend" id="frontierLegend"></div>
+    <div class="chartbox" id="frontierChart"></div>
+    <p class="note" id="frontierNote"></p>
+  </div>
+  <div class="card" id="yieldCutoffCard" style="display:none">
+    <h2>Peptides accepted vs required reproducibility</h2>
+    <p class="desc">The count of accepted precursors as you raise the reproducibility requirement &mdash; <b>keep only
+      precursors detected in &ge;&nbsp;k runs</b> &mdash; for <b>both</b> cut-off statistics: the per-run gate and the
+      best-peak experiment-wide q gate. Counts are directly comparable, so both share this axis (the earlier FDP panel could
+      not). Each curve is <b>solid where the retained set holds at or below the nominal FDR</b> and faded where it is above;
+      the ring is the smallest requirement that reaches the target, and the dashed line is the best-peak gate's controlled
+      yield. This is the quantitative goal made explicit: as the reproducibility bar rises you accept fewer precursors, but
+      up to a point the reproducibility route accepts <i>more</i> real precursors at the same FDR than best-peak alone &mdash;
+      the peptides you gain (or give up) by choosing your cut-off statistic on reproducibility versus best peak.</p>
+    <div class="legend" id="yieldCutoffLegend"></div>
+    <div class="chartbox" id="yieldCutoffChart"></div>
+    <p class="note" id="yieldCutoffNote"></p>
+  </div>
   <div class="card" id="unionFdpCard" style="display:none">
     <h2>Union FDP vs number of runs</h2>
     <p class="desc">The entrapment-measured FDP of the accumulated union of detected precursors as runs are added
@@ -1166,7 +1200,7 @@ function renderReproTab(b){
   const sel0=document.getElementById("reproScopeSel");
   if(!hasCross){
     if(sel0)sel0.style.display="none";
-    ["detByRunCard","runHistCard","unionFdpCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
+    ["detByRunCard","runHistCard","frontierCard","yieldCutoffCard","unionFdpCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
     return;
   }
   if(sel0)sel0.style.display="";
@@ -1298,6 +1332,139 @@ function renderReproTab(b){
   // Phase C: entrapment-measured FDP of the accumulated union vs number of runs, BOTH
   // scopes on one axis (the run-vs-global gap is the point, so this panel is
   // scope-independent -- drawn once, not on the toggle). Hidden without entrapment or N<2.
+  // Cumulative "keep >= k runs" entrapment FDP for one scope's view: the SAME FDRBench
+  // combined estimator the per-slice curve uses -- (1+1/r)*np/(nt+np) -- applied to counts
+  // accumulated from k=N downward, i.e. the experiment-wide FDP of the set retained at each
+  // run-count cutoff. The (1+1/r) factor is a global constant; recover it from the populated
+  // slice with the most entrapment (it back-solves exactly from the per-slice fdp already in
+  // the data, so no extra serialized field is needed). Returns {cf:[N], cstar} or null.
+  function cutoffFdp(v){
+    const h=v&&v.runCountHistogram, eh=v&&v.entrapmentRunCountHistogram, fdp=v&&v.entrapmentFdpByRunCount;
+    if(!h||!eh||!fdp)return null;
+    let A=NaN,be=-1;
+    for(let k=0;k<N;k++){const e=eh[k]||0,f=fdp[k]==null?NaN:Number(fdp[k]);if(e>be&&!isNaN(f)){be=e;A=f*(h[k]+e)/e;}}
+    if(isNaN(A)||be<=0)return null;
+    const cf=new Array(N);let T=0,E=0;
+    for(let c=N;c>=1;c--){T+=h[c-1];E+=(eh[c-1]||0);cf[c-1]=(T+E>0)?A*E/(T+E):NaN;}
+    let cstar=null;for(let c=1;c<=N;c++){const f=cf[c-1];if(f!=null&&!isNaN(f)&&f<=D.runFdr){cstar=c;break;}}
+    return {cf:cf,cstar:cstar};
+  }
+
+  // "Peptides accepted vs required reproducibility": accepted count (>= k runs) for BOTH cut-off
+  // statistics on one axis -- counts are comparable across scopes (unlike FDP), so no mismatch.
+  // Solid where the retained set is FDR-controlled (>= c*), faded where above; ring at c*.
+  // Scope-independent (the two gates are the comparison), so drawn once.
+  function drawYieldCutoff(){
+    const card=document.getElementById("yieldCutoffCard");
+    const pr=hasCross&&cr.perRun?cutoffFdp(cr.perRun):null, ex=hasCross&&cr.experiment?cutoffFdp(cr.experiment):null;
+    if((!pr&&!ex)||N<2){if(card)card.style.display="none";return;}
+    card.style.display="";
+    const host=document.getElementById("yieldCutoffChart");host.innerHTML="";
+    const W=700,Hh=330,box={l:64,t:16,w:W-84,h:Hh-64};
+    const s=svg(W,Hh);host.appendChild(s);
+    function cumCount(v){const h=v.runCountHistogram,a=new Array(N);let T=0;for(let c=N;c>=1;c--){T+=h[c-1];a[c-1]=T;}return a;}
+    const prC=cr.perRun?cumCount(cr.perRun):null, exC=cr.experiment?cumCount(cr.experiment):null;
+    let ymax=1;[prC,exC].forEach(a=>{if(a)ymax=Math.max(ymax,a[0]);});ymax*=1.08;
+    const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
+    const sc=axes(s,box,[1,N],[0,ymax],{xlab:"minimum runs a precursor must appear in (≥ k)",ylab:"precursors accepted",
+      xticks:xt,xfmt:v=>String(Math.round(v)),yfmt:v=>trim(v)});
+    if(ex&&exC&&ex.cstar){const yv=exC[ex.cstar-1];if(yv<=ymax){
+      E(s,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(yv),y2:sc.y(yv),stroke:COL.accent,"stroke-dasharray":"2 4",opacity:.45});
+      E(s,"text",{x:box.l+box.w-2,y:sc.y(yv)-4,"text-anchor":"end",fill:COL.accent,"font-size":"10"}).textContent="best-peak yield "+fmt(yv,0);}}
+    function draw(o,cum,color){if(!o||!cum)return;const cs=o.cstar||1;
+      function seg(a,b,faded){let p="";for(let c=a;c<=b;c++)p+=(c===a?"M":"L")+sc.x(c).toFixed(1)+" "+sc.y(cum[c-1]).toFixed(1)+" ";
+        if(p)E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2,opacity:faded?0.35:1,"stroke-dasharray":faded?"4 3":""});}
+      if(cs>1)seg(1,cs,true); seg(cs,N,false);
+      if(N<=40)for(let c=1;c<=N;c++)E(s,"circle",{cx:sc.x(c),cy:sc.y(cum[c-1]),r:2,fill:color,opacity:c<cs?0.35:1});
+      if(o.cstar){const cx=sc.x(o.cstar),cy=sc.y(cum[o.cstar-1]);
+        E(s,"circle",{cx:cx,cy:cy,r:4.6,fill:"none",stroke:color,"stroke-width":2});
+        E(s,"text",{x:cx,y:(cy-8).toFixed(1),"text-anchor":"middle",fill:color,"font-size":"10"}).textContent="≥"+o.cstar+": "+fmt(cum[o.cstar-1],0);}}
+    draw(ex,exC,COL.accent);
+    draw(pr,prC,COL.decoy);
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const px=(ev.clientX-rb.left)/rb.width*W;
+      const c=Math.min(N,Math.max(1,Math.round((px-box.l)/box.w*(N-1)+1)));
+      let html="<b>require ≥"+c+" of "+N+" runs</b>";
+      if(prC)html+="<br><span style='color:"+COL.decoy+"'>■</span> per-run: "+fmt(prC[c-1],0)+" ("+(pr&&pr.cf[c-1]!=null?pct(pr.cf[c-1],1):"–")+" FDP)";
+      if(exC)html+="<br><span style='color:"+COL.accent+"'>■</span> experiment-wide: "+fmt(exC[c-1],0)+" ("+(ex&&ex.cf[c-1]!=null?pct(ex.cf[c-1],1):"–")+" FDP)";
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+    legend(document.getElementById("yieldCutoffLegend"),[
+      {name:"per-run gate",color:COL.decoy,line:true},
+      {name:"experiment-wide (best-peak) gate",color:COL.accent,line:true},
+      {name:"solid = ≤"+pct(D.runFdr,0)+" FDR · faded = above",color:COL.muted,line:true},
+    ]);
+    let note="";
+    if(pr&&ex&&prC&&exC&&pr.cstar&&ex.cstar){
+      const perAt=prC[pr.cstar-1], expAt=exC[ex.cstar-1], d=perAt-expAt;
+      note = "At the "+pct(D.runFdr,0)+" target the reproducibility route (per-run gate, ≥"+pr.cstar+" runs) accepts "+
+        fmt(perAt,0)+" precursors vs "+fmt(expAt,0)+" for best-peak (experiment-wide q, ≥"+ex.cstar+" run"+(ex.cstar===1?"":"s")+") — "+
+        (d>=0?"<b>"+fmt(d,0)+" more ("+pct(d/expAt,0)+")</b>":"<b>"+fmt(-d,0)+" fewer</b>")+
+        " real-plus-false precursors at the same FDR. Raise the requirement further and the count falls along each curve: the precursors you give up to buy reproducibility.";
+    }
+    document.getElementById("yieldCutoffNote").innerHTML=note;
+  }
+
+  // Prototype iso-FDR frontier: yield (left) + loosest q-cutoff Q* (right) vs run-count
+  // requirement, both scopes precomputed offline into D.frontier. Dual axis (two different
+  // quantities, one scope), scope chosen by the local toggle.
+  function drawFrontier(){
+    const fr=D.frontier, card=document.getElementById("frontierCard");
+    if(!fr||!fr.perRun){if(card)card.style.display="none";return;}
+    card.style.display="";
+    const v=scope===0?fr.experiment:fr.perRun, Nn=fr.N, yld=v.yield, qs=v.q;
+    const host=document.getElementById("frontierChart");host.innerHTML="";
+    const W=700,Hh=340,rm=60,box={l:66,t:18,w:W-66-rm,h:Hh-70};
+    const s=svg(W,Hh);host.appendChild(s);
+    let ymax=1;for(const x of yld)ymax=Math.max(ymax,x);ymax*=1.08;
+    let qmax=fr.target;for(const x of qs)qmax=Math.max(qmax,x);qmax*=1.12;
+    const xt=Nn<=20?Array.from({length:Nn},(_,i)=>i+1):null;
+    const sc=axes(s,box,[0.5,Nn+0.5],[0,ymax],{xlab:"minimum runs a precursor must appear in (≥ k)",
+      ylab:"precursors accepted at "+pct(fr.target,0)+" FDR",xticks:xt,xfmt:v2=>String(Math.round(v2)),yfmt:v2=>trim(v2)});
+    const yR=q=>box.t+box.h-(q/qmax)*box.h;
+    ticks(0,qmax,5).forEach(t=>{if(t<0)return;E(s,"text",{x:box.l+box.w+7,y:yR(t)+3,"text-anchor":"start",fill:COL.warn,"font-size":"10"}).textContent=(t*100).toFixed(t<0.1?1:0)+"%";});
+    E(s,"line",{x1:box.l+box.w,x2:box.l+box.w,y1:box.t,y2:box.t+box.h,stroke:COL.warn,opacity:.5});
+    const tx=box.l+box.w+44;E(s,"text",{class:"axtitle",x:tx,y:box.t+box.h/2,"text-anchor":"middle",fill:COL.warn,transform:"rotate(90 "+tx+" "+(box.t+box.h/2)+")"}).textContent="q-cutoff Q* (right)";
+    function path(vals,yf,color){let p="",st=false;for(let k=1;k<=Nn;k++){const val=vals[k-1];if(val==null||isNaN(val)){st=false;continue;}
+      p+=(st?"L":"M")+sc.x(k).toFixed(1)+" "+yf(val).toFixed(1)+" ";st=true;if(Nn<=40)E(s,"circle",{cx:sc.x(k),cy:yf(val),r:2.3,fill:color});}
+      E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2});}
+    path(qs,yR,COL.warn);      // Q* (right axis)
+    path(yld,sc.y,COL.target); // yield (left axis)
+    // The experiment-wide q<=target "standard" (best-peak, NO run requirement) as a reference:
+    // the frontier rising above it is the reproducible detections that standard forgoes.
+    if(fr.bestPeak&&fr.bestPeak<=ymax){const ys=sc.y(fr.bestPeak);
+      E(s,"line",{x1:box.l,x2:box.l+box.w,y1:ys,y2:ys,stroke:COL.muted,"stroke-dasharray":"2 4",opacity:.75});
+      E(s,"text",{x:box.l+box.w-2,y:ys-4,"text-anchor":"end",fill:COL.muted,"font-size":"10"}).textContent="exp-wide q≤"+pct(fr.target,0)+" standard "+fmt(fr.bestPeak,0);}
+    let pk=1;for(let k=2;k<=Nn;k++)if(yld[k-1]>yld[pk-1])pk=k;
+    const px=sc.x(pk),py=sc.y(yld[pk-1]);
+    E(s,"circle",{cx:px,cy:py,r:5,fill:"none",stroke:COL.ptarget,"stroke-width":2});
+    E(s,"line",{x1:px.toFixed(1),x2:px.toFixed(1),y1:box.t,y2:box.t+box.h,stroke:COL.ptarget,"stroke-dasharray":"4 3","stroke-width":1,opacity:.5});
+    E(s,"text",{x:px,y:box.t+11,"text-anchor":"middle",fill:COL.ptarget,"font-size":"10"}).textContent="peak ≥"+pk;
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const px2=(ev.clientX-rb.left)/rb.width*W;
+      const kk=Math.min(Nn,Math.max(1,Math.round((px2-box.l)/box.w*Nn+0.5)));
+      showTip(ev,"<b>require ≥"+kk+" of "+Nn+" runs</b><br><span style='color:"+COL.target+"'>■</span> yield: "+fmt(yld[kk-1],0)+
+        "<br><span style='color:"+COL.warn+"'>■</span> Q*: "+pct(qs[kk-1],1));});
+    ov.addEventListener("mouseleave",hideTip);
+    legend(document.getElementById("frontierLegend"),[
+      {name:"precursors accepted (left)",color:COL.target,line:true},
+      {name:"q-cutoff Q* (right)",color:COL.warn,line:true},
+      {name:"exp-wide q≤"+pct(fr.target,0)+" standard",color:COL.muted,line:true},
+    ]);
+    const y1=yld[0], yv=yld[pk-1];
+    const kp=document.getElementById("frontierKpis");
+    if(kp){kp.innerHTML="";
+      kpi(kp,"max detected at "+pct(fr.target,0)+" FDR",fmt(yv,0),"good");
+      kpi(kp,"best q-value (Q*)",pct(qs[pk-1],1),"");
+      kpi(kp,"best run count","≥"+pk,"");
+      if(fr.overlapJaccard!=null)kpi(kp,"overlap w/ "+(scope===0?"per-run":"experiment-wide"),pct(fr.overlapJaccard,0),"");
+      if(fr.bestPeak)kpi(kp,"vs exp-wide q≤"+pct(fr.target,0)+" standard","+"+pct(fr.gainPct,0),"good");}
+    document.getElementById("frontierNote").innerHTML=
+      "The peak accepts <b>"+fmt(fr.perRunPeak-fr.bestPeak,0)+" more</b> real precursors than the experiment-wide-q standard at the same "+
+      "entrapment-validated FDP, and the peak set is ~"+pct(fr.overlapJaccard,0)+" the same peptides whichever route you take &mdash; "+
+      "reproducibility, not the q statistic, selects them.";
+  }
+
   function drawUnionFdp(){
     const card=document.getElementById("unionFdpCard");
     const pr=hasCross&&cr.perRun&&cr.perRun.unionFdp, ex=hasCross&&cr.experiment&&cr.experiment.unionFdp;
@@ -1337,7 +1504,7 @@ function renderReproTab(b){
         : "The two track closely here; the gap is expected to widen at higher run counts.");
   }
 
-  function renderRepro(){drawDet();drawHist();}
+  function renderRepro(){drawDet();drawHist();drawFrontier();}
   legend(document.getElementById("detLegend"),[
     {name:"detected / run",color:COL.target,toggle:o=>{detOff.bars=o;drawDet();}},
     {name:"cumulative union",color:COL.pdecoy,line:true,toggle:o=>{detOff.union=o;drawDet();}},
@@ -1360,7 +1527,8 @@ function renderReproTab(b){
   const sel=document.getElementById("reproScopeSel");sel.innerHTML="";
   SCOPES.forEach((sco,k)=>{const btn=H(sel,"button",{class:k===scope?"on":""},sco.name);
     btn.onclick=()=>{scope=k;reproScope=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));btn.classList.add("on");renderRepro();};});
-  renderRepro();
+  renderRepro();    // drawDet + drawHist + drawFrontier (all follow the per-run/experiment-wide selector)
+  drawYieldCutoff();// scope-independent (both gates on one count axis); drawn once
   drawUnionFdp();   // scope-independent (shows both curves); drawn once
 }
 
