@@ -226,6 +226,10 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(skyPath.Exists());
             Assert.IsFalse(missingPath.Exists());
 
+            // The ".zip" container extension is detected case-insensitively (a file may be named .ZIP).
+            var upperZipPath = zipPath.Substring(0, zipPath.Length - 4) + ".ZIP";
+            Assert.IsTrue(new FilePath(upperZipPath + @"\data.skyd").IsInZipFile);
+
             // GetLastWriteTime returns the outermost .zip's time.
             Assert.AreEqual(File.GetLastWriteTime(zipPath), storedPath.GetLastWriteTime());
 

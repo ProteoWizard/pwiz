@@ -167,7 +167,10 @@ namespace pwiz.Skyline.Util
             int searchFrom = 0;
             while (true)
             {
-                int zipIndex = Path.IndexOf(zipExt, searchFrom, StringComparison.Ordinal);
+                // The container's ".zip" extension is a file-system path component, so match it
+                // case-insensitively (a file may be named .ZIP). Entry names inside the zip, and
+                // FilePath equality, remain case-sensitive (see FindEntryByFileName / Equals).
+                int zipIndex = Path.IndexOf(zipExt, searchFrom, StringComparison.OrdinalIgnoreCase);
                 if (zipIndex < 0)
                     return false;
                 int afterZip = zipIndex + zipExt.Length;
