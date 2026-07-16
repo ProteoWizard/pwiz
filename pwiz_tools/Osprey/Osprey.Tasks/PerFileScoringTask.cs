@@ -266,6 +266,18 @@ namespace pwiz.Osprey.Tasks
                     perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                 if (fileResult != null)
                     scoredFileNames.Add(fileName);
+                // Single-file scoring memory boundary. The pre-GC line's working_set
+                // peak is the in-scoring high-water mark (the ~tens-of-GB envelope one
+                // file's Stage 1-4 needs); the forced-GC line is the PERSISTENT set that
+                // survives -- the two together separate transient scoring buffers from
+                // genuinely retained structure ("why does one file need so much, and
+                // what is actually held"). When a dotMemory session is attached
+                // (Profile-Osprey.ps1 -MemoryProfile) the forced-GC probe also captures a
+                // retention snapshot here. Zero cost when OSPREY_LOG_MEMORY is unset; the
+                // multi-file batch never takes this single-file branch.
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"single file scored (pre-GC)");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-scored-live",
+                    string.Format(@"(post-GC, after scoring {0})", fileName));
             }
             else if (effectiveParallelism == 1)
             {
@@ -876,6 +888,10 @@ namespace pwiz.Osprey.Tasks
             }
             else if (!librarySuppliesDecoys)
             {
+                // GenerateAllWithCollisionDetection interns the freshly-minted
+                // decoy strings ("DECOY_"+accession / modified sequence) through
+                // its own pool and logs the collapse summary; no post-pass
+                // interning is needed here.
                 decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
                     library, config, ctx.LogInfo, out List<LibraryEntry> validTargets);
                 library = validTargets;
@@ -1033,7 +1049,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.ExitCode = 1;
                     return false;
                 }
-                var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState, ctx.LogInfo);
                 pairingStats.NPairedViaManifest = manifestStats.NPaired;
                 if (manifestStats.NProteinsReplaced > 0)
                 {
@@ -1665,6 +1681,20 @@ namespace pwiz.Osprey.Tasks
                     _calibrationMassUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
             }
 
+            // Calibration-phase memory boundary (companion to the perfile-scoring-peak
+            // capture below). The [MEM] line's working_set peak is the calibration
+            // high-water mark before scoring pushes it higher; its managed_heap is taken
+            // WITHOUT a forced GC, so the ~1.65 GB float[][] dense XCorr cache
+            // (Calibrator.PreprocessWindowsForXcorr) -- released inside ResolveCalibration
+            // but not yet collected here -- is still counted, sizing the calibration peak.
+            // The paired retention snapshot forces its own GC first (dotMemory), so it
+            // captures the post-calibration FLOOR that scoring inherits (library + spectra)
+            // rather than the transient cache. Both are no-ops off a profiling run
+            // (OSPREY_LOG_MEMORY unset / no dotMemory attached), so the batch and the
+            // regression golden are unaffected; the per-file fan-out reaches this per file.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"post-calibration");
+            ProfilerHooks.CaptureRetentionSnapshot(@"post-calibration");
+
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
             // search incrementally without paying the Stage 4 cost.
@@ -1701,6 +1731,19 @@ namespace pwiz.Osprey.Tasks
             var scoredEntries = ScoreAndDeduplicate(
                 fullLibrary, spectra, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
+            // work targets. Here scoredEntries still hold every heavy per-entry array
+            // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
+            // ReferenceXic*), and the spectra + library are still resident. Those arrays
+            // are dropped a few lines below (the #4355 write-then-null), so the later
+            // perfile-scored-live probe captures only the post-release floor and CANNOT
+            // show them -- a forced-GC snapshot never captures unreferenced objects.
+            // Deliberately a direct SnapshotReady-gated capture (NOT via a forced-GC [MEM]
+            // boundary): a no-op on the batch (no profiler attached), fires only under
+            // Profile-Osprey.ps1 -MemoryProfile, and dotMemory forces its own GC so the
+            // captured live set is the true retained peak (arrays are live here, so kept).
+            ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
 
             // Optional: write per-entry feature TSV for comparison against Rust's PIN output
             if (config.WritePin)
@@ -1780,7 +1823,12 @@ namespace pwiz.Osprey.Tasks
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
-                context);
+                context,
+                // Stage-4 scores a file once, then only DeduplicateDoubleCounting
+                // (RT-only) touches these spectra -- let RunCoelutionScoring free
+                // each raw m/z array as it builds the calibrated copy, so the two
+                // ~4 GB copies never coexist. Stage-6 rescore must NOT set this.
+                consumeInputMzs: true);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001
