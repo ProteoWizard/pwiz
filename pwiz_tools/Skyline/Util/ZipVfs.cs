@@ -21,6 +21,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using pwiz.Common.Database;
 
 namespace pwiz.Skyline.Util
 {
@@ -41,6 +42,18 @@ namespace pwiz.Skyline.Util
 
         [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern IntPtr LoadLibrary(string fileName);
+
+        /// <summary>
+        /// Opens a SQLite connection to a database that may be an ordinary file or stored
+        /// uncompressed inside a .zip. If the path is inside a .zip, it is opened read-only in place
+        /// through the zip VFS; otherwise it is opened normally.
+        /// </summary>
+        public static SQLiteConnection OpenConnection(string path)
+        {
+            if (new FilePath(path).TryGetZipByteRange(out var zipFilePath, out var dataOffset, out var length))
+                return OpenConnection(zipFilePath, dataOffset, length);
+            return SqliteOperations.OpenConnection(path);
+        }
 
         /// <summary>
         /// Opens a read-only connection to a SQLite database stored uncompressed inside a .zip.

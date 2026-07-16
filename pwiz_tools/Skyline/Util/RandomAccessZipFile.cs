@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Finds the entry whose name matches <paramref name="fileName"/>. The comparison
         /// is on the file name only (ignoring any directory prefix stored in the zip) and
-        /// is case-insensitive, matching how shared documents reference their parts.
+        /// is case-sensitive (zip entry names are always case-sensitive).
         /// Returns null if no such entry exists.
         /// </summary>
         public ZipEntryInfo FindEntryByFileName(string fileName)
@@ -77,7 +77,8 @@ namespace pwiz.Skyline.Util
             var name = Path.GetFileName(fileName);
             foreach (var entry in Entries)
             {
-                if (string.Equals(Path.GetFileName(entry.FileName), name, StringComparison.OrdinalIgnoreCase))
+                // Zip entry names are case-sensitive.
+                if (string.Equals(Path.GetFileName(entry.FileName), name, StringComparison.Ordinal))
                     return entry;
             }
             return null;
@@ -109,14 +110,15 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Finds the entry whose in-zip path matches <paramref name="entryPath"/>, comparing on the
-        /// full path with separators normalized to '/', case-insensitively. Returns null if none.
+        /// full path with separators normalized to '/', case-sensitively. Returns null if none.
         /// </summary>
         public ZipEntryInfo FindEntry(string entryPath)
         {
             var normalized = NormalizeEntryPath(entryPath);
             foreach (var entry in Entries)
             {
-                if (string.Equals(NormalizeEntryPath(entry.FileName), normalized, StringComparison.OrdinalIgnoreCase))
+                // Zip entry names are case-sensitive.
+                if (string.Equals(NormalizeEntryPath(entry.FileName), normalized, StringComparison.Ordinal))
                     return entry;
             }
             return null;

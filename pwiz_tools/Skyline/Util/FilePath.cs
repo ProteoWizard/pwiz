@@ -105,6 +105,21 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// The length (uncompressed size) of the file, whether it is an ordinary file or an entry
+        /// inside a zip.
+        /// </summary>
+        public long GetLength()
+        {
+            if (!TryParseZip(out var zipFilePath, out var entryName))
+                return new FileInfo(Path).Length;
+            var entry = new RandomAccessZipFile(zipFilePath).FindEntry(entryName);
+            if (entry == null)
+                throw new FileNotFoundException(string.Format(
+                    UtilResources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
+            return entry.UncompressedSize;
+        }
+
+        /// <summary>
         /// The last-write time of the file. For a path inside a zip this is the time of the
         /// outermost .zip file (the whole archive is what actually changes on disk).
         /// </summary>
@@ -152,7 +167,7 @@ namespace pwiz.Skyline.Util
             int searchFrom = 0;
             while (true)
             {
-                int zipIndex = Path.IndexOf(zipExt, searchFrom, StringComparison.OrdinalIgnoreCase);
+                int zipIndex = Path.IndexOf(zipExt, searchFrom, StringComparison.Ordinal);
                 if (zipIndex < 0)
                     return false;
                 int afterZip = zipIndex + zipExt.Length;
@@ -178,7 +193,9 @@ namespace pwiz.Skyline.Util
 
         protected bool Equals(FilePath other)
         {
-            return string.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase);
+            // Case-sensitive: we cannot know whether the file system is case-sensitive, and entries
+            // inside a .zip are always case-sensitive.
+            return string.Equals(Path, other.Path, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
@@ -188,7 +205,7 @@ namespace pwiz.Skyline.Util
 
         public override int GetHashCode()
         {
-            return Path == null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(Path);
+            return Path == null ? 0 : StringComparer.Ordinal.GetHashCode(Path);
         }
     }
 }

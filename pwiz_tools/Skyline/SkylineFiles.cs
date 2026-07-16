@@ -221,10 +221,52 @@ namespace pwiz.Skyline
 
         public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
         {
-            // CONSIDER: If every file that needs random access (.skyd, .blib) is stored
-            // uncompressed, open the document in place from the .zip without extracting
-            // (sets SharedZipFilePath). For now, always extract.
+            // If the .zip contains only document files and the ones needing random access
+            // (.skyd, .blib) are stored uncompressed, open the document directly from the .zip
+            // without extracting anything. Otherwise fall back to extracting.
+            try
+            {
+                if (CanOpenInPlace(zipPath))
+                    return OpenSharedFileInPlace(zipPath, parentWindow);
+            }
+            catch (Exception)
+            {
+                // Anything unexpected inspecting/opening the .zip in place -> just extract.
+            }
             return ExtractAndOpenSharedFile(zipPath, parentWindow);
+        }
+
+        /// <summary>
+        /// True if the .zip contains only the expected document files and every file that needs
+        /// random access is stored uncompressed, so the document can be opened without extracting.
+        /// </summary>
+        private static bool CanOpenInPlace(string zipPath)
+        {
+            var zip = new RandomAccessZipFile(zipPath);
+            return zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.DocumentZipSuffixes)
+                   && zip.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions);
+        }
+
+        /// <summary>
+        /// Opens the document directly from the .zip, reading the .sky and its supporting files in
+        /// place. <see cref="SharedZipFilePath"/> is set so that operations needing files on disk
+        /// prompt to extract first (see <see cref="CheckDocumentExists"/>).
+        /// </summary>
+        private bool OpenSharedFileInPlace(string zipPath, FormEx parentWindow)
+        {
+            var zip = new RandomAccessZipFile(zipPath);
+            var skyEntry = zip.Entries.FirstOrDefault(e =>
+                string.Equals(Path.GetExtension(e.FileName), SrmDocument.EXT, StringComparison.OrdinalIgnoreCase));
+            if (skyEntry == null)
+                return ExtractAndOpenSharedFile(zipPath, parentWindow);
+
+            // A path into the .zip looks like an ordinary path with the .zip as a component,
+            // e.g. C:\Doc.sky.zip\Doc.sky; FilePath handles reading such paths in place.
+            string skyPathInZip = zipPath + Path.DirectorySeparatorChar + skyEntry.FileName;
+            if (!OpenFile(skyPathInZip, parentWindow))
+                return false;
+            SharedZipFilePath = zipPath;
+            return true;
         }
 
         /// <summary>
@@ -474,7 +516,7 @@ namespace pwiz.Skyline
             if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.HasDocumentLibrary)
             {
                 docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
-                if (!File.Exists(docLibFile))
+                if (!new FilePath(docLibFile).Exists())
                 {
                     MessageDlg.Show(parent, string.Format(SkylineResources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_, docLibFile));
                 }
@@ -503,6 +545,10 @@ namespace pwiz.Skyline
                         pathLibrary = Path.Combine(Settings.Default.LibraryDirectory ?? string.Empty, fileName);
                         if (File.Exists(pathLibrary))
                             return CreateLibrarySpec(library, librarySpec, pathLibrary, false);
+                        // Or stored inside an in-place .sky.zip next to the document.
+                        var pathInZip = new FilePath(Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName));
+                        if (pathInZip.IsInZipFile && pathInZip.Exists())
+                            return CreateLibrarySpec(library, librarySpec, pathInZip.Path, false);
                     }
 
                     using (var dlg = new MissingFileDlg())
@@ -845,11 +891,12 @@ namespace pwiz.Skyline
                     MessageDlg.ShowException(parent ?? this, e);
                 }
             }
-            else if (!File.Exists(pathCache) &&
+            // The cache (.skyd) may be inside an in-place .sky.zip, so check via FilePath.
+            else if (!new FilePath(pathCache).Exists() &&
                 // For backward compatibility, check to see if any per-replicate
                 // cache files exist.
-                !File.Exists(ChromatogramCache.FinalPathForName(path,
-                    document.Settings.MeasuredResults.Chromatograms[0].Name)))
+                !new FilePath(ChromatogramCache.FinalPathForName(path,
+                    document.Settings.MeasuredResults.Chromatograms[0].Name)).Exists())
             {
                 // It has become clear that showing a message box about rebuilding
                 // the cache on open is shocking to people, and they immediately

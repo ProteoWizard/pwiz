@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Util
         public PooledSqliteConnection(ConnectionPool connectionPool, string filePath) : base(connectionPool)
         {
             FilePath = filePath;
-            FileTime = File.GetLastWriteTime(FilePath);
+            FileTime = new FilePath(FilePath).GetLastWriteTime();
         }
 
         public string FilePath { get; private set; }
@@ -38,11 +38,9 @@ namespace pwiz.Skyline.Util
 
         protected override IDisposable Connect()
         {
-            // The .blib may be stored uncompressed inside an in-place .sky.zip; if so, open it
-            // through the zip VFS at its byte range instead of as an ordinary file.
-            if (new FilePath(FilePath).TryGetZipByteRange(out var zipFilePath, out var dataOffset, out var length))
-                return ZipVfs.OpenConnection(zipFilePath, dataOffset, length);
-            return SqliteOperations.OpenConnection(FilePath);
+            // The .blib may be stored uncompressed inside an in-place .sky.zip; ZipVfs opens such a
+            // path in place through the zip VFS, and an ordinary path normally.
+            return ZipVfs.OpenConnection(FilePath);
         }
 
         Stream IPooledStream.Stream
@@ -55,7 +53,7 @@ namespace pwiz.Skyline.Util
             get
             {
                 // If it is still in the pool, then it can't have been modified
-                return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(FilePath));
+                return !IsOpen && !Equals(FileTime, new FilePath(FilePath).GetLastWriteTime());
             }
         }
 
@@ -65,7 +63,7 @@ namespace pwiz.Skyline.Util
             {
                 if (!IsModified)
                     return @"Unmodified";
-                return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
+                return FileEx.GetElapsedTimeExplanation(FileTime, new FilePath(FilePath).GetLastWriteTime());
             }
         }
 

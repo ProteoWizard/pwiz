@@ -1601,7 +1601,8 @@ namespace pwiz.Skyline.Model.Results
                 // If the final cache exists and it is not in the partial caches or partial caches
                 // contain the final cache, but it is not open (Undo-Redo case), then make sure it
                 // is reloaded from scratch, as it may have changed since it was last open.
-                if (_resultsClone._cacheRecalc == null && File.Exists(cachePath))
+                // The cache (.skyd) may be inside an in-place .sky.zip, so check via FilePath.
+                if (_resultsClone._cacheRecalc == null && new FilePath(cachePath).Exists())
                 {
                     if (_resultsClone._listPartialCaches != null)
                     {
