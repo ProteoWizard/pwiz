@@ -1742,9 +1742,14 @@ namespace pwiz.Osprey.Tasks
                 SpectraCache.GetCachePath(inputFile), inputFile);
             if (windowIndex != null && windowIndex.Ms2Count == spectra.Count)
             {
+                // Prove-from-inside (OSPREY_TRACK_RELEASE=1, byte-inert otherwise): capture
+                // WeakReferences to the resident MS2 before dropping it, then confirm below --
+                // after null + a forced GC -- that no unanticipated root still pins it.
+                var releaseProbe = ProfilerHooks.TrackResidentSpectra(spectra);
                 // Release the resident MS2 before scoring reads it back per window.
                 spectra = null;
                 spectraProvider = new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
+                ProfilerHooks.ReportResidentSpectraReleased(releaseProbe, ctx.LogInfo);
             }
             else
             {

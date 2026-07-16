@@ -22,9 +22,11 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -262,6 +264,99 @@ namespace pwiz.Osprey.Tasks
                 "[MEM {0}] managed_heap={1:F2} GB {2}",
                 label, GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
             CaptureRetentionSnapshot(label);
+        }
+
+        /// <summary>
+        /// True when OSPREY_TRACK_RELEASE is set. Gates the prove-from-inside resident-MS2
+        /// retention check (<see cref="TrackResidentSpectra"/> / <see cref="ReportResidentSpectraReleased"/>).
+        /// Byte-inert when unset: no WeakReferences captured, no forced GC, the pipeline path
+        /// is unchanged -- so the regression golden is unaffected.
+        /// </summary>
+        public static readonly bool TrackResidentReleaseEnabled =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_TRACK_RELEASE"));
+
+        /// <summary>
+        /// Capture WeakReferences to the resident MS2 list, a spread of its <see cref="Spectrum"/>
+        /// elements, and their peak arrays, so <see cref="ReportResidentSpectraReleased"/> can
+        /// confirm -- after the caller nulls its strong reference and a full GC runs -- that
+        /// nothing else still roots them. This answers the retention question the forced-GC
+        /// <c>[MEM ...] managed_heap</c> aggregates cannot: they show HOW MUCH is live, not
+        /// whether THIS list is still held by an unanticipated root (an index, a provider, a
+        /// closure). Returns null (capturing nothing) unless <see cref="TrackResidentReleaseEnabled"/>.
+        /// The returned token holds ONLY WeakReferences, so it never itself keeps the spectra alive.
+        /// </summary>
+        public static object TrackResidentSpectra(IReadOnlyList<Spectrum> spectra)
+        {
+            if (!TrackResidentReleaseEnabled || spectra == null)
+                return null;
+            return new ResidentReleaseProbe(spectra);
+        }
+
+        /// <summary>
+        /// After the caller has nulled its strong reference to the resident MS2 list (and built
+        /// any downstream streaming provider), force a full blocking GC and log whether the
+        /// tracked list / sample spectra / peak arrays survived. All-dead == the streaming
+        /// rearchitecture genuinely releases the resident MS2; ANY survivor == an unanticipated
+        /// root still pins it (the retention bug this probe exists to catch). A no-op when
+        /// <paramref name="token"/> is null (tracking disabled), so it is byte-inert by default.
+        /// </summary>
+        public static void ReportResidentSpectraReleased(object token, Action<string> log)
+        {
+            var probe = token as ResidentReleaseProbe;
+            if (probe == null || log == null)
+                return;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            log(@"[RETENTION] resident MS2 after null+GC: " + probe.Report());
+        }
+
+        /// <summary>
+        /// Holds ONLY WeakReferences to the resident MS2 list, a spread of its elements, and
+        /// their peak arrays -- the arrays are the bulk of the ~6 GB, so they are tracked
+        /// explicitly in case an element is collected but its arrays are separately rooted.
+        /// </summary>
+        private sealed class ResidentReleaseProbe
+        {
+            private readonly WeakReference _list;
+            private readonly WeakReference[] _spectra;
+            private readonly WeakReference[] _mzs;
+            private readonly WeakReference[] _intensities;
+            private readonly int _totalCount;
+
+            internal ResidentReleaseProbe(IReadOnlyList<Spectrum> spectra)
+            {
+                _list = new WeakReference(spectra);
+                _totalCount = spectra.Count;
+                int n = Math.Min(16, spectra.Count);
+                _spectra = new WeakReference[n];
+                _mzs = new WeakReference[n];
+                _intensities = new WeakReference[n];
+                for (int i = 0; i < n; i++)
+                {
+                    // Spread the samples evenly across the list (first .. last) so a partial
+                    // leak (e.g. one window still rooted) is more likely to be caught.
+                    int idx = n == 1 ? 0 : (int)((long)i * (spectra.Count - 1) / (n - 1));
+                    var s = spectra[idx];
+                    _spectra[i] = new WeakReference(s);
+                    _mzs[i] = new WeakReference(s?.Mzs);
+                    _intensities[i] = new WeakReference(s?.Intensities);
+                }
+            }
+
+            internal string Report()
+            {
+                int spectraAlive = 0, mzAlive = 0, intAlive = 0;
+                for (int i = 0; i < _spectra.Length; i++)
+                {
+                    if (_spectra[i].IsAlive) spectraAlive++;
+                    if (_mzs[i].IsAlive) mzAlive++;
+                    if (_intensities[i].IsAlive) intAlive++;
+                }
+                return string.Format(CultureInfo.InvariantCulture,
+                    "list_alive={0}, sample_spectra_alive={1}/{2}, mz_arrays_alive={3}/{2}, intensity_arrays_alive={4}/{2} (of {5} resident MS2)",
+                    _list.IsAlive, spectraAlive, _spectra.Length, mzAlive, intAlive, _totalCount);
+            }
         }
     }
 }
