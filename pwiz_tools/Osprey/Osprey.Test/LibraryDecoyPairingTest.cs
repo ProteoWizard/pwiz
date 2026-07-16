@@ -41,8 +41,7 @@ namespace pwiz.Osprey.Test
             byte charge, string[] proteinIds, bool isDecoy)
         {
             var e = new LibraryEntry(id, sequence, sequence, charge, 500.0, 10.0);
-            foreach (var p in proteinIds)
-                e.ProteinIds.Add(p);
+            e.ProteinIds = proteinIds;
             e.IsDecoy = isDecoy;
             return e;
         }

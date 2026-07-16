@@ -60,6 +60,11 @@ namespace pwiz.Osprey.IO
             }
 
             var deduped = new List<LibraryEntry>(groups.Count);
+            // One interner for the merged (count > 1) groups' unioned protein /
+            // gene accessions, so the dedup pass keeps the loader's array-backed
+            // interning instead of re-wrapping each merge in a fresh List.
+            // Singleton groups (the vast majority) pass through untouched below.
+            var interner = new LibraryStringInterner();
 
             foreach (var group in groups.Values)
             {
@@ -113,8 +118,8 @@ namespace pwiz.Osprey.IO
 
                 var best = group[0];
                 best.RetentionTime = avgRt;
-                best.ProteinIds = new List<string>(allProteins);
-                best.GeneNames = new List<string>(allGenes);
+                best.ProteinIds = interner.InternToArray(allProteins);
+                best.GeneNames = interner.InternToArray(allGenes);
                 deduped.Add(best);
             }
 

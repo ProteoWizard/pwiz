@@ -45,7 +45,7 @@ namespace pwiz.Osprey.Scoring
         /// osprey/crates/osprey/src/pipeline.rs::count_topn_fragment_overlap.
         /// </summary>
         public static int CountTopNFragmentOverlap(
-            IList<LibraryFragment> fragsA, IList<LibraryFragment> fragsB,
+            IReadOnlyList<LibraryFragment> fragsA, IReadOnlyList<LibraryFragment> fragsB,
             int n, double tolerance, ToleranceUnit unit)
         {
             double[] topA = TopNFragmentMzs(fragsA, n);
@@ -65,7 +65,7 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>Get m/z values of top-N fragments by intensity (stable on ties).</summary>
-        private static double[] TopNFragmentMzs(IList<LibraryFragment> fragments, int n)
+        private static double[] TopNFragmentMzs(IReadOnlyList<LibraryFragment> fragments, int n)
         {
             if (fragments.Count <= n)
             {

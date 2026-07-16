@@ -163,6 +163,17 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Overload accepting a log callback so the string-interning summary
+        /// (emitted once per load) reaches the pipeline log. See the primary
+        /// <see cref="LoadCache(string,string,Action{string},out LibraryCacheStatus)"/>.
+        /// </summary>
+        public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
+            out LibraryCacheStatus status)
+        {
+            return LoadCache(path, expectedLibraryHash, null, out status);
+        }
+
+        /// <summary>
         /// Load library entries from a binary cache file, validating the source
         /// library's identity hash against <paramref name="expectedLibraryHash"/>.
         /// On bad magic or an unsupported version, returns null with
@@ -174,7 +185,7 @@ namespace pwiz.Osprey.IO
         /// entries and returns <see cref="LibraryCacheStatus.Loaded"/>.
         /// </summary>
         public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
-            out LibraryCacheStatus status)
+            Action<string> logInfo, out LibraryCacheStatus status)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(stream))
@@ -209,20 +220,28 @@ namespace pwiz.Osprey.IO
                 ulong count = r.ReadUInt64();
                 var entries = new List<LibraryEntry>((int)count);
 
+                // Intern the repeated strings (sequences, modification names,
+                // protein / gene accessions) as the interned arrays are filled,
+                // so no member is mutated after assignment. One pool per load
+                // call; only object identity changes, so output is unchanged.
+                var interner = new LibraryStringInterner();
+
                 for (ulong idx = 0; idx < count; idx++)
                 {
                     uint id = r.ReadUInt32();
-                    string sequence = ReadString(r);
-                    string modifiedSequence = ReadString(r);
+                    string sequence = interner.Intern(ReadString(r));
+                    string modifiedSequence = interner.Intern(ReadString(r));
                     byte charge = r.ReadByte();
                     double precursorMz = r.ReadDouble();
                     double retentionTime = r.ReadDouble();
                     bool rtCalibrated = r.ReadByte() != 0;
                     bool isDecoy = r.ReadByte() != 0;
 
-                    // Modifications
+                    // Modifications (share one empty array when none).
                     uint nMods = r.ReadUInt32();
-                    var modifications = new List<Modification>((int)nMods);
+                    var modifications = nMods == 0
+                        ? Array.Empty<Modification>()
+                        : new Modification[nMods];
                     for (uint mi = 0; mi < nMods; mi++)
                     {
                         int position = (int)r.ReadUInt32();
@@ -230,20 +249,22 @@ namespace pwiz.Osprey.IO
                         int? unimodId = hasUnimod ? (int?)r.ReadUInt32() : null;
                         double massDelta = r.ReadDouble();
                         bool hasName = r.ReadByte() != 0;
-                        string name = hasName ? ReadString(r) : null;
+                        string name = hasName ? interner.Intern(ReadString(r)) : null;
 
-                        modifications.Add(new Modification
+                        modifications[mi] = new Modification
                         {
                             Position = position,
                             UnimodId = unimodId,
                             MassDelta = massDelta,
                             Name = name
-                        });
+                        };
                     }
 
                     // Fragments
                     uint nFrags = r.ReadUInt32();
-                    var fragments = new List<LibraryFragment>((int)nFrags);
+                    var fragments = nFrags == 0
+                        ? Array.Empty<LibraryFragment>()
+                        : new LibraryFragment[nFrags];
                     for (uint fi = 0; fi < nFrags; fi++)
                     {
                         double mz = r.ReadDouble();
@@ -253,7 +274,7 @@ namespace pwiz.Osprey.IO
                         byte fragCharge = r.ReadByte();
                         var (lossCode, lossMass) = ReadNeutralLoss(r);
 
-                        fragments.Add(new LibraryFragment
+                        fragments[fi] = new LibraryFragment
                         {
                             Mz = mz,
                             RelativeIntensity = relativeIntensity,
@@ -265,20 +286,23 @@ namespace pwiz.Osprey.IO
                                 NeutralLoss = lossCode,
                                 CustomLossMass = lossMass
                             }
-                        });
+                        };
                     }
 
-                    // Protein IDs
+                    // Protein IDs / gene names (share one empty array when none).
                     uint nProteins = r.ReadUInt32();
-                    var proteinIds = new List<string>((int)nProteins);
+                    var proteinIds = nProteins == 0
+                        ? Array.Empty<string>()
+                        : new string[nProteins];
                     for (uint pi = 0; pi < nProteins; pi++)
-                        proteinIds.Add(ReadString(r));
+                        proteinIds[pi] = interner.Intern(ReadString(r));
 
-                    // Gene names
                     uint nGenes = r.ReadUInt32();
-                    var geneNames = new List<string>((int)nGenes);
+                    var geneNames = nGenes == 0
+                        ? Array.Empty<string>()
+                        : new string[nGenes];
                     for (uint gi = 0; gi < nGenes; gi++)
-                        geneNames.Add(ReadString(r));
+                        geneNames[gi] = interner.Intern(ReadString(r));
 
                     var entry = new LibraryEntry(id, sequence, modifiedSequence,
                         charge, precursorMz, retentionTime);
@@ -292,6 +316,7 @@ namespace pwiz.Osprey.IO
                     entries.Add(entry);
                 }
 
+                interner.LogSummary(logInfo);
                 status = LibraryCacheStatus.Loaded;
                 return entries;
             }
