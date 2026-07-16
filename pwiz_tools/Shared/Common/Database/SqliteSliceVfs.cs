@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using pwiz.Common.Database.FileSystems;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.Database
 {
@@ -41,9 +42,6 @@ namespace pwiz.Common.Database
 
         private static readonly object RegisterLock = new object();
         private static bool _registered;
-
-        [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr LoadLibrary(string fileName);
 
         /// <summary>
         /// Opens a SQLite connection to a database that may be an ordinary file or stored
@@ -97,7 +95,7 @@ namespace pwiz.Common.Database
                     return;
                 var dllPath = GetExtensionDllPath();
                 // Pin the DLL so it is never unloaded (the registered VFS struct/functions live in it).
-                if (LoadLibrary(dllPath) == IntPtr.Zero)
+                if (Kernel32.LoadLibrary(dllPath) == IntPtr.Zero)
                     throw new IOException(string.Format(
                         Resources.SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_, dllPath));
                 using (var connection = new SQLiteConnection(@"Data Source=:memory:;Version=3;"))

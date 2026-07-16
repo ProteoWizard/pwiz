@@ -17,18 +17,21 @@
  * limitations under the License.
  */
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Database.FileSystems;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Tests reading a background proteome (.protdb, a SQLite database) that is stored uncompressed
-    /// inside a shared .sky.zip, in place, without extracting it. The .protdb is read read-only
-    /// through the zip VFS, driven from NHibernate via the connection string.
+    /// Opens a document whose background proteome (.protdb, a SQLite database) and audit log (.skyl)
+    /// are stored inside the shared .sky.zip, in place, without extracting. The .protdb is read
+    /// read-only through the zip VFS, and the .skyl is read sequentially from the zip.
     /// </summary>
     [TestClass]
     public class OpenProteomeFromZipTest : AbstractFunctionalTest
@@ -54,20 +57,52 @@ namespace pwiz.SkylineTestFunctional
                 expectedProteinCount = proteomeDb.GetProteinCount();
             Assert.IsTrue(expectedProteinCount > 0);
 
-            // Share the document. The .protdb is a RandomAccessExtension, so it is stored uncompressed.
-            string zipPath = TestFilesDir.GetTestPath("Shared.sky.zip");
-            RunUI(() => SkylineWindow.ShareDocument(zipPath, new ShareType(true, null)));
-            AssertEx.FileExists(zipPath);
-            Assert.IsTrue(new RandomAccessZipFile(zipPath).AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions),
+            // Remove the spectral library so the shared .zip contains only files openable in place
+            // (the NIST .msp library would be kept as-is and force extraction). Audit logging stays on,
+            // so the share includes a .skyl, which must also be read in place.
+            RunUI(() => SkylineWindow.ModifyDocument("Remove libraries", d =>
+                d.ChangeSettings(d.Settings.ChangePeptideLibraries(lib =>
+                    lib.ChangeLibraries(new LibrarySpec[0], new Library[0])))));
+            WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.SaveDocument());
+
+            // Share the document. The .protdb is stored uncompressed.
+            string inPlaceZip = TestFilesDir.GetTestPath("InPlaceProteome.sky.zip");
+            RunUI(() => SkylineWindow.ShareDocument(inPlaceZip, new ShareType(true, null)));
+            AssertEx.FileExists(inPlaceZip);
+
+            var zip = new RandomAccessZipFile(inPlaceZip);
+            Assert.IsTrue(zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions),
+                "shared .zip has entries that would prevent opening in place: " +
+                string.Join(", ", zip.Entries.Select(e => e.FileName)));
+            Assert.IsTrue(zip.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions),
                 ".protdb was not stored uncompressed");
 
-            // Open the background proteome directly from inside the .zip, without extracting it, and
-            // verify it has the same proteins as the original on disk. A path into the .zip looks
-            // like an ordinary path with the .zip as a component (C:\Doc.sky.zip\Bacillus.protdb).
-            string protdbInZip = zipPath + Path.DirectorySeparatorChar + "Bacillus.protdb";
+            // Read the background proteome directly from inside the .zip, without extracting it, and
+            // verify it has the same proteins as the original on disk. This exercises reading a
+            // .protdb in place through NHibernate + the zip VFS.
+            string protdbInZip = inPlaceZip + Path.DirectorySeparatorChar + "Bacillus.protdb";
             Assert.IsTrue(new FilePath(protdbInZip).IsInZipFile);
             using (var proteomeDb = ProteomeDb.OpenProteomeDb(protdbInZip))
                 Assert.AreEqual(expectedProteinCount, proteomeDb.GetProteinCount());
+
+            // Clear the document, then open the shared file. Because the .zip has only files openable
+            // in place (incl. the .protdb stored uncompressed and the .skyl read sequentially), it
+            // opens in place rather than extracting. Reading the .skyl in place is required to get
+            // here - a failure would have forced extraction, clearing SharedZipFilePath.
+            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.OpenSharedFile(inPlaceZip));
+            var inPlaceDoc = WaitForDocumentLoaded();
+
+            Assert.AreEqual(inPlaceZip, SkylineWindow.SharedZipFilePath);
+            Assert.IsTrue(new FilePath(SkylineWindow.DocumentFilePath).IsInZipFile,
+                "expected the document to be opened from inside the .zip: " + SkylineWindow.DocumentFilePath);
+
+            // The background proteome loaded (Skyline may resolve it to a local copy if one is
+            // registered, which is fine; the in-place read path is covered directly above).
+            var inPlaceProteome = inPlaceDoc.Settings.PeptideSettings.BackgroundProteome;
+            Assert.IsFalse(inPlaceProteome.IsNone);
+            Assert.IsFalse(inPlaceProteome.DatabaseInvalid, "background proteome failed to load");
         }
     }
 }

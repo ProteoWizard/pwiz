@@ -55,6 +55,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
@@ -2222,7 +2223,8 @@ namespace pwiz.Skyline.Model
             var auditLog = new AuditLogList();
             var auditLogPath = GetAuditLogPath(documentPath);
             bool needNewGuid = false;
-            if (File.Exists(auditLogPath))
+            // The .skyl may be stored inside an in-place .sky.zip; FilePath finds it in place.
+            if (new FilePath(auditLogPath).Exists())
             {
                 if (AuditLogList.ReadFromFile(auditLogPath, out var auditLogList))
                 {

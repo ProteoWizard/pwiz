@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -298,7 +299,9 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             try
             {
-                using (var reader = new XmlTextReader(fileName))
+                // The .skyl may be stored inside an in-place .sky.zip; FilePath reads it in place.
+                using (var stream = new FilePath(fileName).OpenRead())
+                using (var reader = new XmlTextReader(stream))
                 {
                     return ReadFromXmlTextReader(reader, out result);
                 }

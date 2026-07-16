@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             var inPlaceDoc = WaitForDocumentLoaded();
 
             // The document was opened directly from the .zip: its path is inside the .zip, and
-            // SharedZipFilePath records the container so later edits prompt to extract first.
+            // SharedZipFilePath records the container so later edits extract the files first.
             Assert.AreEqual(inPlaceZip, SkylineWindow.SharedZipFilePath);
             Assert.IsTrue(new FilePath(SkylineWindow.DocumentFilePath).IsInZipFile,
                 "expected the document to be opened from inside the .zip: " + SkylineWindow.DocumentFilePath);
@@ -88,9 +88,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected.ChromatogramPointCount, actual.ChromatogramPointCount,
                 "chromatogram points read from the .skyd differ");
 
-            // Saving a document opened in place cannot write back into the .zip; it must prompt to
-            // extract everything to a folder first, then reopen from there.
-            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.SaveDocument(), dlg => dlg.ClickOk());
+            // Saving a document opened in place cannot write back into the .zip; everything is
+            // extracted to a folder and reopened from there, and that document is what gets saved.
+            RunUI(() => SkylineWindow.SaveDocument());
             var extractedDoc = WaitForDocumentLoaded();
             Assert.IsNull(SkylineWindow.SharedZipFilePath, "the extracted document should no longer be .zip-backed");
             Assert.IsFalse(new FilePath(SkylineWindow.DocumentFilePath).IsInZipFile,

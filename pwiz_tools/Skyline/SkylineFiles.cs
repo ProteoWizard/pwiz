@@ -234,7 +234,8 @@ namespace pwiz.Skyline
             {
                 // Anything unexpected inspecting/opening the .zip in place -> just extract.
             }
-            return ExtractAndOpenSharedFile(zipPath, parentWindow);
+            string documentPath = ExtractSharedFile(zipPath, parentWindow);
+            return documentPath != null && OpenFile(documentPath, parentWindow);
         }
 
         /// <summary>
@@ -259,7 +260,10 @@ namespace pwiz.Skyline
             var skyEntry = zip.Entries.FirstOrDefault(e =>
                 string.Equals(Path.GetExtension(e.FileName), SrmDocument.EXT, StringComparison.OrdinalIgnoreCase));
             if (skyEntry == null)
-                return ExtractAndOpenSharedFile(zipPath, parentWindow);
+            {
+                string documentPath = ExtractSharedFile(zipPath, parentWindow);
+                return documentPath != null && OpenFile(documentPath, parentWindow);
+            }
 
             // A path into the .zip looks like an ordinary path with the .zip as a component,
             // e.g. C:\Doc.sky.zip\Doc.sky; FilePath handles reading such paths in place.
@@ -271,9 +275,10 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Extracts a .sky.zip to a new folder next to it and opens the extracted document.
+        /// Extracts a .sky.zip to a new folder next to it, and returns the path of the extracted
+        /// Skyline document, or null if the files could not be extracted.
         /// </summary>
-        private bool ExtractAndOpenSharedFile(string zipPath, FormEx parentWindow = null)
+        private string ExtractSharedFile(string zipPath, FormEx parentWindow = null)
         {
             try
             {
@@ -284,20 +289,20 @@ namespace pwiz.Skyline
                     longWaitDlg.Text = Resources.SkylineWindow_OpenSharedFile_Extracting_Files;
                     longWaitDlg.PerformWork(parentWindow ?? this, 1000, sharing.Extract);
                     if (longWaitDlg.IsCanceled)
-                        return false;
+                        return null;
                 }
 
                 // Remember the directory containing the newly extracted file
                 // as the active directory for the next open command.
                 Settings.Default.ActiveDirectory = Path.GetDirectoryName(sharing.DocumentPath);
 
-                return OpenFile(sharing.DocumentPath, parentWindow);
+                return sharing.DocumentPath;
             }
             catch (ZipException zipException)
             {
                 MessageDlg.ShowWithException(parentWindow ?? this, string.Format(SkylineResources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
                                                     zipPath), zipException);
-                return false;
+                return null;
             }
             catch (Exception e)
             {
@@ -305,7 +310,7 @@ namespace pwiz.Skyline
                         Resources.SkylineWindow_OpenSharedFile_Failure_extracting_Skyline_document_from_zip_file__0__,
                         zipPath), e.Message);
                 MessageDlg.ShowWithException(parentWindow ?? this, message, e);
-                return false;
+                return null;
             }
         }
 
@@ -885,15 +890,19 @@ namespace pwiz.Skyline
             string pathCache = ChromatogramCache.FinalPathForName(path, null);
             if (!document.Settings.HasResults)
             {
-                try
+                // A cache file inside an in-place .sky.zip cannot (and need not) be deleted.
+                if (!new FilePath(pathCache).IsInZipFile)
                 {
-                    // On open, make sure a document with no results does not have a
-                    // data cache file, since one may have been left behind on a Save As.
-                    FileEx.SafeDelete(pathCache);
-                }
-                catch (Exception e)
-                {
-                    MessageDlg.ShowException(parent ?? this, e);
+                    try
+                    {
+                        // On open, make sure a document with no results does not have a
+                        // data cache file, since one may have been left behind on a Save As.
+                        FileEx.SafeDelete(pathCache);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageDlg.ShowException(parent ?? this, e);
+                    }
                 }
             }
             // The cache (.skyd) may be inside an in-place .sky.zip, so check via FilePath.
@@ -1162,10 +1171,11 @@ namespace pwiz.Skyline
 
         public bool SaveDocument()
         {
-            // A document opened directly (in place) from a .sky.zip has no .sky on disk to save back
-            // to; prompt to extract everything to a folder first, then reopen from there.
-            if (SharedZipFilePath != null)
-                return CheckDocumentExists(null);
+            // A document opened directly (in place) from a .sky.zip has no .sky on disk to save
+            // back to; extract everything to a folder and reopen from there first, and then save
+            // the document that was reopened from that folder.
+            if (SharedZipFilePath != null && !CheckDocumentExists(null))
+                return false;
 
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
@@ -3681,19 +3691,23 @@ namespace pwiz.Skyline
 
         private bool CheckDocumentExists(String errorMsg)
         {
-            // A document opened directly from a .zip has no files on disk to modify. Offer to
-            // extract everything to a folder first, then reopen from there.
+            // A document opened directly from a .zip has no files on disk to modify. Extract
+            // everything to a folder, and then point the document that is already open at the
+            // extracted files. The document itself is left alone, so that any changes made to it
+            // since it was opened are still there to be saved.
             if (SharedZipFilePath != null)
             {
-                var message = TextUtil.LineSeparate(
-                    string.Format(SkylineResources.SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__, SharedZipFilePath),
-                    SkylineResources.SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_);
-                if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                string pathInZip = DocumentFilePath;
+                string documentPath = ExtractSharedFile(SharedZipFilePath, this);
+                if (documentPath == null)
                     return false;
-                // Extract to a new folder and reopen from there (this clears SharedZipFilePath).
-                // The operation is aborted; the user re-initiates it now that the files are on disk.
-                ExtractAndOpenSharedFile(SharedZipFilePath, this);
-                return false;
+
+                DocumentFilePath = documentPath;
+                SharedZipFilePath = null;
+                SetActiveFile(documentPath);
+                // The path inside the .zip is no longer worth offering to reopen now that its
+                // files have been extracted.
+                Settings.Default.MruList.Remove(pathInZip);
             }
 
             if (string.IsNullOrEmpty(DocumentFilePath))

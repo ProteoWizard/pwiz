@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using System.Xml;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -305,14 +306,16 @@ namespace pwiz.Skyline
             {
                 bool deserialized = false;
                 string layoutFile = GetViewFile(DocumentFilePath);
-                if (docIdChanged && File.Exists(layoutFile))
+                // The .sky.view may be stored inside an in-place .sky.zip; FilePath reads it in place.
+                var layoutFilePath = new FilePath(layoutFile);
+                if (docIdChanged && layoutFilePath.Exists())
                 {
                     layoutLock.EnsureLocked();
                     try
                     {
-                        using (var layoutReader = new StreamReader(layoutFile))
+                        using (var layoutStream = layoutFilePath.OpenRead())
                         {
-                            LoadLayout(layoutReader.BaseStream);
+                            LoadLayout(layoutStream);
                         }
                         deserialized = true;
                     }

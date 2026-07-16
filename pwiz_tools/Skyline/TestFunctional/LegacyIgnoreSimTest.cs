@@ -20,6 +20,7 @@
 using System.Linq;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.SkylineTestUtil;
@@ -84,7 +85,11 @@ namespace pwiz.SkylineTestFunctional
         private XmlElement LoadFullScanElement(string filePath)
         {
             var xDoc = new XmlDocument();
-            xDoc.Load(filePath);
+            // The shared document is opened in place, so its .sky is inside of the .sky.zip
+            using (var stream = new FilePath(filePath).OpenRead())
+            {
+                xDoc.Load(stream);
+            }
             return GetFullScanElement(xDoc);
         }
     }

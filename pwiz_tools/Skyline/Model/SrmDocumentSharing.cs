@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
         /// as we can get a stream and read them SEQUENTIALLY (so they may be compressed). This
         /// excludes the <see cref="RandomAccessExtensions"/>.
         /// </summary>
-        public static readonly string[] SequentialAccessExtensions = { @".sky", @".sky.view", @".sky.log" };
+        public static readonly string[] SequentialAccessExtensions = { @".sky", @".sky.view", @".skyl" };
 
         /// <summary>
         /// True if a .zip containing only entries with these extensions can be opened in place
