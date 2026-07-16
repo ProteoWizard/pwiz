@@ -53,13 +53,40 @@ namespace pwiz.Osprey.IO
     {
         private readonly string _cachePath;
         private readonly Dictionary<int, List<long>> _windowKeyToOffsets;
+        private readonly Dictionary<int, IsolationWindow> _windowKeyToFirstIso;
+        private readonly List<int> _windowKeysInFileOrder;
 
         private SpectraWindowIndex(string cachePath,
-            Dictionary<int, List<long>> windowKeyToOffsets, double[] allMs2Rts)
+            Dictionary<int, List<long>> windowKeyToOffsets, double[] allMs2Rts,
+            Dictionary<int, IsolationWindow> windowKeyToFirstIso, List<int> windowKeysInFileOrder)
         {
             _cachePath = cachePath;
             _windowKeyToOffsets = windowKeyToOffsets;
+            _windowKeyToFirstIso = windowKeyToFirstIso;
+            _windowKeysInFileOrder = windowKeysInFileOrder;
             AllMs2Rts = allMs2Rts;
+        }
+
+        /// <summary>
+        /// The window keys in first-encounter (file) order -- the same order the resident
+        /// calibration grouping (<c>spectraByWindowKey</c>) inserts them, so a linear-scan
+        /// window fallback enumerates them identically. Used only by the streaming
+        /// calibration resolution pre-pass.
+        /// </summary>
+        public IReadOnlyList<int> WindowKeysInFileOrder { get { return _windowKeysInFileOrder; } }
+
+        /// <summary>
+        /// The isolation window of the FIRST spectrum recorded for a key (file order) --
+        /// the same one the resident grouping exposes as <c>windowSpectra[0].IsolationWindow</c>
+        /// for its <c>.Contains(precursorMz)</c> key-collision and linear-scan checks.
+        /// Reconstructed byte-identically to <see cref="SpectraCache.ReadMs2Record"/>
+        /// (<c>new IsolationWindow(isoCenter, isoLower, isoUpper)</c>), so streaming
+        /// calibration resolves each entry's window exactly as the resident path does,
+        /// WITHOUT loading any peaks. Returns false for an absent key.
+        /// </summary>
+        public bool TryGetWindowIsolation(int windowKey, out IsolationWindow isolationWindow)
+        {
+            return _windowKeyToFirstIso.TryGetValue(windowKey, out isolationWindow);
         }
 
         /// <summary>
@@ -95,6 +122,8 @@ namespace pwiz.Osprey.IO
                     return null;
 
                 var windowKeyToOffsets = new Dictionary<int, List<long>>();
+                var windowKeyToFirstIso = new Dictionary<int, IsolationWindow>();
+                var windowKeysInFileOrder = new List<int>();
                 var allMs2Rts = new double[nMs2];
 
                 for (uint i = 0; i < nMs2; i++)
@@ -105,8 +134,8 @@ namespace pwiz.Osprey.IO
                     double rt = r.ReadDouble();
                     r.ReadDouble();                     // precursor_mz (unused here)
                     double isoCenter = r.ReadDouble();
-                    r.ReadDouble();                     // iso_lower (unused here)
-                    r.ReadDouble();                     // iso_upper (unused here)
+                    double isoLower = r.ReadDouble();
+                    double isoUpper = r.ReadDouble();
                     uint nPeaks = r.ReadUInt32();
                     // Skip the variable-length peak blob (f64 m/z + f32 intensity
                     // per peak) without reading it -- the whole point of the pass.
@@ -117,6 +146,11 @@ namespace pwiz.Osprey.IO
                     {
                         offsets = new List<long>();
                         windowKeyToOffsets[key] = offsets;
+                        // First record for this key (file order) -- its isolation window
+                        // is what the resident grouping exposes as windowSpectra[0].
+                        // Built exactly as SpectraCache.ReadMs2Record does.
+                        windowKeyToFirstIso[key] = new IsolationWindow(isoCenter, isoLower, isoUpper);
+                        windowKeysInFileOrder.Add(key);
                     }
                     offsets.Add(recordOffset);
                     allMs2Rts[i] = rt;
@@ -125,7 +159,8 @@ namespace pwiz.Osprey.IO
                 // MS1 records are deliberately not indexed: MS1 access is a global
                 // RT search that stays fully resident (small in DIA), so streaming
                 // leaves it untouched.
-                return new SpectraWindowIndex(cachePath, windowKeyToOffsets, allMs2Rts);
+                return new SpectraWindowIndex(cachePath, windowKeyToOffsets, allMs2Rts,
+                    windowKeyToFirstIso, windowKeysInFileOrder);
             }
         }
 

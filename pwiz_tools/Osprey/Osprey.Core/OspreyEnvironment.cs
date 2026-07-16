@@ -95,6 +95,18 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly int CalSampleSizeOverride = ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
 
+        /// <summary>
+        /// OSPREY_STREAM_CALIBRATION=1: stream the calibration phase's MS2 spectra per
+        /// isolation window from the on-disk cache (via SpectraWindowIndex), the same
+        /// rearchitecture scoring already uses, instead of holding the full resident MS2
+        /// list. This releases the ~6 GB resident MS2 before the calibration apex -- the
+        /// per-file memory high-water mark. Default OFF keeps the resident calibration path
+        /// (byte-identical golden); the streaming path is intended to produce identical
+        /// calibration output (each window loaded, RT-sorted, and scored exactly as the
+        /// resident grouping does) and is gated while that equivalence is being proven.
+        /// </summary>
+        public static readonly bool StreamCalibration = IsSetAndNotZero(@"OSPREY_STREAM_CALIBRATION");
+
         // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
         // was retired in favor of the --task PerFileScoring CLI flag. See the HPC
         // scoring split work in AnalysisPipeline.Run. ExitAfterCalibration

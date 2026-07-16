@@ -1656,13 +1656,37 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
 
+            // When streaming calibration is enabled, index the on-disk MS2 cache up front so
+            // BOTH calibration (Stage 3) and scoring (Stage 4) stream each isolation window in
+            // and out, and the full ~6 GB resident MS2 is released BEFORE the calibration apex
+            // -- the per-file memory high-water mark. Falls back to the resident path when the
+            // cache cannot be indexed (a save failure or a fingerprint change); calibration
+            // output is intended to be identical either way (the streaming scorer loads,
+            // RT-sorts, and scores each window exactly as the resident grouping does).
+            SpectraWindowIndex calWindowIndex = null;
+            if (OspreyEnvironment.StreamCalibration)
+            {
+                calWindowIndex = SpectraWindowIndex.BuildFromCache(
+                    SpectraCache.GetCachePath(inputFile), inputFile);
+                if (calWindowIndex != null && calWindowIndex.Ms2Count == spectra.Count)
+                {
+                    var releaseProbe = ProfilerHooks.TrackResidentSpectra(spectra);
+                    spectra = null; // release the resident MS2 before calibration streams it back
+                    ProfilerHooks.ReportResidentSpectraReleased(releaseProbe, ctx.LogInfo);
+                }
+                else
+                {
+                    calWindowIndex = null; // resident calibration + scoring fallback
+                }
+            }
+
             // Resolve the per-file calibration (load a cached/Rust JSON or
             // compute via Calibrator) and persist the calibration JSON.
             // Segment 2/4 (calibrate): no inner reporter today, so this slice
             // carries the file forward as a step when scoring begins.
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
-                inputFile, fileName, fullLibrary, spectra, ms1Spectra, isolationWindows,
+                inputFile, fileName, fullLibrary, spectra, calWindowIndex, ms1Spectra, isolationWindows,
                 context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
                 out ModelDiagnosticsData.CalFileRow calDiagnostics, ctx);
 
@@ -1732,24 +1756,28 @@ namespace pwiz.Osprey.Tasks
             // Build the window-spectra source for scoring. Calibration (Stage 3) is
             // done, so the whole resident MS2 list is no longer needed at once:
             // index the on-disk cache and STREAM each isolation window's peaks in and
-            // out during scoring, releasing the ~6 GB resident MS2 first. The cache
-            // is normally present -- LoadSpectra either loaded it or wrote it after
-            // parsing mzML. Fall back to the resident provider (which materializes the
-            // calibrated copy, as before) only when the cache cannot be indexed (a
-            // save failure or a fingerprint change); output is identical either way.
+            // out during scoring, releasing the ~6 GB resident MS2 first. When streaming
+            // calibration already ran, reuse its index (the resident MS2 is already
+            // released). The cache is normally present -- LoadSpectra either loaded it or
+            // wrote it after parsing mzML. Fall back to the resident provider (which
+            // materializes the calibrated copy, as before) only when the cache cannot be
+            // indexed (a save failure or a fingerprint change); output is identical either way.
             IWindowSpectraProvider spectraProvider;
-            var windowIndex = SpectraWindowIndex.BuildFromCache(
+            var windowIndex = calWindowIndex ?? SpectraWindowIndex.BuildFromCache(
                 SpectraCache.GetCachePath(inputFile), inputFile);
-            if (windowIndex != null && windowIndex.Ms2Count == spectra.Count)
+            if (windowIndex != null && (spectra == null || windowIndex.Ms2Count == spectra.Count))
             {
-                // Prove-from-inside (OSPREY_TRACK_RELEASE=1, byte-inert otherwise): capture
-                // WeakReferences to the resident MS2 before dropping it, then confirm below --
-                // after null + a forced GC -- that no unanticipated root still pins it.
-                var releaseProbe = ProfilerHooks.TrackResidentSpectra(spectra);
-                // Release the resident MS2 before scoring reads it back per window.
-                spectra = null;
+                if (spectra != null)
+                {
+                    // Prove-from-inside (OSPREY_TRACK_RELEASE=1, byte-inert otherwise): capture
+                    // WeakReferences to the resident MS2 before dropping it, then confirm below --
+                    // after null + a forced GC -- that no unanticipated root still pins it.
+                    var releaseProbe = ProfilerHooks.TrackResidentSpectra(spectra);
+                    // Release the resident MS2 before scoring reads it back per window.
+                    spectra = null;
+                    ProfilerHooks.ReportResidentSpectraReleased(releaseProbe, ctx.LogInfo);
+                }
                 spectraProvider = new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
-                ProfilerHooks.ReportResidentSpectraReleased(releaseProbe, ctx.LogInfo);
             }
             else
             {
@@ -1911,7 +1939,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private RTCalibration ResolveCalibration(
             string inputFile, string fileName,
-            List<LibraryEntry> fullLibrary, List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            List<LibraryEntry> fullLibrary, List<Spectrum> spectra, SpectraWindowIndex windowIndex,
+            List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             ScoringContext context, OspreyConfig config,
             out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
@@ -1986,7 +2015,7 @@ namespace pwiz.Osprey.Tasks
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = new Calibrator(ctx).RunCalibration(
-                    fullLibrary, spectra, ms1Spectra, context,
+                    fullLibrary, spectra, windowIndex, ms1Spectra, context,
                     out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata,
                     out calInitialRtTolerance, out calDiagnostics);
                 swCal.Stop();
