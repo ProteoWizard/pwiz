@@ -484,15 +484,16 @@ namespace pwiz.Osprey.Tasks
                         survivorScore[(kvp.Key, e.EntryId)] =
                             ScoreWithFrozenModel(e.Features, standardizer, avgWeights, avgBias, scratch);
 
-            // 2. Assemble the full 1st-pass population from the persisted scalar sidecars,
-            //    overwriting the reconciled survivors' scores with their frozen-model score.
-            var scoresL = new List<double>();
-            var labelsL = new List<bool>();
-            var entryIdsL = new List<uint>();
-            var fileNamesL = new List<string>();
-            var survivorGlobalIdx = new Dictionary<(string, uint), int>(survivorScore.Count);
-            const uint DECOY_BIT = 0x80000000u;
-            int nOverwritten = 0;
+            // 2. Reported survivors to emit (every post-reconciliation entry) + per-file scalar
+            //    sidecar paths. Validate every sidecar up front so we fail fast (and fall back to
+            //    the retrain) before streaming any file.
+            var survivors = new List<(string, uint)>();
+            foreach (var kvp in perFileEntries)
+                foreach (var e in kvp.Value)
+                    survivors.Add((kvp.Key, e.EntryId));
+
+            var fileKeys = new List<string>(perFileEntries.Count);
+            var sidecarByKey = new Dictionary<string, string>(perFileEntries.Count, StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
                 if (!perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath))
@@ -509,51 +510,47 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning("transfer-compete: 1st-pass scalar sidecar not found: " + sidecarPath);
                     return false;
                 }
-                FdrScoresSidecar.ReadScalars(sidecarPath, out uint[] fileEntryIds, out double[] fileScores);
-                string fileName = kvp.Key;
-                for (int i = 0; i < fileEntryIds.Length; i++)
-                {
-                    uint eid = fileEntryIds[i];
-                    double score = fileScores[i];
-                    var key = (fileName, eid);
-                    if (survivorScore.TryGetValue(key, out double frozenScore))
-                    {
-                        score = frozenScore;
-                        survivorGlobalIdx[key] = scoresL.Count;
-                        nOverwritten++;
-                    }
-                    scoresL.Add(score);
-                    labelsL.Add((eid & DECOY_BIT) != 0u);
-                    entryIdsL.Add(eid);
-                    fileNamesL.Add(fileName);
-                }
+                fileKeys.Add(kvp.Key);
+                sidecarByKey[kvp.Key] = sidecarPath;
             }
+
             ctx.LogInfo(string.Format(
                 "OSPREY_PASS2_QVALUE=transfer-compete: recomputing q/PEP over the FULL 1st-pass " +
-                "population ({0} observations across {1} files); frozen-model scores swapped in for " +
-                "{2} reconciled survivors -- no retrain, full-population null.",
-                scoresL.Count, perFileEntries.Count, nOverwritten));
+                "population by streaming {0} file(s), frozen-model scores swapped in for {1} " +
+                "reconciled survivors -- no retrain, full-population null, one file resident at a time.",
+                fileKeys.Count, survivorScore.Count));
 
-            // 3. Full-population competition + run/experiment precursor q + PEP (scalars, no features).
-            PercolatorFdr.ComputeFullPopulationPrecursorFdr(
-                scoresL.ToArray(), labelsL.ToArray(), entryIdsL.ToArray(), fileNamesL.ToArray(),
-                out double[] runQ, out double[] expQ, out double[] pep);
+            // 3. Streamed full-population competition + run/experiment precursor q + PEP. Only one
+            //    file's scalars are resident at a time; the cross-file state is bounded by the
+            //    number of distinct precursors, not the total observation count -- so peak memory
+            //    is flat in file count (the 32/64 GB many-file target).
+            (uint[] entryIds, double[] scores) ReadFile(string fileKey)
+            {
+                FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                return (eids, scs);
+            }
 
-            // 4. Map the full-population q/PEP back onto the reported survivor entries.
+            PercolatorFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                fileKeys, ReadFile, survivorScore, survivors,
+                out var runQ, out var expQ, out var pep);
+
+            // 4. Map the recomputed q/PEP back onto the reported survivor entries.
             int nMapped = 0;
             foreach (var kvp in perFileEntries)
                 foreach (var e in kvp.Value)
-                    if (survivorGlobalIdx.TryGetValue((kvp.Key, e.EntryId), out int gi))
-                    {
-                        e.RunPrecursorQvalue = runQ[gi];
-                        e.ExperimentPrecursorQvalue = expQ[gi];
-                        e.Pep = pep[gi];
-                        // Precursor-level path: keep peptide q in step with precursor q for the
-                        // reported set (peptide-level FDR is not the transfer-compete target).
-                        e.RunPeptideQvalue = runQ[gi];
-                        e.ExperimentPeptideQvalue = expQ[gi];
-                        nMapped++;
-                    }
+                {
+                    var key = (kvp.Key, e.EntryId);
+                    if (!runQ.TryGetValue(key, out double rq))
+                        continue;
+                    e.RunPrecursorQvalue = rq;
+                    e.ExperimentPrecursorQvalue = expQ[key];
+                    e.Pep = pep[key];
+                    // Precursor-level path: keep peptide q in step with precursor q for the
+                    // reported set (peptide-level FDR is not the transfer-compete target).
+                    e.RunPeptideQvalue = rq;
+                    e.ExperimentPeptideQvalue = expQ[key];
+                    nMapped++;
+                }
             ctx.LogInfo(string.Format(
                 "transfer-compete: mapped full-population q onto {0} reported survivors in {1:F1}s.",
                 nMapped, sw.Elapsed.TotalSeconds));

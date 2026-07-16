@@ -1697,6 +1697,181 @@ namespace pwiz.Osprey.FDR
                     experimentPrecursorQ[i] = bestRunQ[entryIds[i]];
         }
 
+        /// <summary>
+        /// Bounded-memory streaming form of <see cref="ComputeFullPopulationPrecursorFdr"/> for
+        /// OSPREY_PASS2_QVALUE=transfer-compete. Streams one file's 1st-pass population at a time
+        /// (run-level competition + conservative q per file) while accumulating only the
+        /// per-base_id best target/decoy observation for the experiment-level competition.
+        /// Resident footprint is therefore O(distinct precursors + largest single file +
+        /// survivors) -- flat in file count -- where the resident overload is O(total
+        /// observations). Emits run/experiment precursor q and PEP identical to the resident
+        /// method for the reported survivors (verified byte-for-byte on the 3-file Stellar
+        /// entrapment set). File reading is injected so this assembly needs no IO dependency.
+        /// </summary>
+        /// <param name="fileKeys">Stable per-file keys to stream, in any order.</param>
+        /// <param name="readFileScalars">Reads one file's full population as (entryIds, scores);
+        ///   invoked once per file, arrays released before the next file is read.</param>
+        /// <param name="survivorScoreOverride">Frozen-model score to substitute for a reconciled
+        ///   survivor observation, keyed (fileKey, entryId). Observations absent here keep their
+        ///   stored 1st-pass score.</param>
+        /// <param name="survivors">Every reported survivor (fileKey, entryId) to emit q/PEP for.</param>
+        public static void ComputeFullPopulationPrecursorFdrStreaming(
+            IReadOnlyList<string> fileKeys,
+            Func<string, (uint[] entryIds, double[] scores)> readFileScalars,
+            IReadOnlyDictionary<(string, uint), double> survivorScoreOverride,
+            IReadOnlyCollection<(string, uint)> survivors,
+            out Dictionary<(string, uint), double> survivorRunQ,
+            out Dictionary<(string, uint), double> survivorExpQ,
+            out Dictionary<(string, uint), double> survivorPep)
+        {
+            var survivorSet = new HashSet<(string, uint)>(survivors);
+            var survivorEntryIds = new HashSet<uint>();
+            foreach (var s in survivorSet) survivorEntryIds.Add(s.Item2);
+
+            survivorRunQ = new Dictionary<(string, uint), double>(survivorSet.Count);
+            survivorExpQ = new Dictionary<(string, uint), double>(survivorSet.Count);
+            survivorPep = new Dictionary<(string, uint), double>(survivorSet.Count);
+
+            // Experiment-level per-base_id best target/decoy observation (score + locator),
+            // accumulated across every file. Bounded by the number of distinct precursors.
+            var bestTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+
+            // Best (min) run q per SURVIVOR entry_id across the files it won in -- the
+            // best-of-runs monotonicity floor for the experiment q (only survivors are emitted).
+            var minRunQ = new Dictionary<uint, double>(survivorEntryIds.Count);
+
+            for (int fileIdx = 0; fileIdx < fileKeys.Count; fileIdx++)
+            {
+                string fileKey = fileKeys[fileIdx];
+                var (entryIds, scores) = readFileScalars(fileKey);
+                int m = entryIds.Length;
+                var labels = new bool[m];
+                for (int i = 0; i < m; i++)
+                {
+                    uint eid = entryIds[i];
+                    labels[i] = (eid & ~BASE_ID_MASK) != 0u; // decoy high bit set
+                    if (survivorScoreOverride.TryGetValue((fileKey, eid), out double ov))
+                        scores[i] = ov; // swap in the reconciled survivor's frozen-model score
+                }
+
+                // Run-level: compete within this file, conservative q on the winners.
+                var allIdx = new int[m];
+                for (int i = 0; i < m; i++) allIdx[i] = i;
+                CompeteFromIndices(scores, labels, entryIds, allIdx,
+                    out int[] wi, out double[] ws, out bool[] wd);
+                var q = new double[wi.Length];
+                ComputeConservativeQvalues(ws, wd, q);
+                for (int rank = 0; rank < wi.Length; rank++)
+                {
+                    uint eid = entryIds[wi[rank]];
+                    if (!survivorEntryIds.Contains(eid)) continue;
+                    double qv = q[rank];
+                    var key = (fileKey, eid);
+                    if (survivorSet.Contains(key)) survivorRunQ[key] = qv;
+                    if (!minRunQ.TryGetValue(eid, out double cur) || qv < cur) minRunQ[eid] = qv;
+                }
+
+                // Experiment-level: fold every observation into the per-base_id bests.
+                for (int i = 0; i < m; i++)
+                {
+                    uint eid = entryIds[i];
+                    uint bid = eid & BASE_ID_MASK;
+                    double s = scores[i];
+                    if (labels[i])
+                    {
+                        if (!bestDecoy.TryGetValue(bid, out var cur) || s > cur.score)
+                            bestDecoy[bid] = (s, fileIdx, eid);
+                    }
+                    else
+                    {
+                        if (!bestTarget.TryGetValue(bid, out var cur) || s > cur.score)
+                            bestTarget[bid] = (s, fileIdx, eid);
+                    }
+                }
+                // entryIds/scores/labels/allIdx released here before the next file is read.
+            }
+
+            // Experiment competition: one winner per base_id, conservative q, PEP fit over
+            // exactly the winner set the resident method fits.
+            var baseIds = new HashSet<uint>(bestTarget.Keys);
+            baseIds.UnionWith(bestDecoy.Keys);
+            int w = baseIds.Count;
+            var expScore = new double[w];
+            var expIsDecoy = new bool[w];
+            var expBaseId = new uint[w];
+            var winnerLoc = new Dictionary<uint, (int fileIdx, uint entryId, double score)>(w);
+            int wi2 = 0;
+            foreach (uint bid in baseIds)
+            {
+                bool hasT = bestTarget.TryGetValue(bid, out var t);
+                bool hasD = bestDecoy.TryGetValue(bid, out var d);
+                // CompeteFromIndices: target wins strictly (tScore > dScore); ties go to the decoy.
+                bool decoyWins = hasT && hasD ? !(t.score > d.score) : !hasT;
+                var win = decoyWins ? d : t;
+                expScore[wi2] = win.score; expIsDecoy[wi2] = decoyWins; expBaseId[wi2] = bid;
+                winnerLoc[bid] = (win.fileIdx, win.entryId, win.score);
+                wi2++;
+            }
+
+            // Sort winners by score desc, base_id asc (unique base_id => total order).
+            var perm = new int[w];
+            for (int i = 0; i < w; i++) perm[i] = i;
+            Array.Sort(perm, (a, b) => // Array.Sort OK: unique baseId tie-break makes comparator total
+            {
+                int cmp = expScore[b].CompareTo(expScore[a]);
+                return cmp != 0 ? cmp : expBaseId[a].CompareTo(expBaseId[b]);
+            });
+            var sortedScore = new double[w];
+            var sortedDecoy = new bool[w];
+            var sortedBaseId = new uint[w];
+            for (int i = 0; i < w; i++)
+            {
+                sortedScore[i] = expScore[perm[i]];
+                sortedDecoy[i] = expIsDecoy[perm[i]];
+                sortedBaseId[i] = expBaseId[perm[i]];
+            }
+            var qExp = new double[w];
+            ComputeConservativeQvalues(sortedScore, sortedDecoy, qExp);
+            var baseIdExpQ = new Dictionary<uint, double>(w);
+            for (int i = 0; i < w; i++) baseIdExpQ[sortedBaseId[i]] = qExp[i];
+
+            var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
+
+            bool multiFile = fileKeys.Count > 1;
+            foreach (var key in survivorSet)
+            {
+                string fileKey = key.Item1;
+                uint eid = key.Item2;
+                uint bid = eid & BASE_ID_MASK;
+
+                if (!survivorRunQ.ContainsKey(key)) survivorRunQ[key] = 1.0;
+
+                if (multiFile)
+                {
+                    // Experiment q = base_id winner q, floored up to this precursor's best run q.
+                    // An entry_id that won no within-file competition has best run q = 1.0 (every
+                    // observation stayed at the q=1.0 default), matching the resident bestRunQ.
+                    double eq = baseIdExpQ.TryGetValue(bid, out double bq) ? bq : 1.0;
+                    double floorQ = minRunQ.TryGetValue(eid, out double mrq) ? mrq : 1.0;
+                    if (eq < floorQ) eq = floorQ;
+                    survivorExpQ[key] = eq;
+                }
+                else
+                {
+                    // Single file: experiment q == run q (resident short-circuit).
+                    survivorExpQ[key] = survivorRunQ[key];
+                }
+
+                // PEP is real only on the single experiment-winner observation of each base_id.
+                double pep = 1.0;
+                if (winnerLoc.TryGetValue(bid, out var loc) &&
+                    loc.entryId == eid && fileKeys[loc.fileIdx] == fileKey)
+                    pep = pepEstimator.PosteriorError(loc.score);
+                survivorPep[key] = pep;
+            }
+        }
+
         private static void CompeteAll(
             double[] scores,
             bool[] labels,
