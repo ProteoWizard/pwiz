@@ -2628,10 +2628,9 @@ namespace pwiz.Skyline.FileUI
         {
             string brukerTemplate = null;
             BrukerTimsTofMethodExporter.Metrics brukerMetrics = null;
-            // The Bruker timsTOF scheduling-metrics computation goes through the native PrmScheduling SDK,
-            // which is net472-only; skip it on net8. The graph itself (and non-Bruker scheduling) works on
-            // both frameworks, so only this metrics gathering is gated rather than the whole method.
-#if NET472
+            // Gather Bruker timsTOF scheduling metrics for the graph. On net472 this goes through the
+            // C++/CLI PrmScheduling SDK; on net8 BrukerTimsTofMethodExporter binds to the managed
+            // Pwiz.Vendor.Bruker.PrmScheduling P/Invoke port (see Export.cs), so it runs on both.
             brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
                 ? textTemplateFile.Text
                 : null;
@@ -2663,7 +2662,6 @@ namespace pwiz.Skyline.FileUI
                     });
                 }
             }
-#endif
 
             using (var dlg = new ExportMethodScheduleGraph(_document, brukerTemplate, brukerMetrics))
             {
