@@ -4675,15 +4675,8 @@ namespace pwiz.Skyline
             var node = Document.Peptides.FirstOrDefault(p => p.ModifiedTarget.Equals(target));
             if (node == null)
                 return null;
-#if NET472
             return KoinaRetentionTimeModel.Instance?.PredictSingle(KoinaPredictionClient.Current, Document.Settings,
                 node, CancellationToken.None)[node];
-#else
-            // Koina port compiles on net8 (see Model/Koina/**), but this call
-            // stays behind the gate until <Compile Remove="Model\Koina\**"> is
-            // dropped from Skyline.csproj - remove both together.
-            return null;
-#endif
         }
 
         public Func<HttpClient> UserLogin(RemoteAccount account)
