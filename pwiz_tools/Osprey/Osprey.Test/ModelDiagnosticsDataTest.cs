@@ -1251,5 +1251,33 @@ namespace pwiz.Osprey.Test
             p.RunQBins[ModelDiagnosticsData.FrontierBin(runQ)] = (ushort)nRuns;
             return p;
         }
+
+        /// <summary>
+        /// A precursor with several pre-compaction candidates in ONE file must count as one run for
+        /// that file, not one per candidate. Without the per-file dedup the run count would exceed
+        /// N (and index past the histogram in BuildFrontier); this pins the file-not-row semantic.
+        /// </summary>
+        [TestMethod]
+        public void TestFrontierPerFileDedup()
+        {
+            var frontier = new Dictionary<string, ModelDiagnosticsData.FrontierPrec>();
+            var fileMinQ = new Dictionary<string, double>();
+            // file 0: three candidates for the same precursor (best run-q 0.005).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.010, 0.02);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.005, 0.01);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.020, 0.03);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+            // file 1: one candidate for the same precursor (run-q 0.008).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.008, 0.05);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+
+            var fp = frontier["PEP|2"];
+            int total = 0;
+            foreach (var c in fp.RunQBins) total += c;
+            Assert.AreEqual(2, total);                 // two files, not four candidate rows
+            Assert.AreEqual(0.01, fp.MinExpQ, 1e-9);   // min effective exp-q across all rows
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.005)]);  // file 0 at its best run-q
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.008)]);  // file 1
+        }
     }
 }

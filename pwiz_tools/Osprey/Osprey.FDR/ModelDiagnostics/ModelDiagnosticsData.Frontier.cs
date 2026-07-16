@@ -116,9 +116,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         /// <summary>
         /// Per target-side precursor, the un-gated first-pass run-q distribution needed by the
-        /// frontier: <see cref="RunQBins"/>[b] counts the files whose effective run-q first
-        /// qualifies at grid bin b (so the running sum over b is the run count at each cutoff),
-        /// plus the best-peak experiment-wide q and whether the precursor is entrapment.
+        /// frontier: <see cref="RunQBins"/>[b] counts the FILES whose per-file best (min) effective
+        /// run-q first qualifies at grid bin b (so the running sum over b is the run count at each
+        /// cutoff), plus the best-peak experiment-wide q and whether the precursor is entrapment.
+        /// The per-file dedup matters: a precursor can have several pre-compaction candidates in one
+        /// file, but reproducibility counts files, not candidates (same as the cross-run sets).
         /// </summary>
         internal sealed class FrontierPrec
         {
@@ -133,24 +135,42 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         /// <summary>
-        /// Fold one un-gated first-pass target-side row into the frontier tally: bump the file
-        /// count at the row's effective-run-q bin (the running sum over bins is the run count at
-        /// each cutoff) and lower the best-peak experiment-wide q. Shared by the streaming
-        /// accumulator and the resident batch build so the two byte-match.
+        /// Fold one un-gated first-pass target-side row into the WITHIN-FILE tally: create the
+        /// precursor if new, lower its best-peak experiment-wide q, and track the per-file best
+        /// (min) effective run-q in <paramref name="fileMinQ"/> (which the caller flushes once per
+        /// file via <see cref="FrontierFlushFile"/>). Counting the per-file min once — rather than
+        /// every candidate row — keeps the run count = number of files, matching the cross-run
+        /// sets. Shared by the streaming accumulator and the batch build so the two byte-match.
         /// </summary>
-        internal static void FoldFrontier(Dictionary<string, FrontierPrec> frontier,
-            string key, bool isEntrapment, double effRunQ, double effExpQ)
+        internal static void FrontierRow(Dictionary<string, FrontierPrec> frontier,
+            Dictionary<string, double> fileMinQ, string key, bool isEntrapment, double effRunQ, double effExpQ)
         {
             if (!frontier.TryGetValue(key, out var fp))
             {
                 fp = new FrontierPrec { IsEntrapment = isEntrapment };
                 frontier[key] = fp;
             }
-            int fb = FrontierBin(effRunQ);
-            if (fb >= 0 && fp.RunQBins[fb] < ushort.MaxValue)
-                fp.RunQBins[fb]++;
             if (effExpQ < fp.MinExpQ)
                 fp.MinExpQ = effExpQ;
+            if (!fileMinQ.TryGetValue(key, out double cur) || effRunQ < cur)
+                fileMinQ[key] = effRunQ;
+        }
+
+        /// <summary>
+        /// Flush one file's per-precursor best run-q into the frontier bins (one increment per
+        /// detected precursor = one file), then clear the file buffer for the next file.
+        /// </summary>
+        internal static void FrontierFlushFile(Dictionary<string, FrontierPrec> frontier,
+            Dictionary<string, double> fileMinQ)
+        {
+            foreach (var kv in fileMinQ)
+            {
+                var fp = frontier[kv.Key];   // created in FrontierRow before any flush
+                int fb = FrontierBin(kv.Value);
+                if (fb >= 0 && fp.RunQBins[fb] < ushort.MaxValue)
+                    fp.RunQBins[fb]++;
+            }
+            fileMinQ.Clear();
         }
 
         /// <summary>
@@ -190,7 +210,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
 
-            var perRun = new int[nb][]; var perRunJ = new int[n + 1];
+            var perRunJ = new int[n + 1];
             var perRunScope = SweepPerRun(hrReal, hrEnt, nb, n, a, target, perRunJ);
             int[] expJ = new int[n + 1];
             var expScope = SweepExperiment(heReal, heEnt, nb, n, a, target, expJ);
@@ -236,7 +256,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     int t = tGe[j, k], e = eGe[j, k];
                     if (t + e == 0) continue;
-                    if (a * e / (t + e) <= target && t > best) { best = t; bj = j; }
+                    if (a * e / (t + e) <= target && t >= best) { best = t; bj = j; }
                 }
                 yield[k - 1] = best < 0 ? 0 : best; q[k - 1] = bj < 0 ? 0 : FrontierQGrid[bj]; jStar[k] = bj;
             }
@@ -258,7 +278,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     int t = tGe[je, k], e = eGe[je, k];
                     if (t + e == 0) continue;
-                    if (a * e / (t + e) <= target && t > best) { best = t; bj = je; }
+                    if (a * e / (t + e) <= target && t >= best) { best = t; bj = je; }
                 }
                 yield[k - 1] = best < 0 ? 0 : best; q[k - 1] = bj < 0 ? 0 : FrontierQGrid[bj]; jStar[k] = bj;
             }

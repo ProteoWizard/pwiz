@@ -602,7 +602,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
                 var frontier = new Dictionary<string, FrontierPrec>(StringComparer.Ordinal);
+                var fileMinQ = new Dictionary<string, double>(StringComparer.Ordinal);
                 foreach (var kvp in perFileEntries)
+                {
                     foreach (var e in kvp.Value)
                     {
                         if (e.IsDecoy)
@@ -610,9 +612,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         bool isEntrap = haveManifest
                             && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var fcls)
                             && fcls == EntrapmentClass.PTarget;
-                        FoldFrontier(frontier, e.ModifiedSequence + "|" + e.Charge, isEntrap,
+                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + "|" + e.Charge, isEntrap,
                             e.EffectiveRunQvalue(fdrLevel), e.EffectiveExperimentQvalue(fdrLevel));
                     }
+                    FrontierFlushFile(frontier, fileMinQ);   // one increment per detected precursor = one file
+                }
                 data.Frontier = BuildFrontier(frontier.Values, perFileEntries.Count, r, runFdr);
             }
 
