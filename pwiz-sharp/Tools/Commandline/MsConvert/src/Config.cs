@@ -128,4 +128,7 @@ public sealed class MsConvertConfig
 
     /// <summary>When true, log each file + filter applied to stderr.</summary>
     public bool Verbose { get; set; }
+
+    /// <summary>Iteration period for verbose progress reporting (larger = fewer log lines). Default 100.</summary>
+    public int VerboseProgressPeriod { get; set; } = 100;
 }

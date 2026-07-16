@@ -133,6 +133,14 @@ public class ArgParserTests
     }
 
     [TestMethod]
+    public void VerboseProgressPeriod_DefaultsAndOverrides()
+    {
+        // Default keeps the tight console cadence; a host with a slow progress sink raises it.
+        Assert.AreEqual(100, Invoke("in.mzML").VerboseProgressPeriod);
+        Assert.AreEqual(2500, Invoke("in.mzML", "--verboseProgressPeriod", "2500").VerboseProgressPeriod);
+    }
+
+    [TestMethod]
     public void ConfigFile_ReplayedAsOptions()
     {
         // -c FILE replays each line as if it were a command-line option.

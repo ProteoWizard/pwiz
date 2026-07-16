@@ -26,13 +26,13 @@ public sealed class Converter
         _log = log ?? TextWriter.Null;
         // In verbose mode, one shared progress registry drives both the filter chain
         // (e.g. diaUmpire's "[step N of M]" messages during its lazy pull) and the
-        // writer's per-spectrum progress, so long-running filters report progress to the
-        // log/host. Period 100 so even smallish files show intermediate lines (the
-        // registry always fires on the final iteration).
+        // writer's per-spectrum progress. VerboseProgressPeriod sets the reporting
+        // interval; a host with a slow progress sink can raise it to avoid a flood.
         if (_config.Verbose)
         {
             _progressRegistry = new IterationListenerRegistry();
-            _progressRegistry.AddListener(new ConsoleProgressListener(_log), iterationPeriod: 100);
+            _progressRegistry.AddListener(new ConsoleProgressListener(_log),
+                iterationPeriod: Math.Max(1, _config.VerboseProgressPeriod));
         }
         // Include Thermo + Bruker + Waters + Agilent + Sciex alongside the built-in mzML/MGF
         // readers so vendor files auto-detect by extension/identity. Vendor projects always

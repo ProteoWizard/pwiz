@@ -289,6 +289,10 @@ internal static class ArgParser
                     config.Verbose = true;
                     break;
 
+                case "--verboseProgressPeriod":
+                    config.VerboseProgressPeriod = ParseInt(RequireNext(args, ref i, a), a);
+                    break;
+
                 default:
                     if (a.StartsWith('-'))
                         throw new ArgumentException($"Unknown option: {a}");
@@ -390,6 +394,7 @@ internal static class ArgParser
         dest.ContinueOnError |= src.ContinueOnError;
         dest.Verbose |= src.Verbose;
         if (src.SingleThreaded > 0) dest.SingleThreaded = src.SingleThreaded;
+        if (src.VerboseProgressPeriod != 100) dest.VerboseProgressPeriod = src.VerboseProgressPeriod;
         if (src.RunIndexSet is not null) dest.RunIndexSet = src.RunIndexSet;
         if (src.ContactInfo is not null) dest.ContactInfo = src.ContactInfo;
     }
@@ -477,6 +482,7 @@ internal static class ArgParser
         "  --singleThreaded [=N]    Force single-threaded read+write",
         "  --continueOnError        Keep going when a file errors out",
         "  -v, --verbose            Verbose progress logging",
+        "  --verboseProgressPeriod N  Iterations between verbose progress updates (default 100)",
         "  -h, --help               Show this help",
     };
 
