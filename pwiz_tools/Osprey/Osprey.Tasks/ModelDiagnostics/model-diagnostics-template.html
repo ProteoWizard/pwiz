@@ -1467,9 +1467,9 @@ function renderReproTab(b){
       kpi(kp,"best q-value (Q*)",pct(qs[pk-1],1),"");
       kpi(kp,"best run count","≥"+pk,"");
       if(fr.overlapJaccard!=null)kpi(kp,"overlap w/ "+(scope===0?"per-run":"experiment-wide"),pct(fr.overlapJaccard,0),"");
-      if(fr.bestPeak)kpi(kp,"vs exp-wide q≤"+pct(fr.target,0)+" standard","+"+pct(fr.gainPct,0),"good");}
+      if(fr.bestPeak)kpi(kp,"vs exp-wide q≤"+pct(fr.target,0)+" standard","+"+pct((yv-fr.bestPeak)/fr.bestPeak,0),"good");}
     document.getElementById("frontierNote").innerHTML=
-      "The peak accepts <b>"+fmt(fr.perRunPeak-fr.bestPeak,0)+" more</b> real precursors than the experiment-wide-q standard at the same "+
+      "The peak accepts <b>"+fmt(yv-fr.bestPeak,0)+" more</b> real precursors than the experiment-wide-q standard at the same "+
       "entrapment-validated FDP, and the peak set is ~"+pct(fr.overlapJaccard,0)+" the same peptides whichever route you take &mdash; "+
       "reproducibility, not the q statistic, selects them.";
   }

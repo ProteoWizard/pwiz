@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 
 namespace pwiz.Osprey.FDR.ModelDiagnostics
@@ -215,14 +214,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             int[] expJ = new int[n + 1];
             var expScope = SweepExperiment(heReal, heEnt, nb, n, a, target, expJ);
 
-            int peakK = 1;
+            int peakK = 1, expPeakK = 1;
             for (int k = 2; k <= n; k++)
+            {
                 if (perRunScope.Yield[k - 1] > perRunScope.Yield[peakK - 1]) peakK = k;
+                if (expScope.Yield[k - 1] > expScope.Yield[expPeakK - 1]) expPeakK = k;
+            }
             int perRunPeak = perRunScope.Yield[peakK - 1];
-            int expPeak = 0;
-            for (int k = 1; k <= n; k++) expPeak = Math.Max(expPeak, expScope.Yield[k - 1]);
+            int expPeak = expScope.Yield[expPeakK - 1];
 
-            double overlap = OverlapAtPeak(precs, peakK, perRunJ[peakK], expJ[peakK], j1);
+            // Overlap each scope's OWN peak set: the per-run-optimal set at its peak (perRunK,
+            // cutoff perRunJ[peakK]) vs the experiment-wide-optimal set at ITS peak.
+            double overlap = OverlapAtPeak(precs, peakK, expPeakK, perRunJ[peakK], expJ[expPeakK], j1);
 
             return new FrontierData
             {
@@ -308,9 +311,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         // Content overlap (Jaccard) of the two peak-optimal real-target sets: per-run-optimal
-        // (run count at cutoff jr >= peakK) and experiment-wide-optimal (exp-q <= cutoff je AND
-        // run count at target >= peakK). Needs the per-precursor joint, so a second pass.
-        private static double OverlapAtPeak(ICollection<FrontierPrec> precs, int peakK, int jr, int je, int j1)
+        // (run count at cutoff jr >= perRunK) and experiment-wide-optimal (exp-q <= cutoff je AND
+        // run count at target >= expK). Each scope uses its OWN peak run-count threshold. Needs
+        // the per-precursor joint, so a second pass.
+        private static double OverlapAtPeak(ICollection<FrontierPrec> precs, int perRunK, int expK, int jr, int je, int j1)
         {
             if (jr < 0 || je < 0) return double.NaN;
             double qe = FrontierQGrid[je];
@@ -321,8 +325,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 int rcJr = 0, rcTarget = 0;
                 for (int j = 0; j <= jr; j++) rcJr += p.RunQBins[j];
                 for (int j = 0; j <= j1; j++) rcTarget += p.RunQBins[j];
-                bool inA = rcJr >= peakK;
-                bool inB = p.MinExpQ <= qe && rcTarget >= peakK;
+                bool inA = rcJr >= perRunK;
+                bool inB = p.MinExpQ <= qe && rcTarget >= expK;
                 if (inA && inB) both++;
                 else if (inA) aOnly++;
                 else if (inB) bOnly++;
