@@ -210,7 +210,6 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public RTCalibration RunCalibration(
             List<LibraryEntry> library,
-            List<Spectrum> spectra,
             SpectraWindowIndex windowIndex,
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
@@ -280,28 +279,13 @@ namespace pwiz.Osprey.Tasks
                     _libTargetSideCount, realTargets, _libEntrapmentCount, rLib));
             }
 
-            // MS2 RT range. When streaming, the resident spectra list has been released;
-            // the index carries every MS2 record's RT in file order, so the min/max are
-            // identical to scanning the resident list.
-            if (windowIndex != null)
+            // MS2 RT range, from the streaming index (every MS2 record's RT in file order).
+            foreach (double rt in windowIndex.AllMs2Rts)
             {
-                foreach (double rt in windowIndex.AllMs2Rts)
-                {
-                    if (rt < mzmlMinRt)
-                        mzmlMinRt = rt;
-                    if (rt > mzmlMaxRt)
-                        mzmlMaxRt = rt;
-                }
-            }
-            else
-            {
-                foreach (var spectrum in spectra)
-                {
-                    if (spectrum.RetentionTime < mzmlMinRt)
-                        mzmlMinRt = spectrum.RetentionTime;
-                    if (spectrum.RetentionTime > mzmlMaxRt)
-                        mzmlMaxRt = spectrum.RetentionTime;
-                }
+                if (rt < mzmlMinRt)
+                    mzmlMinRt = rt;
+                if (rt > mzmlMaxRt)
+                    mzmlMaxRt = rt;
             }
 
             double libRtRange = libMaxRt - libMinRt;
@@ -339,28 +323,13 @@ namespace pwiz.Osprey.Tasks
             context.FallbackRtMap = RTCalibration.FromLinearMapping(
                 libMinRt, libMaxRt, rtSlope, rtIntercept);
 
-            // Build the per-pass window scorer. Streaming (OSPREY_STREAM_CALIBRATION) loads,
-            // RT-sorts, preprocesses, and scores each isolation window on demand from the
-            // on-disk cache and releases it, so the full ~6 GB resident MS2 is never held
-            // during calibration -- the per-file memory apex. The resident path groups every
-            // window's spectra and preprocesses the whole XCorr cache up front, as before.
-            ScoreCalibrationPass scorePass;
-            if (windowIndex != null)
-            {
-                scorePass = (passNumber, sampled, slope, intercept, tolerance, model) =>
-                    ScoreCalibrationMatchesStreaming(
-                        passNumber, sampled, windowIndex, ms1Spectra, context,
-                        slope, intercept, tolerance, model);
-            }
-            else
-            {
-                BuildResidentWindowCaches(spectra,
-                    out var spectraByWindowKey, out var preprocessedByWindowKey);
-                scorePass = (passNumber, sampled, slope, intercept, tolerance, model) =>
-                    ScoreCalibrationMatches(
-                        passNumber, sampled, spectraByWindowKey, preprocessedByWindowKey,
-                        ms1Spectra, context, slope, intercept, tolerance, model);
-            }
+            // Score each pass by streaming each isolation window's spectra from the on-disk
+            // cache -- load, RT-sort, preprocess, score, release -- so the full ~6 GB MS2 is
+            // never held during calibration (the per-file memory apex).
+            ScoreCalibrationPass scorePass = (passNumber, sampled, slope, intercept, tolerance, model) =>
+                ScoreCalibrationMatchesStreaming(
+                    passNumber, sampled, windowIndex, ms1Spectra, context,
+                    slope, intercept, tolerance, model);
 
             // === Calibration retry ladder (Rust pipeline.rs:700-1271) ===
             // Attempt 1 samples CalibrationSampleSize targets. On shortfall the sample

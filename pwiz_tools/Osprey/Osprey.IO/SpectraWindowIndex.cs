@@ -58,14 +58,35 @@ namespace pwiz.Osprey.IO
 
         private SpectraWindowIndex(string cachePath,
             Dictionary<int, List<long>> windowKeyToOffsets, double[] allMs2Rts,
-            Dictionary<int, IsolationWindow> windowKeyToFirstIso, List<int> windowKeysInFileOrder)
+            Dictionary<int, IsolationWindow> windowKeyToFirstIso, List<int> windowKeysInFileOrder,
+            List<MS1Spectrum> ms1Spectra, List<IsolationWindow> isolationWindows)
         {
             _cachePath = cachePath;
             _windowKeyToOffsets = windowKeyToOffsets;
             _windowKeyToFirstIso = windowKeyToFirstIso;
             _windowKeysInFileOrder = windowKeysInFileOrder;
             AllMs2Rts = allMs2Rts;
+            Ms1Spectra = ms1Spectra;
+            IsolationWindows = isolationWindows;
         }
+
+        /// <summary>
+        /// The MS1 spectra, loaded in full (small in DIA and needed resident for the global
+        /// precursor RT search). Read from the cache's MS1 section during the same header
+        /// pass, so streaming Stages 1-4 get MS1 without materializing the full MS2 list.
+        /// Byte-identical to <see cref="SpectraCache.LoadSpectraCache"/>'s MS1 (shared
+        /// <see cref="SpectraCache.ReadMs1Record"/>).
+        /// </summary>
+        public IReadOnlyList<MS1Spectrum> Ms1Spectra { get; }
+
+        /// <summary>
+        /// The first DIA cycle's isolation windows, deduplicated on the rounded center key
+        /// and sorted by center -- reconstructed byte-identically to
+        /// <c>ScoringTaskShared.ExtractIsolationWindows</c> (same first-appearance dedup,
+        /// same <c>Center</c> sort) from the header pass, so scoring's window fan-out is
+        /// unchanged without materializing the full MS2 list.
+        /// </summary>
+        public IReadOnlyList<IsolationWindow> IsolationWindows { get; }
 
         /// <summary>
         /// The window keys in first-encounter (file) order -- the same order the resident
@@ -118,13 +139,21 @@ namespace pwiz.Osprey.IO
             {
                 // Validate + read counts identically to LoadSpectraCache. On
                 // success the reader is positioned at the first MS2 record.
-                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out _))
+                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1))
                     return null;
 
                 var windowKeyToOffsets = new Dictionary<int, List<long>>();
                 var windowKeyToFirstIso = new Dictionary<int, IsolationWindow>();
                 var windowKeysInFileOrder = new List<int>();
                 var allMs2Rts = new double[nMs2];
+
+                // First DIA cycle's isolation windows, reproducing
+                // ScoringTaskShared.ExtractIsolationWindows: add each distinct rounded-center
+                // key's window in first-appearance order until a key repeats (the cycle
+                // wraps), then sort by center below. Read off this same header pass.
+                var firstCycleWindows = new List<IsolationWindow>();
+                var firstCycleSeen = new HashSet<int>();
+                bool firstCycleDone = false;
 
                 for (uint i = 0; i < nMs2; i++)
                 {
@@ -152,15 +181,32 @@ namespace pwiz.Osprey.IO
                         windowKeyToFirstIso[key] = new IsolationWindow(isoCenter, isoLower, isoUpper);
                         windowKeysInFileOrder.Add(key);
                     }
+                    // First-cycle windows: add on first sight of a key, stop once one repeats.
+                    if (!firstCycleDone)
+                    {
+                        if (!firstCycleSeen.Add(key))
+                            firstCycleDone = true;
+                        else
+                            firstCycleWindows.Add(new IsolationWindow(isoCenter, isoLower, isoUpper));
+                    }
                     offsets.Add(recordOffset);
                     allMs2Rts[i] = rt;
                 }
 
-                // MS1 records are deliberately not indexed: MS1 access is a global
-                // RT search that stays fully resident (small in DIA), so streaming
-                // leaves it untouched.
+                // Reproduce ExtractIsolationWindows' final sort by center.
+                firstCycleWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties (mirror of ExtractIsolationWindows)
+
+                // The reader is now at the MS1 section (the MS2 pass seeked past every peak
+                // blob; the layout is [header][MS2*][MS1*]). Read MS1 in full -- small in DIA
+                // and needed resident for the global precursor RT search -- so streaming
+                // Stages 1-4 get MS1 without ever building the full MS2 list. Same decode as
+                // LoadSpectraCache (shared ReadMs1Record).
+                var ms1Spectra = new List<MS1Spectrum>((int)nMs1);
+                for (uint i = 0; i < nMs1; i++)
+                    ms1Spectra.Add(SpectraCache.ReadMs1Record(r));
+
                 return new SpectraWindowIndex(cachePath, windowKeyToOffsets, allMs2Rts,
-                    windowKeyToFirstIso, windowKeysInFileOrder);
+                    windowKeyToFirstIso, windowKeysInFileOrder, ms1Spectra, firstCycleWindows);
             }
         }
 

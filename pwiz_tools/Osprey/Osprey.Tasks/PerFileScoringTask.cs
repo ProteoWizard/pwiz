@@ -1603,15 +1603,15 @@ namespace pwiz.Osprey.Tasks
 
             var context = new ScoringContext(config, fileName);
 
-            // Load spectra (from mzML or .spectra.bin cache)
-            // Segment 1/4 (read): the mzML/cache read reporter inside LoadSpectra
-            // feeds this file's first progress slice under --parallel-files.
+            // Load the per-file spectra as a STREAMING index over the .spectra.bin cache,
+            // never materializing the full ~6 GB MS2 List<Spectrum>: Stages 1-4 (calibration
+            // + scoring) stream each isolation window on demand. Segment 1/4 (read): the
+            // mzML/cache read reporter inside EnsureSpectraCache feeds this file's first
+            // progress slice under --parallel-files.
             MultiProgressReporter.Current?.BeginSegment();
-            List<Spectrum> spectra;
-            List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
-            LoadSpectra(inputFile, ctx.RunPlan.EffectiveFileParallelism > 1,
-                out spectra, out ms1Spectra, out int unsortedCount, ctx);
+            SpectraWindowIndex windowIndex = EnsureSpectraCache(
+                inputFile, ctx.RunPlan.EffectiveFileParallelism > 1, out int unsortedCount, ctx);
             swParse.Stop();
 
             long inputBytes = 0;
@@ -1637,48 +1637,26 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s", parseSeconds));
             }
 
-            if (spectra == null || spectra.Count == 0)
+            if (windowIndex == null || windowIndex.Ms2Count == 0)
             {
                 ctx.LogWarning(string.Format("No spectra found in {0}", inputFile));
                 return null;
             }
 
-            // Extract isolation windows from spectra
-            var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
+            // MS1 and the isolation windows come straight from the streaming index (copies of
+            // its own small lists); the full MS2 list is never materialized here.
+            var ms1Spectra = windowIndex.Ms1Spectra.ToList();
+            var isolationWindows = windowIndex.IsolationWindows.ToList();
             ctx.LogInfo(string.Format(
                 "Loaded {0} MS1 and {1} MS/MS spectra with {2} unique isolation windows{3}",
-                ms1Spectra != null ? ms1Spectra.Count : 0, spectra.Count, isolationWindows.Count,
+                ms1Spectra.Count, windowIndex.Ms2Count, isolationWindows.Count,
                 unsortedCount > 0
                     ? string.Format(" ({0} had unsorted peaks, re-sorted; use --verbose for detail)", unsortedCount)
                     : string.Empty));
             ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
-                fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
+                fileName, windowIndex.Ms2Count, ms1Spectra.Count));
             ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
-
-            // When streaming calibration is enabled, index the on-disk MS2 cache up front so
-            // BOTH calibration (Stage 3) and scoring (Stage 4) stream each isolation window in
-            // and out, and the full ~6 GB resident MS2 is released BEFORE the calibration apex
-            // -- the per-file memory high-water mark. Falls back to the resident path when the
-            // cache cannot be indexed (a save failure or a fingerprint change); calibration
-            // output is intended to be identical either way (the streaming scorer loads,
-            // RT-sorts, and scores each window exactly as the resident grouping does).
-            SpectraWindowIndex calWindowIndex = null;
-            if (OspreyEnvironment.StreamCalibration)
-            {
-                calWindowIndex = SpectraWindowIndex.BuildFromCache(
-                    SpectraCache.GetCachePath(inputFile), inputFile);
-                if (calWindowIndex != null && calWindowIndex.Ms2Count == spectra.Count)
-                {
-                    var releaseProbe = ProfilerHooks.TrackResidentSpectra(spectra);
-                    spectra = null; // release the resident MS2 before calibration streams it back
-                    ProfilerHooks.ReportResidentSpectraReleased(releaseProbe, ctx.LogInfo);
-                }
-                else
-                {
-                    calWindowIndex = null; // resident calibration + scoring fallback
-                }
-            }
 
             // Resolve the per-file calibration (load a cached/Rust JSON or
             // compute via Calibrator) and persist the calibration JSON.
@@ -1686,7 +1664,7 @@ namespace pwiz.Osprey.Tasks
             // carries the file forward as a step when scoring begins.
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
-                inputFile, fileName, fullLibrary, spectra, calWindowIndex, ms1Spectra, isolationWindows,
+                inputFile, fileName, fullLibrary, windowIndex, ms1Spectra, isolationWindows,
                 context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
                 out ModelDiagnosticsData.CalFileRow calDiagnostics, ctx);
 
@@ -1753,38 +1731,10 @@ namespace pwiz.Osprey.Tasks
             // bulk of a file's motion on the aggregate line.
             MultiProgressReporter.Current?.BeginSegment();
 
-            // Build the window-spectra source for scoring. Calibration (Stage 3) is
-            // done, so the whole resident MS2 list is no longer needed at once:
-            // index the on-disk cache and STREAM each isolation window's peaks in and
-            // out during scoring, releasing the ~6 GB resident MS2 first. When streaming
-            // calibration already ran, reuse its index (the resident MS2 is already
-            // released). The cache is normally present -- LoadSpectra either loaded it or
-            // wrote it after parsing mzML. Fall back to the resident provider (which
-            // materializes the calibrated copy, as before) only when the cache cannot be
-            // indexed (a save failure or a fingerprint change); output is identical either way.
-            IWindowSpectraProvider spectraProvider;
-            var windowIndex = calWindowIndex ?? SpectraWindowIndex.BuildFromCache(
-                SpectraCache.GetCachePath(inputFile), inputFile);
-            if (windowIndex != null && (spectra == null || windowIndex.Ms2Count == spectra.Count))
-            {
-                if (spectra != null)
-                {
-                    // Prove-from-inside (OSPREY_TRACK_RELEASE=1, byte-inert otherwise): capture
-                    // WeakReferences to the resident MS2 before dropping it, then confirm below --
-                    // after null + a forced GC -- that no unanticipated root still pins it.
-                    var releaseProbe = ProfilerHooks.TrackResidentSpectra(spectra);
-                    // Release the resident MS2 before scoring reads it back per window.
-                    spectra = null;
-                    ProfilerHooks.ReportResidentSpectraReleased(releaseProbe, ctx.LogInfo);
-                }
-                spectraProvider = new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
-            }
-            else
-            {
-                var resident = new ResidentWindowSpectraProvider(spectra, ms2Cal, consumeInputMzs: true);
-                spectra = null; // the provider's calibrated copy now owns the peaks
-                spectraProvider = resident;
-            }
+            // Scoring streams each isolation window's peaks from the same index built at load
+            // (Stage 3 calibration used it too), so the full MS2 list is never resident.
+            IWindowSpectraProvider spectraProvider =
+                new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
 
             var scoredEntries = ScoreAndDeduplicate(
                 fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
@@ -1939,7 +1889,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private RTCalibration ResolveCalibration(
             string inputFile, string fileName,
-            List<LibraryEntry> fullLibrary, List<Spectrum> spectra, SpectraWindowIndex windowIndex,
+            List<LibraryEntry> fullLibrary, SpectraWindowIndex windowIndex,
             List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             ScoringContext context, OspreyConfig config,
@@ -2015,7 +1965,7 @@ namespace pwiz.Osprey.Tasks
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = new Calibrator(ctx).RunCalibration(
-                    fullLibrary, spectra, windowIndex, ms1Spectra, context,
+                    fullLibrary, windowIndex, ms1Spectra, context,
                     out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata,
                     out calInitialRtTolerance, out calDiagnostics);
                 swCal.Stop();
@@ -2303,45 +2253,40 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Load spectra from mzML file or spectra cache. When multiple
-        /// files are processed in parallel, the mzML parse is gated so
-        /// only one disk scan runs at a time (see s_mzmlReadGate).
+        /// Ensure a valid <c>.spectra.bin</c> cache exists for the input and return a
+        /// streaming <see cref="SpectraWindowIndex"/> over it (per-window MS2 offsets, plus
+        /// MS1 and the first-cycle isolation windows) WITHOUT materializing the full MS2
+        /// <c>List&lt;Spectrum&gt;</c>. On a cache hit (the common re-run path) the file is only
+        /// header-indexed; on a miss the mzML is parsed once (gated across parallel files),
+        /// written to the cache, then indexed and the parsed list dropped. Stages 1-4
+        /// (calibration + scoring) stream each isolation window from the returned index. The
+        /// full resident load survives only in Stage-6 rescore
+        /// (<see cref="PerFileRescoreTask"/>.LoadSpectraForRescore), a separate follow-up.
         /// </summary>
-        private void LoadSpectra(string inputFile, bool serializeMzmlRead,
-            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra,
+        private SpectraWindowIndex EnsureSpectraCache(string inputFile, bool serializeMzmlRead,
             out int unsortedCount, PipelineContext ctx)
         {
             unsortedCount = 0;
-            // Check for binary spectra cache. Use the shared GetCachePath so the
-            // write and the rescore read (PerFileRescoreTask) derive an identical
-            // filename + directory (ArtifactPaths redirects the dir).
+            // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
+            // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
             if (File.Exists(cachePath))
             {
-                ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
-                try
+                // Cache hit: index the file directly (header pass only) -- never build the
+                // full MS2 list. Returns null when stale/invalid (bad magic/version or the
+                // source fingerprint changed), which falls through to a re-parse below.
+                var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                if (hit != null)
                 {
-                    // null = stale (source changed) or invalid (bad magic/version)
-                    // cache: a normal miss, not an error. Re-parse the mzML below.
-                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath, inputFile);
-                    if (cacheResult != null)
-                    {
-                        ms2Spectra = cacheResult.Ms2Spectra;
-                        ms1Spectra = cacheResult.Ms1Spectra;
-                        return;
-                    }
-                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
+                    ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                    return hit;
                 }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Failed to load spectra cache: {0}. Falling back to mzML.", ex.Message));
-                }
+                ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
             }
 
-            // Parse mzML directly, optionally serialized across files. The "Processing
-            // file N/M: <path>" banner already named the file; the consolidated
-            // "Loaded ... spectra with ... isolation windows" line is emitted by the caller.
+            // Miss/stale/absent: parse the mzML once (materialized only transiently here),
+            // optionally serialized across files, write the cache, then index it and drop the
+            // parsed list. The "Processing file N/M: <path>" banner already named the file.
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
                 ScoringTaskShared.s_mzmlReadGate.Wait();
@@ -2354,19 +2299,28 @@ namespace pwiz.Osprey.Tasks
                 if (serializeMzmlRead)
                     ScoringTaskShared.s_mzmlReadGate.Release();
             }
-            ms2Spectra = mzmlResult.Ms2Spectra;
-            ms1Spectra = mzmlResult.Ms1Spectra;
             unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
-            // Save to cache for next run
             try
             {
-                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra, inputFile);
+                SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
             }
             catch (Exception ex)
             {
                 ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
             }
+
+            // Index the just-written cache and stream from it (the parsed MS2 list drops when
+            // this method returns). Per-file scoring REQUIRES the cache; if it could not be
+            // written/indexed (e.g. a read-only or full output directory), fail clearly rather
+            // than silently fall back to a resident load that would OOM a large run.
+            var index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+            if (index == null)
+                throw new IOException(string.Format(
+                    "Could not index the spectra cache for '{0}'. Per-file scoring streams MS2 from " +
+                    "'{1}'; ensure that directory is writable (the .scores.parquet and .calibration.json " +
+                    "outputs are written to the same place).", inputFile, cachePath));
+            return index;
         }
 
         /// <summary>
