@@ -28,14 +28,15 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// Opens a SQLite database (e.g. a .blib spectral library) that is stored UNCOMPRESSED at a
     /// byte range inside a .zip, in place, without extracting it. This is done with the native
-    /// loadable extension "zipvfs_ext.dll", which registers a read-only "skyzipvfs" VFS that adds
-    /// the entry's base offset to every read. The offset and length are passed as URI parameters.
+    /// loadable extension "byterangevfs.dll", which registers a read-only "byterangevfs" VFS that
+    /// exposes only the bytes at a given offset and length. The offset and length are passed as URI
+    /// parameters.
     /// </summary>
     public static class ZipVfs
     {
-        public const string VFS_NAME = "skyzipvfs";
-        private const string EXTENSION_DLL = "zipvfs_ext.dll";
-        private const string EXTENSION_INIT = "sqlite3_zipvfs_init";
+        public const string VFS_NAME = "byterangevfs";
+        private const string EXTENSION_DLL = "byterangevfs.dll";
+        private const string EXTENSION_INIT = "sqlite3_byterangevfs_init";
 
         private static readonly object RegisterLock = new object();
         private static bool _registered;
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Registers the "skyzipvfs" VFS with SQLite the first time it is needed. The extension DLL
+        /// Registers the "byterangevfs" VFS with SQLite the first time it is needed. The extension DLL
         /// is pinned in memory for the process lifetime, because the registered VFS lives inside it.
         /// </summary>
         private static void EnsureVfsRegistered()
