@@ -69,11 +69,11 @@ namespace pwiz.Osprey.IO
         // Old caches re-populate on this bump.
         private const uint VERSION = 3;
 
-        // Fixed byte layout of one MS2 record's header prefix (everything before
-        // the variable-length peak blob): scan(4) + rt(8) + precursor_mz(8) +
-        // iso_center(8) + iso_lower(8) + iso_upper(8) + n_peaks(4). Used by
-        // SpectraWindowIndex to skip the peak blob during its header-only pass.
-        internal const int MS2_HEADER_PREFIX_BYTES = 48;
+        // Fixed byte layout of one MS2 record's header prefix (48 bytes, everything
+        // before the variable-length peak blob): scan(4) + rt(8) + precursor_mz(8) +
+        // iso_center(8) + iso_lower(8) + iso_upper(8) + n_peaks(4). SpectraWindowIndex
+        // reads these fields individually during its header-only pass, then skips the
+        // peak blob using PEAK_BYTES_PER_POINT.
         // Bytes per peak in a record's blob: one f64 m/z (8) + one f32 intensity (4).
         internal const int PEAK_BYTES_PER_POINT = 12;
 

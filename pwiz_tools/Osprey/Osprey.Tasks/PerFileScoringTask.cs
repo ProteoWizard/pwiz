@@ -2325,14 +2325,24 @@ namespace pwiz.Osprey.Tasks
 
             // Index the just-written cache and stream from it (the parsed MS2 list drops when
             // this method returns). Per-file scoring REQUIRES the cache; if it could not be
-            // written/indexed (e.g. a read-only or full output directory), fail clearly rather
-            // than silently fall back to a resident load that would OOM a large run.
-            var index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+            // written/indexed (e.g. a read-only or full output directory, or a failed write),
+            // fail clearly -- preserving the underlying error -- rather than silently fall back
+            // to a resident load that would OOM a large run.
+            SpectraWindowIndex index = null;
+            Exception indexError = null;
+            try
+            {
+                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+            }
+            catch (Exception ex)
+            {
+                indexError = ex;
+            }
             if (index == null)
                 throw new IOException(string.Format(
                     "Could not index the spectra cache for '{0}'. Per-file scoring streams MS2 from " +
                     "'{1}'; ensure that directory is writable (the .scores.parquet and .calibration.json " +
-                    "outputs are written to the same place).", inputFile, cachePath));
+                    "outputs are written to the same place).", inputFile, cachePath), indexError);
             return index;
         }
 
