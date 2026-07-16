@@ -250,6 +250,7 @@
     <Compile Include="MultiInjectReplicatePivotTest.cs" />
     <Compile Include="MultiInjectRescoreTest.cs" />
     <Compile Include="ChangeDocumentGuidTest.cs" />
+    <Compile Include="OpenDocFromZipTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="PanoramaClientPublishTest.cs" />
     <Compile Include="PeakAreaAbundanceComparisonGraphTest.cs" />
