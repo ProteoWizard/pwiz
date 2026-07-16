@@ -464,13 +464,13 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     install install-bibliospec : ../BiblioSpec/src//install : <location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM) ;
 
-    # Build the "byterangevfs" loadable SQLite extension (exposes a subset of a file's bytes given
-    # an offset and length, e.g. to read a .blib stored uncompressed inside a .sky.zip in place) and
+    # Build the "slicevfs" loadable SQLite extension (exposes a slice of a file's bytes given an
+    # offset and length, e.g. to read a .blib stored uncompressed inside a .sky.zip in place) and
     # install it next to SQLite.Interop.dll, where Skyline.csproj picks it up as Content and copies
     # it into the output beside System.Data.SQLite.
-    install install-byterangevfs
+    install install-slicevfs
         : # sources
-            ../../libraries/SQLite//byterangevfs
+            ../../libraries/SQLite//slicevfs
         : # requirements
             <location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <install-type>SHARED_LIB
@@ -490,7 +490,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <assembly>TestDiagnostics//TestDiagnostics
             <dependency>install-native-dependencies
             <dependency>install-bibliospec
-            <dependency>install-byterangevfs
+            <dependency>install-slicevfs
             <conditional>@build-location
             #<conditional>@install-vendor-api-dependencies
             <conditional>@install-vendor-api-dependencies-to-debug-and-release
