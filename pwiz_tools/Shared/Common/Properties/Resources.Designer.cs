@@ -1477,9 +1477,9 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Unable to load {0}..
         /// </summary>
-        public static string ZipVfs_EnsureVfsRegistered_Unable_to_load__0_ {
+        public static string SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_ {
             get {
-                return ResourceManager.GetString("ZipVfs_EnsureVfsRegistered_Unable_to_load__0_", resourceCulture);
+                return ResourceManager.GetString("SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_", resourceCulture);
             }
         }
     }

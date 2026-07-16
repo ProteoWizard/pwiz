@@ -43,13 +43,14 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Extensions of the files that a document opened in place needs RANDOM access to (.skyd is
-        /// the chromatogram cache, .blib are BiblioSpec spectral libraries). These can be used
-        /// directly from the .zip only if we can get a random-access stream to them, i.e. they are
-        /// stored UNCOMPRESSED. They are stored uncompressed when sharing, and
+        /// the chromatogram cache, .blib are BiblioSpec spectral libraries, .protdb is the
+        /// background proteome). These can be used directly from the .zip only if we can get a
+        /// random-access stream to them, i.e. they are stored UNCOMPRESSED. They are stored
+        /// uncompressed when sharing, and
         /// <see cref="pwiz.Common.Database.FileSystems.RandomAccessZipFile"/> checks that they are all stored
         /// before opening in place.
         /// </summary>
-        public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib" };
+        public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib", @".protdb" };
 
         /// <summary>
         /// Extensions of the other files a document opened in place needs, which we can use as long

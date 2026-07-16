@@ -853,6 +853,10 @@ namespace pwiz.Skyline
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory ?? string.Empty, fileName ?? string.Empty);
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
+            // Or stored inside an in-place .sky.zip next to the document.
+            var pathInZip = new FilePath(Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty));
+            if (pathInZip.IsInZipFile && pathInZip.Exists())
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathInZip.Path);
             using (var dlg = new MissingFileDlg())
             {
                 dlg.FileHint = fileName;

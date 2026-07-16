@@ -21,6 +21,7 @@ using System;
 using System.Data.SQLite;
 using NHibernate;
 using NHibernate.Cfg;
+using pwiz.Common.Database.FileSystems;
 
 namespace pwiz.Common.Database.NHibernate
 {
@@ -49,12 +50,24 @@ namespace pwiz.Common.Database.NHibernate
                 //.SetProperty("show_sql", "true")
                 //.SetProperty("generate_statistics", "true")
                 .SetProperty(@"dialect", typeof(global::NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
-                .SetProperty(@"connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString())
+                .SetProperty(@"connection.connection_string", ConnectionStringFromPath(path))
                 .SetProperty(@"connection.driver_class", typeof(global::NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
                 .SetProperty(@"connection.provider", typeof(global::NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
             if (createSchema)
                 configuration.SetProperty(@"hbm2ddl.auto", @"create");
             return ConfigureMappings(configuration, typeDb, schemaFilename);
+        }
+
+        /// <summary>
+        /// Builds the SQLite connection string for the database at <paramref name="path"/>. If the
+        /// path is a database stored uncompressed inside a .zip, it is opened read-only in place
+        /// through the zip VFS; otherwise it is opened normally from disk.
+        /// </summary>
+        public static string ConnectionStringFromPath(string path)
+        {
+            if (new FilePath(path).TryGetZipByteRange(out var zipFilePath, out var dataOffset, out var length))
+                return SqliteSliceVfs.GetConnectionString(zipFilePath, dataOffset, length);
+            return SQLiteConnectionStringBuilderFromFilePath(path).ToString();
         }
 
         /// <summary>

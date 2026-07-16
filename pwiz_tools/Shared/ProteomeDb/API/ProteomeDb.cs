@@ -26,6 +26,7 @@ using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
 using pwiz.Common.Database;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.DataModel;
@@ -63,7 +64,8 @@ namespace pwiz.ProteomeDatabase.API
             _schemaVersionMajorAsRead = -1; // unknown
             _schemaVersionMinorAsRead = -1; // unknown
             _isTmp = isTmp;
-            if (!File.Exists(path))
+            // FilePath handles a .protdb stored uncompressed inside a .sky.zip (opened in place).
+            if (!new FilePath(path).Exists())
             {
                 // Do not try to open the file if it does not exist, because that would create a zero byte file.
                 throw new FileLoadException(String.Format(Resources.ProteomeDb_ProteomeDb_The_file__0__does_not_exist_, path));

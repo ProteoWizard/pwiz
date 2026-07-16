@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static bool IsRedundantLibrary(string filepath)
         {
-            using var conn = ZipVfs.OpenConnection(filepath);
+            using var conn = SqliteSliceVfs.OpenConnection(filepath);
             using var cmd = new SQLiteCommand(@"SELECT name FROM sqlite_master WHERE name = 'RetentionTimes'", conn);
             return cmd.ExecuteScalar() == null;
         }
@@ -717,7 +717,7 @@ namespace pwiz.Skyline.Model.Lib
             object lockObject = new object();
             ParallelEx.For(0, threadCount, threadIndex =>
             {
-                using var connection = ZipVfs.OpenConnection(FilePath);
+                using var connection = SqliteSliceVfs.OpenConnection(FilePath);
                 string sql = @"SELECT * FROM RefSpectra WHERE id % " + threadCount + @" = " + threadIndex;
                 foreach (var row in connection.Query<RefSpectraRow>(sql, buffered:false))
                 {
@@ -2139,7 +2139,7 @@ namespace pwiz.Skyline.Model.Lib
                 int threadCount = ParallelEx.GetThreadCount();
                 ParallelEx.For(0, threadCount, threadIndex =>
                 {
-                    using var conn = ZipVfs.OpenConnection(_dbPath);
+                    using var conn = SqliteSliceVfs.OpenConnection(_dbPath);
                     ReadSubset(conn, threadCount, threadIndex);
                 }, maxThreads: threadCount);
                 status = _progressStatus;

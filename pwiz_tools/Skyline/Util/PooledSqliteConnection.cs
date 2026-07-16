@@ -39,9 +39,9 @@ namespace pwiz.Skyline.Util
 
         protected override IDisposable Connect()
         {
-            // The .blib may be stored uncompressed inside an in-place .sky.zip; ZipVfs opens such a
+            // The .blib may be stored uncompressed inside an in-place .sky.zip; SqliteSliceVfs opens such a
             // path in place through the zip VFS, and an ordinary path normally.
-            return ZipVfs.OpenConnection(FilePath);
+            return SqliteSliceVfs.OpenConnection(FilePath);
         }
 
         Stream IPooledStream.Stream

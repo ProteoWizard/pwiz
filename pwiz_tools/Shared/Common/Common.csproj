@@ -164,9 +164,9 @@
     <Compile Include="Database\NHibernate\SessionWithLock.cs" />
     <Compile Include="Database\FileSystems\FilePath.cs" />
     <Compile Include="Database\FileSystems\RandomAccessZipFile.cs" />
-    <Compile Include="Database\FileSystems\ZipVfs.cs" />
     <Compile Include="Database\NHibernate\StatelessSessionWithLock.cs" />
     <Compile Include="Database\SqliteOperations.cs" />
+    <Compile Include="Database\SqliteSliceVfs.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\AggregateOperation.cs" />
     <Compile Include="DataBinding\AnnotatedValue.cs" />

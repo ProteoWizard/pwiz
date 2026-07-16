@@ -21,10 +21,10 @@ using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using pwiz.Common.Database;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.Properties;
 
-namespace pwiz.Common.Database.FileSystems
+namespace pwiz.Common.Database
 {
     /// <summary>
     /// Opens a SQLite database (e.g. a .blib spectral library) that is stored UNCOMPRESSED at a
@@ -33,7 +33,7 @@ namespace pwiz.Common.Database.FileSystems
     /// only the slice of the file's bytes at a given offset and length. The offset and length are
     /// passed as URI parameters.
     /// </summary>
-    public static class ZipVfs
+    public static class SqliteSliceVfs
     {
         public const string VFS_NAME = "slicevfs";
         private const string EXTENSION_DLL = "slicevfs.dll";
@@ -65,11 +65,22 @@ namespace pwiz.Common.Database.FileSystems
         /// <param name="length">Length of the database.</param>
         public static SQLiteConnection OpenConnection(string zipFilePath, long dataOffset, long length)
         {
-            EnsureVfsRegistered();
-            var uri = new Uri(zipFilePath).AbsoluteUri + @"?ofs=" + dataOffset + @"&len=" + length + @"&vfs=" + VFS_NAME;
-            var connection = new SQLiteConnection(@"FullUri=""" + uri + @""";Version=3;Read Only=True;");
+            var connection = new SQLiteConnection(GetConnectionString(zipFilePath, dataOffset, length));
             connection.Open();
             return connection;
+        }
+
+        /// <summary>
+        /// Returns a read-only SQLite connection string that opens the database stored uncompressed
+        /// at the given byte range inside a .zip, through the zip VFS. The VFS is registered as a
+        /// side effect. Use this when a caller (e.g. NHibernate) needs the connection string rather
+        /// than an already-open <see cref="SQLiteConnection"/>.
+        /// </summary>
+        public static string GetConnectionString(string zipFilePath, long dataOffset, long length)
+        {
+            EnsureVfsRegistered();
+            var uri = new Uri(zipFilePath).AbsoluteUri + @"?ofs=" + dataOffset + @"&len=" + length + @"&vfs=" + VFS_NAME;
+            return @"FullUri=""" + uri + @""";Version=3;Read Only=True;";
         }
 
         /// <summary>
@@ -88,7 +99,7 @@ namespace pwiz.Common.Database.FileSystems
                 // Pin the DLL so it is never unloaded (the registered VFS struct/functions live in it).
                 if (LoadLibrary(dllPath) == IntPtr.Zero)
                     throw new IOException(string.Format(
-                        Resources.ZipVfs_EnsureVfsRegistered_Unable_to_load__0_, dllPath));
+                        Resources.SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_, dllPath));
                 using (var connection = new SQLiteConnection(@"Data Source=:memory:;Version=3;"))
                 {
                     connection.Open();
