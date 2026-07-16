@@ -1210,7 +1210,7 @@ namespace pwiz.Osprey.Test
             {
                 EntryId = entryId,
                 CorrelationScore = correlationScore,
-                // ScoreCalibrationEntry seeds DiscriminantScore from the correlation
+                // ScoreResolvedCalibrationEntry seeds DiscriminantScore from the correlation
                 // sum; LDA later replaces it.
                 DiscriminantScore = correlationScore,
                 QValue = 1.0,

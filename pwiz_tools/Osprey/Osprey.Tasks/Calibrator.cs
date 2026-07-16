@@ -186,10 +186,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// One calibration scoring pass over the sampled entries, abstracted so the retry
-        /// ladder and the refinement pass are agnostic to whether the window spectra are
-        /// held resident (<see cref="ScoreCalibrationMatches"/>) or streamed per window
-        /// (<see cref="ScoreCalibrationMatchesStreaming"/>). ms1Spectra + context are
-        /// captured by the closure; this carries only the per-pass inputs.
+        /// ladder and the refinement pass are decoupled from the scoring implementation
+        /// (<see cref="ScoreCalibrationMatchesStreaming"/>, which streams each window's
+        /// spectra per pass). ms1Spectra + context are captured by the closure; this carries
+        /// only the per-pass inputs.
         /// </summary>
         private delegate (ConcurrentBag<CalibrationMatch> Matches,
             ConcurrentDictionary<uint, double> SnrByEntryId,
@@ -1505,58 +1505,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Build the resident calibration window caches: group every MS2 spectrum by
-        /// isolation-window key, RT-sort each window's list, and preprocess the whole XCorr
-        /// cache up front. The default (non-streaming) path -- unchanged behaviour hoisted
-        /// out of <see cref="RunCalibration"/> so the streaming branch reads cleanly.
-        /// </summary>
-        private void BuildResidentWindowCaches(
-            List<Spectrum> spectra,
-            out Dictionary<int, List<Spectrum>> spectraByWindowKey,
-            out Dictionary<int, float[][]> preprocessedByWindowKey)
-        {
-            // Group spectra by isolation window center for O(1) window lookup per candidate.
-            spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
-            foreach (var spectrum in spectra)
-            {
-                int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
-                List<Spectrum> list;
-                if (!spectraByWindowKey.TryGetValue(key, out list))
-                {
-                    list = new List<Spectrum>();
-                    spectraByWindowKey[key] = list;
-                }
-                list.Add(spectrum);
-            }
-            // Sort each window's spectra by RT for deterministic XIC extraction.
-            // Array.Sort OK: RT tie hazard, conversion deferred (not a #4362 approved
-            // U-site; the dict lists are re-sorted in place and reused across both
-            // calibration passes, so an in-loop OrderBy reassignment is awkward). Two
-            // spectra within one window sharing an identical RT would be rare; RT values
-            // are per-cycle sampling times. Mirror of the CoelutionScorer RT sort.
-            foreach (var list in spectraByWindowKey.Values)
-                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: (see above) RT tie hazard, conversion deferred; not a #4362 approved U-site
-
-            // Pre-preprocess every window's spectra for XCorr once. The result is a
-            // pure function of the spectra, so it is hoisted out of the attempt and
-            // pass loops (it used to be rebuilt inside every scoring pass).
-            preprocessedByWindowKey = PreprocessWindowsForXcorr(spectraByWindowKey);
-        }
-
-        /// <summary>
-        /// Streaming analogue of <see cref="ScoreCalibrationMatches"/>: rather than scoring
-        /// candidate-parallel against resident per-window dictionaries, it resolves each
-        /// sampled entry to its isolation window (using ONLY the index's per-window isolation
-        /// windows -- no peaks), groups entries by resolved window, then scores WINDOW-parallel.
-        /// Each window's spectra are loaded from the cache, RT-sorted, and preprocessed exactly
-        /// as <see cref="BuildResidentWindowCaches"/> does, its assigned entries are scored
-        /// through the shared <see cref="ScoreResolvedCalibrationEntry"/>, and the window is
-        /// released before the next -- so only O(NThreads) windows' peaks are resident at once
-        /// and the ~6 GB resident MS2 never materialises during calibration. The produced match
-        /// set is identical to the resident path: each entry is scored exactly once against the
-        /// same window spectra in the same RT-sorted order, and the downstream accumulator +
-        /// (base_id, entry_id) sort are order-independent, so the differing parallel-collection
-        /// order does not change the result.
+        /// Scores each sampled calibration entry by streaming its isolation window from the
+        /// on-disk cache: rather than scoring candidate-parallel against resident per-window
+        /// dictionaries, it resolves each sampled entry to its isolation window (using ONLY the
+        /// index's per-window isolation windows -- no peaks), groups entries by resolved window,
+        /// then scores WINDOW-parallel. Each window's spectra are loaded from the cache,
+        /// RT-sorted, and preprocessed, its assigned entries are scored through the shared
+        /// <see cref="ScoreResolvedCalibrationEntry"/>, and the window is released before the
+        /// next -- so only O(NThreads) windows' peaks are resident at once and the ~6 GB resident
+        /// MS2 never materialises during calibration. Each entry is scored exactly once against
+        /// its window spectra in RT-sorted order, and the downstream accumulator + (base_id,
+        /// entry_id) sort are order-independent, so the parallel-collection order does not change
+        /// the result.
         /// </summary>
         private (ConcurrentBag<CalibrationMatch> Matches,
             ConcurrentDictionary<uint, double> SnrByEntryId,
@@ -1607,10 +1567,10 @@ namespace pwiz.Osprey.Tasks
             () => resolution.CreateScorer(),
             (kvp, loopState, localScorer) =>
             {
-                // Load, RT-sort, and preprocess this window exactly as the resident
-                // BuildResidentWindowCaches does, so its spectra order + XCorr cache match.
+                // Load, RT-sort, and preprocess this window's spectra so the XCorr cache
+                // aligns with the RT-sorted spectra order used for scoring.
                 var windowSpectra = windowIndex.LoadWindow(kvp.Key);
-                windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: mirrors the resident calibration RT-only sort tie behaviour
+                windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: calibration RT-only sort tie behaviour
                 // s_calXcorrScorer is shared across the window-parallel bodies here, so
                 // PreprocessSpectrumForXcorrF32 MUST remain stateless (a pure function of its
                 // input spectrum) -- adding per-call scratch state on the scorer would race.
@@ -1647,11 +1607,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Resolve a precursor m/z to its calibration isolation-window key using the index's
-        /// per-window isolation windows -- reproducing <see cref="ScoreCalibrationEntry"/>'s
-        /// resident resolution (direct key + <c>Contains</c> collision guard, then the
-        /// neighbour +/-1 keys taken without a Contains check, then a linear scan in
-        /// file-encounter order) WITHOUT loading peaks. Returns false when no window resolves
-        /// (the entry produces no match, as in the resident path).
+        /// per-window isolation windows -- reproducing the resident window resolution (direct
+        /// key + <c>Contains</c> collision guard, then the neighbour +/-1 keys taken without a
+        /// Contains check, then a linear scan in file-encounter order) WITHOUT loading peaks.
+        /// Returns false when no window resolves (the entry produces no match).
         /// </summary>
         internal static bool TryResolveCalibrationWindow(
             double precursorMz, SpectraWindowIndex windowIndex, out int resolvedWindowKey)
@@ -1693,101 +1652,6 @@ namespace pwiz.Osprey.Tasks
             }
             resolvedWindowKey = 0;
             return false;
-        }
-
-        /// <summary>
-        /// Pre-preprocess all window spectra for XCorr using the calibration
-        /// unit-bin scorer (~2K bins per spectrum, ~16 KB per array).
-        /// Independent of resolution mode -- HRAM 100K-bin arrays would
-        /// consume ~160 GB of LOH for 204K Astral spectra, so we use the
-        /// small unit-bin form for calibration regardless. Main search
-        /// still uses the resolution-mode bins.
-        /// Calibration preprocess runs in pure f32 to match Rust upstream
-        /// maccoss/osprey's native f32 XCorr path (cross-impl parity at
-        /// F10 rounding noise, vs ~4e-6 drift under f64). The f32 cache is
-        /// stored as-is (float[][]) and summed via the f32 XcorrFromPreprocessed
-        /// overload, which promotes each bin to double at the accumulation --
-        /// bit-identical to widening to double[] up front (float->double is exact
-        /// and unique) but at half the footprint (~3.3 GB -> ~1.65 GB on Astral).
-        /// </summary>
-        private Dictionary<int, float[][]> PreprocessWindowsForXcorr(
-            Dictionary<int, List<Spectrum>> spectraByWindowKey)
-        {
-            var preprocessedByWindowKey = new Dictionary<int, float[][]>();
-            foreach (var kvp in spectraByWindowKey)
-            {
-                var pp = new float[kvp.Value.Count][];
-                for (int i = 0; i < kvp.Value.Count; i++)
-                    pp[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
-                preprocessedByWindowKey[kvp.Key] = pp;
-            }
-            return preprocessedByWindowKey;
-        }
-
-        /// <summary>
-        /// Parallel-score each sampled calibration entry against its isolation
-        /// window, returning the successful matches plus the per-entry S/N and
-        /// (libRt, measuredRt) maps. Emits the pass timing + match-count logs.
-        /// </summary>
-        private (ConcurrentBag<CalibrationMatch> Matches,
-            ConcurrentDictionary<uint, double> SnrByEntryId,
-            ConcurrentDictionary<uint, KeyValuePair<double, double>> MatchRts) ScoreCalibrationMatches(
-                int passNumber,
-                List<LibraryEntry> sampledEntries,
-                Dictionary<int, List<Spectrum>> spectraByWindowKey,
-                Dictionary<int, float[][]> preprocessedByWindowKey,
-                List<MS1Spectrum> ms1Spectra,
-                ScoringContext context,
-                double rtSlope, double rtIntercept, double tolerance,
-                RTCalibration calibrationModel)
-        {
-            var config = context.Config;
-            var resolution = context.Resolution;
-            var fileName = context.FileName;
-
-            // Activate per-entry window dump if requested. The rows are added by
-            // ScoreCalibrationEntry below and written by EmitScoringDumps.
-            _ctx.Diagnostics?.StartCalWindowCollection();
-
-            var swScoring = Stopwatch.StartNew();
-            var matches = new ConcurrentBag<CalibrationMatch>();
-            var snrByEntryId = new ConcurrentDictionary<uint, double>();
-            var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
-
-            Parallel.ForEach(sampledEntries, new ParallelOptions
-            {
-                MaxDegreeOfParallelism = config.NThreads
-            },
-            () => resolution.CreateScorer(),
-            (entry, loopState, localScorer) =>
-            {
-                double entrySnr;
-                double entryLibRt;
-                double entryMeasuredRt;
-                var match = ScoreCalibrationEntry(
-                    entry, spectraByWindowKey, preprocessedByWindowKey, ms1Spectra, context,
-                    rtSlope, rtIntercept, tolerance,
-                    calibrationModel,
-                    localScorer,
-                    out entrySnr, out entryLibRt, out entryMeasuredRt);
-                if (match != null)
-                {
-                    matches.Add(match);
-                    snrByEntryId[entry.Id] = entrySnr;
-                    matchRts[entry.Id] = new KeyValuePair<double, double>(
-                        entryLibRt, entryMeasuredRt);
-                }
-                return localScorer;
-            },
-            localScorer => { });
-            swScoring.Stop();
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
-                passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
-                passNumber, fileName, matches.Count));
-            return (matches, snrByEntryId, matchRts);
         }
 
         /// <summary>
@@ -2056,106 +1920,14 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Score a single library entry for calibration: extract fragment XICs across
-        /// spectra in the entry's isolation window that fall within the initial RT
-        /// tolerance, detect the best co-eluting peak, and compute the four LDA
-        /// features at the apex (correlation, LibCosine, top-6 matched, XCorr).
-        /// Returns null if the entry has no viable peak.
-        /// On pass 1 (calibrationModel == null), expectedRt is computed from the
-        /// linear (rtSlope * library_rt + rtIntercept) mapping. On pass 2, the
-        /// LOESS-fitted RTCalibration is used to predict expected_rt and the
-        /// (refined) tolerance is much tighter.
-        /// </summary>
-        private CalibrationMatch ScoreCalibrationEntry(
-            LibraryEntry entry,
-            Dictionary<int, List<Spectrum>> spectraByWindowKey,
-            Dictionary<int, float[][]> preprocessedByWindowKey,
-            List<MS1Spectrum> ms1Spectra,
-            ScoringContext context,
-            double rtSlope, double rtIntercept, double initialTolerance,
-            RTCalibration calibrationModel,
-            SpectralScorer scorer,
-            out double signalToNoise,
-            out double libraryRt,
-            out double measuredRt)
-        {
-            signalToNoise = 0.0;
-            libraryRt = entry.RetentionTime;
-            measuredRt = 0.0;
-
-            if (entry.Fragments == null || entry.Fragments.Count < 2)
-                return null;
-
-            // Find spectra in the entry's isolation window.
-            int windowKey = (int)Math.Round(entry.PrecursorMz * 10.0);
-            List<Spectrum> windowSpectra;
-            if (!spectraByWindowKey.TryGetValue(windowKey, out windowSpectra))
-            {
-                // Try neighbouring window keys (handles off-by-one due to rounding).
-                if (!spectraByWindowKey.TryGetValue(windowKey - 1, out windowSpectra) &&
-                    !spectraByWindowKey.TryGetValue(windowKey + 1, out windowSpectra))
-                {
-                    // Fall back to linear scan across windows that contain this precursor.
-                    windowSpectra = null;
-                    foreach (var kvp in spectraByWindowKey)
-                    {
-                        var first = kvp.Value[0];
-                        if (first.IsolationWindow.Contains(entry.PrecursorMz))
-                        {
-                            windowSpectra = kvp.Value;
-                            break;
-                        }
-                    }
-                    if (windowSpectra == null)
-                        return null;
-                }
-            }
-            else if (!windowSpectra[0].IsolationWindow.Contains(entry.PrecursorMz))
-            {
-                // Key collision where the actual isolation window doesn't contain this precursor.
-                return null;
-            }
-
-            // Resolve the actual window key that was used (may differ from primary
-            // due to neighbour-key or linear-scan fallback), then look up its
-            // preprocessed XCorr cache. The window-confined scoring itself is delegated
-            // to ScoreResolvedCalibrationEntry, shared with the streaming path so the
-            // per-entry math has a single source of truth.
-            int resolvedWindowKey = windowKey;
-            if (!spectraByWindowKey.ContainsKey(windowKey))
-            {
-                if (spectraByWindowKey.ContainsKey(windowKey - 1))
-                    resolvedWindowKey = windowKey - 1;
-                else if (spectraByWindowKey.ContainsKey(windowKey + 1))
-                    resolvedWindowKey = windowKey + 1;
-                else
-                {
-                    // Linear scan fallback - find the key that matched
-                    foreach (var kvp in spectraByWindowKey)
-                    {
-                        if (kvp.Value == windowSpectra)
-                        {
-                            resolvedWindowKey = kvp.Key;
-                            break;
-                        }
-                    }
-                }
-            }
-            float[][] windowPreprocessed;
-            preprocessedByWindowKey.TryGetValue(resolvedWindowKey, out windowPreprocessed);
-
-            return ScoreResolvedCalibrationEntry(
-                entry, windowSpectra, windowPreprocessed, ms1Spectra, context,
-                rtSlope, rtIntercept, initialTolerance, calibrationModel, scorer,
-                out signalToNoise, out libraryRt, out measuredRt);
-        }
-
-        /// <summary>
         /// Score one calibration entry against its ALREADY-RESOLVED isolation window --
-        /// the window-confined tail shared verbatim by the resident
-        /// (<see cref="ScoreCalibrationEntry"/>) and streaming
-        /// (<see cref="ScoreCalibrationMatchesStreaming"/>) paths, so the per-entry
-        /// calibration scoring math has a single source of truth.
+        /// the window-confined tail that scores a single library entry for calibration:
+        /// extract fragment XICs across the window's spectra within the initial RT
+        /// tolerance, detect the best co-eluting peak, and compute the four LDA features at
+        /// the apex (correlation, LibCosine, top-6 matched, XCorr). Returns null if the entry
+        /// has no viable peak. On pass 1 (calibrationModel == null) expectedRt is the linear
+        /// (rtSlope * library_rt + rtIntercept) mapping; on pass 2 the LOESS-fitted
+        /// <see cref="RTCalibration"/> predicts expectedRt with a much tighter tolerance.
         /// <paramref name="windowSpectra"/> is the resolved window's spectra in RT-sorted
         /// order; <paramref name="windowPreprocessed"/> its matching XCorr cache (same
         /// order, may be null).
