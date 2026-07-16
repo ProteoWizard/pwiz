@@ -1157,10 +1157,15 @@ namespace pwiz.Skyline
 
         public bool SaveDocument()
         {
+            // A document opened directly (in place) from a .sky.zip has no .sky on disk to save back
+            // to; prompt to extract everything to a folder first, then reopen from there.
+            if (SharedZipFilePath != null)
+                return CheckDocumentExists(null);
+
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
                 return SaveDocumentAs();
-            
+
             return SaveDocument(fileName);
         }
 

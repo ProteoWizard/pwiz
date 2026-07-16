@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -85,6 +86,19 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected.SpectrumCount, actual.SpectrumCount, "library spectra read from the .blib differ");
             Assert.AreEqual(expected.ChromatogramPointCount, actual.ChromatogramPointCount,
                 "chromatogram points read from the .skyd differ");
+
+            // Saving a document opened in place cannot write back into the .zip; it must prompt to
+            // extract everything to a folder first, then reopen from there.
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.SaveDocument(), dlg => dlg.ClickOk());
+            var extractedDoc = WaitForDocumentLoaded();
+            Assert.IsNull(SkylineWindow.SharedZipFilePath, "the extracted document should no longer be .zip-backed");
+            Assert.IsFalse(new FilePath(SkylineWindow.DocumentFilePath).IsInZipFile,
+                "the extracted document should be on disk: " + SkylineWindow.DocumentFilePath);
+            AssertEx.FileExists(SkylineWindow.DocumentFilePath);
+            var extracted = Summarize(extractedDoc);
+            Assert.AreEqual(expected.PeptideCount, extracted.PeptideCount);
+            Assert.AreEqual(expected.SpectrumCount, extracted.SpectrumCount);
+            Assert.AreEqual(expected.ChromatogramPointCount, extracted.ChromatogramPointCount);
         }
 
         private class DocSummary
