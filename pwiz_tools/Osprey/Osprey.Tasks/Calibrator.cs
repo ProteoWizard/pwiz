@@ -1642,6 +1642,9 @@ namespace pwiz.Osprey.Tasks
                 // BuildResidentWindowCaches does, so its spectra order + XCorr cache match.
                 var windowSpectra = windowIndex.LoadWindow(kvp.Key);
                 windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: mirrors the resident calibration RT-only sort tie behaviour
+                // s_calXcorrScorer is shared across the window-parallel bodies here, so
+                // PreprocessSpectrumForXcorrF32 MUST remain stateless (a pure function of its
+                // input spectrum) -- adding per-call scratch state on the scorer would race.
                 var windowPreprocessed = new float[windowSpectra.Count][];
                 for (int i = 0; i < windowSpectra.Count; i++)
                     windowPreprocessed[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(windowSpectra[i]);
