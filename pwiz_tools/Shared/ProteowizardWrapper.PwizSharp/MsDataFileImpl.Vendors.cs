@@ -36,6 +36,7 @@ namespace pwiz.ProteowizardWrapper
             TryAdd(() => new Pwiz.Vendor.Agilent.Reader_Agilent(), "Agilent");
             TryAdd(() => new Pwiz.Vendor.Bruker.Reader_Bruker(), "Bruker");
             TryAdd(() => new Pwiz.Vendor.UIMF.Reader_UIMF(), "UIMF");
+            TryAdd(() => new Pwiz.Vendor.UNIFI.Reader_UNIFI(), "UNIFI");
         }
     }
 }

@@ -79,6 +79,7 @@
     <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Agilent\Agilent.csproj" />
     <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Bruker\Bruker.csproj" />
     <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UIMF\UIMF.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
