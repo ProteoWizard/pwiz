@@ -46,11 +46,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return DocumentRetentionTimes.IsNotLoadedExplained(document);
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            return Array.Empty<IPooledStream>();
-        }
-
         public override void ClearCache()
         {
         }

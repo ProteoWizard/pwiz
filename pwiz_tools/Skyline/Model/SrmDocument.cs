@@ -2717,6 +2717,13 @@ namespace pwiz.Skyline.Model
             return (SrmDocument) ChangeChildren(newChildren);
         }
 
+        public IEnumerable<IPooledStream> GetOpenStreams()
+        {
+            return Settings.PeptideSettings.Libraries.Libraries.Select(library => library?.ReadStreams)
+                .Append(MeasuredResults?.ReadStreams)
+                .SelectMany(enumerable => enumerable ?? Array.Empty<IPooledStream>());
+        }
+
         #region object overrides
 
         public bool Equals(SrmDocument obj)

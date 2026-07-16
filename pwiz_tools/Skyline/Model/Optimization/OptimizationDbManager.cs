@@ -57,11 +57,6 @@ namespace pwiz.Skyline.Model.Optimization
             return IsNotLoadedDocumentExplained(document);
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            yield break;
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             return false;

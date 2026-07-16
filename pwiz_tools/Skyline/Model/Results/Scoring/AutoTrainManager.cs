@@ -55,11 +55,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return null;
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            yield break;
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             return false;
