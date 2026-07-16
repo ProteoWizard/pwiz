@@ -18,9 +18,10 @@
  */
 using System;
 using System.IO;
-using Ionic.Zip;
+using System.IO.Compression;
+using pwiz.Common.Properties;
 
-namespace pwiz.Skyline.Util
+namespace pwiz.Common.Database.FileSystems
 {
     /// <summary>
     /// A path to a file that might live inside a .zip. Such a path looks exactly like an ordinary
@@ -73,35 +74,42 @@ namespace pwiz.Skyline.Util
             var entry = zip.FindEntry(entryName);
             if (entry == null)
                 throw new FileNotFoundException(string.Format(
-                    UtilResources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
+                    Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
             if (entry.IsStored)
                 return zip.OpenStoredEntry(entry);
 
             // Compressed entry: decompress fully into memory (simple; used for linear reads like the .sky).
-            using (var ionic = ZipFile.Read(zipFilePath))
+            using (var archive = new ZipArchive(File.OpenRead(zipFilePath), ZipArchiveMode.Read))
             {
+                var archiveEntry = archive.GetEntry(entry.FileName);
+                if (archiveEntry == null)
+                    throw new FileNotFoundException(string.Format(
+                        Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
                 var ms = new MemoryStream();
-                ionic[entry.FileName].Extract(ms);
+                using (var entryStream = archiveEntry.Open())
+                    entryStream.CopyTo(ms);
                 ms.Position = 0;
                 return ms;
             }
         }
 
         /// <summary>
-        /// Creates a pooled stream over a stored (uncompressed) zip entry. Throws if this path is
-        /// not inside a zip; the caller should check <see cref="IsInZipFile"/> first.
+        /// For a path inside a zip, returns the containing <see cref="RandomAccessZipFile"/> and the
+        /// entry. Returns false for an ordinary path (not inside a zip). Callers that need a pooled
+        /// or seekable stream over the entry (e.g. Skyline's PooledZipEntryStream) use this.
         /// </summary>
-        public IPooledStream OpenPooledStream(ConnectionPool connectionPool)
+        public bool TryGetZipEntry(out RandomAccessZipFile zipFile, out ZipEntryInfo entry)
         {
+            zipFile = null;
+            entry = null;
             if (!TryParseZip(out var zipFilePath, out var entryName))
-                throw new InvalidOperationException(string.Format(
-                    UtilResources.FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file, Path));
-            var zip = new RandomAccessZipFile(zipFilePath);
-            var entry = zip.FindEntry(entryName);
+                return false;
+            zipFile = new RandomAccessZipFile(zipFilePath);
+            entry = zipFile.FindEntry(entryName);
             if (entry == null)
                 throw new FileNotFoundException(string.Format(
-                    UtilResources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
-            return new PooledZipEntryStream(connectionPool, zip, entry, Path);
+                    Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
+            return true;
         }
 
         /// <summary>
@@ -115,7 +123,7 @@ namespace pwiz.Skyline.Util
             var entry = new RandomAccessZipFile(zipFilePath).FindEntry(entryName);
             if (entry == null)
                 throw new FileNotFoundException(string.Format(
-                    UtilResources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
+                    Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
             return entry.UncompressedSize;
         }
 

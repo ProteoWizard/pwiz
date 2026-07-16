@@ -30,6 +30,7 @@ using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -763,8 +764,8 @@ namespace pwiz.Skyline.Util
         {
             // The file may be stored inside a .zip (e.g. a .skyd in an in-place .sky.zip).
             var filePath = new FilePath(path);
-            if (filePath.IsInZipFile)
-                return filePath.OpenPooledStream(ConnectionPool);
+            if (filePath.TryGetZipEntry(out var zipFile, out var entry))
+                return new PooledZipEntryStream(ConnectionPool, zipFile, entry, path);
             return new PooledFileStream(this, path, buffer);
         }
 

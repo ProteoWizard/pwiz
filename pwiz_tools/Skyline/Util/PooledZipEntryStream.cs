@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util

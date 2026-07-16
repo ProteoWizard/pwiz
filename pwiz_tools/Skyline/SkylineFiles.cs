@@ -30,6 +30,7 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;

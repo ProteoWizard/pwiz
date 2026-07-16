@@ -35,6 +35,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Crosslinking;

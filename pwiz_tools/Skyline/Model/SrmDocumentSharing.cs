@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model
         /// the chromatogram cache, .blib are BiblioSpec spectral libraries). These can be used
         /// directly from the .zip only if we can get a random-access stream to them, i.e. they are
         /// stored UNCOMPRESSED. They are stored uncompressed when sharing, and
-        /// <see cref="pwiz.Skyline.Util.RandomAccessZipFile"/> checks that they are all stored
+        /// <see cref="pwiz.Common.Database.FileSystems.RandomAccessZipFile"/> checks that they are all stored
         /// before opening in place.
         /// </summary>
         public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib" };

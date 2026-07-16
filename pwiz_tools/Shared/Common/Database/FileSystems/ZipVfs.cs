@@ -22,8 +22,9 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using pwiz.Common.Database;
+using pwiz.Common.Properties;
 
-namespace pwiz.Skyline.Util
+namespace pwiz.Common.Database.FileSystems
 {
     /// <summary>
     /// Opens a SQLite database (e.g. a .blib spectral library) that is stored UNCOMPRESSED at a
@@ -87,7 +88,7 @@ namespace pwiz.Skyline.Util
                 // Pin the DLL so it is never unloaded (the registered VFS struct/functions live in it).
                 if (LoadLibrary(dllPath) == IntPtr.Zero)
                     throw new IOException(string.Format(
-                        UtilResources.ZipVfs_EnsureVfsRegistered_Unable_to_load__0_, dllPath));
+                        Resources.ZipVfs_EnsureVfsRegistered_Unable_to_load__0_, dllPath));
                 using (var connection = new SQLiteConnection(@"Data Source=:memory:;Version=3;"))
                 {
                     connection.Open();

@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace pwiz.Skyline.Util
+namespace pwiz.Common.Database.FileSystems
 {
     /// <summary>
     /// Reads a .zip file's directory in order to locate entries that are stored
@@ -373,7 +373,7 @@ namespace pwiz.Skyline.Util
             return -1;
         }
 
-        internal static void ReadExactly(Stream stream, byte[] buffer, int offset, int count)
+        public static void ReadExactly(Stream stream, byte[] buffer, int offset, int count)
         {
             int total = 0;
             while (total < count)

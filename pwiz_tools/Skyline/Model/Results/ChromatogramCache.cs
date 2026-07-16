@@ -25,6 +25,7 @@ using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.CommonMsData;

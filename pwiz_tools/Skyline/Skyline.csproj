@@ -5435,11 +5435,8 @@
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\PanoramaPublishUtil.cs" />
-    <Compile Include="Util\FilePath.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\PooledZipEntryStream.cs" />
-    <Compile Include="Util\RandomAccessZipFile.cs" />
-    <Compile Include="Util\ZipVfs.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
     <Compile Include="Util\UtilInstall.cs" />
