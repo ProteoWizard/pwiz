@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
             // The shared .zip must qualify for opening in place: only document files, and the
             // random-access files stored uncompressed.
             var zip = new RandomAccessZipFile(inPlaceZip);
-            Assert.IsTrue(zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.DocumentZipSuffixes),
+            Assert.IsTrue(zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions),
                 "shared .zip has entries that would prevent opening in place");
             Assert.IsTrue(zip.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions),
                 ".skyd/.blib were not stored uncompressed");

@@ -243,7 +243,7 @@ namespace pwiz.Skyline
         private static bool CanOpenInPlace(string zipPath)
         {
             var zip = new RandomAccessZipFile(zipPath);
-            return zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.DocumentZipSuffixes)
+            return zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions)
                    && zip.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions);
         }
 

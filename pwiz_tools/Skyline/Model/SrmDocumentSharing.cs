@@ -42,22 +42,31 @@ namespace pwiz.Skyline.Model
         public const string EXT_SKY_ZIP = ".sky.zip";
 
         /// <summary>
-        /// Extensions of the files that need random access when a document is opened (.skyd is the
-        /// chromatogram cache, .blib are BiblioSpec spectral libraries). These are stored
-        /// UNCOMPRESSED in a shared .zip so the document can be opened directly from the .zip
-        /// without extracting them, and <see cref="pwiz.Skyline.Util.RandomAccessZipFile"/> checks
-        /// that they are all stored before opening in place.
+        /// Extensions of the files that a document opened in place needs RANDOM access to (.skyd is
+        /// the chromatogram cache, .blib are BiblioSpec spectral libraries). These can be used
+        /// directly from the .zip only if we can get a random-access stream to them, i.e. they are
+        /// stored UNCOMPRESSED. They are stored uncompressed when sharing, and
+        /// <see cref="pwiz.Skyline.Util.RandomAccessZipFile"/> checks that they are all stored
+        /// before opening in place.
         /// </summary>
         public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib" };
 
         /// <summary>
-        /// The file name suffixes a shared document .zip is expected to contain. For now, a .zip is
-        /// opened in place (without extracting) only if it contains only these and its
-        /// <see cref="RandomAccessExtensions"/> files are stored uncompressed. (Longer term
-        /// <c>OpenSharedFile</c> will start reading the .sky from the zip and decide, once it has read
-        /// the settings_summary, whether it can read everything in place or must extract.)
+        /// Extensions of the other files a document opened in place needs, which we can use as long
+        /// as we can get a stream and read them SEQUENTIALLY (so they may be compressed). This
+        /// excludes the <see cref="RandomAccessExtensions"/>.
         /// </summary>
-        public static readonly string[] DocumentZipSuffixes = { @".sky", @".sky.view", @".sky.log", @".skyd", @".blib" };
+        public static readonly string[] SequentialAccessExtensions = { @".sky", @".sky.view", @".sky.log" };
+
+        /// <summary>
+        /// True if a .zip containing only entries with these extensions can be opened in place
+        /// (without extracting): every file it contains is one we can read either randomly (if
+        /// stored) or sequentially. (Longer term <c>OpenSharedFile</c> will start reading the .sky
+        /// from the zip and decide, once it has read the settings_summary, whether it can read
+        /// everything in place or must extract.)
+        /// </summary>
+        public static readonly string[] OpenInPlaceExtensions =
+            RandomAccessExtensions.Concat(SequentialAccessExtensions).ToArray();
 
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
@@ -623,9 +632,12 @@ namespace pwiz.Skyline.Model
                     }
                     else
                     {
-                        var message = string.Format(
-                            ModelResources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
-                            e.CurrentEntry.FileName);
+                        // Files that need random access (.skyd, .blib) are stored uncompressed so the
+                        // document can be opened directly from the .zip; report those as "Storing".
+                        var format = e.CurrentEntry.CompressionMethod == CompressionMethod.None
+                            ? ModelResources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Storing__0_
+                            : ModelResources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__;
+                        var message = string.Format(format, e.CurrentEntry.FileName);
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message));
                     }
                 }
