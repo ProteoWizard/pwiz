@@ -280,6 +280,10 @@ namespace pwiz.Osprey.Tasks
             bool needsResidentFirstPassPool =
                 (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
                 OspreyEnvironment.Pass2TransferQ;
+            // NOTE: transfer-compete does NOT force the resident pool -- it only needs the
+            // trained 1st-pass MODEL (not the full-population score->q table), which the
+            // streaming projection path publishes cheaply via captureModel below. Forcing
+            // resident here OOMs on large (entrapment) libraries.
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
                 !needsResidentFirstPassPool)
             {
@@ -1372,7 +1376,8 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             PipelineContext ctx,
             string passLabel = "First-pass",
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            PercolatorResults frozenModel = null)
         {
             // loadFileFeatures is supplied by the first-pass caller (FirstJoinTask.Run)
             // so the engine streams PIN features per file from parquet (issue #4355
@@ -1385,7 +1390,7 @@ namespace pwiz.Osprey.Tasks
             // model instead of retraining. Null (a pure no-op in the engine) on the default
             // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
             Action<PercolatorResults> captureModel = null;
-            if (OspreyEnvironment.Pass2TransferQ &&
+            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2TransferCompete) &&
                 string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
             {
                 // Publish is add-only (throws on a duplicate key); guard so a first pass
@@ -1404,7 +1409,7 @@ namespace pwiz.Osprey.Tasks
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, out var contributions,
                 BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures,
-                captureModel);
+                captureModel, frozenModel);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left
@@ -1602,6 +1607,19 @@ namespace pwiz.Osprey.Tasks
             if (mdiagAccumulator != null)
                 captureContributions = c => mdiagContributions = c;
 
+            // OSPREY_PASS2_QVALUE=transfer-compete: publish the trained 1st-pass model so the
+            // merge-node 2nd pass can re-score the reconciled targets+decoys with this FROZEN
+            // model and recompute q/PEP by target-decoy competition (no retrain). Off by
+            // default; transfer/table uses the resident path instead. Streaming path only, so
+            // no full-population pool is held resident (avoids the entrapment-library OOM).
+            Action<PercolatorResults> captureModel = null;
+            if (OspreyEnvironment.Pass2TransferCompete)
+                captureModel = results =>
+                {
+                    if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
+                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                };
+
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
                 mdiagAccumulator);
             var swFdr = Stopwatch.StartNew();
@@ -1609,7 +1627,7 @@ namespace pwiz.Osprey.Tasks
                 projections, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                @"First-pass", loadFileFeatures, captureContributions);
+                @"First-pass", loadFileFeatures, captureContributions, captureModel);
             swFdr.Stop();
             var outputs = sink.Outputs;
             if (aborted)

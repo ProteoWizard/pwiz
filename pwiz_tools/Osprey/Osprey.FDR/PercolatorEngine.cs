@@ -65,7 +65,8 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
-            Action<PercolatorResults> captureModel = null)
+            Action<PercolatorResults> captureModel = null,
+            PercolatorResults frozenModel = null)
         {
             contributions = null;
             int numFeatures = featureInfos.Length;
@@ -117,7 +118,7 @@ namespace pwiz.Osprey.FDR
 
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             PercolatorResults results = DispatchSvm(
-                percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
+                percEntries, percConfig, logInfo, passLabel, loadFileFeatures, frozenModel);
 
             // Surface the trained model's feature contributions to the caller
             // (the --model-diagnostics report reads them). Computed already; this
@@ -217,7 +218,8 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
         {
             // The lean FdrProjection no longer stores the q-value outputs (issue #4355
             // struct-shrink S0): the score pass hands them to this per-pass sink (the
@@ -276,7 +278,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                loadFileFeatures, sink, captureContributions);
+                loadFileFeatures, sink, captureContributions, captureModel);
             if (streamingAbort)
                 return true;
 
@@ -334,7 +336,8 @@ namespace pwiz.Osprey.FDR
             PercolatorConfig percConfig,
             Action<string> logInfo,
             string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            PercolatorResults frozenModel = null)
         {
             // Section header (full input population). The cross-validation fold count and the
             // actual training-subset size are reported by RunPercolator once the subsample is
@@ -349,7 +352,7 @@ namespace pwiz.Osprey.FDR
             // different standardizer-fit population; removed so C# and Rust train
             // identically at every scale (mirrors Rust run_percolator_fdr, now stream-only).
             return RunPercolatorStreaming(
-                percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
+                percEntries, percConfig, logInfo, passLabel, loadFileFeatures, frozenModel);
         }
 
         /// <summary>
@@ -484,10 +487,26 @@ namespace pwiz.Osprey.FDR
             PercolatorConfig percConfig,
             Action<string> logInfo,
             string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            PercolatorResults frozenModel = null)
         {
             int n = percEntries.Count;
             int maxTrain = percConfig.MaxTrainSize;
+
+            // OSPREY_PASS2_QVALUE=transfer-compete: do NOT retrain. Score the full
+            // population (all reconciled targets + decoys) with the FROZEN 1st-pass
+            // model, then recompute q + PEP by the standard global target-decoy
+            // competition over that non-depleted population. This is the frozen-weights
+            // path but with a real competition null instead of a co-monotone score->q
+            // table -- the fix for the anti-conservative retrain AND the stepped table.
+            if (frozenModel != null)
+            {
+                logInfo(string.Format(
+                    "{0}: applying FROZEN 1st-pass model to all {1} entries (no retrain) + " +
+                    "target-decoy competition for q/PEP.", passLabel, n));
+                return PercolatorFdr.ScorePopulationAndComputeFdr(
+                    percEntries, frozenModel, percConfig, loadFileFeatures);
+            }
 
             // Pull labels / entry IDs / peptides into flat arrays for the
             // subset helpers. On the streaming build the stubs carry no feature
@@ -675,7 +694,8 @@ namespace pwiz.Osprey.FDR
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             IFdrOutputSink sink,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -828,6 +848,11 @@ namespace pwiz.Osprey.FDR
 
             if (trainResults.DiagnosticAbort)
                 return true;
+
+            // Publish the trained 1st-pass model (OSPREY_PASS2_QVALUE=transfer-compete) so the
+            // 2nd pass can re-score reconciled features with this FROZEN model + target-decoy
+            // competition. No-op (null) on every default run, so scoring stays byte-identical.
+            captureModel?.Invoke(trainResults);
 
             // Release the subset-only working sets before the score pass so only the
             // flat per-observation arrays + the projection remain resident across the

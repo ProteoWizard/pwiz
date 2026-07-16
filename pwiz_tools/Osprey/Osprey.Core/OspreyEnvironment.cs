@@ -159,6 +159,13 @@ namespace pwiz.Osprey.Core
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
         public const string PASS2_QVALUE_TRANSFER = @"transfer";
 
+        /// <summary>The <see cref="Pass2QValue"/> transfer-with-competition mode: score the
+        /// reconciled targets+decoys with the FROZEN 1st-pass model (no retrain), then
+        /// recompute q + PEP by a fresh target-decoy competition over that full reconciled
+        /// population (a non-depleted null) -- i.e. the frozen weights feed the standard
+        /// competition q/PEP math instead of a co-monotone score->q table lookup.</summary>
+        public const string PASS2_QVALUE_TRANSFER_COMPETE = @"transfer-compete";
+
         /// <summary>
         /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
@@ -197,6 +204,11 @@ namespace pwiz.Osprey.Core
         public static readonly bool Pass2TransferQ =
             string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
 
+        /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model +
+        /// target-decoy competition path (OSPREY_PASS2_QVALUE=transfer-compete).</summary>
+        public static readonly bool Pass2TransferCompete =
+            string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER_COMPETE, StringComparison.Ordinal);
+
         private static string NormalizePass2QValue(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
@@ -204,6 +216,8 @@ namespace pwiz.Osprey.Core
             string v = raw.Trim().ToLowerInvariant();
             if (v == PASS2_QVALUE_TRANSFER)
                 return PASS2_QVALUE_TRANSFER;
+            if (v == PASS2_QVALUE_TRANSFER_COMPETE)
+                return PASS2_QVALUE_TRANSFER_COMPETE;
             // Fall back to the parity-preserving default on any unrecognized token; the
             // consuming site (Pass2FdrSidecar) warns so a typo is visible in the log.
             return PASS2_QVALUE_PERCOLATOR;
@@ -214,7 +228,8 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrWhiteSpace(raw))
                 return false;
             string v = raw.Trim().ToLowerInvariant();
-            return v != PASS2_QVALUE_PERCOLATOR && v != PASS2_QVALUE_TRANSFER;
+            return v != PASS2_QVALUE_PERCOLATOR && v != PASS2_QVALUE_TRANSFER &&
+                   v != PASS2_QVALUE_TRANSFER_COMPETE;
         }
 
         private static int ParseIntOrZero(string name)

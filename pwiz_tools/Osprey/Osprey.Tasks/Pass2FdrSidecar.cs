@@ -171,7 +171,8 @@ namespace pwiz.Osprey.Tasks
                     // ComputePass2Resident does) so the frozen 1st-pass model can re-score them.
                     // The projection path streams features to a sink and never lands them resident.
                     if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
-                        !config.ModelDiagnostics && !OspreyEnvironment.Pass2TransferQ)
+                        !config.ModelDiagnostics && !OspreyEnvironment.Pass2TransferQ &&
+                        !OspreyEnvironment.Pass2TransferCompete)
                     {
                         // Projection 2nd pass (issue #4374 + #4355 struct-shrink S0 / C1):
                         // stream the reconciled PIN features through the SAME projection
@@ -544,6 +545,29 @@ namespace pwiz.Osprey.Tasks
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
+                    // OSPREY_PASS2_QVALUE=transfer-compete: apply the FROZEN 1st-pass model to
+                    // the reconciled targets+decoys (no retrain) and recompute q + PEP by a
+                    // fresh target-decoy competition over that full, non-depleted population --
+                    // frozen weights fed to the standard competition q/PEP math (not a
+                    // co-monotone score->q table). Fixes both the retrain's decoy-depleted
+                    // null and the table transfer's stepped/quantized q.
+                    if (OspreyEnvironment.Pass2TransferCompete)
+                    {
+                        if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenCompeteModel) &&
+                            frozenCompeteModel?.Results != null)
+                        {
+                            ctx.LogInfo(
+                                "OSPREY_PASS2_QVALUE=transfer-compete: applying the frozen 1st-pass " +
+                                "model to the reconciled targets+decoys and recomputing q/PEP by " +
+                                "target-decoy competition (no 2nd-pass retrain).");
+                            return FirstJoinTask.RunPercolatorFdr(
+                                perFileEntries, config, ctx, "Second-pass",
+                                frozenModel: frozenCompeteModel.Results);
+                        }
+                        ctx.LogWarning(
+                            "OSPREY_PASS2_QVALUE=transfer-compete could not find the frozen 1st-pass " +
+                            "model byproduct; falling back to the 2nd-pass Percolator retrain.");
+                    }
                     // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
                     // the decoy-depleted reconciled+compacted set, apply the FROZEN 1st-pass
                     // model to each entry's RECONCILED features (loaded onto entry.Features
