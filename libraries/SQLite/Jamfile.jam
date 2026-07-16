@@ -52,8 +52,8 @@ lib sqlite3pp : sqlite3pp.cpp sqlite3 : <include>$(THIS_PATH) <link>static : : <
 # Loadable SQLite extension DLL providing the read-only "skyzipvfs" offset VFS, used to open a
 # .blib stored uncompressed inside a .sky.zip in place. It registers via the extension
 # api-routines table, so it does NOT link sqlite3. Built as a shared library; the exported entry
-# point is sqlite3_zipvfs_init. (The Skyline build must copy the resulting DLL next to
-# SQLite.Interop.dll in the output - that deployment wiring still needs to be added/verified.)
+# point is sqlite3_zipvfs_init. The Skyline build installs this next to SQLite.Interop.dll (see the
+# install-zipvfs-ext rule in pwiz_tools/Skyline/Jamfile.jam) and copies it into the output.
 lib zipvfs_ext : zipvfs_ext.c : <link>shared <include>$(THIS_PATH) : : <include>$(THIS_PATH) ;
 
 #exe sqlite : shell.c : <library>sqlite3 <link>static ;

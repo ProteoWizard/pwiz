@@ -4175,7 +4175,7 @@
       <Link>SQLite.Interop.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\libraries\SQLite\$(Platform)\zipvfs_ext.dll">
+    <Content Include="..\Shared\ProteowizardWrapper\obj\$(Platform)\zipvfs_ext.dll">
       <Link>zipvfs_ext.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
