@@ -166,6 +166,30 @@ public sealed class InstrumentParameter
         ["CorrThreshold"] = CorrThreshold.ToString(System.Globalization.CultureInfo.InvariantCulture),
         ["DeltaApex"] = DeltaApex.ToString(System.Globalization.CultureInfo.InvariantCulture),
         ["MinFrag"] = MinFrag.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        // Emit the remaining configurable parameters too so the DIA-Umpire config round-trips
+        // through the output mzML. Skyline's DiaUmpireDdaConverter reuse check reads these back and
+        // compares them against the current config to decide whether a cached conversion can be
+        // reused; any settable parameter omitted here (e.g. BoostComplementaryIon) reads back as the
+        // default and mismatches whenever it was changed, forcing a full re-conversion every run.
+        ["BoostComplementaryIon"] = BoostComplementaryIon.ToString(),
+        ["AdjustFragIntensity"] = AdjustFragIntensity.ToString(),
+        ["MassDefectFilter"] = MassDefectFilter.ToString(),
+        ["MassDefectOffset"] = MassDefectOffset.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["IsoPattern"] = IsoPattern.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["IsoCorrThreshold"] = IsoCorrThreshold.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["StartCharge"] = StartCharge.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["EndCharge"] = EndCharge.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["MS2StartCharge"] = MS2StartCharge.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["MS2EndCharge"] = MS2EndCharge.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["NoMissedScan"] = NoMissedScan.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["NoPeakPerMin"] = NoPeakPerMin.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["StartRT"] = StartRT.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["EndRT"] = EndRT.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["MinMZ"] = MinMZ.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["MinPrecursorMass"] = MinPrecursorMass.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["MaxPrecursorMass"] = MaxPrecursorMass.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["RemoveGroupedPeaksRTOverlap"] = RemoveGroupedPeaksRTOverlap.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["RemoveGroupedPeaksCorr"] = RemoveGroupedPeaksCorr.ToString(System.Globalization.CultureInfo.InvariantCulture),
     };
 
     /// <summary>m/z ppm delta between two masses, unsigned.</summary>
