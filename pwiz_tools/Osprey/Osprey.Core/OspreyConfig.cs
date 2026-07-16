@@ -423,7 +423,10 @@ namespace pwiz.Osprey.Core
     {
         Percolator,
         Mokapot,
-        Simple
+        Simple,
+        /// <summary>Gradient-boosted decision trees (non-linear alternative to the linear
+        /// Percolator SVM); implemented by Osprey.ML GradientBoostedTrees.</summary>
+        FastTree
     }
 
     /// <summary>
