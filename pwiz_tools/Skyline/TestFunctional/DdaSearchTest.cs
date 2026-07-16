@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165)
+                ExpectedResultsFinal = new ExpectedResults(106, 249, 301, 903, 121) // net8 Comet: FixPercolatorPepXml now excludes Percolator-unmatched PSMs (was 145, 338, 392, 1176, 165)
             };
 
             RunFunctionalTest();
