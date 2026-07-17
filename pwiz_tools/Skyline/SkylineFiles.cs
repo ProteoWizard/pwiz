@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net; // HttpStatusCode
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -1282,11 +1281,13 @@ namespace pwiz.Skyline
 
             // We allow silent failures because it is OK for the cache to remain unoptimized
             // or the layout to not be saved.  These aren't critical as long as the document
-            // was saved correctly.
-            catch (UnauthorizedAccessException) {}
-            catch (IOException) {}
-            catch (OperationCanceledException) {}
-            catch (TargetInvocationException) {}
+            // was saved correctly.  A programming defect still gets reported, but the document
+            // is already saved, so this function continues on rather than rethrowing.
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    Program.ReportException(x);
+            }
 
             // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
             //           DocumentSaved lets subscribers know about a new DocumentFilePath. Example: FilesTree uses this event 
