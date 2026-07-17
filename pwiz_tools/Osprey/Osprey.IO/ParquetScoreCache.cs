@@ -532,7 +532,10 @@ namespace pwiz.Osprey.IO
                     if (metadata != null && metadata.Count > 0)
                         writer.CustomMetadata = metadata;
 
-                    int rowsPerGroup = RowGroupRowCapForTest ?? MAX_ROWS_PER_ROW_GROUP;
+                    // Guard the (test-only) cap to at least 1 so a nonsensical
+                    // RowGroupRowCapForTest (0 or negative) can never make the loop
+                    // spin forever; production always uses MAX_ROWS_PER_ROW_GROUP.
+                    int rowsPerGroup = Math.Max(1, RowGroupRowCapForTest ?? MAX_ROWS_PER_ROW_GROUP);
                     for (int start = 0; start < totalRows; start += rowsPerGroup)
                     {
                         int count = Math.Min(rowsPerGroup, totalRows - start);
