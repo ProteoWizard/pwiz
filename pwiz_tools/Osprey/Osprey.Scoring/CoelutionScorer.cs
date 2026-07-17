@@ -70,7 +70,7 @@ namespace pwiz.Osprey.Scoring
         public List<FdrEntry> ScoreWindow(
             IsolationWindow window,
             List<LibraryEntry> fullLibrary,
-            Dictionary<int, List<Spectrum>> spectraByWindowKey,
+            List<Spectrum> windowSpectra,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
             MzCalibrationResult ms1Calibration,
@@ -82,13 +82,11 @@ namespace pwiz.Osprey.Scoring
             var config = context.Config;
             var entries = new List<FdrEntry>();
 
-            int windowKey = (int)Math.Round(window.Center * 10.0);
-            List<Spectrum> windowSpectra;
-            if (!spectraByWindowKey.TryGetValue(windowKey, out windowSpectra) ||
-                windowSpectra.Count == 0)
-            {
+            // The caller (RunCoelutionScoring) resolves this window's calibrated
+            // spectra from the IWindowSpectraProvider by key; an absent/empty
+            // window yields no scored entries, as before.
+            if (windowSpectra == null || windowSpectra.Count == 0)
                 return entries;
-            }
 
             // Sort spectra by RT for XIC extraction, with ScanNumber as a unique
             // secondary key so the comparator never returns 0 -- an allocation-free
