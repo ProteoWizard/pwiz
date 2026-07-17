@@ -188,6 +188,7 @@
     <Compile Include="GUI\MessageIcons.cs" />
     <Compile Include="Mock\HttpMessageHandlerFactory.cs" />
     <Compile Include="SystemUtil\Assume.cs" />
+    <Compile Include="SystemUtil\ByteRangeStream.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\Production.cs" />
     <Compile Include="SystemUtil\Caching\Receiver.cs" />

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Ionic.Zip;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Lib;
@@ -456,7 +457,8 @@ namespace pwiz.Skyline.Model
             if (librarySpec is BiblioSpecLiteSpec)
             {
                 var redundantBlibPath = BiblioSpecLiteSpec.GetRedundantName(blibPath);
-                if (File.Exists(redundantBlibPath))
+                // The redundant .blib may be inside the .sky.zip the document was opened from
+                if (new FilePath(redundantBlibPath).Exists())
                 {
                     zip.AddFile(redundantBlibPath);
                 }
@@ -493,7 +495,8 @@ namespace pwiz.Skyline.Model
         {
             zip.AddFile(docFilePath);
             var auditLogPath = SrmDocument.GetAuditLogPath(docFilePath);
-            if (File.Exists(auditLogPath))
+            // The .skyl may be inside the .sky.zip the document was opened from
+            if (new FilePath(auditLogPath).Exists())
             {
                 zip.AddFile(auditLogPath);
             }
@@ -506,7 +509,8 @@ namespace pwiz.Skyline.Model
                 return;
             }
             string pathCache = ChromatogramCache.FinalPathForName(DocumentPath, null);
-            if (!File.Exists(pathCache))
+            // The .skyd may be inside the .sky.zip the document was opened from
+            if (!new FilePath(pathCache).Exists())
             {
                 return;
             }
@@ -684,7 +688,19 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    var entry = _zip.AddFile(path, string.Empty);
+                    ZipEntry entry;
+                    if (new FilePath(path).IsInZipFile)
+                    {
+                        // The document was opened in place, so this file lives inside another .zip
+                        // and has no path that Ionic can open. Give it a stream instead, opened
+                        // only when the .zip is written, so that no file is ever held in memory.
+                        entry = _zip.AddEntry(fileName, name => new FilePath(path).OpenRead(),
+                            (name, stream) => stream?.Dispose());
+                    }
+                    else
+                    {
+                        entry = _zip.AddFile(path, string.Empty);
+                    }
                     // Store the files that need random access (.skyd, .blib) UNCOMPRESSED so the
                     // document can be opened directly from the .zip without extracting them.
                     if (RandomAccessExtensions.Contains(Path.GetExtension(fileName), StringComparer.OrdinalIgnoreCase))

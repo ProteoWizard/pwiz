@@ -18,7 +18,6 @@
  */
 using System;
 using System.IO;
-using System.IO.Compression;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.Database.FileSystems
@@ -78,19 +77,10 @@ namespace pwiz.Common.Database.FileSystems
             if (entry.IsStored)
                 return zip.OpenStoredEntry(entry);
 
-            // Compressed entry: decompress fully into memory (simple; used for linear reads like the .sky).
-            using (var archive = new ZipArchive(File.OpenRead(zipFilePath), ZipArchiveMode.Read))
-            {
-                var archiveEntry = archive.GetEntry(entry.FileName);
-                if (archiveEntry == null)
-                    throw new FileNotFoundException(string.Format(
-                        Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
-                var ms = new MemoryStream();
-                using (var entryStream = archiveEntry.Open())
-                    entryStream.CopyTo(ms);
-                ms.Position = 0;
-                return ms;
-            }
+            // Compressed entry: decompressed as it is read, so that a big .sky never has to be held
+            // in memory. The stream is forward-only, which is all the linear readers of a .sky,
+            // .skyl or .sky.view need.
+            return zip.OpenDeflatedEntry(entry);
         }
 
         /// <summary>

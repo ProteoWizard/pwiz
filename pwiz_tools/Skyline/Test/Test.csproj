@@ -180,6 +180,7 @@
     <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="CalibrationCurveOptionsTest.cs" />
+    <Compile Include="ChromatogramCacheFromZipTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
@@ -383,6 +384,7 @@
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
     <EmbeddedResource Include="BookmarkEnumeratorTest2.sky" />
+    <None Include="ChromatogramCacheFromZipTest.zip" />
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />

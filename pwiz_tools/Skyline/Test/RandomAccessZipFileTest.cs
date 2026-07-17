@@ -22,6 +22,7 @@ using System.Text;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Database.FileSystems;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 

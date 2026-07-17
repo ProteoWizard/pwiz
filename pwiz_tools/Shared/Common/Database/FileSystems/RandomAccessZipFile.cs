@@ -19,6 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Database.FileSystems
 {
@@ -49,6 +52,7 @@ namespace pwiz.Common.Database.FileSystems
         // ReSharper restore InconsistentNaming
 
         public const ushort COMPRESSION_STORED = 0;
+        public const ushort COMPRESSION_DEFLATE = 8;
 
         public RandomAccessZipFile(string zipPath)
         {
@@ -187,6 +191,86 @@ namespace pwiz.Common.Database.FileSystems
             {
                 stream.Dispose();
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Opens a read-only stream which decompresses a Deflate entry, reading its compressed
+        /// bytes in place from the .zip file. The returned stream is forward-only, but it does
+        /// report the entry's uncompressed <see cref="Stream.Length"/>, which progress reporting
+        /// needs, and which a bare DeflateStream cannot supply.
+        /// <br/>
+        /// This exists instead of System.IO.Compression.ZipArchive because ZipArchive fails to open
+        /// the entries of the large .zip files that Share produces ("A local file header is
+        /// corrupt"), whereas the byte range this class works out is correct.
+        /// </summary>
+        public Stream OpenDeflatedEntry(ZipEntryInfo entry)
+        {
+            if (entry == null)
+                throw new ArgumentNullException(nameof(entry));
+            if (entry.CompressionMethod != COMPRESSION_DEFLATE)
+                throw new InvalidOperationException(
+                    $@"Zip entry '{entry.FileName}' is not deflated (method {entry.CompressionMethod}).");
+
+            var stream = new FileStream(ZipPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            try
+            {
+                long dataOffset = ReadLocalDataOffset(stream, entry.LocalHeaderOffset);
+                // A zip entry holds a raw Deflate stream, which is what DeflateStream reads.
+                var compressed = new ByteRangeStream(stream, dataOffset, entry.CompressedSize);
+                var deflate = new DeflateStream(compressed, CompressionMode.Decompress);
+                return new DeflatedEntryStream(deflate, entry.UncompressedSize);
+            }
+            catch
+            {
+                stream.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// A forward-only stream over a decompressed zip entry which knows its own length, since
+        /// the length is in the zip's directory even though the DeflateStream cannot report it.
+        /// </summary>
+        private sealed class DeflatedEntryStream : Stream
+        {
+            private readonly Stream _deflate;
+            private long _position;
+
+            public DeflatedEntryStream(Stream deflate, long length)
+            {
+                _deflate = deflate;
+                Length = length;
+            }
+
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length { get; }
+
+            public override long Position
+            {
+                get { return _position; }
+                set { throw new NotSupportedException(); }
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                int read = _deflate.Read(buffer, offset, count);
+                _position += read;
+                return read;
+            }
+
+            public override void Flush() { }
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                    _deflate.Dispose();
+                base.Dispose(disposing);
             }
         }
 
@@ -410,105 +494,4 @@ namespace pwiz.Common.Database.FileSystems
         }
     }
 
-    /// <summary>
-    /// A read-only, seekable stream that exposes a contiguous byte range
-    /// [offset, offset+length) of an underlying stream as if it were a whole file starting
-    /// at position 0. Used to read a stored zip entry's data in place. Owns (and disposes)
-    /// the underlying stream unless constructed with leaveOpen.
-    /// </summary>
-    public sealed class ByteRangeStream : Stream
-    {
-        private readonly Stream _baseStream;
-        private readonly long _offset;
-        private readonly long _length;
-        private readonly bool _leaveOpen;
-        private long _position;
-
-        public ByteRangeStream(Stream baseStream, long offset, long length, bool leaveOpen = false)
-        {
-            _baseStream = baseStream ?? throw new ArgumentNullException(nameof(baseStream));
-            if (offset < 0)
-                throw new ArgumentOutOfRangeException(nameof(offset));
-            if (length < 0)
-                throw new ArgumentOutOfRangeException(nameof(length));
-            if (!baseStream.CanSeek)
-                throw new ArgumentException(@"Base stream must be seekable.", nameof(baseStream));
-            _offset = offset;
-            _length = length;
-            _leaveOpen = leaveOpen;
-            _position = 0;
-        }
-
-        public override bool CanRead => true;
-        public override bool CanSeek => true;
-        public override bool CanWrite => false;
-        public override long Length => _length;
-
-        public override long Position
-        {
-            get => _position;
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                _position = value;
-            }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            if (_position >= _length)
-                return 0;
-            long remaining = _length - _position;
-            if (count > remaining)
-                count = (int) remaining;
-            if (count <= 0)
-                return 0;
-            _baseStream.Seek(_offset + _position, SeekOrigin.Begin);
-            int total = 0;
-            while (total < count)
-            {
-                int n = _baseStream.Read(buffer, offset + total, count - total);
-                if (n <= 0)
-                    break;
-                total += n;
-            }
-            _position += total;
-            return total;
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            long newPosition;
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    newPosition = offset;
-                    break;
-                case SeekOrigin.Current:
-                    newPosition = _position + offset;
-                    break;
-                case SeekOrigin.End:
-                    newPosition = _length + offset;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(origin));
-            }
-            if (newPosition < 0)
-                throw new IOException(@"An attempt was made to move the position before the beginning of the stream.");
-            _position = newPosition;
-            return _position;
-        }
-
-        public override void Flush() { }
-        public override void SetLength(long value) => throw new NotSupportedException();
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && !_leaveOpen)
-                _baseStream.Dispose();
-            base.Dispose(disposing);
-        }
-    }
 }

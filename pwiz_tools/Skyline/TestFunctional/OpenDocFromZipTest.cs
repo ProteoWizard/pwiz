@@ -88,6 +88,31 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected.ChromatogramPointCount, actual.ChromatogramPointCount,
                 "chromatogram points read from the .skyd differ");
 
+            // Sharing a document which is itself open in place: its .skyd and .blib have no path on
+            // disk, so they are added to the new .zip as streams read from the old one.
+            string reSharedZip = TestFilesDir.GetTestPath("ReShared.sky.zip");
+            RunUI(() => SkylineWindow.ShareDocument(reSharedZip, new ShareType(true, null)));
+            AssertEx.FileExists(reSharedZip);
+            var reSharedZipFile = new RandomAccessZipFile(reSharedZip);
+            Assert.IsTrue(reSharedZipFile.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions),
+                "re-shared .zip has entries that would prevent opening in place: " +
+                string.Join(", ", reSharedZipFile.Entries.Select(e => e.FileName)));
+            Assert.IsTrue(reSharedZipFile.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions),
+                ".skyd/.blib were not stored uncompressed in the re-shared .zip");
+
+            // The re-shared .zip must hold the same document: open it in place and compare.
+            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.OpenSharedFile(reSharedZip));
+            var reSharedDoc = WaitForDocumentLoaded();
+            Assert.AreEqual(reSharedZip, SkylineWindow.SharedZipFilePath);
+            var reShared = Summarize(reSharedDoc);
+            Assert.AreEqual(expected.PeptideCount, reShared.PeptideCount);
+            Assert.AreEqual(expected.TransitionCount, reShared.TransitionCount);
+            Assert.AreEqual(expected.SpectrumCount, reShared.SpectrumCount,
+                "library spectra differ after re-sharing from inside a .zip");
+            Assert.AreEqual(expected.ChromatogramPointCount, reShared.ChromatogramPointCount,
+                "chromatogram points differ after re-sharing from inside a .zip");
+
             // Saving a document opened in place cannot write back into the .zip; everything is
             // extracted to a folder and reopened from there, and that document is what gets saved.
             RunUI(() => SkylineWindow.SaveDocument());

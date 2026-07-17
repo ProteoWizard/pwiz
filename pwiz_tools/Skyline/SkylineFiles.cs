@@ -1540,7 +1540,8 @@ namespace pwiz.Skyline
                     else if (DocumentFilePath != null)
                     {
                         string viewFilePath = GetViewFile(DocumentFilePath);
-                        if (File.Exists(viewFilePath))
+                        // The .sky.view may be inside the .sky.zip the document was opened from
+                        if (new FilePath(viewFilePath).Exists())
                         {
                             sharing.ViewFilePath = viewFilePath;
                         }
