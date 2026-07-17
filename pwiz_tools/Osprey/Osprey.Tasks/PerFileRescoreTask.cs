@@ -478,7 +478,7 @@ namespace pwiz.Osprey.Tasks
         ///   <item>Reload MS2/MS1 mass calibration from the sibling .calibration.json.</item>
         ///   <item>Pick the refined RT calibration when present, else fall back to
         ///       the original first-pass calibration.</item>
-        ///   <item>Call <see cref="ScoringPipeline.RunCoelutionScoring"/> with the override-aware
+        ///   <item>Call <see cref="ScoringPipeline"/>.RunCoelutionScoring with the override-aware
         ///       <see cref="ScoringContext"/>.</item>
         ///   <item>Overlay the re-scored entries back onto the per-file
         ///       FdrEntry stubs by entry_id, preserving ParquetIndex.</item>
@@ -1058,7 +1058,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Build the per-file scoring subset: the boundary_overrides map
         /// keyed by entry_id, and the subset library handed to
-        /// <see cref="ScoringPipeline.RunCoelutionScoring"/> so it
+        /// <see cref="ScoringPipeline"/>.RunCoelutionScoring so it
         /// doesn't waste work on entries we're not re-scoring. The subset
         /// is the same library entries the original Stage 1-4 scoring used,
         /// just a smaller list.
