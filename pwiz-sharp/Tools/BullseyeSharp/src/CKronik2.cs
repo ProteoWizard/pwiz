@@ -11,6 +11,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -36,12 +37,16 @@ namespace Pwiz.Tools.BullseyeSharp
         public int scanNum;
         public string file;
         public float rTime;
+        public double scanWinLower;
+        public double scanWinUpper;  // 0 means no SIM/boxcar window
 
         public CScan()
         {
             scanNum = 0;
             file = "";
             rTime = 0;
+            scanWinLower = 0;
+            scanWinUpper = 0;
             vPep = new List<CPep>();
         }
     }
@@ -118,6 +123,11 @@ namespace Pwiz.Tools.BullseyeSharp
 
     class CKronik2
     {
+        private const double PROTON = 1.00727649;
+
+        // m/z of a neutral mass at a given charge (mirrors native mzFromMassCharge in CKronik2.h)
+        private static double MzFromMassCharge(double mass, int charge) => (mass + charge * PROTON) / charge;
+
         private int iGapTol;
         private int iMatchTol;
         private double dPPMTol;
@@ -223,6 +233,24 @@ namespace Pwiz.Tools.BullseyeSharp
                     currentScan.scanNum = Convert.ToInt32(tokens[1]);
                     currentScan.rTime = (float)Convert.ToDouble(tokens[2]);
                     currentScan.file = tokens[3];
+                    // Parse any remaining tokens looking for scan window bounds (SIM/boxcar acquisition).
+                    // Format: S\tscanNum\trTime\tfile\t[precursorInfo...]\tscanWinLower\tscanWinUpper
+                    // The last two numeric tokens (if present) are the scan window bounds.
+                    string prevTok = null, lastTok = null;
+                    for (int t = 4; t < tokens.Length; t++)
+                    {
+                        if (tokens[t].Length == 0) continue; // strtok skips empty fields
+                        prevTok = lastTok;
+                        lastTok = tokens[t];
+                    }
+                    if (prevTok != null && lastTok != null &&
+                        double.TryParse(prevTok, NumberStyles.Float, CultureInfo.InvariantCulture, out double winLower) &&
+                        double.TryParse(lastTok, NumberStyles.Float, CultureInfo.InvariantCulture, out double winUpper) &&
+                        winLower > 0 && winUpper > winLower)
+                    {
+                        currentScan.scanWinLower = winLower;
+                        currentScan.scanWinUpper = winUpper;
+                    }
                 }
                 else
                 {
@@ -271,12 +299,23 @@ namespace Pwiz.Tools.BullseyeSharp
                 charge = maxScan.vPep[0].charge;
                 matchCount = 1;
 
+                // m/z range this feature spans, used to skip SIM/boxcar scans whose window doesn't cover it
+                double featureMzLow = MzFromMassCharge(mass - massToler, charge);
+                double featureMzHigh = MzFromMassCharge(mass + massToler, charge);
+
                 //look left
                 vLeft.Clear();
                 gap = 0;
                 i = sIndex - 1;
                 while (i > -1 && gap <= iGapTol)
                 {
+                    // Skip scans whose SIM/boxcar window doesn't cover this feature's m/z (without spending a gap)
+                    if (_allScans[i].scanWinUpper > 0 &&
+                        (featureMzHigh < _allScans[i].scanWinLower || featureMzLow > _allScans[i].scanWinUpper))
+                    {
+                        i--;
+                        continue;
+                    }
                     bMatch = false;
                     int iScan = i;
                     int iPep = -1;
@@ -306,6 +345,13 @@ namespace Pwiz.Tools.BullseyeSharp
                 i = sIndex + 1;
                 while (i < _allScans.Count && gap <= iGapTol)
                 {
+                    // Skip scans whose SIM/boxcar window doesn't cover this feature's m/z (without spending a gap)
+                    if (_allScans[i].scanWinUpper > 0 &&
+                        (featureMzHigh < _allScans[i].scanWinLower || featureMzLow > _allScans[i].scanWinUpper))
+                    {
+                        i++;
+                        continue;
+                    }
                     bMatch = false;
                     int iScan = i;
                     int iPep = -1;
