@@ -2295,6 +2295,146 @@ namespace pwiz.Osprey.Test
 
         #region FdrScoresSidecar Tests
 
+        /// <summary>
+        /// Bounded row-group write: a parquet written as several row groups (forced via the
+        /// test-only <see cref="ParquetScoreCache.RowGroupRowCapForTest"/> cap) reads back
+        /// logically identical -- same rows in the same global (entry_id, charge, scan_number)
+        /// order, same running ParquetIndex spanning the group boundaries, same per-row
+        /// features + fragment blobs -- to the same entries written as one row group. Only the
+        /// physical row-group framing differs. Guards the memory-capping chunked write path.
+        /// </summary>
+        [TestMethod]
+        public void TestParquetBoundedRowGroupRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_rowgroup_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // EntryIds deliberately out of order so the write's canonical sort is
+                // exercised; distinct features + fragment blobs per row so a chunk-boundary
+                // row mismap surfaces as a value mismatch, not a silent pass.
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+                    for (int f = 0; f < features.Length; f++)
+                        features[f] = id * 100.0 + f;
+                    entries.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        IsDecoy = (id & 1u) == 0,
+                        Charge = 2,
+                        ScanNumber = id * 10,
+                        ApexRt = id + 0.5,
+                        StartRt = id + 0.1,
+                        EndRt = id + 0.9,
+                        ModifiedSequence = "PEPTIDE" + id,
+                        Features = features,
+                        FragmentMzs = new[] { id + 0.25, id + 0.75 },
+                        FragmentIntensities = new float[] { id, id + 1 },
+                        ReferenceXicRts = new[] { id + 1.5, id + 2.5, id + 3.5 },
+                        ReferenceXicIntensities = new[] { id * 2.0, id * 3.0 },
+                    });
+                }
+
+                string singlePath = Path.Combine(dir, "single.scores.parquet");
+                string multiPath = Path.Combine(dir, "multi.scores.parquet");
+
+                // Single-group reference (cap unset), then multi-group (cap 3 -> ceil(7/3)=3
+                // groups). Same entries, same writer, only the row-group cap differs.
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                ParquetScoreCache.WriteScoresParquet(singlePath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(multiPath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(1, CountRowGroups(singlePath));
+                Assert.AreEqual(3, CountRowGroups(multiPath));
+
+                var single = ParquetScoreCache.LoadFullFdrEntries(singlePath);
+                var multi = ParquetScoreCache.LoadFullFdrEntries(multiPath);
+
+                Assert.AreEqual(entries.Count, single.Count);
+                Assert.AreEqual(single.Count, multi.Count);
+
+                // Distinct entry_ids -> canonical sort is ascending; ParquetIndex is the
+                // running global row position, unbroken across the row-group boundaries.
+                var expectedIds = new uint[] { 1, 2, 3, 5, 7, 8, 9 };
+                for (int i = 0; i < multi.Count; i++)
+                {
+                    Assert.AreEqual(expectedIds[i], multi[i].EntryId);
+                    Assert.AreEqual((uint)i, multi[i].ParquetIndex,
+                        "ParquetIndex must be the global row position across row groups");
+
+                    // Multi-group row equals single-group row field-for-field.
+                    Assert.AreEqual(single[i].EntryId, multi[i].EntryId);
+                    Assert.AreEqual(single[i].ParquetIndex, multi[i].ParquetIndex);
+                    Assert.AreEqual(single[i].IsDecoy, multi[i].IsDecoy);
+                    Assert.AreEqual(single[i].Charge, multi[i].Charge);
+                    Assert.AreEqual(single[i].ScanNumber, multi[i].ScanNumber);
+                    Assert.AreEqual(single[i].ApexRt, multi[i].ApexRt);
+                    Assert.AreEqual(single[i].StartRt, multi[i].StartRt);
+                    Assert.AreEqual(single[i].EndRt, multi[i].EndRt);
+                    Assert.AreEqual(single[i].ModifiedSequence, multi[i].ModifiedSequence);
+                    CollectionAssert.AreEqual(single[i].Features, multi[i].Features);
+                    CollectionAssert.AreEqual(single[i].FragmentMzs, multi[i].FragmentMzs);
+                    CollectionAssert.AreEqual(single[i].FragmentIntensities, multi[i].FragmentIntensities);
+                }
+
+                // An all-empty blob column across bounded row groups. Decoys form a
+                // contiguous block at the end of the entry_id sort, so a group can fall
+                // entirely in a region where a blob (e.g. reference XIC) is absent on
+                // every row. A zero-length blob would make the whole group's column
+                // zero-length, which the Parquet reader cannot decode; empty blobs are
+                // written as NULL cells to avoid that. Here reference_xic is empty on
+                // every row and cap=3 forces 3 groups -> every group's reference_xic
+                // column is all-null; it must still read back as empty per row.
+                var emptyXic = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 1, 2, 3, 4, 5, 6, 7 })
+                {
+                    emptyXic.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        Charge = 2,
+                        ScanNumber = id,
+                        ModifiedSequence = "PEP" + id,
+                        Features = new double[ParquetScoreCache.NUM_PIN_FEATURES],
+                        FragmentMzs = new[] { id + 0.5 },
+                        FragmentIntensities = new float[] { id },
+                        // ReferenceXicRts / ReferenceXicIntensities left null (empty).
+                    });
+                }
+                string emptyXicPath = Path.Combine(dir, "empty_xic.scores.parquet");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(emptyXicPath, emptyXic, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(3, CountRowGroups(emptyXicPath));
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(emptyXicPath);
+                Assert.AreEqual(emptyXic.Count, reloaded.Count);
+                foreach (var e in reloaded)
+                {
+                    Assert.AreEqual(0, e.ReferenceXicRts.Length,
+                        "an all-empty reference-XIC column must read back as empty, not crash");
+                    Assert.AreEqual(0, e.ReferenceXicIntensities.Length);
+                    Assert.AreEqual(1, e.FragmentMzs.Length);
+                }
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        private static int CountRowGroups(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult())
+                return reader.RowGroupCount;
+        }
+
         private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep,
             double runProteinQvalue = 1.0)
         {

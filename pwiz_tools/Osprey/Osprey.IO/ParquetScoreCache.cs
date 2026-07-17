@@ -173,6 +173,22 @@ namespace pwiz.Osprey.IO
 
         #region Write
 
+        // Cap each Parquet row group at this many rows so the writer materializes,
+        // compresses, and flushes one chunk's columns at a time instead of the whole
+        // file. The rows are emitted in the same global (entry_id, charge, scan_number)
+        // order as a single-group write, so the logical rows, their order, and the
+        // read-side ParquetIndex (running row position) are unchanged -- only the
+        // physical row-group framing differs. No gate compares parquet bytes (the
+        // regression + cross-impl gates compare the blib + protein-FDR at 1e-9), and
+        // every reader already loops RowGroupCount, so N groups read back identically
+        // to one. See ai/todos/active/TODO-20260716_osprey_parquet_bounded_rowgroup_write.md.
+        private const int MAX_ROWS_PER_ROW_GROUP = 100_000;
+
+        // Test seam: when non-null, overrides MAX_ROWS_PER_ROW_GROUP so a unit test can
+        // force several row groups from a handful of rows and assert the multi-group
+        // round-trip is logically identical. Always null in production.
+        internal static int? RowGroupRowCapForTest;
+
         /// <summary>
         /// Write scored entries to a Parquet file.
         /// Schema columns: entry_id, is_decoy, charge, scan_number, modified_sequence,
@@ -191,101 +207,78 @@ namespace pwiz.Osprey.IO
             var featureFields = BuildFeatureFields();
             var schema = BuildWriteSchema(featureFields);
 
-            // Build column arrays. Schema matches Rust's
-            // write_scores_parquet_with_metadata; columns are name-indexed
-            // so order is informational, but kept aligned for clarity.
-            var entryIds = new uint[n];
-            var isDecoys = new bool[n];
-            var sequences = new string[n];
-            var modifiedSequences = new string[n];
-            var charges = new byte[n];
-            var precursorMzs = new double[n];
-            var proteinIds = new string[n];
-            var scanNumbers = new uint[n];
-            var apexRts = new double[n];
-            var startRts = new double[n];
-            var endRts = new double[n];
-            var boundsAreas = new double[n];
-            var boundsSnrs = new double[n];
-            var fileNames = new string[n];
-            var cwtCandidates = new byte[n][];
-            var fragmentMzs = new byte[n][];
-            var fragmentIntensities = new byte[n][];
-            var refXicRts = new byte[n][];
-            var refXicIntensities = new byte[n][];
-            var featureArrays = new double[NUM_PIN_FEATURES][];
-            for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                featureArrays[f] = new double[n];
-
             // Iterate in canonical sorted order (entry_id, charge, scan_number)
-            // so per-side parquets have identical physical row layout across the
+            // so per-side parquets have identical physical row order across the
             // Rust and C# impls. Order-sensitive consumers downstream (Stage 5
             // standardizer, SVM training) then see the same row sequence
             // regardless of which side wrote the parquet. Mirrors Rust
-            // pipeline.rs::write_scores_parquet_with_metadata.
+            // pipeline.rs::write_scores_parquet_with_metadata. The row groups
+            // written below preserve this order across chunk boundaries.
             var sortedIndices = Enumerable.Range(0, n)
                 .OrderBy(idx => entries[idx].EntryId)
                 .ThenBy(idx => entries[idx].Charge)
                 .ThenBy(idx => entries[idx].ScanNumber)
                 .ToArray();
 
-            using (var buildProgress = new ProgressReporter(
-                string.Format("Preparing {0} entries", n), n, string.Empty,
-                ProgressReporter.IO_INTERVAL_SECONDS))
+            // Build and write one bounded row group at a time. Each chunk
+            // materializes only its own column arrays for rows [start, start+count)
+            // in the sorted order above; they are released once the group is
+            // flushed, so peak residency is one row group rather than all n rows.
+            WriteChunkedParquet(path, schema, metadata, n, (start, count) =>
             {
-                for (int i = 0; i < n; i++)
+                var entryIds = new uint[count];
+                var isDecoys = new bool[count];
+                var sequences = new string[count];
+                var modifiedSequences = new string[count];
+                var charges = new byte[count];
+                var precursorMzs = new double[count];
+                var proteinIds = new string[count];
+                var scanNumbers = new uint[count];
+                var apexRts = new double[count];
+                var startRts = new double[count];
+                var endRts = new double[count];
+                var boundsAreas = new double[count];
+                var boundsSnrs = new double[count];
+                var fileNames = new string[count];
+                var cwtCandidates = new byte[count][];
+                var fragmentMzs = new byte[count][];
+                var fragmentIntensities = new byte[count][];
+                var refXicRts = new byte[count][];
+                var refXicIntensities = new byte[count][];
+                var featureArrays = new double[NUM_PIN_FEATURES][];
+                for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                    featureArrays[f] = new double[count];
+
+                for (int j = 0; j < count; j++)
                 {
-                    var entry = entries[sortedIndices[i]];
-                    entryIds[i] = entry.EntryId;
-                    isDecoys[i] = entry.IsDecoy;
-                    sequences[i] = entry.Sequence ?? string.Empty;
-                    modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
-                    charges[i] = entry.Charge;
-                    precursorMzs[i] = entry.PrecursorMz;
-                    proteinIds[i] = entry.ProteinIds != null
+                    var entry = entries[sortedIndices[start + j]];
+                    entryIds[j] = entry.EntryId;
+                    isDecoys[j] = entry.IsDecoy;
+                    sequences[j] = entry.Sequence ?? string.Empty;
+                    modifiedSequences[j] = entry.ModifiedSequence ?? string.Empty;
+                    charges[j] = entry.Charge;
+                    precursorMzs[j] = entry.PrecursorMz;
+                    proteinIds[j] = entry.ProteinIds != null
                         ? string.Join(";", entry.ProteinIds)
                         : null;
-                    scanNumbers[i] = entry.ScanNumber;
-                    apexRts[i] = entry.ApexRt;
-                    startRts[i] = entry.PeakBounds != null ? entry.PeakBounds.StartRt : 0.0;
-                    endRts[i] = entry.PeakBounds != null ? entry.PeakBounds.EndRt : 0.0;
-                    boundsAreas[i] = entry.PeakBounds != null ? entry.PeakBounds.Area : 0.0;
-                    boundsSnrs[i] = entry.PeakBounds != null ? entry.PeakBounds.SignalToNoise : 0.0;
-                    fileNames[i] = entry.FileName ?? string.Empty;
+                    scanNumbers[j] = entry.ScanNumber;
+                    apexRts[j] = entry.ApexRt;
+                    startRts[j] = entry.PeakBounds != null ? entry.PeakBounds.StartRt : 0.0;
+                    endRts[j] = entry.PeakBounds != null ? entry.PeakBounds.EndRt : 0.0;
+                    boundsAreas[j] = entry.PeakBounds != null ? entry.PeakBounds.Area : 0.0;
+                    boundsSnrs[j] = entry.PeakBounds != null ? entry.PeakBounds.SignalToNoise : 0.0;
+                    fileNames[j] = entry.FileName ?? string.Empty;
 
-                    ExtractPinFeatures(entry.Features, featureArrays, i);
-                    buildProgress.Report(i + 1);
+                    ExtractPinFeatures(entry.Features, featureArrays, j);
                 }
-            }
 
-            // Write to a sibling temp file first, then atomically rename into
-            // the final path (safe NAS writes): the temp lives in the SAME
-            // directory as the destination, so the promote is an in-volume
-            // rename rather than a cross-volume copy that could truncate.
-            using (var saver = new FileSaver(path))
-            {
-                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
-                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
-                {
-                    writer.CompressionMethod = CompressionMethod.Zstd;
-
-                    // Set custom metadata if provided
-                    if (metadata != null && metadata.Count > 0)
-                        writer.CustomMetadata = metadata;
-
-                    using (var group = writer.CreateRowGroup())
-                    {
-                        var columns = BuildRowGroupColumns(
-                            entryIds, isDecoys, sequences, modifiedSequences, charges,
-                            precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                            boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
-                            fragmentIntensities, refXicRts, refXicIntensities,
-                            featureFields, featureArrays);
-                        WriteRowGroupColumns(group, columns, n);
-                    }
-                }
-                saver.Commit();
-            }
+                return BuildRowGroupColumns(
+                    entryIds, isDecoys, sequences, modifiedSequences, charges,
+                    precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                    boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                    fragmentIntensities, refXicRts, refXicIntensities,
+                    featureFields, featureArrays);
+            });
         }
 
         /// <summary>
@@ -310,58 +303,63 @@ namespace pwiz.Osprey.IO
             var featureFields = BuildFeatureFields();
             var schema = BuildWriteSchema(featureFields);
 
-            var entryIds = new uint[n];
-            var isDecoys = new bool[n];
-            var sequences = new string[n];
-            var modifiedSequences = new string[n];
-            var charges = new byte[n];
-            var precursorMzs = new double[n];
-            var proteinIds = new string[n];
-            var scanNumbers = new uint[n];
-            var apexRts = new double[n];
-            var startRts = new double[n];
-            var endRts = new double[n];
-            var boundsAreas = new double[n];
-            var boundsSnrs = new double[n];
-            var fileNames = new string[n];
-            // The blob columns below carry per-entry binary payloads
-            // matching Rust pipeline.rs:1620-1645's encoding:
-            //   cwt_candidates             = u32 LE count + N×(6×f64 LE)
-            //   fragment_mzs               = M×f64 LE   (no count prefix)
-            //   fragment_intensities       = M×f32 LE   (no count prefix)
-            //   reference_xic_rts          = K×f64 LE
-            //   reference_xic_intensities  = K×f64 LE
-            // Length is recovered on read as bytes / sizeof(element).
-            var cwtCandidates = new byte[n][];
-            var fragmentMzs = new byte[n][];
-            var fragmentIntensities = new byte[n][];
-            var refXicRts = new byte[n][];
-            var refXicIntensities = new byte[n][];
-            var featureArrays = new double[NUM_PIN_FEATURES][];
-            for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                featureArrays[f] = new double[n];
-
             // Iterate in canonical sorted order (entry_id, charge, scan_number)
-            // so per-side parquets have identical physical row layout across
+            // so per-side parquets have identical physical row order across
             // Rust and C# impls. Order-sensitive consumers downstream (Stage 5
             // standardizer, SVM training) then see the same row sequence
             // regardless of which side wrote the parquet. Mirrors Rust
             // pipeline.rs::write_scores_parquet_with_metadata. ParquetIndex is
-            // assigned to the post-sort destination row below.
+            // assigned to the post-sort destination row below (the global row
+            // position, preserved across the bounded row-group boundaries).
             var sortedIndices = Enumerable.Range(0, n)
                 .OrderBy(idx => entries[idx].EntryId)
                 .ThenBy(idx => entries[idx].Charge)
                 .ThenBy(idx => entries[idx].ScanNumber)
                 .ToArray();
 
-            using (var buildProgress = new ProgressReporter(
-                string.Format("Preparing {0} entries", n), n, string.Empty,
-                ProgressReporter.IO_INTERVAL_SECONDS))
+            // Build and write one bounded row group at a time. Each chunk
+            // materializes only its own column arrays (including the heavy blob
+            // columns) for rows [start, start+count) in the sorted order above,
+            // then releases them once the group is flushed -- so peak residency
+            // is one row group's columns + native compression buffers rather
+            // than the whole file's.
+            WriteChunkedParquet(path, schema, metadata, n, (start, count) =>
             {
-                for (int i = 0; i < n; i++)
+                var entryIds = new uint[count];
+                var isDecoys = new bool[count];
+                var sequences = new string[count];
+                var modifiedSequences = new string[count];
+                var charges = new byte[count];
+                var precursorMzs = new double[count];
+                var proteinIds = new string[count];
+                var scanNumbers = new uint[count];
+                var apexRts = new double[count];
+                var startRts = new double[count];
+                var endRts = new double[count];
+                var boundsAreas = new double[count];
+                var boundsSnrs = new double[count];
+                var fileNames = new string[count];
+                // The blob columns below carry per-entry binary payloads
+                // matching Rust pipeline.rs:1620-1645's encoding:
+                //   cwt_candidates             = u32 LE count + N×(6×f64 LE)
+                //   fragment_mzs               = M×f64 LE   (no count prefix)
+                //   fragment_intensities       = M×f32 LE   (no count prefix)
+                //   reference_xic_rts          = K×f64 LE
+                //   reference_xic_intensities  = K×f64 LE
+                // Length is recovered on read as bytes / sizeof(element).
+                var cwtCandidates = new byte[count][];
+                var fragmentMzs = new byte[count][];
+                var fragmentIntensities = new byte[count][];
+                var refXicRts = new byte[count][];
+                var refXicIntensities = new byte[count][];
+                var featureArrays = new double[NUM_PIN_FEATURES][];
+                for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                    featureArrays[f] = new double[count];
+
+                for (int j = 0; j < count; j++)
                 {
-                    var entry = entries[sortedIndices[i]];
-                    // Assign ParquetIndex to match the row position we are
+                    var entry = entries[sortedIndices[start + j]];
+                    // Assign ParquetIndex to match the global row position we are
                     // about to write. Mirrors LoadFdrStubsFromParquet, which
                     // assigns ParquetIndex = row on read. Without this
                     // assignment, in-memory entries reach Stage 5
@@ -379,22 +377,22 @@ namespace pwiz.Osprey.IO
                     // byte-identical but reconciliation.json action shape
                     // diverged -- 35K use_cwt actions on HPC side, 814 on
                     // in-memory side, total identical).
-                    entry.ParquetIndex = (uint)i;
-                    entryIds[i] = entry.EntryId;
-                    isDecoys[i] = entry.IsDecoy;
-                    charges[i] = entry.Charge;
-                    scanNumbers[i] = entry.ScanNumber;
-                    modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
-                    apexRts[i] = entry.ApexRt;
-                    startRts[i] = entry.StartRt;
-                    endRts[i] = entry.EndRt;
-                    boundsAreas[i] = entry.BoundsArea;
-                    boundsSnrs[i] = entry.BoundsSnr;
-                    fileNames[i] = fileName ?? string.Empty;
-                    fragmentMzs[i] = EncodeF64Blob(entry.FragmentMzs);
-                    fragmentIntensities[i] = EncodeF32Blob(entry.FragmentIntensities);
-                    refXicRts[i] = EncodeF64Blob(entry.ReferenceXicRts);
-                    refXicIntensities[i] = EncodeF64Blob(entry.ReferenceXicIntensities);
+                    entry.ParquetIndex = (uint)(start + j);
+                    entryIds[j] = entry.EntryId;
+                    isDecoys[j] = entry.IsDecoy;
+                    charges[j] = entry.Charge;
+                    scanNumbers[j] = entry.ScanNumber;
+                    modifiedSequences[j] = entry.ModifiedSequence ?? string.Empty;
+                    apexRts[j] = entry.ApexRt;
+                    startRts[j] = entry.StartRt;
+                    endRts[j] = entry.EndRt;
+                    boundsAreas[j] = entry.BoundsArea;
+                    boundsSnrs[j] = entry.BoundsSnr;
+                    fileNames[j] = fileName ?? string.Empty;
+                    fragmentMzs[j] = EncodeF64Blob(entry.FragmentMzs);
+                    fragmentIntensities[j] = EncodeF32Blob(entry.FragmentIntensities);
+                    refXicRts[j] = EncodeF64Blob(entry.ReferenceXicRts);
+                    refXicIntensities[j] = EncodeF64Blob(entry.ReferenceXicIntensities);
 
                     // Mirror Rust's invariant: every row carries a cwt_candidates
                     // blob, even when the candidate list is empty. Rust's
@@ -418,7 +416,7 @@ namespace pwiz.Osprey.IO
                     // without allocating a fresh List per empty row.
                     // CwtCandidateCodec.Encode takes IReadOnlyList<CwtCandidate>
                     // which both List<T> and T[] satisfy.
-                    cwtCandidates[i] = CwtCandidateCodec.Encode(
+                    cwtCandidates[j] = CwtCandidateCodec.Encode(
                         entry.CwtCandidates ?? (IReadOnlyList<CwtCandidate>)Array.Empty<CwtCandidate>());
 
                     LibraryEntry libEntry = null;
@@ -426,67 +424,44 @@ namespace pwiz.Osprey.IO
                         libraryById.TryGetValue(entry.EntryId, out libEntry);
                     if (libEntry != null)
                     {
-                        sequences[i] = libEntry.Sequence ?? string.Empty;
-                        precursorMzs[i] = libEntry.PrecursorMz;
-                        proteinIds[i] = libEntry.ProteinIds != null
+                        sequences[j] = libEntry.Sequence ?? string.Empty;
+                        precursorMzs[j] = libEntry.PrecursorMz;
+                        proteinIds[j] = libEntry.ProteinIds != null
                             ? string.Join(";", libEntry.ProteinIds)
                             : null;
                     }
                     else
                     {
-                        sequences[i] = string.Empty;
-                        precursorMzs[i] = 0.0;
-                        proteinIds[i] = null;
+                        sequences[j] = string.Empty;
+                        precursorMzs[j] = 0.0;
+                        proteinIds[j] = null;
                     }
 
                     var featureVec = entry.Features;
                     if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
                     {
                         for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                            featureArrays[f][i] = Finite(featureVec[f]);
+                            featureArrays[f][j] = Finite(featureVec[f]);
                     }
                     // else: leave zeros (entries without features can't drive Stage 5+).
-                    buildProgress.Report(i + 1);
                 }
-            }
 
-            // Write to a sibling temp file first, then atomically rename into
-            // the final path (safe NAS writes): the temp lives in the SAME
-            // directory as the destination, so the promote is an in-volume
-            // rename rather than a cross-volume copy that could truncate.
-            using (var saver = new FileSaver(path))
-            {
-                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
-                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
-                {
-                    writer.CompressionMethod = CompressionMethod.Zstd;
-                    if (metadata != null && metadata.Count > 0)
-                        writer.CustomMetadata = metadata;
-
-                    using (var group = writer.CreateRowGroup())
-                    {
-                        var columns = BuildRowGroupColumns(
-                            entryIds, isDecoys, sequences, modifiedSequences, charges,
-                            precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                            boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
-                            fragmentIntensities, refXicRts, refXicIntensities,
-                            featureFields, featureArrays);
-                        WriteRowGroupColumns(group, columns, n);
-                    }
-                }
-                saver.Commit();
-            }
+                return BuildRowGroupColumns(
+                    entryIds, isDecoys, sequences, modifiedSequences, charges,
+                    precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                    boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                    fragmentIntensities, refXicRts, refXicIntensities,
+                    featureFields, featureArrays);
+            });
         }
 
         /// <summary>
-        /// Assemble the row-group's <see cref="DataColumn"/> list in the exact physical order
+        /// Assemble one row group's <see cref="DataColumn"/> list in the exact physical order
         /// both <see cref="WriteScoresParquet(string,List{CoelutionScoredEntry},Dictionary{string,string})"/>
         /// overloads write -- the 19 fixed columns followed by the 21 PIN feature columns.
-        /// Centralizing the order keeps the two overloads identical and lets
-        /// <see cref="WriteRowGroupColumns"/> drive a per-column <see cref="ProgressReporter"/>
-        /// over the write. Parquet is name-indexed, so the order is informational for
-        /// correctness, but it is kept byte-for-byte identical to the prior explicit-call
-        /// sequence so the written parquet is unchanged.
+        /// Centralizing the order keeps the two overloads identical. Parquet is name-indexed,
+        /// so the order is informational for correctness, but it is kept identical to the
+        /// prior explicit-call sequence so the within-group column layout is unchanged.
         /// </summary>
         private static List<DataColumn> BuildRowGroupColumns(
             uint[] entryIds, bool[] isDecoys, string[] sequences, string[] modifiedSequences,
@@ -524,27 +499,64 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Write the assembled <paramref name="columns"/> to <paramref name="group"/> in order,
-        /// driving a per-column <see cref="ProgressReporter"/> so an Astral-scale parquet write
-        /// (~2.9M rows, 30-47s) reports a throttled percent instead of stalling silently. The
-        /// write order (and therefore the parquet bytes) is exactly the
-        /// <see cref="BuildRowGroupColumns"/> order. <paramref name="rowCount"/> is shown in the
-        /// heading only.
+        /// Write <paramref name="totalRows"/> rows to <paramref name="path"/> as a sequence
+        /// of bounded row groups (at most <see cref="MAX_ROWS_PER_ROW_GROUP"/> rows each),
+        /// invoking <paramref name="buildChunkColumns"/> to materialize each chunk's
+        /// <see cref="DataColumn"/> list just before that group is written and releasing it
+        /// after -- so peak residency is one row group's column arrays plus its native
+        /// (Zstd / IronCompress) compression buffers, not the whole file's. The chunks are
+        /// written in order, so the physical row sequence (and therefore the read-side
+        /// ParquetIndex, a running row count) equals a single-group write of the same rows.
+        /// Writes to a sibling temp file, then atomically renames into <paramref name="path"/>
+        /// (safe NAS writes): the temp lives in the SAME directory as the destination, so the
+        /// promote is an in-volume rename rather than a cross-volume copy that could truncate.
+        /// The metadata footer is written once. A throttled row-level
+        /// <see cref="ProgressReporter"/> covers the whole file so an Astral-scale write
+        /// (~2.9M rows) reports percent instead of stalling silently.
         /// </summary>
-        private static void WriteRowGroupColumns(ParquetRowGroupWriter group,
-            List<DataColumn> columns, long rowCount)
+        private static void WriteChunkedParquet(string path, ParquetSchema schema,
+            Dictionary<string, string> metadata, int totalRows,
+            Func<int, int, List<DataColumn>> buildChunkColumns)
         {
-            using (var progress = new ProgressReporter(
-                string.Format("Writing {0} entries", rowCount), columns.Count, string.Empty,
-                ProgressReporter.IO_INTERVAL_SECONDS))
+            using (var saver = new FileSaver(path))
             {
-                int col = 0;
-                foreach (var column in columns)
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
+                using (var progress = new ProgressReporter(
+                    string.Format("Writing {0} entries", totalRows), totalRows, string.Empty,
+                    ProgressReporter.IO_INTERVAL_SECONDS))
                 {
-                    RunSync(group.WriteColumnAsync(column));
-                    progress.Report(++col);
+                    writer.CompressionMethod = CompressionMethod.Zstd;
+
+                    // Set custom metadata if provided
+                    if (metadata != null && metadata.Count > 0)
+                        writer.CustomMetadata = metadata;
+
+                    int rowsPerGroup = RowGroupRowCapForTest ?? MAX_ROWS_PER_ROW_GROUP;
+                    for (int start = 0; start < totalRows; start += rowsPerGroup)
+                    {
+                        int count = Math.Min(rowsPerGroup, totalRows - start);
+                        var columns = buildChunkColumns(start, count);
+                        using (var group = writer.CreateRowGroup())
+                        {
+                            WriteRowGroupColumns(group, columns);
+                        }
+                        progress.Report(start + count);
+                    }
                 }
+                saver.Commit();
             }
+        }
+
+        /// <summary>
+        /// Write the assembled <paramref name="columns"/> to <paramref name="group"/> in the
+        /// <see cref="BuildRowGroupColumns"/> order. The write order (and therefore the
+        /// parquet bytes within the group) is exactly that order.
+        /// </summary>
+        private static void WriteRowGroupColumns(ParquetRowGroupWriter group, List<DataColumn> columns)
+        {
+            foreach (var column in columns)
+                RunSync(group.WriteColumnAsync(column));
         }
 
         /// <summary>
@@ -628,14 +640,23 @@ namespace pwiz.Osprey.IO
         /// Encode an array of f64 values as a little-endian byte blob with
         /// no length prefix — bytes / 8 recovers the count on read. Mirrors
         /// Rust pipeline.rs:1620-1623 (`v.to_le_bytes().flat_map(...)`)
-        /// byte-for-byte. A null or empty input encodes as a zero-length
-        /// blob, NOT a null cell, so the column is non-nullable in
-        /// practice.
+        /// byte-for-byte for a non-empty input. A null or empty input encodes
+        /// as a NULL cell (the column is declared nullable). A zero-length blob
+        /// would instead leave a whole row group's column zero-length whenever
+        /// every row in that group is empty -- reachable once the file is
+        /// written in bounded row groups (e.g. a group that falls entirely in
+        /// the contiguous decoy region, where reference XICs can be absent) --
+        /// which the Parquet reader cannot decode (an all-zero-length page
+        /// overruns on the length prefix). A null cell reads back as an empty
+        /// array (DecodeF64Blob(null) == empty), so the decoded value is
+        /// unchanged and no gate is affected (the regression + cross-impl gates
+        /// compare the blib + protein-FDR, never parquet bytes). This is the
+        /// "more parquet-idiomatic" form the cwt_candidates TODO above anticipates.
         /// </summary>
         private static byte[] EncodeF64Blob(double[] values)
         {
             if (values == null || values.Length == 0)
-                return Array.Empty<byte>();
+                return null;
             var buf = new byte[values.Length * 8];
             for (int i = 0; i < values.Length; i++)
             {
@@ -655,12 +676,14 @@ namespace pwiz.Osprey.IO
         /// (allocation-free per element); the IEEE-754 little-endian byte
         /// layout matches the Rust blob exactly on LE hosts (x64/x86 — both
         /// pwiz target archs are LE), avoiding net472's missing
-        /// <c>BitConverter.SingleToInt32Bits</c>.
+        /// <c>BitConverter.SingleToInt32Bits</c>. A null or empty input encodes
+        /// as a NULL cell (not a zero-length blob) for the same reason as
+        /// <see cref="EncodeF64Blob"/> -- see that method for the rationale.
         /// </summary>
         private static byte[] EncodeF32Blob(float[] values)
         {
             if (values == null || values.Length == 0)
-                return Array.Empty<byte>();
+                return null;
             var buf = new byte[values.Length * 4];
             Buffer.BlockCopy(values, 0, buf, 0, buf.Length);
             return buf;
