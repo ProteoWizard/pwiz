@@ -80,13 +80,14 @@ namespace pwiz.Osprey.IO
                 try
                 {
                     LibraryCache.LibraryCacheStatus status;
-                    var cached = LibraryCache.LoadCache(cachePath, libraryHash, out status);
+                    // The cache reader interns the repeated strings as it builds
+                    // each entry's arrays and logs a one-line collapse summary.
+                    var cached = LibraryCache.LoadCache(cachePath, libraryHash, logInfo, out status);
                     if (cached != null && cached.Count > 0)
                     {
                         logInfo(string.Format(
                             "Loaded {0} library entries from cache '{1}'",
                             cached.Count, cachePath));
-                        LibraryStringInterner.InternInPlace(cached, logInfo);
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -113,12 +114,12 @@ namespace pwiz.Osprey.IO
             {
                 case LibraryFormat.DiannTsv:
                     var tsvLoader = new DiannTsvLoader();
-                    entries = tsvLoader.Load(path);
+                    entries = tsvLoader.Load(path, logInfo);
                     break;
 
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader();
-                    entries = blibLoader.Load(path);
+                    entries = blibLoader.Load(path, logInfo);
                     break;
 
                 default:
@@ -126,7 +127,9 @@ namespace pwiz.Osprey.IO
                         "Unsupported library format: {0}", config.LibrarySource.Format));
             }
 
-            // Deduplicate library entries
+            // Deduplicate library entries. The format loaders already interned
+            // their strings during construction (and logged a collapse summary),
+            // so entries carry shared instances by the time they get here.
             entries = LibraryDeduplicator.DeduplicateLibrary(entries);
 
             logInfo(string.Format("Loaded {0} library entries", entries.Count));
@@ -144,11 +147,6 @@ namespace pwiz.Osprey.IO
             {
                 logWarning(string.Format("Failed to save library cache: {0}", ex.Message));
             }
-
-            // Intern after the cache is written (the cache bytes are identical
-            // either way) so the resident set shares one instance per distinct
-            // string.
-            LibraryStringInterner.InternInPlace(entries, logInfo);
 
             return entries;
         }

@@ -967,8 +967,11 @@ namespace pwiz.Osprey.FDR
             int[] winnerIndices;
             double[] winnerScores;
             bool[] winnerIsDecoy;
-            CompeteAll(finalScores, labels, entryIds,
-                out winnerIndices, out winnerScores, out winnerIsDecoy);
+            // Throttled progress over the ~344M-row population competition (the big walk that
+            // ran silent at 82 files); null (silent) on small runs. Console-only, byte-neutral.
+            using (var pepProgress = QProgress(@"Population target/decoy competition", n, n))
+                CompeteAll(finalScores, labels, entryIds,
+                    out winnerIndices, out winnerScores, out winnerIsDecoy, pepProgress);
 
             int nWinners = winnerIndices.Length;
             var pepOrder = new int[nWinners];
@@ -1112,7 +1115,8 @@ namespace pwiz.Osprey.FDR
             bool[] labels, uint[] entryIds, string[] peptides, string[] fileNames,
             PercolatorResults trainResults, PercolatorConfig config,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            IFdrOutputSink sink)
+            IFdrOutputSink sink,
+            Action<FeatureContributions> captureContributions = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -1144,36 +1148,54 @@ namespace pwiz.Osprey.FDR
             var standardizer = trainResults.Standardizer;
             var finalScores = new double[n];
             var featureBuf = new double[nFeatures];
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
+            // Collect the per-feature target/decoy standardized-value histograms when
+            // --model-diagnostics asked for them (config.CollectFeatureHistograms == ModelDiagnostics,
+            // set in BuildProjectionPercolatorConfig). The full-population Add loop below feeds the
+            // identical standardized featureBuf the resident path bins, so the Model tab's
+            // per-feature distributions are byte-identical to the resident build's; off the
+            // production path this stays a plain (no-histogram) accumulator.
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
 
             // Streaming score pass over the projection, one file at a time. The
             // per-entry math and the per-file iteration order match the
             // PercolatorEntry streaming loop exactly, so finalScores + the
             // contribution sums are byte-for-byte identical.
+            // Per-file progress so this full-population score pass (~15 min silent at
+            // 344M rows on the 82-file first-pass join) shows movement; the heartbeat
+            // covers a slow single file. Console-only -- never touches finalScores /
+            // the sink, so byte-identity is unaffected.
             int gi = 0;
-            foreach (var kvp in perFile)
+            using (var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0} entries", n), n))
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                var projRows = kvp.Value;
-                for (int r = 0; r < projRows.Count; r++)
+                foreach (var kvp in perFile)
                 {
-                    var proj = projRows[r];
-                    double[] featRow = ResolveFeatureRow(
-                        rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
-                    Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
-                    standardizer.TransformSlice(featureBuf);
-                    double score = avgBias;
-                    for (int j = 0; j < nFeatures; j++)
-                        score += avgWeights[j] * featureBuf[j];
-                    finalScores[gi] = score;
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    var projRows = kvp.Value;
+                    for (int r = 0; r < projRows.Count; r++)
+                    {
+                        var proj = projRows[r];
+                        double[] featRow = ResolveFeatureRow(
+                            rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
+                        Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+                        standardizer.TransformSlice(featureBuf);
+                        double score = avgBias;
+                        for (int j = 0; j < nFeatures; j++)
+                            score += avgWeights[j] * featureBuf[j];
+                        finalScores[gi] = score;
 
-                    contribAcc.Add(featureBuf, proj.IsDecoy);
-                    gi++;
+                        contribAcc.Add(featureBuf, proj.IsDecoy);
+                        gi++;
+                    }
+                    scoreProgress.Report(gi);
                 }
             }
 
             var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
             EmitFeatureContributions(contributions);
+            // Surface the trained model's contributions to the caller (the projection-path
+            // --model-diagnostics report reads them). No-op (null) on every path that does not
+            // request them; a pure hand-off, so scoring stays byte-identical.
+            captureContributions?.Invoke(contributions);
 
             double[] peps, runPrecursorQvalues, runPeptideQvalues,
                      expPrecursorQvalues, expPeptideQvalues;
@@ -1532,13 +1554,22 @@ namespace pwiz.Osprey.FDR
             int[] indices,
             out int[] winnerIndices,
             out double[] winnerScores,
-            out bool[] winnerIsDecoy)
+            out bool[] winnerIsDecoy,
+            ProgressReporter progress = null)
         {
             var targets = new Dictionary<uint, KeyValuePair<int, double>>();
             var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
 
+            // Throttled per-row progress for the large experiment / PEP competitions -- the
+            // ~344M-row base_id reduction below ran ~90 s silent at 82 files. Console-only via
+            // the caller's reporter (null on the small per-file per-run calls, which report at
+            // their own per-file granularity); never affects the winners, so q-values are
+            // byte-identical.
+            long processed = 0;
             foreach (int idx in indices)
             {
+                if (progress != null && (++processed & 0x3FFFFF) == 0)
+                    progress.Report(processed);
                 uint baseId = entryIds[idx] & BASE_ID_MASK;
                 if (labels[idx])
                 {
@@ -1624,13 +1655,14 @@ namespace pwiz.Osprey.FDR
             uint[] entryIds,
             out int[] winnerIndices,
             out double[] winnerScores,
-            out bool[] winnerIsDecoy)
+            out bool[] winnerIsDecoy,
+            ProgressReporter progress = null)
         {
             var allIndices = new int[scores.Length];
             for (int i = 0; i < scores.Length; i++)
                 allIndices[i] = i;
             CompeteFromIndices(scores, labels, entryIds, allIndices,
-                out winnerIndices, out winnerScores, out winnerIsDecoy);
+                out winnerIndices, out winnerScores, out winnerIsDecoy, progress);
         }
 
         /// <summary>
@@ -2218,8 +2250,11 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
 
+            var progress = QProgress(@"Per-run precursor q-values", fileGroups.Count, n);
+            int fileDone = 0;
             foreach (var group in fileGroups.Values)
             {
+                progress?.Report(++fileDone);
                 var fileScores = new double[group.Count];
                 var fileLabels = new bool[group.Count];
                 var fileEntryIds = new uint[group.Count];
@@ -2247,6 +2282,7 @@ namespace pwiz.Osprey.FDR
                     qvalues[globalIdx] = q[rank];
                 }
             }
+            progress?.Dispose();
 
             return qvalues;
         }
@@ -2272,8 +2308,11 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
 
+            var progress = QProgress(@"Per-run peptide q-values", fileGroups.Count, n);
+            int fileDone = 0;
             foreach (var group in fileGroups.Values)
             {
+                progress?.Report(++fileDone);
                 var bestPerPeptide = BestPrecursorPerPeptide(
                     group.ToArray(), scores, labels, peptides);
 
@@ -2312,6 +2351,7 @@ namespace pwiz.Osprey.FDR
                         qvalues[idx] = qv;
                 }
             }
+            progress?.Dispose();
 
             return qvalues;
         }
@@ -2327,7 +2367,8 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteAll(scores, labels, entryIds, out wi, out ws, out wd);
+            using (var progress = QProgress(@"Experiment precursor q-values", n, n))
+                CompeteAll(scores, labels, entryIds, out wi, out ws, out wd, progress);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -2385,8 +2426,9 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
-                out wi, out ws, out wd);
+            using (var progress = QProgress(@"Experiment peptide q-values", bestPerPeptide.Length, bestPerPeptide.Length))
+                CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
+                    out wi, out ws, out wd, progress);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -2406,6 +2448,14 @@ namespace pwiz.Osprey.FDR
             }
 
             return qvalues;
+        }
+
+        // A console progress reporter for the large first-pass q-value / competition passes,
+        // or null (no output) when the population is small enough that the pass is sub-second
+        // -- keeps unit tests / Stellar clutter-free. Console-only; never affects the q-values.
+        private static ProgressReporter QProgress(string activity, long reportTotal, long workSize)
+        {
+            return workSize > 2_000_000 ? new ProgressReporter(activity, reportTotal) : null;
         }
 
         // ============================================================

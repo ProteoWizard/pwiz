@@ -54,8 +54,11 @@ namespace pwiz.Osprey.FDR.Reconciliation
         private const int SIGMA_CLIP_MIN_SURVIVORS = 20;
 
         /// <summary>
-        /// Plan inter-replicate peak reconciliation for all entries across all
-        /// runs.
+        /// Plan inter-replicate peak reconciliation for all entries across all runs.
+        /// In-memory / test overload: takes the per-file CWT candidate lists as a
+        /// materialized dictionary and adapts it to the streaming overload below.
+        /// Production (Stage 6) uses the streaming overload so it never holds all
+        /// files' candidates resident.
         /// </summary>
         /// <returns>
         /// A dictionary keyed by (fileName, entryIndex) for entries that need
@@ -70,12 +73,46 @@ namespace pwiz.Osprey.FDR.Reconciliation
             IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
             double experimentFdr)
         {
+            if (perFileCwtCandidates == null)
+                throw new ArgumentNullException(nameof(perFileCwtCandidates));
+            return Plan(consensus, perFileEntries,
+                fileName => perFileCwtCandidates.TryGetValue(fileName, out var fileCwt)
+                    ? fileCwt
+                    : null,
+                perFileRefinedCal, perFileOriginalCal, experimentFdr);
+        }
+
+        /// <summary>
+        /// Plan inter-replicate peak reconciliation for all entries across all runs.
+        /// Streaming entry point: <paramref name="loadFileCwt"/> supplies one file's
+        /// CWT candidate lists (indexed by <see cref="FdrEntry.ParquetIndex"/>) on
+        /// demand -- it is called once per file inside the per-file loop and its
+        /// result falls out of scope before the next file, so no more than one file's
+        /// candidates are resident at a time (the streaming fix for the 82-file
+        /// Stage-6 planning OOM). It may return null for a file with no candidates
+        /// (treated as empty). The cross-file inputs (the passing-base-id set, the
+        /// consensus map) never touch CWT candidates, so the streamed result is
+        /// element-for-element identical to loading them all up front.
+        /// </summary>
+        /// <returns>
+        /// A dictionary keyed by (fileName, entryIndex) for entries that need
+        /// re-scoring. Entries absent from the map implicitly retain their
+        /// current peak (ReconcileAction.Keep).
+        /// </returns>
+        public static IReadOnlyDictionary<(string File, int Index), ReconcileAction> Plan(
+            IReadOnlyList<PeptideConsensusRT> consensus,
+            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
+            Func<string, IReadOnlyList<IReadOnlyList<CwtCandidate>>> loadFileCwt,
+            IReadOnlyDictionary<string, RTCalibration> perFileRefinedCal,
+            IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
+            double experimentFdr)
+        {
             if (consensus == null)
                 throw new ArgumentNullException(nameof(consensus));
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
-            if (perFileCwtCandidates == null)
-                throw new ArgumentNullException(nameof(perFileCwtCandidates));
+            if (loadFileCwt == null)
+                throw new ArgumentNullException(nameof(loadFileCwt));
             if (perFileRefinedCal == null)
                 throw new ArgumentNullException(nameof(perFileRefinedCal));
             if (perFileOriginalCal == null)
@@ -146,8 +183,15 @@ namespace pwiz.Osprey.FDR.Reconciliation
             var actions = new Dictionary<(string, int), ReconcileAction>();
             var emptyCwt = new List<IReadOnlyList<CwtCandidate>>();
 
+            // Per-file progress: planning reconciliation actions across all files ran
+            // ~5 min silent on the 82-file join. Console-only, never affects the plan.
+            var planProgress = new ProgressReporter(
+                string.Format(@"Planning reconciliation across {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count);
+            int planIdx = 0;
             foreach (var fileKvp in perFileEntries)
             {
+                planProgress.Report(++planIdx);
                 string fileName = fileKvp.Key;
                 var entries = fileKvp.Value;
 
@@ -189,8 +233,9 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     Math.Max(globalWithinPeptideMadLib * MAD_TO_SIGMA * SIGMA_FACTOR, MIN_RT_TOLERANCE),
                     fileCalToleranceCeiling);
 
-                if (!perFileCwtCandidates.TryGetValue(fileName, out var fileCwt))
-                    fileCwt = emptyCwt;
+                // Load this file's CWT candidates on demand and release them at
+                // the end of the iteration -- one file resident at a time.
+                var fileCwt = loadFileCwt(fileName) ?? emptyCwt;
 
                 for (int entryIdx = 0; entryIdx < entries.Count; entryIdx++)
                 {
@@ -229,6 +274,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                         actions[(fileName, entryIdx)] = action;
                 }
             }
+            planProgress.Dispose();
 
             return actions;
         }
