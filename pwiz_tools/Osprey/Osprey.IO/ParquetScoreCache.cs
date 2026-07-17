@@ -1104,6 +1104,31 @@ namespace pwiz.Osprey.IO
                         buffer.Clear();
                     }
 
+                    // Emit one row in output order, GUARDING canonical monotonicity. The
+                    // merge preserves (entry_id, charge, scan_number) order only if the
+                    // original parquet is already sorted AND each overlay keeps the key of the
+                    // row it replaces -- but a reconciliation rescore can move the apex scan,
+                    // so an overlay CAN change scan_number. If that (or a mis-sorted original)
+                    // makes an emitted row's key fall below the previous, the output would be
+                    // non-canonical and silently corrupt Pass 2's scan recovery. Hard-fail
+                    // instead (ReconciledParquetWriter.Write re-throws this to abort the run,
+                    // rather than skipping the file). No-op on valid, already-sorted input.
+                    FdrEntry lastEmitted = null;
+                    void Emit(FdrEntry e)
+                    {
+                        if (lastEmitted != null && KeyLess(e, lastEmitted))
+                            throw new InvalidOperationException(string.Format(
+                                "Stage 6 reconciled transfer for {0}: rows out of canonical " +
+                                "(entry_id, charge, scan_number) order at output row {1} -- the " +
+                                "original parquet is not sorted, or a re-scored overlay changed its " +
+                                "scan across a same-(entry_id,charge) sibling. Refusing to write a " +
+                                "mis-ordered reconciled parquet.", fileName, written + buffer.Count));
+                        lastEmitted = e;
+                        buffer.Add(e);
+                        if (buffer.Count == rowsPerGroup)
+                            FlushGroup();
+                    }
+
                     for (int g = 0; g < reader.RowGroupCount; g++)
                     {
                         var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead);
@@ -1120,14 +1145,8 @@ namespace pwiz.Osprey.IO
                             // Emit gap-fill rows that sort strictly before this original
                             // row; a key tie keeps the original first (stable-sort order).
                             while (gapIdx < gapFillCount && KeyLess(sortedGapFill[gapIdx], row))
-                            {
-                                buffer.Add(sortedGapFill[gapIdx++]);
-                                if (buffer.Count == rowsPerGroup)
-                                    FlushGroup();
-                            }
-                            buffer.Add(row);
-                            if (buffer.Count == rowsPerGroup)
-                                FlushGroup();
+                                Emit(sortedGapFill[gapIdx++]);
+                            Emit(row);
                         }
                         origRead += groupEntries.Count;
                     }
@@ -1135,11 +1154,7 @@ namespace pwiz.Osprey.IO
 
                     // Trailing gap-fill (keys at or beyond the last original row).
                     while (gapIdx < gapFillCount)
-                    {
-                        buffer.Add(sortedGapFill[gapIdx++]);
-                        if (buffer.Count == rowsPerGroup)
-                            FlushGroup();
-                    }
+                        Emit(sortedGapFill[gapIdx++]);
                     FlushGroup();
                 }
                 saver.Commit();

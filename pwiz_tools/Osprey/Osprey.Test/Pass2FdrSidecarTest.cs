@@ -110,8 +110,8 @@ namespace pwiz.Osprey.Test
         /// a <c>(entry_id, charge)</c> group. The never-asserted corner -- exercised
         /// here -- is the scan-tie / gap-fill case: the reconciled re-sort is a STABLE
         /// <c>OrderBy(EntryId).ThenBy(Charge).ThenBy(ScanNumber)</c> with NO ParquetIndex
-        /// tiebreak (<c>ParquetScoreCache.WriteScoresParquet</c>) and gap-fill rows are
-        /// appended (<c>ReconciledParquetWriter.ApplyRescoredRows</c>). Two clean 8-file
+        /// tiebreak, which the streaming transfer reproduces by merging gap-fill rows into
+        /// canonical position (<c>ParquetScoreCache.StreamReconciledScoresParquet</c>). Two clean 8-file
         /// Carafe runs were byte-identical end-to-end but never asserted this in
         /// isolation.
         ///

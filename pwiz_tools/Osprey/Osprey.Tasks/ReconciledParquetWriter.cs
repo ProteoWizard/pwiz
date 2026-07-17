@@ -91,7 +91,11 @@ namespace pwiz.Osprey.Tasks
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;
             }
-            catch (Exception ex)
+            // A read/write IO failure is a recoverable per-file skip (clears the sidecar,
+            // re-rescored next run). But an InvalidOperationException from the streaming
+            // merge is the canonical-order invariant guard firing -- that is silently-invalid
+            // output, so let it propagate and ABORT the run (hard-fail over warn-and-proceed).
+            catch (Exception ex) when (!(ex is InvalidOperationException))
             {
                 logWarning(string.Format(
                     "Stage 6 write-back: failed to transfer {0} -> {1}: {2}",

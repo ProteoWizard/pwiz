@@ -2433,8 +2433,8 @@ namespace pwiz.Osprey.Test
         /// group-by-group with an overlay map + gap-fill list
         /// (<see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>) is logically
         /// identical -- same rows, same per-row features + blobs -- to the former
-        /// load-all + in-place overlay + re-sort write, including the appended gap-fill
-        /// (which the streaming path leaves at the physical end). Also asserts the
+        /// load-all + in-place overlay + re-sort write, including the gap-fill (which the
+        /// streaming path merges into canonical (entry_id, charge, scan) position). Also asserts the
         /// replaced / appended / original counts, the out-of-range warning, and that the
         /// output is genuinely multi-group.
         /// </summary>
