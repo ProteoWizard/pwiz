@@ -32,12 +32,12 @@ namespace pwiz.Common.SystemUtil
     /// <see cref="pwiz.Common.Collections.StructSerializer{TItem}"/>, which reads a FileStream
     /// directly) and this stream cannot disagree about it.
     /// </summary>
-    public sealed class ByteRangeStream : Stream
+    public sealed class SliceStream : Stream
     {
         private readonly long _length;
         private readonly bool _leaveOpen;
 
-        public ByteRangeStream(Stream baseStream, long offset, long length, bool leaveOpen = false)
+        public SliceStream(Stream baseStream, long offset, long length, bool leaveOpen = false)
         {
             BaseStream = baseStream ?? throw new ArgumentNullException(nameof(baseStream));
             if (offset < 0)

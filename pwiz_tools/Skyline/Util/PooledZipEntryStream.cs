@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// An <see cref="IPooledStream"/> that reads a file stored UNCOMPRESSED inside a .zip
     /// (typically a .skyd chromatogram cache inside a .sky.zip) in place, without extracting it.
-    /// The pooled stream is a <see cref="ByteRangeStream"/> over the .zip file positioned at the
+    /// The pooled stream is a <see cref="SliceStream"/> over the .zip file positioned at the
     /// entry's stored byte range, so code that expects a seekable stream over the .skyd (e.g.
     /// <c>ChromatogramCache</c>) works unchanged.
     ///

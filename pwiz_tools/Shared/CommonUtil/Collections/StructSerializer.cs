@@ -241,7 +241,7 @@ namespace pwiz.Common.Collections
             // A window onto part of a FileStream (e.g. a .skyd stored uncompressed in a .sky.zip)
             // can be read directly too: the window is positioned by its base stream, which is
             // where the direct read reads from and leaves it.
-            FileStream fileStream = (stream as ByteRangeStream)?.BaseStream as FileStream ?? stream as FileStream;
+            FileStream fileStream = (stream as SliceStream)?.BaseStream as FileStream ?? stream as FileStream;
             if (fileStream == null)
             {
                 return null;

@@ -29,7 +29,7 @@ namespace pwiz.Common.Database.FileSystems
     /// Reads a .zip file's directory in order to locate entries that are stored
     /// UNCOMPRESSED (compression method 0). The bytes of such an entry form a
     /// contiguous range inside the .zip file and can therefore be read in place with
-    /// a random-access stream (<see cref="ByteRangeStream"/>) without extracting the
+    /// a random-access stream (<see cref="SliceStream"/>) without extracting the
     /// entry. This is what lets Skyline open a document directly from a .sky.zip when
     /// the files that need random access (.skyd, .blib) were stored uncompressed.
     ///
@@ -173,7 +173,7 @@ namespace pwiz.Common.Database.FileSystems
         /// reading its bytes in place from the .zip file. Each call opens its own file
         /// handle so multiple entry streams can be read concurrently.
         /// </summary>
-        public ByteRangeStream OpenStoredEntry(ZipEntryInfo entry)
+        public SliceStream OpenStoredEntry(ZipEntryInfo entry)
         {
             if (entry == null)
                 throw new ArgumentNullException(nameof(entry));
@@ -185,7 +185,7 @@ namespace pwiz.Common.Database.FileSystems
             try
             {
                 long dataOffset = ReadLocalDataOffset(stream, entry.LocalHeaderOffset);
-                return new ByteRangeStream(stream, dataOffset, entry.UncompressedSize);
+                return new SliceStream(stream, dataOffset, entry.UncompressedSize);
             }
             catch
             {
@@ -217,7 +217,7 @@ namespace pwiz.Common.Database.FileSystems
             {
                 long dataOffset = ReadLocalDataOffset(stream, entry.LocalHeaderOffset);
                 // A zip entry holds a raw Deflate stream, which is what DeflateStream reads.
-                var compressed = new ByteRangeStream(stream, dataOffset, entry.CompressedSize);
+                var compressed = new SliceStream(stream, dataOffset, entry.CompressedSize);
                 var deflate = new DeflateStream(compressed, CompressionMode.Decompress);
                 return new DeflatedEntryStream(deflate, entry.UncompressedSize);
             }

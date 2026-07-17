@@ -29,7 +29,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     /// <summary>
-    /// Tests <see cref="RandomAccessZipFile"/> and <see cref="ByteRangeStream"/>: locating a
+    /// Tests <see cref="RandomAccessZipFile"/> and <see cref="SliceStream"/>: locating a
     /// stored (uncompressed) zip entry and reading its bytes in place, without extraction.
     /// </summary>
     [TestClass]
@@ -97,15 +97,15 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
-        public void TestByteRangeStreamBounds()
+        public void TestSliceStreamBounds()
         {
-            // ByteRangeStream must expose exactly [offset, offset+length) of the base stream,
+            // SliceStream must expose exactly [offset, offset+length) of the base stream,
             // never reading outside the window even if the base stream has more data.
             var full = MakeRandomBytes(1000, seed: 99);
             const int offset = 250;
             const int length = 400;
             using (var baseStream = new MemoryStream(full))
-            using (var window = new ByteRangeStream(baseStream, offset, length, leaveOpen: true))
+            using (var window = new SliceStream(baseStream, offset, length, leaveOpen: true))
             {
                 Assert.AreEqual(length, window.Length);
 
