@@ -2428,6 +2428,189 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// Stage-6 streaming reconciled transfer: streaming the original parquet
+        /// group-by-group with an overlay map + gap-fill list
+        /// (<see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>) is logically
+        /// identical -- same rows, same per-row features + blobs -- to the former
+        /// load-all + in-place overlay + re-sort write, including the appended gap-fill
+        /// (which the streaming path leaves at the physical end). Also asserts the
+        /// replaced / appended / original counts, the out-of-range warning, and that the
+        /// output is genuinely multi-group.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamReconciledTransferMatchesLoadAllOverlay()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_stream_recon_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Original rows: out-of-order ids so the write's canonical sort runs,
+                // distinct features + blobs per row so any chunk-boundary mismap surfaces
+                // as a value mismatch rather than a silent pass.
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                    original.Add(MakeStreamEntry(id, id * 100.0));
+
+                string originalPath = Path.Combine(dir, "orig.scores.parquet");
+                string refPath = Path.Combine(dir, "ref.scores-reconciled.parquet");
+                string streamPath = Path.Combine(dir, "stream.scores-reconciled.parquet");
+
+                // Write the original as several bounded row groups (cap 3 -> 3 groups).
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // Map each original entry_id to the global row position the write assigned,
+                // so the overlay indices below hit the right rows.
+                var posById = new Dictionary<uint, uint>();
+                foreach (var e in ParquetScoreCache.LoadFullFdrEntries(originalPath))
+                    posById[e.EntryId] = e.ParquetIndex;
+
+                // Overlay two existing rows (id 3, id 8) with distinctly re-scored
+                // features/blobs; leave id 2 un-overlaid (its original row must stream
+                // through untouched); and one out-of-range index that must be dropped
+                // with a warning.
+                var overlayByIndex = new Dictionary<uint, FdrEntry>
+                {
+                    { posById[3], MakeStreamEntry(3, 7777.0) },
+                    { posById[8], MakeStreamEntry(8, 8888.0) },
+                    { 999u, MakeStreamEntry(200, 1.0) },   // out of range -> dropped + warned
+                };
+                // Gap-fill ids 4 and 6 fall BETWEEN existing original ids (3 < 4 < 5 < 6 <
+                // 7), so the streaming merge must interleave them into canonical position;
+                // a plain append-at-end would misplace them and the physical-order check
+                // below would fail. Listed out of order so the merge's own sort is exercised.
+                var gapFill = new List<FdrEntry>
+                {
+                    MakeStreamEntry(6, 60060.0),
+                    MakeStreamEntry(4, 40040.0),
+                };
+
+                // Reference (old behavior): load the whole file, overlay in place by index,
+                // append gap-fill, re-sort on write.
+                var oldFull = ParquetScoreCache.LoadFullFdrEntries(originalPath);
+                foreach (var kv in overlayByIndex)
+                    if (kv.Key < oldFull.Count)
+                        oldFull[(int)kv.Key] = kv.Value;
+                oldFull.AddRange(gapFill);
+                ParquetScoreCache.WriteScoresParquet(refPath, oldFull, null, null, "f.mzML");
+                var refResult = ParquetScoreCache.LoadFullFdrEntries(refPath);
+
+                // New behavior: stream the transfer.
+                var warnings = new List<string>();
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", warnings.Add);
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
+                Assert.AreEqual(2, result.NReplaced);
+                Assert.AreEqual(2, result.NAppended);
+                Assert.AreEqual(7, result.OrigRowCount);
+
+                // The one out-of-range overlay index is dropped with exactly one warning.
+                Assert.AreEqual(1, warnings.Count);
+
+                // The stream output is genuinely multi-group (3 original groups + gap-fill).
+                Assert.IsTrue(CountRowGroups(streamPath) >= 3,
+                    "streaming reconciled transfer must preserve bounded row groups");
+
+                // Physical order: the streaming merge must emit rows already in canonical
+                // (entry_id, charge, scan_number) order -- gap-fill interleaved by scan,
+                // NOT appended at the end. This is the guarantee Pass 2's projection sort
+                // relies on; a plain append would leave ids 4/6 after id 9 and fail here.
+                var streamResult = ParquetScoreCache.LoadFullFdrEntries(streamPath);
+                Comparison<FdrEntry> byKey = (a, b) =>
+                {
+                    int c = a.EntryId.CompareTo(b.EntryId);
+                    if (c != 0)
+                        return c;
+                    c = a.Charge.CompareTo(b.Charge);
+                    return c != 0 ? c : a.ScanNumber.CompareTo(b.ScanNumber);
+                };
+                for (int i = 1; i < streamResult.Count; i++)
+                    Assert.IsTrue(byKey(streamResult[i - 1], streamResult[i]) <= 0,
+                        "streaming reconciled transfer must emit rows in canonical sorted order");
+
+                // Logical equivalence: same rows, same values (both canonical after sort).
+                refResult.Sort(byKey);
+                streamResult.Sort(byKey);
+                AssertStreamRowsEqual(refResult, streamResult);
+
+                // The overlay actually took effect: id 3 / id 8 carry the re-scored
+                // features, while the un-overlaid id 2 keeps its ORIGINAL features.
+                Assert.AreEqual(7777.0, RowById(streamResult, 3).Features[0]);
+                Assert.AreEqual(8888.0, RowById(streamResult, 8).Features[0]);
+                Assert.AreEqual(200.0, RowById(streamResult, 2).Features[0]);
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
+        // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
+        // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
+        // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
+        // overlay preserves the canonical sort key of the row it replaces.
+        private static FdrEntry MakeStreamEntry(uint id, double baseValue)
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < features.Length; f++)
+                features[f] = baseValue + f;
+            return new FdrEntry
+            {
+                EntryId = id,
+                IsDecoy = (id & 1u) == 0,
+                Charge = 2,
+                ScanNumber = id * 10,
+                ApexRt = id + 0.5,
+                StartRt = id + 0.1,
+                EndRt = id + 0.9,
+                BoundsArea = id + 0.3,
+                BoundsSnr = id + 0.7,
+                ModifiedSequence = "PEPTIDE" + id,
+                Features = features,
+                FragmentMzs = new[] { baseValue + 0.25, baseValue + 0.75 },
+                FragmentIntensities = new[] { (float)baseValue, (float)(baseValue + 1) },
+                ReferenceXicRts = new[] { baseValue + 1.5, baseValue + 2.5 },
+                ReferenceXicIntensities = new[] { baseValue * 2.0, baseValue * 3.0 },
+            };
+        }
+
+        private static FdrEntry RowById(List<FdrEntry> rows, uint id)
+        {
+            return rows.First(e => e.EntryId == id);
+        }
+
+        private static void AssertStreamRowsEqual(List<FdrEntry> expected, List<FdrEntry> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                var e = expected[i];
+                var a = actual[i];
+                Assert.AreEqual(e.EntryId, a.EntryId);
+                Assert.AreEqual(e.IsDecoy, a.IsDecoy);
+                Assert.AreEqual(e.Charge, a.Charge);
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.ApexRt, a.ApexRt);
+                Assert.AreEqual(e.StartRt, a.StartRt);
+                Assert.AreEqual(e.EndRt, a.EndRt);
+                Assert.AreEqual(e.CoelutionSum, a.CoelutionSum);
+                Assert.AreEqual(e.BoundsArea, a.BoundsArea);
+                Assert.AreEqual(e.BoundsSnr, a.BoundsSnr);
+                Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
+                CollectionAssert.AreEqual(e.Features, a.Features);
+                CollectionAssert.AreEqual(e.FragmentMzs, a.FragmentMzs);
+                CollectionAssert.AreEqual(e.FragmentIntensities, a.FragmentIntensities);
+                CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
+                CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
+            }
+        }
+
         private static int CountRowGroups(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
