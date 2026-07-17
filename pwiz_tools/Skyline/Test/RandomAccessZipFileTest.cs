@@ -250,7 +250,7 @@ namespace pwiz.SkylineTest
             var bytes = MakeRandomBytes(20000, seed: 3);
 
             // What File > Share produces: the random-access files stored uncompressed, the rest
-            // deflated. ".sky.view" must not be mistaken for a disallowed ".view".
+            // deflated. ".sky.view" must not be mistaken for ".sky" or for a disallowed ".view".
             Assert.IsTrue(CanOpenInPlace("openable.zip", zf =>
             {
                 AddStored(zf, "doc.skyd", bytes);

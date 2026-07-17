@@ -59,16 +59,6 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static readonly string[] SequentialAccessExtensions = { @".sky", @".sky.view", @".skyl" };
 
-        /// <summary>
-        /// How a document opened in place would have to read one of the files in the .zip.
-        /// </summary>
-        private enum EntryAccess
-        {
-            random_access,
-            sequential,
-            must_extract
-        }
-
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {
@@ -145,65 +135,65 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public bool CanOpenInPlace()
         {
-            using (var zip = ZipFile.Read(SharedPath))
+            using var zip = ZipFile.Read(SharedPath);
+            var randomAccessEntries = new List<ZipEntry>();
+            var sequentialAccessEntries = new List<ZipEntry>();
+            foreach (var entry in zip.Entries)
             {
-                foreach (var entry in zip.Entries)
+                // Skyline never sets a zip password, so an encrypted .zip cannot be opened at all -
+                // extracting it throws BadPasswordException. Extracting is still the right answer,
+                // because reading an encrypted entry here would hand ciphertext to the inflater
+                // instead of failing that clearly. Encryption is independent of the compression
+                // method, so even a stored entry can be encrypted.
+                if (entry.UsesEncryption)
                 {
-                    switch (GetEntryAccess(entry.FileName))
-                    {
-                        case EntryAccess.must_extract:
-                            return false;
-                        case EntryAccess.random_access:
-                            if (!CanGetRandomAccess(entry))
-                                return false;
-                            break;
-                        case EntryAccess.sequential:
-                            if (!CanGetSequentialStream(entry))
-                                return false;
-                            break;
-                    }
+                    return false;
+                }
+                if (RandomAccessExtensions.Any(ext =>
+                        entry.FileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    randomAccessEntries.Add(entry);
+                }
+                else if (SequentialAccessExtensions.Any(ext =>
+                             entry.FileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    sequentialAccessEntries.Add(entry);
+                }
+                else
+                {
+                    return false;
                 }
             }
-            return true;
-        }
 
-        private static EntryAccess GetEntryAccess(string fileName)
-        {
-            if (RandomAccessExtensions.Contains(Path.GetExtension(fileName), StringComparer.OrdinalIgnoreCase))
-                return EntryAccess.random_access;
-            if (SequentialAccessExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-                return EntryAccess.sequential;
-            // Anything else (e.g. an .elib, which always needs a sibling .elibc) means the .zip has
-            // to be extracted to a real directory.
-            return EntryAccess.must_extract;
+            return randomAccessEntries.All(CanGetRandomAccess) &&
+                   sequentialAccessEntries.All(CanGetSequentialStream);
         }
 
         /// <summary>
         /// True if the entry's bytes are a contiguous, unmodified range inside the .zip, so they can
-        /// be read in place. Encryption is independent of the compression method, so a stored entry
-        /// can still be encrypted, in which case its bytes are ciphertext preceded by a header and
-        /// its compressed size exceeds its uncompressed size. Reading such an entry in place would
-        /// silently produce garbage rather than fail, so all three are checked.
+        /// be read in place. The sizes must agree as well as the method being "stored", because
+        /// reading an entry in place whose bytes are not what the directory describes would silently
+        /// produce garbage rather than fail. (An encrypted entry is one such: its bytes are
+        /// ciphertext preceded by a header, which makes it bigger than its uncompressed size.
+        /// <see cref="CanOpenInPlace"/> rejects those before this is reached.)
         /// </summary>
         private static bool CanGetRandomAccess(ZipEntry entry)
         {
             return entry.CompressionMethod == CompressionMethod.None
-                   && !entry.UsesEncryption
                    && entry.UncompressedSize == entry.CompressedSize;
         }
 
         /// <summary>
-        /// True if the entry can be read from beginning to end, i.e. it is stored or deflated and
-        /// not encrypted - see <see cref="RandomAccessZipFile.OpenEntry"/>, which reads a zip entry
-        /// with .NET's inflater rather than DotNetZip's because it is markedly faster. Extracting
-        /// the .zip goes through DotNetZip, which reads compression methods we do not, so an entry
-        /// compressed some other way means the whole .zip has to be extracted.
+        /// True if the entry can be read from beginning to end, i.e. it is stored or deflated - see
+        /// <see cref="RandomAccessZipFile.OpenEntry"/>, which reads a zip entry with .NET's inflater
+        /// rather than DotNetZip's because it is markedly faster. Extracting the .zip goes through
+        /// DotNetZip, which reads compression methods we do not, so an entry compressed some other
+        /// way means the whole .zip has to be extracted.
         /// </summary>
         private static bool CanGetSequentialStream(ZipEntry entry)
         {
-            return (entry.CompressionMethod == CompressionMethod.None ||
-                    entry.CompressionMethod == CompressionMethod.Deflate)
-                   && !entry.UsesEncryption;
+            return entry.CompressionMethod == CompressionMethod.None ||
+                   entry.CompressionMethod == CompressionMethod.Deflate;
         }
 
         public void Extract(IProgressMonitor progressMonitor)
