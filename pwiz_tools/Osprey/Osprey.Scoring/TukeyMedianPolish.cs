@@ -290,7 +290,7 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         public static double LibCosine(
             TukeyMedianPolishResult polish,
-            IList<LibraryFragment> libraryFragments)
+            IReadOnlyList<LibraryFragment> libraryFragments)
         {
             if (polish == null)
                 return 0.0;

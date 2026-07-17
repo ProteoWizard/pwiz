@@ -509,9 +509,10 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_get_open_forms"),
      Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines with form type, " +
-        "SubType, title, whether it contains a ZedGraph graph, dock state, a stable identifier in TypeName:Title " +
+        "title, whether it contains a ZedGraph graph, dock state, a stable identifier in TypeName:Title " +
         "format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'), whether the form is a native OS window, " +
-        "and Message. " +
+        "its SubType, and Message. (New columns are appended, so a positional reader keyed on the earlier ones " +
+        "keeps working.) " +
         "Use the identifier with skyline_get_graph_data, skyline_get_graph_image, and skyline_get_form_image. " +
         "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog. " +
         "IsNative=True marks a native OS dialog, whose Type is always 'Dialog'; its SubType says which kind -- " +
@@ -529,10 +530,12 @@ public static class SkylineTools
                 return "No forms are currently open in Skyline.";
 
             var sb = new StringBuilder();
-            sb.AppendLine("Type\tSubType\tTitle\tHasGraph\tDockState\tId\tIsNative\tMessage");
+            // The first five columns are the ORIGINAL set, in their original order, so a reader that matches by
+            // position still finds them. Every column added since -- IsNative, SubType, Message -- is appended.
+            sb.AppendLine("Type\tTitle\tHasGraph\tDockState\tId\tIsNative\tSubType\tMessage");
             foreach (var form in forms)
-                sb.AppendLine($"{form.Type}\t{form.SubType}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t" +
-                              $"{form.Id}\t{form.IsNative}\t{form.DetailedMessage}");
+                sb.AppendLine($"{form.Type}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t{form.Id}\t" +
+                              $"{form.IsNative}\t{form.SubType}\t{form.DetailedMessage}");
             return sb.ToString().TrimEnd();
         });
     }

@@ -94,10 +94,8 @@ namespace pwiz.Skyline.ToolsUI
                     caught = ex;
                 }
             }));
-            // Rethrown AS ITSELF -- type, message and original stack (see DialogWatcher.PerformActionAndWait, which
-            // does the same). What the action threw is what the verb means to say, and callers key on the type.
             if (caught != null)
-                ExceptionDispatchInfo.Capture(caught).Throw();
+                ExceptionUtil.WrapAndThrowException(caught);
         }
 
         /// <summary>Executes a function on the UI thread and returns its result (see

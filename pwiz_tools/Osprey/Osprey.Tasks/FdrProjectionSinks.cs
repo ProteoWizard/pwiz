@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
@@ -51,9 +52,14 @@ namespace pwiz.Osprey.Tasks
         private readonly int[] _fileTargets;
         private readonly int[] _fileDecoys;
         private readonly Dictionary<string, double> _bestQByPrecursor;
+        // Streaming --model-diagnostics accumulator (null off the report path): folds every
+        // pre-compaction row into the reduced report structures so the projection path can emit
+        // the pass-1 report without holding the resident FdrEntry pool. Fed in Accept.
+        private readonly ModelDiagnosticsData.Accumulator _mdiagAccumulator;
 
         protected FdrProjectionSinkBase(
-            FdrProjectionSet projections, OspreyConfig config, string passLabel)
+            FdrProjectionSet projections, OspreyConfig config, string passLabel,
+            ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
         {
             Projections = projections;
             _fdrLevel = config.FdrLevel;
@@ -63,6 +69,7 @@ namespace pwiz.Osprey.Tasks
             _fileTargets = new int[nFiles];
             _fileDecoys = new int[nFiles];
             _bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
+            _mdiagAccumulator = mdiagAccumulator;
         }
 
         /// <summary>
@@ -98,6 +105,16 @@ namespace pwiz.Osprey.Tasks
                 double existing;
                 if (!_bestQByPrecursor.TryGetValue(pkey, out existing) || eff < existing)
                     _bestQByPrecursor[pkey] = eff;
+            }
+
+            // --model-diagnostics: fold this pre-compaction row into the streaming report
+            // reductions (every row -- targets, decoys, entrapment, failing -- not just the
+            // passing set the [COUNT] tally reads). Null off the report path.
+            if (_mdiagAccumulator != null)
+            {
+                var mproj = Projections.PerFile[fileIdx].Value[rowIdx];
+                _mdiagAccumulator.Add(fileIdx, Projections.PeptideById[mproj.PeptideId],
+                    mproj.Charge, entryId, isDecoy, score, in q);
             }
 
             AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, in q);
@@ -170,8 +187,9 @@ namespace pwiz.Osprey.Tasks
 
         public FdrStoringSink(
             FdrProjectionSet projections, OspreyConfig config, string passLabel,
-            Func<string, IReadOnlyList<FdrScoreRecord>, int> flushPartial)
-            : base(projections, config, passLabel)
+            Func<string, IReadOnlyList<FdrScoreRecord>, int> flushPartial,
+            ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
+            : base(projections, config, passLabel, mdiagAccumulator)
         {
             _outputs = new FdrProjectionOutputs(projections);
             _flushPartial = flushPartial;

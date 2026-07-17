@@ -699,14 +699,13 @@ namespace pwiz.Osprey.Test
             public FdrQValues QAt(int fileIdx, int rowIdx) => _q[(fileIdx, rowIdx)];
         }
 
-        // ReSharper disable once InvalidXmlDocComment
         /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
-        /// overload must produce byte-identical Score + q-values to the FdrEntry
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(List{KeyValuePair{string,List{FdrEntry}}},OspreyConfig,OspreyFeatureInfo[],System.Action{string},FeatureContributions,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
-        /// overload -- the flag-off byte-identity ORACLE -- on the same input, at the
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions})"/>
+        /// overload must produce byte-identical Score + q-values to the FdrEntry-buffer
+        /// <see cref="PercolatorEngine"/> RunPercolatorFdr overload (the one that takes the
+        /// per-file <see cref="FdrEntry"/> lists) -- the flag-off byte-identity ORACLE -- on the same input, at the
         /// shared production config. Streaming-only: both overloads always take the
         /// streaming SVM path (best-per-precursor subsample, Stage 5 standardizer fit
         /// on that subset), so this checks that the two buffer shapes -- the FdrEntry

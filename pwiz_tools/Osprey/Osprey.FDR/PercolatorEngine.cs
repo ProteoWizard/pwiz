@@ -216,7 +216,8 @@ namespace pwiz.Osprey.FDR
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            Action<FeatureContributions> captureContributions = null)
         {
             // The lean FdrProjection no longer stores the q-value outputs (issue #4355
             // struct-shrink S0): the score pass hands them to this per-pass sink (the
@@ -275,7 +276,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                loadFileFeatures, sink);
+                loadFileFeatures, sink, captureContributions);
             if (streamingAbort)
                 return true;
 
@@ -673,7 +674,8 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            IFdrOutputSink sink)
+            IFdrOutputSink sink,
+            Action<FeatureContributions> captureContributions = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -787,17 +789,25 @@ namespace pwiz.Osprey.FDR
             }
 
             var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
-            logInfo(string.Format(@"Loading training-subset feature vectors from {0} file(s)...",
-                subsetByFile.Count));
-            foreach (var kvp in subsetByFile)
+            // Per-file progress: loading the training-subset feature vectors from every file
+            // ran ~5 min silent before cross-validation. Console-only, never touches the
+            // loaded features, so training is byte-identical.
+            using (var loadProgress = new ProgressReporter(
+                string.Format(@"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count),
+                subsetByFile.Count))
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                foreach (int k in kvp.Value)
+                int loadDone = 0;
+                foreach (var kvp in subsetByFile)
                 {
-                    var entry = subsetEntries[k];
-                    entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
-                        rows, entry.ParquetIndex, entry.CoelutionSum,
-                        percConfig.FeatureInfos.Length).Clone();
+                    loadProgress.Report(++loadDone);
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    foreach (int k in kvp.Value)
+                    {
+                        var entry = subsetEntries[k];
+                        entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                            rows, entry.ParquetIndex, entry.CoelutionSum,
+                            percConfig.FeatureInfos.Length).Clone();
+                    }
                 }
             }
 
@@ -834,7 +844,7 @@ namespace pwiz.Osprey.FDR
             //    arrays already built above.
             PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, fileNames, trainResults, percConfig,
-                loadFileFeatures, sink);
+                loadFileFeatures, sink, captureContributions);
             return false;
         }
 

@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net; // HttpStatusCode
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -1246,11 +1245,13 @@ namespace pwiz.Skyline
 
             // We allow silent failures because it is OK for the cache to remain unoptimized
             // or the layout to not be saved.  These aren't critical as long as the document
-            // was saved correctly.
-            catch (UnauthorizedAccessException) {}
-            catch (IOException) {}
-            catch (OperationCanceledException) {}
-            catch (TargetInvocationException) {}
+            // was saved correctly.  A programming defect still gets reported, but the document
+            // is already saved, so this function continues on rather than rethrowing.
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    Program.ReportException(x);
+            }
 
             // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
             //           DocumentSaved lets subscribers know about a new DocumentFilePath. Example: FilesTree uses this event 
@@ -3438,6 +3439,11 @@ namespace pwiz.Skyline
             ShowEncyclopeDiaSearchDlg();
         }
 
+        private void diannSearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDiannSearchDlg();
+        }
+
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
@@ -3526,6 +3532,79 @@ namespace pwiz.Skyline
                     // Nothing to do; the dialog does all the work.
                 }
             }
+        }
+
+        public void ShowDiannSearchDlg()
+        {
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            if (!EnsureDiannInstalled())
+                return;
+
+            using (var dlg = new DiannSearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loops until DIA-NN is installed, the user lets us install it, or the user cancels.
+        /// Returns true if DIA-NN is available, false if the user declined to proceed.
+        /// If the Windows uninstall registry exposes an existing DIA-NN install, the user
+        /// is asked whether to reuse that install or download our bundled version.
+        /// </summary>
+        private bool EnsureDiannInstalled()
+        {
+            if (!File.Exists(DiannHelpers.DiannBinary))
+            {
+                var registered = DiannHelpers.TryGetRegisteredDiannPath();
+                if (!string.IsNullOrEmpty(registered))
+                {
+                    var choice = MultiButtonMsgDlg.Show(this,
+                        string.Format(AlertsResources.EnsureDiannInstalled_Use_existing_or_download__0____1__,
+                            registered, DiannHelpers.DIANN_VERSION),
+                        AlertsResources.EnsureDiannInstalled_Use_Existing,
+                        AlertsResources.EnsureDiannInstalled_Download,
+                        true);
+                    if (choice == DialogResult.Cancel)
+                        return false;
+                    if (choice == DialogResult.Yes)
+                    {
+                        if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
+                            Settings.Default.SearchToolList.Remove(
+                                Settings.Default.SearchToolList[SearchToolType.DIANN]);
+                        Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                            registered, string.Empty, Path.GetDirectoryName(registered), false));
+                    }
+                    // choice == DialogResult.No: fall through to the download dialog
+                }
+            }
+
+            while (!File.Exists(DiannHelpers.DiannBinary))
+            {
+                using var downloadDlg = new DiannDownloadDlg();
+                var result = downloadDlg.ShowDialog(this);
+                if (result == DialogResult.OK)
+                    continue; // download succeeded - loop to re-check
+                if (result == DiannDownloadDlg.SpecifyManuallyResult)
+                {
+                    ShowSearchToolsDlg();
+                    continue; // re-check after user edits the list
+                }
+                return false; // user canceled
+            }
+            return true;
         }
 
         public void ShowFeatureDetectionDlg()

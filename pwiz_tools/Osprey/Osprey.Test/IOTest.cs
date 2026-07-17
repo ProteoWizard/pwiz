@@ -27,6 +27,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
@@ -595,6 +596,230 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="SpectraWindowIndex"/> streams each isolation
+        /// window's MS2 spectra byte-for-byte identically to the resident grouping
+        /// that scoring builds today from <see cref="SpectraCache.LoadSpectraCache"/>.
+        /// This is the load-bearing correctness gate for the per-window streaming
+        /// refactor: same window key (Round(center*10)), same file-order membership
+        /// (including two distinct centers that round to one key), same decoded
+        /// fields/peaks, an empty-peak record, MS1 records the index must skip, an
+        /// absent key returning empty, AllMs2Rts mirroring the file-order RTs, and
+        /// invalid/missing caches rejected the same way LoadSpectraCache rejects them.
+        /// </summary>
+        [TestMethod]
+        public void TestSpectraWindowIndex()
+        {
+            // Interleaved DIA-style cycling across three windows in the INPUT (file /
+            // acquisition order), so the v4 writer's window grouping makes on-disk order
+            // differ from file order -- this exercises both the grouping and the readers'
+            // reconstruction of file-order membership. 500.03 and 699.98 round to the
+            // same keys as 500.0 and 700.0, and one record has zero peaks.
+            var ms2 = new List<Spectrum>
+            {
+                MakeIndexMs2(1, 10.0, 500.00, 3),
+                MakeIndexMs2(2, 10.0, 600.00, 2),
+                MakeIndexMs2(3, 10.0, 700.00, 5),
+                MakeIndexMs2(4, 10.1, 500.03, 1),
+                MakeIndexMs2(5, 10.1, 600.00, 0),
+                MakeIndexMs2(6, 10.1, 699.98, 4),
+                MakeIndexMs2(7, 10.2, 500.00, 2),
+                MakeIndexMs2(8, 10.2, 600.00, 3),
+                MakeIndexMs2(9, 10.2, 700.00, 1),
+            };
+            var ms1 = new List<MS1Spectrum>
+            {
+                new MS1Spectrum
+                {
+                    ScanNumber = 0, RetentionTime = 9.9,
+                    Mzs = new[] { 400.0, 500.0 }, Intensities = new[] { 10.0f, 20.0f }
+                },
+                new MS1Spectrum
+                {
+                    ScanNumber = 10, RetentionTime = 10.3,
+                    Mzs = new[] { 450.0 }, Intensities = new[] { 30.0f }
+                },
+            };
+
+            string path = Path.GetTempFileName();
+            try
+            {
+                SpectraCache.SaveSpectraCache(path, ms2, ms1);
+
+                // Reference grouping = exactly what RunCoelutionScoring builds today.
+                SpectraCacheResult full = SpectraCache.LoadSpectraCache(path);
+                Assert.IsNotNull(full);
+
+                // LoadSpectraCache must return MS2 in ACQUISITION (file) order even
+                // though the v4 body is physically window-grouped -- Stage-6 rescore
+                // relies on a full resident load in file order, so grouping must not
+                // force it to stream. The interleaved input makes grouped order differ
+                // from file order, so this catches a loader that returns on-disk order.
+                Assert.AreEqual(ms2.Count, full.Ms2Spectra.Count);
+                for (int i = 0; i < ms2.Count; i++)
+                {
+                    Assert.AreEqual(ms2[i].ScanNumber, full.Ms2Spectra[i].ScanNumber);
+                    Assert.AreEqual(ms2[i].RetentionTime, full.Ms2Spectra[i].RetentionTime, 0.0);
+                }
+
+                var expected = GroupByWindowKey(full.Ms2Spectra);
+
+                SpectraWindowIndex index = SpectraWindowIndex.BuildFromCache(path);
+                Assert.IsNotNull(index);
+                Assert.AreEqual(full.Ms2Spectra.Count, index.Ms2Count);
+
+                // Each window's streamed spectra are byte-identical, in file order.
+                int streamedTotal = 0;
+                foreach (var kvp in expected)
+                {
+                    List<Spectrum> streamed = index.LoadWindow(kvp.Key);
+                    AssertSpectraListEqual(kvp.Value, streamed);
+                    streamedTotal += streamed.Count;
+                }
+                // No record lost or double-counted across the window partition.
+                Assert.AreEqual(full.Ms2Spectra.Count, streamedTotal);
+
+                // Absent key -> empty list (matches the dictionary miss).
+                int absentKey = 1;
+                while (expected.ContainsKey(absentKey))
+                    absentKey++;
+                Assert.AreEqual(0, index.LoadWindow(absentKey).Count);
+
+                // AllMs2Rts mirrors the file-order RTs (dedup's sole dependency).
+                Assert.AreEqual(full.Ms2Spectra.Count, index.AllMs2Rts.Count);
+                for (int i = 0; i < full.Ms2Spectra.Count; i++)
+                    Assert.AreEqual(full.Ms2Spectra[i].RetentionTime, index.AllMs2Rts[i], 0.0);
+
+                // MS1 loaded via the EOF index (its recorded section offset) is byte-identical
+                // to the full load's MS1 -- streaming Stages 1-4 get MS1 without the MS2 list.
+                Assert.AreEqual(full.Ms1Spectra.Count, index.Ms1Spectra.Count);
+                for (int i = 0; i < full.Ms1Spectra.Count; i++)
+                {
+                    Assert.AreEqual(full.Ms1Spectra[i].ScanNumber, index.Ms1Spectra[i].ScanNumber);
+                    Assert.AreEqual(full.Ms1Spectra[i].RetentionTime, index.Ms1Spectra[i].RetentionTime, 0.0);
+                    CollectionAssert.AreEqual(full.Ms1Spectra[i].Mzs, index.Ms1Spectra[i].Mzs);
+                    CollectionAssert.AreEqual(full.Ms1Spectra[i].Intensities, index.Ms1Spectra[i].Intensities);
+                }
+
+                // First-cycle isolation windows: the distinct windows of DIA cycle 1 (records
+                // 1-3; record 4's 500.03 repeats key 5000 and ends the cycle), each carrying
+                // that key's first record's window, sorted by center. Mirrors
+                // ScoringTaskShared.ExtractIsolationWindows so scoring's window fan-out is
+                // unchanged without materializing the MS2 list.
+                Assert.AreEqual(3, index.IsolationWindows.Count);
+                for (int i = 0; i < 3; i++)
+                {
+                    Assert.AreEqual(ms2[i].IsolationWindow.Center, index.IsolationWindows[i].Center, 0.0);
+                    Assert.AreEqual(ms2[i].IsolationWindow.LowerOffset, index.IsolationWindows[i].LowerOffset, 0.0);
+                    Assert.AreEqual(ms2[i].IsolationWindow.UpperOffset, index.IsolationWindows[i].UpperOffset, 0.0);
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+
+            // A cache with bad magic -> null (same rule as LoadSpectraCache), so a
+            // caller can fall back to a resident load rather than stream garbage.
+            string badPath = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllBytes(badPath, System.Text.Encoding.ASCII.GetBytes("NOTVALID"));
+                Assert.IsNull(SpectraWindowIndex.BuildFromCache(badPath));
+            }
+            finally
+            {
+                TryDeleteFile(badPath);
+            }
+
+            // A missing file -> null.
+            Assert.IsNull(SpectraWindowIndex.BuildFromCache(
+                Path.Combine(Path.GetTempPath(),
+                    "osprey_no_such_" + Guid.NewGuid().ToString("N") + ".spectra.bin")));
+
+            // A cache written by the pre-grouping v3 format is rejected (the VERSION
+            // bump invalidates old caches so they re-populate window-grouped on first
+            // use) -- both readers return null on the version mismatch.
+            string v3Path = Path.GetTempFileName();
+            try
+            {
+                using (var fs = new FileStream(v3Path, FileMode.Create, FileAccess.Write))
+                using (var w = new BinaryWriter(fs))
+                {
+                    w.Write(System.Text.Encoding.ASCII.GetBytes("OSPRSPC\0"));
+                    w.Write((uint)3);   // pre-grouping version
+                    w.Write((ulong)0);  // source size (no fingerprint)
+                    w.Write((long)0);   // source mtime
+                    w.Write((uint)0);   // n_ms2
+                    w.Write((uint)0);   // n_ms1
+                }
+                Assert.IsNull(SpectraWindowIndex.BuildFromCache(v3Path));
+                Assert.IsNull(SpectraCache.LoadSpectraCache(v3Path));
+            }
+            finally
+            {
+                TryDeleteFile(v3Path);
+            }
+        }
+
+        // Distinct, non-round peak values per record so any field/peak mis-decode
+        // surfaces; isolation offsets vary per scan so those decode paths are checked.
+        private static Spectrum MakeIndexMs2(uint scan, double rt, double center, int nPeaks)
+        {
+            var mzs = new double[nPeaks];
+            var intensities = new float[nPeaks];
+            for (int p = 0; p < nPeaks; p++)
+            {
+                mzs[p] = 100.0 + scan * 7.0 + p * 1.5;
+                intensities[p] = scan * 100.0f + p * 3.0f;
+            }
+            return new Spectrum
+            {
+                ScanNumber = scan,
+                RetentionTime = rt,
+                PrecursorMz = center,
+                IsolationWindow = new IsolationWindow(center, 0.5 + scan * 0.01, 1.5 + scan * 0.02),
+                Mzs = mzs,
+                Intensities = intensities
+            };
+        }
+
+        // Group MS2 by the same key scoring uses: (int)Math.Round(center * 10.0),
+        // preserving file order within each window.
+        private static Dictionary<int, List<Spectrum>> GroupByWindowKey(List<Spectrum> ms2)
+        {
+            var byKey = new Dictionary<int, List<Spectrum>>();
+            foreach (var s in ms2)
+            {
+                int key = (int)Math.Round(s.IsolationWindow.Center * 10.0);
+                if (!byKey.TryGetValue(key, out var list))
+                {
+                    list = new List<Spectrum>();
+                    byKey[key] = list;
+                }
+                list.Add(s);
+            }
+            return byKey;
+        }
+
+        private static void AssertSpectraListEqual(List<Spectrum> expected, List<Spectrum> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                Spectrum e = expected[i];
+                Spectrum a = actual[i];
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.RetentionTime, a.RetentionTime, 0.0);
+                Assert.AreEqual(e.PrecursorMz, a.PrecursorMz, 0.0);
+                Assert.AreEqual(e.IsolationWindow.Center, a.IsolationWindow.Center, 0.0);
+                Assert.AreEqual(e.IsolationWindow.LowerOffset, a.IsolationWindow.LowerOffset, 0.0);
+                Assert.AreEqual(e.IsolationWindow.UpperOffset, a.IsolationWindow.UpperOffset, 0.0);
+                CollectionAssert.AreEqual(e.Mzs, a.Mzs);
+                CollectionAssert.AreEqual(e.Intensities, a.Intensities);
+            }
+        }
+
         #endregion
 
         #region DiannTsvLoader Tests
@@ -803,8 +1028,8 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(orig.IsDecoy, copy.IsDecoy);
                     Assert.AreEqual(orig.Fragments.Count, copy.Fragments.Count);
                     Assert.AreEqual(orig.Modifications.Count, copy.Modifications.Count);
-                    CollectionAssert.AreEqual(orig.ProteinIds, copy.ProteinIds);
-                    CollectionAssert.AreEqual(orig.GeneNames, copy.GeneNames);
+                    CollectionAssert.AreEqual(orig.ProteinIds.ToArray(), copy.ProteinIds.ToArray());
+                    CollectionAssert.AreEqual(orig.GeneNames.ToArray(), copy.GeneNames.ToArray());
 
                     // Check fragment details
                     for (int f = 0; f < orig.Fragments.Count; f++)
@@ -1069,26 +1294,22 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestLibraryStringInterning()
         {
-            // Two entries repeat the same values across every interned field.
-            var e0 = MakeInternEntry(1, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
-            var e1 = MakeInternEntry(2, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+            // The interner is an instance pool the loaders route every string
+            // through as they build each entry's arrays. Build two entries that
+            // repeat the same values across every interned field, sharing one
+            // pool, and a third with a null value / empty arrays.
+            var interner = new LibraryStringInterner();
+            var e0 = MakeInternEntry(interner, 1, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+            var e1 = MakeInternEntry(interner, 2, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
 
-            // A third entry with a null protein list, an empty gene list, and a
-            // null modification name -- interning must leave these untouched, not throw.
-            var e2 = new LibraryEntry(3, FreshCopy("PEPTIDEK"), FreshCopy("PEPTIDEK"), 2, 600.0, 8.0);
-            e2.ProteinIds = null;
-            e2.GeneNames = new List<string>();
-            e2.Modifications = new List<Modification> { new Modification { Position = 0, Name = null } };
-
-            var entries = new List<LibraryEntry> { e0, e1, e2 };
-
-            // Pre-condition: the repeated values are DISTINCT instances (the char-array
-            // copies defeat the compiler's literal interning), so AreSame below proves
-            // LibraryStringInterner shared them -- not the CLR string pool.
-            Assert.AreNotSame(e0.Sequence, e1.Sequence);
-            Assert.AreNotSame(e0.ProteinIds[0], e1.ProteinIds[0]);
-
-            LibraryStringInterner.InternInPlace(entries);
+            // A third entry with a null protein element, empty gene array, and a
+            // null modification name -- interning must leave these unchanged, not throw.
+            var e2 = new LibraryEntry(3,
+                interner.Intern(FreshCopy("PEPTIDEK")), interner.Intern(FreshCopy("PEPTIDEK")),
+                2, 600.0, 8.0);
+            e2.ProteinIds = new[] { interner.Intern(null) };
+            e2.GeneNames = Array.Empty<string>();
+            e2.Modifications = new[] { new Modification { Position = 0, Name = interner.Intern(null) } };
 
             // Values are unchanged on every interned field...
             Assert.AreEqual("PEPTIDER", e0.Sequence);
@@ -1097,7 +1318,10 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual("GENEA", e0.GeneNames[0]);
             Assert.AreEqual("Oxidation", e0.Modifications[0].Name);
 
-            // ...but duplicates now share one instance, for each interned field.
+            // ...but duplicates share one instance, for each interned field.
+            // (The char-array copies in MakeInternEntry defeat the compiler's
+            // literal interning, so AreSame proves the pool shared them -- not
+            // the CLR string pool.)
             Assert.AreSame(e0.Sequence, e1.Sequence);
             Assert.AreSame(e0.ModifiedSequence, e1.ModifiedSequence);
             Assert.AreSame(e0.ProteinIds[0], e1.ProteinIds[0]);
@@ -1105,28 +1329,30 @@ namespace pwiz.Osprey.Test
             Assert.AreSame(e0.Modifications[0].Name, e1.Modifications[0].Name);
 
             // The null/empty entry is untouched (no NRE).
-            Assert.IsNull(e2.ProteinIds);
+            Assert.IsNull(e2.ProteinIds[0]);
             Assert.AreEqual(0, e2.GeneNames.Count);
             Assert.IsNull(e2.Modifications[0].Name);
             Assert.AreEqual("PEPTIDEK", e2.Sequence);
         }
 
         // Fresh instance with the same characters, so the compiler's literal
-        // interning does not pre-share it before LibraryStringInterner runs.
+        // interning does not pre-share it before the interner runs.
         private static string FreshCopy(string s)
         {
             return new string(s.ToCharArray());
         }
 
-        private static LibraryEntry MakeInternEntry(uint id, string seq, string modSeq,
-            string protein, string gene, string modName)
+        private static LibraryEntry MakeInternEntry(LibraryStringInterner interner, uint id,
+            string seq, string modSeq, string protein, string gene, string modName)
         {
-            var e = new LibraryEntry(id, FreshCopy(seq), FreshCopy(modSeq), 2, 500.0, 10.0);
-            e.ProteinIds = new List<string> { FreshCopy(protein) };
-            e.GeneNames = new List<string> { FreshCopy(gene) };
-            e.Modifications = new List<Modification>
+            var e = new LibraryEntry(id,
+                interner.Intern(FreshCopy(seq)), interner.Intern(FreshCopy(modSeq)),
+                2, 500.0, 10.0);
+            e.ProteinIds = new[] { interner.Intern(FreshCopy(protein)) };
+            e.GeneNames = new[] { interner.Intern(FreshCopy(gene)) };
+            e.Modifications = new[]
             {
-                new Modification { Position = 1, Name = FreshCopy(modName) }
+                new Modification { Position = 1, Name = interner.Intern(FreshCopy(modName)) }
             };
             return e;
         }
@@ -2068,6 +2294,146 @@ namespace pwiz.Osprey.Test
         #endregion
 
         #region FdrScoresSidecar Tests
+
+        /// <summary>
+        /// Bounded row-group write: a parquet written as several row groups (forced via the
+        /// test-only <see cref="ParquetScoreCache.RowGroupRowCapForTest"/> cap) reads back
+        /// logically identical -- same rows in the same global (entry_id, charge, scan_number)
+        /// order, same running ParquetIndex spanning the group boundaries, same per-row
+        /// features + fragment blobs -- to the same entries written as one row group. Only the
+        /// physical row-group framing differs. Guards the memory-capping chunked write path.
+        /// </summary>
+        [TestMethod]
+        public void TestParquetBoundedRowGroupRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_rowgroup_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // EntryIds deliberately out of order so the write's canonical sort is
+                // exercised; distinct features + fragment blobs per row so a chunk-boundary
+                // row mismap surfaces as a value mismatch, not a silent pass.
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+                    for (int f = 0; f < features.Length; f++)
+                        features[f] = id * 100.0 + f;
+                    entries.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        IsDecoy = (id & 1u) == 0,
+                        Charge = 2,
+                        ScanNumber = id * 10,
+                        ApexRt = id + 0.5,
+                        StartRt = id + 0.1,
+                        EndRt = id + 0.9,
+                        ModifiedSequence = "PEPTIDE" + id,
+                        Features = features,
+                        FragmentMzs = new[] { id + 0.25, id + 0.75 },
+                        FragmentIntensities = new float[] { id, id + 1 },
+                        ReferenceXicRts = new[] { id + 1.5, id + 2.5, id + 3.5 },
+                        ReferenceXicIntensities = new[] { id * 2.0, id * 3.0 },
+                    });
+                }
+
+                string singlePath = Path.Combine(dir, "single.scores.parquet");
+                string multiPath = Path.Combine(dir, "multi.scores.parquet");
+
+                // Single-group reference (cap unset), then multi-group (cap 3 -> ceil(7/3)=3
+                // groups). Same entries, same writer, only the row-group cap differs.
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                ParquetScoreCache.WriteScoresParquet(singlePath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(multiPath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(1, CountRowGroups(singlePath));
+                Assert.AreEqual(3, CountRowGroups(multiPath));
+
+                var single = ParquetScoreCache.LoadFullFdrEntries(singlePath);
+                var multi = ParquetScoreCache.LoadFullFdrEntries(multiPath);
+
+                Assert.AreEqual(entries.Count, single.Count);
+                Assert.AreEqual(single.Count, multi.Count);
+
+                // Distinct entry_ids -> canonical sort is ascending; ParquetIndex is the
+                // running global row position, unbroken across the row-group boundaries.
+                var expectedIds = new uint[] { 1, 2, 3, 5, 7, 8, 9 };
+                for (int i = 0; i < multi.Count; i++)
+                {
+                    Assert.AreEqual(expectedIds[i], multi[i].EntryId);
+                    Assert.AreEqual((uint)i, multi[i].ParquetIndex,
+                        "ParquetIndex must be the global row position across row groups");
+
+                    // Multi-group row equals single-group row field-for-field.
+                    Assert.AreEqual(single[i].EntryId, multi[i].EntryId);
+                    Assert.AreEqual(single[i].ParquetIndex, multi[i].ParquetIndex);
+                    Assert.AreEqual(single[i].IsDecoy, multi[i].IsDecoy);
+                    Assert.AreEqual(single[i].Charge, multi[i].Charge);
+                    Assert.AreEqual(single[i].ScanNumber, multi[i].ScanNumber);
+                    Assert.AreEqual(single[i].ApexRt, multi[i].ApexRt);
+                    Assert.AreEqual(single[i].StartRt, multi[i].StartRt);
+                    Assert.AreEqual(single[i].EndRt, multi[i].EndRt);
+                    Assert.AreEqual(single[i].ModifiedSequence, multi[i].ModifiedSequence);
+                    CollectionAssert.AreEqual(single[i].Features, multi[i].Features);
+                    CollectionAssert.AreEqual(single[i].FragmentMzs, multi[i].FragmentMzs);
+                    CollectionAssert.AreEqual(single[i].FragmentIntensities, multi[i].FragmentIntensities);
+                }
+
+                // An all-empty blob column across bounded row groups. Decoys form a
+                // contiguous block at the end of the entry_id sort, so a group can fall
+                // entirely in a region where a blob (e.g. reference XIC) is absent on
+                // every row. A zero-length blob would make the whole group's column
+                // zero-length, which the Parquet reader cannot decode; empty blobs are
+                // written as NULL cells to avoid that. Here reference_xic is empty on
+                // every row and cap=3 forces 3 groups -> every group's reference_xic
+                // column is all-null; it must still read back as empty per row.
+                var emptyXic = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 1, 2, 3, 4, 5, 6, 7 })
+                {
+                    emptyXic.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        Charge = 2,
+                        ScanNumber = id,
+                        ModifiedSequence = "PEP" + id,
+                        Features = new double[ParquetScoreCache.NUM_PIN_FEATURES],
+                        FragmentMzs = new[] { id + 0.5 },
+                        FragmentIntensities = new float[] { id },
+                        // ReferenceXicRts / ReferenceXicIntensities left null (empty).
+                    });
+                }
+                string emptyXicPath = Path.Combine(dir, "empty_xic.scores.parquet");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(emptyXicPath, emptyXic, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(3, CountRowGroups(emptyXicPath));
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(emptyXicPath);
+                Assert.AreEqual(emptyXic.Count, reloaded.Count);
+                foreach (var e in reloaded)
+                {
+                    Assert.AreEqual(0, e.ReferenceXicRts.Length,
+                        "an all-empty reference-XIC column must read back as empty, not crash");
+                    Assert.AreEqual(0, e.ReferenceXicIntensities.Length);
+                    Assert.AreEqual(1, e.FragmentMzs.Length);
+                }
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        private static int CountRowGroups(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult())
+                return reader.RowGroupCount;
+        }
 
         private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep,
             double runProteinQvalue = 1.0)
