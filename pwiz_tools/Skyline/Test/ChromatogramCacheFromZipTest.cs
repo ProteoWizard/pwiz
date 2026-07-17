@@ -132,7 +132,7 @@ namespace pwiz.SkylineTest
             int chromPeakSize;
             long locationPeaks;
             int numPeaks;
-            using (var stream = filePath.OpenRead())
+            using (var stream = filePath.OpenRandomAccessStream())
             {
                 var cacheHeader = CacheHeaderStruct.Read(stream);
                 var cacheFormat = CacheFormat.FromCacheHeader(cacheHeader);
@@ -192,7 +192,7 @@ namespace pwiz.SkylineTest
         private static ChromPeakWithExtra[] ReadPadded(FilePath filePath,
             StructSerializer<ChromPeakWithExtra> serializer, long locationPeaks, int numPeaks)
         {
-            using (var stream = filePath.OpenRead())
+            using (var stream = filePath.OpenRandomAccessStream())
             {
                 stream.Seek(locationPeaks, SeekOrigin.Begin);
                 return serializer.ReadArray(stream, numPeaks);
@@ -203,7 +203,7 @@ namespace pwiz.SkylineTest
             StructSerializer<ChromPeakWithExtra> serializer, long locationPeaks, int numPeaks, int chromPeakSize)
         {
             var peaks = new ChromPeakWithExtra[numPeaks];
-            using (var stream = filePath.OpenRead())
+            using (var stream = filePath.OpenRandomAccessStream())
             {
                 stream.Seek(locationPeaks, SeekOrigin.Begin);
                 var buffer = new byte[serializer.ItemSizeInMemory];
@@ -218,7 +218,7 @@ namespace pwiz.SkylineTest
 
         private static ChromPeak[] ReadRealChromPeaks(FilePath filePath, long locationPeaks, int numPeaks)
         {
-            using (var stream = filePath.OpenRead())
+            using (var stream = filePath.OpenRandomAccessStream())
             {
                 var cacheHeader = CacheHeaderStruct.Read(stream);
                 var serializer = CacheFormat.FromCacheHeader(cacheHeader).ChromPeakSerializer();

@@ -1320,7 +1320,8 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeFinalCacheIncomplete(true);
             }
 
-            using var stream = cacheFilePath.OpenRead();
+            // The cache header is at the END of the .skyd, so this reader seeks.
+            using var stream = cacheFilePath.OpenRandomAccessStream();
             var cachedFilePaths = ChromatogramCache.GetCachedFilePaths(stream).ToHashSet();
             if (!Chromatograms.SelectMany(chrom => chrom.MSDataFilePaths).All(cachedFilePaths.Contains))
             {

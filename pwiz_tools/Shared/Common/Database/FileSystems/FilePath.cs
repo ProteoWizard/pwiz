@@ -60,27 +60,40 @@ namespace pwiz.Common.Database.FileSystems
         }
 
         /// <summary>
-        /// Opens the file for reading. For a stored (uncompressed) zip entry this is a seekable
-        /// stream that reads the bytes in place; for a compressed zip entry the entry is decompressed
-        /// into memory; otherwise it is an ordinary <see cref="File.OpenRead(string)"/>.
+        /// Opens the file to be read from beginning to end. A compressed zip entry is decompressed
+        /// as it is read, so a big file never has to be held in memory. This is what almost every
+        /// reader wants; only the .skyd is read with random access.
         /// </summary>
-        public Stream OpenRead()
+        public Stream OpenSequentialStream()
         {
             if (!TryParseZip(out var zipFilePath, out var entryName))
                 return File.OpenRead(Path);
-
             var zip = new RandomAccessZipFile(zipFilePath);
+            return zip.OpenEntry(FindEntryOrThrow(zip, zipFilePath, entryName));
+        }
+
+        /// <summary>
+        /// Opens the file to be read in any order (a seekable stream). Inside a .zip only a stored
+        /// (uncompressed) entry can be read this way, because only its bytes are a contiguous range
+        /// of the .zip; a compressed entry throws. Skyline stores the files it needs random access
+        /// to when sharing, and checks that they really are stored before opening a .zip in place
+        /// (see SrmDocumentSharing.CanOpenInPlace).
+        /// </summary>
+        public Stream OpenRandomAccessStream()
+        {
+            if (!TryParseZip(out var zipFilePath, out var entryName))
+                return File.OpenRead(Path);
+            var zip = new RandomAccessZipFile(zipFilePath);
+            return zip.OpenStoredEntry(FindEntryOrThrow(zip, zipFilePath, entryName));
+        }
+
+        private ZipEntryInfo FindEntryOrThrow(RandomAccessZipFile zip, string zipFilePath, string entryName)
+        {
             var entry = zip.FindEntry(entryName);
             if (entry == null)
                 throw new FileNotFoundException(string.Format(
                     Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
-            if (entry.IsStored)
-                return zip.OpenStoredEntry(entry);
-
-            // Compressed entry: decompressed as it is read, so that a big .sky never has to be held
-            // in memory. The stream is forward-only, which is all the linear readers of a .sky,
-            // .skyl or .sky.view need.
-            return zip.OpenDeflatedEntry(entry);
+            return entry;
         }
 
         /// <summary>

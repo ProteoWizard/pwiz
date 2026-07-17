@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Model.AuditLog
             try
             {
                 // The .skyl may be stored inside an in-place .sky.zip; FilePath reads it in place.
-                using (var stream = new FilePath(fileName).OpenRead())
+                using (var stream = new FilePath(fileName).OpenSequentialStream())
                 using (var reader = new XmlTextReader(stream))
                 {
                     return ReadFromXmlTextReader(reader, out result);

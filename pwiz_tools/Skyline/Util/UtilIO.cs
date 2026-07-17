@@ -743,9 +743,12 @@ namespace pwiz.Skyline.Util
                 else
                 {
                     // Reading may be from a file stored inside a .zip (e.g. an in-place .sky.zip).
+                    // These are the binary caches (.skyd and the library caches), which seek - they
+                    // read their header from the end of the file - so this must be a random-access
+                    // stream, like the FileStream it stands in for.
                     var filePath = new FilePath(path);
                     stream = filePath.IsInZipFile
-                        ? filePath.OpenRead()
+                        ? filePath.OpenRandomAccessStream()
                         : new FileStream(path, mode, FileAccess.Read, FileShare.Read);
                 }
             }

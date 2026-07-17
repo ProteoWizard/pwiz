@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
         private ChromatogramCache.RawData LoadChromatogramRawData(SrmDocument document)
         {
             // The shared document is opened in place, so its .skyd is inside of the .sky.zip
-            using (var stream = new FilePath(document.Settings.MeasuredResults.CachePaths.Single()).OpenRead())
+            using (var stream = new FilePath(document.Settings.MeasuredResults.CachePaths.Single()).OpenRandomAccessStream())
             {
                 ChromatogramCache.LoadStructs(stream, new ProgressStatus(), new SilentProgressMonitor(),
                     out var rawData);

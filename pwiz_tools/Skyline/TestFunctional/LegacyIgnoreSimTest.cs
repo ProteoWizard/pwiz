@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var xDoc = new XmlDocument();
             // The shared document is opened in place, so its .sky is inside of the .sky.zip
-            using (var stream = new FilePath(filePath).OpenRead())
+            using (var stream = new FilePath(filePath).OpenSequentialStream())
             {
                 xDoc.Load(stream);
             }

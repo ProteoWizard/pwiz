@@ -71,12 +71,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ShareDocument(inPlaceZip, new ShareType(true, null)));
             AssertEx.FileExists(inPlaceZip);
 
-            var zip = new RandomAccessZipFile(inPlaceZip);
-            Assert.IsTrue(zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions),
+            Assert.IsTrue(new SrmDocumentSharing(inPlaceZip).CanOpenInPlace(),
                 "shared .zip has entries that would prevent opening in place: " +
-                string.Join(", ", zip.Entries.Select(e => e.FileName)));
-            Assert.IsTrue(zip.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions),
-                ".protdb was not stored uncompressed");
+                string.Join(", ", new RandomAccessZipFile(inPlaceZip).Entries.Select(e => e.ToString())));
 
             // Read the background proteome directly from inside the .zip, without extracting it, and
             // verify it has the same proteins as the original on disk. This exercises reading a

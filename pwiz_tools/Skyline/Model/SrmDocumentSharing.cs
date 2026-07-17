@@ -46,10 +46,9 @@ namespace pwiz.Skyline.Model
         /// Extensions of the files that a document opened in place needs RANDOM access to (.skyd is
         /// the chromatogram cache, .blib are BiblioSpec spectral libraries, .protdb is the
         /// background proteome). These can be used directly from the .zip only if we can get a
-        /// random-access stream to them, i.e. they are stored UNCOMPRESSED. They are stored
-        /// uncompressed when sharing, and
-        /// <see cref="pwiz.Common.Database.FileSystems.RandomAccessZipFile"/> checks that they are all stored
-        /// before opening in place.
+        /// random-access stream to them, i.e. their bytes are a contiguous, unmodified range inside
+        /// the .zip. They are stored uncompressed when sharing, and <see cref="CanOpenInPlace"/>
+        /// checks that they really are before opening in place.
         /// </summary>
         public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib", @".protdb" };
 
@@ -61,14 +60,14 @@ namespace pwiz.Skyline.Model
         public static readonly string[] SequentialAccessExtensions = { @".sky", @".sky.view", @".skyl" };
 
         /// <summary>
-        /// True if a .zip containing only entries with these extensions can be opened in place
-        /// (without extracting): every file it contains is one we can read either randomly (if
-        /// stored) or sequentially. (Longer term <c>OpenSharedFile</c> will start reading the .sky
-        /// from the zip and decide, once it has read the settings_summary, whether it can read
-        /// everything in place or must extract.)
+        /// How a document opened in place would have to read one of the files in the .zip.
         /// </summary>
-        public static readonly string[] OpenInPlaceExtensions =
-            RandomAccessExtensions.Concat(SequentialAccessExtensions).ToArray();
+        private enum EntryAccess
+        {
+            random_access,
+            sequential,
+            must_extract
+        }
 
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
@@ -137,6 +136,74 @@ namespace pwiz.Skyline.Model
                         : ModelResources.SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__,
                     Path.GetFileName(SharedPath));
             }
+        }
+
+        /// <summary>
+        /// True if the document in <see cref="SharedPath"/> can be opened directly from the .zip,
+        /// without extracting anything: every file in it is one a document opened in place knows
+        /// how to read, and can be read the way that file needs to be read.
+        /// </summary>
+        public bool CanOpenInPlace()
+        {
+            using (var zip = ZipFile.Read(SharedPath))
+            {
+                foreach (var entry in zip.Entries)
+                {
+                    switch (GetEntryAccess(entry.FileName))
+                    {
+                        case EntryAccess.must_extract:
+                            return false;
+                        case EntryAccess.random_access:
+                            if (!CanGetRandomAccess(entry))
+                                return false;
+                            break;
+                        case EntryAccess.sequential:
+                            if (!CanGetSequentialStream(entry))
+                                return false;
+                            break;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private static EntryAccess GetEntryAccess(string fileName)
+        {
+            if (RandomAccessExtensions.Contains(Path.GetExtension(fileName), StringComparer.OrdinalIgnoreCase))
+                return EntryAccess.random_access;
+            if (SequentialAccessExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                return EntryAccess.sequential;
+            // Anything else (e.g. an .elib, which always needs a sibling .elibc) means the .zip has
+            // to be extracted to a real directory.
+            return EntryAccess.must_extract;
+        }
+
+        /// <summary>
+        /// True if the entry's bytes are a contiguous, unmodified range inside the .zip, so they can
+        /// be read in place. Encryption is independent of the compression method, so a stored entry
+        /// can still be encrypted, in which case its bytes are ciphertext preceded by a header and
+        /// its compressed size exceeds its uncompressed size. Reading such an entry in place would
+        /// silently produce garbage rather than fail, so all three are checked.
+        /// </summary>
+        private static bool CanGetRandomAccess(ZipEntry entry)
+        {
+            return entry.CompressionMethod == CompressionMethod.None
+                   && !entry.UsesEncryption
+                   && entry.UncompressedSize == entry.CompressedSize;
+        }
+
+        /// <summary>
+        /// True if the entry can be read from beginning to end, i.e. it is stored or deflated and
+        /// not encrypted - see <see cref="RandomAccessZipFile.OpenEntry"/>, which reads a zip entry
+        /// with .NET's inflater rather than DotNetZip's because it is markedly faster. Extracting
+        /// the .zip goes through DotNetZip, which reads compression methods we do not, so an entry
+        /// compressed some other way means the whole .zip has to be extracted.
+        /// </summary>
+        private static bool CanGetSequentialStream(ZipEntry entry)
+        {
+            return (entry.CompressionMethod == CompressionMethod.None ||
+                    entry.CompressionMethod == CompressionMethod.Deflate)
+                   && !entry.UsesEncryption;
         }
 
         public void Extract(IProgressMonitor progressMonitor)
@@ -694,7 +761,7 @@ namespace pwiz.Skyline.Model
                         // The document was opened in place, so this file lives inside another .zip
                         // and has no path that Ionic can open. Give it a stream instead, opened
                         // only when the .zip is written, so that no file is ever held in memory.
-                        entry = _zip.AddEntry(fileName, name => new FilePath(path).OpenRead(),
+                        entry = _zip.AddEntry(fileName, name => new FilePath(path).OpenSequentialStream(),
                             (name, stream) => stream?.Dispose());
                     }
                     else

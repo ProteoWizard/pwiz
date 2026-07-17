@@ -313,7 +313,7 @@ namespace pwiz.Skyline
                     layoutLock.EnsureLocked();
                     try
                     {
-                        using (var layoutStream = layoutFilePath.OpenRead())
+                        using (var layoutStream = layoutFilePath.OpenSequentialStream())
                         {
                             LoadLayout(layoutStream);
                         }

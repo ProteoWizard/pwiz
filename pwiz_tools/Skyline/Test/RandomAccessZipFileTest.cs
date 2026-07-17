@@ -23,6 +23,7 @@ using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -31,6 +32,8 @@ namespace pwiz.SkylineTest
     /// <summary>
     /// Tests <see cref="RandomAccessZipFile"/> and <see cref="SliceStream"/>: locating a
     /// stored (uncompressed) zip entry and reading its bytes in place, without extraction.
+    /// Also tests <see cref="SrmDocumentSharing.CanOpenInPlace"/>, the decision about whether a
+    /// .sky.zip can be read this way at all.
     /// </summary>
     [TestClass]
     public class RandomAccessZipFileTest : AbstractUnitTest
@@ -172,36 +175,6 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
-        public void TestAreEntriesStored()
-        {
-            TestContext.EnsureTestResultsDir();
-            string good = TestContext.GetTestResultsPath("openable.zip");
-            string bad = TestContext.GetTestResultsPath("not_openable.zip");
-            var incompressible = MakeRandomBytes(20000, seed: 3);
-
-            // "good": .skyd and .blib stored uncompressed; .sky deflated (doesn't matter).
-            using (var zf = new ZipFile(Encoding.UTF8))
-            {
-                var a = zf.AddEntry("doc.skyd", incompressible); a.CompressionMethod = CompressionMethod.None;
-                var b = zf.AddEntry("lib.blib", incompressible); b.CompressionMethod = CompressionMethod.None;
-                zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 4000)));
-                zf.Save(good);
-            }
-            // "bad": .skyd is deflated, so it cannot be read in place.
-            using (var zf = new ZipFile(Encoding.UTF8))
-            {
-                zf.AddEntry("doc.skyd", Encoding.UTF8.GetBytes(new string('y', 40000)));
-                var b = zf.AddEntry("lib.blib", incompressible); b.CompressionMethod = CompressionMethod.None;
-                zf.Save(bad);
-            }
-
-            Assert.IsTrue(new RandomAccessZipFile(good).AreEntriesStored(".skyd", ".blib"), "all stored");
-            Assert.IsFalse(new RandomAccessZipFile(bad).AreEntriesStored(".skyd", ".blib"), ".skyd deflated");
-            // Extensions not asked about are ignored: the bad zip's .blib is stored.
-            Assert.IsTrue(new RandomAccessZipFile(bad).AreEntriesStored(".blib"), "blib alone is stored");
-        }
-
-        [TestMethod]
         public void TestFilePath()
         {
             TestContext.EnsureTestResultsDir();
@@ -236,15 +209,17 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(File.GetLastWriteTime(zipPath), storedPath.GetLastWriteTime());
 
             // Stored entry: a seekable, in-place, byte-identical read.
-            using (var stream = storedPath.OpenRead())
+            using (var stream = storedPath.OpenRandomAccessStream())
             {
                 Assert.IsTrue(stream.CanSeek, "stored entry stream should be seekable");
                 Assert.AreEqual(storedBytes.Length, stream.Length);
                 CollectionAssert.AreEqual(storedBytes, ReadAll(stream));
             }
-            // Compressed entry: decompressed, byte-identical.
-            using (var stream = skyPath.OpenRead())
+            // Compressed entry: decompressed, byte-identical, read from beginning to end.
+            using (var stream = skyPath.OpenSequentialStream())
                 CollectionAssert.AreEqual(skyText, ReadAll(stream));
+            // A compressed entry has no contiguous byte range, so it cannot be read out of order.
+            AssertEx.ThrowsException<InvalidOperationException>(() => skyPath.OpenRandomAccessStream());
 
             // Byte range for the SQLite VFS: stored yes (and it points at the right bytes), compressed no.
             Assert.IsTrue(storedPath.TryGetZipByteRange(out var zp, out var ofs, out var len));
@@ -261,34 +236,90 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(skyPath.TryGetZipByteRange(out _, out _, out _));
         }
 
+        /// <summary>
+        /// Tests the decision Skyline makes about a .sky.zip before opening it:
+        /// <see cref="SrmDocumentSharing.CanOpenInPlace"/>. Files read sequentially are not checked
+        /// (they are read with the same library that would extract them), so what matters is that
+        /// nothing unrecognized is present and that every file needing random access really is a
+        /// contiguous, unmodified byte range.
+        /// </summary>
         [TestMethod]
-        public void TestContainsOnlyEntriesWithSuffixes()
+        public void TestCanOpenInPlace()
         {
             TestContext.EnsureTestResultsDir();
-            var bytes = MakeRandomBytes(10000, seed: 5);
-            var suffixes = new[] { ".sky", ".sky.view", ".sky.log", ".skyd", ".blib" };
-            string docOnly = TestContext.GetTestResultsPath("doconly.zip");
-            string hasExtra = TestContext.GetTestResultsPath("hasextra.zip");
+            var bytes = MakeRandomBytes(20000, seed: 3);
 
-            using (var zf = new ZipFile(Encoding.UTF8))
+            // What File > Share produces: the random-access files stored uncompressed, the rest
+            // deflated. ".sky.view" must not be mistaken for a disallowed ".view".
+            Assert.IsTrue(CanOpenInPlace("openable.zip", zf =>
             {
-                var d = zf.AddEntry("doc.skyd", bytes); d.CompressionMethod = CompressionMethod.None;
-                var b = zf.AddEntry("lib.blib", bytes); b.CompressionMethod = CompressionMethod.None;
-                zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 2000)));
+                AddStored(zf, "doc.skyd", bytes);
+                AddStored(zf, "lib.blib", bytes);
+                AddStored(zf, "prot.protdb", bytes);
+                zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 4000)));
                 zf.AddEntry("doc.sky.view", Encoding.UTF8.GetBytes(new string('y', 500)));
-                zf.Save(docOnly);
-            }
-            using (var zf = new ZipFile(Encoding.UTF8))
+                zf.AddEntry("doc.skyl", Encoding.UTF8.GetBytes(new string('z', 500)));
+            }), "a shared document with its random-access files stored should open in place");
+
+            // A deflated .skyd is not a contiguous range of the bytes we want, so it must extract.
+            Assert.IsFalse(CanOpenInPlace("deflated_skyd.zip", zf =>
+            {
+                zf.AddEntry("doc.skyd", Encoding.UTF8.GetBytes(new string('y', 40000)));
+                AddStored(zf, "lib.blib", bytes);
+            }), "a deflated .skyd must not open in place");
+
+            // A file that is not part of a document (e.g. raw data) means extracting everything.
+            Assert.IsFalse(CanOpenInPlace("extra_file.zip", zf =>
             {
                 zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 2000)));
-                zf.AddEntry("extra.raw", bytes); // not an allowed document suffix
-                zf.Save(hasExtra);
-            }
+                zf.AddEntry("extra.raw", bytes);
+            }), "an unrecognized file must force extraction");
 
-            Assert.IsTrue(new RandomAccessZipFile(docOnly).ContainsOnlyEntriesWithSuffixes(suffixes));
-            Assert.IsFalse(new RandomAccessZipFile(hasExtra).ContainsOnlyEntriesWithSuffixes(suffixes));
-            // ".sky.view" must not be mistaken for ".sky" or a disallowed ".view".
-            Assert.IsTrue(new RandomAccessZipFile(docOnly).ContainsOnlyEntriesWithSuffixes(suffixes));
+            // Encryption is independent of the compression method, so an entry can be both stored
+            // and encrypted. Its bytes are ciphertext preceded by a header, so reading it in place
+            // would silently produce garbage rather than fail.
+            Assert.IsFalse(CanOpenInPlace("encrypted_skyd.zip", zf =>
+            {
+                zf.Password = "secret";
+                zf.Encryption = EncryptionAlgorithm.WinZipAes256;
+                AddStored(zf, "doc.skyd", bytes);
+            }), "an encrypted .skyd must not open in place");
+
+            // Stored and deflated are the only methods a document opened in place can read, but
+            // Ionic can write others, and extracting the .zip would go through Ionic. So a .sky
+            // compressed some other way has to extract.
+            Assert.IsFalse(CanOpenInPlace("bzip2_sky.zip", zf =>
+            {
+                AddStored(zf, "doc.skyd", bytes);
+                zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 4000)))
+                    .CompressionMethod = CompressionMethod.BZip2;
+            }), "a bzip2 .sky must not open in place");
+
+            // An encrypted .sky is still deflated, but our inflater would be handed ciphertext.
+            // Only the .sky is encrypted here, so that the .skyd cannot be what fails the check.
+            Assert.IsFalse(CanOpenInPlace("encrypted_sky.zip", zf =>
+            {
+                AddStored(zf, "doc.skyd", bytes);
+                var sky = zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 4000)));
+                sky.Password = "secret";
+                sky.Encryption = EncryptionAlgorithm.WinZipAes256;
+            }), "an encrypted .sky must not open in place");
+        }
+
+        private bool CanOpenInPlace(string zipName, Action<ZipFile> addEntries)
+        {
+            string zipPath = TestContext.GetTestResultsPath(zipName);
+            using (var zipFile = new ZipFile(Encoding.UTF8))
+            {
+                addEntries(zipFile);
+                zipFile.Save(zipPath);
+            }
+            return new SrmDocumentSharing(zipPath).CanOpenInPlace();
+        }
+
+        private static void AddStored(ZipFile zipFile, string name, byte[] bytes)
+        {
+            zipFile.AddEntry(name, bytes).CompressionMethod = CompressionMethod.None;
         }
 
         private static byte[] MakeRandomBytes(int count, int seed)

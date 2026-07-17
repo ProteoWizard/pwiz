@@ -147,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void CopyFile(string sourcePath, string destinationPath)
         {
-            using var sourceStream = new FilePath(sourcePath).OpenRead();
+            using var sourceStream = new FilePath(sourcePath).OpenSequentialStream();
             using var destinationStream = File.Create(destinationPath);
             sourceStream.CopyTo(destinationStream);
         }

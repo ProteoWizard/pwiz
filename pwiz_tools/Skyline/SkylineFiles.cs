@@ -222,12 +222,12 @@ namespace pwiz.Skyline
 
         public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
         {
-            // If the .zip contains only document files and the ones needing random access
-            // (.skyd, .blib) are stored uncompressed, open the document directly from the .zip
-            // without extracting anything. Otherwise fall back to extracting.
+            // If every file in the .zip is one a document opened in place can read, open the
+            // document directly from the .zip without extracting anything. Otherwise fall back
+            // to extracting.
             try
             {
-                if (CanOpenInPlace(zipPath))
+                if (new SrmDocumentSharing(zipPath).CanOpenInPlace())
                     return OpenSharedFileInPlace(zipPath, parentWindow);
             }
             catch (Exception)
@@ -236,17 +236,6 @@ namespace pwiz.Skyline
             }
             string documentPath = ExtractSharedFile(zipPath, parentWindow);
             return documentPath != null && OpenFile(documentPath, parentWindow);
-        }
-
-        /// <summary>
-        /// True if the .zip contains only the expected document files and every file that needs
-        /// random access is stored uncompressed, so the document can be opened without extracting.
-        /// </summary>
-        private static bool CanOpenInPlace(string zipPath)
-        {
-            var zip = new RandomAccessZipFile(zipPath);
-            return zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions)
-                   && zip.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions);
         }
 
         /// <summary>
@@ -384,7 +373,7 @@ namespace pwiz.Skyline
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
                         // The .sky may live inside an in-place .sky.zip (path like <zip>\doc.sky).
-                        using var fileStream = new FilePath(path).OpenRead();
+                        using var fileStream = new FilePath(path).OpenSequentialStream();
                         using var progressStream = new ProgressStream(fileStream);
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
                         using var hashingStream = new HashingStream(progressStream, true);

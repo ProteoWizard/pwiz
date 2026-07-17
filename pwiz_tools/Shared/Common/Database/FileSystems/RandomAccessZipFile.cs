@@ -89,30 +89,6 @@ namespace pwiz.Common.Database.FileSystems
         }
 
         /// <summary>
-        /// True if every entry's name ends with one of the given suffixes (case-insensitive). Used
-        /// to recognize a .sky.zip that contains only the expected document files (so it is safe to
-        /// open in place). Suffixes may be compound, e.g. ".sky.view".
-        /// </summary>
-        public bool ContainsOnlyEntriesWithSuffixes(params string[] suffixes)
-        {
-            foreach (var entry in Entries)
-            {
-                bool matched = false;
-                foreach (var suffix in suffixes)
-                {
-                    if (entry.FileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-                    {
-                        matched = true;
-                        break;
-                    }
-                }
-                if (!matched)
-                    return false;
-            }
-            return true;
-        }
-
-        /// <summary>
         /// Finds the entry whose in-zip path matches <paramref name="entryPath"/>, comparing on the
         /// full path with separators normalized to '/', case-sensitively. Returns null if none.
         /// </summary>
@@ -148,30 +124,13 @@ namespace pwiz.Common.Database.FileSystems
         }
 
         /// <summary>
-        /// Returns true if every entry whose extension is one of <paramref name="extensions"/>
-        /// (each including the leading dot, e.g. ".skyd") is stored UNCOMPRESSED. This is the test
-        /// for whether a document could be opened in place from the .zip: all the files that need
-        /// random access must be stored, so they can be read without extraction. Entries with other
-        /// extensions (e.g. the linearly-read ".sky") do not matter.
-        /// </summary>
-        public bool AreEntriesStored(params string[] extensions)
-        {
-            foreach (var entry in Entries)
-            {
-                var ext = Path.GetExtension(entry.FileName);
-                foreach (var e in extensions)
-                {
-                    if (string.Equals(ext, e, StringComparison.OrdinalIgnoreCase) && !entry.IsStored)
-                        return false;
-                }
-            }
-            return true;
-        }
-
-        /// <summary>
         /// Opens a random-access read-only stream over a stored (uncompressed) entry,
         /// reading its bytes in place from the .zip file. Each call opens its own file
         /// handle so multiple entry streams can be read concurrently.
+        /// <br/>
+        /// Only a stored entry can be read this way: it is the only kind whose bytes are a
+        /// contiguous range of the .zip. Use <see cref="OpenEntry"/> to read any entry
+        /// sequentially.
         /// </summary>
         public SliceStream OpenStoredEntry(ZipEntryInfo entry)
         {
@@ -195,22 +154,30 @@ namespace pwiz.Common.Database.FileSystems
         }
 
         /// <summary>
-        /// Opens a read-only stream which decompresses a Deflate entry, reading its compressed
-        /// bytes in place from the .zip file. The returned stream is forward-only, but it does
-        /// report the entry's uncompressed <see cref="Stream.Length"/>, which progress reporting
-        /// needs, and which a bare DeflateStream cannot supply.
+        /// Opens a read-only stream which reads an entry from beginning to end, decompressing it as
+        /// it is read so that a big entry never has to be held in memory. A stored entry is read in
+        /// place (and the stream happens to be seekable); a deflated entry is inflated.
         /// <br/>
-        /// This exists instead of System.IO.Compression.ZipArchive because ZipArchive fails to open
-        /// the entries of the large .zip files that Share produces ("A local file header is
-        /// corrupt"), whereas the byte range this class works out is correct.
+        /// Stored and deflated are the only methods this reads. Ionic can write others (e.g. bzip2),
+        /// so callers which might see an arbitrary .zip must be prepared for the exception - Skyline
+        /// only ever reads a .zip whose entries it has already checked.
+        /// <br/>
+        /// This uses System.IO.Compression rather than DotNetZip because its DeflateStream is
+        /// native-backed and DotNetZip's inflater is managed: on a 5 GB .sky, DotNetZip took 26.5 s
+        /// against 9.7 s, and only 5 s of that difference was its CRC checking. It does not use
+        /// System.IO.Compression's ZipArchive, which cannot open the entries of the large .zip
+        /// files Share produces ("A local file header is corrupt"), only its raw inflater, which
+        /// never looks at a zip header at all.
         /// </summary>
-        public Stream OpenDeflatedEntry(ZipEntryInfo entry)
+        public Stream OpenEntry(ZipEntryInfo entry)
         {
             if (entry == null)
                 throw new ArgumentNullException(nameof(entry));
+            if (entry.IsStored)
+                return OpenStoredEntry(entry);
             if (entry.CompressionMethod != COMPRESSION_DEFLATE)
                 throw new InvalidOperationException(
-                    $@"Zip entry '{entry.FileName}' is not deflated (method {entry.CompressionMethod}).");
+                    $@"Zip entry '{entry.FileName}' uses compression method {entry.CompressionMethod}, which cannot be read.");
 
             var stream = new FileStream(ZipPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             try

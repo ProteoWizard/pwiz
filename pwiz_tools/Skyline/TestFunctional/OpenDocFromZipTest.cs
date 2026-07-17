@@ -62,11 +62,9 @@ namespace pwiz.SkylineTestFunctional
 
             // The shared .zip must qualify for opening in place: only document files, and the
             // random-access files stored uncompressed.
-            var zip = new RandomAccessZipFile(inPlaceZip);
-            Assert.IsTrue(zip.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions),
-                "shared .zip has entries that would prevent opening in place");
-            Assert.IsTrue(zip.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions),
-                ".skyd/.blib were not stored uncompressed");
+            Assert.IsTrue(new SrmDocumentSharing(inPlaceZip).CanOpenInPlace(),
+                "shared .zip has entries that would prevent opening in place: " +
+                string.Join(", ", new RandomAccessZipFile(inPlaceZip).Entries.Select(e => e.ToString())));
 
             // Clear the document, then open the shared file. It should open in place, not extract.
             RunUI(() => SkylineWindow.NewDocument());
@@ -93,12 +91,9 @@ namespace pwiz.SkylineTestFunctional
             string reSharedZip = TestFilesDir.GetTestPath("ReShared.sky.zip");
             RunUI(() => SkylineWindow.ShareDocument(reSharedZip, new ShareType(true, null)));
             AssertEx.FileExists(reSharedZip);
-            var reSharedZipFile = new RandomAccessZipFile(reSharedZip);
-            Assert.IsTrue(reSharedZipFile.ContainsOnlyEntriesWithSuffixes(SrmDocumentSharing.OpenInPlaceExtensions),
+            Assert.IsTrue(new SrmDocumentSharing(reSharedZip).CanOpenInPlace(),
                 "re-shared .zip has entries that would prevent opening in place: " +
-                string.Join(", ", reSharedZipFile.Entries.Select(e => e.FileName)));
-            Assert.IsTrue(reSharedZipFile.AreEntriesStored(SrmDocumentSharing.RandomAccessExtensions),
-                ".skyd/.blib were not stored uncompressed in the re-shared .zip");
+                string.Join(", ", new RandomAccessZipFile(reSharedZip).Entries.Select(e => e.ToString())));
 
             // The re-shared .zip must hold the same document: open it in place and compare.
             RunUI(() => SkylineWindow.NewDocument());

@@ -1968,7 +1968,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var cancellationToken = ReadStream.ReaderWriterLock.CancellationToken;
                 // CachePath (.skyd) may live inside an in-place .sky.zip, so go through FilePath.
-                using (var stream = new FilePath(CachePath).OpenRead())
+                using (var stream = new FilePath(CachePath).OpenRandomAccessStream())
                 {
                     if (peaks != null)
                     {
