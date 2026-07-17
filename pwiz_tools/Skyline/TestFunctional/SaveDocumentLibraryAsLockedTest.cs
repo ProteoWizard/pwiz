@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
             string pathToLock = getFileToLock(newPath);
 
             // The file has to exist for another process to be holding it open.
-            File.WriteAllText(pathToLock, "Locked by another process.");
+            File.WriteAllText(pathToLock, @"Locked by another process.");
 
             var docBeforeSave = SkylineWindow.Document;
             using (new FileStream(pathToLock, FileMode.Open, FileAccess.Read, FileShare.None))
