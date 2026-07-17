@@ -560,11 +560,15 @@ namespace pwiz.Skyline.Model.DocSettings
             var libs = new Library[specs.Length];
             BiblioSpecLiteLibrary oldDocumentLibrary = null;
             BiblioSpecLiteLibrary newDocumentLibrary = null;
+            string oldDocumentLibraryName = null;
+            string newDocumentLibraryName = null;
             for (int i = 0; i < specs.Length; i++)
             {
                 if (peptideLibraries.LibrarySpecs[i].IsDocumentLibrary)
                 {
                     var newDocumentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newPath);
+                    oldDocumentLibraryName = peptideLibraries.LibrarySpecs[i].Name;
+                    newDocumentLibraryName = newDocumentLibrarySpec.Name;
                     specs[i] = newDocumentLibrarySpec;
                     oldDocumentLibrary = peptideLibraries.Libraries[i] as BiblioSpecLiteLibrary;
                     if (oldDocumentLibrary != null)
@@ -580,8 +584,24 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            var result = ChangePeptideSettings(PeptideSettings.ChangeLibraries(
-                peptideLibraries.ChangeLibraries(specs, libs)));
+            var newPeptideSettings = PeptideSettings.ChangeLibraries(peptideLibraries.ChangeLibraries(specs, libs));
+            // An alignment target which names the document library has to follow it to its new name.
+            // Otherwise it no longer matches any library in the document, and retention time alignment
+            // silently stops working. This is keyed off the library spec rather than the loaded library,
+            // since the spec is renamed even when the library itself is not loaded.
+            var imputation = newPeptideSettings.Imputation;
+            if (imputation?.AlignmentTarget != null && oldDocumentLibraryName != null)
+            {
+                var newAlignmentTarget =
+                    imputation.AlignmentTarget.ChangeLibraryName(oldDocumentLibraryName, newDocumentLibraryName);
+                if (!ReferenceEquals(newAlignmentTarget, imputation.AlignmentTarget))
+                {
+                    newPeptideSettings = newPeptideSettings.ChangeImputation(
+                        imputation.ChangeAlignmentTarget(newAlignmentTarget));
+                }
+            }
+
+            var result = ChangePeptideSettings(newPeptideSettings);
             if (newDocumentLibrary != null)
             {
                 result = result.ChangeDocumentRetentionTimes(
