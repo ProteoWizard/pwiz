@@ -475,7 +475,7 @@ namespace pwiz.Osprey.Tasks
         /// <list type="number">
         ///   <item>Build boundary_overrides keyed by entry_id.</item>
         ///   <item>Subset the library to the entries that need re-scoring.</item>
-        ///   <item>Reload spectra from the .spectra.bin cache or the mzML.</item>
+        ///   <item>Stream MS2 by isolation window from the .spectra.bin cache (required).</item>
         ///   <item>Reload MS2/MS1 mass calibration from the sibling .calibration.json.</item>
         ///   <item>Pick the refined RT calibration when present, else fall back to
         ///       the original first-pass calibration.</item>
