@@ -33,7 +33,8 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     /// unconditionally because actually checking would require iterating every scan's
     /// trailer params — too expensive at construction time. The per-spectrum
     /// FAIMS-on check happens at <c>GetSpectrum</c> time and sets
-    /// <c>MS_FAIMS_compensation_voltage</c> on the scan when present.</summary>
+    /// <c>MS_FAIMS_compensation_voltage</c> on the spectrum when the scan
+    /// filter carries a cv= token.</summary>
     /// <remarks>
     /// TODO: there's probably a way to check this without walking every scan — most
     /// likely the file-level instrument-method text (the Thermo SDK exposes it via
@@ -511,6 +512,16 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
         catch { /* ignore — a subset of scans might not expose stats */ }
 
+        // FAIMS compensation voltage. Like the sid= offset voltage above, the filter string embeds
+        // it as "cv=N.NN" — e.g. "FTMS + p NSI cv=-50.00 Full ms ...". Emit at SPECTRUM level (not the
+        // scan) to match pwiz C++ SpectrumList_Thermo.cpp:381-382 and the Skyline read site
+        // (MsDataFileImpl.GetIonMobility reads spectrum.CvParam(MS_FAIMS_compensation_voltage)). Emit
+        // whenever the token is present, including cv=0 (C++ keys on FAIMSOn, not value != 0). Without
+        // this the reader advertises IonMobilityUnits.CompensationV but every spectrum reports no CV,
+        // so FAIMS CV filtering silently drops all data.
+        if (TryParseCv(filterString, out double cv))
+            spec.Params.Set(CVID.MS_FAIMS_compensation_voltage, cv);
+
         spec.ScanList.Set(CVID.MS_no_combination);
         spec.ScanList.Scans.Add(scan);
 
@@ -659,6 +670,17 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         value = 0;
         if (string.IsNullOrEmpty(filter)) return false;
         var m = SidRegex.Match(filter);
+        return m.Success && double.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex CvRegex =
+        new(@"\bcv=([\-+]?\d+(?:\.\d+)?)", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static bool TryParseCv(string filter, out double value)
+    {
+        value = 0;
+        if (string.IsNullOrEmpty(filter)) return false;
+        var m = CvRegex.Match(filter);
         return m.Success && double.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
     }
 
