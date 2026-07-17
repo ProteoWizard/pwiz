@@ -181,7 +181,7 @@ namespace pwiz.SkylineTest
             var realPeaks = ReadRealChromPeaks(filePath, locationPeaks, numPeaks);
             for (int i = 0; i < numPeaks; i++)
             {
-                Assert.AreEqual(realPeaks[i], paddedPeaks[i].Peak, "peak {0} differs", i);
+                Assert.AreEqual(realPeaks[i], paddedPeaks![i].Peak, "peak {0} differs", i);
                 Assert.AreEqual(0, paddedPeaks[i].Extra);
             }
 

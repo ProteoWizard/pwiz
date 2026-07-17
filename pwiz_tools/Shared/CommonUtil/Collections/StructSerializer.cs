@@ -42,7 +42,6 @@ namespace pwiz.Common.Collections
         bool WriteArray(FileStream fileStream, TItem[] items);
     }
 
-
     
     /// <summary>
     /// Reads and writes structs from a Stream using methods provided on the <see cref="Marshal"/> 
@@ -63,14 +62,6 @@ namespace pwiz.Common.Collections
         public bool PadFromStart { get; set; }
         public IDirectSerializer<TItem> DirectSerializer { get; set; }
 
-        /// <summary>
-        /// How many bytes of items to read before handing them off to be converted. Big enough that
-        /// the queue is not being locked for every item, and small enough to stay under the 85,000
-        /// byte Large Object Heap threshold, so that a chunk is an ordinary gen0 allocation which
-        /// dies as soon as it has been converted.
-        /// </summary>
-        private const int READ_CHUNK_BYTES = 64 * 1024;
-
         public TItem[] ReadArray(Stream stream, int count)
         {
             TItem[] result = TryDirectRead(stream, count);
@@ -79,85 +70,24 @@ namespace pwiz.Common.Collections
                 return result;
             }
             result = new TItem[count];
-            if (count == 0)
+            var buffer = new byte[Math.Max(ItemSizeInMemory, ItemSizeOnDisk)];
+            int countToRead = ItemSizeOnDisk;
+            int offset;
+            if (PadFromStart)
             {
-                return result;
+                offset = buffer.Length - countToRead;
             }
-            int bufferSize = Math.Max(ItemSizeInMemory, ItemSizeOnDisk);
-            int offset = PadFromStart ? bufferSize - ItemSizeOnDisk : 0;
-            int itemsPerChunk = Math.Max(1, READ_CHUNK_BYTES / ItemSizeOnDisk);
-            int threadCount = count <= itemsPerChunk
-                ? 1
-                : ParallelEx.GetThreadCount(count / itemsPerChunk);
-            if (threadCount <= 1)
+            else
             {
-                ReadArraySerial(stream, count, result, bufferSize, offset);
-                return result;
+                offset = 0;
             }
-
-            // FromByteArray is slow, so the items of each chunk are converted on other threads while
-            // the next chunk is being read.
-            using var queueWorker = new QueueWorker<ItemChunk>(null, (chunk, threadIndex) =>
-            {
-                var itemBuffer = new byte[bufferSize];
-                for (int j = 0; j < chunk.Count; j++)
-                {
-                    Array.Copy(chunk.Bytes, j * ItemSizeOnDisk, itemBuffer, offset, ItemSizeOnDisk);
-                    result[chunk.StartIndex + j] = FromByteArray(itemBuffer);
-                }
-            });
-            // Bound the queue, so that reading cannot race ahead of the conversion and end up
-            // holding the whole array in memory, which for a .skyd would be a lot.
-            queueWorker.RunAsync(threadCount, nameof(ReadArray), threadCount * 2);
-            for (int i = 0; i < count; i += itemsPerChunk)
-            {
-                int chunkCount = Math.Min(itemsPerChunk, count - i);
-                var bytes = new byte[chunkCount * ItemSizeOnDisk];
-                ReadComplete(stream, bytes);
-                queueWorker.Add(new ItemChunk(bytes, i, chunkCount));
-            }
-            queueWorker.Wait();
-            return result;
-        }
-
-        private void ReadArraySerial(Stream stream, int count, TItem[] result, int bufferSize, int offset)
-        {
-            var buffer = new byte[bufferSize];
             for (int i = 0; i < count; i++)
             {
-                if (stream.Read(buffer, offset, ItemSizeOnDisk) != ItemSizeOnDisk)
+                if (stream.Read(buffer, offset, countToRead) != countToRead)
                     throw new InvalidDataException();
                 result[i] = FromByteArray(buffer);
             }
-        }
-
-        /// <summary>
-        /// Fills the buffer, since a Stream is allowed to return fewer bytes than were asked for.
-        /// </summary>
-        private static void ReadComplete(Stream stream, byte[] buffer)
-        {
-            int total = 0;
-            while (total < buffer.Length)
-            {
-                int read = stream.Read(buffer, total, buffer.Length - total);
-                if (read <= 0)
-                    throw new InvalidDataException();
-                total += read;
-            }
-        }
-
-        private class ItemChunk
-        {
-            public ItemChunk(byte[] bytes, int startIndex, int count)
-            {
-                Bytes = bytes;
-                StartIndex = startIndex;
-                Count = count;
-            }
-
-            public byte[] Bytes { get; }
-            public int StartIndex { get; }
-            public int Count { get; }
+            return result;
         }
 
         public void WriteItems(Stream stream, IEnumerable<TItem> items)
@@ -238,10 +168,23 @@ namespace pwiz.Common.Collections
             {
                 return null;
             }
-            // A window onto part of a FileStream (e.g. a .skyd stored uncompressed in a .sky.zip)
-            // can be read directly too: the window is positioned by its base stream, which is
-            // where the direct read reads from and leaves it.
-            FileStream fileStream = (stream as SliceStream)?.BaseStream as FileStream ?? stream as FileStream;
+            FileStream fileStream = stream as FileStream;
+            if (fileStream == null && stream is SliceStream sliceStream)
+            {
+                // A window onto part of a FileStream (e.g. a .skyd stored uncompressed in a .sky.zip)
+                // can be read directly too: the window is positioned by its base stream, which is
+                // where the direct read reads from and leaves it. The direct read goes to the
+                // FileStream, which knows nothing of the window, so it is only safe if the items
+                // being read really are inside the window.
+                if (stream.Position + (long) count * ItemSizeOnDisk <= stream.Length)
+                {
+                    while (sliceStream.BaseStream is SliceStream)
+                    {
+                        sliceStream = (SliceStream)sliceStream.BaseStream;
+                    }
+                    fileStream = sliceStream.BaseStream as FileStream;
+                }
+            }
             if (fileStream == null)
             {
                 return null;
