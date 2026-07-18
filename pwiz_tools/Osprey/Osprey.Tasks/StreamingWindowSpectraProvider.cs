@@ -35,16 +35,13 @@ namespace pwiz.Osprey.Tasks
     /// and applies the MS2 m/z calibration in place, so scoring never materializes
     /// the whole ~6 GB MS2 list -- only the windows being scored concurrently are
     /// resident. The load lives in Osprey.Tasks because it bridges the Osprey.IO
-    /// index and the Osprey.Chromatography calibration; the equivalent
-    /// <see cref="ResidentWindowSpectraProvider"/> lives in Osprey.Scoring because
-    /// it needs neither.
+    /// index and the Osprey.Chromatography calibration.
     ///
-    /// Output is byte-identical to the resident provider: <see cref="SpectraWindowIndex.LoadWindow"/>
-    /// decodes the same bytes the resident cache load decoded, and
-    /// <see cref="MzCalibration.ApplyCalibration"/> is the same pure per-m/z
-    /// function the resident provider applies. Because each window is a fresh
-    /// decode, calibration is done in place (no extra copy) rather than into a new
-    /// array as the shared resident list requires.
+    /// Output is byte-identical to a full resident cache load: <see cref="SpectraWindowIndex.LoadWindow"/>
+    /// decodes the same bytes <c>SpectraCache.LoadSpectraCache</c> would, and
+    /// <see cref="MzCalibration.ApplyCalibration"/> is the same pure per-m/z function
+    /// that a whole-list calibrate-copy applies. Because each window is a fresh decode,
+    /// calibration is done in place (no extra copy) rather than into a new array.
     /// </summary>
     public class StreamingWindowSpectraProvider : IWindowSpectraProvider
     {

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -474,7 +475,7 @@ namespace pwiz.Osprey.Tasks
         /// <list type="number">
         ///   <item>Build boundary_overrides keyed by entry_id.</item>
         ///   <item>Subset the library to the entries that need re-scoring.</item>
-        ///   <item>Reload spectra from the .spectra.bin cache or the mzML.</item>
+        ///   <item>Stream MS2 by isolation window from the .spectra.bin cache (required).</item>
         ///   <item>Reload MS2/MS1 mass calibration from the sibling .calibration.json.</item>
         ///   <item>Pick the refined RT calibration when present, else fall back to
         ///       the original first-pass calibration.</item>
@@ -688,15 +689,30 @@ namespace pwiz.Osprey.Tasks
             var (boundaryOverrides, subsetLibrary) =
                 BuildScoringSubset(combinedTargets, fdrEntries, fullLibrary);
 
-            // Segment 1/3 (read): reload this file's spectra -- the file's first
+            // Segment 1/3 (read): index this file's spectra cache -- the file's first
             // progress slice on the --parallel-files "[i] p%" aggregate line.
             MultiProgressReporter.Current?.BeginSegment();
-            // Load spectra: prefer the .spectra.bin cache the original
-            // Stage 1 wrote; fall back to mzML if the cache is missing
-            // or unreadable.
-            List<Spectrum> spectra;
-            List<MS1Spectrum> ms1Spectra;
-            LoadSpectraForRescore(inputFile, fileName, out spectra, out ms1Spectra, ctx);
+            // Stream this file's MS2 by isolation window from the .spectra.bin cache the
+            // original Stage 1-4 run wrote, instead of materializing the whole ~6 GB
+            // resident List<Spectrum>: build the seekable SpectraWindowIndex (MS1 + the
+            // first-cycle isolation windows come from it too) and load each window on
+            // demand during the re-score. Stage 6 REQUIRES that cache; there is no mzML
+            // fallback -- a rescore without the cache is a deployment error, not a reason
+            // to re-read the 6 GB mzML (LoadSpectraForRescore throws).
+            SpectraWindowIndex spectraIndex = LoadSpectraForRescore(inputFile, fileName, ctx);
+            var ms1Spectra = spectraIndex.Ms1Spectra.ToList();
+
+            // Load-boundary memory probe. With streaming this measures the small index +
+            // MS1 on the reconciliation floor (library + this file's parquet stubs) -- the
+            // ~6 GB resident MS2 the resident load used to root here is gone (that reduction
+            // is the point of this change). Kept as permanent instrumentation to catch a
+            // future regression that re-materializes the MS2 at this boundary; the forced-GC
+            // line is the live number and, under Profile-Osprey.ps1 -MemoryProfile, captures
+            // a "perfile-rescore-loaded" retention snapshot. Zero cost -- collection
+            // included -- when OSPREY_LOG_MEMORY is unset.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"perfile-rescore-loaded (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-rescore-loaded",
+                @"(post-GC, streaming index resident)");
 
             // Load the sibling .calibration.json so the search uses the
             // same MS2/MS1 mass calibrations the original Stage 1-4 run
@@ -733,9 +749,20 @@ namespace pwiz.Osprey.Tasks
             context.BoundaryOverrides = boundaryOverrides;
             context.OriginalRtMad = rtMadFromCalJson;
 
-            // Build isolation windows from the loaded spectra (same as
-            // the first-pass ProcessFile path).
-            var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
+            // Isolation windows come straight from the streaming index -- reconstructed
+            // with the same first-cycle dedup + Center sort ScoringTaskShared.ExtractIsolationWindows
+            // applied to the resident list, so the window fan-out is unchanged.
+            var isolationWindows = spectraIndex.IsolationWindows.ToList();
+
+            // Stream each isolation window's calibrated MS2 from the index on demand. ONE
+            // provider is shared across the subset re-score + both gap-fill passes: it holds
+            // no per-window state (each GetCalibratedWindow is a fresh decode + in-place
+            // calibration), so re-scoring the file three times just re-reads windows -- no
+            // resident ~6 GB list, and none of the per-pass whole-list calibrated COPIES the
+            // resident provider built. (That repeated-scoring is exactly why the resident path
+            // had to pass consumeInputMzs:false; streaming has no such constraint.)
+            IWindowSpectraProvider spectraProvider =
+                new StreamingWindowSpectraProvider(spectraIndex, ms2Cal);
 
             // Segment 2/3 (score): the subset re-score; its "Re-scoring isolation
             // windows" reporter feeds this slice (the bulk of the file's motion).
@@ -746,7 +773,7 @@ namespace pwiz.Osprey.Tasks
             if (subsetLibrary.Count > 0)
             {
                 rescored = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
-                    subsetLibrary, spectra, ms1Spectra,
+                    subsetLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
                     context, passLabel: "Re-scoring");
@@ -777,7 +804,7 @@ namespace pwiz.Osprey.Tasks
             if (gapFillTargets.Count > 0)
             {
                 var (nGapCwt, nGapForced) = RunGapFillTwoPass(
-                    gapFillTargets, fullLibrary, spectra, ms1Spectra,
+                    gapFillTargets, fullLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal, ms2Cal, ms1Cal,
                     fileConfig, fileName, rtMadFromCalJson, fdrEntries, ctx);
                 totalGapCwt += nGapCwt;
@@ -790,24 +817,51 @@ namespace pwiz.Osprey.Tasks
             // PHASE 3 -- reconciled parquet write-back + sidecar stamp.
             WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
 
-            // Deterministically drop this file's heavy transients before the next
-            // file loads its own: the reloaded spectra (~1.5 GB) and the write-back's
-            // full-parquet reload. At 100s of files these cannot all be resident
-            // (300 files x ~1.5 GB), and .NET's Server GC otherwise defers collection
-            // until it nears the RAM ceiling -- so the reconciliation working set
-            // rides up with file count instead of staying flat. Forcing the collection
-            // here mirrors Rust's per-iteration spectra drop (pipeline.rs:3338, in Rust's
-            // strictly sequential reconciliation file loop) and
-            // keeps the working set at ~the persistent floor + one file's transient.
-            // Output is unchanged (GC timing only). Skipped under file-parallelism > 1,
-            // where concurrent files legitimately share residency and a blocking GC
-            // would stall the other in-flight rescores.
-            spectra = null;
+            // Per-file rescore high-water mark: the raw (pre-GC) working_set peak and
+            // managed_heap since the last collection -- the during-scoring transient (the
+            // per-window streamed+calibrated spectra + the scored/gap-fill entries). With
+            // streaming there is no resident MS2 nor the per-pass whole-list calibrated
+            // copies here, so this is the reduced "after" peak vs the resident baseline.
+            // A forced-GC [MEM] is deliberately NOT taken (it would just show the
+            // post-release floor). Zero cost when OSPREY_LOG_MEMORY is unset.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"perfile-rescore-peak (pre-GC)");
+
+            // Apex retention snapshot (dotMemory only). Once the resident MS2 is streamed,
+            // the remaining per-file accumulation is the scored + reconciled entries still
+            // rooted by fdrEntries here (each carries the heavy Features / CwtCandidates /
+            // Fragment* / ReferenceXic* arrays). dotMemory forces its own GC before the
+            // snapshot, so the write-back's parquet-reload transient collapses and the
+            // dominators are exactly that retained entry set -- the next memory lever
+            // (scored-entry streaming, shared with PerFileScoring; see
+            // ai/todos/backlog/brendanx67/TODO-osprey_perfile_scored_entry_streaming.md).
+            // No-op unless a Profile-Osprey.ps1 -MemoryProfile session is attached.
+            ProfilerHooks.CaptureRetentionSnapshot(@"perfile-rescore-apex");
+
+            // Deterministically drop this file's transients before the next file loads its
+            // own: the streaming index + MS1 and the write-back's full-parquet reload. At
+            // 100s of files .NET's Server GC otherwise defers collection until it nears the
+            // RAM ceiling -- so the reconciliation working set rides up with file count
+            // instead of staying flat. Forcing the collection here mirrors Rust's
+            // per-iteration spectra drop (pipeline.rs:3338, in Rust's strictly sequential
+            // reconciliation file loop) and keeps the working set at ~the persistent floor +
+            // one file's transient. Output is unchanged (GC timing only). Skipped under
+            // file-parallelism > 1, where concurrent files legitimately share residency and
+            // a blocking GC would stall the other in-flight rescores.
+            spectraProvider = null;
+            spectraIndex = null;
             ms1Spectra = null;
             isolationWindows = null;
             rescored = null;
             if (ctx.RunPlan.EffectiveFileParallelism <= 1)
                 GC.Collect();
+
+            // Post-release floor: the persistent set that survives after this file's
+            // transients (streaming index, MS1, scored entries) are dropped. Forced-GC so
+            // it is the true floor, and it captures a "perfile-rescore-live" retention
+            // snapshot to pair with the loaded snapshot. Zero cost -- collection included --
+            // when OSPREY_LOG_MEMORY is unset.
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-rescore-live",
+                @"(post-GC, after release)");
 
             return (totalRescored, totalGapCwt, totalGapForced);
         }
@@ -1337,7 +1391,7 @@ namespace pwiz.Osprey.Tasks
         private (int NGapCwt, int NGapForced) RunGapFillTwoPass(
             List<GapFillTarget> gapFillTargets,
             List<LibraryEntry> fullLibrary,
-            List<Spectrum> spectra,
+            IWindowSpectraProvider spectraProvider,
             List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             RTCalibration rtCal,
@@ -1379,7 +1433,7 @@ namespace pwiz.Osprey.Tasks
 
                 var swCwt = Stopwatch.StartNew();
                 var cwtResults = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
-                    gapFillLibrary, spectra, ms1Spectra,
+                    gapFillLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
                     cwtContext, passLabel: "Gap-fill scoring");
@@ -1447,7 +1501,7 @@ namespace pwiz.Osprey.Tasks
 
                 var swForced = Stopwatch.StartNew();
                 var forcedResults = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
-                    forcedLibrary, spectra, ms1Spectra,
+                    forcedLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
                     forcedContext, passLabel: "Gap-fill forced integration");
@@ -1477,40 +1531,43 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Load MS2 spectra + MS1 spectra for the rescore loop. Prefers the
-        /// .spectra.bin cache the original Stage 1 wrote; falls back to
-        /// re-parsing the mzML on cache miss / read error. Mirrors the
-        /// Rust spectra-load block at pipeline.rs:2851-2872.
+        /// Build a streaming <see cref="SpectraWindowIndex"/> over the <c>.spectra.bin</c>
+        /// cache the original Stage 1-4 run wrote, so Stage-6 rescore loads each isolation
+        /// window's MS2 on demand instead of materializing the whole ~6 GB resident
+        /// <c>List&lt;Spectrum&gt;</c>. MS1 + the first-cycle isolation windows come from the
+        /// same index. There is NO mzML fallback: Stage 6 always runs against a file the
+        /// upstream stages already cached, so an absent/invalid cache is a deployment error
+        /// (the mzML may not even be shipped to the rescore worker), and re-reading the 6 GB
+        /// mzML would defeat the streaming this method exists to enable. Throws
+        /// <see cref="InvalidDataException"/> when the cache cannot be indexed.
         /// </summary>
-        private void LoadSpectraForRescore(string inputFile, string fileName,
-            out List<Spectrum> spectra, out List<MS1Spectrum> ms1Spectra, PipelineContext ctx)
+        private SpectraWindowIndex LoadSpectraForRescore(string inputFile, string fileName,
+            PipelineContext ctx)
         {
             string cachePath = SpectraCache.GetCachePath(inputFile);
-            if (File.Exists(cachePath))
+            SpectraWindowIndex index;
+            try
             {
-                try
-                {
-                    var result = SpectraCache.LoadSpectraCache(cachePath, inputFile);
-                    spectra = result.Ms2Spectra;
-                    ms1Spectra = result.Ms1Spectra;
-                    ctx.LogInfo(string.Format(
-                        "  Loaded {1} MS1 and {0} MS/MS spectra from cache for {2}",
-                        spectra.Count, ms1Spectra.Count, fileName));
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Failed to load spectra cache {0}: {1}; falling back to mzML",
-                        cachePath, ex.Message));
-                }
+                // null = absent / stale (source changed) / bad magic-version -- the same
+                // rejection rules LoadSpectraCache applies. Any of them is fatal here.
+                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
             }
-            var fresh = MzmlReader.LoadAllSpectra(inputFile);
-            spectra = fresh.Ms2Spectra;
-            ms1Spectra = fresh.Ms1Spectra;
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(
+                    "Stage-6 rescore requires the '{0}' spectra cache written by the per-file " +
+                    "scoring stage, but indexing it failed: {1}", cachePath, ex.Message), ex);
+            }
+            if (index == null)
+                throw new InvalidDataException(string.Format(
+                    "Stage-6 rescore requires the '{0}' spectra cache written by the per-file " +
+                    "scoring stage (absent, stale, or wrong version). Re-run PerFileScoring for " +
+                    "'{1}' so the cache is present beside its outputs.", cachePath, fileName));
+
             ctx.LogInfo(string.Format(
-                "  Loaded {1} MS1 and {0} MS/MS spectra from mzML for {2}",
-                spectra.Count, ms1Spectra.Count, fileName));
+                "  Streaming {1} MS1 and {0} MS/MS spectra from cache for {2}",
+                index.Ms2Count, index.Ms1Spectra.Count, fileName));
+            return index;
         }
 
         /// <summary>

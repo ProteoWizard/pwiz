@@ -58,31 +58,6 @@ namespace pwiz.Osprey.Scoring
 
 
         /// <summary>
-        /// Run coelution scoring for all library entries across all isolation
-        /// windows, sourcing each window's MS2 spectra from the full resident list.
-        /// Thin wrapper that wraps <paramref name="spectra"/> in a
-        /// <see cref="ResidentWindowSpectraProvider"/> (MS2 calibration + window
-        /// grouping) and delegates to the provider-driven overload. Used by the
-        /// Stage-6 rescore / gap-fill passes and as the Stage-4 fallback.
-        /// </summary>
-        public List<FdrEntry> RunCoelutionScoring(
-            List<LibraryEntry> fullLibrary,
-            List<Spectrum> spectra,
-            List<MS1Spectrum> ms1Spectra,
-            List<IsolationWindow> isolationWindows,
-            RTCalibration rtCalibration,
-            MzCalibrationResult ms2Calibration,
-            MzCalibrationResult ms1Calibration,
-            ScoringContext context,
-            string passLabel = null,
-            bool consumeInputMzs = false)
-        {
-            var spectraProvider = new ResidentWindowSpectraProvider(spectra, ms2Calibration, consumeInputMzs);
-            return RunCoelutionScoring(fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
-                rtCalibration, ms2Calibration, ms1Calibration, context, passLabel);
-        }
-
-        /// <summary>
         /// Run coelution scoring for all library entries across all isolation windows.
         /// For each window, finds candidate entries whose precursor falls in the window,
         /// extracts fragment XICs, detects CWT peaks, and scores at each peak. Each
@@ -115,15 +90,13 @@ namespace pwiz.Osprey.Scoring
             // never shrinks, so gen-2 keeps the arrays for the full run.
             context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
 
-            // MS2 calibration of each spectrum and the window grouping now live in
-            // the IWindowSpectraProvider: ResidentWindowSpectraProvider on the
-            // resident / Stage-6 rescore path (it copies + calibrates the whole list
-            // up front, mirroring Rust run_search's calibrated_spectra), and the
-            // streaming index on Stage 4 (it calibrates one window at a time so only
-            // that window's copy is ever live). The provider does NOT mutate the
-            // caller's raw m/z except the gated consumeInputMzs free the Stage-4
-            // caller opts into -- the Stage-6 loop re-scores one shared list, so it
-            // leaves the raw m/z intact for the next call.
+            // MS2 calibration of each spectrum and the window grouping live in the
+            // IWindowSpectraProvider: StreamingWindowSpectraProvider loads one window's
+            // MS2 from the .spectra.bin index on demand and calibrates it in place, so
+            // only the windows being scored concurrently are resident -- both Stage 4
+            // and the Stage-6 rescore / gap-fill passes stream this way (the latter
+            // simply re-reads windows on each pass; there is no shared resident list to
+            // preserve, so nothing here mutates a caller's m/z).
 
             // Determine RT tolerance - global, matching Rust's run_search.
             // Rust computes one tolerance for ALL entries: 3 * MAD * 1.4826,

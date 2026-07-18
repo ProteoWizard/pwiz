@@ -2295,6 +2295,329 @@ namespace pwiz.Osprey.Test
 
         #region FdrScoresSidecar Tests
 
+        /// <summary>
+        /// Bounded row-group write: a parquet written as several row groups (forced via the
+        /// test-only <see cref="ParquetScoreCache.RowGroupRowCapForTest"/> cap) reads back
+        /// logically identical -- same rows in the same global (entry_id, charge, scan_number)
+        /// order, same running ParquetIndex spanning the group boundaries, same per-row
+        /// features + fragment blobs -- to the same entries written as one row group. Only the
+        /// physical row-group framing differs. Guards the memory-capping chunked write path.
+        /// </summary>
+        [TestMethod]
+        public void TestParquetBoundedRowGroupRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_rowgroup_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // EntryIds deliberately out of order so the write's canonical sort is
+                // exercised; distinct features + fragment blobs per row so a chunk-boundary
+                // row mismap surfaces as a value mismatch, not a silent pass.
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+                    for (int f = 0; f < features.Length; f++)
+                        features[f] = id * 100.0 + f;
+                    entries.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        IsDecoy = (id & 1u) == 0,
+                        Charge = 2,
+                        ScanNumber = id * 10,
+                        ApexRt = id + 0.5,
+                        StartRt = id + 0.1,
+                        EndRt = id + 0.9,
+                        ModifiedSequence = "PEPTIDE" + id,
+                        Features = features,
+                        FragmentMzs = new[] { id + 0.25, id + 0.75 },
+                        FragmentIntensities = new float[] { id, id + 1 },
+                        ReferenceXicRts = new[] { id + 1.5, id + 2.5, id + 3.5 },
+                        ReferenceXicIntensities = new[] { id * 2.0, id * 3.0 },
+                    });
+                }
+
+                string singlePath = Path.Combine(dir, "single.scores.parquet");
+                string multiPath = Path.Combine(dir, "multi.scores.parquet");
+
+                // Single-group reference (cap unset), then multi-group (cap 3 -> ceil(7/3)=3
+                // groups). Same entries, same writer, only the row-group cap differs.
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                ParquetScoreCache.WriteScoresParquet(singlePath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(multiPath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(1, CountRowGroups(singlePath));
+                Assert.AreEqual(3, CountRowGroups(multiPath));
+
+                var single = ParquetScoreCache.LoadFullFdrEntries(singlePath);
+                var multi = ParquetScoreCache.LoadFullFdrEntries(multiPath);
+
+                Assert.AreEqual(entries.Count, single.Count);
+                Assert.AreEqual(single.Count, multi.Count);
+
+                // Distinct entry_ids -> canonical sort is ascending; ParquetIndex is the
+                // running global row position, unbroken across the row-group boundaries.
+                var expectedIds = new uint[] { 1, 2, 3, 5, 7, 8, 9 };
+                for (int i = 0; i < multi.Count; i++)
+                {
+                    Assert.AreEqual(expectedIds[i], multi[i].EntryId);
+                    Assert.AreEqual((uint)i, multi[i].ParquetIndex,
+                        "ParquetIndex must be the global row position across row groups");
+
+                    // Multi-group row equals single-group row field-for-field.
+                    Assert.AreEqual(single[i].EntryId, multi[i].EntryId);
+                    Assert.AreEqual(single[i].ParquetIndex, multi[i].ParquetIndex);
+                    Assert.AreEqual(single[i].IsDecoy, multi[i].IsDecoy);
+                    Assert.AreEqual(single[i].Charge, multi[i].Charge);
+                    Assert.AreEqual(single[i].ScanNumber, multi[i].ScanNumber);
+                    Assert.AreEqual(single[i].ApexRt, multi[i].ApexRt);
+                    Assert.AreEqual(single[i].StartRt, multi[i].StartRt);
+                    Assert.AreEqual(single[i].EndRt, multi[i].EndRt);
+                    Assert.AreEqual(single[i].ModifiedSequence, multi[i].ModifiedSequence);
+                    CollectionAssert.AreEqual(single[i].Features, multi[i].Features);
+                    CollectionAssert.AreEqual(single[i].FragmentMzs, multi[i].FragmentMzs);
+                    CollectionAssert.AreEqual(single[i].FragmentIntensities, multi[i].FragmentIntensities);
+                }
+
+                // An all-empty blob column across bounded row groups. Decoys form a
+                // contiguous block at the end of the entry_id sort, so a group can fall
+                // entirely in a region where a blob (e.g. reference XIC) is absent on
+                // every row. A zero-length blob would make the whole group's column
+                // zero-length, which the Parquet reader cannot decode; empty blobs are
+                // written as NULL cells to avoid that. Here reference_xic is empty on
+                // every row and cap=3 forces 3 groups -> every group's reference_xic
+                // column is all-null; it must still read back as empty per row.
+                var emptyXic = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 1, 2, 3, 4, 5, 6, 7 })
+                {
+                    emptyXic.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        Charge = 2,
+                        ScanNumber = id,
+                        ModifiedSequence = "PEP" + id,
+                        Features = new double[ParquetScoreCache.NUM_PIN_FEATURES],
+                        FragmentMzs = new[] { id + 0.5 },
+                        FragmentIntensities = new float[] { id },
+                        // ReferenceXicRts / ReferenceXicIntensities left null (empty).
+                    });
+                }
+                string emptyXicPath = Path.Combine(dir, "empty_xic.scores.parquet");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(emptyXicPath, emptyXic, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(3, CountRowGroups(emptyXicPath));
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(emptyXicPath);
+                Assert.AreEqual(emptyXic.Count, reloaded.Count);
+                foreach (var e in reloaded)
+                {
+                    Assert.AreEqual(0, e.ReferenceXicRts.Length,
+                        "an all-empty reference-XIC column must read back as empty, not crash");
+                    Assert.AreEqual(0, e.ReferenceXicIntensities.Length);
+                    Assert.AreEqual(1, e.FragmentMzs.Length);
+                }
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Stage-6 streaming reconciled transfer: streaming the original parquet
+        /// group-by-group with an overlay map + gap-fill list
+        /// (<see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>) is logically
+        /// identical -- same rows, same per-row features + blobs -- to the former
+        /// load-all + in-place overlay + re-sort write, including the gap-fill (which the
+        /// streaming path merges into canonical (entry_id, charge, scan) position). Also asserts the
+        /// replaced / appended / original counts, the out-of-range warning, and that the
+        /// output is genuinely multi-group.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamReconciledTransferMatchesLoadAllOverlay()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_stream_recon_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Original rows: out-of-order ids so the write's canonical sort runs,
+                // distinct features + blobs per row so any chunk-boundary mismap surfaces
+                // as a value mismatch rather than a silent pass.
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                    original.Add(MakeStreamEntry(id, id * 100.0));
+
+                string originalPath = Path.Combine(dir, "orig.scores.parquet");
+                string refPath = Path.Combine(dir, "ref.scores-reconciled.parquet");
+                string streamPath = Path.Combine(dir, "stream.scores-reconciled.parquet");
+
+                // Write the original as several bounded row groups (cap 3 -> 3 groups).
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // Map each original entry_id to the global row position the write assigned,
+                // so the overlay indices below hit the right rows.
+                var posById = new Dictionary<uint, uint>();
+                foreach (var e in ParquetScoreCache.LoadFullFdrEntries(originalPath))
+                    posById[e.EntryId] = e.ParquetIndex;
+
+                // Overlay two existing rows (id 3, id 8) with distinctly re-scored
+                // features/blobs; leave id 2 un-overlaid (its original row must stream
+                // through untouched); and one out-of-range index that must be dropped
+                // with a warning.
+                var overlayByIndex = new Dictionary<uint, FdrEntry>
+                {
+                    { posById[3], MakeStreamEntry(3, 7777.0) },
+                    { posById[8], MakeStreamEntry(8, 8888.0) },
+                    { 999u, MakeStreamEntry(200, 1.0) },   // out of range -> dropped + warned
+                };
+                // Gap-fill ids 4 and 6 fall BETWEEN existing original ids (3 < 4 < 5 < 6 <
+                // 7), so the streaming merge must interleave them into canonical position;
+                // a plain append-at-end would misplace them and the physical-order check
+                // below would fail. Listed out of order so the merge's own sort is exercised.
+                var gapFill = new List<FdrEntry>
+                {
+                    MakeStreamEntry(6, 60060.0),
+                    MakeStreamEntry(4, 40040.0),
+                };
+
+                // Reference (old behavior): load the whole file, overlay in place by index,
+                // append gap-fill, re-sort on write.
+                var oldFull = ParquetScoreCache.LoadFullFdrEntries(originalPath);
+                foreach (var kv in overlayByIndex)
+                    if (kv.Key < oldFull.Count)
+                        oldFull[(int)kv.Key] = kv.Value;
+                oldFull.AddRange(gapFill);
+                ParquetScoreCache.WriteScoresParquet(refPath, oldFull, null, null, "f.mzML");
+                var refResult = ParquetScoreCache.LoadFullFdrEntries(refPath);
+
+                // New behavior: stream the transfer.
+                var warnings = new List<string>();
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", warnings.Add);
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
+                Assert.AreEqual(2, result.NReplaced);
+                Assert.AreEqual(2, result.NAppended);
+                Assert.AreEqual(7, result.OrigRowCount);
+
+                // The one out-of-range overlay index is dropped with exactly one warning.
+                Assert.AreEqual(1, warnings.Count);
+
+                // The stream output is genuinely multi-group (3 original groups + gap-fill).
+                Assert.IsTrue(CountRowGroups(streamPath) >= 3,
+                    "streaming reconciled transfer must preserve bounded row groups");
+
+                // Physical order: the streaming merge must emit rows already in canonical
+                // (entry_id, charge, scan_number) order -- gap-fill interleaved by scan,
+                // NOT appended at the end. This is the guarantee Pass 2's projection sort
+                // relies on; a plain append would leave ids 4/6 after id 9 and fail here.
+                var streamResult = ParquetScoreCache.LoadFullFdrEntries(streamPath);
+                Comparison<FdrEntry> byKey = (a, b) =>
+                {
+                    int c = a.EntryId.CompareTo(b.EntryId);
+                    if (c != 0)
+                        return c;
+                    c = a.Charge.CompareTo(b.Charge);
+                    return c != 0 ? c : a.ScanNumber.CompareTo(b.ScanNumber);
+                };
+                for (int i = 1; i < streamResult.Count; i++)
+                    Assert.IsTrue(byKey(streamResult[i - 1], streamResult[i]) <= 0,
+                        "streaming reconciled transfer must emit rows in canonical sorted order");
+
+                // Logical equivalence: same rows, same values (both canonical after sort).
+                refResult.Sort(byKey);
+                streamResult.Sort(byKey);
+                AssertStreamRowsEqual(refResult, streamResult);
+
+                // The overlay actually took effect: id 3 / id 8 carry the re-scored
+                // features, while the un-overlaid id 2 keeps its ORIGINAL features.
+                Assert.AreEqual(7777.0, RowById(streamResult, 3).Features[0]);
+                Assert.AreEqual(8888.0, RowById(streamResult, 8).Features[0]);
+                Assert.AreEqual(200.0, RowById(streamResult, 2).Features[0]);
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
+        // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
+        // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
+        // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
+        // overlay preserves the canonical sort key of the row it replaces.
+        private static FdrEntry MakeStreamEntry(uint id, double baseValue)
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < features.Length; f++)
+                features[f] = baseValue + f;
+            return new FdrEntry
+            {
+                EntryId = id,
+                IsDecoy = (id & 1u) == 0,
+                Charge = 2,
+                ScanNumber = id * 10,
+                ApexRt = id + 0.5,
+                StartRt = id + 0.1,
+                EndRt = id + 0.9,
+                BoundsArea = id + 0.3,
+                BoundsSnr = id + 0.7,
+                ModifiedSequence = "PEPTIDE" + id,
+                Features = features,
+                FragmentMzs = new[] { baseValue + 0.25, baseValue + 0.75 },
+                FragmentIntensities = new[] { (float)baseValue, (float)(baseValue + 1) },
+                ReferenceXicRts = new[] { baseValue + 1.5, baseValue + 2.5 },
+                ReferenceXicIntensities = new[] { baseValue * 2.0, baseValue * 3.0 },
+            };
+        }
+
+        private static FdrEntry RowById(List<FdrEntry> rows, uint id)
+        {
+            return rows.First(e => e.EntryId == id);
+        }
+
+        private static void AssertStreamRowsEqual(List<FdrEntry> expected, List<FdrEntry> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                var e = expected[i];
+                var a = actual[i];
+                Assert.AreEqual(e.EntryId, a.EntryId);
+                Assert.AreEqual(e.IsDecoy, a.IsDecoy);
+                Assert.AreEqual(e.Charge, a.Charge);
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.ApexRt, a.ApexRt);
+                Assert.AreEqual(e.StartRt, a.StartRt);
+                Assert.AreEqual(e.EndRt, a.EndRt);
+                Assert.AreEqual(e.CoelutionSum, a.CoelutionSum);
+                Assert.AreEqual(e.BoundsArea, a.BoundsArea);
+                Assert.AreEqual(e.BoundsSnr, a.BoundsSnr);
+                Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
+                CollectionAssert.AreEqual(e.Features, a.Features);
+                CollectionAssert.AreEqual(e.FragmentMzs, a.FragmentMzs);
+                CollectionAssert.AreEqual(e.FragmentIntensities, a.FragmentIntensities);
+                CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
+                CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
+            }
+        }
+
+        private static int CountRowGroups(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult())
+                return reader.RowGroupCount;
+        }
+
         private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep,
             double runProteinQvalue = 1.0)
         {
