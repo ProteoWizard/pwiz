@@ -1755,6 +1755,28 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
+            CompeteFromDicts(targets, decoys,
+                out winnerIndices, out winnerScores, out winnerIsDecoy);
+        }
+
+        /// <summary>
+        /// Shared finish for target/decoy competition: given per-base_id best-target and
+        /// best-decoy maps (winning row index + score), compete each pair (higher score wins,
+        /// ties to decoy), add unpaired decoys, and sort winners by score desc / base_id asc.
+        /// Extracted from <see cref="CompeteFromIndices"/> so the flat-array path (which builds
+        /// the maps by walking an index subset) and the streaming path (issue #4355 struct-shrink
+        /// S3, which builds the identical maps by pushing rows in flat (file,row) order) share the
+        /// EXACT compete + sort, and so cannot drift. The stored index is the winning row's flat
+        /// index / streaming ordinal; both label the same row because the streaming pass visits
+        /// rows in the same order the flat arrays were built.
+        /// </summary>
+        internal static void CompeteFromDicts(
+            Dictionary<uint, KeyValuePair<int, double>> targets,
+            Dictionary<uint, KeyValuePair<int, double>> decoys,
+            out int[] winnerIndices,
+            out double[] winnerScores,
+            out bool[] winnerIsDecoy)
+        {
             // Compete pairs: higher score wins, ties go to decoy
             var winners = new List<Tuple<int, double, bool, uint>>(targets.Count);
             foreach (var kvp in targets)
