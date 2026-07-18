@@ -206,10 +206,22 @@ namespace pwiz.Osprey.Scoring
         /// logger is now an injected <paramref name="logInfo"/> callback so Scoring stays
         /// free of a Tasks/PipelineContext dependency. Arithmetic is unchanged, so
         /// cross-impl parity is unaffected.
+        ///
+        /// <paramref name="omitFragments"/> supports the lean library a
+        /// FirstPassFDR / <c>StopAfterStage5</c> worker loads (fragment peaks
+        /// dropped, six identity scalars kept). When set: the empty-fragment
+        /// exclusion gate is skipped (every real library entry has >= 1 fragment,
+        /// so the gate never excluded any, and the loaded entries now carry no
+        /// fragments), and each decoy is built with an empty fragment list
+        /// (RecalculateFragments is skipped -- decoy fragments are the same dead
+        /// weight the targets dropped). The decoys' six identity scalars are
+        /// derived from the target scalars and the collision-checked sequence,
+        /// never from fragment content, so the target/decoy set the FDR stages
+        /// see is byte-identical to a full load.
         /// </summary>
         public static List<LibraryEntry> GenerateAllWithCollisionDetection(
             List<LibraryEntry> targets, OspreyConfig config,
-            Action<string> logInfo,
+            Action<string> logInfo, bool omitFragments,
             out List<LibraryEntry> validTargets)
         {
             // Public API: tolerate a missing logger as a no-op rather than throwing.
@@ -233,7 +245,12 @@ namespace pwiz.Osprey.Scoring
             Parallel.For(0, targets.Count, i =>
             {
                 var target = targets[i];
-                if (target.IsDecoy || target.Fragments == null || target.Fragments.Count == 0)
+                // The fragment-count gate is skipped under omitFragments: the
+                // library was loaded lean (every entry keeps only its scalars),
+                // and every real entry had >= 1 fragment before the drop, so the
+                // gate could not have excluded any. The IsDecoy skip is kept.
+                if (target.IsDecoy ||
+                    (!omitFragments && (target.Fragments == null || target.Fragments.Count == 0)))
                 {
                     results[i] = (null, null, 0);
                     return;
@@ -246,7 +263,7 @@ namespace pwiz.Osprey.Scoring
 
                 if (reversedSeq != target.Sequence && !targetSequences.Contains(reversedSeq))
                 {
-                    var decoy = BuildDecoyFromSequence(target, reversedSeq, mapping);
+                    var decoy = BuildDecoyFromSequence(target, reversedSeq, mapping, omitFragments);
                     if (decoy != null)
                     {
                         results[i] = (target, decoy, 1);
@@ -261,7 +278,7 @@ namespace pwiz.Osprey.Scoring
                     string cycledSeq = gen.CycleSequence(target.Sequence, cycleLength, out mapping);
                     if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq))
                     {
-                        var decoy = BuildDecoyFromSequence(target, cycledSeq, mapping);
+                        var decoy = BuildDecoyFromSequence(target, cycledSeq, mapping, omitFragments);
                         if (decoy != null)
                         {
                             results[i] = (target, decoy, 2);
@@ -352,9 +369,12 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// Build a decoy LibraryEntry from a decoy sequence and position mapping.
         /// Mirrors <see cref="Generate"/>'s construction but takes an already-chosen sequence.
+        /// With <paramref name="omitFragments"/> the decoy gets an empty fragment
+        /// list (RecalculateFragments is skipped) -- the identity scalars are
+        /// unchanged, matching the lean library a StopAfterStage5 worker loads.
         /// </summary>
         private static LibraryEntry BuildDecoyFromSequence(
-            LibraryEntry target, string decoySequence, int[] positionMapping)
+            LibraryEntry target, string decoySequence, int[] positionMapping, bool omitFragments)
         {
             var decoy = new LibraryEntry(
                 target.Id | 0x80000000u,
@@ -367,8 +387,9 @@ namespace pwiz.Osprey.Scoring
             decoy.IsDecoy = true;
             decoy.Modifications = RemapModificationsStatic(
                 target.Modifications, positionMapping);
-            decoy.Fragments = RecalculateFragmentsStatic(
-                target, positionMapping, decoySequence);
+            decoy.Fragments = omitFragments
+                ? Array.Empty<LibraryFragment>()
+                : RecalculateFragmentsStatic(target, positionMapping, decoySequence);
             // Strings stay un-interned here (this runs in a Parallel.For body);
             // the sequential collection loop interns every decoy afterwards.
             decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
