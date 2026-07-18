@@ -118,6 +118,11 @@ namespace pwiz.Skyline.ToolsUI
         /// folder and Accept, wait (via GetControls) until the folder is reached, then EnterPath the double-quoted
         /// space-separated file names and Accept to open them. The BM_CLICK is SENT, so call this OFF the UI thread,
         /// where the dialog's modal loop can process it.</para>
+        ///
+        /// <para>One click may not commit: typing the names raises the combo's shell autocomplete drop-down, and a
+        /// click can be spent closing that drop-down rather than opening. So the caller VERIFIES -- checks whether
+        /// the dialog closed (it is no longer in GetOpenForms) -- and clicks again if it did not, rather than
+        /// assuming a single Accept opened the files.</para>
         /// </summary>
         public void Accept()
         {
