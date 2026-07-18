@@ -1107,21 +1107,36 @@ namespace pwiz.Osprey.FDR
             for (int i = 0; i < n; i++)
             {
                 double runBoth = Math.Max(runPrecursorQvalues[i], runPeptideQvalues[i]);
-                double curPrec;
-                if (!minRunBothByEntryId.TryGetValue(entryIds[i], out curPrec) || runBoth < curPrec)
-                    minRunBothByEntryId[entryIds[i]] = runBoth;
-
-                // Empty ModifiedSequence has no peptide identity; do not bucket unrelated
-                // entries under an empty key (mirrors the resident overload).
-                if (string.IsNullOrEmpty(peptides[i]))
-                    continue;
-                // Peptide identity is (ModifiedSequence, IsDecoy) so a decoy's good run never
-                // lowers its paired target's peptide floor.
-                var pkey = (peptides[i], labels[i]);
-                double curPept;
-                if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
-                    minRunBothByPeptide[pkey] = runBoth;
+                UpdateExperimentQClampFloor(
+                    minRunBothByEntryId, minRunBothByPeptide, entryIds[i], peptides[i], labels[i], runBoth);
             }
+        }
+
+        /// <summary>
+        /// Folds one row into the best-of-runs clamp floors (issue #4390): tracks the minimum over
+        /// an entry's / peptide's rows of <paramref name="runBoth"/> = <c>max(runPrecursorQ,
+        /// runPeptideQ)</c>, keyed by <paramref name="entryId"/> and by
+        /// <c>(<paramref name="peptide"/>, <paramref name="isDecoy"/>)</c>. Shared by
+        /// <see cref="BuildExperimentQClampFloors"/> (flat path) and the projection score pass's
+        /// floor reduction so the two cannot drift on a byte-identity-locked path (issue #4355
+        /// Part B). An empty ModifiedSequence has no peptide identity and is not bucketed; peptide
+        /// identity is (sequence, isDecoy) so a decoy's good run never lowers its target's floor.
+        /// </summary>
+        private static void UpdateExperimentQClampFloor(
+            Dictionary<uint, double> minRunBothByEntryId,
+            Dictionary<(string, bool), double> minRunBothByPeptide,
+            uint entryId, string peptide, bool isDecoy, double runBoth)
+        {
+            double curPrec;
+            if (!minRunBothByEntryId.TryGetValue(entryId, out curPrec) || runBoth < curPrec)
+                minRunBothByEntryId[entryId] = runBoth;
+
+            if (string.IsNullOrEmpty(peptide))
+                return;
+            var pkey = (peptide, isDecoy);
+            double curPept;
+            if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
+                minRunBothByPeptide[pkey] = runBoth;
         }
 
         /// <summary>
@@ -1308,15 +1323,8 @@ namespace pwiz.Osprey.FDR
                     {
                         int g = off + r;
                         double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
-                        double curPrec;
-                        if (!minRunBothByEntryId.TryGetValue(entryIds[g], out curPrec) || runBoth < curPrec)
-                            minRunBothByEntryId[entryIds[g]] = runBoth;
-                        if (string.IsNullOrEmpty(peptides[g]))
-                            continue;
-                        var pkey = (peptides[g], labels[g]);
-                        double curPept;
-                        if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
-                            minRunBothByPeptide[pkey] = runBoth;
+                        UpdateExperimentQClampFloor(
+                            minRunBothByEntryId, minRunBothByPeptide, entryIds[g], peptides[g], labels[g], runBoth);
                     }
                     off += count;
                     floorProgress?.Report(++floorFile);
@@ -2379,87 +2387,70 @@ namespace pwiz.Osprey.FDR
         // ============================================================
 
         /// <summary>
-        /// One file's per-run PRECURSOR q-values, over that file's own local slice (issue
-        /// #4355 Part B). Byte-identical to the per-file group body of
-        /// <see cref="ComputePerRunPrecursorQvalues"/> -- same competition + conservative-q,
-        /// winners get their q and every other row stays 1.0 -- but bounded to one file's rows,
-        /// so the projection score pass never holds a full double[n] per-run array. Returns a
-        /// local array indexed 0..count-1 (the caller scatters it back).
+        /// One file's per-run PRECURSOR q-values. Competes the file's rows -- the contiguous
+        /// global index range in <paramref name="indices"/> (<c>[off, off+count)</c>) -- directly
+        /// over the global score-pass arrays (no per-file slice copy; issue #4355 Part B), then
+        /// maps each winning global index back to its local offset. Byte-identical to the per-file
+        /// group body of <see cref="ComputePerRunPrecursorQvalues"/>: winners get their q, every
+        /// other row stays 1.0. Returns a local array indexed 0..count-1 (the caller scatters it back).
         /// </summary>
         private static double[] ComputePerRunPrecursorQvaluesForFile(
-            double[] fileScores, bool[] fileLabels, uint[] fileEntryIds)
+            double[] scores, bool[] labels, uint[] entryIds, int[] indices, int off)
         {
-            int count = fileScores.Length;
+            int count = indices.Length;
             var qvalues = new double[count];
             for (int i = 0; i < count; i++)
                 qvalues[i] = 1.0;
 
-            var allIndices = new int[count];
-            for (int i = 0; i < count; i++)
-                allIndices[i] = i;
-
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteFromIndices(fileScores, fileLabels, fileEntryIds, allIndices, out wi, out ws, out wd);
+            CompeteFromIndices(scores, labels, entryIds, indices, out wi, out ws, out wd);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
             for (int rank = 0; rank < wi.Length; rank++)
-                qvalues[wi[rank]] = q[rank];
+                qvalues[wi[rank] - off] = q[rank];   // wi[rank] is a global index in [off, off+count)
             return qvalues;
         }
 
         /// <summary>
-        /// One file's per-run PEPTIDE q-values, over that file's own local slice (issue #4355
-        /// Part B). Byte-identical to the per-file group body of
-        /// <see cref="ComputePerRunPeptideQvalues"/>: best-per-peptide over the file, competition,
+        /// One file's per-run PEPTIDE q-values, competing directly over the global arrays via the
+        /// file's contiguous global index range <paramref name="indices"/> (<c>[off, off+count)</c>)
+        /// -- no per-file slice copy (issue #4355 Part B). Byte-identical to the per-file group body
+        /// of <see cref="ComputePerRunPeptideQvalues"/>: best-per-peptide over the file, competition,
         /// then the peptide's q propagated to every row of that peptide (others stay 1.0).
-        /// Bounded to one file's rows.
+        /// <see cref="BestPrecursorPerPeptide"/> returns global indices, which
+        /// <see cref="CompeteFromIndices"/> then competes directly (both take an index subset).
+        /// Returns a local array indexed 0..count-1.
         /// </summary>
         private static double[] ComputePerRunPeptideQvaluesForFile(
-            double[] fileScores, bool[] fileLabels, uint[] fileEntryIds, string[] filePeptides)
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides, int[] indices, int off)
         {
-            int count = fileScores.Length;
+            int count = indices.Length;
             var qvalues = new double[count];
             for (int i = 0; i < count; i++)
                 qvalues[i] = 1.0;
 
-            var allIndices = new int[count];
-            for (int i = 0; i < count; i++)
-                allIndices[i] = i;
-
-            var bestPerPeptide = BestPrecursorPerPeptide(allIndices, fileScores, fileLabels, filePeptides);
-
-            var peptScores = new double[bestPerPeptide.Length];
-            var peptLabels = new bool[bestPerPeptide.Length];
-            var peptEntryIds = new uint[bestPerPeptide.Length];
-            var peptIndices = new int[bestPerPeptide.Length];
-            for (int i = 0; i < bestPerPeptide.Length; i++)
-            {
-                peptScores[i] = fileScores[bestPerPeptide[i]];
-                peptLabels[i] = fileLabels[bestPerPeptide[i]];
-                peptEntryIds[i] = fileEntryIds[bestPerPeptide[i]];
-                peptIndices[i] = i;
-            }
+            var bestPerPeptide = BestPrecursorPerPeptide(indices, scores, labels, peptides);
 
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteFromIndices(peptScores, peptLabels, peptEntryIds, peptIndices, out wi, out ws, out wd);
+            CompeteFromIndices(scores, labels, entryIds, bestPerPeptide, out wi, out ws, out wd);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
 
             var peptideQvalue = new Dictionary<string, double>();
             for (int rank = 0; rank < wi.Length; rank++)
-                peptideQvalue[filePeptides[bestPerPeptide[wi[rank]]]] = q[rank];
+                peptideQvalue[peptides[wi[rank]]] = q[rank];   // wi[rank] is a global index
 
-            for (int i = 0; i < count; i++)
+            for (int r = 0; r < count; r++)
             {
                 double qv;
-                if (peptideQvalue.TryGetValue(filePeptides[i], out qv))
-                    qvalues[i] = qv;
+                if (peptideQvalue.TryGetValue(peptides[off + r], out qv))
+                    qvalues[r] = qv;
             }
             return qvalues;
         }
@@ -2475,20 +2466,14 @@ namespace pwiz.Osprey.FDR
             int off, int count,
             out double[] runPrecursorQvalues, out double[] runPeptideQvalues)
         {
-            var fileScores = new double[count];
-            var fileLabels = new bool[count];
-            var fileEntryIds = new uint[count];
-            var filePeptides = new string[count];
+            // A file's rows are the contiguous global range [off, off+count); compete directly over
+            // the global arrays through this index buffer instead of copying four per-file slices
+            // (issue #4355 Part B, Copilot review). One int[count] shared by both per-run passes.
+            var indices = new int[count];
             for (int r = 0; r < count; r++)
-            {
-                int g = off + r;
-                fileScores[r] = scores[g];
-                fileLabels[r] = labels[g];
-                fileEntryIds[r] = entryIds[g];
-                filePeptides[r] = peptides[g];
-            }
-            runPrecursorQvalues = ComputePerRunPrecursorQvaluesForFile(fileScores, fileLabels, fileEntryIds);
-            runPeptideQvalues = ComputePerRunPeptideQvaluesForFile(fileScores, fileLabels, fileEntryIds, filePeptides);
+                indices[r] = off + r;
+            runPrecursorQvalues = ComputePerRunPrecursorQvaluesForFile(scores, labels, entryIds, indices, off);
+            runPeptideQvalues = ComputePerRunPeptideQvaluesForFile(scores, labels, entryIds, peptides, indices, off);
         }
 
         private static double[] ComputePerRunPrecursorQvalues(
