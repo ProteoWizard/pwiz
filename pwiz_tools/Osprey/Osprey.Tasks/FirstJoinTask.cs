@@ -1870,27 +1870,20 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            bool faulted = false;
             ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                 (entryId, charge, isDecoy, coelutionSum, modseq) =>
                 {
-                    if (faulted)
-                        return;
-                    if (!recordByEntryId.TryGetValue(entryId, out FdrScoreRecord record))
-                    {
-                        faulted = true;
-                        return;
-                    }
-                    onRow(modseq, isDecoy, record);
+                    // Mirror the survivor reload's superset tolerance (FdrScoresSidecar.TryRead):
+                    // the sidecar is written from the projection, a SUBSET of the parquet rows, so
+                    // a parquet row with no sidecar record is not a first-pass row -- skip it (the
+                    // resident path never saw it either). Today parquet == projection == sidecar
+                    // exactly (LoadFdrStubsFromParquet and ReadFdrStubScalars share the row-group
+                    // skip rule with no per-row filter), so this never triggers; keeping the
+                    // reader's contract aligned with the reload's avoids aborting a run on any
+                    // future parquet-superset case (e.g. an Astral gap-fill row).
+                    if (recordByEntryId.TryGetValue(entryId, out FdrScoreRecord record))
+                        onRow(modseq, isDecoy, record);
                 });
-            if (faulted)
-            {
-                ctx.LogError(string.Format(
-                    @"First-pass protein FDR: .1st-pass.fdr_scores.bin for {0} is missing an " +
-                    @"entry_id present in {1} (sidecar / parquet mismatch)", fileName, parquetPath));
-                ctx.ExitCode = 1;
-                return false;
-            }
             return true;
         }
 
