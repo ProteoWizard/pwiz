@@ -20,7 +20,6 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using pwiz.Common.Database.FileSystems;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil.PInvoke;

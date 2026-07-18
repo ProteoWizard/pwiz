@@ -19,10 +19,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Database.FileSystems;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional

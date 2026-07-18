@@ -18,7 +18,6 @@
  */
 using System.Collections.Generic;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.IonMobility
 {
