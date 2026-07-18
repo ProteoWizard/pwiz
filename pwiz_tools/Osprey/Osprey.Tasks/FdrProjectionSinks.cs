@@ -238,6 +238,15 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!_flushed[f])
                 {
+                    // A file with recorded rows that never reached its last-row flush means the
+                    // 1st-pass streaming score pass emitted fewer rows than the counts-only producer
+                    // recorded (the two independent parquet reads disagreed). Writing a 0-record
+                    // sidecar here would silently corrupt .1st-pass.fdr_scores.bin, so fail loud.
+                    if (Projections.RowCount(f) > 0)
+                        throw new InvalidOperationException(string.Format(
+                            @"First-pass sidecar flush for '{0}' never fired: {1} rows were recorded but " +
+                            @"the score pass emitted fewer -- the parquet row count is inconsistent.",
+                            perFile[f].Key, Projections.RowCount(f)));
                     _partialWriteFailures += _flushPartial(perFile[f].Key, empty);
                     _flushed[f] = true;
                 }

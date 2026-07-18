@@ -1516,7 +1516,7 @@ namespace pwiz.Osprey.FDR
             }
             int n = g;
             logInfo(string.Format(
-                @"[PATH] {0} first-pass streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
+                @"[PATH] {0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
             logInfo(string.Format(
                 "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
                 passLabel, n, nInputTargets, nInputDecoys, nFeatures));
@@ -1816,7 +1816,12 @@ namespace pwiz.Osprey.FDR
                 Charges.Add(charge);
                 IsDecoys.Add(isDecoy);
                 CoelutionSums.Add(coelutionSum);
-                Peptides.Add(peptide);
+                // Normalize a null modseq to string.Empty exactly as the resident FdrProjectionSet
+                // .Builder.AddRow does (a present-but-null modified_sequence element survives
+                // ReadFdrStubScalars' column-level guard): a null peptide would otherwise throw as a
+                // Dictionary<string,...> key in StreamingFirstPassQ / SubsampleByPeptideGroup and
+                // would group differently from the resident path's ""-normalized peptides.
+                Peptides.Add(peptide ?? string.Empty);
             }
         }
 
