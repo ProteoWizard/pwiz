@@ -1548,9 +1548,13 @@ namespace pwiz.Osprey.Tasks
             var projections = prebuiltProjections ??
                 FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
             int beforeCount = projections.TotalRows;
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, string.Format(
-                @"projection built: {0} rows, {1} distinct peptides; FdrEntry stubs released",
-                beforeCount, projections.PeptideById.Length));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, projections.IsCountsOnly
+                ? string.Format(
+                    @"projection counts-only: {0} rows across {1} files (no resident rows); FdrEntry stubs released",
+                    beforeCount, projections.PerFile.Count)
+                : string.Format(
+                    @"projection built: {0} rows, {1} distinct peptides; FdrEntry stubs released",
+                    beforeCount, projections.PeptideById.Length));
 
             // Stage 5: first-pass Percolator over the projection. Same SVM, same
             // dispatch, same q-values -- only the resident buffer differs. The lean
@@ -1604,12 +1608,33 @@ namespace pwiz.Osprey.Tasks
 
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
                 mdiagAccumulator);
+            var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
             var swFdr = Stopwatch.StartNew();
-            bool aborted = PercolatorEngine.RunPercolatorFdr(
-                projections, config,
-                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                @"First-pass", loadFileFeatures, captureContributions);
+            bool aborted;
+            if (projections.IsCountsOnly)
+            {
+                // Stage B (issue #4355 struct-shrink S3): the lean 1st pass holds NO resident
+                // FdrProjection[] -- stream every row's identity + features from the per-file
+                // .scores.parquet. The row source reads the scalar columns (entry_id / charge /
+                // is_decoy / coelution_sum / modseq) in parquet row order (== the resident sort
+                // order on the 1st pass, since the parquet is written (entry_id,charge,scan)-sorted),
+                // and loadFileFeatures loads that file's feature vectors by the running row ordinal.
+                // perFileParquetPaths has every projection file (the counts-only producer read the
+                // same parquet to count its rows), so the indexer cannot miss.
+                Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
+                    (fileName, onRow) => ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow);
+                aborted = PercolatorEngine.RunFirstPassStreaming(
+                    projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
+                    config, featureInfos, ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
+                    @"First-pass", captureContributions);
+            }
+            else
+            {
+                aborted = PercolatorEngine.RunPercolatorFdr(
+                    projections, config, featureInfos,
+                    ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
+                    @"First-pass", loadFileFeatures, captureContributions);
+            }
             swFdr.Stop();
             if (aborted)
             {

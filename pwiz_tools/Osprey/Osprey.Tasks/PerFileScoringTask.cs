@@ -419,8 +419,12 @@ namespace pwiz.Osprey.Tasks
                 // no FdrEntry is ever allocated. Peptide ids arrive in insertion order
                 // and are remapped to the global Ordinal rank by Build(), so the result
                 // is element-for-element identical to BuildFromEntries (pinned by
-                // TestFdrProjectionBuilderMatchesBuildFromEntries).
-                var builder = new FdrProjectionSet.Builder();
+                // TestFdrProjectionBuilderMatchesBuildFromEntries). Counts-only (issue #4355
+                // struct-shrink S3, Stage B): the projection carries per-file row counts only --
+                // no 32 B rows -- because the 1st-pass streaming score path re-reads every row's
+                // identity + features from parquet, so the resident FdrProjection[] buffer that
+                // grew O(files) is never allocated.
+                var builder = new FdrProjectionSet.Builder(countsOnly: true);
                 // Per-file progress: streaming 32 B projection rows from each parquet is
                 // the lean path, but reading 82 files still ran minutes silent. Console-only,
                 // never touches the streamed rows, so the projection is byte-identical.
@@ -624,7 +628,10 @@ namespace pwiz.Osprey.Tasks
             var swAllFiles = Stopwatch.StartNew();
             if (config.InputFiles != null)
             {
-                var builder = needsResidentPool ? null : new FdrProjectionSet.Builder();
+                // Counts-only (issue #4355 struct-shrink S3, Stage B): the resume lean path builds
+                // only per-file row counts; the 1st-pass streaming score path re-reads identity +
+                // features from parquet, so no resident FdrProjection[] buffer is allocated.
+                var builder = needsResidentPool ? null : new FdrProjectionSet.Builder(countsOnly: true);
                 // Per-file progress so this all-files load is not a silent multi-minute
                 // stall on a large resume (the phase that looked hung on the 82-file run).
                 using (var loadProgress = new ProgressReporter(@"Loading scored entries", config.InputFiles.Count))
@@ -1178,8 +1185,11 @@ namespace pwiz.Osprey.Tasks
             // the merge needs the resident pool (an opt-in feature output) or is a
             // reconciled 2nd-pass bundle hydration (AllHaveReconSidecars -- FirstJoin
             // skips Percolator there and HydrateReconciliationOverlay reads the fat stubs).
+            // Counts-only (issue #4355 struct-shrink S3, Stage B): the merge-node lean path builds
+            // only per-file row counts; the 1st-pass streaming score path re-reads identity +
+            // features from parquet, so the resident FdrProjection[] buffer is never allocated.
             var builder = (!NeedsResidentPool(config) && !hasReconSidecars)
-                ? new FdrProjectionSet.Builder()
+                ? new FdrProjectionSet.Builder(countsOnly: true)
                 : null;
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
             {
