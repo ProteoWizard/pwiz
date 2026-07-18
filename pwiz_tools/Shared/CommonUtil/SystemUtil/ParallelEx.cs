@@ -19,8 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+using System.Runtime.ExceptionServices;
 using JetBrains.Annotations;
 
 namespace pwiz.Common.SystemUtil
@@ -143,21 +142,11 @@ namespace pwiz.Common.SystemUtil
 
                 if (ex != null)
                 {
-                    // The thrown exception needs to be preserved to preserve
-                    // the original stack trace from which it was thrown.  In some cases,
-                    // its type must also be preserved, because existing code handles certain
-                    // exception types.  If this case threw only TargetInvocationException,
-                    // then more frequently the code would just have to have a blanket catch
-                    // of the base exception type, which could hide coding errors.
-                    if (ex is InvalidDataException)
-                        throw new InvalidDataException(ex.Message, ex);
-                    if (ex is IOException)
-                        throw new IOException(ex.Message, ex);
-                    if (ex is OperationCanceledException)
-                        throw new OperationCanceledException(ex.Message, ex);
-                    if (ex is UnauthorizedAccessException)
-                        throw new UnauthorizedAccessException(ex.Message, ex);
-                    throw new TargetInvocationException(ex.Message, ex);
+                    // Rethrow the exception from the worker thread with both its type and its
+                    // original stack trace intact.  The type matters because existing code
+                    // catches specific exception types, and the stack trace from the throw
+                    // site is what makes a reported error diagnosable.
+                    ExceptionDispatchInfo.Capture(ex).Throw();
                 }
                 if (catchClause != null)
                     catchClause(x);
