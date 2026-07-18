@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -95,6 +96,46 @@ namespace pwiz.SkylineTestFunctional
             NativeDialog.WaitForDialog<NativeOpenFileDialog>().EnterPathAndAccept(savePath);
             WaitForDocumentChangeLoaded(documentBeforeOpen);
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
+
+            TestMultiselectNavigateThenSelect();
+        }
+
+        /// <summary>
+        /// Drives a multiselect Open dialog the way an MCP client would: navigate to a folder and confirm the
+        /// arrival by reading the dialog's current folder from GetControls (the read-only "AddressBar" control),
+        /// then select several files in it by their quoted names. This is the focused, self-contained proof that
+        /// the connector exposes enough to select multiple files -- no waiting is baked into the dialog; the caller
+        /// observes the state and drives each step.
+        /// </summary>
+        private void TestMultiselectNavigateThenSelect()
+        {
+            // A folder holding several files to select.
+            var selectDir = TestContext.GetTestResultsPath(@"MultiSelect");
+            Directory.CreateDirectory(selectDir);
+            var fileNames = new[] { @"alpha.txt", @"beta.txt", @"gamma.txt" };
+            var filePaths = fileNames.Select(name => Path.Combine(selectDir, name)).ToArray();
+            foreach (var path in filePaths)
+                File.WriteAllText(path, @"x");
+
+            // Show a MULTISELECT Open dialog starting in a DIFFERENT folder, so driving it needs a real navigation.
+            // RunLongNativeDlg runs the exercise on the test thread, so it can read the dialog (GetControls) between
+            // steps; it returns once the shown dialog has closed (here, once ShowDialog has returned).
+            string[] selectedFiles = null;
+            RunLongNativeDlg<NativeOpenFileDialog>(
+                () =>
+                {
+                    using (var dlg = new System.Windows.Forms.OpenFileDialog
+                        { Multiselect = true, InitialDirectory = Path.GetTempPath() })
+                    {
+                        if (dlg.ShowDialog(SkylineWindow) == System.Windows.Forms.DialogResult.OK)
+                            selectedFiles = dlg.FileNames;
+                    }
+                },
+                // Navigate to the folder (confirmed through GetControls) and select the files by name.
+                fileDialog => SelectFilesInOpenDialog(fileDialog, selectDir, fileNames));
+
+            CollectionAssert.AreEquivalent(filePaths, selectedFiles,
+                @"The multiselect dialog did not return the files that were selected by name.");
         }
 
         private static void AssertPngSignature(byte[] bytes)

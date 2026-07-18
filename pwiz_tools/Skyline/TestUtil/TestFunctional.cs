@@ -432,6 +432,13 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(() => showDlgActionCompleted);
         }
 
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the UI (event) thread -- for a simple,
+        /// single fire-and-forget gesture (e.g. <see cref="NativeOpenFileDialog.EnterPathAndAccept"/>). A gesture
+        /// that has to interleave with the dialog's own modal loop -- a multi-step navigation, or one that waits on
+        /// the dialog (a DismissWith... verb) -- must run on the test thread instead; use
+        /// <see cref="RunLongNativeDlg{TDlg}"/> for that (the analog of <see cref="RunLongDlg{TDlg}"/>).
+        /// </summary>
         protected static void RunNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
             [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
         {
@@ -444,6 +451,69 @@ namespace pwiz.SkylineTestUtil
             var dlg = NativeDialog.WaitForDialog<TDlg>();
             SkylineBeginInvoke(() => exerciseDlgAction(dlg));
             WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the TEST thread -- the native-dialog
+        /// analog of <see cref="RunLongDlg{TDlg}"/>. Use this when the action does more than a single gesture: a
+        /// native dialog is driven by thread-agnostic Win32 messages that its modal loop (running on the UI thread)
+        /// pumps, so a multi-step interaction -- navigate a multiselect Open dialog to a folder and then select
+        /// files in it, or read the dialog's state (GetControls) between steps, or wait on it (a DismissWith...
+        /// verb) -- has to run off the UI thread, leaving that loop free to pump each step. (An action marshaled
+        /// onto the UI thread would block the loop and could never pump between steps.)
+        /// </summary>
+        protected static void RunLongNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = NativeDialog.WaitForDialog<TDlg>();
+            exerciseDlgAction(dlg);
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Drives an OPEN multiselect Open dialog to <paramref name="folder"/> and selects the files named there
+        /// (<paramref name="fileNames"/> are BARE names within that folder), exactly as an MCP client would through
+        /// the connector: navigate to the folder and confirm the arrival by reading the dialog's "Address" control
+        /// (get_value), then enter the quoted names and accept. EnterPath registers the text robustly and Accept
+        /// clicks the Open button, so each step is a single call -- no retrying here. (A list of full paths does not
+        /// work for a multiselect; the names must be bare and in the current folder.) Call on the test thread
+        /// (inside a <see cref="RunLongNativeDlg{TDlg}"/> exercise).
+        /// </summary>
+        protected static void SelectFilesInOpenDialog(NativeOpenFileDialog dlg, string folder,
+            IEnumerable<string> fileNames)
+        {
+            var quotedNames = string.Join(@" ", fileNames.Select(name => @"""" + name + @""""));
+
+            // Navigate to the folder, then confirm we got there by reading the "Address" control before selecting.
+            dlg.EnterPath(folder);
+            dlg.Accept();
+            WaitForCondition(() => DialogShowsFolder(dlg, folder),
+                @"The Open dialog did not navigate to the requested folder.");
+
+            // Select the files by name. Confirm through the API (get_value on "File name") that the box holds them
+            // -- both that the names landed and that the box is readable by that name (not shadowed by its static).
+            dlg.EnterPath(quotedNames);
+            Assert.AreEqual(quotedNames, dlg.GetFormValue(@"File name"),
+                @"The file-name box did not hold the typed names, or was not readable by 'File name'.");
+
+            // Open them.
+            dlg.Accept();
+            WaitForCondition(() => !dlg.IsOpen, @"The Open dialog did not open the selected files.");
+        }
+
+        // Whether the Open dialog is showing the given folder -- read from its "Address" control with get_value, the
+        // way an MCP client confirms a navigation (trailing separator and case ignored).
+        private static bool DialogShowsFolder(NativeOpenFileDialog dlg, string folder)
+        {
+            var current = dlg.GetFormValue(@"Address");
+            return current != null &&
+                   current.TrimEnd('\\').Equals(folder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

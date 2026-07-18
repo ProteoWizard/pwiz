@@ -19,7 +19,9 @@
  */
 
 using System;
+using System.Linq;
 using System.Threading;
+using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
@@ -36,6 +38,8 @@ namespace pwiz.Skyline.ToolsUI
         // ComboBoxEx32, its ComboBox and the Edit inside it alike. Unlike the localized captions it is stable
         // across Windows versions and locales, and its presence tells the Open dialog from every other "#32770".
         private const int FILE_NAME_COMBO_ID = 1148;
+
+        private const int IDOK = 1; // the Open button's control id
 
         public override string DialogTypeName => @"OpenFileDialog";
 
@@ -70,25 +74,54 @@ namespace pwiz.Skyline.ToolsUI
             PostEnter(edit.Hwnd);
         }
 
-        /// <summary>
-        /// Types a file name into the dialog's file name box without accepting; call
-        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open. Pass several double-quoted, space-separated
-        /// paths (<c>"a" "b"</c>) to select multiple files in a multiselect dialog.
-        /// </summary>
-        public override void EnterPath(string path)
-        {
-            BringToForeground();
-            FileNameTextBox.SetText(path);
-        }
-
-        /// <summary>Accepts by pressing Enter in the file-name box (rather than clicking Open, which would act on
-        /// whatever the file list has selected rather than the path just typed). OkDialog POSTS Enter on the
-        /// dialog's UI thread -- so the modal loop translates it into accept, see PostEnter -- and waits for the
-        /// dialog to close.</summary>
+        /// <summary>Accepts by clicking the Open button (BM_CLICK on IDOK). A posted Enter is NOT reliable here: on
+        /// the multiselect dialog a single typed file name raises the combo's autocomplete drop-down, which swallows
+        /// the Enter (it selects the drop-down item instead of committing) -- so the dialog never closes. Clicking
+        /// Open commits in one message. With a file name in the box the dialog opens THAT (not any file-list
+        /// selection), which is what the caller typed. OkDialog SENDS the click on the dialog's own thread and waits
+        /// for it to close -- so a click that raises a nested modal (an overwrite/error prompt) blocks there,
+        /// counted, rather than pinning the pipe thread.</summary>
         public override ActionResult DismissWithAcceptButton()
         {
-            var handle = FileNameTextBox.Hwnd;
-            return OkDialog(() => PostEnter(handle));
+            return OkDialog(AcceptButton.ClickNow);
+        }
+
+        // The Open button, by its control id (IDOK) rather than its localized caption.
+        private NativeButton AcceptButton => RequireButton(IDOK, @"Open");
+
+        // The file-name Edit. The classic combo's id (1148) rides the ComboBoxEx32, its ComboBox and (at least on
+        // current Windows, the multiselect "Add Input Files" dialog included) the Edit inside it. Take the Edit
+        // that carries the id when there is one; otherwise -- a flavour that keeps the id only on the combo -- take
+        // the Edit inside the combo that does, which is never the address-bar Edit (not a child of this combo).
+        protected override IntPtr FindFileNameEdit()
+        {
+            var edit = base.FindFileNameEdit();
+            if (edit != IntPtr.Zero)
+                return edit;
+            var combo = User32.EnumChildWindows(Hwnd)
+                .FirstOrDefault(hwnd => User32.GetDlgCtrlID(hwnd) == FILE_NAME_COMBO_ID);
+            return combo == IntPtr.Zero
+                ? IntPtr.Zero
+                : User32.EnumChildWindows(combo)
+                    .FirstOrDefault(hwnd => User32.GetClassName(hwnd) == NativeControl.EDIT_CLASS);
+        }
+
+        /// <summary>
+        /// Commits whatever is in the file-name box by clicking the Open button: a FOLDER path navigates into that
+        /// folder and leaves the dialog open, while file name(s) open and the dialog closes. Clicking Open (rather
+        /// than posting Enter) is what makes this reliable -- see <see cref="DismissWithAcceptButton"/> for why a
+        /// posted Enter is swallowed on the multiselect dialog. The caller drives the next step by observing the
+        /// result: it confirms a NAVIGATION by reading the dialog's current folder from GetControls (the read-only
+        /// "AddressBar" control, see <see cref="NativeAddressBar"/>) and an OPEN by the dialog closing.
+        ///
+        /// <para>So the multiselect Open dialog is driven like this: <see cref="NativeFileDialog.EnterPath"/> the
+        /// folder and Accept, wait (via GetControls) until the folder is reached, then EnterPath the double-quoted
+        /// space-separated file names and Accept to open them. The BM_CLICK is SENT, so call this OFF the UI thread,
+        /// where the dialog's modal loop can process it.</para>
+        /// </summary>
+        public void Accept()
+        {
+            AcceptButton.ClickNow();
         }
     }
 }

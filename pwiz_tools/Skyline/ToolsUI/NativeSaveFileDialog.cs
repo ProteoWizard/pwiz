@@ -61,13 +61,6 @@ namespace pwiz.Skyline.ToolsUI
                 .HasDescendant(NativeControl.EDIT_CLASS, FILE_NAME_EDIT_ID);
         }
 
-        /// <summary>Types a single file path into the dialog's file name box without accepting.</summary>
-        public override void EnterPath(string path)
-        {
-            BringToForeground();
-            FileNameTextBox.SetText(path);
-        }
-
         /// <summary>Accepts by clicking the Save button. OkDialog SENDS BM_CLICK on the dialog's OWN thread and
         /// waits for the dialog to close: clicking Save can raise a nested modal (the overwrite-confirm prompt), and
         /// running the send on the UI thread lets that modal's loop run there -- the send blocks in it, keeping the

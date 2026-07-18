@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using pwiz.Common.SystemUtil.PInvoke;
 
@@ -33,16 +34,75 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public abstract class NativeFileDialog : NativeDialog
     {
+        // The address breadcrumb's window class and control id -- the "Address: <folder>" toolbar. Surfaced through
+        // EnumerateChildren as a read-only element so a caller can read the dialog's current folder from GetControls.
+        private const string ADDRESS_BAR_CLASS = @"ToolbarWindow32";
+        private const int ADDRESS_BAR_ID = 1001;
+
+        // How long EnterPath re-sets the file name waiting for it to read back (a freshly-shown or just-navigated
+        // dialog is still settling and can discard a too-early set), and its poll interval.
+        private const int SET_CONFIRM_MILLIS = 3000;
+        private const int SET_POLL_MILLIS = 100;
+
         protected NativeFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }
 
+        /// <summary>The dialog's controls: its Win32 children (the file-name field, the commit and cancel buttons)
+        /// PLUS the address breadcrumb as a read-only <see cref="NativeAddressBar"/> element -- so a caller can read
+        /// the folder the dialog is showing from GetControls and confirm a navigation before selecting files. The
+        /// file-name box is given the label "File name" so a caller can read/set it by that name (its adjacent
+        /// "File name:" static would otherwise shadow the caption-less field, and its own value is empty).</summary>
+        public override IEnumerable<UiElement> EnumerateChildren()
+        {
+            var fileNameEdit = FindFileNameEdit();
+            foreach (var child in base.EnumerateChildren())
+            {
+                // Drop the field-label statics ("File name:", "Files of type:"): they carry no value, and a caption
+                // matching a field's would SHADOW it (the static comes first, so a get/set on "File name" would hit
+                // the empty static, not the box). The box is given that caption directly, below.
+                if (child is NativeLabel)
+                    continue;
+                yield return child is NativeTextBox textBox && textBox.Hwnd == fileNameEdit
+                    ? new NativeTextBox(fileNameEdit, CancellationToken, @"File name")
+                    : child;
+            }
+            var addressBar = FindDescendant(ADDRESS_BAR_CLASS, ADDRESS_BAR_ID);
+            if (addressBar != IntPtr.Zero)
+                yield return new NativeAddressBar(addressBar, CancellationToken);
+        }
+
         /// <summary>
-        /// Types the file name(s) into the dialog's file name field without accepting; call
-        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open/save. The Open dialog accepts several
-        /// double-quoted, space-separated paths for a multiselect; the Save dialog takes a single path.
+        /// Types the file name(s) into the dialog's file-name field WITHOUT accepting; call
+        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open/save. Sets the text and confirms it
+        /// registered, retrying if not: a freshly-shown dialog is still initializing and the shell overwrites a
+        /// too-early set, so a single set can be silently lost -- and the dialog would then open nothing.
+        ///
+        /// <para>To select several files in a multiselect Open dialog, FIRST navigate to their folder (EnterPath
+        /// the folder path, accept), THEN EnterPath their names -- BARE names in that folder, double-quoted and
+        /// space-separated (<c>"a.raw" "b.raw"</c>). A list of FULL paths does not work.</para>
         /// </summary>
-        public abstract void EnterPath(string path);
+        public void EnterPath(string path)
+        {
+            BringToForeground();
+            var textBox = FileNameTextBox;
+            textBox.SetText(path);
+            // A folder path the shell consumes to navigate (clearing the box) is not confirmed here -- the caller
+            // confirms the navigation through the "Address" control. A file name that must OPEN has to land in the
+            // box, and a freshly-shown or just-navigated dialog is still settling and can discard a too-early set,
+            // so re-set it until it reads back (or a bounded time elapses). The read runs ON the box's UI thread
+            // (CallFunction): an off-thread read of a ComboBoxEx edit returns empty, and a cross-thread WM_GETTEXT
+            // can block on a busy shell.
+            if (System.IO.Directory.Exists(path))
+                return;
+            for (int waited = 0; waited < SET_CONFIRM_MILLIS; waited += SET_POLL_MILLIS)
+            {
+                if (Equals(textBox.CallFunction(() => textBox.GetValueNow() as string), path))
+                    return;
+                Thread.Sleep(SET_POLL_MILLIS);
+                textBox.SetText(path);
+            }
+        }
 
         /// <summary>The control id of this dialog's file-name Edit -- 1148 for the Open dialog's classic combo,
         /// 1001 for the Save dialog's DirectUI-hosted field.</summary>
@@ -60,11 +120,16 @@ namespace pwiz.Skyline.ToolsUI
         protected NativeTextBox FileNameTextBox =>
             PollUntil(MillisTimeout, @"the dialog's file name field", () =>
             {
-                var hwnd = FindDescendant(NativeControl.EDIT_CLASS, FileNameControlId);
+                var hwnd = FindFileNameEdit();
                 return hwnd != IntPtr.Zero && User32.IsWindowVisible(hwnd)
                     ? new NativeTextBox(hwnd, CancellationToken)
                     : null;
             });
+
+        /// <summary>The window handle of the file-name Edit, or IntPtr.Zero until it exists. By default the Edit
+        /// itself carries <see cref="FileNameControlId"/> (the Save dialog's Edit, the plain Open dialog's combo
+        /// Edit); the Open dialog overrides this because its multiselect flavour does not put the id on the Edit.</summary>
+        protected virtual IntPtr FindFileNameEdit() => FindDescendant(NativeControl.EDIT_CLASS, FileNameControlId);
 
         // set_value types the path: its controlId is ignored, because a file dialog has the one field to set.
         protected override void SetValueCore(string value) => EnterPath(value);

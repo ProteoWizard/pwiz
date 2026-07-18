@@ -68,6 +68,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             PBM_SETSTATE = 0x0410,
             WM_SETREDRAW = 0x000B,
             WM_SETTEXT = 0x000C,
+            WM_GETTEXT = 0x000D,
+            WM_GETTEXTLENGTH = 0x000E,
             WM_PAINT = 0x000F,
             WM_CLOSE = 0x0010,
             WM_ERASEBKGND = 0x0014,
@@ -296,6 +298,21 @@ namespace pwiz.Common.SystemUtil.PInvoke
             var caption = new StringBuilder(MAX_WINDOW_TEXT);
             InternalGetWindowText(hwnd, caption, caption.Capacity);
             return caption.ToString();
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, StringBuilder lParam);
+
+        /// <summary>The control's text read by SENDING it WM_GETTEXT, which is processed on the window's OWNING
+        /// thread -- so it returns what a control such as an edit box HOLDS even when called from another thread,
+        /// unlike <see cref="GetWindowText"/>, which off-thread reads only the stored caption (empty for a control,
+        /// such as a ComboBoxEx's edit, that keeps its own text). Blocks until the owning thread pumps the send.</summary>
+        public static string SendGetText(IntPtr hwnd)
+        {
+            var length = (int) SendMessage(hwnd, WinMessageType.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+            var text = new StringBuilder(length + 1);
+            SendMessage(hwnd, WinMessageType.WM_GETTEXT, (IntPtr) text.Capacity, text);
+            return text.ToString();
         }
 
 
