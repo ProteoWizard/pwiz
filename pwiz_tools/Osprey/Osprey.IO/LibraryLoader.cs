@@ -159,6 +159,18 @@ namespace pwiz.Osprey.IO
 
             logInfo(string.Format("Loaded {0} library entries", entries.Count));
 
+            // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact and are
+            // not valid for DIA search; fail fast at load (issue #4355 / PR #4434 review), before the
+            // cache save, so a bad entry never reaches the cache, decoy generation (which would
+            // silently exclude it), or a lean OmitFragments load (which would retain a phantom and
+            // diverge the FirstPassFDR reconciliation bytes).
+            foreach (var entry in entries)
+                if (entry.Fragments.Count == 0)
+                    throw new InvalidDataException(string.Format(
+                        "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
+                        "BiblioSpec MS1 feature finding and are not valid for DIA search.",
+                        entry.Id, entry.ModifiedSequence));
+
             // Save binary cache for next run
             try
             {

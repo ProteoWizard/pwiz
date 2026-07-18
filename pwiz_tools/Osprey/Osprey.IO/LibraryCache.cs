@@ -281,6 +281,15 @@ namespace pwiz.Osprey.IO
                     // (to advance the stream to the protein-ID block that follows)
                     // but discard them, leaving a shared empty array.
                     uint nFrags = r.ReadUInt32();
+                    // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact,
+                    // not valid for DIA search; fail fast rather than let one reach decoy generation
+                    // or a lean OmitFragments load (issue #4355 / PR #4434 review). A stale cache
+                    // built before this guard rebuilds from source, which fails fast there too.
+                    if (nFrags == 0)
+                        throw new InvalidDataException(string.Format(
+                            "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
+                            "BiblioSpec MS1 feature finding and are not valid for DIA search.",
+                            id, modifiedSequence));
                     LibraryFragment[] fragments;
                     if (omitFragments)
                     {
@@ -290,9 +299,7 @@ namespace pwiz.Osprey.IO
                     }
                     else
                     {
-                        fragments = nFrags == 0
-                            ? Array.Empty<LibraryFragment>()
-                            : new LibraryFragment[nFrags];
+                        fragments = new LibraryFragment[nFrags];   // nFrags > 0: 0-fragment entries fail fast above
                         for (uint fi = 0; fi < nFrags; fi++)
                         {
                             double mz = r.ReadDouble();
