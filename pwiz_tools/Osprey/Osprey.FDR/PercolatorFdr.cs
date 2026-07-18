@@ -1140,9 +1140,12 @@ namespace pwiz.Osprey.FDR
         /// of the <see cref="PercolatorEntry"/> path.
         ///
         /// The caller passes the flat <paramref name="labels"/> / <paramref name="entryIds"/>
-        /// / <paramref name="peptides"/> / <paramref name="fileNames"/> arrays it
-        /// already built (in nested file/row order) for training-subset selection, so
-        /// they are not rebuilt here; this method walks <paramref name="perFile"/> in
+        /// / <paramref name="peptides"/> arrays it already built (in nested file/row order)
+        /// for training-subset selection, so they are not rebuilt here; this method walks
+        /// <paramref name="perFile"/> in the SAME nested order (its own key is the file name,
+        /// so no flat <c>fileNames</c> array is needed) and zips the results back, keeping every
+        /// index aligned. The feature-contribution accumulation runs in per-file order identical
+        /// to the <see cref="PercolatorEntry"/>
         /// that SAME nested order to compute <c>finalScores</c> and to zip the results
         /// back, keeping every index aligned. The feature-contribution accumulation
         /// runs in per-file order identical to the <see cref="PercolatorEntry"/>
@@ -1152,7 +1155,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         internal static void ScoreProjectionAndComputeFdrInPlace(
             List<KeyValuePair<string, List<FdrProjection>>> perFile,
-            bool[] labels, uint[] entryIds, string[] peptides, string[] fileNames,
+            bool[] labels, uint[] entryIds, string[] peptides,
             PercolatorResults trainResults, PercolatorConfig config,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             IFdrOutputSink sink,
@@ -1249,23 +1252,15 @@ namespace pwiz.Osprey.FDR
             // ComputeStreamingCompetitionQvalues), so the streamed outputs are identical.
             var pepByWinnerIdx = ComputePepWinnerMap(finalScores, labels, entryIds);
 
-            // Experiment q-values: the single-file shortcut is exp == per-run (matching
-            // ComputeStreamingCompetitionQvalues), so the maps are built only when multi-file.
-            bool isSingleFile = new HashSet<string>(fileNames).Count <= 1;
-            Dictionary<uint, double> expPrecByBaseId = isSingleFile
-                ? null : ComputeExperimentPrecursorQMap(finalScores, labels, entryIds);
-            Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
-
             // The per-file q-value passes below slice each file as one contiguous block
             // [off, off+count). The full-length ComputePerRun* path instead grouped by file
-            // NAME, which is robust to a file appearing in more than one PerFile entry; the
+            // name, which is robust to a file appearing in more than one PerFile entry; the
             // slice is not (it would split one file's competition in two -> different run q ->
             // different clamp floors -> different bytes). Every population the pipeline builds
-            // has distinct PerFile keys (fileNames is assigned straight from PerFile order), so
-            // this is an invariant, not a live case -- assert it so a future duplicate-key
-            // producer (e.g. a 2nd-pass reconciliation re-opening a file) fails fast instead of
-            // silently diverging.
+            // has distinct PerFile keys, so this is an invariant, not a live case -- assert it
+            // (the single-file test + per-file passes below depend on it) so a future
+            // duplicate-key producer (e.g. a 2nd-pass reconciliation re-opening a file) fails
+            // fast instead of silently diverging.
             var seenFileKeys = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in perFile)
                 if (!seenFileKeys.Add(kvp.Key))
@@ -1273,6 +1268,23 @@ namespace pwiz.Osprey.FDR
                         @"ScoreProjectionAndComputeFdrInPlace: duplicate per-file key '{0}'; the " +
                         @"bounded per-file q-value pass requires one contiguous block per file.",
                         kvp.Key));
+
+            // Experiment q-values: the single-file shortcut is exp == per-run (matching
+            // ComputeStreamingCompetitionQvalues), built only when multi-file. With distinct
+            // keys (asserted above) the file count is just the number of non-empty PerFile
+            // entries, so no flat fileNames[n] array is needed -- the caller no longer builds
+            // one (issue #4355 Part B: dropping a full O(n) string reference array). This
+            // reproduces the retired `new HashSet<string>(fileNames).Count <= 1` exactly (both
+            // count the distinct files that contribute rows).
+            int nonEmptyFiles = 0;
+            foreach (var kvp in perFile)
+                if (kvp.Value.Count > 0)
+                    nonEmptyFiles++;
+            bool isSingleFile = nonEmptyFiles <= 1;
+            Dictionary<uint, double> expPrecByBaseId = isSingleFile
+                ? null : ComputeExperimentPrecursorQMap(finalScores, labels, entryIds);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile
+                ? null : ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
 
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
