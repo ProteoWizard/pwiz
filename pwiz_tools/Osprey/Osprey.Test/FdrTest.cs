@@ -1547,6 +1547,105 @@ namespace pwiz.Osprey.Test
         #endregion
 
         // ============================================================
+        // Streaming first-pass q maps (Stage B) == flat builders
+        // ============================================================
+
+        #region StreamingFirstPassQ Tests
+
+        /// <summary>
+        /// The Stage B streaming builder (<c>PercolatorFdr.StreamingFirstPassQ</c>) must produce
+        /// experiment-precursor / experiment-peptide / PEP maps BYTE-IDENTICAL to the flat
+        /// array builders when fed the same population in the same flat (file,row) order -- the
+        /// invariant that lets the 1st-pass score pass drop the resident
+        /// finalScores/labels/entryIds/peptides[n] arrays. Uses a deterministic pseudo-random
+        /// multi-file population with score ties (rounded to 1 dp) to exercise the first-seen
+        /// tie-break and the target-vs-decoy-tie-to-decoy rule, and peptides shared across
+        /// base_ids to exercise best-per-peptide.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingFirstPassQMatchesFlat()
+        {
+            var rng = new Random(20260718);
+            const int nFiles = 4;
+            const int nBaseIds = 60;
+            var perFile = new List<(uint EntryId, bool IsDecoy, double Score, string Peptide)>[nFiles];
+            for (int f = 0; f < nFiles; f++)
+                perFile[f] = new List<(uint, bool, double, string)>();
+
+            for (uint baseId = 1; baseId <= nBaseIds; baseId++)
+            {
+                // Some base_ids share a peptide (different charges) -> best-per-peptide spans base_ids.
+                string peptide = "PEP" + (baseId % 40);
+                foreach (bool isDecoy in new[] { false, true })
+                {
+                    uint entryId = isDecoy ? (baseId | 0x80000000u) : baseId;
+                    int nObs = 1 + rng.Next(nFiles); // 1..nFiles observations
+                    var files = Enumerable.Range(0, nFiles).OrderBy(_ => rng.Next()).Take(nObs);
+                    foreach (int f in files)
+                    {
+                        double score = Math.Round(rng.NextDouble() * 8.0 - 2.0, 1); // 1 dp -> ties
+                        perFile[f].Add((entryId, isDecoy, score, peptide));
+                    }
+                }
+            }
+
+            // Flatten in (file,row) order == the streaming ordinal g.
+            var scores = new List<double>();
+            var labels = new List<bool>();
+            var entryIds = new List<uint>();
+            var peptides = new List<string>();
+            var streaming = new PercolatorFdr.StreamingFirstPassQ();
+            int g = 0;
+            for (int f = 0; f < nFiles; f++)
+            {
+                foreach (var row in perFile[f])
+                {
+                    scores.Add(row.Score);
+                    labels.Add(row.IsDecoy);
+                    entryIds.Add(row.EntryId);
+                    peptides.Add(row.Peptide);
+                    streaming.Add(g, row.Score, row.EntryId, row.IsDecoy, row.Peptide);
+                    g++;
+                }
+            }
+
+            var scoreArr = scores.ToArray();
+            var labelArr = labels.ToArray();
+            var entryIdArr = entryIds.ToArray();
+            var peptideArr = peptides.ToArray();
+
+            AssertMapsEqual(
+                PercolatorFdr.ComputeExperimentPrecursorQMap(scoreArr, labelArr, entryIdArr),
+                streaming.BuildExperimentPrecursorQMap(), "exp-precursor");
+            AssertMapsEqual(
+                PercolatorFdr.ComputeExperimentPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr),
+                streaming.BuildExperimentPeptideQMap(), "exp-peptide");
+            AssertMapsEqual(
+                PercolatorFdr.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
+                streaming.BuildPepWinnerMap(), "pep-winner");
+        }
+
+        private static void AssertMapsEqual<TKey>(
+            Dictionary<TKey, double> flat, Dictionary<TKey, double> streaming, string which)
+        {
+            Assert.AreEqual(flat.Count, streaming.Count,
+                string.Format("{0}: map size differs (flat {1} vs streaming {2})",
+                    which, flat.Count, streaming.Count));
+            foreach (var kvp in flat)
+            {
+                double sv;
+                Assert.IsTrue(streaming.TryGetValue(kvp.Key, out sv),
+                    string.Format("{0}: streaming missing key {1}", which, kvp.Key));
+                // Byte-identical: the streaming path reuses the exact compete + conservative-q +
+                // PepEstimator finish on the same values in the same order, so the doubles match bit-for-bit.
+                Assert.AreEqual(kvp.Value, sv, 0.0,
+                    string.Format("{0}: value differs at key {1}", which, kvp.Key));
+            }
+        }
+
+        #endregion
+
+        // ============================================================
         // ClampExperimentQToBestRun tests
         // ============================================================
 

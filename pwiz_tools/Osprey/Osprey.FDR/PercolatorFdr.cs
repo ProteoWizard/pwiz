@@ -1010,7 +1010,7 @@ namespace pwiz.Osprey.FDR
         /// cross-impl byte parity the winners must be reordered to the same base_id-sorted
         /// order Rust's compute_fdr_from_stubs uses before the fit.
         /// </summary>
-        private static Dictionary<int, double> ComputePepWinnerMap(
+        internal static Dictionary<int, double> ComputePepWinnerMap(
             double[] finalScores, bool[] labels, uint[] entryIds)
         {
             int n = finalScores.Length;
@@ -1756,7 +1756,7 @@ namespace pwiz.Osprey.FDR
             }
 
             CompeteFromDicts(targets, decoys,
-                out winnerIndices, out winnerScores, out winnerIsDecoy);
+                out winnerIndices, out winnerScores, out winnerIsDecoy, out _);
         }
 
         /// <summary>
@@ -1768,14 +1768,18 @@ namespace pwiz.Osprey.FDR
         /// S3, which builds the identical maps by pushing rows in flat (file,row) order) share the
         /// EXACT compete + sort, and so cannot drift. The stored index is the winning row's flat
         /// index / streaming ordinal; both label the same row because the streaming pass visits
-        /// rows in the same order the flat arrays were built.
+        /// rows in the same order the flat arrays were built. <paramref name="winnerBaseIds"/>
+        /// carries each winner's base_id (the map key) so the streaming path can key the
+        /// experiment-precursor / PEP maps WITHOUT a resident <c>entryIds[]</c> array (the flat
+        /// path recovers the same base_id via <c>entryIds[wi[rank]] &amp; BASE_ID_MASK</c>).
         /// </summary>
         internal static void CompeteFromDicts(
             Dictionary<uint, KeyValuePair<int, double>> targets,
             Dictionary<uint, KeyValuePair<int, double>> decoys,
             out int[] winnerIndices,
             out double[] winnerScores,
-            out bool[] winnerIsDecoy)
+            out bool[] winnerIsDecoy,
+            out uint[] winnerBaseIds)
         {
             // Compete pairs: higher score wins, ties go to decoy
             var winners = new List<Tuple<int, double, bool, uint>>(targets.Count);
@@ -1819,11 +1823,13 @@ namespace pwiz.Osprey.FDR
             winnerIndices = new int[winners.Count];
             winnerScores = new double[winners.Count];
             winnerIsDecoy = new bool[winners.Count];
+            winnerBaseIds = new uint[winners.Count];
             for (int i = 0; i < winners.Count; i++)
             {
                 winnerIndices[i] = winners[i].Item1;
                 winnerScores[i] = winners[i].Item2;
                 winnerIsDecoy[i] = winners[i].Item3;
+                winnerBaseIds[i] = winners[i].Item4;
             }
         }
 
@@ -2634,7 +2640,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="ComputeExperimentPrecursorQvalues"/> wrapper simply expands this map,
         /// so the two share the SAME competition + conservative-q math and cannot drift.
         /// </summary>
-        private static Dictionary<uint, double> ComputeExperimentPrecursorQMap(
+        internal static Dictionary<uint, double> ComputeExperimentPrecursorQMap(
             double[] scores, bool[] labels, uint[] entryIds)
         {
             int n = scores.Length;
@@ -2686,7 +2692,7 @@ namespace pwiz.Osprey.FDR
         /// expands this map, so both share the SAME best-per-peptide + competition +
         /// conservative-q math and cannot drift.
         /// </summary>
-        private static Dictionary<string, double> ComputeExperimentPeptideQMap(
+        internal static Dictionary<string, double> ComputeExperimentPeptideQMap(
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides)
         {
             int n = scores.Length;
@@ -2739,6 +2745,163 @@ namespace pwiz.Osprey.FDR
                 qvalues[i] = peptideQvalue.TryGetValue(peptides[i], out qv) ? qv : 1.0;
             }
             return qvalues;
+        }
+
+        /// <summary>
+        /// Streaming builder for the three GLOBAL bounded first-pass q maps (issue #4355
+        /// struct-shrink S3, Stage B): the experiment-precursor <c>base_id -&gt; q</c> map, the
+        /// experiment-peptide <c>peptide -&gt; q</c> map, and the PEP <c>winner-ordinal -&gt; pep</c>
+        /// map -- built by pushing each scored row via <see cref="Add"/> in flat (file,row) order
+        /// instead of reading the resident <c>finalScores/labels/entryIds/peptides[n]</c> arrays.
+        /// Bounded: it retains only per-base_id and per-peptide bests (O(distinct)), never an O(n)
+        /// buffer. Each Build* reuses the SAME <see cref="CompeteFromDicts"/> +
+        /// <see cref="ComputeConservativeQvalues"/> (+ <c>PepEstimator</c>) finish the flat
+        /// <see cref="ComputeExperimentPrecursorQMap"/> / <see cref="ComputeExperimentPeptideQMap"/>
+        /// / <see cref="ComputePepWinnerMap"/> run, so a population fed in the same order yields
+        /// byte-identical maps (verified by <c>FdrTest.TestStreamingFirstPassQMatchesFlat</c>). The
+        /// PEP map is keyed by the streaming ordinal <c>g</c>, which equals the flat winner index
+        /// because both visit rows in the same nested (file,row) order.
+        /// </summary>
+        internal sealed class StreamingFirstPassQ
+        {
+            // Global experiment-precursor / PEP competition: base_id -> best (g, score), strict
+            // '>' first-seen, split target/decoy -- the identical maps CompeteAll builds.
+            private readonly Dictionary<uint, KeyValuePair<int, double>> _precTargets =
+                new Dictionary<uint, KeyValuePair<int, double>>();
+            private readonly Dictionary<uint, KeyValuePair<int, double>> _precDecoys =
+                new Dictionary<uint, KeyValuePair<int, double>>();
+            // Experiment-peptide: peptide -> best row, mirroring BestPrecursorPerPeptide.
+            private readonly Dictionary<string, PeptideBest> _peptBest =
+                new Dictionary<string, PeptideBest>();
+
+            /// <summary>Fold one scored row (in flat (file,row) order) into the bounded bests.</summary>
+            public void Add(int g, double score, uint entryId, bool isDecoy, string peptide)
+            {
+                uint baseId = entryId & BASE_ID_MASK;
+                var dict = isDecoy ? _precDecoys : _precTargets;
+                KeyValuePair<int, double> existing;
+                if (dict.TryGetValue(baseId, out existing))
+                {
+                    if (score > existing.Value)
+                        dict[baseId] = new KeyValuePair<int, double>(g, score);
+                }
+                else
+                {
+                    dict[baseId] = new KeyValuePair<int, double>(g, score);
+                }
+
+                PeptideBest pb;
+                if (_peptBest.TryGetValue(peptide, out pb))
+                {
+                    if (score > pb.Score)
+                        _peptBest[peptide] = new PeptideBest(g, score, isDecoy, entryId, peptide);
+                }
+                else
+                {
+                    _peptBest[peptide] = new PeptideBest(g, score, isDecoy, entryId, peptide);
+                }
+            }
+
+            /// <summary>
+            /// Experiment-precursor <c>base_id -&gt; q</c>: compete the global base_id bests,
+            /// conservative-q, keyed by each winner's base_id -- byte-identical to
+            /// <see cref="ComputeExperimentPrecursorQMap"/>.
+            /// </summary>
+            public Dictionary<uint, double> BuildExperimentPrecursorQMap()
+            {
+                CompeteFromDicts(_precTargets, _precDecoys,
+                    out _, out double[] ws, out bool[] wd, out uint[] wb);
+                var q = new double[ws.Length];
+                ComputeConservativeQvalues(ws, wd, q);
+                var map = new Dictionary<uint, double>(wb.Length);
+                for (int rank = 0; rank < wb.Length; rank++)
+                    map[wb[rank]] = q[rank];
+                return map;
+            }
+
+            /// <summary>
+            /// Experiment-peptide <c>peptide -&gt; q</c>: materialize the best-per-peptide set
+            /// sorted by ordinal (matching <see cref="BestPrecursorPerPeptide"/>'s sort), compete
+            /// by base_id, conservative-q, keyed by the winner's peptide -- byte-identical to
+            /// <see cref="ComputeExperimentPeptideQMap"/>.
+            /// </summary>
+            public Dictionary<string, double> BuildExperimentPeptideQMap()
+            {
+                var best = new List<PeptideBest>(_peptBest.Values);
+                best.Sort((a, b) => a.G.CompareTo(b.G)); // Array.Sort OK: G is the unique streaming ordinal of each peptide's best row, so the comparator never ties -- reproduces BestPrecursorPerPeptide's result.Sort() on ascending global index
+                var targets = new Dictionary<uint, KeyValuePair<int, double>>();
+                var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
+                for (int i = 0; i < best.Count; i++)
+                {
+                    uint baseId = best[i].EntryId & BASE_ID_MASK;
+                    var dict = best[i].IsDecoy ? decoys : targets;
+                    KeyValuePair<int, double> existing;
+                    if (dict.TryGetValue(baseId, out existing))
+                    {
+                        if (best[i].Score > existing.Value)
+                            dict[baseId] = new KeyValuePair<int, double>(i, best[i].Score);
+                    }
+                    else
+                    {
+                        dict[baseId] = new KeyValuePair<int, double>(i, best[i].Score);
+                    }
+                }
+                CompeteFromDicts(targets, decoys,
+                    out int[] wi, out double[] ws, out bool[] wd, out _);
+                var q = new double[ws.Length];
+                ComputeConservativeQvalues(ws, wd, q);
+                var map = new Dictionary<string, double>(wi.Length);
+                for (int rank = 0; rank < wi.Length; rank++)
+                    map[best[wi[rank]].Peptide] = q[rank];
+                return map;
+            }
+
+            /// <summary>
+            /// PEP <c>winner-ordinal -&gt; pep</c>: compete the global base_id bests, fit the PEP
+            /// estimator on winners sorted base_id-ascending (the non-associative KDE sum is
+            /// order-sensitive), then posterior-error each winner -- byte-identical to
+            /// <see cref="ComputePepWinnerMap"/>.
+            /// </summary>
+            public Dictionary<int, double> BuildPepWinnerMap()
+            {
+                CompeteFromDicts(_precTargets, _precDecoys,
+                    out int[] wi, out double[] ws, out bool[] wd, out uint[] wb);
+                int nWinners = wi.Length;
+                var pepOrder = new int[nWinners];
+                for (int k = 0; k < nWinners; k++)
+                    pepOrder[k] = k;
+                Array.Sort(pepOrder, (a, b) => wb[a].CompareTo(wb[b])); // Array.Sort OK: one winner per base_id, so wb has no ties -- matches ComputePepWinnerMap
+                var pepScores = new double[nWinners];
+                var pepIsDecoy = new bool[nWinners];
+                for (int k = 0; k < nWinners; k++)
+                {
+                    pepScores[k] = ws[pepOrder[k]];
+                    pepIsDecoy[k] = wd[pepOrder[k]];
+                }
+                var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
+                var map = new Dictionary<int, double>(nWinners);
+                for (int k = 0; k < nWinners; k++)
+                    map[wi[k]] = pepEstimator.PosteriorError(ws[k]);
+                return map;
+            }
+
+            private readonly struct PeptideBest
+            {
+                public readonly int G;
+                public readonly double Score;
+                public readonly bool IsDecoy;
+                public readonly uint EntryId;
+                public readonly string Peptide;
+
+                public PeptideBest(int g, double score, bool isDecoy, uint entryId, string peptide)
+                {
+                    G = g;
+                    Score = score;
+                    IsDecoy = isDecoy;
+                    EntryId = entryId;
+                    Peptide = peptide;
+                }
+            }
         }
 
         // A console progress reporter for the large first-pass q-value / competition passes,
