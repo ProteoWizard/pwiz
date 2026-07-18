@@ -161,25 +161,25 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// 1st-pass sink (issue #4355 struct-shrink S1, two-phase sidecar): keeps ONLY the
-    /// two q-values that must stay resident across the whole pass -- <c>RunPeptideQ</c>
-    /// and <c>RunProteinQ</c> -- in a 16 B/row <see cref="FdrProjectionOutputs"/> array
-    /// (1st-pass resident projection = 48 B), and streams the other four q-values
-    /// straight to disk. During the score pass (phase 1) it buffers each file's PARTIAL
-    /// 60-byte <see cref="FdrScoreRecord"/>s in projection order -- with the
+    /// 1st-pass sink (issue #4355 struct-shrink S2, two-phase sidecar): streams ALL of the
+    /// score pass's per-row output straight to disk -- it keeps NO resident q-value array.
+    /// During the score pass (phase 1) it buffers each file's 60-byte
+    /// <see cref="FdrScoreRecord"/>s in projection order -- with the
     /// <c>run_protein_qvalue</c> field held at its 1.0 placeholder -- and flushes the
     /// per-file <c>.1st-pass.fdr_scores.bin</c> via the caller's <c>flushPartial</c>
-    /// callback at the file's last row, so the four streamed q-values are never held
-    /// resident. Empty survivor files are flushed with a 0-record sidecar in
-    /// <see cref="OnFinish"/>. Protein FDR + compaction read <see cref="Outputs"/>; after
-    /// protein FDR the caller runs phase 2, patching each record's <c>[52..60]</c> from
-    /// the resident <c>RunProteinQ</c>. The byte layout is single-sourced through
-    /// <c>FdrScoresSidecar.WriteRecord</c>, so the phase-1 file is byte-identical to the
-    /// pre-S1 single-phase write except for the placeholder column the patch overwrites.
+    /// callback at the file's last row, so a full pass's worth of q-values is never held
+    /// resident (one file's buffer at a time). Empty survivor files are flushed with a
+    /// 0-record sidecar in <see cref="OnFinish"/>. First-pass protein FDR + compaction now
+    /// stream <c>run_peptide_qvalue</c> / <c>run_protein_qvalue</c> back off this sidecar
+    /// (see <c>FirstJoinTask.RunFirstPassProteinFdrStreaming</c>), so the resident
+    /// <c>FdrProjectionOutputs</c> array the pre-S2 sink kept is gone; protein FDR patches
+    /// each record's <c>[52..60]</c> straight onto the sidecar. The byte layout is
+    /// single-sourced through <c>FdrScoresSidecar.WriteRecord</c>, so the phase-1 file is
+    /// byte-identical to the pre-S1 single-phase write except for the placeholder column the
+    /// patch overwrites.
     /// </summary>
     internal sealed class FdrStoringSink : FdrProjectionSinkBase
     {
-        private readonly FdrProjectionOutputs _outputs;
         private readonly Func<string, IReadOnlyList<FdrScoreRecord>, int> _flushPartial;
         private readonly bool[] _flushed;
         private readonly List<FdrScoreRecord> _buffer;
@@ -191,13 +191,10 @@ namespace pwiz.Osprey.Tasks
             ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
             : base(projections, config, passLabel, mdiagAccumulator)
         {
-            _outputs = new FdrProjectionOutputs(projections);
             _flushPartial = flushPartial;
             _flushed = new bool[projections.PerFile.Count];
             _buffer = new List<FdrScoreRecord>();
         }
-
-        public FdrProjectionOutputs Outputs => _outputs;
 
         /// <summary>
         /// Number of per-file phase-1 partial-sidecar writes that failed during the score
@@ -210,16 +207,11 @@ namespace pwiz.Osprey.Tasks
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
             bool isDecoy, double score, in FdrQValues q)
         {
-            // Resident: keep ONLY the run peptide q-value (protein FDR + compaction need
-            // it across all rows); run protein q-value stays at its 1.0 placeholder until
-            // first-pass protein FDR fills it (issue #4355 struct-shrink S1).
-            _outputs.SetRunPeptideQvalue(fileIdx, rowIdx, q.RunPeptideQvalue);
-
             // Phase 1 of the two-phase sidecar: buffer this row's PARTIAL record
             // (run_protein_qvalue = 1.0 placeholder) in projection order and flush the
-            // per-file .1st-pass.fdr_scores.bin at the file's last row. The four streamed
-            // q-values (RunPrecursorQ, ExpPrecursorQ, ExpPeptideQ, Pep) go straight to
-            // disk here and are never kept resident; phase 2 patches [52..60] afterward.
+            // per-file .1st-pass.fdr_scores.bin at the file's last row. All five score-pass
+            // q-values (incl. run_peptide_qvalue) go straight to disk here and are never
+            // kept resident; first-pass protein FDR streams them back + patches [52..60].
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
                 q.RunPrecursorQvalue, q.RunPeptideQvalue,
