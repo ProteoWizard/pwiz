@@ -1142,6 +1142,39 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheRejectsPeaklessEntry()
+        {
+            // Peak-less (0-fragment) entries are a BiblioSpec MS1-feature-finding artifact and are
+            // not valid for DIA search: the cache reader must fail fast (PR #4434 review) rather than
+            // let one reach decoy generation (which would silently exclude it) or a lean OmitFragments
+            // load (which would retain a phantom and diverge the FirstPassFDR reconciliation bytes).
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(0),                                    // fragment-carrying: valid
+                new LibraryEntry(1, "BBB", "BBB", 2, 400.0, 20.0)    // no fragments: must be rejected
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_peakless_" + Guid.NewGuid().ToString("N") + ".libcache");
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "peakless-hash");
+
+                // Both the full and the lean (OmitFragments) cache reads must fail fast on the
+                // 0-fragment entry (the guard is upstream of the omit branch).
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    LibraryCache.LoadCache(tempPath, "peakless-hash", false, null, out _));
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    LibraryCache.LoadCache(tempPath, "peakless-hash", true, null, out _));
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheIdentityHash()
         {
             // The .libcache stamps the source library's identity hash into its
