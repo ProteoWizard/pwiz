@@ -1377,11 +1377,446 @@ namespace pwiz.Osprey.FDR
 
                     projRows[r] = projRows[r].WithScore(finalScores[g]);
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
-                        finalScores[g],
+                        projRows[r].Charge, pept, finalScores[g],
                         new FdrQValues(rp, rpe, ep, epe, pep));
                 }
                 wgi += count;
                 fileIdx++;
+            }
+        }
+
+        /// <summary>
+        /// One best-per-precursor winner captured while streaming identity in flat (file,row)
+        /// order (issue #4355 struct-shrink S3, Stage B): enough to reproduce
+        /// <see cref="SelectBestPerPrecursor"/>'s output AND build the training-subset
+        /// <see cref="PercolatorEntry"/> without a resident projection. <see cref="G"/> is the
+        /// row's global (file,row) ordinal -- sorting the captured winners by it ascending
+        /// reproduces <c>SelectBestPerPrecursor</c>'s <c>Array.Sort(globalIndex)</c> exactly.
+        /// </summary>
+        private readonly struct FirstPassDedupRow
+        {
+            public readonly int G;
+            public readonly string FileName;
+            public readonly uint EntryId;
+            public readonly byte Charge;
+            public readonly bool IsDecoy;
+            public readonly uint ParquetIndex;
+            public readonly double CoelutionSum;
+            public readonly string Peptide;
+
+            public FirstPassDedupRow(int g, string fileName, uint entryId, byte charge, bool isDecoy,
+                uint parquetIndex, double coelutionSum, string peptide)
+            {
+                G = g;
+                FileName = fileName;
+                EntryId = entryId;
+                Charge = charge;
+                IsDecoy = isDecoy;
+                ParquetIndex = parquetIndex;
+                CoelutionSum = coelutionSum;
+                Peptide = peptide;
+            }
+        }
+
+        /// <summary>
+        /// 1st-pass-ONLY streaming Percolator that holds NO resident row buffer at all (issue
+        /// #4355 struct-shrink S3, Stage B -- the FLAT-memory win): the memory-collapsing fork of
+        /// <see cref="PercolatorEngine.RunStreamingIntoProjection"/> +
+        /// <see cref="ScoreProjectionAndComputeFdrInPlace"/>. Where those hold the resident
+        /// <see cref="FdrProjection"/>[] + the flat <c>labels/entryIds/peptides/finalScores[n]</c>
+        /// arrays (O(pre-compaction rows), the 82->500 file blocker), this streams every row's
+        /// identity + features straight from parquet THREE times -- once to select the training
+        /// subset, once to score + build the bounded q-value maps + clamp floors, once to score +
+        /// emit -- recomputing the SVM score per row instead of parking an O(n) score array. Only
+        /// the SUBSET (&lt;= MaxTrainSize) and the intrinsically-bounded lookups (O(base_ids) /
+        /// O(peptides), via <see cref="StreamingFirstPassQ"/> + per-file run-q) are ever resident,
+        /// so the peak is FLAT in file count.
+        ///
+        /// Byte-identical to the resident projection path on the same rows in the same (file,row)
+        /// order (verified by <c>FdrTest.TestStreamingFirstPassMatchesProjection</c>): the
+        /// training-subset selection reproduces <see cref="SelectBestPerPrecursor"/> +
+        /// <see cref="BuildTrainingSubset"/> (strict-<c>&gt;</c> first-seen dedup ranked on
+        /// CoelutionSum, ascending-global-ordinal order, identical
+        /// <see cref="SubsampleByPeptideGroup"/>), the SVM training runs the SAME
+        /// <see cref="RunPercolator"/> on the SAME subset, and the score + q-value math reuses the
+        /// SAME primitives (<see cref="StreamingFirstPassQ"/>, <see cref="ComputePerFileRunQvalues"/>,
+        /// <see cref="UpdateExperimentQClampFloor"/>). This is 1st-pass-only: the 2nd pass keeps its
+        /// O(survivors) resident projection (Stage 7/8 needs it) via the unchanged
+        /// <see cref="ScoreProjectionAndComputeFdrInPlace"/>.
+        ///
+        /// The caller supplies the row source as delegates (kept free of an Osprey.IO dependency):
+        /// <paramref name="fileNames"/> in the join's file order; <paramref name="streamFileRows"/>
+        /// invokes its callback once per parquet row of a file in row order (== the resident sort's
+        /// order on the 1st pass, since the parquet is written (entry_id,charge,scan)-sorted);
+        /// <paramref name="loadFileFeatures"/> loads one file's feature vectors, indexed by the
+        /// running parquet row ordinal. Returns <c>true</c> on a diagnostic-only train abort.
+        /// </summary>
+        internal static bool RunStreamingFirstPass(
+            IReadOnlyList<string> fileNames,
+            Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            PercolatorConfig percConfig,
+            Action<string> logInfo,
+            string passLabel,
+            IFdrOutputSink sink,
+            Action<FeatureContributions> captureContributions = null)
+        {
+            if (streamFileRows == null)
+                throw new ArgumentNullException(nameof(streamFileRows));
+            if (loadFileFeatures == null)
+                throw new ArgumentNullException(nameof(loadFileFeatures));
+            if (sink == null)
+                throw new ArgumentNullException(nameof(sink));
+
+            int nFiles = fileNames.Count;
+            int nFeatures = percConfig.FeatureInfos.Length;
+            int maxTrain = percConfig.MaxTrainSize;
+            // One file's raw rows buffered at a time (bounded -- the same one-file resident set the
+            // per-file run-q already needs). The stream callback only appends to the buffer's lists
+            // (reference types, never reassigned), so the running row/global ordinals are advanced
+            // in the plain indexed loops below, not captured-and-mutated inside the closure.
+            var buffer = new RowBuffer();
+
+            // ---- Pass 0: stream identity, build the training subset, train the model ----
+            // Best-per-precursor dedup captured WITH identity, in flat (file,row) order. Strict
+            // '>' on CoelutionSum with first-seen (lowest g) winning ties -- exactly
+            // SelectBestPerPrecursor iterating ascending global index. bestScores == CoelutionSum
+            // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
+            var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
+            var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
+            int g = 0;
+            int nInputTargets = 0, nInputDecoys = 0;
+            for (int f = 0; f < nFiles; f++)
+            {
+                string file = fileNames[f];
+                buffer.Clear();
+                streamFileRows(file, buffer.Add);
+                int count = buffer.Count;
+                for (int r = 0; r < count; r++)
+                {
+                    uint entryId = buffer.EntryIds[r];
+                    bool isDecoy = buffer.IsDecoys[r];
+                    double coelutionSum = buffer.CoelutionSums[r];
+                    uint baseId = entryId & BASE_ID_MASK;
+                    var map = isDecoy ? bestDecoy : bestTarget;
+                    if (map.TryGetValue(baseId, out FirstPassDedupRow existing))
+                    {
+                        if (coelutionSum > existing.CoelutionSum)
+                            map[baseId] = new FirstPassDedupRow(
+                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                    }
+                    else
+                    {
+                        map[baseId] = new FirstPassDedupRow(
+                            g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                    }
+                    if (isDecoy) nInputDecoys++; else nInputTargets++;
+                    g++;
+                }
+            }
+            int n = g;
+            logInfo(string.Format(
+                @"[PATH] {0} first-pass streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
+            logInfo(string.Format(
+                "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
+                passLabel, n, nInputTargets, nInputDecoys, nFeatures));
+
+            // Dedup rows in ascending global ordinal == SelectBestPerPrecursor's Array.Sort of the
+            // winning global indices (each base_id's best is one unique row, so g never ties).
+            var dedup = new List<FirstPassDedupRow>(bestTarget.Count + bestDecoy.Count);
+            dedup.AddRange(bestTarget.Values);
+            dedup.AddRange(bestDecoy.Values);
+            dedup.Sort((a, b) => a.G.CompareTo(b.G)); // Array.Sort OK: G is the unique global row ordinal of each base_id's best row, so the comparator never ties -- reproduces SelectBestPerPrecursor's Array.Sort(result).
+            int m = dedup.Count;
+            int dedupTargets = 0;
+            foreach (var d in dedup)
+                if (!d.IsDecoy) dedupTargets++;
+            logInfo(string.Format(
+                "[COUNT] {0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
+                passLabel, m, dedupTargets, m - dedupTargets, n));
+
+            // Peptide-grouped subsample when the dedup count exceeds MaxTrainSize (mirrors
+            // BuildTrainingSubset: SelectBestPerPrecursor already ran above via the streaming dedup,
+            // so only the SubsampleByPeptideGroup step remains). localSelected indexes `dedup`.
+            int[] localSelected;
+            if (maxTrain <= 0 || m <= maxTrain)
+            {
+                localSelected = new int[m];
+                for (int i = 0; i < m; i++)
+                    localSelected[i] = i;
+            }
+            else
+            {
+                var dedupLabels = new bool[m];
+                var dedupEntryIds = new uint[m];
+                var dedupPeptides = new string[m];
+                for (int i = 0; i < m; i++)
+                {
+                    dedupLabels[i] = dedup[i].IsDecoy;
+                    dedupEntryIds[i] = dedup[i].EntryId;
+                    dedupPeptides[i] = dedup[i].Peptide;
+                }
+                localSelected = SubsampleByPeptideGroup(
+                    dedupLabels, dedupEntryIds, dedupPeptides, maxTrain, percConfig.Seed);
+            }
+
+            int subTargets = 0;
+            var subsetEntries = new List<PercolatorEntry>(localSelected.Length);
+            foreach (int li in localSelected)
+            {
+                var d = dedup[li];
+                if (!d.IsDecoy) subTargets++;
+                subsetEntries.Add(new PercolatorEntry
+                {
+                    FileName = d.FileName,
+                    Peptide = d.Peptide,
+                    Charge = d.Charge,
+                    IsDecoy = d.IsDecoy,
+                    EntryId = d.EntryId,
+                    ParquetIndex = d.ParquetIndex,
+                    CoelutionSum = d.CoelutionSum,
+                    Features = null
+                });
+            }
+            logInfo(string.Format(
+                "[COUNT] {0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
+                passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets));
+
+            // Load ONLY the subset's feature vectors, one file at a time (bounded by MaxTrainSize),
+            // cloning each row so the subset entry owns it -- mirrors RunStreamingIntoProjection.
+            var subsetByFile = GroupIndicesByFileName(subsetEntries);
+            foreach (var kvp in subsetByFile)
+            {
+                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                foreach (int k in kvp.Value)
+                {
+                    var entry = subsetEntries[k];
+                    entry.Features = (double[])ResolveFeatureRow(
+                        rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                }
+            }
+
+            var trainConfig = new PercolatorConfig
+            {
+                TrainFdr = percConfig.TrainFdr,
+                TestFdr = percConfig.TestFdr,
+                MaxIterations = percConfig.MaxIterations,
+                NFolds = percConfig.NFolds,
+                Seed = percConfig.Seed,
+                CValues = percConfig.CValues,
+                MaxTrainSize = percConfig.MaxTrainSize,
+                FeatureInfos = percConfig.FeatureInfos,
+                TrainOnly = true,
+                Diagnostics = percConfig.Diagnostics
+            };
+            PercolatorResults trainResults = RunPercolator(subsetEntries, trainConfig);
+            if (trainResults.DiagnosticAbort)
+                return true;
+
+            // Release the pass-0 working sets before the score passes so only the bounded lookups
+            // remain resident across the peak.
+            bestTarget = null;
+            bestDecoy = null;
+            dedup = null;
+            localSelected = null;
+            subsetEntries = null;
+            subsetByFile = null;
+
+            // Average fold weights + biases (identical to ScoreProjectionAndComputeFdrInPlace).
+            int nModels = trainResults.FoldWeights.Count;
+            if (nModels == 0)
+                throw new InvalidOperationException(
+                    @"RunStreamingFirstPass: trainResults contains no fold models");
+            var avgWeights = new double[nFeatures];
+            double avgBias = 0.0;
+            for (int fm = 0; fm < nModels; fm++)
+            {
+                double[] foldW = trainResults.FoldWeights[fm];
+                for (int j = 0; j < nFeatures; j++)
+                    avgWeights[j] += foldW[j];
+                avgBias += trainResults.FoldBiases[fm];
+            }
+            double nModelsD = nModels;
+            for (int j = 0; j < nFeatures; j++)
+                avgWeights[j] /= nModelsD;
+            avgBias /= nModelsD;
+            var standardizer = trainResults.Standardizer;
+            var featureBuf = new double[nFeatures];
+
+            // ---- Pass 1: score + build the 3 bounded q maps + reduce the clamp floors ----
+            // Reuses the verified StreamingFirstPassQ kernel; per-file run-q from a bounded one-file
+            // buffer, reduced into the best-of-runs clamp floors (issue #4390). The score is
+            // recomputed per row (bias first, then the averaged-weight dot product in feature order)
+            // -- byte-for-byte the resident score loop, only without the O(n) finalScores array.
+            var streamingQ = new StreamingFirstPassQ();
+            var minRunBothByEntryId = new Dictionary<uint, double>();
+            var minRunBothByPeptide = new Dictionary<(string, bool), double>();
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
+            int nonEmptyFiles = 0;
+            int g1 = 0;
+            logInfo(string.Format(@"Running {0} Percolator on {1} entries...", passLabel, n));
+            for (int f = 0; f < nFiles; f++)
+            {
+                IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
+                buffer.Clear();
+                streamFileRows(fileNames[f], buffer.Add);
+                int count = buffer.Count;
+                if (count > 0)
+                    nonEmptyFiles++;
+                var fScores = new double[count];
+                var fLabels = new bool[count];
+                var fEntryIds = new uint[count];
+                var fPeptides = new string[count];
+                for (int r = 0; r < count; r++)
+                {
+                    // ComputeStreamedScore leaves featureBuf standardized, which contribAcc bins.
+                    double score = ComputeStreamedScore(
+                        avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
+                    bool isDecoy = buffer.IsDecoys[r];
+                    fScores[r] = score;
+                    fLabels[r] = isDecoy;
+                    fEntryIds[r] = buffer.EntryIds[r];
+                    fPeptides[r] = buffer.Peptides[r];
+                    streamingQ.Add(g1, score, buffer.EntryIds[r], isDecoy, buffer.Peptides[r]);
+                    contribAcc.Add(featureBuf, isDecoy);
+                    g1++;
+                }
+                ComputePerFileRunQvalues(
+                    fScores, fLabels, fEntryIds, fPeptides, 0, count,
+                    out double[] runPrecFile, out double[] runPeptFile);
+                for (int r = 0; r < count; r++)
+                {
+                    double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
+                    UpdateExperimentQClampFloor(
+                        minRunBothByEntryId, minRunBothByPeptide, fEntryIds[r], fPeptides[r], fLabels[r], runBoth);
+                }
+            }
+
+            var contributions = contribAcc.Build(trainResults.FoldWeights, percConfig.FeatureInfos);
+            EmitFeatureContributions(contributions);
+            captureContributions?.Invoke(contributions);
+
+            // Finalize the bounded lookups. PEP is global (built always); the experiment maps use
+            // the single-file shortcut (exp == per-run) so they are built only when multi-file --
+            // matching ScoreProjectionAndComputeFdrInPlace exactly.
+            var pepByWinnerIdx = streamingQ.BuildPepWinnerMap();
+            bool isSingleFile = nonEmptyFiles <= 1;
+            Dictionary<uint, double> expPrecByBaseId = isSingleFile
+                ? null : streamingQ.BuildExperimentPrecursorQMap();
+            Dictionary<string, double> expPeptByPeptide = isSingleFile
+                ? null : streamingQ.BuildExperimentPeptideQMap();
+
+            // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
+            int gEmit = 0;
+            for (int f = 0; f < nFiles; f++)
+            {
+                IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
+                buffer.Clear();
+                streamFileRows(fileNames[f], buffer.Add);
+                int count = buffer.Count;
+                var fScores = new double[count];
+                var fLabels = new bool[count];
+                var fEntryIds = new uint[count];
+                var fPeptides = new string[count];
+                var fCharges = new byte[count];
+                for (int r = 0; r < count; r++)
+                {
+                    fScores[r] = ComputeStreamedScore(
+                        avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
+                    fLabels[r] = buffer.IsDecoys[r];
+                    fEntryIds[r] = buffer.EntryIds[r];
+                    fPeptides[r] = buffer.Peptides[r];
+                    fCharges[r] = buffer.Charges[r];
+                }
+                ComputePerFileRunQvalues(
+                    fScores, fLabels, fEntryIds, fPeptides, 0, count,
+                    out double[] runPrecFile, out double[] runPeptFile);
+                for (int r = 0; r < count; r++)
+                {
+                    double rp = runPrecFile[r];
+                    double rpe = runPeptFile[r];
+
+                    double ep = isSingleFile
+                        ? rp
+                        : (expPrecByBaseId.TryGetValue(fEntryIds[r] & BASE_ID_MASK, out double epv) ? epv : 1.0);
+                    if (minRunBothByEntryId.TryGetValue(fEntryIds[r], out double floorPrec) && floorPrec > ep)
+                        ep = floorPrec;
+
+                    string pept = fPeptides[r];
+                    double epe = isSingleFile
+                        ? rpe
+                        : (expPeptByPeptide.TryGetValue(pept, out double epev) ? epev : 1.0);
+                    if (!string.IsNullOrEmpty(pept) &&
+                        minRunBothByPeptide.TryGetValue((pept, fLabels[r]), out double floorPept) && floorPept > epe)
+                        epe = floorPept;
+
+                    double pep = pepByWinnerIdx.TryGetValue(gEmit + r, out double pv) ? pv : 1.0;
+
+                    sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r],
+                        new FdrQValues(rp, rpe, ep, epe, pep));
+                }
+                gEmit += count;
+            }
+            sink.Finish(logInfo);
+            return false;
+        }
+
+        /// <summary>
+        /// Recompute one row's SVM discriminant from its streamed features (issue #4355
+        /// struct-shrink S3, Stage B): resolve the parquet feature row by its running ordinal,
+        /// standardize it in <paramref name="featureBuf"/>, then the averaged-model score = bias
+        /// first + the weight dot product in feature order -- byte-for-byte the resident score
+        /// loop's per-entry math (<see cref="ScoreProjectionAndComputeFdrInPlace"/>). Leaves the
+        /// standardized values in <paramref name="featureBuf"/> so the caller can bin them into
+        /// the feature-contribution accumulator without recomputing.
+        /// </summary>
+        private static double ComputeStreamedScore(
+            double[] avgWeights, double avgBias, FeatureStandardizer standardizer, double[] featureBuf,
+            IReadOnlyList<double[]> rows, int parquetIndex, double coelutionSum, int nFeatures)
+        {
+            double[] featRow = ResolveFeatureRow(rows, (uint)parquetIndex, coelutionSum, nFeatures);
+            Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+            standardizer.TransformSlice(featureBuf);
+            double score = avgBias;
+            for (int j = 0; j < nFeatures; j++)
+                score += avgWeights[j] * featureBuf[j];
+            return score;
+        }
+
+        /// <summary>
+        /// One file's raw parquet stub rows, buffered by the 1st-pass streaming score path
+        /// (<see cref="RunStreamingFirstPass"/>) so the stream callback only appends to
+        /// reference-type lists (never a captured-and-mutated counter) and the row/global ordinals
+        /// advance in plain indexed loops. Bounded to one file at a time -- the same one-file
+        /// resident set the per-file run-q competition already requires. The five parallel lists
+        /// mirror the <see cref="FdrProjection"/> scalar slice the resident path holds.
+        /// </summary>
+        private sealed class RowBuffer
+        {
+            public readonly List<uint> EntryIds = new List<uint>();
+            public readonly List<byte> Charges = new List<byte>();
+            public readonly List<bool> IsDecoys = new List<bool>();
+            public readonly List<double> CoelutionSums = new List<double>();
+            public readonly List<string> Peptides = new List<string>();
+
+            public int Count => EntryIds.Count;
+
+            public void Clear()
+            {
+                EntryIds.Clear();
+                Charges.Clear();
+                IsDecoys.Clear();
+                CoelutionSums.Clear();
+                Peptides.Clear();
+            }
+
+            public void Add(uint entryId, byte charge, bool isDecoy, double coelutionSum, string peptide)
+            {
+                EntryIds.Add(entryId);
+                Charges.Add(charge);
+                IsDecoys.Add(isDecoy);
+                CoelutionSums.Add(coelutionSum);
+                Peptides.Add(peptide);
             }
         }
 

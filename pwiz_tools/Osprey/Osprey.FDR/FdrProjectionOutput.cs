@@ -116,15 +116,19 @@ namespace pwiz.Osprey.FDR
     public interface IFdrOutputSink
     {
         /// <summary>
-        /// Accept one scored projection row. <paramref name="fileIdx"/> /
-        /// <paramref name="rowIdx"/> locate the lean struct row within its per-file
-        /// list; <paramref name="entryId"/> / <paramref name="isDecoy"/> identify it;
-        /// <paramref name="score"/> + <paramref name="q"/> are the freshly computed
-        /// outputs. Called once per row, in nested (file, row) order == the flat
-        /// score-pass index order.
+        /// Accept one scored row. <paramref name="fileIdx"/> / <paramref name="rowIdx"/>
+        /// locate the row within its per-file list; <paramref name="entryId"/> /
+        /// <paramref name="isDecoy"/> / <paramref name="charge"/> / <paramref name="peptide"/>
+        /// identify it; <paramref name="score"/> + <paramref name="q"/> are the freshly
+        /// computed outputs. Called once per row, in nested (file, row) order == the flat
+        /// score-pass index order. <paramref name="charge"/> / <paramref name="peptide"/> are
+        /// passed in (not read off a resident row) so the sink's [COUNT] tally + streaming
+        /// --model-diagnostics accumulator work whether the caller holds a resident projection
+        /// (2nd pass) or streams the rows straight from parquet with no resident buffer at all
+        /// (1st-pass streaming, issue #4355 struct-shrink S3 Stage B).
         /// </summary>
         void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
-            double score, in FdrQValues q);
+            byte charge, string peptide, double score, in FdrQValues q);
 
         /// <summary>
         /// Finalize the pass: emit the tail <c>[COUNT]</c> lines (per-file pass counts,

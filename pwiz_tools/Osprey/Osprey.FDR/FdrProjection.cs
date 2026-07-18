@@ -163,11 +163,64 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public string[] PeptideById { get; }
 
+        /// <summary>
+        /// Per-file row counts when this set is COUNTS-ONLY (issue #4355 struct-shrink S3,
+        /// Stage B): the 1st-pass streaming score path holds no resident <see cref="FdrProjection"/>
+        /// rows at all -- it streams identity + features straight from parquet -- so the set
+        /// carries only the ordered file names + each file's row count. <c>null</c> on the
+        /// normal / 2nd-pass resident set, where the count is <c>PerFile[f].Value.Count</c>.
+        /// </summary>
+        private readonly int[] _leanRowCounts;
+
         public FdrProjectionSet(
             List<KeyValuePair<string, List<FdrProjection>>> perFile, string[] peptideById)
+            : this(perFile, peptideById, null)
+        {
+        }
+
+        private FdrProjectionSet(
+            List<KeyValuePair<string, List<FdrProjection>>> perFile, string[] peptideById,
+            int[] leanRowCounts)
         {
             PerFile = perFile;
             PeptideById = peptideById;
+            _leanRowCounts = leanRowCounts;
+        }
+
+        /// <summary>
+        /// A COUNTS-ONLY set: the ordered file names + each file's parquet row count, with NO
+        /// resident <see cref="FdrProjection"/> rows and an empty <see cref="PeptideById"/>
+        /// (issue #4355 struct-shrink S3, Stage B). Used by the 1st-pass streaming score path,
+        /// which streams every row (identity + features) straight from parquet, so the O(rows)
+        /// projection buffer is never allocated. Downstream first-pass protein FDR / compaction /
+        /// survivor reload read only the file names (Stage A already moved them off the rows), and
+        /// the score-pass sink reads per-file counts via <see cref="RowCount"/>.
+        /// </summary>
+        public static FdrProjectionSet CountsOnly(IReadOnlyList<string> fileNames, IReadOnlyList<int> rowCounts)
+        {
+            if (fileNames == null) throw new ArgumentNullException(nameof(fileNames));
+            if (rowCounts == null) throw new ArgumentNullException(nameof(rowCounts));
+            if (fileNames.Count != rowCounts.Count)
+                throw new ArgumentException(@"fileNames and rowCounts must be the same length");
+            var perFile = new List<KeyValuePair<string, List<FdrProjection>>>(fileNames.Count);
+            var counts = new int[fileNames.Count];
+            for (int f = 0; f < fileNames.Count; f++)
+            {
+                perFile.Add(new KeyValuePair<string, List<FdrProjection>>(
+                    fileNames[f], new List<FdrProjection>()));
+                counts[f] = rowCounts[f];
+            }
+            return new FdrProjectionSet(perFile, Array.Empty<string>(), counts);
+        }
+
+        /// <summary>
+        /// Row count for a file: the resident row-list count on a normal / 2nd-pass set, or the
+        /// stored per-file count on a <see cref="CountsOnly"/> set (whose row lists are empty).
+        /// The score-pass sink keys its per-file sidecar flush on this, so both shapes work.
+        /// </summary>
+        public int RowCount(int fileIdx)
+        {
+            return _leanRowCounts != null ? _leanRowCounts[fileIdx] : PerFile[fileIdx].Value.Count;
         }
 
         /// <summary>Total projection rows across all files.</summary>
@@ -176,6 +229,12 @@ namespace pwiz.Osprey.FDR
             get
             {
                 int n = 0;
+                if (_leanRowCounts != null)
+                {
+                    foreach (int c in _leanRowCounts)
+                        n += c;
+                    return n;
+                }
                 foreach (var kvp in PerFile)
                     n += kvp.Value.Count;
                 return n;

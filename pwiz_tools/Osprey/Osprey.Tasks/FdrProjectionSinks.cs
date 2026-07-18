@@ -85,11 +85,13 @@ namespace pwiz.Osprey.Tasks
         public IReadOnlyList<int> FilePassingTargets => _fileTargets;
 
         public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
-            double score, in FdrQValues q)
+            byte charge, string peptide, double score, in FdrQValues q)
         {
             // Tail [COUNT] tally, identical to the retired inline block: passing =
             // EffectiveRunQvalue <= RunFdr, split target/decoy; best-q-per-precursor
-            // over passing targets keyed by modseq|charge (looked up from the lean row).
+            // over passing targets keyed by modseq|charge. peptide + charge are passed in
+            // (issue #4355 struct-shrink S3 Stage B) so this works whether the caller holds
+            // a resident projection (2nd pass) or streams the row straight from parquet.
             double eff = q.EffectiveRunQvalue(_fdrLevel);
             if (eff <= _runFdr)
             {
@@ -100,8 +102,7 @@ namespace pwiz.Osprey.Tasks
             }
             if (!isDecoy && eff <= _runFdr)
             {
-                var proj = Projections.PerFile[fileIdx].Value[rowIdx];
-                string pkey = Projections.PeptideById[proj.PeptideId] + "|" + proj.Charge;
+                string pkey = peptide + "|" + charge;
                 double existing;
                 if (!_bestQByPrecursor.TryGetValue(pkey, out existing) || eff < existing)
                     _bestQByPrecursor[pkey] = eff;
@@ -111,11 +112,7 @@ namespace pwiz.Osprey.Tasks
             // reductions (every row -- targets, decoys, entrapment, failing -- not just the
             // passing set the [COUNT] tally reads). Null off the report path.
             if (_mdiagAccumulator != null)
-            {
-                var mproj = Projections.PerFile[fileIdx].Value[rowIdx];
-                _mdiagAccumulator.Add(fileIdx, Projections.PeptideById[mproj.PeptideId],
-                    mproj.Charge, entryId, isDecoy, score, in q);
-            }
+                _mdiagAccumulator.Add(fileIdx, peptide, charge, entryId, isDecoy, score, in q);
 
             AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, in q);
         }
@@ -218,7 +215,10 @@ namespace pwiz.Osprey.Tasks
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
                 q.Pep, 1.0));
 
-            if (rowIdx == Projections.PerFile[fileIdx].Value.Count - 1)
+            // RowCount, not PerFile[fileIdx].Value.Count: on the 1st-pass streaming path the
+            // projection carries per-file counts but NO resident rows (issue #4355 struct-shrink
+            // S3 Stage B), so the last-row flush must key on the count, not an empty row list.
+            if (rowIdx == Projections.RowCount(fileIdx) - 1)
             {
                 _partialWriteFailures += _flushPartial(Projections.PerFile[fileIdx].Key, _buffer);
                 _flushed[fileIdx] = true;
@@ -299,8 +299,10 @@ namespace pwiz.Osprey.Tasks
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
                 q.Pep, runProteinQvalue));
 
-            // Last row of this file: flush its sidecar and release the buffer.
-            if (rowIdx == Projections.PerFile[fileIdx].Value.Count - 1)
+            // Last row of this file: flush its sidecar and release the buffer. RowCount
+            // (not the row list) so the 2nd-pass resident projection and the 1st-pass
+            // streaming counts-only projection both resolve the file's row count.
+            if (rowIdx == Projections.RowCount(fileIdx) - 1)
             {
                 _flushFile(Projections.PerFile[fileIdx].Key, _buffer);
                 _flushed[fileIdx] = true;
