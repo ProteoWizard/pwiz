@@ -1207,7 +1207,13 @@ namespace pwiz.Osprey.Tasks
                         throw new InvalidDataException(string.Format(
                             @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
                             parquetPath));
-                    builder.BeginFile(fileName);
+                    // Pre-size the per-file projection list to the parquet row count (footer
+                    // NumRows, no column data) so the 32 B rows fill one right-sized backing
+                    // array instead of the List's doubling growth -- byte-neutral, ~5.4 GB less
+                    // resident at 82 files (issue #4355 Part B; the pre-size was measured on the
+                    // memory branch). A 0/missing count just falls back to an un-hinted list.
+                    long rowCountHint = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath).RowCount;
+                    builder.BeginFile(fileName, checked((int)rowCountHint));
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                         (entryId, charge, isDecoy, coelutionSum, modseq) =>
                             builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
