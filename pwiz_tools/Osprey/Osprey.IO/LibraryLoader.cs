@@ -48,6 +48,28 @@ namespace pwiz.Osprey.IO
         public static List<LibraryEntry> Load(OspreyConfig config,
             Action<string> logInfo, Action<string> logWarning)
         {
+            return Load(config, LibraryLoadOptions.Default, logInfo, logWarning);
+        }
+
+        /// <summary>
+        /// Load spectral library from the configured source, using binary cache
+        /// when available. Matches Rust's .libcache mechanism for fast reload.
+        ///
+        /// With <see cref="LibraryLoadOptions.OmitFragments"/>, the returned
+        /// entries carry their six identity scalars but no fragment peaks -- the
+        /// dead weight for a FirstPassFDR / <c>StopAfterStage5</c> worker. The
+        /// cache-read path skips retaining the fragment blocks; the source-parse
+        /// path loads fragments in full (the min-fragment filter and
+        /// <see cref="LibraryDeduplicator"/> both need the counts), writes the
+        /// shared .libcache in full, then drops the retained arrays. So the
+        /// returned library is lean exactly when <see cref="LibraryLoadOptions.OmitFragments"/>
+        /// is set, and the on-disk cache is unaffected.
+        /// </summary>
+        public static List<LibraryEntry> Load(OspreyConfig config, LibraryLoadOptions options,
+            Action<string> logInfo, Action<string> logWarning)
+        {
+            // A null carrier means "no special handling" (a full load).
+            options = options ?? LibraryLoadOptions.Default;
             // Default the injected log callbacks to no-ops so a null delegate
             // cannot NRE this public API (matches PipelineContext's pattern).
             logInfo = logInfo ?? (_ => { });
@@ -82,7 +104,10 @@ namespace pwiz.Osprey.IO
                     LibraryCache.LibraryCacheStatus status;
                     // The cache reader interns the repeated strings as it builds
                     // each entry's arrays and logs a one-line collapse summary.
-                    var cached = LibraryCache.LoadCache(cachePath, libraryHash, logInfo, out status);
+                    // OmitFragments has it read-and-discard the fragment blocks so
+                    // the returned entries stay lean (no ~3.2 GB of peak arrays).
+                    var cached = LibraryCache.LoadCache(
+                        cachePath, libraryHash, options.OmitFragments, logInfo, out status);
                     if (cached != null && cached.Count > 0)
                     {
                         logInfo(string.Format(
@@ -134,6 +159,18 @@ namespace pwiz.Osprey.IO
 
             logInfo(string.Format("Loaded {0} library entries", entries.Count));
 
+            // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact and are
+            // not valid for DIA search; fail fast at load (issue #4355 / PR #4434 review), before the
+            // cache save, so a bad entry never reaches the cache, decoy generation (which would
+            // silently exclude it), or a lean OmitFragments load (which would retain a phantom and
+            // diverge the FirstPassFDR reconciliation bytes).
+            foreach (var entry in entries)
+                if (entry.Fragments.Count == 0)
+                    throw new InvalidDataException(string.Format(
+                        "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
+                        "BiblioSpec MS1 feature finding and are not valid for DIA search.",
+                        entry.Id, entry.ModifiedSequence));
+
             // Save binary cache for next run
             try
             {
@@ -146,6 +183,19 @@ namespace pwiz.Osprey.IO
             catch (Exception ex)
             {
                 logWarning(string.Format("Failed to save library cache: {0}", ex.Message));
+            }
+
+            // Drop the retained fragment arrays now that every fragment-count
+            // dependency is satisfied (the min-fragment filter in the loaders,
+            // LibraryDeduplicator's fragment-count tie-break, and the full cache
+            // save above). The six identity scalars are untouched, so a
+            // StopAfterStage5 worker gets the resident-memory win with output
+            // unchanged. Done here rather than in each loader so the source-parse
+            // path returns a library as lean as the cache-read path.
+            if (options.OmitFragments)
+            {
+                foreach (var entry in entries)
+                    entry.Fragments = Array.Empty<LibraryFragment>();
             }
 
             return entries;
