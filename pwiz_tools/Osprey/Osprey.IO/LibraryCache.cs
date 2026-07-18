@@ -187,6 +187,23 @@ namespace pwiz.Osprey.IO
         public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
             Action<string> logInfo, out LibraryCacheStatus status)
         {
+            return LoadCache(path, expectedLibraryHash, false, logInfo, out status);
+        }
+
+        /// <summary>
+        /// Overload that can leave each entry's fragment peaks unretained. With
+        /// <paramref name="omitFragments"/> the fragment blocks are still read
+        /// (to advance the stream past them) but discarded, so the returned
+        /// entries keep their six identity scalars and an empty
+        /// <see cref="LibraryEntry.Fragments"/>. Used by a FirstPassFDR /
+        /// <c>StopAfterStage5</c> worker, whose FDR stages read only the scalars,
+        /// to skip retaining the ~3.2 GB (SEA-AD scale) of fragment arrays. The
+        /// scalars, modifications, protein IDs and gene names are unchanged, so
+        /// the six values every downstream stage reads are byte-identical.
+        /// </summary>
+        public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
+            bool omitFragments, Action<string> logInfo, out LibraryCacheStatus status)
+        {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(stream))
             {
@@ -260,33 +277,52 @@ namespace pwiz.Osprey.IO
                         };
                     }
 
-                    // Fragments
+                    // Fragments. When omitting, still read each fragment's bytes
+                    // (to advance the stream to the protein-ID block that follows)
+                    // but discard them, leaving a shared empty array.
                     uint nFrags = r.ReadUInt32();
-                    var fragments = nFrags == 0
-                        ? Array.Empty<LibraryFragment>()
-                        : new LibraryFragment[nFrags];
-                    for (uint fi = 0; fi < nFrags; fi++)
+                    // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact,
+                    // not valid for DIA search; fail fast rather than let one reach decoy generation
+                    // or a lean OmitFragments load (issue #4355 / PR #4434 review). A stale cache
+                    // built before this guard rebuilds from source, which fails fast there too.
+                    if (nFrags == 0)
+                        throw new InvalidDataException(string.Format(
+                            "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
+                            "BiblioSpec MS1 feature finding and are not valid for DIA search.",
+                            id, modifiedSequence));
+                    LibraryFragment[] fragments;
+                    if (omitFragments)
                     {
-                        double mz = r.ReadDouble();
-                        float relativeIntensity = r.ReadSingle();
-                        IonType ionType = ByteToIonType(r.ReadByte());
-                        byte ordinal = r.ReadByte();
-                        byte fragCharge = r.ReadByte();
-                        var (lossCode, lossMass) = ReadNeutralLoss(r);
-
-                        fragments[fi] = new LibraryFragment
+                        fragments = Array.Empty<LibraryFragment>();
+                        for (uint fi = 0; fi < nFrags; fi++)
+                            SkipFragment(r);
+                    }
+                    else
+                    {
+                        fragments = new LibraryFragment[nFrags];   // nFrags > 0: 0-fragment entries fail fast above
+                        for (uint fi = 0; fi < nFrags; fi++)
                         {
-                            Mz = mz,
-                            RelativeIntensity = relativeIntensity,
-                            Annotation = new FragmentAnnotation
+                            double mz = r.ReadDouble();
+                            float relativeIntensity = r.ReadSingle();
+                            IonType ionType = ByteToIonType(r.ReadByte());
+                            byte ordinal = r.ReadByte();
+                            byte fragCharge = r.ReadByte();
+                            var (lossCode, lossMass) = ReadNeutralLoss(r);
+
+                            fragments[fi] = new LibraryFragment
                             {
-                                IonType = ionType,
-                                Ordinal = ordinal,
-                                Charge = fragCharge,
-                                NeutralLoss = lossCode,
-                                CustomLossMass = lossMass
-                            }
-                        };
+                                Mz = mz,
+                                RelativeIntensity = relativeIntensity,
+                                Annotation = new FragmentAnnotation
+                                {
+                                    IonType = ionType,
+                                    Ordinal = ordinal,
+                                    Charge = fragCharge,
+                                    NeutralLoss = lossCode,
+                                    CustomLossMass = lossMass
+                                }
+                            };
+                        }
                     }
 
                     // Protein IDs / gene names (share one empty array when none).
@@ -429,6 +465,22 @@ namespace pwiz.Osprey.IO
                     throw new InvalidDataException(string.Format(
                         "Unknown neutral loss tag: {0}", tag));
             }
+        }
+
+        /// <summary>
+        /// Read past one fragment record without materializing it, advancing the
+        /// reader exactly as the full fragment read would. Must stay in lockstep
+        /// with the fragment write in <see cref="SaveCache"/> / the full read in
+        /// <see cref="LoadCache(string,string,bool,Action{string},out LibraryCacheStatus)"/>.
+        /// </summary>
+        private static void SkipFragment(BinaryReader r)
+        {
+            r.ReadDouble();     // Mz
+            r.ReadSingle();     // RelativeIntensity
+            r.ReadByte();       // IonType
+            r.ReadByte();       // Ordinal
+            r.ReadByte();       // Charge
+            ReadNeutralLoss(r); // NeutralLoss tag (+ optional custom mass)
         }
 
         private static bool BytesEqual(byte[] a, byte[] b)

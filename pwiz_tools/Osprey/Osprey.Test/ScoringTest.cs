@@ -939,6 +939,100 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// A StopAfterStage5 worker loads the library lean (fragment peaks
+        /// dropped), so decoy generation runs in omit mode. It must produce the
+        /// SAME set of valid targets and decoys, with byte-identical six identity
+        /// scalars (Id, ModifiedSequence, Charge, PrecursorMz, IsDecoy,
+        /// ProteinIds), as a full-fragment run -- differing only in that the decoy
+        /// fragment lists are empty. This guards the byte-identity of the
+        /// FirstPassFDR target+decoy set, whose members the FDR stages look up by
+        /// the six scalars alone.
+        /// </summary>
+        [TestMethod]
+        public void TestDecoyGenerationOmitFragments()
+        {
+            var config = new OspreyConfig(); // DecoyMethod defaults to Reverse
+
+            var full = MakeDecoyTestTargets();
+            // Simulate the lean load: same entries, but no retained fragments.
+            var lean = MakeDecoyTestTargets();
+            foreach (var t in lean)
+                t.Fragments = Array.Empty<LibraryFragment>();
+
+            var fullDecoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                full, config, null, false, out var fullValid);
+            var leanDecoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                lean, config, null, true, out var leanValid);
+
+            // Valid-target membership is sequence / collision driven, never
+            // fragment-content driven, so the two runs keep the same targets.
+            Assert.AreEqual(fullValid.Count, leanValid.Count);
+            for (int i = 0; i < fullValid.Count; i++)
+                Assert.AreEqual(fullValid[i].Id, leanValid[i].Id);
+
+            // Same decoys, six identity scalars byte-identical...
+            Assert.IsTrue(fullDecoys.Count > 0, "Expected at least one decoy");
+            Assert.AreEqual(fullDecoys.Count, leanDecoys.Count);
+            for (int i = 0; i < fullDecoys.Count; i++)
+            {
+                var fd = fullDecoys[i];
+                var ld = leanDecoys[i];
+                Assert.AreEqual(fd.Id, ld.Id);
+                Assert.AreEqual(fd.ModifiedSequence, ld.ModifiedSequence);
+                Assert.AreEqual(fd.Charge, ld.Charge);
+                Assert.AreEqual(fd.PrecursorMz, ld.PrecursorMz, 1e-10);
+                Assert.AreEqual(fd.IsDecoy, ld.IsDecoy);
+                CollectionAssert.AreEqual(fd.ProteinIds.ToArray(), ld.ProteinIds.ToArray());
+
+                // ...but the lean decoy carries no fragments (dead weight for FDR),
+                // while the full-mode decoy still recalculates them.
+                Assert.IsTrue(fd.Fragments.Count > 0, "Full-mode decoy should keep fragments");
+                Assert.AreEqual(0, ld.Fragments.Count, "Lean-mode decoy fragments must be empty");
+            }
+        }
+
+        /// <summary>
+        /// Two trypsin (C-terminal K) targets whose reversals collide with
+        /// neither each other nor the originals, so both yield reversed decoys.
+        /// </summary>
+        private static List<LibraryEntry> MakeDecoyTestTargets()
+        {
+            var t1 = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 471.2567, 25.3);
+            t1.ProteinIds = new[] { "P11111" };
+            t1.Fragments = new[]
+            {
+                new LibraryFragment
+                {
+                    Mz = 147.11, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 1, Charge = 1 }
+                },
+                new LibraryFragment
+                {
+                    Mz = 262.14, RelativeIntensity = 0.5f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 2, Charge = 1 }
+                }
+            };
+
+            var t2 = new LibraryEntry(2, "SAMPLERK", "SAMPLERK", 3, 402.55, 30.1);
+            t2.ProteinIds = new[] { "Q22222" };
+            t2.Fragments = new[]
+            {
+                new LibraryFragment
+                {
+                    Mz = 175.12, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 1, Charge = 1 }
+                },
+                new LibraryFragment
+                {
+                    Mz = 288.20, RelativeIntensity = 0.4f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 2, Charge = 1 }
+                }
+            };
+
+            return new List<LibraryEntry> { t1, t2 };
+        }
+
+        /// <summary>
         /// Session 9 fix: scan boundary must use strict less-than for the
         /// upper bound break to prevent off-by-one. When the last spectrum
         /// RT equals exactly expectedRt + tolerance, it must be included.

@@ -1072,6 +1072,109 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheOmitFragments()
+        {
+            // A FirstPassFDR / StopAfterStage5 worker loads the library lean: the
+            // six identity scalars per entry are kept, but the fragment peaks
+            // (~3.2 GB at SEA-AD scale) are read past and discarded. The skip must
+            // land the reader on the same following bytes as a full read, so the
+            // scalars, sequence, RT, modifications, protein IDs and gene names all
+            // stay byte-identical -- only Fragments is emptied. MakeTestEntry's
+            // custom-neutral-loss fragment exercises the variable-length skip.
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(0),
+                MakeTestEntry(1)
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_omit_" + Guid.NewGuid().ToString("N") + ".libcache");
+
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "omit-hash");
+
+                // Control: a normal (full) load still carries every fragment.
+                var full = LibraryCache.LoadCache(tempPath, "omit-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus fullStatus);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, fullStatus);
+                Assert.IsNotNull(full);
+                Assert.AreEqual(3, full[0].Fragments.Count);
+
+                // Lean: same entry count, every non-fragment member preserved,
+                // Fragments emptied.
+                var lean = LibraryCache.LoadCache(tempPath, "omit-hash", true, null,
+                    out LibraryCache.LibraryCacheStatus leanStatus);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, leanStatus);
+                Assert.IsNotNull(lean);
+                Assert.AreEqual(entries.Count, lean.Count);
+
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    var orig = entries[i];
+                    var copy = lean[i];
+
+                    // The six scalars the FDR stages read must be intact...
+                    Assert.AreEqual(orig.Id, copy.Id);
+                    Assert.AreEqual(orig.ModifiedSequence, copy.ModifiedSequence);
+                    Assert.AreEqual(orig.Charge, copy.Charge);
+                    Assert.AreEqual(orig.PrecursorMz, copy.PrecursorMz, 1e-10);
+                    Assert.AreEqual(orig.IsDecoy, copy.IsDecoy);
+                    CollectionAssert.AreEqual(orig.ProteinIds.ToArray(), copy.ProteinIds.ToArray());
+
+                    // ...along with the other non-fragment members that follow the
+                    // fragment block on disk (proving the skip advanced correctly)...
+                    Assert.AreEqual(orig.Sequence, copy.Sequence);
+                    Assert.AreEqual(orig.RetentionTime, copy.RetentionTime, 1e-10);
+                    Assert.AreEqual(orig.RtCalibrated, copy.RtCalibrated);
+                    Assert.AreEqual(orig.Modifications.Count, copy.Modifications.Count);
+                    CollectionAssert.AreEqual(orig.GeneNames.ToArray(), copy.GeneNames.ToArray());
+
+                    // ...but the fragment peaks are dropped.
+                    Assert.AreEqual(0, copy.Fragments.Count);
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
+        public void TestLibraryCacheRejectsPeaklessEntry()
+        {
+            // Peak-less (0-fragment) entries are a BiblioSpec MS1-feature-finding artifact and are
+            // not valid for DIA search: the cache reader must fail fast (PR #4434 review) rather than
+            // let one reach decoy generation (which would silently exclude it) or a lean OmitFragments
+            // load (which would retain a phantom and diverge the FirstPassFDR reconciliation bytes).
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(0),                                    // fragment-carrying: valid
+                new LibraryEntry(1, "BBB", "BBB", 2, 400.0, 20.0)    // no fragments: must be rejected
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_peakless_" + Guid.NewGuid().ToString("N") + ".libcache");
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "peakless-hash");
+
+                // Both the full and the lean (OmitFragments) cache reads must fail fast on the
+                // 0-fragment entry (the guard is upstream of the omit branch).
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    LibraryCache.LoadCache(tempPath, "peakless-hash", false, null, out _));
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    LibraryCache.LoadCache(tempPath, "peakless-hash", true, null, out _));
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheIdentityHash()
         {
             // The .libcache stamps the source library's identity hash into its
