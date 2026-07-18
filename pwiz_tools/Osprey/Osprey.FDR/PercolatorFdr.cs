@@ -1257,6 +1257,23 @@ namespace pwiz.Osprey.FDR
             Dictionary<string, double> expPeptByPeptide = isSingleFile
                 ? null : ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
 
+            // The per-file q-value passes below slice each file as one contiguous block
+            // [off, off+count). The full-length ComputePerRun* path instead grouped by file
+            // NAME, which is robust to a file appearing in more than one PerFile entry; the
+            // slice is not (it would split one file's competition in two -> different run q ->
+            // different clamp floors -> different bytes). Every population the pipeline builds
+            // has distinct PerFile keys (fileNames is assigned straight from PerFile order), so
+            // this is an invariant, not a live case -- assert it so a future duplicate-key
+            // producer (e.g. a 2nd-pass reconciliation re-opening a file) fails fast instead of
+            // silently diverging.
+            var seenFileKeys = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in perFile)
+                if (!seenFileKeys.Add(kvp.Key))
+                    throw new InvalidOperationException(string.Format(
+                        @"ScoreProjectionAndComputeFdrInPlace: duplicate per-file key '{0}'; the " +
+                        @"bounded per-file q-value pass requires one contiguous block per file.",
+                        kvp.Key));
+
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
             // by (peptide, isDecoy). The global minimum must be known before any row is emitted,
