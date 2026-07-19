@@ -1862,10 +1862,11 @@ namespace pwiz.Osprey.Tasks
         /// <c>.1st-pass.fdr_scores.bin</c> into an entry_id -> record map (one file resident;
         /// bounded), then stream the parquet scalars (the modseq source PeptideById was
         /// interned from + IsDecoy) in parquet-row order, joining each row to its sidecar
-        /// record by entry_id. Returns <c>false</c> (ExitCode set) on a missing parquet path,
-        /// an unreadable / size-mismatched sidecar, or a parquet row whose entry_id is absent
-        /// from the sidecar (corruption -- the sidecar was written from this same parquet, so
-        /// every row must be present).
+        /// record by entry_id. Returns <c>false</c> (ExitCode set) on a missing parquet path, a
+        /// missing sidecar base path, or an unreadable / size-mismatched sidecar. A parquet row
+        /// whose entry_id is absent from the sidecar is SKIPPED, not a fault: the sidecar is a
+        /// SUBSET of the parquet rows, so a row with no record is simply not a first-pass row
+        /// (superset tolerance mirroring the survivor reload -- see the inline note below).
         /// </summary>
         private bool StreamFirstPassFileScores(
             string fileName,
@@ -1882,6 +1883,13 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
             string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+            if (string.IsNullOrEmpty(sidecarBase))
+            {
+                ctx.LogError(string.Format(
+                    @"First-pass protein FDR: no sidecar base path for {0}", fileName));
+                ctx.ExitCode = 1;
+                return false;
+            }
             string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
 
             var recordByEntryId = new Dictionary<uint, FdrScoreRecord>();
@@ -1947,6 +1955,13 @@ namespace pwiz.Osprey.Tasks
             {
                 string fileName = kvp.Key;
                 string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                if (string.IsNullOrEmpty(sidecarBase))
+                {
+                    ctx.LogError(string.Format(
+                        @"First-pass compaction: no sidecar base path for {0}", fileName));
+                    ctx.ExitCode = 1;
+                    return null;
+                }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
                 if (!FdrScoresSidecar.ReadRecords(fdrPath, FdrScoresSidecar.Pass.FirstPass,
                         record =>
