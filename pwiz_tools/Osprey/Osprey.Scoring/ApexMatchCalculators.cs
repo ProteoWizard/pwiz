@@ -50,6 +50,24 @@ namespace pwiz.Osprey.Scoring
         public double AbsMassErrSum;
         public int NMatched;
 
+        // --- non-PIN, populated ONLY when OspreyConfig.ExtraFeatures is on -------------
+        // Gated so the default path does not pay for a per-fragment Log, an ion-type
+        // switch, and a per-row list it would throw away. Their presence never perturbs
+        // the PIN fields above.
+
+        /// <summary>Signed per-fragment mass errors, in match order. Kept (rather than a
+        /// running sum of squares) so <see cref="MassAccuracyStdCalc"/> can reproduce
+        /// Rust's TWO-PASS variance exactly; the algebraic one-pass identity is a
+        /// different, less stable computation.</summary>
+        public List<double> MassErrors;
+
+        /// <summary>Sum of ln(matched intensity + 1) -- the hyperscore intensity term.</summary>
+        public double SumLogMatchedIntensity;
+
+        /// <summary>Matched b- and y-ion counts -- the hyperscore factorial terms.</summary>
+        public int NB;
+        public int NY;
+
         public static ApexFragmentMatchSet GetOrCompute(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             if (context.TryGetInfo(out ApexFragmentMatchSet matchSet))
@@ -85,6 +103,12 @@ namespace pwiz.Osprey.Scoring
             double massErrSum = 0.0;
             double absMassErrSum = 0.0;
             int nMatched = 0;
+
+            // Non-PIN accumulators (--extra-features only); see the field comments.
+            bool extra = context.Config.ExtraFeatures;
+            var massErrors = extra ? new List<double>() : null;
+            double sumLogMatchedIntensity = 0.0;
+            int nB = 0, nY = 0;
 
             if (apexSpectrum.Mzs != null && apexSpectrum.Intensities != null &&
                 candidate.Fragments != null)
@@ -123,6 +147,19 @@ namespace pwiz.Osprey.Scoring
                         massErrSum += err;
                         absMassErrSum += Math.Abs(err);
                         nMatched++;
+
+                        if (extra)
+                        {
+                            massErrors.Add(err);
+                            // Rust compute_hyperscore (osprey-scoring/src/lib.rs:1463):
+                            // ln(n_b!) + ln(n_y!) + SUM ln(I+1). Non-b/y ions contribute
+                            // intensity but not the factorial terms.
+                            sumLogMatchedIntensity += Math.Log(bestIntensity + 1.0);
+                            if (frag.Annotation.IonType == IonType.B)
+                                nB++;
+                            else if (frag.Annotation.IonType == IonType.Y)
+                                nY++;
+                        }
                     }
                 }
             }
@@ -132,6 +169,10 @@ namespace pwiz.Osprey.Scoring
             matchSet.MassErrSum = massErrSum;
             matchSet.AbsMassErrSum = absMassErrSum;
             matchSet.NMatched = nMatched;
+            matchSet.MassErrors = massErrors;
+            matchSet.SumLogMatchedIntensity = sumLogMatchedIntensity;
+            matchSet.NB = nB;
+            matchSet.NY = nY;
             return matchSet;
         }
     }

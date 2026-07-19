@@ -228,5 +228,62 @@ namespace pwiz.Osprey.FDR
 
             return new SecondPassProteinFdrResult(detectedPeptides, parsimony, proteinFdr);
         }
+
+        /// <summary>
+        /// Count protein groups passing FDR over a SUBSET of entries -- one replicate, or
+        /// the whole experiment -- by building an independent parsimony + picked-protein
+        /// FDR on that subset's detected peptides. Reuses the exact primitives
+        /// <see cref="RunSecondPass"/> uses (<see cref="ProteinFdr.CollectBestPeptideScores"/>,
+        /// <see cref="ProteinFdr.BuildProteinParsimony"/>,
+        /// <see cref="ProteinFdr.ComputeProteinFdr"/>), so a per-replicate count is the SAME
+        /// computation as the experiment-level count, just scoped to one run and gated on
+        /// run-level q instead of experiment-level.
+        ///
+        /// The summary report calls this once per replicate (with that replicate's entries,
+        /// <paramref name="runLevel"/>=true) so the per-run protein column is a real
+        /// protein FDR, not a coverage proxy -- the comparison a reviewer asks for.
+        /// </summary>
+        public static int CountPassingProteinGroups(
+            IList<KeyValuePair<string, List<FdrEntry>>> entries,
+            IList<LibraryEntry> fullLibrary,
+            OspreyConfig config,
+            bool runLevel)
+        {
+            var bestScores = ProteinFdr.CollectBestPeptideScores(entries);
+
+            // Same gate SHAPE as RunSecondPass, but run-scope vs experiment-scope: a
+            // replicate's detected set is its targets passing RUN-level q at RunFdr; the
+            // experiment's is targets passing EXPERIMENT-level q at ExperimentFdr.
+            var gateLevel = config.FdrLevel;
+            double gate = runLevel ? config.RunFdr : config.ExperimentFdr;
+            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in entries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (entry.IsDecoy)
+                        continue;
+                    double q = runLevel
+                        ? entry.EffectiveRunQvalue(gateLevel)
+                        : entry.EffectiveExperimentQvalue(gateLevel);
+                    if (q <= gate)
+                        detectedPeptides.Add(entry.ModifiedSequence);
+                }
+            }
+            if (detectedPeptides.Count == 0)
+                return 0;
+
+            var parsimony = ProteinFdr.BuildProteinParsimony(
+                fullLibrary, config.SharedPeptides, detectedPeptides);
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
+
+            int passing = 0;
+            foreach (var q in proteinFdr.GroupQvalues.Values)
+            {
+                if (q <= config.EffectiveProteinFdr)
+                    passing++;
+            }
+            return passing;
+        }
     }
 }

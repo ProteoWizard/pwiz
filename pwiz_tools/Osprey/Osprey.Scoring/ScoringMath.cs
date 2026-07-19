@@ -135,5 +135,47 @@ namespace pwiz.Osprey.Scoring
             }
             return lo;
         }
+
+        // Lanczos coefficients (g = 7), from Numerical Recipes -- the exact constants
+        // Rust's ln_gamma uses, so the ported hyperscore matches value-for-value.
+        private static readonly double[] LN_GAMMA_COEFFICIENTS =
+        {
+            0.9999999999998099,
+            676.5203681218851,
+            -1259.1392167224028,
+            771.3234287776531,
+            -176.6150291621406,
+            12.507343278686905,
+            -0.13857109526572012,
+            9.984369578019572e-6,
+            1.5056327351493116e-7
+        };
+
+        private const double LN_GAMMA_G = 7.0;
+
+        /// <summary>
+        /// ln(Gamma(x)) via the Lanczos approximation -- i.e. ln((x-1)!) at positive
+        /// integers, which is how the hyperscore's ln(n_b!) / ln(n_y!) terms are computed
+        /// without ever forming a factorial that would overflow.
+        ///
+        /// Port of Rust <c>ln_gamma</c> (osprey-scoring/src/lib.rs:2829), including its
+        /// short-circuits: x &lt;= 0 returns 0 (not a domain error), and x &lt;= 2 returns
+        /// 0 because ln(0!) == ln(1!) == 0.
+        /// </summary>
+        public static double LogGamma(double x)
+        {
+            if (x <= 0.0)
+                return 0.0;
+            if (x <= 2.0)
+                return 0.0;   // ln(Gamma(1)) = ln(0!) = 0; ln(Gamma(2)) = ln(1!) = 0
+
+            double xAdj = x - 1.0;
+            double sum = LN_GAMMA_COEFFICIENTS[0];
+            for (int i = 1; i < LN_GAMMA_COEFFICIENTS.Length; i++)
+                sum += LN_GAMMA_COEFFICIENTS[i] / (xAdj + i);
+
+            double t = xAdj + LN_GAMMA_G + 0.5;
+            return 0.5 * Math.Log(2.0 * Math.PI) + Math.Log(t) * (xAdj + 0.5) - t + Math.Log(sum);
+        }
     }
 }

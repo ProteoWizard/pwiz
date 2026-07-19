@@ -249,8 +249,12 @@ namespace pwiz.Osprey.Scoring
                     ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
             }
 
-            // Build full 21-element PIN feature vector
-            double[] features = new double[OspreyFeatureCalculators.FeatureCount];
+            // Build the full PIN feature vector: the 21 parity-locked features, plus the
+            // extra non-PIN scores appended at 21+ when --extra-features is on. The 21
+            // unrolled calls below are unchanged and stay at their frozen indices, so the
+            // flag-off vector is byte-identical.
+            double[] features = new double[
+                OspreyFeatureCalculators.Count(ospreyContext.Config.ExtraFeatures)];
             features[0] = OspreyFeatureCalculators.Get(0).Calculate(ospreyContext, ospreyPeakData);
             features[1] = OspreyFeatureCalculators.Get(1).Calculate(ospreyContext, ospreyPeakData);
             features[2] = OspreyFeatureCalculators.Get(2).Calculate(ospreyContext, ospreyPeakData);
@@ -272,6 +276,12 @@ namespace pwiz.Osprey.Scoring
             features[18] = OspreyFeatureCalculators.Get(18).Calculate(ospreyContext, ospreyPeakData);
             features[19] = OspreyFeatureCalculators.Get(19).Calculate(ospreyContext, ospreyPeakData);
             features[20] = OspreyFeatureCalculators.Get(20).Calculate(ospreyContext, ospreyPeakData);
+
+            // Extra (non-PIN) scores -- tree classifier only; see OspreyConfig.ExtraFeatures.
+            // Looped rather than unrolled: this set is experimental and expected to grow,
+            // and it is off the default path.
+            for (int fi = OspreyFeatureCalculators.FeatureCount; fi < features.Length; fi++)
+                features[fi] = OspreyFeatureCalculators.Get(fi).Calculate(ospreyContext, ospreyPeakData);
 
             // Median-polish bisection dump (after the feature vector so the four
             // values are available). Reads the polish + cropped inputs from the

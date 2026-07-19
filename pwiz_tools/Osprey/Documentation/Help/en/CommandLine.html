@@ -27,6 +27,8 @@ a { color: #1565c0; }
 <tr><td><nobr>--output-dir</nobr>&nbsp;&lt;dir&gt;</td><td>Directory for derived artifacts (overrides <nobr>--work-dir</nobr>)</td></tr>
 <tr><td><nobr>--cache-dir</nobr>&nbsp;&lt;dir&gt;</td><td>Directory for the .spectra.bin cache (overrides <nobr>--work-dir</nobr>)</td></tr>
 <tr><td><nobr>--report</nobr>&nbsp;&lt;report.tsv&gt;</td><td>Write TSV report to file</td></tr>
+<tr><td><nobr>--no-protein-report</nobr></td><td>Do not write the &lt;output&gt;.protein_groups.tsv report (protein groups, supporting peptides, and <nobr>library-proteotypic</nobr> peptides). Written by default.</td></tr>
+<tr><td><nobr>--no-summary-report</nobr></td><td>Do not write the &lt;output&gt;.stats.tsv report (<nobr>per-replicate</nobr> and <nobr>experiment-level</nobr> precursor / peptide / protein counts). Written by default.</td></tr>
 </table>
 <div class="RowType">Scoring &amp; Tolerance</div>
 <table>
@@ -43,9 +45,10 @@ a { color: #1565c0; }
 <tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Experiment-level</nobr> FDR threshold (default: 0.01)</td></tr>
 <tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>Peptide <nobr>q-value</nobr> gate for <nobr>first-pass</nobr> compaction (default: 0.01 = <nobr>run-fdr</nobr>; loosen e.g. to 0.05 to broaden the reconciliation pool)</td></tr>
 <tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Protein-level</nobr> FDR threshold (optional)</td></tr>
-<tr><td><nobr>--fdr-method</nobr> &lt;percolator | simple&gt;</td><td>FDR method (default: percolator)</td></tr>
+<tr><td><nobr>--fdr-method</nobr> &lt;percolator | fasttree | simple&gt;</td><td>FDR method (default: percolator)</td></tr>
 <tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDR level (default: precursor)</td></tr>
 <tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>Shared peptide handling (default: all)</td></tr>
+<tr><td><nobr>--extra-features</nobr></td><td>EXPERIMENTAL. Also compute the <nobr>non-PIN</nobr> scores (fragment_coelution_min, peak_symmetry, mass_accuracy_std, hyperscore) and train on them. Use ONLY with <nobr>--fdr-method</nobr> fasttree: these scores are <nobr>non-monotone</nobr> or collinear <nobr>--</nobr> which is why they are excluded by default <nobr>--</nobr> so the linear Percolator SVM cannot exploit them, while <nobr>gradient-boosted</nobr> trees can. Widens .scores.parquet, so <nobr>re-score</nobr> from a clean <nobr>--work-dir</nobr> when toggling.</td></tr>
 <tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>Write an <nobr>FDRBench-compatible</nobr> input TSV to this path. The level is taken from <nobr>--fdr-level</nobr> (peptide; precursor and both emit <nobr>precursor-level</nobr>). Includes every reported (<nobr>compaction-surviving</nobr>) target, i.e. the peptides actually written to the output, regardless of <nobr>q-value</nobr>, with the raw SVM discriminant as &#39;score&#39;, so FDRBench can compute <nobr>true-FDR</nobr> via entrapment counting without truncation at Osprey&#39;s threshold.</td></tr>
 <tr><td><nobr>--fdrbench-per-run</nobr></td><td>With <nobr>--fdrbench</nobr>: emit one row per (precursor, run) using <nobr>run-level</nobr> <nobr>q-values</nobr> (adds a &#39;run&#39; column). Default is one row per precursor using <nobr>experiment-level</nobr> <nobr>q-values</nobr>.</td></tr>
 <tr><td><nobr>--fdrbench-pass</nobr> &lt;1 | 2 | both&gt;</td><td>With <nobr>--fdrbench</nobr>: which FDR pass to emit. 2 (default) = the <nobr>post-compaction</nobr> <nobr>second-pass</nobr> survivors written to the blib (the FDR of what Osprey reports). 1 = the full <nobr>pre-compaction</nobr> <nobr>first-pass</nobr> pool (every scored target, regardless of q) with <nobr>first-pass</nobr> <nobr>q-values</nobr>, matching Rust osprey&#39;s write_fdrbench_peptide_input (the assumption the <nobr>second-pass</nobr> output rests on). both = emit both in one run, writing the <nobr>--fdrbench</nobr> path with .pass1 / .pass2 stem suffixes.</td></tr>

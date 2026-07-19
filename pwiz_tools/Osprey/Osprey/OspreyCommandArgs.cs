@@ -89,10 +89,17 @@ namespace pwiz.Osprey
             () => @"<dir>", (c, p) => c._cacheDir = p.Value);
         public static readonly OspreyArgument ARG_REPORT = new OspreyArgument(@"report",
             () => @"<report.tsv>", (c, p) => c._config.OutputReport = p.Value);
+        // The protein-group + summary reports are written by default next to the output
+        // blib; these turn them off. See OspreyConfig.WriteProteinReport / WriteSummaryReport.
+        public static readonly OspreyArgument ARG_NO_PROTEIN_REPORT = new OspreyArgument(@"no-protein-report",
+            (c, p) => c._config.WriteProteinReport = false);
+        public static readonly OspreyArgument ARG_NO_SUMMARY_REPORT = new OspreyArgument(@"no-summary-report",
+            (c, p) => c._config.WriteSummaryReport = false);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => @"General I/O", true,
-                ARG_INPUT, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT);
+                ARG_INPUT, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT,
+                ARG_NO_PROTEIN_REPORT, ARG_NO_SUMMARY_REPORT);
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
@@ -186,10 +193,19 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
             new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p.Value));
 
+        /// <summary>
+        /// EXPERIMENTAL: compute + persist the non-PIN scores for the classifier to train
+        /// on. Only meaningful with <c>--fdr-method fasttree</c> -- these scores are
+        /// non-monotone / collinear and were excluded from the PIN precisely because they
+        /// misbehave with the linear SVM. <see cref="ToConfig"/> warns on misuse.
+        /// </summary>
+        public static readonly OspreyArgument ARG_EXTRA_FEATURES = new OspreyArgument(@"extra-features",
+            (c, p) => c._config.ExtraFeatures = true);
+
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,
                 ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
-                ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
+                ARG_EXTRA_FEATURES, ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(@"decoys-in-library",
@@ -445,6 +461,27 @@ namespace pwiz.Osprey
         private OspreyConfig ToConfig()
         {
             _config.InputFiles = _inputFiles;
+
+            // --extra-features exists for the tree classifier. The extra scores are
+            // non-monotone / collinear by nature -- that is WHY they are not in the 21-feature
+            // PIN -- so a linear model cannot express them and can be actively hurt. Warn
+            // rather than fail: the combination is a legitimate thing to measure (it is how
+            // we know they hurt the SVM), just never what you want by accident.
+            if (_config.ExtraFeatures && !_config.FdrMethod.UsesPercolatorFramework())
+            {
+                Program.LogWarning(string.Format(
+                    @"--extra-features has no effect with --fdr-method {0}: the extra scores " +
+                    @"are only consumed by the Percolator-framework classifiers.",
+                    _config.FdrMethod.ToString().ToLowerInvariant()));
+            }
+            else if (_config.ExtraFeatures && _config.FdrMethod != FdrMethod.FastTree)
+            {
+                Program.LogWarning(
+                    @"--extra-features is intended for --fdr-method fasttree. The extra scores " +
+                    @"are non-monotone or collinear (that is why they are excluded from the 21 " +
+                    @"PIN features), so the linear Percolator SVM cannot exploit them and may " +
+                    @"score worse. Use gradient-boosted trees, or drop --extra-features.");
+            }
 
             // --work-dir sets both the derived-artifact output directory and the spectra-cache
             // directory; an explicit --output-dir / --cache-dir overrides the matching one.
@@ -763,6 +800,7 @@ namespace pwiz.Osprey
                 { @"reconciliation-compaction-fdr", @"Peptide q-value gate for first-pass compaction (default: 0.01 = run-fdr; loosen e.g. to 0.05 to broaden the reconciliation pool)" },
                 { @"protein-fdr", @"Protein-level FDR threshold (optional)" },
                 { @"fdr-method", @"FDR method (default: percolator)" },
+                { @"extra-features", @"EXPERIMENTAL. Also compute the non-PIN scores (fragment_coelution_min, peak_symmetry, mass_accuracy_std, hyperscore) and train on them. Use ONLY with --fdr-method fasttree: these scores are non-monotone or collinear -- which is why they are excluded by default -- so the linear Percolator SVM cannot exploit them, while gradient-boosted trees can. Widens .scores.parquet, so re-score from a clean --work-dir when toggling." },
                 { @"fdr-level", @"FDR level (default: precursor)" },
                 { @"shared-peptides", @"Shared peptide handling (default: all)" },
                 { @"fdrbench", @"Write an FDRBench-compatible input TSV to this path. The level is taken from --fdr-level (peptide; precursor and both emit precursor-level). Includes every reported (compaction-surviving) target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as 'score', so FDRBench can compute true-FDR via entrapment counting without truncation at Osprey's threshold." },
@@ -782,6 +820,8 @@ namespace pwiz.Osprey
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
                 { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model and FDR calibration" },
+                { @"no-protein-report", @"Do not write the <output>.protein_groups.tsv report (protein groups, supporting peptides, and library-proteotypic peptides). Written by default." },
+                { @"no-summary-report", @"Do not write the <output>.stats.tsv report (per-replicate and experiment-level precursor / peptide / protein counts). Written by default." },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },
             };

@@ -36,6 +36,11 @@ namespace pwiz.Osprey.Scoring
     {
         public double Sum;
         public double Max;
+        /// <summary>Weakest pairwise fragment correlation ("weakest link"), or 0 when no
+        /// pair was valid. Non-PIN: read only by <see cref="CoelutionMinCalc"/> under
+        /// <c>--extra-features</c>. Computed in the same pass as Sum/Max (free), and its
+        /// presence does not perturb them.</summary>
+        public double Min;
         public int NCoeluting;
 
         public static CoelutionStats GetOrCompute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
@@ -64,6 +69,7 @@ namespace pwiz.Osprey.Scoring
             int[] fragCorrCount = new int[xics.Count];
             bool haveAny = false;
             double maxCorr = double.NegativeInfinity;
+            double minCorr = double.PositiveInfinity;   // non-PIN: CoelutionMinCalc (--extra-features)
             double sum = 0.0;
 
             for (int i = 0; i < xics.Count; i++)
@@ -79,6 +85,8 @@ namespace pwiz.Osprey.Scoring
                     sum += corr;
                     if (corr > maxCorr)
                         maxCorr = corr;
+                    if (corr < minCorr)
+                        minCorr = corr;
                     haveAny = true;
 
                     fragCorrSum[i] += corr;
@@ -90,7 +98,11 @@ namespace pwiz.Osprey.Scoring
 
             stats.Sum = sum;
             if (haveAny)
+            {
                 stats.Max = maxCorr;
+                // Rust pipeline.rs:7539 -- non-finite (no valid pair) reports 0.0.
+                stats.Min = minCorr;
+            }
 
             int nCoeluting = 0;
             for (int i = 0; i < xics.Count; i++)

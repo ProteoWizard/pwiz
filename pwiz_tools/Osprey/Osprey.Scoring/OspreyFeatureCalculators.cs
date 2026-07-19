@@ -40,14 +40,35 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public static class OspreyFeatureCalculators
     {
-        /// <summary>Number of PIN features (the feature-vector width).</summary>
+        /// <summary>
+        /// Number of PIN features -- the parity-locked feature-vector width. Indices
+        /// 0..20 ARE the Rust PIN order, the <c>.scores.parquet</c> column order, and the
+        /// regression golden's column order: never renumber them. Extra (non-PIN) scores
+        /// are APPENDED at 21+ (<see cref="ExtraFeatureCount"/>), which is what keeps
+        /// <c>--extra-features</c> byte-neutral when it is off.
+        /// </summary>
         public const int FeatureCount = 21;
+
+        /// <summary>
+        /// Number of EXTRA (non-PIN) scores appended after the 21 when
+        /// <c>--extra-features</c> is on -- scores the Rust engine computes but the PIN
+        /// excludes because they misbehave with a linear model. See
+        /// <see cref="OspreyConfig.ExtraFeatures"/> for why they are tree-only.
+        /// </summary>
+        public const int ExtraFeatureCount = 4;
+
+        /// <summary>The feature-vector width for this run: the 21 PIN features, plus the
+        /// extras when <paramref name="extraFeatures"/> is on.</summary>
+        public static int Count(bool extraFeatures)
+        {
+            return extraFeatures ? FeatureCount + ExtraFeatureCount : FeatureCount;
+        }
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
         private static IOspreyFeatureCalculator[] CreateCalculators()
         {
-            var calculators = new IOspreyFeatureCalculator[FeatureCount];
+            var calculators = new IOspreyFeatureCalculator[FeatureCount + ExtraFeatureCount];
 
             // Coelution family: pairwise fragment-correlation sum / max / count.
             calculators[0] = new FragmentCoelutionSumCalc();
@@ -87,6 +108,16 @@ namespace pwiz.Osprey.Scoring
             calculators[19] = new MedianPolishMinFragmentR2Calc();
             calculators[20] = new MedianPolishResidualCorrelationCalc();
 
+            // --- EXTRA (non-PIN) scores, --extra-features only --------------------------
+            // Appended at 21+ so the PIN indices above stay frozen. Each is a score the
+            // Rust engine computes but the PIN drops because a LINEAR model cannot use it
+            // (non-monotone or collinear); trees split on them freely. Only reached when
+            // OspreyConfig.ExtraFeatures is set.
+            calculators[21] = new CoelutionMinCalc();
+            calculators[22] = new PeakSymmetryCalc();
+            calculators[23] = new MassAccuracyStdCalc();
+            calculators[24] = new HyperscoreCalc();
+
             return calculators;
         }
 
@@ -119,12 +150,20 @@ namespace pwiz.Osprey.Scoring
         /// </param>
         public static OspreyFeatureInfo[] BuildFeatureInfos(string[] featureNames)
         {
-            if (featureNames == null || featureNames.Length != FeatureCount)
+            // Accepts either width: the 21 PIN features, or 21 + the extras when
+            // --extra-features widened the vector. The caller's array length selects,
+            // so the two stay in lockstep with the parquet schema it was built from.
+            if (featureNames == null ||
+                (featureNames.Length != FeatureCount &&
+                 featureNames.Length != FeatureCount + ExtraFeatureCount))
+            {
                 throw new System.ArgumentException(
-                    string.Format(@"BuildFeatureInfos expects {0} feature names", FeatureCount),
+                    string.Format(@"BuildFeatureInfos expects {0} or {1} feature names",
+                        FeatureCount, FeatureCount + ExtraFeatureCount),
                     nameof(featureNames));
-            var infos = new OspreyFeatureInfo[FeatureCount];
-            for (int i = 0; i < FeatureCount; i++)
+            }
+            var infos = new OspreyFeatureInfo[featureNames.Length];
+            for (int i = 0; i < featureNames.Length; i++)
                 infos[i] = new OspreyFeatureInfo(
                     featureNames[i], _calculators[i].DisplayName, _calculators[i].IsReversedScore);
             return infos;

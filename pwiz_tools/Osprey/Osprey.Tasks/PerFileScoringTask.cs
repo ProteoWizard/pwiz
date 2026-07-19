@@ -1433,7 +1433,7 @@ namespace pwiz.Osprey.Tasks
         {
             return config.ExpectReconciledInput ||
                    !OspreyEnvironment.UseFdrProjection ||
-                   config.FdrMethod != FdrMethod.Percolator ||
+                   !config.FdrMethod.UsesPercolatorFramework() ||
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
                    OspreyEnvironment.Pass2TransferQ;
         }

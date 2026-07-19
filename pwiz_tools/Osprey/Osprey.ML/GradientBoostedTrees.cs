@@ -59,13 +59,33 @@ namespace pwiz.Osprey.ML
         public double RegAlpha = 0.0;
         /// <summary>Histogram bins per feature (&lt;= 255 so bin indices fit a byte).</summary>
         public int MaxBins = 64;
-        public int Seed = 42;
+        /// <summary>Seed for the row/column subsampling PRNG. Drives
+        /// <see cref="XorShift64"/> -- see the determinism note on
+        /// <see cref="GradientBoostedTrees"/>.</summary>
+        public ulong Seed = 42;
     }
 
     /// <summary>
     /// Gradient-boosted decision trees (Newton boosting, logistic loss) with L1/L2
     /// leaf regularization. Trained via <see cref="Train"/>; scored via
     /// <see cref="ScoreSingle"/>, which returns a raw log-odds margin.
+    ///
+    /// DETERMINISTIC by construction, to the same standard as the linear SVM it stands
+    /// in for: identical input produces a bit-identical model and bit-identical scores,
+    /// on every target framework. The pieces that guarantee it:
+    /// <list type="bullet">
+    /// <item>subsampling draws from <see cref="XorShift64"/> -- the same seeded,
+    /// bit-exact-by-definition PRNG the rest of Osprey.ML uses -- NOT
+    /// <c>System.Random</c>, whose seeded sequence is a framework implementation detail
+    /// (this builds net472 AND net8.0, so a divergence there would silently train two
+    /// different models from one source);</item>
+    /// <item>every float accumulation (histograms, leaf gradients/hessians) runs
+    /// single-threaded in a fixed row order, so no summation order can drift;</item>
+    /// <item>the one <c>Array.Sort</c> is over a primitive array read only by quantile
+    /// index, where equal values are interchangeable.</item>
+    /// </list>
+    /// Callers may train folds in parallel: each <see cref="Train"/> call owns its PRNG
+    /// and touches no shared state. <see cref="ScoreSingle"/> is pure and thread-safe.
     /// </summary>
     public sealed class GradientBoostedTrees
     {
@@ -139,7 +159,7 @@ namespace pwiz.Osprey.ML
 
             // --- 2. Labels, weights, base score ---
             var y = new double[n];
-            var w = sampleWeight ?? null;
+            var w = sampleWeight;
             double pos = 0, tot = 0;
             for (int i = 0; i < n; i++)
             {
@@ -155,7 +175,7 @@ namespace pwiz.Osprey.ML
             var g = new double[n];
             var h = new double[n];
 
-            var rng = new Random(p.Seed);
+            var rng = new XorShift64(p.Seed);
             var nodesFeature = new List<int>(); var nodesThresh = new List<double>();
             var nodesLeft = new List<int>(); var nodesRight = new List<int>();
             var nodesLeaf = new List<double>();
@@ -284,7 +304,7 @@ namespace pwiz.Osprey.ML
         private static double[] QuantileCuts(double[] values, int maxBins)
         {
             var sorted = (double[])values.Clone();
-            Array.Sort(sorted);
+            Array.Sort(sorted); // Array.Sort OK: single primitive array read only by quantile INDEX to pick cut points; equal values are interchangeable, so tie order cannot affect the cuts
             int nCut = maxBins - 1;
             var cuts = new List<double>(nCut);
             double last = double.NegativeInfinity;
@@ -299,21 +319,21 @@ namespace pwiz.Osprey.ML
             return cuts.ToArray();
         }
 
-        private static int[] Subsample(int n, double frac, Random rng)
+        private static int[] Subsample(int n, double frac, XorShift64 rng)
         {
             if (frac >= 0.999) { var all = new int[n]; for (int i = 0; i < n; i++) all[i] = i; return all; }
             int m = Math.Max(1, (int)Math.Round(n * Math.Min(Math.Max(frac, 0.01), 1.0)));
             var idx = new int[n]; for (int i = 0; i < n; i++) idx[i] = i;
-            for (int i = 0; i < m; i++) { int j = i + rng.Next(n - i); int tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
+            for (int i = 0; i < m; i++) { int j = i + (int)(rng.Next() % (ulong)(n - i)); int tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
             var res = new int[m]; Array.Copy(idx, res, m); return res;
         }
 
-        private static int[] SampleColumns(int[] all, int k, Random rng)
+        private static int[] SampleColumns(int[] all, int k, XorShift64 rng)
         {
             if (k >= all.Length) return (int[])all.Clone();
             var idx = (int[])all.Clone();
-            for (int i = 0; i < k; i++) { int j = i + rng.Next(idx.Length - i); int tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
-            var res = new int[k]; Array.Copy(idx, res, k); Array.Sort(res); return res;
+            for (int i = 0; i < k; i++) { int j = i + (int)(rng.Next() % (ulong)(idx.Length - i)); int tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
+            var res = new int[k]; Array.Copy(idx, res, k); Array.Sort(res); return res; // Array.Sort OK: single primitive array of DISTINCT feature indices (partial Fisher-Yates over a distinct set), so the comparator never ties
         }
     }
 }

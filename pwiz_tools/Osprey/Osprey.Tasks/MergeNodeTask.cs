@@ -270,6 +270,16 @@ namespace pwiz.Osprey.Tasks
                 if (ctx.Diagnostics?.Stage7ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
+
+            // Default user-facing reports (protein groups + per-replicate/experiment
+            // summary), modeled on DIA-NN. Additive files next to the output blib, so the
+            // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
+            // protein counts re-run protein FDR per run, so this is the one place with the
+            // full per-file pool + library in hand.
+            if (config.WriteProteinReport || config.WriteSummaryReport)
+            {
+                OspreyReportWriter.WriteReports(result, perFileEntries, fullLibrary, config, ctx.LogInfo);
+            }
         }
 
         /// <summary>

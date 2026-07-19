@@ -29,7 +29,6 @@ using System.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
-using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -170,7 +169,7 @@ namespace pwiz.Osprey.Tasks
                     // needs each survivor's RECONCILED features loaded onto entry.Features (which
                     // ComputePass2Resident does) so the frozen 1st-pass model can re-score them.
                     // The projection path streams features to a sink and never lands them resident.
-                    if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
+                    if (OspreyEnvironment.UseFdrProjection && config.FdrMethod.UsesPercolatorFramework() &&
                         !config.ModelDiagnostics && !OspreyEnvironment.Pass2TransferQ &&
                         !OspreyEnvironment.Pass2TransferCompete)
                     {
@@ -461,28 +460,35 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
-            PercolatorResults frozenModel)
+            PercolatorResults frozenModel,
+            HashSet<uint> stratumBaseIds = null)
         {
-            if (frozenModel.FoldWeights == null || frozenModel.FoldWeights.Count == 0 ||
-                frozenModel.Standardizer == null)
+            // stratumBaseIds == null -> transfer-compete (full-population competition).
+            // non-null -> protein-compact: the competition is CONSTRAINED to the stratum
+            // (peptides of >=2-peptide 1st-pass proteins), and the map-back below leaves
+            // OFF-stratum survivors on their 1st-pass q (report = pass1 U stratum passers,
+            // so re-scoping only adds, never drops an already-passing peptide).
+            bool proteinCompact = stratumBaseIds != null;
+            string mode = proteinCompact ? "protein-compact" : "transfer-compete";
+            // Works for whichever classifier the 1st pass trained (linear SVM or
+            // gradient-boosted trees) -- the scorer hides that choice, so transfer-compete
+            // stays the honest-FDR path under --fdr-method fasttree too.
+            var scorer = FrozenModelScorer.TryCreate(frozenModel);
+            if (scorer == null)
             {
-                ctx.LogWarning("transfer-compete: frozen 1st-pass model has no weights/standardizer.");
+                ctx.LogWarning("transfer-compete: frozen 1st-pass model has no usable model/standardizer.");
                 return false;
             }
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            int nFeatures = frozenModel.FoldWeights[0].Length;
-            AverageFoldModel(frozenModel, out double[] avgWeights, out double avgBias);
-            var standardizer = frozenModel.Standardizer;
+            int nFeatures = scorer.NumFeatures;
 
             // 1. Frozen-model score for each reconciled survivor (their reconciled features are
             //    resident on the entries). Keyed by (file, entry_id); entry_id is unique per file.
             var survivorScore = new Dictionary<(string, uint), double>();
-            var scratch = new double[nFeatures];
             foreach (var kvp in perFileEntries)
                 foreach (var e in kvp.Value)
                     if (e.Features != null && e.Features.Length == nFeatures)
-                        survivorScore[(kvp.Key, e.EntryId)] =
-                            ScoreWithFrozenModel(e.Features, standardizer, avgWeights, avgBias, scratch);
+                        survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(e.Features);
 
             // 2. Reported survivors to emit (every post-reconciliation entry) + per-file scalar
             //    sidecar paths. Validate every sidecar up front so we fail fast (and fall back to
@@ -515,10 +521,12 @@ namespace pwiz.Osprey.Tasks
             }
 
             ctx.LogInfo(string.Format(
-                "OSPREY_PASS2_QVALUE=transfer-compete: recomputing q/PEP over the FULL 1st-pass " +
-                "population by streaming {0} file(s), frozen-model scores swapped in for {1} " +
-                "reconciled survivors -- no retrain, full-population null, one file resident at a time.",
-                fileKeys.Count, survivorScore.Count));
+                "OSPREY_PASS2_QVALUE={0}: recomputing q/PEP by streaming {1} file(s), frozen-model " +
+                "scores swapped in for {2} reconciled survivors -- no retrain, one file resident at a " +
+                "time{3}.",
+                mode, fileKeys.Count, survivorScore.Count,
+                proteinCompact ? ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"
+                               : ", full-population null"));
 
             // 3. Streamed full-population competition + run/experiment precursor q + PEP. Only one
             //    file's scalars are resident at a time; the cross-file state is bounded by the
@@ -532,13 +540,18 @@ namespace pwiz.Osprey.Tasks
 
             PercolatorFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 fileKeys, ReadFile, survivorScore, survivors,
-                out var runQ, out var expQ, out var pep);
+                out var runQ, out var expQ, out var pep, stratumBaseIds);
 
-            // 4. Map the recomputed q/PEP back onto the reported survivor entries.
+            // 4. Map the recomputed q/PEP back onto the reported survivor entries. Under
+            //    protein-compact, an OFF-stratum survivor got q=1.0 from the (constrained)
+            //    competition -- skip it so it KEEPS its already-passing 1st-pass q rather
+            //    than being dropped (report = pass1 U stratum passers).
             int nMapped = 0;
             foreach (var kvp in perFileEntries)
                 foreach (var e in kvp.Value)
                 {
+                    if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu))
+                        continue;
                     var key = (kvp.Key, e.EntryId);
                     if (!runQ.TryGetValue(key, out double rq))
                         continue;
@@ -546,14 +559,14 @@ namespace pwiz.Osprey.Tasks
                     e.ExperimentPrecursorQvalue = expQ[key];
                     e.Pep = pep[key];
                     // Precursor-level path: keep peptide q in step with precursor q for the
-                    // reported set (peptide-level FDR is not the transfer-compete target).
+                    // reported set (peptide-level FDR is not the target here).
                     e.RunPeptideQvalue = rq;
                     e.ExperimentPeptideQvalue = expQ[key];
                     nMapped++;
                 }
             ctx.LogInfo(string.Format(
-                "transfer-compete: mapped full-population q onto {0} reported survivors in {1:F1}s.",
-                nMapped, sw.Elapsed.TotalSeconds));
+                "{0}: mapped recomputed q onto {1} reported survivors in {2:F1}s.",
+                mode, nMapped, sw.Elapsed.TotalSeconds));
             return true;
         }
 
@@ -658,7 +671,13 @@ namespace pwiz.Osprey.Tasks
 
             switch (config.FdrMethod)
             {
+                // FastTree shares this path with Percolator: the 2nd pass is the same
+                // sequence (transfer-compete's frozen-model recompute, or a retrain)
+                // regardless of which classifier the 1st pass trained. The frozen model
+                // carried in ctx is whichever one that was, and the score passes select
+                // on it, so transfer-compete works unchanged for trees.
                 case FdrMethod.Percolator:
+                case FdrMethod.FastTree:
                     // OSPREY_PASS2_QVALUE=transfer-compete: apply the FROZEN 1st-pass model to
                     // the reconciled targets+decoys (no retrain) and recompute q + PEP by a
                     // fresh target-decoy competition over that full, non-depleted population --
@@ -681,6 +700,29 @@ namespace pwiz.Osprey.Tasks
                             "OSPREY_PASS2_QVALUE=transfer-compete could not run the full-population " +
                             "recompute (frozen model or 1st-pass scalars absent); falling back to the " +
                             "2nd-pass Percolator retrain.");
+                    }
+                    // OSPREY_PASS2_QVALUE=protein-compact: same frozen-model recompute as
+                    // transfer-compete, but the target-decoy competition is CONSTRAINED to the
+                    // protein stratum (peptides of proteins detected in the 1st pass by >=2
+                    // peptides) published by FirstJoin -> reduced multiple testing lowers q for
+                    // marginal present-protein peptides while off-stratum survivors keep their
+                    // 1st-pass q. Falls back to the retrain if the frozen model, scalars, or
+                    // stratum are absent.
+                    if (OspreyEnvironment.Pass2ProteinCompact)
+                    {
+                        if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenPcModel) &&
+                            frozenPcModel?.Results != null &&
+                            ctx.TryGet<ProteinCompactStratum>(out var pcStratum) &&
+                            pcStratum?.BaseIds != null && pcStratum.BaseIds.Count > 0 &&
+                            ComputePass2TransferCompeteFull(
+                                ctx, perFileEntries, perFileParquetPaths, config,
+                                frozenPcModel.Results, pcStratum.BaseIds))
+                        {
+                            return null;
+                        }
+                        ctx.LogWarning(
+                            "OSPREY_PASS2_QVALUE=protein-compact could not run (frozen model, 1st-pass " +
+                            "scalars, or protein stratum absent); falling back to the 2nd-pass retrain.");
                     }
                     // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
                     // the decoy-depleted reconciled+compacted set, apply the FROZEN 1st-pass
@@ -987,11 +1029,11 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx,
             PercolatorResults firstPassModel)
         {
-            if (firstPassModel.FoldWeights == null || firstPassModel.FoldWeights.Count == 0 ||
-                firstPassModel.Standardizer == null)
+            var scorer = FrozenModelScorer.TryCreate(firstPassModel);
+            if (scorer == null)
             {
                 ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: frozen 1st-pass model has no fold weights " +
+                    "OSPREY_PASS2_QVALUE=transfer: frozen 1st-pass model has no usable model " +
                     "or standardizer; cannot transfer.");
                 return false;
             }
@@ -1014,9 +1056,6 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
-            int nFeatures = avgWeights.Length;
-
             ctx.LogInfo(string.Format(
                 "OSPREY_PASS2_QVALUE=transfer: using FULL-population score->q table ({0} points, " +
                 "raw-score range [{1:F4}, {2:F4}], q range [{3:E3}, {4:E3}]) from the " +
@@ -1026,8 +1065,7 @@ namespace pwiz.Osprey.Tasks
                 fullTable.QDesc[0], fullTable.QDesc[fullTable.QDesc.Length - 1]));
 
             TransferQWithTable(
-                perFileEntries, firstPassModel.Standardizer, avgWeights, avgBias, nFeatures,
-                fullTable.ScoresDesc, fullTable.QDesc, ctx);
+                perFileEntries, scorer, fullTable.ScoresDesc, fullTable.QDesc, ctx);
             return true;
         }
 
@@ -1047,7 +1085,7 @@ namespace pwiz.Osprey.Tasks
         /// stubs and streams features into the SVM without persisting them onto
         /// <see cref="FdrEntry.Features"/>, so reading that field here would find nothing.)
         /// Each entry's key is the SAME raw averaged-model score the transfer uses
-        /// (<see cref="ScoreWithFrozenModel"/>), NOT the stored per-fold recalibrated
+        /// (<see cref="FrozenModelScorer.Score"/>), NOT the stored per-fold recalibrated
         /// <see cref="FdrEntry.Score"/>, so table and transfer stay on one scale by
         /// construction. Paired q is the entry's effective experiment q (max of precursor +
         /// peptide). Returns null (logged) when the frozen model is unusable or no features
@@ -1059,12 +1097,12 @@ namespace pwiz.Osprey.Tasks
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             PipelineContext ctx)
         {
-            if (firstPassModel.FoldWeights == null || firstPassModel.FoldWeights.Count == 0 ||
-                firstPassModel.Standardizer == null)
+            var scorer = FrozenModelScorer.TryCreate(firstPassModel);
+            if (scorer == null)
             {
                 ctx.LogWarning(
                     "OSPREY_PASS2_QVALUE=transfer: cannot build full-population score->q table -- " +
-                    "frozen 1st-pass model has no fold weights or standardizer.");
+                    "frozen 1st-pass model has no usable model or standardizer.");
                 return null;
             }
             if (loadFileFeatures == null)
@@ -1074,9 +1112,7 @@ namespace pwiz.Osprey.Tasks
                     "build the full-population score->q table (transfer will fall back).");
                 return null;
             }
-            AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
-            int nFeatures = avgWeights.Length;
-            var standardizer = firstPassModel.Standardizer;
+            int nFeatures = scorer.NumFeatures;
 
             // Score every entry in the full pre-compaction population, paired with its
             // unbiased 1st-pass effective q. Features come from each file's Stage-4 parquet
@@ -1084,7 +1120,6 @@ namespace pwiz.Osprey.Tasks
             var tableScores = new List<double>();
             var tableQs = new List<double>();
             int nSkipped = 0;
-            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
             foreach (var kvp in perFileEntries)
             {
                 IReadOnlyList<double[]> rows;
@@ -1110,8 +1145,7 @@ namespace pwiz.Osprey.Tasks
                         nSkipped++;
                         continue;
                     }
-                    double rawScore = ScoreWithFrozenModel(
-                        rows[idx], standardizer, avgWeights, avgBias, scratch);
+                    double rawScore = scorer.Score(rows[idx]);
                     double effQ = Math.Max(
                         entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue);
                     tableScores.Add(rawScore);
@@ -1136,60 +1170,11 @@ namespace pwiz.Osprey.Tasks
             return new FirstPassScoreQTable { ScoresDesc = scoresDesc, QDesc = qDesc };
         }
 
-        /// <summary>
-        /// Apply the averaged frozen model to a single raw feature vector: standardize a
-        /// copy into the caller-supplied <paramref name="scratch"/> buffer, then
-        /// score = avgBias + sum(avgWeights[j] * std(feat)[j]). Mirrors the per-entry math
-        /// in <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>, which likewise reuses a
-        /// single feature buffer to avoid a per-entry allocation in the scoring loop. Does
-        /// not mutate <paramref name="rawFeatures"/>; overwrites <paramref name="scratch"/>
-        /// (length must be &gt;= rawFeatures.Length).
-        /// </summary>
-        internal static double ScoreWithFrozenModel(
-            double[] rawFeatures,
-            FeatureStandardizer standardizer,
-            double[] avgWeights,
-            double avgBias,
-            double[] scratch)
-        {
-            Array.Copy(rawFeatures, 0, scratch, 0, rawFeatures.Length);
-            standardizer.TransformSlice(scratch);
-            double score = avgBias;
-            for (int j = 0; j < avgWeights.Length; j++)
-                score += avgWeights[j] * scratch[j];
-            return score;
-        }
-
         /// <summary>Number of equal-count score-quantile bins
         /// <see cref="BuildScoreToQTable"/> smooths the per-entry q into. Large enough to
         /// trace the FDR curve finely, small enough that each bin averages out the
         /// per-entry q noise from the raw-vs-calibrated score scale mismatch.</summary>
         private const int SCORE_Q_TABLE_BINS = 1000;
-
-        /// <summary>
-        /// Average the frozen Percolator fold weights + biases into a single (weights, bias)
-        /// pair -- the same averaged-model math <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>
-        /// applies before scoring a population. Caller has already verified the model carries
-        /// at least one fold.
-        /// </summary>
-        private static void AverageFoldModel(
-            PercolatorResults model, out double[] avgWeights, out double avgBias)
-        {
-            int nModels = model.FoldWeights.Count;
-            int nFeatures = model.FoldWeights[0].Length;
-            avgWeights = new double[nFeatures];
-            avgBias = 0.0;
-            for (int f = 0; f < nModels; f++)
-            {
-                double[] foldW = model.FoldWeights[f];
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += model.FoldBiases[f];
-            }
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nModels;
-            avgBias /= nModels;
-        }
 
         /// <summary>
         /// Apply the frozen 1st-pass model to each entry's RECONCILED features (already on
@@ -1201,17 +1186,14 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static void TransferQWithTable(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            FeatureStandardizer standardizer,
-            double[] avgWeights,
-            double avgBias,
-            int nFeatures,
+            FrozenModelScorer scorer,
             double[] scoresDesc,
             double[] qDesc,
             PipelineContext ctx)
         {
             int nScored = 0;
             int nSkipped = 0;
-            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
+            int nFeatures = scorer.NumFeatures;
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
@@ -1221,8 +1203,7 @@ namespace pwiz.Osprey.Tasks
                         nSkipped++;
                         continue;
                     }
-                    double newScore = ScoreWithFrozenModel(
-                        entry.Features, standardizer, avgWeights, avgBias, scratch);
+                    double newScore = scorer.Score(entry.Features);
                     entry.Score = newScore;
                     double q = LookupQForScore(newScore, scoresDesc, qDesc);
                     // Assign one transferred q to all four q slots (precursor/peptide x

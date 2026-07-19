@@ -105,7 +105,8 @@ namespace pwiz.Osprey.Tasks
         {
             typeof(PerFileConsensusTargets), typeof(ReconciliationActions),
             typeof(RefinedCalibrations), typeof(PerFileGapFillForRescore),
-            typeof(CompactedEntries), typeof(PlanningPerformed)
+            typeof(CompactedEntries), typeof(PlanningPerformed),
+            typeof(ProteinCompactStratum)
         };
 
         // Stage 6 planning state. Set by PlanStage6 (Run) and published into the
@@ -117,6 +118,12 @@ namespace pwiz.Osprey.Tasks
         // collections so a published slot from a no-op / stopped-after-Stage-5
         // run is never null.
         private bool _didPlan;
+
+        // The protein-compact stratum (base_ids of >=2-peptide 1st-pass proteins), built
+        // during first-pass protein FDR and read by the compaction gate to ADMIT present-
+        // protein peptides that did not individually pass 1st-pass FDR (so they get
+        // reconciled + rescored + reported). Null unless OSPREY_PASS2_QVALUE=protein-compact.
+        private HashSet<uint> _proteinCompactStratum;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
         private IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions
@@ -207,13 +214,13 @@ namespace pwiz.Osprey.Tasks
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
-            // Stage 5: First-pass FDR. The Percolator path prints its own
-            // "Running First-pass Percolator on N entries..." line from the FDR
+            // Stage 5: First-pass FDR. The Percolator framework (SVM or FastTree) prints
+            // its own "Running First-pass Percolator on N entries..." line from the FDR
             // engine, so the generic header would just be a redundant second
             // header right after the [TASK] FirstPassFDR banner. Emit it only for
             // the other methods (Simple / fallback), which otherwise go straight
             // to per-file result lines with no header of their own.
-            if (config.FdrMethod != FdrMethod.Percolator)
+            if (!config.FdrMethod.UsesPercolatorFramework())
             {
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
@@ -284,7 +291,7 @@ namespace pwiz.Osprey.Tasks
             // trained 1st-pass MODEL (not the full-population score->q table), which the
             // streaming projection path publishes cheaply via captureModel below. Forcing
             // resident here OOMs on large (entrapment) libraries.
-            if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
+            if (OspreyEnvironment.UseFdrProjection && config.FdrMethod.UsesPercolatorFramework() &&
                 !needsResidentFirstPassPool)
             {
                 // Null unless PerFileScoring took the lean path and streamed the rows
@@ -833,10 +840,16 @@ namespace pwiz.Osprey.Tasks
                         {
                             if (entry.IsDecoy)
                                 continue;
+                            uint baseId = entry.EntryId & ScoringTaskShared.BASE_ID_MASK;
+                            // Compaction gate: passes peptide-q, OR passes protein-rescue, OR
+                            // (protein-compact) is in the >=2-peptide protein stratum -- the
+                            // last clause admits present-protein peptides that failed 1st-pass
+                            // FDR so they get reconciled + rescored + reported.
                             if (entry.RunPeptideQvalue <= peptideGate ||
-                                entry.RunProteinQvalue <= proteinGate)
+                                entry.RunProteinQvalue <= proteinGate ||
+                                (_proteinCompactStratum != null && _proteinCompactStratum.Contains(baseId)))
                             {
-                                firstPassBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
+                                firstPassBaseIds.Add(baseId);
                             }
                         }
                     }
@@ -1346,7 +1359,13 @@ namespace pwiz.Osprey.Tasks
         {
             switch (config.FdrMethod)
             {
+                // Both run the same semi-supervised target-decoy framework; FdrMethod
+                // rides along in the config and selects the classifier (linear SVM vs
+                // gradient-boosted trees) at the two seams that touch it inside the
+                // engine. Nothing else about the run differs, so there is no separate
+                // FastTree pipeline to dispatch to.
                 case FdrMethod.Percolator:
+                case FdrMethod.FastTree:
                     return RunPercolatorFdr(perFileEntries, config, ctx, loadFileFeatures: loadFileFeatures);
 
                 case FdrMethod.Simple:
@@ -1390,7 +1409,8 @@ namespace pwiz.Osprey.Tasks
             // model instead of retraining. Null (a pure no-op in the engine) on the default
             // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
             Action<PercolatorResults> captureModel = null;
-            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2TransferCompete) &&
+            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2TransferCompete ||
+                 OspreyEnvironment.Pass2ProteinCompact) &&
                 string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
             {
                 // Publish is add-only (throws on a duplicate key); guard so a first pass
@@ -1406,7 +1426,8 @@ namespace pwiz.Osprey.Tasks
 
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
-                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
+                OspreyFeatureCalculators.BuildFeatureInfos(
+                    ParquetScoreCache.FeatureNames(config.ExtraFeatures)),
                 ctx.LogInfo, out var contributions,
                 BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures,
                 captureModel, frozenModel);
@@ -1444,7 +1465,8 @@ namespace pwiz.Osprey.Tasks
         {
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 projections, config,
-                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
+                OspreyFeatureCalculators.BuildFeatureInfos(
+                    ParquetScoreCache.FeatureNames(config.ExtraFeatures)),
                 ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
                 loadFileFeatures);
             if (aborted)
@@ -1510,6 +1532,11 @@ namespace pwiz.Osprey.Tasks
             var result = ProteinFdrEngine.RunFirstPass(
                 perFileEntries, fullLibrary, config, ctx.LogInfo);
 
+            // Build + publish the protein-compact stratum (legacy path). Gated on the mode:
+            // it scans the full library, and it is read only by the compaction gate + pass-2.
+            if (OspreyEnvironment.Pass2ProteinCompact)
+                BuildAndPublishProteinCompactStratum(result, fullLibrary, ctx);
+
             if (ctx.Diagnostics?.DumpProteinFdr ?? false)
             {
                 ctx.Diagnostics?.WriteStage6ProteinFdrDump(
@@ -1517,6 +1544,62 @@ namespace pwiz.Osprey.Tasks
                 if (ctx.Diagnostics?.ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
             }
+        }
+
+        /// <summary>
+        /// Build the protein-compact stratum: the base_ids of every library precursor whose
+        /// peptide maps to a protein detected in the 1st pass by &gt;=2 DISTINCT peptides (the
+        /// honest multi-hit anchor -- single-hit proteins break the independent-filtering
+        /// assumption; the entrapment prototype showed &gt;=2 restores FDP control at full
+        /// gain). Bounded by the library -> flat in file count. Read by the compaction gate
+        /// (to admit these peptides for reconciliation) and by <c>Pass2FdrSidecar</c>'s
+        /// stratified competition (to re-scope q over them).
+        /// </summary>
+        private static HashSet<uint> BuildProteinCompactStratum(
+            FirstPassProteinFdrResult result, List<LibraryEntry> fullLibrary, Action<string> log)
+        {
+            // ModifiedSequence -> its protein ids (from target library entries).
+            var pepProteins = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (var e in fullLibrary)
+                if (!e.IsDecoy && e.ProteinIds != null && e.ProteinIds.Count > 0 &&
+                    !pepProteins.ContainsKey(e.ModifiedSequence))
+                    pepProteins[e.ModifiedSequence] = e.ProteinIds;
+
+            // Count DISTINCT detected peptides per protein; keep proteins with >=2.
+            var protPepCount = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var pep in result.DetectedPeptides)
+                if (pepProteins.TryGetValue(pep, out var pids))
+                    foreach (var p in pids)
+                        protPepCount[p] = protPepCount.TryGetValue(p, out int c) ? c + 1 : 1;
+            var present2 = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kv in protPepCount)
+                if (kv.Value >= 2) present2.Add(kv.Key);
+
+            // stratum = base_ids of every library precursor of a present-2 protein (target
+            // and paired decoy share a base_id, so this is pair-symmetric).
+            var stratum = new HashSet<uint>();
+            foreach (var e in fullLibrary)
+            {
+                if (e.ProteinIds == null) continue;
+                foreach (var p in e.ProteinIds)
+                    if (present2.Contains(p)) { stratum.Add(e.Id & ~LibraryEntry.DECOY_ID_BIT); break; }
+            }
+            log(string.Format(
+                "protein-compact: {0} proteins with >=2 detected peptides -> stratum of {1} base_ids " +
+                "(from {2} detected peptides).",
+                present2.Count, stratum.Count, result.DetectedPeptides.Count));
+            return stratum;
+        }
+
+        /// <summary>Build the protein-compact stratum, stash it for the compaction gate
+        /// (<see cref="_proteinCompactStratum"/>), and publish it for the pass-2 stratified
+        /// competition. Called on BOTH the legacy and projection first-pass paths so the
+        /// compaction set is identical either way.</summary>
+        private void BuildAndPublishProteinCompactStratum(
+            FirstPassProteinFdrResult result, List<LibraryEntry> fullLibrary, PipelineContext ctx)
+        {
+            _proteinCompactStratum = BuildProteinCompactStratum(result, fullLibrary, ctx.LogInfo);
+            ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
         }
 
         /// <summary>
@@ -1613,7 +1696,7 @@ namespace pwiz.Osprey.Tasks
             // default; transfer/table uses the resident path instead. Streaming path only, so
             // no full-population pool is held resident (avoids the entrapment-library OOM).
             Action<PercolatorResults> captureModel = null;
-            if (OspreyEnvironment.Pass2TransferCompete)
+            if (OspreyEnvironment.Pass2TransferCompete || OspreyEnvironment.Pass2ProteinCompact)
                 captureModel = results =>
                 {
                     if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
@@ -1625,7 +1708,8 @@ namespace pwiz.Osprey.Tasks
             var swFdr = Stopwatch.StartNew();
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 projections, config,
-                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
+                OspreyFeatureCalculators.BuildFeatureInfos(
+                    ParquetScoreCache.FeatureNames(config.ExtraFeatures)),
                 ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", loadFileFeatures, captureContributions, captureModel);
             swFdr.Stop();
@@ -1680,6 +1764,12 @@ namespace pwiz.Osprey.Tasks
                 swProt.Stop();
                 ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
                     swProt.Elapsed.TotalSeconds));
+
+                // Build + publish the protein-compact stratum on the PROJECTION (production)
+                // path too -- the compaction gate below (ComputeFirstPassBaseIds) reads it to
+                // admit present-protein peptides that did not pass 1st-pass FDR.
+                if (OspreyEnvironment.Pass2ProteinCompact)
+                    BuildAndPublishProteinCompactStratum(proteinResult, fullLibrary, ctx);
             }
 
             // Phase 2 of the two-phase sidecar (issue #4355 struct-shrink S1): now that
@@ -1704,7 +1794,7 @@ namespace pwiz.Osprey.Tasks
 
             // Compaction predicate over the projection -> passing base_id set
             // (identical to CompactFirstPass's non-bundle branch, risk #7).
-            var firstPassBaseIds = ComputeFirstPassBaseIds(projections, outputs, config);
+            var firstPassBaseIds = ComputeFirstPassBaseIds(projections, outputs, config, _proteinCompactStratum);
 
             // Reload full FdrEntry survivors from the ORIGINAL parquet + the
             // just-written 1st-pass sidecar. ParquetIndex therefore comes from
@@ -1828,7 +1918,8 @@ namespace pwiz.Osprey.Tasks
         /// the masked id set drives the survivor filter symmetrically.
         /// </summary>
         private static HashSet<uint> ComputeFirstPassBaseIds(
-            FdrProjectionSet projections, FdrProjectionOutputs outputs, OspreyConfig config)
+            FdrProjectionSet projections, FdrProjectionOutputs outputs, OspreyConfig config,
+            HashSet<uint> stratum)
         {
             var firstPassBaseIds = new HashSet<uint>();
             // Peptide-q compaction gate: the dedicated field (default 0.01 = RunFdr)
@@ -1848,12 +1939,16 @@ namespace pwiz.Osprey.Tasks
                 {
                     if (rows[r].IsDecoy)
                         continue;
+                    uint baseId = rows[r].EntryId & ScoringTaskShared.BASE_ID_MASK;
                     // Run peptide/protein q-values now live in the parallel outputs
-                    // array (issue #4355 struct-shrink S0), not on the lean struct.
+                    // array (issue #4355 struct-shrink S0), not on the lean struct. The
+                    // stratum clause (protein-compact) admits present-protein peptides that
+                    // failed 1st-pass FDR -- identical to the legacy CompactFirstPass twin.
                     if (outputs.RunPeptideQvalue(f, r) <= peptideGate ||
-                        outputs.RunProteinQvalue(f, r) <= proteinGate)
+                        outputs.RunProteinQvalue(f, r) <= proteinGate ||
+                        (stratum != null && stratum.Contains(baseId)))
                     {
-                        firstPassBaseIds.Add(rows[r].EntryId & ScoringTaskShared.BASE_ID_MASK);
+                        firstPassBaseIds.Add(baseId);
                     }
                 }
             }

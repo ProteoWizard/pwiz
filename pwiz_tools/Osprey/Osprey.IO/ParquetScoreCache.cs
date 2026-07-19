@@ -83,6 +83,55 @@ namespace pwiz.Osprey.IO
 
         public const int NUM_PIN_FEATURES = 21;
 
+        /// <summary>
+        /// EXTRA (non-PIN) score columns, appended AFTER the 21 when
+        /// <c>--extra-features</c> is on. Order must match the calculator indices 21+ in
+        /// <c>OspreyFeatureCalculators</c> (this project cannot reference Osprey.Scoring,
+        /// so the two lists are paired by position -- <c>ScoringTaskShared</c> asserts the
+        /// widths agree). Appended, never interleaved, so the 21 PIN columns keep their
+        /// names and positions and a flag-off parquet is byte-identical.
+        /// </summary>
+        public static readonly string[] EXTRA_FEATURE_NAMES =
+        {
+            "fragment_coelution_min",
+            "peak_symmetry",
+            "mass_accuracy_std",
+            "hyperscore",
+        };
+
+        /// <summary>
+        /// The feature-vector width a parquet FILE carries, read from its own schema: the
+        /// extra columns are appended, so the presence of the first one marks a wide file.
+        /// Self-describing on purpose -- a reader must not need to be told which flag the
+        /// writer ran with, and an old (21-column) parquet stays readable unchanged.
+        /// </summary>
+        private static int DetectFeatureWidth(Dictionary<string, DataField> fieldsByName)
+        {
+            return fieldsByName != null && fieldsByName.ContainsKey(EXTRA_FEATURE_NAMES[0])
+                ? NUM_PIN_FEATURES + EXTRA_FEATURE_NAMES.Length
+                : NUM_PIN_FEATURES;
+        }
+
+        /// <summary>Feature-column count for this run: the 21 PIN columns, plus the extras
+        /// when <paramref name="extraFeatures"/> is on.</summary>
+        public static int FeatureColumnCount(bool extraFeatures)
+        {
+            return extraFeatures ? NUM_PIN_FEATURES + EXTRA_FEATURE_NAMES.Length : NUM_PIN_FEATURES;
+        }
+
+        /// <summary>The feature-column names for this run, in vector order (PIN 0..20,
+        /// then the extras). The returned array's length is the vector width, which is
+        /// what <c>OspreyFeatureCalculators.BuildFeatureInfos</c> keys off.</summary>
+        public static string[] FeatureNames(bool extraFeatures)
+        {
+            if (!extraFeatures)
+                return PIN_FEATURE_NAMES;
+            var names = new string[NUM_PIN_FEATURES + EXTRA_FEATURE_NAMES.Length];
+            Array.Copy(PIN_FEATURE_NAMES, names, NUM_PIN_FEATURES);
+            Array.Copy(EXTRA_FEATURE_NAMES, 0, names, NUM_PIN_FEATURES, EXTRA_FEATURE_NAMES.Length);
+            return names;
+        }
+
         #endregion
 
         #region Schema Fields
@@ -127,12 +176,46 @@ namespace pwiz.Osprey.IO
         // schema -- it's already there via BuildFeatureFields().
         private static readonly DataField FIELD_COELUTION_SUM = new DataField<double>("fragment_coelution_sum");
 
-        private static DataField[] BuildFeatureFields()
+        /// <summary>
+        /// Feature columns for a vector of <paramref name="featureWidth"/> values: the 21
+        /// PIN columns, plus the extra non-PIN columns when the vector is wider (see
+        /// <see cref="EXTRA_FEATURE_NAMES"/>).
+        /// </summary>
+        private static DataField[] BuildFeatureFields(int featureWidth)
         {
-            var fields = new DataField[NUM_PIN_FEATURES];
-            for (int i = 0; i < NUM_PIN_FEATURES; i++)
-                fields[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
+            string[] names = FeatureNames(featureWidth > NUM_PIN_FEATURES);
+            var fields = new DataField[featureWidth];
+            for (int i = 0; i < featureWidth; i++)
+                fields[i] = new DataField<double>(names[i]);
             return fields;
+        }
+
+        /// <summary>
+        /// The feature-vector width to write, taken FROM THE DATA (the first entry that
+        /// carries a vector) rather than from a flag. The scorer already sized every
+        /// vector for this run, so reading the width off the vectors makes it impossible
+        /// for the schema and the values to disagree -- a flag threaded down here could.
+        /// Falls back to the 21 PIN columns when nothing carries features.
+        /// </summary>
+        private static int InferFeatureWidth(IEnumerable<double[]> featureVectors)
+        {
+            foreach (var v in featureVectors)
+            {
+                if (v == null)
+                    continue;
+                if (v.Length == NUM_PIN_FEATURES ||
+                    v.Length == NUM_PIN_FEATURES + EXTRA_FEATURE_NAMES.Length)
+                {
+                    return v.Length;
+                }
+                // A width we have no column names for: writing it would produce a parquet
+                // whose schema silently disagrees with the vectors. Fail loudly instead.
+                throw new InvalidOperationException(string.Format(
+                    @"Feature vector width {0} matches neither the {1} PIN features nor " +
+                    @"the {2} PIN + extra features; cannot name the parquet columns.",
+                    v.Length, NUM_PIN_FEATURES, NUM_PIN_FEATURES + EXTRA_FEATURE_NAMES.Length));
+            }
+            return NUM_PIN_FEATURES;
         }
 
         // Parquet.Net 4.x requires the DataField passed to DataColumn's ctor
@@ -188,7 +271,10 @@ namespace pwiz.Osprey.IO
                 return;
 
             int n = entries.Count;
-            var featureFields = BuildFeatureFields();
+            // This overload writes from the CoelutionFeatureSet DTO, which ExtractPinFeatures
+            // maps to the 21 PIN columns only -- the extra scores travel on the FdrEntry
+            // double[] vector (the production path), not this one.
+            var featureFields = BuildFeatureFields(NUM_PIN_FEATURES);
             var schema = BuildWriteSchema(featureFields);
 
             // Build column arrays. Schema matches Rust's
@@ -307,7 +393,10 @@ namespace pwiz.Osprey.IO
                 return;
 
             int n = entries.Count;
-            var featureFields = BuildFeatureFields();
+            // Width comes from the vectors themselves, so --extra-features widens the
+            // parquet automatically and a flag can never disagree with the data.
+            int featureWidth = InferFeatureWidth(entries.Select(e => e.Features));
+            var featureFields = BuildFeatureFields(featureWidth);
             var schema = BuildWriteSchema(featureFields);
 
             var entryIds = new uint[n];
@@ -337,8 +426,8 @@ namespace pwiz.Osprey.IO
             var fragmentIntensities = new byte[n][];
             var refXicRts = new byte[n][];
             var refXicIntensities = new byte[n][];
-            var featureArrays = new double[NUM_PIN_FEATURES][];
-            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+            var featureArrays = new double[featureWidth][];
+            for (int f = 0; f < featureWidth; f++)
                 featureArrays[f] = new double[n];
 
             // Iterate in canonical sorted order (entry_id, charge, scan_number)
@@ -440,9 +529,9 @@ namespace pwiz.Osprey.IO
                     }
 
                     var featureVec = entry.Features;
-                    if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
+                    if (featureVec != null && featureVec.Length == featureWidth)
                     {
-                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                        for (int f = 0; f < featureWidth; f++)
                             featureArrays[f][i] = Finite(featureVec[f]);
                     }
                     // else: leave zeros (entries without features can't drive Stage 5+).
@@ -518,7 +607,9 @@ namespace pwiz.Osprey.IO
                 new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts),
                 new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities),
             };
-            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+            // featureFields.Length, not NUM_PIN_FEATURES: this assembles whatever width the
+            // caller built (21, or 21 + the extras).
+            for (int f = 0; f < featureFields.Length; f++)
                 columns.Add(new DataColumn(featureFields[f], featureArrays[f]));
             return columns;
         }
@@ -944,7 +1035,6 @@ namespace pwiz.Osprey.IO
         public static List<FdrEntry> LoadFullFdrEntries(string path)
         {
             var entries = new List<FdrEntry>();
-            var featureFields = BuildFeatureFields();
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
@@ -974,15 +1064,20 @@ namespace pwiz.Osprey.IO
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;
 
-                        var featureCols = new double[NUM_PIN_FEATURES][];
-                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                            featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, featureFields[f].Name);
+                        // Width from the file's own schema (see DetectFeatureWidth), so a
+                        // wide --extra-features parquet round-trips its extra columns
+                        // through Stage 6 reconciliation instead of silently dropping them.
+                        int featureWidth = DetectFeatureWidth(fieldsByName);
+                        string[] featureNames = FeatureNames(featureWidth > NUM_PIN_FEATURES);
+                        var featureCols = new double[featureWidth][];
+                        for (int f = 0; f < featureWidth; f++)
+                            featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, featureNames[f]);
 
                         int rowCount = entryIdCol.Length;
                         for (int row = 0; row < rowCount; row++)
                         {
-                            var features = new double[NUM_PIN_FEATURES];
-                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            var features = new double[featureWidth];
+                            for (int f = 0; f < featureWidth; f++)
                             {
                                 double v = featureCols[f] != null ? featureCols[f][row] : 0.0;
                                 features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
@@ -1037,11 +1132,15 @@ namespace pwiz.Osprey.IO
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
-                        // Read all feature columns
-                        var featureCols = new double[NUM_PIN_FEATURES][];
-                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                        // Read all feature columns. Width comes from the file's schema, so
+                        // an --extra-features parquet yields wide vectors and a legacy
+                        // 21-column one still yields 21 -- no flag needed at read time.
+                        int width = DetectFeatureWidth(fieldsByName);
+                        string[] names = FeatureNames(width > NUM_PIN_FEATURES);
+                        var featureCols = new double[width][];
+                        for (int f = 0; f < width; f++)
                         {
-                            featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                            featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, names[f]);
                         }
 
                         if (featureCols[0] == null)
@@ -1050,8 +1149,8 @@ namespace pwiz.Osprey.IO
                         int rowCount = featureCols[0].Length;
                         for (int row = 0; row < rowCount; row++)
                         {
-                            var features = new double[NUM_PIN_FEATURES];
-                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            var features = new double[width];
+                            for (int f = 0; f < width; f++)
                             {
                                 double v = featureCols[f][row];
                                 features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;

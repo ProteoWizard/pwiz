@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
 {
@@ -308,13 +309,46 @@ namespace pwiz.Osprey.FDR
             OspreyFeatureInfo[] featureInfos,
             PercolatorDiagnosticsConfig diagnostics)
         {
+            // Start from the validated GbtParams defaults and apply any env overrides
+            // (OSPREY_GBT_*), so a regularization / capacity sweep runs without a recompile
+            // per setting. Unset vars leave the default in place. Tree-only: this object is
+            // ignored on the SVM path. The chosen values are echoed to the run log.
+            var gbtParams = new GbtParams();
+            if (OspreyEnvironment.GbtGamma.HasValue) gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
+            if (OspreyEnvironment.GbtRegLambda.HasValue) gbtParams.RegLambda = OspreyEnvironment.GbtRegLambda.Value;
+            if (OspreyEnvironment.GbtRegAlpha.HasValue) gbtParams.RegAlpha = OspreyEnvironment.GbtRegAlpha.Value;
+            if (OspreyEnvironment.GbtMaxDepth.HasValue) gbtParams.MaxDepth = OspreyEnvironment.GbtMaxDepth.Value;
+            if (OspreyEnvironment.GbtNTrees.HasValue) gbtParams.NTrees = OspreyEnvironment.GbtNTrees.Value;
+            if (OspreyEnvironment.GbtMinChildWeight.HasValue) gbtParams.MinChildWeight = OspreyEnvironment.GbtMinChildWeight.Value;
+            if (OspreyEnvironment.GbtLearningRate.HasValue) gbtParams.LearningRate = OspreyEnvironment.GbtLearningRate.Value;
+            if (OspreyEnvironment.GbtSubsample.HasValue) gbtParams.Subsample = OspreyEnvironment.GbtSubsample.Value;
+            if (OspreyEnvironment.GbtColSample.HasValue) gbtParams.ColSample = OspreyEnvironment.GbtColSample.Value;
+
             return new PercolatorConfig
             {
                 TrainFdr = config.RunFdr,
                 TestFdr = config.RunFdr,
-                MaxIterations = 10,
+                // The SVM's 10 is unchanged. Trees converge far more slowly and were
+                // still improving when they hit 10, so they get their own (higher) cap --
+                // both loops still early-stop on convergence, so this only binds when the
+                // model genuinely has further to go. See OspreyEnvironment.GbtMaxIterations.
+                MaxIterations = config.FdrMethod == FdrMethod.FastTree
+                    ? OspreyEnvironment.GbtMaxIterations
+                    : 10,
                 NFolds = 3,
                 FeatureInfos = featureInfos,
+                // --fdr-method fasttree: swap the linear SVM for gradient-boosted trees.
+                // This is the ONLY knob that differs between the two methods -- the
+                // dedup, fold assignment, semi-supervised iteration, competition, and
+                // q-value/PEP math are the same shared code either way, which is what
+                // makes them comparable at matched entrapment FDP.
+                UseGradientBoostedTrees = config.FdrMethod == FdrMethod.FastTree,
+                GbtParams = gbtParams,
+                // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
+                // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
+                MaxTrainSize = OspreyEnvironment.MaxTrainSizeOverride ?? 300000,
+                // Honors --threads; drives only the tree score pass (see NThreads).
+                NThreads = config.NThreads,
                 // Collect per-feature target/decoy score histograms only for the
                 // model-diagnostics report (#4377); off the production path otherwise,
                 // so byte-neutral when --model-diagnostics is not requested.
@@ -585,19 +619,7 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            var trainConfig = new PercolatorConfig
-            {
-                TrainFdr = percConfig.TrainFdr,
-                TestFdr = percConfig.TestFdr,
-                MaxIterations = percConfig.MaxIterations,
-                NFolds = percConfig.NFolds,
-                Seed = percConfig.Seed,
-                CValues = percConfig.CValues,
-                MaxTrainSize = percConfig.MaxTrainSize,
-                FeatureInfos = percConfig.FeatureInfos,
-                TrainOnly = true,
-                Diagnostics = percConfig.Diagnostics
-            };
+            var trainConfig = percConfig.CloneForTrainOnly();
             PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
 
             // A diagnostic-only (*Only) dump can fire during the train-only pass
@@ -831,19 +853,7 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            var trainConfig = new PercolatorConfig
-            {
-                TrainFdr = percConfig.TrainFdr,
-                TestFdr = percConfig.TestFdr,
-                MaxIterations = percConfig.MaxIterations,
-                NFolds = percConfig.NFolds,
-                Seed = percConfig.Seed,
-                CValues = percConfig.CValues,
-                MaxTrainSize = percConfig.MaxTrainSize,
-                FeatureInfos = percConfig.FeatureInfos,
-                TrainOnly = true,
-                Diagnostics = percConfig.Diagnostics
-            };
+            var trainConfig = percConfig.CloneForTrainOnly();
             PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
 
             if (trainResults.DiagnosticAbort)

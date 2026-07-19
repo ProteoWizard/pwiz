@@ -90,6 +90,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(8, Parse(@"--threads", @"8").NThreads);
             Assert.AreEqual(FdrMethod.Simple, Parse(@"--fdr-method", @"simple").FdrMethod);
             Assert.AreEqual(FdrMethod.Percolator, Parse(@"--fdr-method", @"bogus").FdrMethod); // warn -> default
+            Assert.AreEqual(FdrMethod.FastTree, Parse(@"--fdr-method", @"fasttree").FdrMethod);
+
+            // --extra-features is OFF unless asked for: on is a scoring change (a wider
+            // feature vector + a wider parquet schema), so the default must stay the
+            // parity-locked 21.
+            Assert.IsFalse(Parse(@"--fdr-method", @"fasttree").ExtraFeatures);
+            Assert.IsTrue(Parse(@"--extra-features", @"--fdr-method", @"fasttree").ExtraFeatures);
+            // Still parses with a non-tree method -- ToConfig warns rather than rejecting,
+            // since measuring the (bad) SVM + extra-features combination is legitimate.
+            Assert.IsTrue(Parse(@"--extra-features", @"--fdr-method", @"percolator").ExtraFeatures);
             Assert.AreEqual(FdrLevel.Peptide, Parse(@"--fdr-level", @"peptide").FdrLevel);
             Assert.AreEqual(FdrLevel.Precursor, Parse(@"--fdr-level", @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(@"--shared-peptides", @"razor").SharedPeptides);
