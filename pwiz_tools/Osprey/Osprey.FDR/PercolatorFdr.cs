@@ -1585,6 +1585,9 @@ namespace pwiz.Osprey.FDR
             // Load ONLY the subset's feature vectors, one file at a time (bounded by MaxTrainSize),
             // cloning each row so the subset entry owns it -- mirrors RunStreamingIntoProjection.
             var subsetByFile = GroupIndicesByFileName(subsetEntries);
+            int subsetFilesLoaded = 0;
+            using (var loadProgress = new ProgressReporter(string.Format(
+                       @"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count), subsetByFile.Count))
             foreach (var kvp in subsetByFile)
             {
                 IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
@@ -1594,6 +1597,7 @@ namespace pwiz.Osprey.FDR
                     entry.Features = (double[])ResolveFeatureRow(
                         rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
                 }
+                loadProgress.Report(++subsetFilesLoaded);
             }
 
             var trainConfig = new PercolatorConfig
@@ -1655,6 +1659,10 @@ namespace pwiz.Osprey.FDR
             int nonEmptyFiles = 0;
             int g1 = 0;
             logInfo(string.Format(@"Running {0} Percolator on {1} entries...", passLabel, n));
+            // Fill the previously-silent multi-minute streaming score pass with throttled percent,
+            // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
+            // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
+            using (var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0} entries", n), n))
             for (int f = 0; f < nFiles; f++)
             {
                 IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
@@ -1680,6 +1688,7 @@ namespace pwiz.Osprey.FDR
                     streamingQ.Add(g1, score, buffer.EntryIds[r], isDecoy, buffer.Peptides[r]);
                     contribAcc.Add(featureBuf, isDecoy);
                     g1++;
+                    scoreProgress.Report(g1);
                 }
                 ComputePerFileRunQvalues(
                     fScores, fLabels, fEntryIds, fPeptides, 0, count,
@@ -1707,7 +1716,10 @@ namespace pwiz.Osprey.FDR
                 ? null : streamingQ.BuildExperimentPeptideQMap();
 
             // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
+            // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
+            // is not silent; byte-identical q-values and sink output.
             int gEmit = 0;
+            using (var emitProgress = new ProgressReporter(string.Format(@"Assigning q-values to {0} entries", n), n))
             for (int f = 0; f < nFiles; f++)
             {
                 IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
@@ -1754,6 +1766,7 @@ namespace pwiz.Osprey.FDR
 
                     sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r],
                         new FdrQValues(rp, rpe, ep, epe, pep));
+                    emitProgress.Report(gEmit + r + 1);
                 }
                 gEmit += count;
             }

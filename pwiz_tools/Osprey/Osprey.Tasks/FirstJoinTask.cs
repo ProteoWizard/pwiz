@@ -1798,8 +1798,12 @@ namespace pwiz.Osprey.Tasks
             // projection order (the reductions are order-independent, but streaming in the
             // resident path's file/row order keeps the best-scores insertion order identical).
             var accumulator = new FirstPassProteinFdrAccumulator(config.RunFdr);
+            int proteinReduceFiles = 0;
+            using (var reduceProgress = new ProgressReporter(string.Format(
+                       @"Computing first-pass protein FDR ({0} files)", projections.PerFile.Count), projections.PerFile.Count))
             foreach (var kvp in projections.PerFile)
             {
+                reduceProgress.Report(++proteinReduceFiles);
                 if (!StreamFirstPassFileScores(kvp.Key, perFileParquetPaths, config, ctx,
                         (modseq, isDecoy, record) =>
                             accumulator.Add(modseq, isDecoy, record.Score, record.RunPeptideQvalue)))
@@ -1817,8 +1821,12 @@ namespace pwiz.Osprey.Tasks
             // value the pass-1 PeptideQvalues keys were built from), not re-derived from the
             // library, so the peptide -> q lookup matches.
             var peptideQvalues = result.ProteinFdr.PeptideQvalues;
+            int proteinPatchFiles = 0;
+            using (var patchProgress = new ProgressReporter(string.Format(
+                       @"Patching first-pass protein q-values ({0} files)", projections.PerFile.Count), projections.PerFile.Count))
             foreach (var kvp in projections.PerFile)
             {
+                patchProgress.Report(++proteinPatchFiles);
                 string fileName = kvp.Key;
                 string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
@@ -1957,8 +1965,12 @@ namespace pwiz.Osprey.Tasks
             // plain f64, never a null switch). First-pass protein FDR runs unconditionally
             // on this path too, so run_protein_qvalue is populated in the finalized sidecar.
             double proteinGate = config.EffectiveProteinFdr;
+            int compactFiles = 0;
+            using (var compactProgress = new ProgressReporter(string.Format(
+                       @"Compacting first-pass results ({0} files)", projections.PerFile.Count), projections.PerFile.Count))
             foreach (var kvp in projections.PerFile)
             {
+                compactProgress.Report(++compactFiles);
                 string fileName = kvp.Key;
                 string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
