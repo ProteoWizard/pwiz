@@ -1833,7 +1833,10 @@ namespace pwiz.Osprey.Tasks
                         (entryId, charge, isDecoy, coelutionSum, modseq) =>
                         {
                             double q;
-                            if (!peptideQvalues.TryGetValue(modseq, out q))
+                            // Normalize a present-but-null modseq to "" so the lookup matches the
+                            // pass-1 PeptideQvalues keys (the accumulator normalizes the same way);
+                            // a null Dictionary key would otherwise throw. See StreamFirstPassFileScores.
+                            if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                 q = 1.0;
                             runProteinByEntryId[entryId] = q;
                         });
@@ -1914,8 +1917,11 @@ namespace pwiz.Osprey.Tasks
                     // skip rule with no per-row filter), so this never triggers; keeping the
                     // reader's contract aligned with the reload's avoids aborting a run on any
                     // future parquet-superset case (e.g. an Astral gap-fill row).
+                    // Normalize a present-but-null modseq to "" so the protein-FDR accumulator's
+                    // Dictionary<string,...> key never sees null (which would throw); matches the
+                    // resident path, where FdrProjectionSet.Builder interned null modseqs as "".
                     if (recordByEntryId.TryGetValue(entryId, out FdrScoreRecord record))
-                        onRow(modseq, isDecoy, record);
+                        onRow(modseq ?? string.Empty, isDecoy, record);
                 });
             return true;
         }
