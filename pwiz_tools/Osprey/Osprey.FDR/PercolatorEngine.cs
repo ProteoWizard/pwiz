@@ -217,7 +217,8 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
         {
             // The lean FdrProjection no longer stores the q-value outputs (issue #4355
             // struct-shrink S0): the score pass hands them to this per-pass sink (the
@@ -276,7 +277,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                loadFileFeatures, sink, captureContributions);
+                loadFileFeatures, sink, captureContributions, captureModel);
             if (streamingAbort)
                 return true;
 
@@ -295,7 +296,7 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
         /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
-        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions})"/>
+        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// projection overload for the lean 1st-pass case, it builds the same parity-locked
         /// <see cref="PercolatorConfig"/> and delegates to
         /// <see cref="PercolatorFdr.RunStreamingFirstPass"/>, which streams every row's identity +
@@ -315,7 +316,8 @@ namespace pwiz.Osprey.FDR
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -326,7 +328,7 @@ namespace pwiz.Osprey.FDR
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             return PercolatorFdr.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
-                captureContributions);
+                captureContributions, captureModel);
         }
 
         /// <summary>
@@ -712,7 +714,8 @@ namespace pwiz.Osprey.FDR
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             IFdrOutputSink sink,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -863,6 +866,11 @@ namespace pwiz.Osprey.FDR
 
             if (trainResults.DiagnosticAbort)
                 return true;
+
+            // OSPREY_PASS2_QVALUE=transfer: surface the trained model so the caller can publish
+            // FirstPassPercolatorModel for the 2nd-pass transfer (see RunFirstPassStreaming).
+            // Null off the transfer path -- a pure hand-off, so scoring stays byte-identical.
+            captureModel?.Invoke(trainResults);
 
             // Release the subset-only working sets before the score pass so only the
             // flat per-observation arrays + the projection remain resident across the

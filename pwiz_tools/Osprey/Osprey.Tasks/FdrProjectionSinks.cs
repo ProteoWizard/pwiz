@@ -56,10 +56,16 @@ namespace pwiz.Osprey.Tasks
         // pre-compaction row into the reduced report structures so the projection path can emit
         // the pass-1 report without holding the resident FdrEntry pool. Fed in Accept.
         private readonly ModelDiagnosticsData.Accumulator _mdiagAccumulator;
+        // Streaming OSPREY_PASS2_QVALUE=transfer score->q table accumulator (null off the transfer
+        // path): folds every pre-compaction row's (averaged-model score, effective experiment q)
+        // into the table population, so the projection path builds the full-population table
+        // without the resident FdrEntry pool BuildFullPopulationScoreQTable walks. Fed in Accept.
+        private readonly Pass2FdrSidecar.FirstPassScoreQTableAccumulator _scoreQTableAccumulator;
 
         protected FdrProjectionSinkBase(
             FdrProjectionSet projections, OspreyConfig config, string passLabel,
-            ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
+            ModelDiagnosticsData.Accumulator mdiagAccumulator = null,
+            Pass2FdrSidecar.FirstPassScoreQTableAccumulator scoreQTableAccumulator = null)
         {
             Projections = projections;
             _fdrLevel = config.FdrLevel;
@@ -70,6 +76,7 @@ namespace pwiz.Osprey.Tasks
             _fileDecoys = new int[nFiles];
             _bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
             _mdiagAccumulator = mdiagAccumulator;
+            _scoreQTableAccumulator = scoreQTableAccumulator;
         }
 
         /// <summary>
@@ -113,6 +120,15 @@ namespace pwiz.Osprey.Tasks
             // passing set the [COUNT] tally reads). Null off the report path.
             if (_mdiagAccumulator != null)
                 _mdiagAccumulator.Add(fileIdx, peptide, charge, entryId, isDecoy, score, in q);
+
+            // OSPREY_PASS2_QVALUE=transfer: fold this pre-compaction row's averaged-model score
+            // (== the finalScores/fScores the projection score pass hands us, byte-identical to
+            // Pass2FdrSidecar.ScoreWithFrozenModel) and its effective experiment q into the full-
+            // population score->q table, matching the resident BuildFullPopulationScoreQTable's
+            // (score, Math.Max(exp prec q, exp pept q)) pair. Null off the transfer path.
+            if (_scoreQTableAccumulator != null)
+                _scoreQTableAccumulator.Add(score,
+                    Math.Max(q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue));
 
             AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, in q);
         }
@@ -185,8 +201,9 @@ namespace pwiz.Osprey.Tasks
         public FdrStoringSink(
             FdrProjectionSet projections, OspreyConfig config, string passLabel,
             Func<string, IReadOnlyList<FdrScoreRecord>, int> flushPartial,
-            ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
-            : base(projections, config, passLabel, mdiagAccumulator)
+            ModelDiagnosticsData.Accumulator mdiagAccumulator = null,
+            Pass2FdrSidecar.FirstPassScoreQTableAccumulator scoreQTableAccumulator = null)
+            : base(projections, config, passLabel, mdiagAccumulator, scoreQTableAccumulator)
         {
             _flushPartial = flushPartial;
             _flushed = new bool[projections.PerFile.Count];

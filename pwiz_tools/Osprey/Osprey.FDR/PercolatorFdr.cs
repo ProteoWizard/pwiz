@@ -1459,7 +1459,8 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             string passLabel,
             IFdrOutputSink sink,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -1616,6 +1617,13 @@ namespace pwiz.Osprey.FDR
             PercolatorResults trainResults = RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
                 return true;
+
+            // OSPREY_PASS2_QVALUE=transfer: surface the trained model so the caller can publish
+            // FirstPassPercolatorModel (the merge-node 2nd-pass transfer re-scores reconciled
+            // features with this frozen model). Null off the transfer path -- a pure hand-off, so
+            // scoring stays byte-identical. Mirrors the resident RunPercolatorFdr facade's
+            // captureModel, but on the streaming (lean) 1st-pass path.
+            captureModel?.Invoke(trainResults);
 
             // Release the pass-0 working sets before the score passes so only the bounded lookups
             // remain resident across the peak.

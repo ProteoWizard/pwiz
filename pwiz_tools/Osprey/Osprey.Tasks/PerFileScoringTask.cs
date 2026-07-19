@@ -616,13 +616,16 @@ namespace pwiz.Osprey.Tasks
             // needs the resident pool. FirstJoin consumes the projection set identically
             // whether Run or this path produced it.
             //
-            // --model-diagnostics is the one resume-only exception to Run's lean choice:
-            // Run streams the report off the first-pass Percolator score pass (the streaming
-            // Accumulator), but a resume SKIPS that score pass (sidecar q-values), so FirstJoin's
-            // resume path emits the report via the batch ModelDiagnosticsReport.Write, which reads
-            // the RESIDENT per-file entries. Force the fat pool here so that report is populated
-            // (matches pre-lean behavior); the compute Run path stays lean.
-            bool needsResidentPool = NeedsResidentPool(config) || config.ModelDiagnostics;
+            // --model-diagnostics no longer forces the fat pool here: a resume where FirstJoin RUNS
+            // Stage 5 (the common case -- the 1st-pass sidecars are absent) streams the report off
+            // the score pass exactly like a fresh Run, and a resume where FirstJoin REHYDRATES Stage 5
+            // (1st-pass sidecars valid) now emits the report by streaming the sidecar + parquet into
+            // the same ModelDiagnosticsData.Accumulator (FirstJoinTask.WriteModelDiagnosticsFromSidecars)
+            // rather than the resident batch ModelDiagnosticsReport.Write. Either way the report is
+            // byte-identical to the resident build, and the ~80-100 GB resident FdrEntry pool that
+            // OOM'd an 82-file --model-diagnostics resume is never materialized. So mdiag follows the
+            // same lean resume path plain percolator already takes.
+            bool needsResidentPool = NeedsResidentPool(config);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -1464,12 +1467,17 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
         /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
-        /// output reads every entry's in-memory features/scores (FDRBench pass 1,
-        /// OSPREY_PASS2_QVALUE=transfer), when the projection path is off
-        /// (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR), or on the reconciled-input
-        /// worker join. Shared by <see cref="Run"/> and <see cref="RehydrateFromOwnOutputs"/>
-        /// so the compute and resume paths make the identical lean/fat choice -- otherwise a
-        /// pure resume rebuilds the ~53 GB fat buffer #4400 dropped for straight-through.
+        /// output reads every entry's in-memory features/scores (FDRBench pass 1), when the
+        /// projection path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR), or on the
+        /// reconciled-input worker join. Shared by <see cref="Run"/> and
+        /// <see cref="RehydrateFromOwnOutputs"/> so the compute and resume paths make the identical
+        /// lean/fat choice -- otherwise a pure resume rebuilds the ~53 GB fat buffer #4400 dropped
+        /// for straight-through.
+        ///
+        /// OSPREY_PASS2_QVALUE=transfer is NOT here anymore: it streams its full-population
+        /// score->q table (and publishes the frozen model) off the projection score pass in
+        /// FirstJoinTask.RunFirstPassProjection, so it no longer needs the resident FdrEntry pool
+        /// BuildFullPopulationScoreQTable used to walk -- the OOM at an 82-file transfer resume.
         ///
         /// --model-diagnostics is NOT here: it streams its pass-1 report off the projection
         /// path via a ModelDiagnosticsData.Accumulator fed by the score-pass sink (mirrors the
@@ -1483,8 +1491,7 @@ namespace pwiz.Osprey.Tasks
             return config.ExpectReconciledInput ||
                    !OspreyEnvironment.UseFdrProjection ||
                    config.FdrMethod != FdrMethod.Percolator ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                   OspreyEnvironment.Pass2TransferQ;
+                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
         }
 
         /// <summary>

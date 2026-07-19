@@ -999,6 +999,67 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Streaming counterpart of <see cref="BuildFullPopulationScoreQTable"/> for the
+        /// projection / lean 1st-pass path (OSPREY_PASS2_QVALUE=transfer): the resident build
+        /// walks the full pre-compaction <see cref="FdrEntry"/> pool -- the ~80 GB buffer that
+        /// OOM'd an 82-file transfer resume at the join -- to pair each entry's averaged-model
+        /// score with its effective experiment q. The projection score pass already computes the
+        /// SAME two values per row (<c>finalScores</c>/<c>fScores</c> == the averaged-model
+        /// <see cref="ScoreWithFrozenModel"/> score, plus the experiment precursor/peptide q it
+        /// hands the sink), so this accumulator collects them straight off the score-pass sink --
+        /// no resident pool, no second parquet re-read. <see cref="BuildScoreToQTable"/> sorts by
+        /// score, so the collection order does not matter: the resulting table is byte-identical
+        /// to the resident build on the same (score, q) multiset.
+        /// </summary>
+        internal sealed class FirstPassScoreQTableAccumulator
+        {
+            // Two parallel lists, exactly the tableScores / tableQs the resident build fills.
+            private readonly List<double> _scores = new List<double>();
+            private readonly List<double> _qs = new List<double>();
+
+            /// <summary>Number of (score, q) pairs folded in so far.</summary>
+            public int Count => _scores.Count;
+
+            /// <summary>
+            /// Fold one pre-compaction 1st-pass row's averaged-model score + effective experiment q
+            /// into the table population, matching the resident build's per-entry
+            /// <c>(ScoreWithFrozenModel(...), Math.Max(ExperimentPrecursorQvalue,
+            /// ExperimentPeptideQvalue))</c> pair. Called once per row from the score-pass sink.
+            /// </summary>
+            public void Add(double score, double effExperimentQ)
+            {
+                _scores.Add(score);
+                _qs.Add(effExperimentQ);
+            }
+
+            /// <summary>
+            /// Build the score-&gt;q table from the folded pairs via <see cref="BuildScoreToQTable"/>,
+            /// with the same log line + empty-population guard as
+            /// <see cref="BuildFullPopulationScoreQTable"/>. Returns <c>null</c> (logged) when no
+            /// rows were folded, so the caller publishes nothing and the transfer falls back.
+            /// </summary>
+            public FirstPassScoreQTable BuildTableOrNull(PipelineContext ctx)
+            {
+                if (_scores.Count == 0)
+                {
+                    ctx.LogWarning(
+                        "OSPREY_PASS2_QVALUE=transfer: streaming score->q table folded no rows; " +
+                        "table not published (transfer will fall back).");
+                    return null;
+                }
+                BuildScoreToQTable(_scores, _qs, out double[] scoresDesc, out double[] qDesc);
+                ctx.LogInfo(string.Format(
+                    "OSPREY_PASS2_QVALUE=transfer: built FULL-population score->q table from {0} entries " +
+                    "(streamed off the projection score pass; raw-score range [{1:F4}, {2:F4}]; " +
+                    "q range [{3:E3}, {4:E3}]).",
+                    scoresDesc.Length,
+                    scoresDesc[scoresDesc.Length - 1], scoresDesc[0],
+                    qDesc[0], qDesc[qDesc.Length - 1]));
+                return new FirstPassScoreQTable { ScoresDesc = scoresDesc, QDesc = qDesc };
+            }
+        }
+
+        /// <summary>
         /// Apply the averaged frozen model to a single raw feature vector: standardize a
         /// copy into the caller-supplied <paramref name="scratch"/> buffer, then
         /// score = avgBias + sum(avgWeights[j] * std(feat)[j]). Mirrors the per-entry math

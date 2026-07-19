@@ -264,13 +264,17 @@ namespace pwiz.Osprey.Tasks
             // bound memory -- so when it is requested, take the resident (legacy) path so that
             // report still emits. Off the default output path, so byte-identity is unaffected
             // (the regression gate never sets it).
-            // OSPREY_PASS2_QVALUE=transfer also needs the resident first-pass pool: it
-            // captures the frozen 1st-pass model and builds the FULL pre-compaction
-            // score->q table (BuildFullPopulationScoreQTable, below), both of which read
-            // every entry's in-memory Stage-4 features -- exactly what the projection path
-            // streams and drops. The regression gate never sets the env var, so byte-identity
-            // on the default percolator path is unaffected.
-            // --model-diagnostics is NOT here: it now STREAMS its pass-1 report off the
+            // OSPREY_PASS2_QVALUE=transfer is NOT here anymore: it now STREAMS its full-population
+            // score->q table AND publishes the frozen 1st-pass model off the projection path (a
+            // FirstPassScoreQTableAccumulator + captureModel fed by the score-pass sink in
+            // RunFirstPassProjection below), so the ~80 GB resident FdrEntry pool
+            // BuildFullPopulationScoreQTable used to walk -- the OOM at an 82-file transfer resume --
+            // is never materialized. The sink hands the accumulator the same averaged-model score +
+            // experiment q the resident build paired, and BuildScoreToQTable sorts, so the streamed
+            // table is byte-identical to the resident build. The resident BuildFullPopulationScoreQTable
+            // path below still runs when the projection path is off (OSPREY_FDR_PROJECTION=0 /
+            // non-Percolator FDR), where the fat pool is present.
+            // --model-diagnostics is NOT here either: it likewise STREAMS its pass-1 report off the
             // projection path via a ModelDiagnosticsData.Accumulator fed by the score-pass sink
             // (RunFirstPassProjection below), folding each pre-compaction row into the reduced
             // report structures rather than holding the whole-run FdrEntry pool resident -- which
@@ -278,8 +282,7 @@ namespace pwiz.Osprey.Tasks
             // streamed report is byte-identical to the resident build, and it stays off the
             // default output path.
             bool needsResidentFirstPassPool =
-                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                OspreyEnvironment.Pass2TransferQ;
+                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
                 !needsResidentFirstPassPool)
             {
@@ -484,7 +487,11 @@ namespace pwiz.Osprey.Tasks
 
             ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
 
-            LogFirstPassResultsAndDump(perFileEntries, config, ctx);
+            // Resume path: emit --model-diagnostics by streaming the 1st-pass sidecar + parquet
+            // (streamModelDiagnosticsFromSidecars) rather than the resident batch write, so the
+            // report no longer forces the ~80-100 GB fat pool that OOM'd an 82-file mdiag resume.
+            LogFirstPassResultsAndDump(perFileEntries, config, ctx,
+                streamModelDiagnosticsFromSidecars: true);
 
             // Compaction delegates to RescoreCompaction.Apply on the bundle
             // path so the pre-compaction (file, vec_idx) keys in
@@ -582,12 +589,24 @@ namespace pwiz.Osprey.Tasks
         /// OSPREY_DUMP_PERCOLATOR; written before compaction drops rows so the
         /// cross-impl diff sees both targets and decoys) and the
         /// OSPREY_PERCOLATOR_ONLY measurement exit.
+        ///
+        /// When <paramref name="streamModelDiagnosticsFromSidecars"/> is set (the
+        /// <see cref="Rehydrate"/> resume path), the <c>--model-diagnostics</c> report is emitted
+        /// by STREAMING each file's <c>.1st-pass.fdr_scores.bin</c> sidecar + parquet scalars into
+        /// the reduced <see cref="ModelDiagnosticsData.Accumulator"/>, rather than reading the
+        /// resident <paramref name="perFileEntries"/> pool -- so a resume no longer materializes the
+        /// ~80-100 GB fat pool that OOM'd an 82-file --model-diagnostics resume. The accumulator's
+        /// streamed reductions reproduce the resident <c>Write</c> reductions (order-independent),
+        /// so the report is byte-identical. On the resident <see cref="Run"/> path (projection off /
+        /// non-Percolator) the flag is false and the batch <c>Write</c> reads the resident pool,
+        /// whose 1st-pass sidecars are not written yet.
         /// </summary>
         private void LogFirstPassResultsAndDump(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
-            FeatureContributions contributions = null)
+            FeatureContributions contributions = null,
+            bool streamModelDiagnosticsFromSidecars = false)
         {
             LogFirstPassResults(perFileEntries, config, ctx);
 
@@ -603,9 +622,111 @@ namespace pwiz.Osprey.Tasks
             // output; a failure is logged and swallowed inside Write.
             if (config.ModelDiagnostics)
             {
-                var libraryById = ctx.Get<LibraryById>().Value;
-                var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
-                ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
+                if (streamModelDiagnosticsFromSidecars)
+                {
+                    WriteModelDiagnosticsFromSidecars(perFileEntries, config, ctx);
+                }
+                else
+                {
+                    var libraryById = ctx.Get<LibraryById>().Value;
+                    var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
+                    ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Resume-path <c>--model-diagnostics</c> emission: stream every file's
+        /// <c>.1st-pass.fdr_scores.bin</c> sidecar (SVM score + q-values, in stored row order) joined
+        /// with its parquet scalars (entry_id / charge / is_decoy / modseq, same row order) into the
+        /// reduced <see cref="ModelDiagnosticsData.Accumulator"/>, then render via
+        /// <see cref="ModelDiagnosticsReport.WriteFromAccumulator"/>. This reproduces the exact rows
+        /// the resident batch <see cref="ModelDiagnosticsReport.Write"/> reads off the fat pool -- the
+        /// sidecar carries the SAME per-row score + q the overlay would have assigned each stub -- so
+        /// the streamed report is byte-identical to the resident build, without materializing the fat
+        /// pool. Contributions are null on a resume (no retrain), matching the resident resume path.
+        /// A failure is logged and swallowed; a diagnostics artifact never aborts a real run.
+        /// </summary>
+        private void WriteModelDiagnosticsFromSidecars(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            try
+            {
+                var runNames = perFileEntries.ConvertAll(kv => kv.Key);
+                var accumulator = BuildModelDiagnosticsAccumulator(runNames.ToArray(), config, ctx);
+                var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+
+                for (int fileIdx = 0; fileIdx < perFileEntries.Count; fileIdx++)
+                {
+                    string fileName = perFileEntries[fileIdx].Key;
+                    if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: no scores parquet path for {0}; skipping its rows.",
+                            fileName));
+                        continue;
+                    }
+                    string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                    if (string.IsNullOrEmpty(sidecarBase))
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: no sidecar base path for {0}; skipping its rows.",
+                            fileName));
+                        continue;
+                    }
+                    string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
+
+                    // Read the file's 1st-pass records (row order == parquet row order == the order
+                    // the score-pass sink wrote them), then zip with the parquet scalars by that row
+                    // ordinal -- the same (features/scalars indexed by row) binding the resident
+                    // overlay uses. entry_id is carried on both sides, so a mismatch fails loud
+                    // rather than folding misaligned rows.
+                    var records = new List<FdrScoreRecord>();
+                    if (!FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, records.Add))
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: failed to read {0}; skipping its rows.", sidecarPath));
+                        continue;
+                    }
+
+                    int localFileIdx = fileIdx;
+                    int row = 0;
+                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                        {
+                            if (row >= records.Count)
+                                throw new InvalidDataException(string.Format(
+                                    @"model-diagnostics resume: {0} has more parquet rows than {1} has records.",
+                                    parquetPath, sidecarPath));
+                            var rec = records[row];
+                            if (rec.EntryId != entryId)
+                                throw new InvalidDataException(string.Format(
+                                    @"model-diagnostics resume: row {0} entry_id mismatch (parquet {1} vs sidecar {2}) in {3}.",
+                                    row, entryId, rec.EntryId, fileName));
+                            var q = new FdrQValues(
+                                rec.RunPrecursorQvalue, rec.RunPeptideQvalue,
+                                rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue, rec.Pep);
+                            accumulator.Add(localFileIdx, modseq ?? string.Empty, charge, entryId,
+                                isDecoy, rec.Score, in q);
+                            row++;
+                        });
+                    if (row != records.Count)
+                        throw new InvalidDataException(string.Format(
+                            @"model-diagnostics resume: {0} has {1} parquet rows but {2} sidecar records.",
+                            fileName, row, records.Count));
+                }
+
+                var cal = BuildCalibrationData(ctx, runNames);
+                ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null, cal, config, ctx.LogInfo);
+            }
+            catch (Exception ex)
+            {
+                // Never let a diagnostics-only artifact take down a real run (matches Write /
+                // WriteFromAccumulator, which also log-and-swallow).
+                ctx.LogInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] resume report generation failed: {0}", ex.Message));
             }
         }
 
@@ -685,14 +806,11 @@ namespace pwiz.Osprey.Tasks
         /// accumulator with the input-file order (from the projection) plus the run FDR level.
         /// </summary>
         private static ModelDiagnosticsData.Accumulator BuildModelDiagnosticsAccumulator(
-            FdrProjectionSet projections, OspreyConfig config, PipelineContext ctx)
+            string[] runNames, OspreyConfig config, PipelineContext ctx)
         {
             var libraryById = ctx.Get<LibraryById>().Value;
             ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, ctx.LogInfo,
                 out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
-            var runNames = new string[projections.PerFile.Count];
-            for (int i = 0; i < runNames.Length; i++)
-                runNames[i] = projections.PerFile[i].Key;
             return new ModelDiagnosticsData.Accumulator(
                 runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr, config.FdrLevel);
         }
@@ -1599,15 +1717,39 @@ namespace pwiz.Osprey.Tasks
             // folds every pre-compaction row into it; capture the trained model for the Model tab.
             // Null off the report path, so byte-neutral there.
             var mdiagAccumulator = config.ModelDiagnostics
-                ? BuildModelDiagnosticsAccumulator(projections, config, ctx)
+                ? BuildModelDiagnosticsAccumulator(
+                    projections.PerFile.ConvertAll(kv => kv.Key).ToArray(), config, ctx)
                 : null;
             FeatureContributions mdiagContributions = null;
             Action<FeatureContributions> captureContributions = null;
             if (mdiagAccumulator != null)
                 captureContributions = c => mdiagContributions = c;
 
+            // OSPREY_PASS2_QVALUE=transfer: build the full-population score->q table AND publish the
+            // frozen 1st-pass model straight off the projection score pass, so the ~80 GB resident
+            // FdrEntry pool BuildFullPopulationScoreQTable used to walk (the OOM at an 82-file
+            // transfer resume) is never materialized. The sink folds each pre-compaction row's
+            // averaged-model score + effective experiment q into the accumulator, and captureModel
+            // publishes the trained model the merge-node 2nd-pass transfer re-scores reconciled
+            // features with. Null off the transfer path, so byte-neutral there.
+            var scoreQTableAccumulator = OspreyEnvironment.Pass2TransferQ
+                ? new Pass2FdrSidecar.FirstPassScoreQTableAccumulator()
+                : null;
+            Action<PercolatorResults> captureModel = null;
+            if (OspreyEnvironment.Pass2TransferQ)
+            {
+                // Publish is add-only (throws on a duplicate key); guard so a first pass that somehow
+                // ran twice in one process degrades to a no-op rather than a raw ArgumentException.
+                // Mirrors the resident RunPercolatorFdr facade's captureModel guard.
+                captureModel = results =>
+                {
+                    if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
+                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                };
+            }
+
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
-                mdiagAccumulator);
+                mdiagAccumulator, scoreQTableAccumulator);
             var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
@@ -1626,14 +1768,14 @@ namespace pwiz.Osprey.Tasks
                 aborted = PercolatorEngine.RunFirstPassStreaming(
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                     config, featureInfos, ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", captureContributions);
+                    @"First-pass", captureContributions, captureModel);
             }
             else
             {
                 aborted = PercolatorEngine.RunPercolatorFdr(
                     projections, config, featureInfos,
                     ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", loadFileFeatures, captureContributions);
+                    @"First-pass", loadFileFeatures, captureContributions, captureModel);
             }
             swFdr.Stop();
             if (aborted)
@@ -1662,6 +1804,18 @@ namespace pwiz.Osprey.Tasks
                 var cal = BuildCalibrationData(ctx, projections.PerFile.ConvertAll(kv => kv.Key));
                 ModelDiagnosticsReport.WriteFromAccumulator(
                     mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo);
+            }
+
+            // OSPREY_PASS2_QVALUE=transfer: build + publish the FULL-population score->q table from
+            // the pairs the sink streamed during the score pass (the resident BuildFullPopulationScoreQTable
+            // equivalent, without the resident pool). captureModel above already published the frozen
+            // model; the merge-node 2nd-pass transfer reads both byproducts. Null (no publish) when the
+            // accumulator folded nothing, matching the resident build's fall-back.
+            if (scoreQTableAccumulator != null)
+            {
+                var scoreQTable = scoreQTableAccumulator.BuildTableOrNull(ctx);
+                if (scoreQTable != null)
+                    ctx.Publish(scoreQTable);
             }
 
             // First-pass protein FDR streamed off the per-file sidecar + parquet scalars
