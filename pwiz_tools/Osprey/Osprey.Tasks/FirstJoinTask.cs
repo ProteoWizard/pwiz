@@ -411,7 +411,7 @@ namespace pwiz.Osprey.Tasks
                 // --input-scores / per-file-resume stub loaders DO populate
                 // FdrEntry.Features when hydrating, so null them defensively to keep the
                 // "Features != null means this entry was rescored" sentinel that
-                // ReconciledParquetWriter.ApplyRescoredRows relies on valid going into
+                // ReconciledParquetWriter.BuildOverlay relies on valid going into
                 // Stage 6 (mirrors the resume-rehydrate re-null and
                 // PerFileScoringTask.HydrateRescoreBundleIfPresent). MergeNode reloads
                 // features from the reconciled parquet.

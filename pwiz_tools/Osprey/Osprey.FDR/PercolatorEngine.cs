@@ -748,19 +748,18 @@ namespace pwiz.Osprey.FDR
             int maxTrain = percConfig.MaxTrainSize;
 
             // Flat identity + best-score arrays from the projection, built ONCE:
-            // labels/entryIds/peptides/fileNames drive BOTH the subset selection here
-            // and the score/compete pass below. bestScores (= CoelutionSum) ranks
+            // labels/entryIds/peptides drive the subset selection here (the score/compete
+            // pass below reads the projection's own PerFile keys, so no flat fileNames array
+            // is built -- issue #4355 Part B). bestScores (= CoelutionSum) ranks
             // best-per-precursor before any Score exists (risk #2), byte-identical to
             // Features[0] on the first pass.
             var labels = new bool[n];
             var entryIds = new uint[n];
             var peptides = new string[n];
-            var fileNames = new string[n];
             var bestScores = new double[n];
             int gi = 0;
             for (int f = 0; f < nFiles; f++)
             {
-                string fileName = perFile[f].Key;
                 var rows = perFile[f].Value;
                 for (int r = 0; r < rows.Count; r++)
                 {
@@ -768,7 +767,6 @@ namespace pwiz.Osprey.FDR
                     labels[gi] = proj.IsDecoy;
                     entryIds[gi] = proj.EntryId;
                     peptides[gi] = peptideById[proj.PeptideId];
-                    fileNames[gi] = fileName;
                     bestScores[gi] = proj.CoelutionSum;
                     gi++;
                 }
@@ -878,7 +876,7 @@ namespace pwiz.Osprey.FDR
             //    to the sink (no PercolatorResult list). Reuses the flat identity
             //    arrays already built above.
             PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
-                perFile, labels, entryIds, peptides, fileNames, trainResults, percConfig,
+                perFile, labels, entryIds, peptides, trainResults, percConfig,
                 loadFileFeatures, sink, captureContributions);
             return false;
         }

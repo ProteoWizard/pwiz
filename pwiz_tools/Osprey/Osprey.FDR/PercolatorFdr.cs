@@ -1111,51 +1111,16 @@ namespace pwiz.Osprey.FDR
         {
             int n = finalScores.Length;
 
-            // PEP via global target-decoy competition. CompeteAll returns
-            // winners sorted by score-descending (matches the direct-path
-            // Percolator flow and is what ComputeConservativeQvalues needs
-            // downstream). Rust's streaming path uses compute_fdr_from_stubs
-            // instead, which iterates a base_id-ascending-sorted union of
-            // targets + decoys -- because PepEstimator.FitDefault's KDE sum
-            // is NOT associative and HashMap iteration order would leak 1-
-            // ULP-level noise into every PEP value. For cross-impl byte
-            // parity we must feed PepEstimator in the same base_id-sorted
-            // order Rust uses, not CompeteAll's score-sorted order. Reorder
-            // a parallel copy here; the score-sorted arrays stay intact for
-            // the per-run / experiment q-value calls below.
-            int[] winnerIndices;
-            double[] winnerScores;
-            bool[] winnerIsDecoy;
-            // Throttled progress over the ~344M-row population competition (the big walk that
-            // ran silent at 82 files); null (silent) on small runs. Console-only, byte-neutral.
-            using (var pepProgress = QProgress(@"Population target/decoy competition", n, n))
-                CompeteAll(finalScores, labels, entryIds,
-                    out winnerIndices, out winnerScores, out winnerIsDecoy, pepProgress);
-
-            int nWinners = winnerIndices.Length;
-            var pepOrder = new int[nWinners];
-            for (int k = 0; k < nWinners; k++)
-                pepOrder[k] = k;
-            Array.Sort(pepOrder, (a, b) => // Array.Sort OK: TDC's CompeteAll already produced one winner per base_id, so each base_id appears at most once in pepOrder -- no ties.
-            {
-                uint ba = entryIds[winnerIndices[a]] & BASE_ID_MASK;
-                uint bb = entryIds[winnerIndices[b]] & BASE_ID_MASK;
-                return ba.CompareTo(bb);
-            });
-            var pepScores = new double[nWinners];
-            var pepIsDecoy = new bool[nWinners];
-            for (int k = 0; k < nWinners; k++)
-            {
-                pepScores[k] = winnerScores[pepOrder[k]];
-                pepIsDecoy[k] = winnerIsDecoy[pepOrder[k]];
-            }
-
-            var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
+            // PEP via global target-decoy competition. The bounded winner->PEP map
+            // (base_id-ascending KDE order -- see ComputePepWinnerMap) is expanded to the
+            // full per-row peps array here; the projection score pass reads the map directly
+            // so the O(n) array is never materialized (issue #4355 Part B).
+            var pepByWinnerIdx = ComputePepWinnerMap(finalScores, labels, entryIds);
             peps = new double[n];
             for (int i = 0; i < n; i++)
                 peps[i] = 1.0;
-            foreach (int idx in winnerIndices)
-                peps[idx] = pepEstimator.PosteriorError(finalScores[idx]);
+            foreach (var kv in pepByWinnerIdx)
+                peps[kv.Key] = kv.Value;
 
             // Per-run precursor + peptide q-values (each file independently).
             runPrecursorQvalues = ComputePerRunPrecursorQvalues(
@@ -1190,6 +1155,59 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Bounded (O(base_ids)) posterior-error-probability (PEP) map: the global
+        /// target-decoy competition winner index -&gt; its PEP. This is the intrinsic working
+        /// set of the PEP step -- one PEP per competition winner (every other row's PEP is the
+        /// default 1.0) -- so the projection score pass
+        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) reads the map directly to set
+        /// the winning rows' PEP without materializing the O(n) per-row array (issue #4355
+        /// Part B). <see cref="ComputeStreamingCompetitionQvalues"/> expands the same map, so
+        /// both share the one PEP fit and cannot drift.
+        ///
+        /// The KDE is fed in base_id-ascending order (risk #6): CompeteAll returns winners
+        /// score-descending, but PepEstimator.FitDefault's KDE sum is NOT associative, so for
+        /// cross-impl byte parity the winners must be reordered to the same base_id-sorted
+        /// order Rust's compute_fdr_from_stubs uses before the fit.
+        /// </summary>
+        private static Dictionary<int, double> ComputePepWinnerMap(
+            double[] finalScores, bool[] labels, uint[] entryIds)
+        {
+            int n = finalScores.Length;
+            int[] winnerIndices;
+            double[] winnerScores;
+            bool[] winnerIsDecoy;
+            // Throttled progress over the ~344M-row population competition (the big walk that
+            // ran silent at 82 files); null (silent) on small runs. Console-only, byte-neutral.
+            using (var pepProgress = QProgress(@"Population target/decoy competition", n, n))
+                CompeteAll(finalScores, labels, entryIds,
+                    out winnerIndices, out winnerScores, out winnerIsDecoy, pepProgress);
+
+            int nWinners = winnerIndices.Length;
+            var pepOrder = new int[nWinners];
+            for (int k = 0; k < nWinners; k++)
+                pepOrder[k] = k;
+            Array.Sort(pepOrder, (a, b) => // Array.Sort OK: TDC's CompeteAll already produced one winner per base_id, so each base_id appears at most once in pepOrder -- no ties.
+            {
+                uint ba = entryIds[winnerIndices[a]] & BASE_ID_MASK;
+                uint bb = entryIds[winnerIndices[b]] & BASE_ID_MASK;
+                return ba.CompareTo(bb);
+            });
+            var pepScores = new double[nWinners];
+            var pepIsDecoy = new bool[nWinners];
+            for (int k = 0; k < nWinners; k++)
+            {
+                pepScores[k] = winnerScores[pepOrder[k]];
+                pepIsDecoy[k] = winnerIsDecoy[pepOrder[k]];
+            }
+
+            var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
+            var pepByWinnerIdx = new Dictionary<int, double>(nWinners);
+            foreach (int idx in winnerIndices)
+                pepByWinnerIdx[idx] = pepEstimator.PosteriorError(finalScores[idx]);
+            return pepByWinnerIdx;
+        }
+
+        /// <summary>
         /// Memory-bounded flat form of <see cref="PercolatorEngine.ClampExperimentQToBestRun"/>
         /// (issue #4378): floor each experiment q up to the entry's best (min-over-runs)
         /// combined run q (<c>runBoth = max(runPrecursorQ, runPeptideQ)</c>), keyed by EntryId
@@ -1204,28 +1222,11 @@ namespace pwiz.Osprey.FDR
             double[] runPrecursorQvalues, double[] runPeptideQvalues,
             double[] expPrecursorQvalues, double[] expPeptideQvalues)
         {
+            BuildExperimentQClampFloors(
+                entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
+                out var minRunBothByEntryId, out var minRunBothByPeptide);
+
             int n = entryIds.Length;
-            var minRunBothByEntryId = new Dictionary<uint, double>();
-            var minRunBothByPeptide = new Dictionary<(string, bool), double>();
-            for (int i = 0; i < n; i++)
-            {
-                double runBoth = Math.Max(runPrecursorQvalues[i], runPeptideQvalues[i]);
-                double curPrec;
-                if (!minRunBothByEntryId.TryGetValue(entryIds[i], out curPrec) || runBoth < curPrec)
-                    minRunBothByEntryId[entryIds[i]] = runBoth;
-
-                // Empty ModifiedSequence has no peptide identity; do not bucket unrelated
-                // entries under an empty key (mirrors the resident overload).
-                if (string.IsNullOrEmpty(peptides[i]))
-                    continue;
-                // Peptide identity is (ModifiedSequence, IsDecoy) so a decoy's good run never
-                // lowers its paired target's peptide floor.
-                var pkey = (peptides[i], labels[i]);
-                double curPept;
-                if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
-                    minRunBothByPeptide[pkey] = runBoth;
-            }
-
             for (int i = 0; i < n; i++)
             {
                 double floorPrec;
@@ -1244,6 +1245,60 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Builds the min-over-runs combined-run-q floors that
+        /// <see cref="ClampExperimentQToBestRunFlat"/> applies:
+        /// <c>minRunBothByEntryId[entryId]</c> and <c>minRunBothByPeptide[(peptide, isDecoy)]</c>
+        /// = the minimum over that entry's / peptide's rows of
+        /// <c>max(runPrecursorQ, runPeptideQ)</c>. Bounded (O(distinct entryIds) +
+        /// O(distinct peptides)), shared with the projection score pass
+        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) so both clamp identically
+        /// without a resident per-row experiment-q array (issue #4355 Part B).
+        /// </summary>
+        private static void BuildExperimentQClampFloors(
+            uint[] entryIds, bool[] labels, string[] peptides,
+            double[] runPrecursorQvalues, double[] runPeptideQvalues,
+            out Dictionary<uint, double> minRunBothByEntryId,
+            out Dictionary<(string, bool), double> minRunBothByPeptide)
+        {
+            int n = entryIds.Length;
+            minRunBothByEntryId = new Dictionary<uint, double>();
+            minRunBothByPeptide = new Dictionary<(string, bool), double>();
+            for (int i = 0; i < n; i++)
+            {
+                double runBoth = Math.Max(runPrecursorQvalues[i], runPeptideQvalues[i]);
+                UpdateExperimentQClampFloor(
+                    minRunBothByEntryId, minRunBothByPeptide, entryIds[i], peptides[i], labels[i], runBoth);
+            }
+        }
+
+        /// <summary>
+        /// Folds one row into the best-of-runs clamp floors (issue #4390): tracks the minimum over
+        /// an entry's / peptide's rows of <paramref name="runBoth"/> = <c>max(runPrecursorQ,
+        /// runPeptideQ)</c>, keyed by <paramref name="entryId"/> and by
+        /// <c>(<paramref name="peptide"/>, <paramref name="isDecoy"/>)</c>. Shared by
+        /// <see cref="BuildExperimentQClampFloors"/> (flat path) and the projection score pass's
+        /// floor reduction so the two cannot drift on a byte-identity-locked path (issue #4355
+        /// Part B). An empty ModifiedSequence has no peptide identity and is not bucketed; peptide
+        /// identity is (sequence, isDecoy) so a decoy's good run never lowers its target's floor.
+        /// </summary>
+        private static void UpdateExperimentQClampFloor(
+            Dictionary<uint, double> minRunBothByEntryId,
+            Dictionary<(string, bool), double> minRunBothByPeptide,
+            uint entryId, string peptide, bool isDecoy, double runBoth)
+        {
+            double curPrec;
+            if (!minRunBothByEntryId.TryGetValue(entryId, out curPrec) || runBoth < curPrec)
+                minRunBothByEntryId[entryId] = runBoth;
+
+            if (string.IsNullOrEmpty(peptide))
+                return;
+            var pkey = (peptide, isDecoy);
+            double curPept;
+            if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
+                minRunBothByPeptide[pkey] = runBoth;
+        }
+
+        /// <summary>
         /// Projection-native counterpart of <see cref="ScorePopulationAndComputeFdr"/>
         /// (issue #4355 step (b) increment iii): apply the trained averaged model to
         /// every projection row by streaming its file's parquet features, then run the
@@ -1259,9 +1314,12 @@ namespace pwiz.Osprey.FDR
         /// of the <see cref="PercolatorEntry"/> path.
         ///
         /// The caller passes the flat <paramref name="labels"/> / <paramref name="entryIds"/>
-        /// / <paramref name="peptides"/> / <paramref name="fileNames"/> arrays it
-        /// already built (in nested file/row order) for training-subset selection, so
-        /// they are not rebuilt here; this method walks <paramref name="perFile"/> in
+        /// / <paramref name="peptides"/> arrays it already built (in nested file/row order)
+        /// for training-subset selection, so they are not rebuilt here; this method walks
+        /// <paramref name="perFile"/> in the SAME nested order (its own key is the file name,
+        /// so no flat <c>fileNames</c> array is needed) and zips the results back, keeping every
+        /// index aligned. The feature-contribution accumulation runs in per-file order identical
+        /// to the <see cref="PercolatorEntry"/>
         /// that SAME nested order to compute <c>finalScores</c> and to zip the results
         /// back, keeping every index aligned. The feature-contribution accumulation
         /// runs in per-file order identical to the <see cref="PercolatorEntry"/>
@@ -1271,7 +1329,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         internal static void ScoreProjectionAndComputeFdrInPlace(
             List<KeyValuePair<string, List<FdrProjection>>> perFile,
-            bool[] labels, uint[] entryIds, string[] peptides, string[] fileNames,
+            bool[] labels, uint[] entryIds, string[] peptides,
             PercolatorResults trainResults, PercolatorConfig config,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             IFdrOutputSink sink,
@@ -1384,34 +1442,132 @@ namespace pwiz.Osprey.FDR
             // request them; a pure hand-off, so scoring stays byte-identical.
             captureContributions?.Invoke(contributions);
 
-            double[] peps, runPrecursorQvalues, runPeptideQvalues,
-                     expPrecursorQvalues, expPeptideQvalues;
-            ComputeStreamingCompetitionQvalues(
-                finalScores, labels, entryIds, peptides, fileNames,
-                out peps, out runPrecursorQvalues, out runPeptideQvalues,
-                out expPrecursorQvalues, out expPeptideQvalues);
+            // Bounded q-value reconstruction (issue #4355 Part B): rather than materialize
+            // five full-length double[n] q-value arrays (~14 GB at an 82-file join), build only
+            // the intrinsically-bounded lookups the write-back reads. PEP is one value per
+            // competition winner and experiment q is one value per base_id / per peptide (both
+            // O(distinct), built once); the PER-RUN q-values are per-file, so they are computed
+            // one file at a time from that file's slice, never a full double[n] array. The
+            // competition + q-value math is byte-for-byte the shared code the five-array path
+            // used (ComputePepWinnerMap / ComputeExperimentPrecursorQMap /
+            // ComputeExperimentPeptideQMap / ComputePerFileRunQvalues all mirror
+            // ComputeStreamingCompetitionQvalues), so the streamed outputs are identical.
+            var pepByWinnerIdx = ComputePepWinnerMap(finalScores, labels, entryIds);
 
-            // Write the Score straight onto the projection rows (no PercolatorResult
-            // list) and stream the five q-value outputs to the sink (issue #4355
-            // struct-shrink S0). FdrProjection is a readonly struct, so each row's
-            // Score is replaced via WithScore; the q-values no longer live on the
-            // struct. Same nested (file, row) walk as the scoring loop, so index wgi
-            // stays aligned to finalScores / the q-value arrays.
+            // The per-file q-value passes below slice each file as one contiguous block
+            // [off, off+count). The full-length ComputePerRun* path instead grouped by file
+            // name, which is robust to a file appearing in more than one PerFile entry; the
+            // slice is not (it would split one file's competition in two -> different run q ->
+            // different clamp floors -> different bytes). Every population the pipeline builds
+            // has distinct PerFile keys, so this is an invariant, not a live case -- assert it
+            // (the single-file test + per-file passes below depend on it) so a future
+            // duplicate-key producer (e.g. a 2nd-pass reconciliation re-opening a file) fails
+            // fast instead of silently diverging.
+            var seenFileKeys = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in perFile)
+                if (!seenFileKeys.Add(kvp.Key))
+                    throw new InvalidOperationException(string.Format(
+                        @"ScoreProjectionAndComputeFdrInPlace: duplicate per-file key '{0}'; the " +
+                        @"bounded per-file q-value pass requires one contiguous block per file.",
+                        kvp.Key));
+
+            // Experiment q-values: the single-file shortcut is exp == per-run (matching
+            // ComputeStreamingCompetitionQvalues), built only when multi-file. With distinct
+            // keys (asserted above) the file count is just the number of non-empty PerFile
+            // entries, so no flat fileNames[n] array is needed -- the caller no longer builds
+            // one (issue #4355 Part B: dropping a full O(n) string reference array). This
+            // reproduces the retired `new HashSet<string>(fileNames).Count <= 1` exactly (both
+            // count the distinct files that contribute rows).
+            int nonEmptyFiles = 0;
+            foreach (var kvp in perFile)
+                if (kvp.Value.Count > 0)
+                    nonEmptyFiles++;
+            bool isSingleFile = nonEmptyFiles <= 1;
+            Dictionary<uint, double> expPrecByBaseId = isSingleFile
+                ? null : ComputeExperimentPrecursorQMap(finalScores, labels, entryIds);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile
+                ? null : ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
+
+            // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
+            // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
+            // by (peptide, isDecoy). The global minimum must be known before any row is emitted,
+            // so a first pass computes each file's per-run q-values (bounded, one file at a time)
+            // and reduces them into the floor maps; the emit pass below recomputes them per file
+            // to assign. min/max are order-independent -> byte-identical to the flat clamp.
+            var minRunBothByEntryId = new Dictionary<uint, double>();
+            var minRunBothByPeptide = new Dictionary<(string, bool), double>();
+            using (var floorProgress = QProgress(@"Per-run q-value floors", perFile.Count, n))
+            {
+                int off = 0;
+                int floorFile = 0;
+                foreach (var kvp in perFile)
+                {
+                    int count = kvp.Value.Count;
+                    ComputePerFileRunQvalues(
+                        finalScores, labels, entryIds, peptides, off, count,
+                        out double[] runPrecFile, out double[] runPeptFile);
+                    for (int r = 0; r < count; r++)
+                    {
+                        int g = off + r;
+                        double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
+                        UpdateExperimentQClampFloor(
+                            minRunBothByEntryId, minRunBothByPeptide, entryIds[g], peptides[g], labels[g], runBoth);
+                    }
+                    off += count;
+                    floorProgress?.Report(++floorFile);
+                }
+            }
+
+            // Emit pass: recompute each file's per-run q-values, assign every row's five q-values
+            // from the bounded lookups, write the Score onto the projection row (FdrProjection is
+            // a readonly struct, so via WithScore), and stream to the sink -- same nested (file,
+            // row) order as the scoring loop, so the sink sees the order the five-array write-back
+            // produced.
             int wgi = 0;
             int fileIdx = 0;
             foreach (var kvp in perFile)
             {
                 var projRows = kvp.Value;
-                for (int r = 0; r < projRows.Count; r++)
+                int count = projRows.Count;
+                ComputePerFileRunQvalues(
+                    finalScores, labels, entryIds, peptides, wgi, count,
+                    out double[] runPrecFile, out double[] runPeptFile);
+                for (int r = 0; r < count; r++)
                 {
-                    projRows[r] = projRows[r].WithScore(finalScores[wgi]);
+                    int g = wgi + r;
+                    double rp = runPrecFile[r];
+                    double rpe = runPeptFile[r];
+
+                    // Experiment precursor: base_id map (or per-run on the single-file
+                    // shortcut), floored up to the entry's min-over-runs combined run q.
+                    double ep = isSingleFile
+                        ? rp
+                        : (expPrecByBaseId.TryGetValue(entryIds[g] & BASE_ID_MASK, out double epv)
+                            ? epv : 1.0);
+                    if (minRunBothByEntryId.TryGetValue(entryIds[g], out double floorPrec) &&
+                        floorPrec > ep)
+                        ep = floorPrec;
+
+                    // Experiment peptide: peptide map (or per-run on the shortcut), floored up
+                    // to the (peptide, isDecoy) min-over-runs combined run q. An empty peptide
+                    // has no peptide identity and is not floored (matches the flat clamp).
+                    string pept = peptides[g];
+                    double epe = isSingleFile
+                        ? rpe
+                        : (expPeptByPeptide.TryGetValue(pept, out double epev) ? epev : 1.0);
+                    if (!string.IsNullOrEmpty(pept) &&
+                        minRunBothByPeptide.TryGetValue((pept, labels[g]), out double floorPept) &&
+                        floorPept > epe)
+                        epe = floorPept;
+
+                    double pep = pepByWinnerIdx.TryGetValue(g, out double pv) ? pv : 1.0;
+
+                    projRows[r] = projRows[r].WithScore(finalScores[g]);
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
-                        finalScores[wgi],
-                        new FdrQValues(
-                            runPrecursorQvalues[wgi], runPeptideQvalues[wgi],
-                            expPrecursorQvalues[wgi], expPeptideQvalues[wgi], peps[wgi]));
-                    wgi++;
+                        finalScores[g],
+                        new FdrQValues(rp, rpe, ep, epe, pep));
                 }
+                wgi += count;
                 fileIdx++;
             }
         }
@@ -2986,6 +3142,96 @@ namespace pwiz.Osprey.FDR
         // Per-run and experiment-level q-value computation
         // ============================================================
 
+        /// <summary>
+        /// One file's per-run PRECURSOR q-values. Competes the file's rows -- the contiguous
+        /// global index range in <paramref name="indices"/> (<c>[off, off+count)</c>) -- directly
+        /// over the global score-pass arrays (no per-file slice copy; issue #4355 Part B), then
+        /// maps each winning global index back to its local offset. Byte-identical to the per-file
+        /// group body of <see cref="ComputePerRunPrecursorQvalues"/>: winners get their q, every
+        /// other row stays 1.0. Returns a local array indexed 0..count-1 (the caller scatters it back).
+        /// </summary>
+        private static double[] ComputePerRunPrecursorQvaluesForFile(
+            double[] scores, bool[] labels, uint[] entryIds, int[] indices, int off)
+        {
+            int count = indices.Length;
+            var qvalues = new double[count];
+            for (int i = 0; i < count; i++)
+                qvalues[i] = 1.0;
+
+            int[] wi;
+            double[] ws;
+            bool[] wd;
+            CompeteFromIndices(scores, labels, entryIds, indices, out wi, out ws, out wd);
+
+            var q = new double[wi.Length];
+            ComputeConservativeQvalues(ws, wd, q);
+            for (int rank = 0; rank < wi.Length; rank++)
+                qvalues[wi[rank] - off] = q[rank];   // wi[rank] is a global index in [off, off+count)
+            return qvalues;
+        }
+
+        /// <summary>
+        /// One file's per-run PEPTIDE q-values, competing directly over the global arrays via the
+        /// file's contiguous global index range <paramref name="indices"/> (<c>[off, off+count)</c>)
+        /// -- no per-file slice copy (issue #4355 Part B). Byte-identical to the per-file group body
+        /// of <see cref="ComputePerRunPeptideQvalues"/>: best-per-peptide over the file, competition,
+        /// then the peptide's q propagated to every row of that peptide (others stay 1.0).
+        /// <see cref="BestPrecursorPerPeptide"/> returns global indices, which
+        /// <see cref="CompeteFromIndices"/> then competes directly (both take an index subset).
+        /// Returns a local array indexed 0..count-1.
+        /// </summary>
+        private static double[] ComputePerRunPeptideQvaluesForFile(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides, int[] indices, int off)
+        {
+            int count = indices.Length;
+            var qvalues = new double[count];
+            for (int i = 0; i < count; i++)
+                qvalues[i] = 1.0;
+
+            var bestPerPeptide = BestPrecursorPerPeptide(indices, scores, labels, peptides);
+
+            int[] wi;
+            double[] ws;
+            bool[] wd;
+            CompeteFromIndices(scores, labels, entryIds, bestPerPeptide, out wi, out ws, out wd);
+
+            var q = new double[wi.Length];
+            ComputeConservativeQvalues(ws, wd, q);
+
+            var peptideQvalue = new Dictionary<string, double>();
+            for (int rank = 0; rank < wi.Length; rank++)
+                peptideQvalue[peptides[wi[rank]]] = q[rank];   // wi[rank] is a global index
+
+            for (int r = 0; r < count; r++)
+            {
+                double qv;
+                if (peptideQvalue.TryGetValue(peptides[off + r], out qv))
+                    qvalues[r] = qv;
+            }
+            return qvalues;
+        }
+
+        /// <summary>
+        /// Computes one file's per-run precursor + peptide q-values from its contiguous slice
+        /// <c>[off, off+count)</c> of the flat score-pass arrays (nested (file, row) order, so a
+        /// file's rows are contiguous). Used by the projection score pass in place of the full
+        /// double[n] per-run arrays (issue #4355 Part B); bounded to one file.
+        /// </summary>
+        private static void ComputePerFileRunQvalues(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
+            int off, int count,
+            out double[] runPrecursorQvalues, out double[] runPeptideQvalues)
+        {
+            // A file's rows are the contiguous global range [off, off+count); compete directly over
+            // the global arrays through this index buffer instead of copying four per-file slices
+            // (issue #4355 Part B, Copilot review). One int[count] shared by both per-run passes.
+            var indices = new int[count];
+            for (int r = 0; r < count; r++)
+                indices[r] = off + r;
+            runPrecursorQvalues = ComputePerRunPrecursorQvaluesForFile(scores, labels, entryIds, indices, off);
+            runPeptideQvalues = ComputePerRunPeptideQvaluesForFile(scores, labels, entryIds, peptides, indices, off);
+        }
+
         private static double[] ComputePerRunPrecursorQvalues(
             double[] scores, bool[] labels, uint[] entryIds, string[] fileNames)
         {
@@ -3177,14 +3423,20 @@ namespace pwiz.Osprey.FDR
             return qvalues;
         }
 
-        private static double[] ComputeExperimentPrecursorQvalues(
+        /// <summary>
+        /// Bounded (O(base_ids)) experiment-precursor q map: <c>base_id -&gt; q</c>. This is
+        /// the intrinsic working set of the experiment-precursor competition -- one q per
+        /// distinct base_id -- so it is what the projection score pass
+        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) reads to assign each row's
+        /// experiment-precursor q WITHOUT ever materializing the O(n) per-row array
+        /// (issue #4355 Part B, bounded q-value reconstruction). The full-length
+        /// <see cref="ComputeExperimentPrecursorQvalues"/> wrapper simply expands this map,
+        /// so the two share the SAME competition + conservative-q math and cannot drift.
+        /// </summary>
+        private static Dictionary<uint, double> ComputeExperimentPrecursorQMap(
             double[] scores, bool[] labels, uint[] entryIds)
         {
             int n = scores.Length;
-            var qvalues = new double[n];
-            for (int i = 0; i < n; i++)
-                qvalues[i] = 1.0;
-
             int[] wi;
             double[] ws;
             bool[] wd;
@@ -3194,38 +3446,49 @@ namespace pwiz.Osprey.FDR
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
 
-            // Propagate the winner's q-value to all observations sharing the
-            // same base_id (both target and decoy sides). Matches Rust's
-            // base_id_exp_prec_q HashMap at osprey-fdr/src/percolator.rs:2168
-            // -- without this, non-winning per-file observations of a
-            // multi-file precursor stay at q=1.0 and downstream stages that
-            // gate on experiment_precursor_qvalue (Stage 6 calibration refit
-            // and reconciliation) miss the bulk of the consensus pool.
+            // Winner's q-value keyed by base_id -- assigned to all observations sharing the
+            // same base_id (both target and decoy sides) at expand/assign time. Matches
+            // Rust's base_id_exp_prec_q HashMap at osprey-fdr/src/percolator.rs:2168 --
+            // without this, non-winning per-file observations of a multi-file precursor stay
+            // at q=1.0 and downstream stages that gate on experiment_precursor_qvalue (Stage
+            // 6 calibration refit and reconciliation) miss the bulk of the consensus pool.
             var baseIdExpQ = new Dictionary<uint, double>();
             for (int rank = 0; rank < wi.Length; rank++)
             {
                 uint baseId = entryIds[wi[rank]] & BASE_ID_MASK;
                 baseIdExpQ[baseId] = q[rank];
             }
-            for (int i = 0; i < n; i++)
-            {
-                uint baseId = entryIds[i] & BASE_ID_MASK;
-                double qv;
-                if (baseIdExpQ.TryGetValue(baseId, out qv))
-                    qvalues[i] = qv;
-            }
-
-            return qvalues;
+            return baseIdExpQ;
         }
 
-        private static double[] ComputeExperimentPeptideQvalues(
-            double[] scores, bool[] labels, uint[] entryIds, string[] peptides)
+        private static double[] ComputeExperimentPrecursorQvalues(
+            double[] scores, bool[] labels, uint[] entryIds)
         {
             int n = scores.Length;
             var qvalues = new double[n];
+            var baseIdExpQ = ComputeExperimentPrecursorQMap(scores, labels, entryIds);
             for (int i = 0; i < n; i++)
-                qvalues[i] = 1.0;
+            {
+                double qv;
+                qvalues[i] = baseIdExpQ.TryGetValue(entryIds[i] & BASE_ID_MASK, out qv) ? qv : 1.0;
+            }
+            return qvalues;
+        }
 
+        /// <summary>
+        /// Bounded (O(peptides)) experiment-peptide q map: <c>peptide -&gt; q</c>. The
+        /// intrinsic working set of the experiment-peptide competition -- one q per distinct
+        /// peptide string -- which the projection score pass
+        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) reads to assign each row's
+        /// experiment-peptide q without materializing the O(n) per-row array (issue #4355
+        /// Part B). The full-length <see cref="ComputeExperimentPeptideQvalues"/> wrapper
+        /// expands this map, so both share the SAME best-per-peptide + competition +
+        /// conservative-q math and cannot drift.
+        /// </summary>
+        private static Dictionary<string, double> ComputeExperimentPeptideQMap(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides)
+        {
+            int n = scores.Length;
             var allIndices = new int[n];
             for (int i = 0; i < n; i++)
                 allIndices[i] = i;
@@ -3260,14 +3523,20 @@ namespace pwiz.Osprey.FDR
                 int globalIdx = bestPerPeptide[wi[rank]];
                 peptideQvalue[peptides[globalIdx]] = q[rank];
             }
+            return peptideQvalue;
+        }
 
+        private static double[] ComputeExperimentPeptideQvalues(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides)
+        {
+            int n = scores.Length;
+            var qvalues = new double[n];
+            var peptideQvalue = ComputeExperimentPeptideQMap(scores, labels, entryIds, peptides);
             for (int i = 0; i < n; i++)
             {
                 double qv;
-                if (peptideQvalue.TryGetValue(peptides[i], out qv))
-                    qvalues[i] = qv;
+                qvalues[i] = peptideQvalue.TryGetValue(peptides[i], out qv) ? qv : 1.0;
             }
-
             return qvalues;
         }
 

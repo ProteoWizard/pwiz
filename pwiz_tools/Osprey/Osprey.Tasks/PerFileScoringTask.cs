@@ -266,6 +266,18 @@ namespace pwiz.Osprey.Tasks
                     perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                 if (fileResult != null)
                     scoredFileNames.Add(fileName);
+                // Single-file scoring memory boundary. The pre-GC line's working_set
+                // peak is the in-scoring high-water mark (the ~tens-of-GB envelope one
+                // file's Stage 1-4 needs); the forced-GC line is the PERSISTENT set that
+                // survives -- the two together separate transient scoring buffers from
+                // genuinely retained structure ("why does one file need so much, and
+                // what is actually held"). When a dotMemory session is attached
+                // (Profile-Osprey.ps1 -MemoryProfile) the forced-GC probe also captures a
+                // retention snapshot here. Zero cost when OSPREY_LOG_MEMORY is unset; the
+                // multi-file batch never takes this single-file branch.
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"single file scored (pre-GC)");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-scored-live",
+                    string.Format(@"(post-GC, after scoring {0})", fileName));
             }
             else if (effectiveParallelism == 1)
             {
@@ -825,8 +837,19 @@ namespace pwiz.Osprey.Tasks
         {
             fullLibrary = null;
 
+            // A StopAfterStage5 worker (--task FirstPassFDR) reads only the six
+            // identity scalars per library entry (the FDR stages never touch
+            // fragments), so skip retaining the fragment peaks -- ~3.2 GB at
+            // SEA-AD scale of otherwise-resident dead weight. Gate strictly on
+            // StopAfterStage5: a straight-through run (or any run that later
+            // writes the .blib) still needs the fragments. Decoy generation and
+            // the fragment diagnostic below are told about the omission so they
+            // stay byte-identical (see LibraryLoadOptions / DecoyGenerator).
+            bool omitFragments = config.StopAfterStage5;
+            var loadOptions = new LibraryLoadOptions { OmitFragments = omitFragments };
+
             var swLibrary = Stopwatch.StartNew();
-            var library = LibraryLoader.Load(config, ctx.LogInfo, ctx.LogWarning);
+            var library = LibraryLoader.Load(config, loadOptions, ctx.LogInfo, ctx.LogWarning);
             if (library == null || library.Count == 0)
             {
                 ctx.LogError(@"Library is empty after loading");
@@ -876,8 +899,12 @@ namespace pwiz.Osprey.Tasks
             }
             else if (!librarySuppliesDecoys)
             {
+                // GenerateAllWithCollisionDetection interns the freshly-minted
+                // decoy strings ("DECOY_"+accession / modified sequence) through
+                // its own pool and logs the collapse summary; no post-pass
+                // interning is needed here.
                 decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
-                    library, config, ctx.LogInfo, out List<LibraryEntry> validTargets);
+                    library, config, ctx.LogInfo, omitFragments, out List<LibraryEntry> validTargets);
                 library = validTargets;
             }
             else
@@ -902,21 +929,27 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"[COUNT] Full library: {0} ({1} targets + {2} decoys)",
                 fullLibrary.Count, library.Count, decoys.Count));
 
-            // Count entries with few fragments (diagnostic for entry count parity)
-            int nZeroFrag = 0, nOneFrag = 0, nTwoFrag = 0;
-            foreach (var entry in fullLibrary)
+            // Count entries with few fragments (diagnostic for entry count
+            // parity). Skipped when fragments were omitted: the entries carry no
+            // fragment arrays by design, so every count would read 0 and the line
+            // would misreport the whole library as sub-3-fragment.
+            if (!omitFragments)
             {
-                int fc = entry.Fragments != null ? entry.Fragments.Count : 0;
-                if (fc == 0)
-                    nZeroFrag++;
-                else if (fc == 1)
-                    nOneFrag++;
-                else if (fc == 2)
-                    nTwoFrag++;
+                int nZeroFrag = 0, nOneFrag = 0, nTwoFrag = 0;
+                foreach (var entry in fullLibrary)
+                {
+                    int fc = entry.Fragments != null ? entry.Fragments.Count : 0;
+                    if (fc == 0)
+                        nZeroFrag++;
+                    else if (fc == 1)
+                        nOneFrag++;
+                    else if (fc == 2)
+                        nTwoFrag++;
+                }
+                if (nZeroFrag + nOneFrag + nTwoFrag > 0)
+                    ctx.LogInfo(string.Format(@"[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
+                        nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag));
             }
-            if (nZeroFrag + nOneFrag + nTwoFrag > 0)
-                ctx.LogInfo(string.Format(@"[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
-                    nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag));
 
             // Build library lookup by ID for fast access
             var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
@@ -1033,7 +1066,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.ExitCode = 1;
                     return false;
                 }
-                var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState, ctx.LogInfo);
                 pairingStats.NPairedViaManifest = manifestStats.NPaired;
                 if (manifestStats.NProteinsReplaced > 0)
                 {
@@ -1174,7 +1207,13 @@ namespace pwiz.Osprey.Tasks
                         throw new InvalidDataException(string.Format(
                             @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
                             parquetPath));
-                    builder.BeginFile(fileName);
+                    // Pre-size the per-file projection list to the parquet row count (footer
+                    // NumRows, no column data) so the 32 B rows fill one right-sized backing
+                    // array instead of the List's doubling growth -- byte-neutral, ~5.4 GB less
+                    // resident at 82 files (issue #4355 Part B; the pre-size was measured on the
+                    // memory branch). A 0/missing count just falls back to an un-hinted list.
+                    long rowCountHint = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath).RowCount;
+                    builder.BeginFile(fileName, checked((int)rowCountHint));
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                         (entryId, charge, isDecoy, coelutionSum, modseq) =>
                             builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
@@ -1587,15 +1626,15 @@ namespace pwiz.Osprey.Tasks
 
             var context = new ScoringContext(config, fileName);
 
-            // Load spectra (from mzML or .spectra.bin cache)
-            // Segment 1/4 (read): the mzML/cache read reporter inside LoadSpectra
-            // feeds this file's first progress slice under --parallel-files.
+            // Load the per-file spectra as a STREAMING index over the .spectra.bin cache,
+            // never materializing the full ~6 GB MS2 List<Spectrum>: Stages 1-4 (calibration
+            // + scoring) stream each isolation window on demand. Segment 1/4 (read): the
+            // mzML/cache read reporter inside EnsureSpectraCache feeds this file's first
+            // progress slice under --parallel-files.
             MultiProgressReporter.Current?.BeginSegment();
-            List<Spectrum> spectra;
-            List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
-            LoadSpectra(inputFile, ctx.RunPlan.EffectiveFileParallelism > 1,
-                out spectra, out ms1Spectra, out int unsortedCount, ctx);
+            SpectraWindowIndex windowIndex = EnsureSpectraCache(
+                inputFile, ctx.RunPlan.EffectiveFileParallelism > 1, out int unsortedCount, ctx);
             swParse.Stop();
 
             long inputBytes = 0;
@@ -1621,22 +1660,24 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s", parseSeconds));
             }
 
-            if (spectra == null || spectra.Count == 0)
+            if (windowIndex == null || windowIndex.Ms2Count == 0)
             {
                 ctx.LogWarning(string.Format("No spectra found in {0}", inputFile));
                 return null;
             }
 
-            // Extract isolation windows from spectra
-            var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
+            // MS1 and the isolation windows come straight from the streaming index (copies of
+            // its own small lists); the full MS2 list is never materialized here.
+            var ms1Spectra = windowIndex.Ms1Spectra.ToList();
+            var isolationWindows = windowIndex.IsolationWindows.ToList();
             ctx.LogInfo(string.Format(
                 "Loaded {0} MS1 and {1} MS/MS spectra with {2} unique isolation windows{3}",
-                ms1Spectra != null ? ms1Spectra.Count : 0, spectra.Count, isolationWindows.Count,
+                ms1Spectra.Count, windowIndex.Ms2Count, isolationWindows.Count,
                 unsortedCount > 0
                     ? string.Format(" ({0} had unsorted peaks, re-sorted; use --verbose for detail)", unsortedCount)
                     : string.Empty));
             ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
-                fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
+                fileName, windowIndex.Ms2Count, ms1Spectra.Count));
             ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
 
@@ -1646,7 +1687,7 @@ namespace pwiz.Osprey.Tasks
             // carries the file forward as a step when scoring begins.
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
-                inputFile, fileName, fullLibrary, spectra, ms1Spectra, isolationWindows,
+                inputFile, fileName, fullLibrary, windowIndex, ms1Spectra, isolationWindows,
                 context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
                 out ModelDiagnosticsData.CalFileRow calDiagnostics, ctx);
 
@@ -1664,6 +1705,20 @@ namespace pwiz.Osprey.Tasks
                 if (_calibrationMassUnit == null)
                     _calibrationMassUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
             }
+
+            // Calibration-phase memory boundary (companion to the perfile-scoring-peak
+            // capture below). The [MEM] line's working_set peak is the calibration
+            // high-water mark before scoring pushes it higher; its managed_heap is taken
+            // WITHOUT a forced GC, so the transient per-window float[][] XCorr caches the
+            // calibration scoring builds and releases per isolation window -- not yet
+            // collected here -- are still counted, sizing the calibration peak.
+            // The paired retention snapshot forces its own GC first (dotMemory), so it
+            // captures the post-calibration FLOOR that scoring inherits (library + spectra)
+            // rather than the transient cache. Both are no-ops off a profiling run
+            // (OSPREY_LOG_MEMORY unset / no dotMemory attached), so the batch and the
+            // regression golden are unaffected; the per-file fan-out reaches this per file.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"post-calibration");
+            ProfilerHooks.CaptureRetentionSnapshot(@"post-calibration");
 
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
@@ -1698,9 +1753,30 @@ namespace pwiz.Osprey.Tasks
             // in ScoringPipeline feeds this slice -- the long phase that shows the
             // bulk of a file's motion on the aggregate line.
             MultiProgressReporter.Current?.BeginSegment();
+
+            // Scoring streams each isolation window's peaks from the same index built at load
+            // (Stage 3 calibration used it too), so the full MS2 list is never resident.
+            IWindowSpectraProvider spectraProvider =
+                new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
+
             var scoredEntries = ScoreAndDeduplicate(
-                fullLibrary, spectra, ms1Spectra, isolationWindows,
+                fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
+            // work targets. Here scoredEntries still hold every heavy per-entry array
+            // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
+            // ReferenceXic*) and the library is still resident, but the resident MS2 is
+            // gone on the streaming path (dropped above), which is the reduction this
+            // snapshot exists to confirm. Those per-entry arrays are dropped a few lines
+            // below (the #4355 write-then-null), so the later
+            // perfile-scored-live probe captures only the post-release floor and CANNOT
+            // show them -- a forced-GC snapshot never captures unreferenced objects.
+            // Deliberately a direct SnapshotReady-gated capture (NOT via a forced-GC [MEM]
+            // boundary): a no-op on the batch (no profiler attached), fires only under
+            // Profile-Osprey.ps1 -MemoryProfile, and dotMemory forces its own GC so the
+            // captured live set is the true retained peak (arrays are live here, so kept).
+            ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
 
             // Optional: write per-entry feature TSV for comparison against Rust's PIN output
             if (config.WritePin)
@@ -1767,17 +1843,20 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private List<FdrEntry> ScoreAndDeduplicate(
             List<LibraryEntry> fullLibrary,
-            List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            IWindowSpectraProvider spectraProvider, List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Cal, MzCalibrationResult ms1Cal,
             ScoringContext context, OspreyConfig config,
             string fileName, PipelineContext ctx)
         {
-            // Run coelution scoring across all isolation windows
+            // Run coelution scoring across all isolation windows from the caller's
+            // window-spectra source (streaming per window, or the resident fallback).
+            // Stage-4 scores a file once; then only DeduplicateDoubleCounting touches
+            // the spectra, and it needs only the MS2 RTs the provider carries.
             var swScoring = Stopwatch.StartNew();
             var scoredEntries = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
-                fullLibrary, spectra, ms1Spectra,
+                fullLibrary, spectraProvider, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
                 context);
@@ -1803,7 +1882,7 @@ namespace pwiz.Osprey.Tasks
             // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
             // same call site, between scoring and pair-deduplication.
             scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicateDoubleCounting(
-                scoredEntries, fullLibrary, spectra, ms2Cal,
+                scoredEntries, fullLibrary, spectraProvider.Ms2RetentionTimes, ms2Cal,
                 isolationWindows, config);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
@@ -1833,7 +1912,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private RTCalibration ResolveCalibration(
             string inputFile, string fileName,
-            List<LibraryEntry> fullLibrary, List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            List<LibraryEntry> fullLibrary, SpectraWindowIndex windowIndex,
+            List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             ScoringContext context, OspreyConfig config,
             out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
@@ -1908,7 +1988,7 @@ namespace pwiz.Osprey.Tasks
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = new Calibrator(ctx).RunCalibration(
-                    fullLibrary, spectra, ms1Spectra, context,
+                    fullLibrary, windowIndex, ms1Spectra, context,
                     out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata,
                     out calInitialRtTolerance, out calDiagnostics);
                 swCal.Stop();
@@ -2196,45 +2276,53 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Load spectra from mzML file or spectra cache. When multiple
-        /// files are processed in parallel, the mzML parse is gated so
-        /// only one disk scan runs at a time (see s_mzmlReadGate).
+        /// Ensure a valid <c>.spectra.bin</c> cache exists for the input and return a
+        /// streaming <see cref="SpectraWindowIndex"/> over it (per-window MS2 offsets, plus
+        /// MS1 and the first-cycle isolation windows) WITHOUT materializing the full MS2
+        /// <c>List&lt;Spectrum&gt;</c>. On a cache hit (the common re-run path) the file is only
+        /// header-indexed; on a miss the mzML is parsed once (gated across parallel files),
+        /// written to the cache, then indexed and the parsed list dropped. Stages 1-4
+        /// (calibration + scoring) stream each isolation window from the returned index. The
+        /// full resident load survives only in Stage-6 rescore
+        /// (<see cref="PerFileRescoreTask"/>.LoadSpectraForRescore), a separate follow-up.
         /// </summary>
-        private void LoadSpectra(string inputFile, bool serializeMzmlRead,
-            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra,
+        private SpectraWindowIndex EnsureSpectraCache(string inputFile, bool serializeMzmlRead,
             out int unsortedCount, PipelineContext ctx)
         {
             unsortedCount = 0;
-            // Check for binary spectra cache. Use the shared GetCachePath so the
-            // write and the rescore read (PerFileRescoreTask) derive an identical
-            // filename + directory (ArtifactPaths redirects the dir).
+            // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
+            // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
             if (File.Exists(cachePath))
             {
-                ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
                 try
                 {
-                    // null = stale (source changed) or invalid (bad magic/version)
-                    // cache: a normal miss, not an error. Re-parse the mzML below.
-                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath, inputFile);
-                    if (cacheResult != null)
+                    // Cache hit: index the file directly (header pass only) -- never build the
+                    // full MS2 list. Returns null when stale/invalid (bad magic/version or the
+                    // source fingerprint changed), which falls through to a re-parse below.
+                    var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                    if (hit != null)
                     {
-                        ms2Spectra = cacheResult.Ms2Spectra;
-                        ms1Spectra = cacheResult.Ms1Spectra;
-                        return;
+                        ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                        return hit;
                     }
                     ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
                 }
                 catch (Exception ex)
                 {
+                    // A present-but-corrupt/truncated cache body (intact header, e.g. an
+                    // interrupted write) throws during the index pass; re-parse the mzML and
+                    // rewrite the cache rather than faulting the file. Matches the old
+                    // LoadSpectra fallback. Only the miss-path re-index below stays a hard
+                    // error, since that indexes a cache we just wrote.
                     ctx.LogWarning(string.Format(
-                        "Failed to load spectra cache: {0}. Falling back to mzML.", ex.Message));
+                        "Failed to index spectra cache: {0}. Re-parsing mzML.", ex.Message));
                 }
             }
 
-            // Parse mzML directly, optionally serialized across files. The "Processing
-            // file N/M: <path>" banner already named the file; the consolidated
-            // "Loaded ... spectra with ... isolation windows" line is emitted by the caller.
+            // Miss/stale/absent: parse the mzML once (materialized only transiently here),
+            // optionally serialized across files, write the cache, then index it and drop the
+            // parsed list. The "Processing file N/M: <path>" banner already named the file.
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
                 ScoringTaskShared.s_mzmlReadGate.Wait();
@@ -2247,19 +2335,38 @@ namespace pwiz.Osprey.Tasks
                 if (serializeMzmlRead)
                     ScoringTaskShared.s_mzmlReadGate.Release();
             }
-            ms2Spectra = mzmlResult.Ms2Spectra;
-            ms1Spectra = mzmlResult.Ms1Spectra;
             unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
-            // Save to cache for next run
             try
             {
-                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra, inputFile);
+                SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
             }
             catch (Exception ex)
             {
                 ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
             }
+
+            // Index the just-written cache and stream from it (the parsed MS2 list drops when
+            // this method returns). Per-file scoring REQUIRES the cache; if it could not be
+            // written/indexed (e.g. a read-only or full output directory, or a failed write),
+            // fail clearly -- preserving the underlying error -- rather than silently fall back
+            // to a resident load that would OOM a large run.
+            SpectraWindowIndex index = null;
+            Exception indexError = null;
+            try
+            {
+                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+            }
+            catch (Exception ex)
+            {
+                indexError = ex;
+            }
+            if (index == null)
+                throw new IOException(string.Format(
+                    "Could not index the spectra cache for '{0}'. Per-file scoring streams MS2 from " +
+                    "'{1}'; ensure that directory is writable (the .scores.parquet and .calibration.json " +
+                    "outputs are written to the same place).", inputFile, cachePath), indexError);
+            return index;
         }
 
         /// <summary>
