@@ -211,26 +211,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public bool WriteSummaryReport { get; set; } = true;
 
-        /// <summary>
-        /// EXPERIMENTAL (<c>--extra-features</c>): also compute the non-PIN scores --
-        /// appended AFTER the 21 parity-locked PIN features -- and persist them to
-        /// <c>.scores.parquet</c> so the classifier can train on them.
-        ///
-        /// USE ONLY WITH <c>--fdr-method fasttree</c>. These scores were deliberately
-        /// excluded from the 21-feature PIN because they misbehave with a LINEAR model:
-        /// they are non-monotone (e.g. peak_symmetry is U-shaped about 1.0 -- both tails
-        /// are bad, which a single weight cannot express), collinear with existing
-        /// features (the dot_product family), or only useful in interaction. A linear SVM
-        /// gets no benefit and can be actively harmed; gradient-boosted trees split on
-        /// them freely, which is the entire reason the tree classifier exists. Osprey
-        /// warns if this is set with any other FDR method.
-        ///
-        /// OFF by default, and off means byte-identical: the 21 PIN features, their
-        /// indices, and the parquet schema are unchanged, so the Rust cross-impl gate and
-        /// the regression golden are untouched.
-        /// </summary>
-        public bool ExtraFeatures { get; set; }
-
         /// <summary>Write PIN files for external tools.</summary>
         public bool WritePin { get; set; }
 

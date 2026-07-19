@@ -1427,7 +1427,7 @@ namespace pwiz.Osprey.Tasks
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(
-                    ParquetScoreCache.FeatureNames(config.ExtraFeatures)),
+                    ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, out var contributions,
                 BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures,
                 captureModel, frozenModel);
@@ -1466,7 +1466,7 @@ namespace pwiz.Osprey.Tasks
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 projections, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(
-                    ParquetScoreCache.FeatureNames(config.ExtraFeatures)),
+                    ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
                 loadFileFeatures);
             if (aborted)
@@ -1709,7 +1709,7 @@ namespace pwiz.Osprey.Tasks
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 projections, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(
-                    ParquetScoreCache.FeatureNames(config.ExtraFeatures)),
+                    ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", loadFileFeatures, captureContributions, captureModel);
             swFdr.Stop();
