@@ -94,6 +94,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly Dictionary<uint, EntrapmentClass> _tClass =
                 new Dictionary<uint, EntrapmentClass>();
 
+            // Frontier: un-gated first-pass run-q distribution per target-side precursor, the
+            // one input the reproducibility frontier needs beyond the gated cross-run sets.
+            private readonly Dictionary<string, FrontierPrec> _frontier =
+                new Dictionary<string, FrontierPrec>(StringComparer.Ordinal);
+            // Within-file dedup buffer: the current file's per-precursor best run-q, flushed into
+            // the bins at each file boundary (rows arrive in file-major order).
+            private readonly Dictionary<string, double> _frontierFileMinQ =
+                new Dictionary<string, double>(StringComparer.Ordinal);
+            private int _frontierCurFile = -1;
+
             /// <param name="runNames">Input-file names in scoring (input-file) order -- the x for
             /// the per-file table and cross-run curves; also fixes <see cref="FileCount"/>.</param>
             /// <param name="classByBaseId">library base_id -> target-side entrapment class, exactly
@@ -222,6 +232,21 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                 }
 
+                // Frontier: fold the UN-GATED first-pass row into the within-file run-q tally
+                // (target side only). On a new file, flush the previous file's per-precursor best
+                // run-q into the bins first (rows arrive in file-major order).
+                if (!isDecoy)
+                {
+                    if (fileIdx != _frontierCurFile)
+                    {
+                        if (_frontierCurFile >= 0)
+                            FrontierFlushFile(_frontier, _frontierFileMinQ);
+                        _frontierCurFile = fileIdx;
+                    }
+                    FrontierRow(_frontier, _frontierFileMinQ, key, isEntrap,
+                        q.EffectiveRunQvalue(_fdrLevel), q.EffectiveExperimentQvalue(_fdrLevel));
+                }
+
                 // --- win fraction per base_id (== BuildWinFraction: best target vs best decoy) ---
                 if (!_bt.TryGetValue(baseId, out var slot))
                 {
@@ -311,6 +336,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
                 if (data.HasEntrapment)
                     data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+
+                // Reproducibility frontier (first-pass, pre-compaction; entrapment-gated).
+                if (data.HasEntrapment)
+                {
+                    FrontierFlushFile(_frontier, _frontierFileMinQ);   // flush the final file
+                    data.Frontier = BuildFrontier(_frontier.Values, _nFiles, r, _runFdr);
+                }
 
                 return data;
             }
