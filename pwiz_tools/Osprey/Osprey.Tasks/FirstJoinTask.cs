@@ -1559,7 +1559,8 @@ namespace pwiz.Osprey.Tasks
             FirstPassProteinFdrResult result, List<LibraryEntry> fullLibrary, Action<string> log)
         {
             // ModifiedSequence -> its protein ids (from target library entries).
-            var pepProteins = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            // ProteinIds is IReadOnlyList<string> after the LibraryStringInterner change (#4424).
+            var pepProteins = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
             foreach (var e in fullLibrary)
                 if (!e.IsDecoy && e.ProteinIds != null && e.ProteinIds.Count > 0 &&
                     !pepProteins.ContainsKey(e.ModifiedSequence))
