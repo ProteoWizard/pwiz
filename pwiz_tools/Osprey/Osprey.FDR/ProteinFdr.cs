@@ -164,6 +164,86 @@ namespace pwiz.Osprey.FDR
     }
 
     /// <summary>
+    /// Streaming first-pass protein-FDR reducer (issue #4355 struct-shrink S2): builds the
+    /// detected-peptide set + per-peptide best scores from rows fed one at a time, then runs
+    /// the identical parsimony + picked-protein FDR the buffer overloads run. Lets the
+    /// bounded per-file consumer stream each row's <c>(modifiedSequence, isDecoy, score,
+    /// runPeptideQvalue)</c> straight off the <c>.1st-pass.fdr_scores.bin</c> sidecar
+    /// (score / run_peptide_q) + the parquet scalars (modseq / isDecoy) -- read in the Tasks
+    /// layer, which owns the disk I/O -- WITHOUT holding the resident <see cref="FdrProjection"/>
+    /// buffer + the parallel <c>FdrProjectionOutputs</c> array. Both reductions
+    /// (detected-gate + best max-score / min-q) are order-independent and a modified sequence
+    /// maps to a single target/decoy label, so any streaming order reproduces the resident
+    /// <see cref="ProteinFdr.CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>
+    /// path byte-identically. The caller then patches each entry's <c>run_protein_qvalue</c>
+    /// onto the sidecar from <see cref="FirstPassProteinFdrResult.ProteinFdr"/>'s
+    /// <c>PeptideQvalues</c> (replacing the resident <c>PropagateRunProteinQvalues</c> +
+    /// phase-2 patch with one streaming pass).
+    /// </summary>
+    public sealed class FirstPassProteinFdrAccumulator
+    {
+        private readonly double _runFdr;
+        private readonly HashSet<string> _detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
+        private readonly Dictionary<string, PeptideScore> _bestScores = new Dictionary<string, PeptideScore>();
+
+        public FirstPassProteinFdrAccumulator(double runFdr)
+        {
+            _runFdr = runFdr;
+        }
+
+        /// <summary>
+        /// Fold one row into the detected-peptide set (targets passing peptide-level run FDR,
+        /// matching Rust pipeline.rs:4301) and the per-peptide best (max) score / best (min)
+        /// run peptide q-value reduction (matching
+        /// <see cref="ProteinFdr.CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>).
+        /// </summary>
+        public void Add(string modifiedSequence, bool isDecoy, double score, double runPeptideQvalue)
+        {
+            if (!isDecoy && runPeptideQvalue <= _runFdr)
+                _detectedPeptides.Add(modifiedSequence);
+
+            PeptideScore ps;
+            if (_bestScores.TryGetValue(modifiedSequence, out ps))
+            {
+                if (score > ps.Score)
+                    ps.Score = score;
+                if (runPeptideQvalue < ps.BestQvalue)
+                    ps.BestQvalue = runPeptideQvalue;
+            }
+            else
+            {
+                _bestScores[modifiedSequence] = new PeptideScore
+                {
+                    Score = score,
+                    IsDecoy = isDecoy,
+                    BestQvalue = runPeptideQvalue
+                };
+            }
+        }
+
+        /// <summary>
+        /// Run the identical parsimony + picked-protein FDR the buffer path runs and return
+        /// the artifacts (the caller logs summary counts + patches the sidecar's
+        /// <c>run_protein_qvalue</c> from <see cref="ProteinFdrResult.PeptideQvalues"/>). The
+        /// cross-impl best-peptide-scores dump fires here, at the same point the resident
+        /// <see cref="ProteinFdr.CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>
+        /// emits it (after the reduction is complete).
+        /// </summary>
+        public FirstPassProteinFdrResult Finish(IList<LibraryEntry> fullLibrary, OspreyConfig config)
+        {
+            if (FdrDiagnostics.DumpBestPeptideScores)
+                FdrDiagnostics.WriteBestPeptideScoresDump(_bestScores);
+
+            var parsimony = ProteinFdr.BuildProteinParsimony(
+                fullLibrary, config.SharedPeptides, _detectedPeptides);
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, _bestScores, config.RunFdr);
+
+            return new FirstPassProteinFdrResult(
+                _detectedPeptides, parsimony, _bestScores, proteinFdr);
+        }
+    }
+
+    /// <summary>
     /// The computed artifacts of a second-pass / run-wide protein-FDR run, returned
     /// by <see cref="ProteinFdrEngine.RunSecondPass"/> so the Tasks-layer caller can
     /// emit the Stage-7 detected-peptides and protein-FDR diagnostic dumps (and the
@@ -834,126 +914,5 @@ namespace pwiz.Osprey.FDR
                 detectedPeptides, parsimony, bestScores, proteinFdr);
         }
 
-        /// <summary>
-        /// Projection-buffer counterpart of
-        /// <see cref="CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>
-        /// (issue #4355 struct-shrink S0): reduce the thin <see cref="FdrProjection"/>
-        /// rows to the per-peptide best (max) SVM score and best (min) run peptide
-        /// q-value. <see cref="FdrProjection.Score"/> + IsDecoy stay resident on the
-        /// lean struct; the run peptide q-value now comes from the parallel
-        /// <paramref name="outputs"/> array (it is no longer a struct field). The
-        /// modified sequence is materialized from <paramref name="peptideById"/>. The
-        /// resulting dictionary is byte-identical to the FdrEntry path (the max/min
-        /// reductions are order-independent, and a modified sequence maps to a single
-        /// target/decoy label).
-        /// </summary>
-        public static Dictionary<string, PeptideScore> CollectBestPeptideScores(
-            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
-            string[] peptideById,
-            FdrProjectionOutputs outputs)
-        {
-            var best = new Dictionary<string, PeptideScore>();
-            for (int f = 0; f < perFileProjections.Count; f++)
-            {
-                var rows = perFileProjections[f].Value;
-                for (int r = 0; r < rows.Count; r++)
-                {
-                    var proj = rows[r];
-                    double runPeptideQvalue = outputs.RunPeptideQvalue(f, r);
-                    string modseq = peptideById[proj.PeptideId];
-                    PeptideScore ps;
-                    if (best.TryGetValue(modseq, out ps))
-                    {
-                        if (proj.Score > ps.Score)
-                            ps.Score = proj.Score;
-                        if (runPeptideQvalue < ps.BestQvalue)
-                            ps.BestQvalue = runPeptideQvalue;
-                    }
-                    else
-                    {
-                        best[modseq] = new PeptideScore
-                        {
-                            Score = proj.Score,
-                            IsDecoy = proj.IsDecoy,
-                            BestQvalue = runPeptideQvalue
-                        };
-                    }
-                }
-            }
-
-            if (FdrDiagnostics.DumpBestPeptideScores)
-                FdrDiagnostics.WriteBestPeptideScoresDump(best);
-
-            return best;
-        }
-
-        /// <summary>
-        /// Projection-buffer counterpart of <see cref="PropagateProteinQvalues"/>:
-        /// write the run protein q-value into the parallel <paramref name="outputs"/>
-        /// array for every row from the parsimony result, keyed by the materialized
-        /// modified sequence (issue #4355 struct-shrink S0 -- the value is no longer a
-        /// struct field). <see cref="FdrEntry.ExperimentProteinQvalue"/> has no
-        /// projection slot (it stays at its 1.0 default until the Stage 7 second pass,
-        /// on the reloaded survivor stubs), so this only sets the run-level value --
-        /// matching the first-pass call's <c>setExperiment: false</c>.
-        /// </summary>
-        public static void PropagateRunProteinQvalues(
-            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
-            string[] peptideById,
-            ProteinFdrResult proteinFdr,
-            FdrProjectionOutputs outputs)
-        {
-            for (int f = 0; f < perFileProjections.Count; f++)
-            {
-                var rows = perFileProjections[f].Value;
-                for (int i = 0; i < rows.Count; i++)
-                {
-                    double q;
-                    if (!proteinFdr.PeptideQvalues.TryGetValue(peptideById[rows[i].PeptideId], out q))
-                        q = 1.0;
-                    outputs.SetRunProteinQvalue(f, i, q);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Projection-buffer counterpart of
-        /// <see cref="RunFirstPassProteinFdr(IList{KeyValuePair{string, List{FdrEntry}}}, IList{LibraryEntry}, OspreyConfig)"/>.
-        /// Builds the detected-peptide set + per-peptide best scores from the
-        /// projection rows (materializing modified sequences from
-        /// <paramref name="peptideById"/>), runs the identical parsimony +
-        /// picked-protein FDR (those helpers are peptide-string-keyed and never
-        /// touch the buffer), and writes the run protein q-value into
-        /// <paramref name="outputs"/> for every row (issue #4355 struct-shrink S0 --
-        /// it is no longer a struct field). Byte-identical to the FdrEntry path.
-        /// </summary>
-        public static FirstPassProteinFdrResult RunFirstPassProteinFdr(
-            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
-            string[] peptideById,
-            FdrProjectionOutputs outputs,
-            IList<LibraryEntry> fullLibrary,
-            OspreyConfig config)
-        {
-            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
-            for (int f = 0; f < perFileProjections.Count; f++)
-            {
-                var rows = perFileProjections[f].Value;
-                for (int r = 0; r < rows.Count; r++)
-                {
-                    if (!rows[r].IsDecoy && outputs.RunPeptideQvalue(f, r) <= config.RunFdr)
-                        detectedPeptides.Add(peptideById[rows[r].PeptideId]);
-                }
-            }
-
-            var parsimony = BuildProteinParsimony(
-                fullLibrary, config.SharedPeptides, detectedPeptides);
-            var bestScores = CollectBestPeptideScores(perFileProjections, peptideById, outputs);
-            var proteinFdr = ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
-
-            PropagateRunProteinQvalues(perFileProjections, peptideById, proteinFdr, outputs);
-
-            return new FirstPassProteinFdrResult(
-                detectedPeptides, parsimony, bestScores, proteinFdr);
-        }
     }
 }
