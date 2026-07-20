@@ -1464,10 +1464,14 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
         /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
-        /// output reads every entry's in-memory features/scores (FDRBench pass 1,
-        /// OSPREY_PASS2_QVALUE=transfer), when the projection path is off
-        /// (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR), or on the reconciled-input
-        /// worker join. Shared by <see cref="Run"/> and <see cref="RehydrateFromOwnOutputs"/>
+        /// output reads every entry's in-memory features/scores (FDRBench pass 1),
+        /// when the projection path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR),
+        /// or on the reconciled-input worker join. OSPREY_PASS2_QVALUE=transfer no longer
+        /// forces the resident pool -- the per-run-only redesign maps each adjusted peak
+        /// through that file's own 1st-pass (score -> run q) sidecar table at pass 2, so
+        /// transfer takes the SAME lean projection first-pass path as the default (see
+        /// TODO-osprey_pass2_per_run_only_qvalue). Shared by <see cref="Run"/> and
+        /// <see cref="RehydrateFromOwnOutputs"/>
         /// so the compute and resume paths make the identical lean/fat choice -- otherwise a
         /// pure resume rebuilds the ~53 GB fat buffer #4400 dropped for straight-through.
         ///
@@ -1483,8 +1487,7 @@ namespace pwiz.Osprey.Tasks
             return config.ExpectReconciledInput ||
                    !OspreyEnvironment.UseFdrProjection ||
                    config.FdrMethod != FdrMethod.Percolator ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                   OspreyEnvironment.Pass2TransferQ;
+                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
         }
 
         /// <summary>

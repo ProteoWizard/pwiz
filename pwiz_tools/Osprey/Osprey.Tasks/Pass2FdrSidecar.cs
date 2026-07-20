@@ -87,8 +87,9 @@ namespace pwiz.Osprey.Tasks
             if (OspreyEnvironment.Pass2TransferQ)
             {
                 ctx.LogInfo(string.Format(
-                    "OSPREY_PASS2_QVALUE={0}: 2nd-pass q comes from the frozen 1st-pass model + " +
-                    "full pre-compaction score->q table (confidence transfer), not a reduced-pool retrain.",
+                    "OSPREY_PASS2_QVALUE={0}: pass-2 carries the pass-1 q through and re-maps ONLY the " +
+                    "per-run q of reconciliation-moved peaks (frozen 1st-pass model + each file's own " +
+                    "score->run-q table); experiment q is frozen by the best-peak anchor, no retrain.",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
@@ -545,15 +546,18 @@ namespace pwiz.Osprey.Tasks
             {
                 case FdrMethod.Percolator:
                     // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
-                    // the decoy-depleted reconciled+compacted set, apply the FROZEN 1st-pass
-                    // model to each entry's RECONCILED features (loaded onto entry.Features
-                    // above) and map the resulting score to a q via the full pre-compaction
-                    // 1st-pass score->q table. Falls through to the retrain if the flag is
-                    // off or the frozen-model / table byproducts were not captured.
+                    // the decoy-depleted reconciled+compacted set (which re-derives an
+                    // anti-conservative experiment-scope q), carry the pass-1 q through and
+                    // recompute ONLY the per-run q of the peaks reconciliation actually moved.
+                    // Each moved/gap-filled peak is re-scored with the FROZEN 1st-pass model
+                    // (its RECONCILED features are on entry.Features above) and mapped through
+                    // THAT file's own (1st-pass score -> run q) table; experiment q is left as
+                    // the pass-1 carry. Falls through to the retrain if the flag is off or the
+                    // frozen model was not captured. See TODO-osprey_pass2_per_run_only_qvalue.
                     if (OspreyEnvironment.Pass2TransferQ &&
                         ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
                         frozenModel?.Results != null &&
-                        TransferQFromFrozenModel(perFileEntries, ctx, frozenModel.Results))
+                        TransferPerRunQ(perFileEntries, config, ctx, frozenModel.Results))
                     {
                         // Transferred: no retrained 2nd-pass model in transfer mode -> no
                         // pass-2 SVM model view for --model-diagnostics (the pass-2 FDR
@@ -565,8 +569,7 @@ namespace pwiz.Osprey.Tasks
                     {
                         ctx.LogWarning(
                             "OSPREY_PASS2_QVALUE=transfer could not transfer (frozen 1st-pass " +
-                            "model or full-population score->q table byproduct absent); falling " +
-                            "back to the 2nd-pass Percolator retrain.");
+                            "model byproduct absent); falling back to the 2nd-pass Percolator retrain.");
                     }
                     // Capture the 2nd-pass model for the --model-diagnostics pass-2 model
                     // view (retrained on the post-reconciliation pool, #4377). Capturing
@@ -828,24 +831,34 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// OSPREY_PASS2_QVALUE=transfer. Instead of retraining a 2nd-pass Percolator SVM
-        /// on the decoy-depleted reconciled+compacted set -- which underestimates q
-        /// anti-conservatively -- apply the FROZEN 1st-pass model
-        /// (<paramref name="firstPassModel"/>: averaged fold weights + biases +
-        /// standardizer) to each entry's RECONCILED features (already on
-        /// <see cref="FdrEntry.Features"/>) and map the resulting score to a q via the
-        /// FULL pre-compaction 1st-pass score-&gt;q table (the
-        /// <see cref="FirstPassScoreQTable"/> byproduct built by
-        /// <see cref="BuildFullPopulationScoreQTable"/> at first-pass time). This keeps
-        /// the reconciliation peak-move (a peak moved to a worse position maps through the
-        /// unbiased table to an honestly higher q) while discarding the retrain's
-        /// decoy-depleted null (co-monotonic confidence transfer; Rost 2016 TRIC).
-        /// Returns false (caller falls back to the retrain) when the model is unusable or
-        /// the full-population table byproduct is absent (e.g. a resume path that did not
-        /// run the 1st pass in this process).
+        /// OSPREY_PASS2_QVALUE=transfer (per-run-only redesign). Carry the pass-1 q through
+        /// verbatim and recompute ONLY the per-run q of the peaks reconciliation MOVED -- never
+        /// the experiment q, which the best-peak anchor freezes (the best run is untouched, so
+        /// re-taking the best-of-runs min returns the pass-1 value; see
+        /// TODO-osprey_pass2_per_run_only_qvalue). For each file, read its OWN
+        /// <c>.1st-pass.fdr_scores.bin</c> sidecar and build two per-file lookup tables from its
+        /// <c>(Score, RunPrecursorQvalue)</c> / <c>(Score, RunPeptideQvalue)</c> pairs -- the
+        /// sidecar Score is the averaged-model score, the SAME scale
+        /// <see cref="ScoreWithFrozenModel"/> produces, so the table is scale-consistent by
+        /// construction. Then classify every survivor by its reconciled feature score against
+        /// its 1st-pass sidecar record:
+        /// <list type="bullet">
+        /// <item>UNCHANGED (recomputed score == the sidecar's, bit-exact): carry the full
+        /// 1st-pass record verbatim.</item>
+        /// <item>MOVED (has a sidecar record but the reconciled score differs): recompute run q
+        /// from that file's tables; keep the 1st-pass experiment q + PEP.</item>
+        /// <item>GAP-FILL (no sidecar record -- a new detection): run q from the tables;
+        /// experiment q = the precursor's pass-1 experiment q (from <paramref name="firstPassModel"/>'s
+        /// companion cross-file map) so the downstream best-of-runs clamp resolves it correctly.</item>
+        /// </list>
+        /// No global full-population table and no resident first-pass pool: the frozen model is
+        /// captured on the lean projection first pass and each file's table is built from data
+        /// already on disk, one file at a time. Returns false (caller falls back to the retrain)
+        /// when the frozen model is unusable or the input-file list is absent.
         /// </summary>
-        internal static bool TransferQFromFrozenModel(
+        internal static bool TransferPerRunQ(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config,
             PipelineContext ctx,
             PercolatorResults firstPassModel)
         {
@@ -857,145 +870,156 @@ namespace pwiz.Osprey.Tasks
                     "or standardizer; cannot transfer.");
                 return false;
             }
-            if (!ctx.TryGet<FirstPassScoreQTable>(out var fullTable) ||
-                fullTable?.ScoresDesc == null || fullTable.ScoresDesc.Length == 0)
+            if (config.InputFiles == null)
             {
                 ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: no FULL-population score->q table byproduct " +
-                    "present (the 1st pass did not build one in this process); cannot transfer.");
-                return false;
-            }
-            // ScoresDesc and QDesc are built and published together (always parallel), but
-            // guard against a partially-populated byproduct so the logging + lookup below
-            // never index a null or mismatched QDesc.
-            if (fullTable.QDesc == null || fullTable.QDesc.Length != fullTable.ScoresDesc.Length)
-            {
-                ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: score->q table byproduct has a null or " +
-                    "length-mismatched QDesc; cannot transfer.");
+                    "OSPREY_PASS2_QVALUE=transfer: no input-file list to locate the per-file " +
+                    "1st-pass sidecars; cannot transfer.");
                 return false;
             }
 
-            AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
-            int nFeatures = avgWeights.Length;
-
-            ctx.LogInfo(string.Format(
-                "OSPREY_PASS2_QVALUE=transfer: using FULL-population score->q table ({0} points, " +
-                "raw-score range [{1:F4}, {2:F4}], q range [{3:E3}, {4:E3}]) from the " +
-                "pre-compaction 1st-pass null.",
-                fullTable.ScoresDesc.Length,
-                fullTable.ScoresDesc[fullTable.ScoresDesc.Length - 1], fullTable.ScoresDesc[0],
-                fullTable.QDesc[0], fullTable.QDesc[fullTable.QDesc.Length - 1]));
-
-            TransferQWithTable(
-                perFileEntries, firstPassModel.Standardizer, avgWeights, avgBias, nFeatures,
-                fullTable.ScoresDesc, fullTable.QDesc, ctx);
-            return true;
-        }
-
-        /// <summary>
-        /// Build the FULL 1st-pass-population score-&gt;q table at first-pass FDR time
-        /// (called from <see cref="FirstJoinTask"/> BEFORE compaction, while
-        /// <paramref name="perFileEntries"/> still holds every entry -- passing, failing,
-        /// target, and decoy -- with its unbiased 1st-pass q-values). Sourcing the table
-        /// from the full pre-compaction null preserves the high-q failing/decoy tail so a
-        /// peak that reconciliation moved to a worse position maps to an honestly higher q --
-        /// the tail the decoy-depleted compacted pool lacks.
-        ///
-        /// Features are STREAMED per file from the original Stage-4 parquet via
-        /// <paramref name="loadFileFeatures"/> and addressed by each entry's
-        /// <see cref="FdrEntry.ParquetIndex"/> -- the same source and row binding the
-        /// first-pass Percolator score pass uses. (The resident first-pass path builds lean
-        /// stubs and streams features into the SVM without persisting them onto
-        /// <see cref="FdrEntry.Features"/>, so reading that field here would find nothing.)
-        /// Each entry's key is the SAME raw averaged-model score the transfer uses
-        /// (<see cref="ScoreWithFrozenModel"/>), NOT the stored per-fold recalibrated
-        /// <see cref="FdrEntry.Score"/>, so table and transfer stay on one scale by
-        /// construction. Paired q is the entry's effective experiment q (max of precursor +
-        /// peptide). Returns null (logged) when the frozen model is unusable or no features
-        /// resolved, so the caller publishes nothing and the transfer falls back to the retrain.
-        /// </summary>
-        internal static FirstPassScoreQTable BuildFullPopulationScoreQTable(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            PercolatorResults firstPassModel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            PipelineContext ctx)
-        {
-            if (firstPassModel.FoldWeights == null || firstPassModel.FoldWeights.Count == 0 ||
-                firstPassModel.Standardizer == null)
-            {
-                ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: cannot build full-population score->q table -- " +
-                    "frozen 1st-pass model has no fold weights or standardizer.");
-                return null;
-            }
-            if (loadFileFeatures == null)
-            {
-                ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: no per-file feature loader supplied; cannot " +
-                    "build the full-population score->q table (transfer will fall back).");
-                return null;
-            }
             AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
             int nFeatures = avgWeights.Length;
             var standardizer = firstPassModel.Standardizer;
 
-            // Score every entry in the full pre-compaction population, paired with its
-            // unbiased 1st-pass effective q. Features come from each file's Stage-4 parquet
-            // (loaded once per file) addressed by ParquetIndex.
-            var tableScores = new List<double>();
-            var tableQs = new List<double>();
-            int nSkipped = 0;
-            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
+            var inputByFileName = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var inputFile in config.InputFiles)
+                inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+            // Cross-file pass-1 experiment q per entry id (the MIN across files -- experiment q is
+            // an experiment-scope property, so every file's record for a precursor carries the same
+            // value; min is a safe reducer). ONLY gap-fill peaks (no per-file record) consult it.
+            // These light uint->double maps stay resident while the heavier per-file record maps +
+            // tables are built and released one file at a time.
+            var globalExpPrecQ = new Dictionary<uint, double>();
+            var globalExpPepQ = new Dictionary<uint, double>();
             foreach (var kvp in perFileEntries)
             {
-                IReadOnlyList<double[]> rows;
-                try
+                if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
+                    continue;
+                FdrScoresSidecar.ReadRecords(
+                    FdrScoresSidecar.Pass1Path(inputFile), FdrScoresSidecar.Pass.FirstPass, rec =>
                 {
-                    rows = loadFileFeatures(kvp.Key);
-                }
-                catch (Exception ex)
+                    if (!globalExpPrecQ.TryGetValue(rec.EntryId, out double curPrec) ||
+                        rec.ExperimentPrecursorQvalue < curPrec)
+                        globalExpPrecQ[rec.EntryId] = rec.ExperimentPrecursorQvalue;
+                    if (!globalExpPepQ.TryGetValue(rec.EntryId, out double curPep) ||
+                        rec.ExperimentPeptideQvalue < curPep)
+                        globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
+                });
+            }
+
+            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
+            int nUnchanged = 0, nMoved = 0, nGapFill = 0, nSkipped = 0, nMissingSidecar = 0, nFilesDone = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
                 {
-                    ctx.LogWarning(string.Format(
-                        "OSPREY_PASS2_QVALUE=transfer: failed to load 1st-pass features for '{0}': {1}; " +
-                        "its entries are excluded from the score->q table.", kvp.Key, ex.Message));
                     nSkipped += kvp.Value.Count;
                     continue;
                 }
-                int rowCount = rows?.Count ?? 0;
+                string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+
+                // Build this file's per-run tables + record map from its own 1st-pass sidecar.
+                var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
+                var precScores = new List<double>();
+                var precQs = new List<double>();
+                var pepScores = new List<double>();
+                var pepQs = new List<double>();
+                bool ok = FdrScoresSidecar.ReadRecords(
+                    pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
+                {
+                    firstPassByEntryId[rec.EntryId] = rec; // entry_id is unique per file (DeduplicatePairs)
+                    precScores.Add(rec.Score);
+                    precQs.Add(rec.RunPrecursorQvalue);
+                    pepScores.Add(rec.Score);
+                    pepQs.Add(rec.RunPeptideQvalue);
+                });
+                if (!ok || precScores.Count == 0)
+                {
+                    nMissingSidecar++;
+                    ctx.LogWarning(string.Format(
+                        "OSPREY_PASS2_QVALUE=transfer: could not read the 1st-pass sidecar for '{0}' " +
+                        "({1}); this file's per-run q is left unadjusted.", kvp.Key, pass1Path));
+                    continue;
+                }
+                BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
+                BuildScoreToQTable(pepScores, pepQs, out double[] pepScoresDesc, out double[] pepQDesc);
+
                 foreach (var entry in kvp.Value)
                 {
-                    int idx = (int)entry.ParquetIndex;
-                    if (rows == null || idx < 0 || idx >= rowCount ||
-                        rows[idx] == null || rows[idx].Length != nFeatures)
+                    if (entry.Features == null || entry.Features.Length != nFeatures)
                     {
+                        // No reconciled features resolved (a stub/parquet mismatch the reload
+                        // already warned about). Leave this entry's q as-is rather than guess.
                         nSkipped++;
                         continue;
                     }
-                    double rawScore = ScoreWithFrozenModel(
-                        rows[idx], standardizer, avgWeights, avgBias, scratch);
-                    double effQ = Math.Max(
-                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue);
-                    tableScores.Add(rawScore);
-                    tableQs.Add(effQ);
+                    double newScore = ScoreWithFrozenModel(
+                        entry.Features, standardizer, avgWeights, avgBias, scratch);
+
+                    if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord rec1))
+                    {
+                        // Bit-exact equality is the reliable MOVED discriminator: an UNCHANGED
+                        // survivor's reconciled features ARE its original Stage-4 features
+                        // (ReconciledParquetWriter streams unchanged rows through untouched), and
+                        // the sidecar Score was computed from those same parquet features with this
+                        // same averaged model -- so the recomputation is bit-identical. A MOVED peak
+                        // carries rescored features, so its score differs.
+                        if (newScore == rec1.Score)
+                        {
+                            entry.Score = rec1.Score;
+                            entry.RunPrecursorQvalue = rec1.RunPrecursorQvalue;
+                            entry.RunPeptideQvalue = rec1.RunPeptideQvalue;
+                            entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
+                            entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
+                            entry.Pep = rec1.Pep;
+                            nUnchanged++;
+                        }
+                        else
+                        {
+                            entry.Score = newScore;
+                            entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
+                            entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
+                            // Experiment q is a pass-1 property (best-peak anchor) -- carry it.
+                            entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
+                            entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
+                            entry.Pep = rec1.Pep;
+                            nMoved++;
+                        }
+                    }
+                    else
+                    {
+                        // GAP-FILL: a new detection of a precursor that passed in a sibling run.
+                        // Run q from this file's tables; experiment q = the precursor's pass-1
+                        // experiment q (so ClampExperimentQToBestRun -- a floor that only raises --
+                        // resolves it to the precursor's best-run q). A precursor with no pass-1
+                        // record anywhere keeps q=1.
+                        entry.Score = newScore;
+                        entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
+                        entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
+                        entry.ExperimentPrecursorQvalue =
+                            globalExpPrecQ.TryGetValue(entry.EntryId, out double gExpPrec) ? gExpPrec : 1.0;
+                        entry.ExperimentPeptideQvalue =
+                            globalExpPepQ.TryGetValue(entry.EntryId, out double gExpPep) ? gExpPep : 1.0;
+                        nGapFill++;
+                    }
                 }
-            }
-            if (tableScores.Count == 0)
-            {
-                ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: full-population score->q table build resolved no " +
-                    "features from parquet; table not published (transfer will fall back).");
-                return null;
+                nFilesDone++;
             }
 
-            BuildScoreToQTable(tableScores, tableQs, out double[] scoresDesc, out double[] qDesc);
             ctx.LogInfo(string.Format(
-                "OSPREY_PASS2_QVALUE=transfer: built FULL-population score->q table from {0} entries " +
-                "({1} skipped for missing features; raw-score range [{2:F4}, {3:F4}]; q range [{4:E3}, {5:E3}]).",
-                scoresDesc.Length, nSkipped,
-                scoresDesc[scoresDesc.Length - 1], scoresDesc[0],
-                qDesc[0], qDesc[qDesc.Length - 1]));
-            return new FirstPassScoreQTable { ScoresDesc = scoresDesc, QDesc = qDesc };
+                "OSPREY_PASS2_QVALUE=transfer: per-run q transfer over {0} file(s) -- {1} unchanged " +
+                "(pass-1 q carried), {2} moved (run q re-mapped, experiment q carried), {3} gap-fill " +
+                "(new run q + carried experiment q){4}{5}.",
+                nFilesDone, nUnchanged, nMoved, nGapFill,
+                nMissingSidecar > 0
+                    ? string.Format("; {0} file(s) had no readable 1st-pass sidecar", nMissingSidecar)
+                    : string.Empty,
+                nSkipped > 0
+                    ? string.Format("; {0} entr(y/ies) skipped for missing features", nSkipped)
+                    : string.Empty));
+            return true;
         }
 
         /// <summary>
@@ -1051,62 +1075,6 @@ namespace pwiz.Osprey.Tasks
             for (int j = 0; j < nFeatures; j++)
                 avgWeights[j] /= nModels;
             avgBias /= nModels;
-        }
-
-        /// <summary>
-        /// Apply the frozen 1st-pass model to each entry's RECONCILED features (already on
-        /// <see cref="FdrEntry.Features"/>), overwrite <see cref="FdrEntry.Score"/> with the
-        /// raw averaged-model score, and map that score to a q via the supplied score-&gt;q
-        /// table (<paramref name="scoresDesc"/> / <paramref name="qDesc"/>). Sets both
-        /// precursor + peptide levels (run + experiment) so the downstream effective-q
-        /// filtering (detected-peptides gate) sees the transferred q.
-        /// </summary>
-        private static void TransferQWithTable(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            FeatureStandardizer standardizer,
-            double[] avgWeights,
-            double avgBias,
-            int nFeatures,
-            double[] scoresDesc,
-            double[] qDesc,
-            PipelineContext ctx)
-        {
-            int nScored = 0;
-            int nSkipped = 0;
-            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
-            foreach (var kvp in perFileEntries)
-            {
-                foreach (var entry in kvp.Value)
-                {
-                    if (entry.Features == null || entry.Features.Length != nFeatures)
-                    {
-                        nSkipped++;
-                        continue;
-                    }
-                    double newScore = ScoreWithFrozenModel(
-                        entry.Features, standardizer, avgWeights, avgBias, scratch);
-                    entry.Score = newScore;
-                    double q = LookupQForScore(newScore, scoresDesc, qDesc);
-                    // Assign one transferred q to all four q slots (precursor/peptide x
-                    // run/experiment). This is the coarse whole-pool transfer: it collapses
-                    // the precursor-vs-peptide and run-vs-experiment distinctions the
-                    // percolator path maintains, so the reported "experiment q" here is a
-                    // per-observation transferred value, not a genuine across-file estimate.
-                    // The downstream best-of-runs clamp (MergeNodeTask) is then a no-op on
-                    // these equal values. Acceptable for this experimental mode; Part B's
-                    // surgical transfer (Design 1) preserves the survivors' calibrated q
-                    // per level instead. See TODO-20260710_osprey_pass2_recalibration_fix.
-                    entry.ExperimentPrecursorQvalue = q;
-                    entry.ExperimentPeptideQvalue = q;
-                    entry.RunPrecursorQvalue = q;
-                    entry.RunPeptideQvalue = q;
-                    nScored++;
-                }
-            }
-            ctx.LogInfo(string.Format(
-                "OSPREY_PASS2_QVALUE=transfer: re-scored {0} entries with the FROZEN 1st-pass model " +
-                "on reconciled features ({1} skipped for missing features); q transferred via the " +
-                "score->q table.", nScored, nSkipped));
         }
 
         /// <summary>
