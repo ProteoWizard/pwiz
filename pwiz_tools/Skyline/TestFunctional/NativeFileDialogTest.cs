@@ -23,6 +23,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -63,17 +64,24 @@ namespace pwiz.SkylineTestFunctional
                 var nativeForm = nativeForms[0];
 
                 // GetFormImage resolves the native id (rather than throwing "form not found" as it would for a
-                // missing WinForms form) and captures the window by taking a screen copy of its rectangle.
-                // EXPERIMENT (temporary): REQUIRE the capture to succeed, so a machine that cannot screen-capture
-                // fails here. On a nightly machine whose Remote Desktop session has been disconnected the app can
-                // still show windows but CopyFromScreen fails, so ScreenCapture.IsDesktopAvailable() is false and
-                // GetFormImageBytes returns the "capture unavailable" message with no Data -- which now trips the
-                // assert below (regression #4229). A thrown ArgumentException would instead mean the native id was
-                // not routed to the capture path at all.
+                // missing WinForms form) and captures the window by taking a screen copy of its rectangle. With a
+                // live display that yields PNG bytes; on a machine whose Remote Desktop session has been
+                // disconnected the app can still show windows but CopyFromScreen throws ("The handle is invalid",
+                // which we cannot avoid), so ScreenCapture.IsDesktopAvailable() is false and GetFormImageBytes
+                // returns the "capture unavailable" message with no Data (regression #4229). Which outcome we get is
+                // exactly IsDesktopAvailable(); a thrown ArgumentException would instead mean the native id was not
+                // routed to the capture path at all.
                 var image = JsonUiService.GetFormImageBytes(nativeForm.Id);
-                Assert.IsNotNull(image.Data,
-                    @"Expected a screen capture of the native dialog, but none was produced: " + image.Message);
-                AssertPngSignature(image.Data);
+                if (image.Data != null)
+                {
+                    Assert.IsTrue(ScreenCapture.IsDesktopAvailable());
+                    AssertPngSignature(image.Data);
+                }
+                else
+                {
+                    Assert.IsFalse(ScreenCapture.IsDesktopAvailable());
+                    Assert.IsNotNull(image.Message);
+                }
 
                 fileDialog.DismissWithCancelButton();
             });
