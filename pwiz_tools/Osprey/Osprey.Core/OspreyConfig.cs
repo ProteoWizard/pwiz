@@ -449,8 +449,9 @@ namespace pwiz.Osprey.Core
         Mokapot,
         Simple,
         /// <summary>Gradient-boosted decision trees (non-linear alternative to the linear
-        /// Percolator SVM); implemented by Osprey.ML GradientBoostedTrees.</summary>
-        FastTree
+        /// Percolator SVM); implemented by Osprey.ML GradientBoostedTrees. Selected by
+        /// <c>--fdr-method gbdt</c> (the legacy alias <c>fasttree</c> still parses).</summary>
+        Gbdt
     }
 
     public static class FdrMethodExtensions
@@ -458,7 +459,7 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// True for the methods driven by the shared semi-supervised target-decoy
         /// framework: <see cref="FdrMethod.Percolator"/> (linear SVM) and
-        /// <see cref="FdrMethod.FastTree"/> (gradient-boosted trees). The two differ ONLY
+        /// <see cref="FdrMethod.Gbdt"/> (gradient-boosted trees). The two differ ONLY
         /// in the classifier -- identical best-per-precursor dedup, peptide-grouped CV
         /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
         /// identical projection / streaming plumbing around all of it.
@@ -467,7 +468,7 @@ namespace pwiz.Osprey.Core
         /// than a raw <c>== FdrMethod.Percolator</c>. Those gates are scattered across the
         /// Tasks layer -- the join's projection gate, the 2nd-pass projection gate,
         /// <c>NeedsResidentPool</c>, the Stage 5 log header -- and each one that compares
-        /// against Percolator alone silently routes FastTree down the resident
+        /// against Percolator alone silently routes Gbdt down the resident
         /// <c>FdrEntry</c> path instead of the streaming projection. That fails quietly:
         /// same q-values, but the whole-run pool goes resident, which is exactly what
         /// OOM'd the 82-file join.
@@ -476,7 +477,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool UsesPercolatorFramework(this FdrMethod method)
         {
-            return method == FdrMethod.Percolator || method == FdrMethod.FastTree;
+            return method == FdrMethod.Percolator || method == FdrMethod.Gbdt;
         }
     }
 

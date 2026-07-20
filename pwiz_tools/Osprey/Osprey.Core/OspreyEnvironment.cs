@@ -150,7 +150,46 @@ namespace pwiz.Osprey.Core
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
 
         /// <summary>
-        /// Semi-supervised training iterations for <c>--fdr-method fasttree</c>
+        /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
+        /// row per CWT candidate peak of every precursor (targets AND decoys) scored in the
+        /// first-pass main search to a per-input-file TSV
+        /// (<c>&lt;work-dir&gt;\&lt;inputStem&gt;.pick_candidates.tsv</c>). The row carries the
+        /// exact raw rank terms the picker computes (coelution, ln_intensity, rt_penalty,
+        /// median_polish) plus the candidate bounds and whether it was the chosen peak, so a
+        /// downstream trainer can learn a linear pick model (see <see cref="PickLdaModelPath"/>)
+        /// on precisely those values. Default OFF: no per-candidate median polish is computed and
+        /// no file is written, so the hot loop is byte-identical and pays nothing when unset.
+        /// </summary>
+        public static readonly bool PickDumpCandidates = IsSetAndNotZero(@"OSPREY_PICK_DUMP_CANDIDATES");
+
+        /// <summary>
+        /// OSPREY_PICK_LDA_MODEL: path to a JSON file with a frozen linear pick model. When set
+        /// and the file exists, the CWT candidate rank score is REPLACED by
+        ///   rank = w0*z(coelution) + w1*z(ln_intensity) + w2*z(rt_penalty) + w3*z(median_polish)
+        /// where z(x_i) = (x_i - mean[i]) / scale[i], using the same four raw terms the dump
+        /// (<see cref="PickDumpCandidates"/>) captures. The argmax selection and IEEE-754
+        /// total-order tie-break are unchanged. Overrides the resolution-keyed default model.
+        /// Loaded and cached once by <c>PickLdaModel</c>. JSON schema:
+        ///   { "features": ["coelution","ln_intensity","rt_penalty","median_polish"],
+        ///     "weights": [w0,w1,w2,w3], "means": [m0,m1,m2,m3], "scales": [s0,s1,s2,s3] }
+        /// </summary>
+        public static readonly string PickLdaModelPath = Environment.GetEnvironmentVariable(@"OSPREY_PICK_LDA_MODEL");
+
+        /// <summary>
+        /// OSPREY_PICK_LEGACY: escape hatch to the pure product-form peak pick
+        /// (coelution * rt_penalty * ln_intensity, with no median-polish factor) instead of the
+        /// resolution-keyed default linear model. This is the standard / Rust-parity pick. Purpose:
+        /// run the old product pick for Rust cross-impl parity and the committed regression
+        /// golden, which the learned default no longer matches. Precedence in the picker:
+        ///   1. OSPREY_PICK_LDA_MODEL set -> that model (test override);
+        ///   2. else OSPREY_PICK_LEGACY set -> this legacy product pick;
+        ///   3. else (default) -> the hardcoded resolution-keyed model (Stellar for unit, Astral
+        ///      for HRAM). Default OFF.
+        /// </summary>
+        public static readonly bool PickLegacy = IsSetAndNotZero(@"OSPREY_PICK_LEGACY");
+
+        /// <summary>
+        /// Semi-supervised training iterations for <c>--fdr-method gbdt</c>
         /// (OSPREY_GBT_MAX_ITERATIONS); 0/unset uses <see cref="GBT_MAX_ITERATIONS_DEFAULT"/>.
         /// Tree-only: the linear SVM keeps its own fixed 10 and is untouched by this.
         ///
@@ -176,7 +215,7 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>Optional overrides for the gradient-boosted-trees hyper-parameters
-        /// (<c>--fdr-method fasttree</c>), so a regularization / capacity sweep runs from
+        /// (<c>--fdr-method gbdt</c>), so a regularization / capacity sweep runs from
         /// env vars without a recompile per setting. Each is null when its var is unset,
         /// leaving the validated <c>GbtParams</c> default in place; applied in
         /// <c>BuildProjectionPercolatorConfig</c>. Tree-only -- the linear SVM ignores them.

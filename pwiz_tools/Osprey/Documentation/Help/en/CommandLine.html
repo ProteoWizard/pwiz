@@ -43,7 +43,7 @@ a { color: #1565c0; }
 <tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Experiment-level</nobr> FDR threshold (default: 0.01)</td></tr>
 <tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>Peptide <nobr>q-value</nobr> gate for <nobr>first-pass</nobr> compaction (default: 0.01 = <nobr>run-fdr</nobr>; loosen e.g. to 0.05 to broaden the reconciliation pool)</td></tr>
 <tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Protein-level</nobr> FDR threshold (optional)</td></tr>
-<tr><td><nobr>--fdr-method</nobr> &lt;percolator | fasttree | simple&gt;</td><td>FDR method (default: percolator)</td></tr>
+<tr><td><nobr>--fdr-method</nobr> &lt;percolator | gbdt | simple&gt;</td><td>FDR method (default: percolator)</td></tr>
 <tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDR level (default: precursor)</td></tr>
 <tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>Shared peptide handling (default: all)</td></tr>
 <tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>Write an <nobr>FDRBench-compatible</nobr> input TSV to this path. The level is taken from <nobr>--fdr-level</nobr> (peptide; precursor and both emit <nobr>precursor-level</nobr>). Includes every reported (<nobr>compaction-surviving</nobr>) target, i.e. the peptides actually written to the output, regardless of <nobr>q-value</nobr>, with the raw SVM discriminant as &#39;score&#39;, so FDRBench can compute <nobr>true-FDR</nobr> via entrapment counting without truncation at Osprey&#39;s threshold.</td></tr>

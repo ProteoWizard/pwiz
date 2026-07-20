@@ -215,6 +215,32 @@ namespace pwiz.Osprey.Scoring
             XICPeakBounds bestPeak = null;
             double bestRankScore = double.MinValue;
             int bestPeakIdx = -1;
+
+            // Peak-pick model selection. The learned linear model is now the DEFAULT, keyed by
+            // scoring resolution; the pure product form is an opt-in escape hatch. Precedence:
+            //   1. OSPREY_PICK_LDA_MODEL (env json) -> that model (override for testing new models);
+            //   2. else OSPREY_PICK_LEGACY -> null == the pure product pick
+            //      (coelution * rt_penalty * ln_intensity, no median-polish factor; Rust parity);
+            //   3. else (DEFAULT) -> the hardcoded model for this resolution (Stellar for unit,
+            //      Astral for HRAM), via context.Resolution.HasMs1Features.
+            // The model + the per-candidate capture (OSPREY_PICK_DUMP_CANDIDATES) both consume the
+            // SAME four raw terms (coelution, ln_intensity, rt_penalty, median_polish); the
+            // per-candidate median-polish cosine is computed once below and reused by both.
+            // Capture is a first-pass-only concern: the override path builds a single synthetic
+            // peak (no CWT candidate set), so it is excluded here just as capturedPeaks below is.
+            PickLdaModel envModel = PickLdaModel.Current;
+            PickLdaModel pickModel;
+            if (envModel != null)
+                pickModel = envModel;                                              // (1) env override
+            else if (OspreyEnvironment.PickLegacy)
+                pickModel = null;                                                  // (2) legacy product pick
+            else
+                pickModel = PickLdaModel.ForResolution(context.Resolution.HasMs1Features); // (3) default
+            bool modelActive = pickModel != null;
+            bool doDump = context.PickDump != null && !overrideBounds.HasValue;
+            bool needMedianPolish = modelActive || doDump;
+            var dumpRows = doDump ? new List<PickCandidateDump.Row>(peaks.Count) : null;
+
             int diagNScored = 0; // peaks that pass apex-acceptance
             double twoSigmaSq = 2.0 * rtSigma * rtSigma;
             // Capture every scored peak with its raw coelution score
@@ -286,7 +312,50 @@ namespace pwiz.Osprey.Scoring
                 double apexIntensity = refXicIntensities[p.ApexIndex];
                 double intensityWeight = Math.Log(1.0 + apexIntensity);
 
-                double rankScore = coelutionScore * rtPenalty * intensityWeight;
+                // Per-candidate median-polish cosine (feature 15 computed per candidate, not
+                // only for the winner). Computed ONCE here and reused by the linear model and
+                // the candidate dump. Neutral 1.0 when neither is active, so it costs nothing on
+                // the legacy product path. Same value the dump records.
+                double medianPolish = needMedianPolish
+                    ? CandidateLibCosine(xics, candidate, p)
+                    : 1.0;
+
+                double rankScore;
+                if (modelActive)
+                {
+                    // Learned linear pick model (default, or OSPREY_PICK_LDA_MODEL): replace the
+                    // product form with a standardized linear combination of the same four raw
+                    // terms -- median_polish is a proper weighted feature here. The argmax +
+                    // total-order tie-break below are unchanged.
+                    rankScore = pickModel.Score(coelutionScore, intensityWeight, rtPenalty, medianPolish);
+                }
+                else
+                {
+                    // Legacy / standard pick (OSPREY_PICK_LEGACY): the pure product form, exactly
+                    // coelution * rt_penalty * ln_intensity, with no median-polish factor. This is
+                    // the Rust cross-impl-parity / regression-golden pick.
+                    rankScore = coelutionScore * rtPenalty * intensityWeight;
+                }
+
+                // Per-candidate capture (OSPREY_PICK_DUMP_CANDIDATES). is_picked is filled in
+                // after the loop once the winning index is known. Records the EXACT raw terms
+                // above so a downstream trainer learns on what the model consumes.
+                if (dumpRows != null)
+                {
+                    dumpRows.Add(new PickCandidateDump.Row
+                    {
+                        BaseId = candidate.Id & 0x7FFFFFFFu,
+                        IsDecoy = (candidate.Id & 0x80000000u) != 0,
+                        CandIndex = pi,
+                        Coelution = coelutionScore,
+                        LnIntensity = intensityWeight,
+                        RtPenalty = rtPenalty,
+                        MedianPolish = medianPolish,
+                        ApexRt = peakApexRt,
+                        StartRt = windowRts[startScan + p.StartIndex],
+                        EndRt = windowRts[startScan + p.EndIndex],
+                    });
+                }
 
                 // Tie-break via IEEE 754-2008 total order (matches Rust's
                 // f64::total_cmp used in run_search's scored_candidates
@@ -306,6 +375,16 @@ namespace pwiz.Osprey.Scoring
 
                 if (capturedPeaks != null)
                     capturedPeaks.Add((p, coelutionScore, rankScore));
+            }
+
+            // Candidate dump (OSPREY_PICK_DUMP_CANDIDATES): now that the winning peak index is
+            // known, mark the chosen candidate and hand this precursor's rows to the per-file
+            // thread-safe collector (flushed once, per input mzML, by the orchestrator).
+            if (dumpRows != null)
+            {
+                for (int r = 0; r < dumpRows.Count; r++)
+                    dumpRows[r].IsPicked = dumpRows[r].CandIndex == bestPeakIdx;
+                context.PickDump.AddRows(dumpRows);
             }
 
             // Append peak boundaries to search XIC diagnostic dump
@@ -526,6 +605,42 @@ namespace pwiz.Osprey.Scoring
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Library spectral-match term for ONE candidate window: the median-polish cosine of the
+        /// cropped peak XICs against the theoretical library fragments -- feature 15 computed per
+        /// candidate rather than only for the winner. This is the <c>median_polish</c> term the
+        /// learned pick model weights and the OSPREY_PICK_DUMP_CANDIDATES capture records. Crop +
+        /// fit mirror <see cref="CoelutionScorer"/>'s best-peak median-polish publish exactly, so
+        /// for the chosen peak this equals the reported median_polish_cosine. Neutral (1.0) when
+        /// the window is too short, the fit does not converge, or the cosine is NaN/&lt;=0.
+        /// Mirrors skyline-osprey-tool OspreyFeatureScorer.WindowTerms.
+        /// </summary>
+        private static double CandidateLibCosine(List<XicData> xics, LibraryEntry candidate, XICPeakBounds p)
+        {
+            int peakLen = p.EndIndex - p.StartIndex + 1;
+            if (peakLen < 3 || xics.Count == 0)
+                return 1.0;
+
+            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
+            var peakRts = new double[peakLen];
+            for (int s = 0; s < peakLen; s++)
+                peakRts[s] = xics[0].RetentionTimes[p.StartIndex + s];
+            for (int xi = 0; xi < xics.Count; xi++)
+            {
+                var src = xics[xi].Intensities;
+                var slice = new double[peakLen];
+                for (int s = 0; s < peakLen; s++)
+                    slice[s] = src[p.StartIndex + s];
+                peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
+            }
+
+            var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+            if (polish == null)
+                return 1.0;
+            double lc = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);
+            return !double.IsNaN(lc) && lc > 0.0 ? lc : 1.0;
         }
 
         /// <summary>

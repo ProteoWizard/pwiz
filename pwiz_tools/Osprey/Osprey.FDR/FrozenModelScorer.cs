@@ -35,7 +35,7 @@ namespace pwiz.Osprey.FDR
     /// They previously reached into <see cref="PercolatorResults.FoldWeights"/>, averaged
     /// the fold weights themselves, and inlined a dot product -- a third copy of the
     /// averaged-model math that silently assumed a linear model. With
-    /// <c>--fdr-method fasttree</c> that assumption fails closed in the worst possible
+    /// <c>--fdr-method gbdt</c> that assumption fails closed in the worst possible
     /// way: the weight list is empty, the transfer declines, and the run falls back to
     /// the anti-conservative 2nd-pass retrain -- the exact behavior transfer-compete was
     /// written to fix, reintroduced silently under a different flag.
@@ -75,7 +75,7 @@ namespace pwiz.Osprey.FDR
         public int NumFeatures { get; }
 
         /// <summary>True when the frozen model is a tree ensemble
-        /// (<c>--fdr-method fasttree</c>) rather than the linear SVM. Reporting only --
+        /// (<c>--fdr-method gbdt</c>) rather than the linear SVM. Reporting only --
         /// <see cref="Score"/> already handles both.</summary>
         public bool IsGradientBoostedTrees { get { return _gbtModels != null; } }
 

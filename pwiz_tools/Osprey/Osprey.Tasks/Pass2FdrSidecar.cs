@@ -472,7 +472,7 @@ namespace pwiz.Osprey.Tasks
             string mode = proteinCompact ? "protein-compact" : "transfer-compete";
             // Works for whichever classifier the 1st pass trained (linear SVM or
             // gradient-boosted trees) -- the scorer hides that choice, so transfer-compete
-            // stays the honest-FDR path under --fdr-method fasttree too.
+            // stays the honest-FDR path under --fdr-method gbdt too.
             var scorer = FrozenModelScorer.TryCreate(frozenModel);
             if (scorer == null)
             {
@@ -671,13 +671,13 @@ namespace pwiz.Osprey.Tasks
 
             switch (config.FdrMethod)
             {
-                // FastTree shares this path with Percolator: the 2nd pass is the same
+                // Gbdt shares this path with Percolator: the 2nd pass is the same
                 // sequence (transfer-compete's frozen-model recompute, or a retrain)
                 // regardless of which classifier the 1st pass trained. The frozen model
                 // carried in ctx is whichever one that was, and the score passes select
                 // on it, so transfer-compete works unchanged for trees.
                 case FdrMethod.Percolator:
-                case FdrMethod.FastTree:
+                case FdrMethod.Gbdt:
                     // OSPREY_PASS2_QVALUE=transfer-compete: apply the FROZEN 1st-pass model to
                     // the reconciled targets+decoys (no retrain) and recompute q + PEP by a
                     // fresh target-decoy competition over that full, non-depleted population --

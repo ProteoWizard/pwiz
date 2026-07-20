@@ -214,7 +214,7 @@ namespace pwiz.Osprey.Tasks
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
-            // Stage 5: First-pass FDR. The Percolator framework (SVM or FastTree) prints
+            // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
             // its own "Running First-pass Percolator on N entries..." line from the FDR
             // engine, so the generic header would just be a redundant second
             // header right after the [TASK] FirstPassFDR banner. Emit it only for
@@ -1363,9 +1363,9 @@ namespace pwiz.Osprey.Tasks
                 // rides along in the config and selects the classifier (linear SVM vs
                 // gradient-boosted trees) at the two seams that touch it inside the
                 // engine. Nothing else about the run differs, so there is no separate
-                // FastTree pipeline to dispatch to.
+                // Gbdt pipeline to dispatch to.
                 case FdrMethod.Percolator:
-                case FdrMethod.FastTree:
+                case FdrMethod.Gbdt:
                     return RunPercolatorFdr(perFileEntries, config, ctx, loadFileFeatures: loadFileFeatures);
 
                 case FdrMethod.Simple:

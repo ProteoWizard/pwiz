@@ -113,7 +113,7 @@ namespace pwiz.Osprey.FDR
         public PercolatorDiagnosticsConfig Diagnostics { get; set; }
 
         /// <summary>
-        /// Train gradient-boosted decision trees (<c>--fdr-method fasttree</c>) instead
+        /// Train gradient-boosted decision trees (<c>--fdr-method gbdt</c>) instead
         /// of the linear SVM. Everything else about the run is unchanged: the same
         /// best-per-precursor dedup, the same peptide-grouped CV folds, the same
         /// semi-supervised positive-set iteration, and the same target-decoy
@@ -521,7 +521,7 @@ namespace pwiz.Osprey.FDR
 
             var foldModels = new LinearSvmClassifier[config.NFolds];
             // Populated instead of foldModels when config.UseGradientBoostedTrees
-            // (--fdr-method fasttree). Exactly one of the two is non-null.
+            // (--fdr-method gbdt). Exactly one of the two is non-null.
             var foldGbtModels = config.UseGradientBoostedTrees
                 ? new GradientBoostedTrees[config.NFolds]
                 : null;
@@ -643,7 +643,7 @@ namespace pwiz.Osprey.FDR
             // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
             // Skipped on the gradient-boosted-trees path: the dump's whole content is
             // per-fold linear weights + bias, which a tree ensemble does not have. It is
-            // a cross-impl parity dump for the SVM (which fasttree has no Rust
+            // a cross-impl parity dump for the SVM (which gbdt has no Rust
             // counterpart for), so there is nothing to emit rather than something to port.
             if (config.Diagnostics != null && config.Diagnostics.DumpSvmWeights &&
                 !config.UseGradientBoostedTrees)
@@ -1872,7 +1872,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Gradient-boosted-trees counterpart of <see cref="TrainFold"/>
-        /// (<c>--fdr-method fasttree</c>): the SAME semi-supervised loop -- select the
+        /// (<c>--fdr-method gbdt</c>): the SAME semi-supervised loop -- select the
         /// targets that reach <paramref name="trainFdr"/> under the current score, train
         /// on those positives against all decoys, re-score, keep the iteration that
         /// passes the most targets, stop after two without improvement -- with the linear

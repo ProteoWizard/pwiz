@@ -361,13 +361,13 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// --fdr-method fasttree trains tree ensembles instead of the linear SVM and
+        /// --fdr-method gbdt trains tree ensembles instead of the linear SVM and
         /// scores through the same population/competition path: targets separate from
         /// decoys, one model per fold, and no linear weights (the tree path leaves
         /// FoldWeights empty and populates FoldGbtModels instead).
         /// </summary>
         [TestMethod]
-        public void TestFastTreeBasic()
+        public void TestGbdtBasic()
         {
             var entries = new List<PercolatorEntry>();
             for (int i = 0; i < 20; i++)
@@ -404,7 +404,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The reason --fdr-method fasttree exists: model capacity. On a population
+        /// The reason --fdr-method gbdt exists: model capacity. On a population
         /// whose discriminating feature is NON-MONOTONE (targets near zero, decoys in
         /// both tails -- the shape that made several Rust CoelutionFeatureSet scores
         /// unusable with a linear SVM), a linear model can only exploit the weak
@@ -415,7 +415,7 @@ namespace pwiz.Osprey.Test
         /// fixed population, not a sampled one.
         /// </summary>
         [TestMethod]
-        public void TestFastTreeLearnsNonMonotoneFeature()
+        public void TestGbdtLearnsNonMonotoneFeature()
         {
             var entries = MakeNonMonotoneEntries();
 
@@ -438,7 +438,7 @@ namespace pwiz.Osprey.Test
         /// 2nd-pass transfer paths (OSPREY_PASS2_QVALUE=transfer / transfer-compete),
         /// which decline when handed a model they cannot read and fall back to the
         /// anti-conservative retrain. Before the scorer existed they read FoldWeights
-        /// directly, so a fasttree run would have silently taken that fallback -- honest
+        /// directly, so a gbdt run would have silently taken that fallback -- honest
         /// FDR lost, with nothing failing.
         /// </summary>
         [TestMethod]
@@ -488,7 +488,7 @@ namespace pwiz.Osprey.Test
         /// The gradient-boosted-trees path must be deterministic to the same standard as
         /// the linear SVM: identical input -> BIT-identical scores, every run. The model
         /// subsamples rows and columns, so this is a real property, not a formality --
-        /// and unlike Percolator, fasttree has no Rust counterpart and is not in the
+        /// and unlike Percolator, gbdt has no Rust counterpart and is not in the
         /// regression golden, so nothing else would catch a drift.
         ///
         /// The exactness is the point: <c>AreEqual</c> with no delta. Anything that made
@@ -496,7 +496,7 @@ namespace pwiz.Osprey.Test
         /// accumulation, a hash-ordered iteration) fails here.
         /// </summary>
         [TestMethod]
-        public void TestFastTreeIsDeterministic()
+        public void TestGbdtIsDeterministic()
         {
             var entries = MakeNonMonotoneEntries();
             var config = new PercolatorConfig { MaxIterations = 4, UseGradientBoostedTrees = true };
@@ -534,7 +534,7 @@ namespace pwiz.Osprey.Test
         /// concurrent vs straight-through must agree bit-for-bit.
         /// </summary>
         [TestMethod]
-        public void TestFastTreeScoringIsThreadSafeAndChunkInvariant()
+        public void TestGbdtScoringIsThreadSafeAndChunkInvariant()
         {
             var entries = MakeNonMonotoneEntries();
             var results = PercolatorFdr.RunPercolator(

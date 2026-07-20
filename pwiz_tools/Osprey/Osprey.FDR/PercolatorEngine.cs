@@ -332,17 +332,17 @@ namespace pwiz.Osprey.FDR
                 // still improving when they hit 10, so they get their own (higher) cap --
                 // both loops still early-stop on convergence, so this only binds when the
                 // model genuinely has further to go. See OspreyEnvironment.GbtMaxIterations.
-                MaxIterations = config.FdrMethod == FdrMethod.FastTree
+                MaxIterations = config.FdrMethod == FdrMethod.Gbdt
                     ? OspreyEnvironment.GbtMaxIterations
                     : 10,
                 NFolds = 3,
                 FeatureInfos = featureInfos,
-                // --fdr-method fasttree: swap the linear SVM for gradient-boosted trees.
+                // --fdr-method gbdt: swap the linear SVM for gradient-boosted trees.
                 // This is the ONLY knob that differs between the two methods -- the
                 // dedup, fold assignment, semi-supervised iteration, competition, and
                 // q-value/PEP math are the same shared code either way, which is what
                 // makes them comparable at matched entrapment FDP.
-                UseGradientBoostedTrees = config.FdrMethod == FdrMethod.FastTree,
+                UseGradientBoostedTrees = config.FdrMethod == FdrMethod.Gbdt,
                 GbtParams = gbtParams,
                 // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
                 // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
