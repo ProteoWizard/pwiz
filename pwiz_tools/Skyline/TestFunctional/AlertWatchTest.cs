@@ -126,7 +126,7 @@ namespace pwiz.SkylineTestFunctional
         private static IntPtr FindNativeMessageBox(string caption)
         {
             return User32.EnumWindows().FirstOrDefault(hwnd =>
-                User32.GetClassName(hwnd) == @"#32770" && User32.GetWindowText(hwnd) == caption);
+                User32.GetClassName(hwnd) == @"#32770" && User32.GetWindowTextNoBlock(hwnd) == caption);
         }
     }
 }

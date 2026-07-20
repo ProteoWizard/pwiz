@@ -731,11 +731,11 @@ namespace pwiz.Skyline.ToolsUI
             // exactly when a BackgroundThreadLongWaitDlg is up, which is when the MAIN thread is busy and NOT pumping,
             // so reading the main window's title (or any other form's) would never come back. (Reading Handle is no
             // better: its getter throws when the cross-thread check is on.) Go to the handle the caller already has:
-            // User32.GetWindowText reads another thread's window rather than asking it, so it cannot wait. For a
+            // User32.GetWindowTextNoBlock reads another thread's window rather than asking it, so it cannot wait. For a
             // top-level form the caption IS its Text, so the title -- and the id built from it -- are the same either way.
             if (form.InvokeRequired)
             {
-                var caption = hwnd != IntPtr.Zero ? User32.GetWindowText(hwnd) : null;
+                var caption = hwnd != IntPtr.Zero ? User32.GetWindowTextNoBlock(hwnd) : null;
                 return !string.IsNullOrEmpty(caption) ? caption : form.GetType().Name;
             }
             if (form is DockableFormEx dockable)

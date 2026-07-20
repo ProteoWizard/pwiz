@@ -68,6 +68,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             PBM_SETSTATE = 0x0410,
             WM_SETREDRAW = 0x000B,
             WM_SETTEXT = 0x000C,
+            WM_GETTEXT = 0x000D,
+            WM_GETTEXTLENGTH = 0x000E,
             WM_PAINT = 0x000F,
             WM_CLOSE = 0x0010,
             WM_ERASEBKGND = 0x0014,
@@ -269,8 +271,24 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         private const int MAX_WINDOW_TEXT = 1024;
 
+        /// <summary>The full text (caption / control text) of a window, read by SENDING it WM_GETTEXT -- the Win32
+        /// GetWindowText API does that send itself for a window in our own process -- so the text is whatever the
+        /// window computes: what a control such as an edit box HOLDS, not merely a caption. The buffer is sized to
+        /// the window's text length up front, so the whole of it comes back.
+        ///
+        /// <para>The send is processed on the window's OWNING thread, so this BLOCKS until that thread pumps it.
+        /// Where the owning thread may be busy and never pump (the main thread, while a BackgroundThreadLongWaitDlg
+        /// reports on the long paste it is running), use <see cref="GetWindowTextNoBlock"/> instead.</para></summary>
+        public static string GetWindowTextComplete(IntPtr hwnd)
+        {
+            var text = new StringBuilder(GetWindowTextLength(hwnd) + 1);
+            GetWindowText(hwnd, text, text.Capacity);
+            return text.ToString();
+        }
+
         /// <summary>
-        /// The full text (caption / control text) of a window, or empty if it has none.
+        /// The full text (caption / control text) of a window, or empty if it has none, without ever waiting on the
+        /// window's owning thread.
         ///
         /// <para>OUR OWN THREAD's window is asked for its text: GetWindowText sends it WM_GETTEXT, which on this
         /// thread is just a call into its wndproc, so the text is whatever the window computes -- what a control such
@@ -284,14 +302,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// wait. That is a window's CAPTION, so it is right for a form and empty for the kind of control that keeps
         /// its own text; those are read from the thread that owns them (UiAction.Invoke puts a gesture there first).</para>
         /// </summary>
-        public static string GetWindowText(IntPtr hwnd)
+        public static string GetWindowTextNoBlock(IntPtr hwnd)
         {
             if (GetWindowThreadProcessId(hwnd, out _) == (uint) Kernel32.GetCurrentThreadId())
-            {
-                var text = new StringBuilder(GetWindowTextLength(hwnd) + 1);
-                GetWindowText(hwnd, text, text.Capacity);
-                return text.ToString();
-            }
+                return GetWindowTextComplete(hwnd);
 
             var caption = new StringBuilder(MAX_WINDOW_TEXT);
             InternalGetWindowText(hwnd, caption, caption.Capacity);

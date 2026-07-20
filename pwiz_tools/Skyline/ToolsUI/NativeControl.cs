@@ -61,7 +61,7 @@ namespace pwiz.Skyline.ToolsUI
         public int ControlId => User32.GetDlgCtrlID(Hwnd);
 
         public override string Name => string.Empty;
-        public override string Label => User32.GetWindowText(Hwnd);
+        public override string Label => User32.GetWindowTextNoBlock(Hwnd);
         public override bool IsEnabled => User32.IsWindowEnabled(Hwnd);
 
         // A GESTURE, though, does go through the dialog's UI thread (DialogWatcher marshals it there), so it is
@@ -90,20 +90,29 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A text field on a native dialog -- in practice a file dialog's file-name box. Reports itself as a
-    /// <see cref="TextBox"/>. Its Label is null (the Static beside it is what names it), so it is the field a
-    /// caller reaches without naming a control: a file dialog has exactly one.</summary>
+    /// <see cref="TextBox"/>. By default its Label is null (the Static beside it is what names it); the file dialog
+    /// passes it the label "File name" so a caller can read/set the box by that name, since the adjacent
+    /// "File name:" static would otherwise shadow the caption-less field.</summary>
     public sealed class NativeTextBox : NativeControl, IValueElement
     {
-        public NativeTextBox(IntPtr hwnd, CancellationToken cancellationToken) : base(hwnd, cancellationToken)
+        private readonly string _label;
+
+        public NativeTextBox(IntPtr hwnd, CancellationToken cancellationToken, string label = null)
+            : base(hwnd, cancellationToken)
         {
+            _label = label;
         }
 
         public override Type ElementType => typeof(TextBox);
 
         // Its window text is its VALUE, not its label -- otherwise a file dialog's file-name box would answer to
-        // whatever path happens to be typed in it.
-        public override string Label => null;
-        public override object GetValueNow() => User32.GetWindowText(Hwnd);
+        // whatever path happens to be typed in it. The label, when given, is the caption of the static beside it.
+        // Read by SENDING WM_GETTEXT (User32.GetWindowTextComplete), which Win32 does cross-thread within our own
+        // process, so the box reads back correctly from ANY thread and needs no marshaling. The non-blocking read
+        // will not do here: off-thread it returns only the stored caption, which a ComboBoxEx's edit leaves empty
+        // because it keeps its own text.
+        public override string Label => _label;
+        public override object GetValueNow() => User32.GetWindowTextComplete(Hwnd);
 
         public void SetValueNow(object value) => SetText(value?.ToString() ?? string.Empty);
 
@@ -126,5 +135,30 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         public override Type ElementType => typeof(Label);
+    }
+
+    /// <summary>The Open/Save file dialog's address breadcrumb, surfaced (via
+    /// <see cref="NativeFileDialog.EnumerateChildren"/>) so a caller can read the folder the dialog is currently
+    /// showing -- to confirm a navigation before selecting files in it. Read-only: it reports itself as a
+    /// <see cref="Label"/> and its <see cref="GetValueNow"/> is the current folder path. It carries the visible
+    /// label "Address", so a caller reads the current folder with get_value on the "Address" control.</summary>
+    public sealed class NativeAddressBar : NativeControl
+    {
+        public NativeAddressBar(IntPtr hwnd, CancellationToken cancellationToken) : base(hwnd, cancellationToken)
+        {
+        }
+
+        public override Type ElementType => typeof(Label);
+        public override string Label => @"Address";
+
+        // The current folder: the breadcrumb caption ("Address: C:\dir") with everything up to and including the
+        // first ": " removed. A path cannot contain ": " (':' is legal only in a drive's "C:\"), so this drops the
+        // localized "Address:" label without touching the path; a caption with no ": " is returned unchanged.
+        public override object GetValueNow()
+        {
+            var text = User32.GetWindowTextNoBlock(Hwnd);
+            var separator = text?.IndexOf(@": ", StringComparison.Ordinal) ?? -1;
+            return separator < 0 ? text : text.Substring(separator + 2);
+        }
     }
 }

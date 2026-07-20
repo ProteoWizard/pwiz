@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -702,6 +703,36 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        // Adds the input files. A SINGLE file is added by driving the real native "Add Input Files" (Open) dialog --
+        // type its full path and accept (a simple fire-and-forget gesture, so RunNativeDlg) -- so the build still
+        // exercises the connector's native-dialog automation. MULTIPLE files are added directly through
+        // BuildLibraryDlg.AddInputFiles, which shows no dialog; driving a multiselect Open dialog by name is
+        // exercised on its own by NativeFileDialogTest.
+        private void AddInputFilesThroughDialog(BuildLibraryDlg buildLibraryDlg, IList<string> inputPaths)
+        {
+            if (inputPaths.Count > 1)
+            {
+                RunUI(() => buildLibraryDlg.AddInputFiles(inputPaths));
+                return;
+            }
+            RunNativeDlg<NativeOpenFileDialog>(buildLibraryDlg.ClickAddFile, dlg =>
+            {
+                dlg.EnterPath(inputPaths[0]);
+                dlg.Accept();
+            });
+        }
+
+        // Adds a directory of input files by driving the real native Browse-For-Folder dialog: select the folder
+        // and accept.
+        private void AddInputDirectoryThroughDialog(BuildLibraryDlg buildLibraryDlg, string inputDir)
+        {
+            RunLongNativeDlg<NativeFolderBrowserDialog>(buildLibraryDlg.ClickAddDirectory, dlg =>
+            {
+                dlg.SetValue(@"Folder", inputDir);
+                dlg.DismissWithAcceptButton();
+            });
+        }
+
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,
             bool keepRedundant, bool includeAmbiguous, bool filterPeptides, bool append, IrtStandard irtStandard,
             bool thresholdAll, double? threshold = null)
@@ -727,11 +758,14 @@ namespace pwiz.SkylineTestFunctional
                 if (irtStandard != null && !irtStandard.IsEmpty)
                     buildLibraryDlg.IrtStandard = irtStandard;
                 buildLibraryDlg.OkWizardPage();
-                if (inputPaths != null)
-                    buildLibraryDlg.AddInputFiles(inputPaths);
-                else
-                    buildLibraryDlg.AddDirectory(inputDir);
             });
+            // Add the inputs by driving the real native dialogs -- files through the "Add Input Files" (multiselect
+            // Open) dialog, a directory through the Browse-For-Folder dialog -- rather than calling AddInputFiles /
+            // AddDirectory directly, so every build here exercises the connector's native-dialog automation.
+            if (inputPaths != null)
+                AddInputFilesThroughDialog(buildLibraryDlg, inputPaths);
+            else
+                AddInputDirectoryThroughDialog(buildLibraryDlg, inputDir);
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             if (thresholdAll)
             {

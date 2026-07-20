@@ -432,6 +432,27 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(() => showDlgActionCompleted);
         }
 
+        /// <summary>
+        /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
+        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the
+        /// driver of a native dialog, so the wait lives here in the test rather than baked into the dialog itself.
+        /// </summary>
+        protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
+        {
+            TDlg dlg = null;
+            WaitForCondition(() => null != (dlg = NativeDialog.GetOpenDialogs(CancellationToken.None)
+                .OfType<TDlg>().FirstOrDefault()));
+            return dlg;
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the UI (event) thread -- for a simple,
+        /// single fire-and-forget gesture (e.g. <see cref="NativeFileDialog.EnterPath"/> then
+        /// <see cref="NativeOpenFileDialog.Accept"/>). A gesture that has to interleave with the dialog's own modal
+        /// loop -- a multi-step navigation, or one that waits on the dialog (a DismissWith... verb) -- must run on
+        /// the test thread instead; use <see cref="RunLongNativeDlg{TDlg}"/> for that (the analog of
+        /// <see cref="RunLongDlg{TDlg}"/>).
+        /// </summary>
         protected static void RunNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
             [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
         {
@@ -441,8 +462,31 @@ namespace pwiz.SkylineTestUtil
                 showDlgAction();
                 showDlgActionCompleted = true;
             });
-            var dlg = NativeDialog.WaitForDialog<TDlg>();
+            var dlg = WaitForNativeDlg<TDlg>();
             SkylineBeginInvoke(() => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the TEST thread -- the native-dialog
+        /// analog of <see cref="RunLongDlg{TDlg}"/>. Use this when the action does more than a single gesture: a
+        /// native dialog is driven by thread-agnostic Win32 messages that its modal loop (running on the UI thread)
+        /// pumps, so a multi-step interaction -- navigate a multiselect Open dialog to a folder and then select
+        /// files in it, or read the dialog's state (GetControls) between steps, or wait on it (a DismissWith...
+        /// verb) -- has to run off the UI thread, leaving that loop free to pump each step. (An action marshaled
+        /// onto the UI thread would block the loop and could never pump between steps.)
+        /// </summary>
+        protected static void RunLongNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = WaitForNativeDlg<TDlg>();
+            exerciseDlgAction(dlg);
             WaitForConditionUI(() => showDlgActionCompleted);
         }
 
@@ -504,7 +548,8 @@ namespace pwiz.SkylineTestUtil
         {
             RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
             {
-                dlg.EnterPathAndAccept(path);
+                dlg.EnterPath(path);
+                dlg.Accept();
             });
         }
 
