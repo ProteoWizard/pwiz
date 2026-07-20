@@ -180,6 +180,24 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No ions uniquely localize this modification.
+        /// </summary>
+        public static string PopupPickList_SiteDetermining_NoneFound {
+            get {
+                return ResourceManager.GetString("PopupPickList_SiteDetermining_NoneFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show only ions that uniquely localize modifications.
+        /// </summary>
+        public static string PopupPickList_SiteDetermining_ToolTip {
+            get {
+                return ResourceManager.GetString("PopupPickList_SiteDetermining_ToolTip", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Auto-select filtered {0}.
         /// </summary>
         public static string PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_ {

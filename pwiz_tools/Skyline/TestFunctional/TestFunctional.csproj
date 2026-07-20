@@ -342,6 +342,7 @@
     <Compile Include="RescoreRawChromatogramsTest.cs" />
     <Compile Include="SettingsChangeReimportTest.cs" />
     <Compile Include="SimpleRatiosTest.cs" />
+    <Compile Include="SiteDeterminingIonFunctionalTest.cs" />
     <Compile Include="SkylineMenuTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />

@@ -1978,6 +1978,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The number of positional isomers arising from ambiguously localized modifications on the peptide..
+        /// </summary>
+        public static string LocalizationIsomerCount {
+            get {
+                return ResourceManager.GetString("LocalizationIsomerCount", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The logarithm base 2 of the fold change value..
         /// </summary>
         public static string Log2FoldChange {
@@ -2335,6 +2344,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to A key identifying peptides that share the same unmodified sequence and the same set of ambiguously localized modifications..
+        /// </summary>
+        public static string ModificationLocalizationGroup {
+            get {
+                return ResourceManager.GetString("ModificationLocalizationGroup", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence..
         /// </summary>
