@@ -125,6 +125,57 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         }
 
         /// <summary>
+        /// Projection-path counterpart of <see cref="Write"/>: build and write the pass-1 report
+        /// from the streamed <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the
+        /// first-pass score sink) instead of the resident pre-compaction pool that OOM'd an
+        /// 82-file run at the join. The accumulator already holds the entrapment classification
+        /// (built by <see cref="BuildClassificationFromLibrary"/> when it was constructed, and
+        /// logged once there), so this only assembles the data model, attaches the CAL view + run
+        /// metadata, renders the HTML, and stashes the pass-1 data sidecar for MergeNodeTask's
+        /// pass-2 enrichment. Byte-identical to <see cref="Write"/> on the same input: the
+        /// accumulator's streamed reductions reproduce the resident reductions (they are
+        /// order-independent). Any failure is logged and swallowed; a diagnostics artifact never
+        /// aborts a real run.
+        /// </summary>
+        public static void WriteFromAccumulator(
+            ModelDiagnosticsData.Accumulator accumulator,
+            FeatureContributions contributions,
+            ModelDiagnosticsData.CalibrationData cal,
+            OspreyConfig config,
+            Action<string> logInfo)
+        {
+            try
+            {
+                var data = accumulator.Build(contributions);
+                // The CAL view: per-file calibration diagnostics captured at Stage 3 (null when
+                // none were captured -- a resumed run, or no files calibrated). Serialized into the
+                // pass-1 data sidecar below so it round-trips into WritePass2AndFinalize's reloaded
+                // object graph and survives to the final page (same as Write).
+                data.Cal = cal;
+                if (contributions == null)
+                    logInfo(@"[MODEL-DIAGNOSTICS] first-pass model not retrained on this run " +
+                            @"(resumed/rehydrated); the Model tab's feature table and per-feature " +
+                            @"distributions are unavailable. Clear the 1st-pass FDR sidecars to force a retrain.");
+                data.GeneratedUtc = DateTime.UtcNow.ToString(
+                    @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+                data.OspreyVersion = OspreyVersion.DisplayVersion;
+                data.OutputName = OutputStem(config);
+
+                string outPath = RenderAndWrite(data, config);
+                // Stash the pass-1 data so MergeNodeTask can append the pass-2 (final reported pool)
+                // FDP views and re-render one page with both.
+                WriteDataSidecar(data, config);
+
+                logInfo(string.Format(@"[MODEL-DIAGNOSTICS] wrote model diagnostics report: {0}", outPath));
+            }
+            catch (Exception ex)
+            {
+                // Never let a diagnostics-only artifact take down a real run.
+                logInfo(string.Format(@"[MODEL-DIAGNOSTICS] report generation failed: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
         /// End-of-run enrichment: reload the pass-1 data sidecar, compute the
         /// pass-2 (final reported pool) FDP calibration views from the
         /// post-compaction, second-pass-q-valued <paramref name="perFileEntries"/>
@@ -248,7 +299,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// <paramref name="entrapmentRatio"/> is the library p_target/target count
         /// ratio r (1.0 for a balanced 1-fold entrapment library).
         /// </summary>
-        private static void BuildClassificationFromLibrary(
+        internal static void BuildClassificationFromLibrary(
             OspreyConfig config,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             Action<string> logInfo,
@@ -262,6 +313,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (libraryById == null)
                 return;
 
+            // Label this phase so it is not silent: classifying the searched library
+            // (6.3M entries on the 82-file Astral run) for model diagnostics ran for
+            // minutes at the top of first-pass FDR. Console-only, never affects the
+            // classification.
+            logInfo(string.Format(@"Classifying {0} library entries for model diagnostics...",
+                libraryById.Count));
             var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
 
             int nTarget = 0, nPTarget = 0;

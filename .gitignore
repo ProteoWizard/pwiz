@@ -229,6 +229,11 @@ PublishScripts/
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
+# Spurious NuGet.Config regenerated in a .nuget folder nested inside another
+# .nuget folder (seen only on some machines, e.g. idpicker/.nuget/.nuget/); never
+# part of the project. Anchored to the nested case so the tracked top-level
+# idpicker/.nuget/ files (NuGet.Config, NuGet.exe, NuGet.targets) are unaffected.
+**/.nuget/.nuget/
 
 # Microsoft Azure Build Output
 csx/

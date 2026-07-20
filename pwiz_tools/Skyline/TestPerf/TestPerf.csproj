@@ -109,6 +109,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
@@ -139,6 +141,8 @@
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="BullseyeSharpTest.cs" />
     <Compile Include="DiaNnPeakImputationTest.cs" />
+    <Compile Include="DiannSearchPerfTest.cs" />
+    <Compile Include="DiannSearchLFQbenchTest.cs" />
     <Compile Include="PeakBoundaryImputationDiaTutorial.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
