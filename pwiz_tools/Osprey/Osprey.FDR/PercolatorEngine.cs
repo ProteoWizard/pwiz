@@ -293,6 +293,43 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
+        /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
+        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions})"/>
+        /// projection overload for the lean 1st-pass case, it builds the same parity-locked
+        /// <see cref="PercolatorConfig"/> and delegates to
+        /// <see cref="PercolatorFdr.RunStreamingFirstPass"/>, which streams every row's identity +
+        /// features from the caller-supplied row source instead of a resident
+        /// <see cref="FdrProjectionSet"/>. The caller (Tasks layer) wires
+        /// <paramref name="streamFileRows"/> to the per-file parquet scalar reader and
+        /// <paramref name="loadFileFeatures"/> to the per-file feature loader, keeping this project
+        /// free of an Osprey.IO dependency. Returns <c>true</c> on a diagnostic-only train abort.
+        /// </summary>
+        public static bool RunFirstPassStreaming(
+            IReadOnlyList<string> fileNames,
+            Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            OspreyConfig config,
+            OspreyFeatureInfo[] featureInfos,
+            Action<string> logInfo,
+            IFdrOutputSink sink,
+            PercolatorDiagnosticsConfig diagnostics = null,
+            string passLabel = @"First-pass",
+            Action<FeatureContributions> captureContributions = null)
+        {
+            if (sink == null)
+                throw new ArgumentNullException(nameof(sink));
+            if (loadFileFeatures == null)
+                throw new InvalidOperationException(
+                    @"RunFirstPassStreaming always streams features per file; a per-file feature " +
+                    @"loader is required.");
+            var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
+            return PercolatorFdr.RunStreamingFirstPass(
+                fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
+                captureContributions);
+        }
+
+        /// <summary>
         /// Build the first-pass <see cref="PercolatorConfig"/> shared by the legacy
         /// <see cref="FdrEntry"/> path and the projection path. Centralized (issue
         /// #4355 step (b) increment iii) so every SVM knob is IDENTICAL whether the
@@ -706,19 +743,18 @@ namespace pwiz.Osprey.FDR
             int maxTrain = percConfig.MaxTrainSize;
 
             // Flat identity + best-score arrays from the projection, built ONCE:
-            // labels/entryIds/peptides/fileNames drive BOTH the subset selection here
-            // and the score/compete pass below. bestScores (= CoelutionSum) ranks
+            // labels/entryIds/peptides drive the subset selection here (the score/compete
+            // pass below reads the projection's own PerFile keys, so no flat fileNames array
+            // is built -- issue #4355 Part B). bestScores (= CoelutionSum) ranks
             // best-per-precursor before any Score exists (risk #2), byte-identical to
             // Features[0] on the first pass.
             var labels = new bool[n];
             var entryIds = new uint[n];
             var peptides = new string[n];
-            var fileNames = new string[n];
             var bestScores = new double[n];
             int gi = 0;
             for (int f = 0; f < nFiles; f++)
             {
-                string fileName = perFile[f].Key;
                 var rows = perFile[f].Value;
                 for (int r = 0; r < rows.Count; r++)
                 {
@@ -726,7 +762,6 @@ namespace pwiz.Osprey.FDR
                     labels[gi] = proj.IsDecoy;
                     entryIds[gi] = proj.EntryId;
                     peptides[gi] = peptideById[proj.PeptideId];
-                    fileNames[gi] = fileName;
                     bestScores[gi] = proj.CoelutionSum;
                     gi++;
                 }
@@ -843,7 +878,7 @@ namespace pwiz.Osprey.FDR
             //    to the sink (no PercolatorResult list). Reuses the flat identity
             //    arrays already built above.
             PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
-                perFile, labels, entryIds, peptides, fileNames, trainResults, percConfig,
+                perFile, labels, entryIds, peptides, trainResults, percConfig,
                 loadFileFeatures, sink, captureContributions);
             return false;
         }

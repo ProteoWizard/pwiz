@@ -1209,5 +1209,75 @@ namespace pwiz.Osprey.Test
                 list.Add(new KeyValuePair<string, List<FdrEntry>>("file" + (i + 1), files[i]));
             return list;
         }
+
+        /// <summary>
+        /// Frontier math on a fully hand-computable case: N=4 runs, r=1 (combined factor 2),
+        /// 10% target. 100 real precursors detected in all 4 runs (run-q 0.005, best-peak exp-q
+        /// 0.01); 100 real detected in only 1 run (exp-q 0.20, off the exp grid); 10 entrapment
+        /// detected in 1 run (exp-q 0.20). Every asserted value is derived by hand.
+        /// </summary>
+        [TestMethod]
+        public void TestReproducibilityFrontier()
+        {
+            var precs = new List<ModelDiagnosticsData.FrontierPrec>();
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.01, 0.005, 4));
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.20, 0.005, 1));
+            for (int i = 0; i < 10; i++) precs.Add(MakeFrontierPrec(true, 0.20, 0.005, 1));
+
+            var f = ModelDiagnosticsData.BuildFrontier(precs, 4, 1.0, 0.10);
+            Assert.IsNotNull(f);
+            Assert.AreEqual(4, f.N);
+            Assert.AreEqual(0.10, f.Target, 1e-9);
+            // per-run: k=1 admits all 200 real at 20/210 = 9.5% FDP (<= 10%); k>=2 keeps only the
+            // 100 four-run real (entrapment does not reproduce) at 0% FDP.
+            CollectionAssert.AreEqual(new[] { 200, 100, 100, 100 }, f.PerRun.Yield);
+            Assert.AreEqual(1, f.PeakK);
+            Assert.AreEqual(200, f.PerRunPeak);
+            // best-peak "standard": real with exp-q <= 10% -> only the 100 with exp-q 0.01.
+            Assert.AreEqual(100, f.BestPeak);
+            Assert.AreEqual(0.0, f.BestPeakFdp, 1e-9);
+            Assert.AreEqual(1.0, f.GainPct, 1e-9);        // (200-100)/100
+            Assert.AreEqual(0.5, f.SacrificePct, 1e-9);   // (200-100)/200
+            // experiment-wide sees only the 100 exp-q-0.01 real (the 0.20 group is off-grid).
+            Assert.AreEqual(100, f.ExpPeak);
+            // content overlap at the peak: per-run-optimal = all 200 real; exp-optimal = the 100
+            // exp-q-0.01 real. Intersection 100, union 200 => Jaccard 0.5.
+            Assert.AreEqual(0.5, f.OverlapJaccard, 1e-9);
+        }
+
+        private static ModelDiagnosticsData.FrontierPrec MakeFrontierPrec(bool entrapment, double expQ, double runQ, int nRuns)
+        {
+            var p = new ModelDiagnosticsData.FrontierPrec { IsEntrapment = entrapment, MinExpQ = expQ };
+            p.RunQBins[ModelDiagnosticsData.FrontierBin(runQ)] = (ushort)nRuns;
+            return p;
+        }
+
+        /// <summary>
+        /// A precursor with several pre-compaction candidates in ONE file must count as one run for
+        /// that file, not one per candidate. Without the per-file dedup the run count would exceed
+        /// N (and index past the histogram in BuildFrontier); this pins the file-not-row semantic.
+        /// </summary>
+        [TestMethod]
+        public void TestFrontierPerFileDedup()
+        {
+            var frontier = new Dictionary<string, ModelDiagnosticsData.FrontierPrec>();
+            var fileMinQ = new Dictionary<string, double>();
+            // file 0: three candidates for the same precursor (best run-q 0.005).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.010, 0.02);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.005, 0.01);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.020, 0.03);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+            // file 1: one candidate for the same precursor (run-q 0.008).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.008, 0.05);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+
+            var fp = frontier["PEP|2"];
+            int total = 0;
+            foreach (var c in fp.RunQBins) total += c;
+            Assert.AreEqual(2, total);                 // two files, not four candidate rows
+            Assert.AreEqual(0.01, fp.MinExpQ, 1e-9);   // min effective exp-q across all rows
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.005)]);  // file 0 at its best run-q
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.008)]);  // file 1
+        }
     }
 }

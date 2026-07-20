@@ -1072,6 +1072,109 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheOmitFragments()
+        {
+            // A FirstPassFDR / StopAfterStage5 worker loads the library lean: the
+            // six identity scalars per entry are kept, but the fragment peaks
+            // (~3.2 GB at SEA-AD scale) are read past and discarded. The skip must
+            // land the reader on the same following bytes as a full read, so the
+            // scalars, sequence, RT, modifications, protein IDs and gene names all
+            // stay byte-identical -- only Fragments is emptied. MakeTestEntry's
+            // custom-neutral-loss fragment exercises the variable-length skip.
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(0),
+                MakeTestEntry(1)
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_omit_" + Guid.NewGuid().ToString("N") + ".libcache");
+
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "omit-hash");
+
+                // Control: a normal (full) load still carries every fragment.
+                var full = LibraryCache.LoadCache(tempPath, "omit-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus fullStatus);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, fullStatus);
+                Assert.IsNotNull(full);
+                Assert.AreEqual(3, full[0].Fragments.Count);
+
+                // Lean: same entry count, every non-fragment member preserved,
+                // Fragments emptied.
+                var lean = LibraryCache.LoadCache(tempPath, "omit-hash", true, null,
+                    out LibraryCache.LibraryCacheStatus leanStatus);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, leanStatus);
+                Assert.IsNotNull(lean);
+                Assert.AreEqual(entries.Count, lean.Count);
+
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    var orig = entries[i];
+                    var copy = lean[i];
+
+                    // The six scalars the FDR stages read must be intact...
+                    Assert.AreEqual(orig.Id, copy.Id);
+                    Assert.AreEqual(orig.ModifiedSequence, copy.ModifiedSequence);
+                    Assert.AreEqual(orig.Charge, copy.Charge);
+                    Assert.AreEqual(orig.PrecursorMz, copy.PrecursorMz, 1e-10);
+                    Assert.AreEqual(orig.IsDecoy, copy.IsDecoy);
+                    CollectionAssert.AreEqual(orig.ProteinIds.ToArray(), copy.ProteinIds.ToArray());
+
+                    // ...along with the other non-fragment members that follow the
+                    // fragment block on disk (proving the skip advanced correctly)...
+                    Assert.AreEqual(orig.Sequence, copy.Sequence);
+                    Assert.AreEqual(orig.RetentionTime, copy.RetentionTime, 1e-10);
+                    Assert.AreEqual(orig.RtCalibrated, copy.RtCalibrated);
+                    Assert.AreEqual(orig.Modifications.Count, copy.Modifications.Count);
+                    CollectionAssert.AreEqual(orig.GeneNames.ToArray(), copy.GeneNames.ToArray());
+
+                    // ...but the fragment peaks are dropped.
+                    Assert.AreEqual(0, copy.Fragments.Count);
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
+        public void TestLibraryCacheRejectsPeaklessEntry()
+        {
+            // Peak-less (0-fragment) entries are a BiblioSpec MS1-feature-finding artifact and are
+            // not valid for DIA search: the cache reader must fail fast (PR #4434 review) rather than
+            // let one reach decoy generation (which would silently exclude it) or a lean OmitFragments
+            // load (which would retain a phantom and diverge the FirstPassFDR reconciliation bytes).
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(0),                                    // fragment-carrying: valid
+                new LibraryEntry(1, "BBB", "BBB", 2, 400.0, 20.0)    // no fragments: must be rejected
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_peakless_" + Guid.NewGuid().ToString("N") + ".libcache");
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "peakless-hash");
+
+                // Both the full and the lean (OmitFragments) cache reads must fail fast on the
+                // 0-fragment entry (the guard is upstream of the omit branch).
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    LibraryCache.LoadCache(tempPath, "peakless-hash", false, null, out _));
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    LibraryCache.LoadCache(tempPath, "peakless-hash", true, null, out _));
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheIdentityHash()
         {
             // The .libcache stamps the source library's identity hash into its
@@ -2425,6 +2528,189 @@ namespace pwiz.Osprey.Test
             {
                 ParquetScoreCache.RowGroupRowCapForTest = null;
                 try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Stage-6 streaming reconciled transfer: streaming the original parquet
+        /// group-by-group with an overlay map + gap-fill list
+        /// (<see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>) is logically
+        /// identical -- same rows, same per-row features + blobs -- to the former
+        /// load-all + in-place overlay + re-sort write, including the gap-fill (which the
+        /// streaming path merges into canonical (entry_id, charge, scan) position). Also asserts the
+        /// replaced / appended / original counts, the out-of-range warning, and that the
+        /// output is genuinely multi-group.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamReconciledTransferMatchesLoadAllOverlay()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_stream_recon_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Original rows: out-of-order ids so the write's canonical sort runs,
+                // distinct features + blobs per row so any chunk-boundary mismap surfaces
+                // as a value mismatch rather than a silent pass.
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                    original.Add(MakeStreamEntry(id, id * 100.0));
+
+                string originalPath = Path.Combine(dir, "orig.scores.parquet");
+                string refPath = Path.Combine(dir, "ref.scores-reconciled.parquet");
+                string streamPath = Path.Combine(dir, "stream.scores-reconciled.parquet");
+
+                // Write the original as several bounded row groups (cap 3 -> 3 groups).
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // Map each original entry_id to the global row position the write assigned,
+                // so the overlay indices below hit the right rows.
+                var posById = new Dictionary<uint, uint>();
+                foreach (var e in ParquetScoreCache.LoadFullFdrEntries(originalPath))
+                    posById[e.EntryId] = e.ParquetIndex;
+
+                // Overlay two existing rows (id 3, id 8) with distinctly re-scored
+                // features/blobs; leave id 2 un-overlaid (its original row must stream
+                // through untouched); and one out-of-range index that must be dropped
+                // with a warning.
+                var overlayByIndex = new Dictionary<uint, FdrEntry>
+                {
+                    { posById[3], MakeStreamEntry(3, 7777.0) },
+                    { posById[8], MakeStreamEntry(8, 8888.0) },
+                    { 999u, MakeStreamEntry(200, 1.0) },   // out of range -> dropped + warned
+                };
+                // Gap-fill ids 4 and 6 fall BETWEEN existing original ids (3 < 4 < 5 < 6 <
+                // 7), so the streaming merge must interleave them into canonical position;
+                // a plain append-at-end would misplace them and the physical-order check
+                // below would fail. Listed out of order so the merge's own sort is exercised.
+                var gapFill = new List<FdrEntry>
+                {
+                    MakeStreamEntry(6, 60060.0),
+                    MakeStreamEntry(4, 40040.0),
+                };
+
+                // Reference (old behavior): load the whole file, overlay in place by index,
+                // append gap-fill, re-sort on write.
+                var oldFull = ParquetScoreCache.LoadFullFdrEntries(originalPath);
+                foreach (var kv in overlayByIndex)
+                    if (kv.Key < oldFull.Count)
+                        oldFull[(int)kv.Key] = kv.Value;
+                oldFull.AddRange(gapFill);
+                ParquetScoreCache.WriteScoresParquet(refPath, oldFull, null, null, "f.mzML");
+                var refResult = ParquetScoreCache.LoadFullFdrEntries(refPath);
+
+                // New behavior: stream the transfer.
+                var warnings = new List<string>();
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", warnings.Add);
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
+                Assert.AreEqual(2, result.NReplaced);
+                Assert.AreEqual(2, result.NAppended);
+                Assert.AreEqual(7, result.OrigRowCount);
+
+                // The one out-of-range overlay index is dropped with exactly one warning.
+                Assert.AreEqual(1, warnings.Count);
+
+                // The stream output is genuinely multi-group (3 original groups + gap-fill).
+                Assert.IsTrue(CountRowGroups(streamPath) >= 3,
+                    "streaming reconciled transfer must preserve bounded row groups");
+
+                // Physical order: the streaming merge must emit rows already in canonical
+                // (entry_id, charge, scan_number) order -- gap-fill interleaved by scan,
+                // NOT appended at the end. This is the guarantee Pass 2's projection sort
+                // relies on; a plain append would leave ids 4/6 after id 9 and fail here.
+                var streamResult = ParquetScoreCache.LoadFullFdrEntries(streamPath);
+                Comparison<FdrEntry> byKey = (a, b) =>
+                {
+                    int c = a.EntryId.CompareTo(b.EntryId);
+                    if (c != 0)
+                        return c;
+                    c = a.Charge.CompareTo(b.Charge);
+                    return c != 0 ? c : a.ScanNumber.CompareTo(b.ScanNumber);
+                };
+                for (int i = 1; i < streamResult.Count; i++)
+                    Assert.IsTrue(byKey(streamResult[i - 1], streamResult[i]) <= 0,
+                        "streaming reconciled transfer must emit rows in canonical sorted order");
+
+                // Logical equivalence: same rows, same values (both canonical after sort).
+                refResult.Sort(byKey);
+                streamResult.Sort(byKey);
+                AssertStreamRowsEqual(refResult, streamResult);
+
+                // The overlay actually took effect: id 3 / id 8 carry the re-scored
+                // features, while the un-overlaid id 2 keeps its ORIGINAL features.
+                Assert.AreEqual(7777.0, RowById(streamResult, 3).Features[0]);
+                Assert.AreEqual(8888.0, RowById(streamResult, 8).Features[0]);
+                Assert.AreEqual(200.0, RowById(streamResult, 2).Features[0]);
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
+        // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
+        // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
+        // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
+        // overlay preserves the canonical sort key of the row it replaces.
+        private static FdrEntry MakeStreamEntry(uint id, double baseValue)
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < features.Length; f++)
+                features[f] = baseValue + f;
+            return new FdrEntry
+            {
+                EntryId = id,
+                IsDecoy = (id & 1u) == 0,
+                Charge = 2,
+                ScanNumber = id * 10,
+                ApexRt = id + 0.5,
+                StartRt = id + 0.1,
+                EndRt = id + 0.9,
+                BoundsArea = id + 0.3,
+                BoundsSnr = id + 0.7,
+                ModifiedSequence = "PEPTIDE" + id,
+                Features = features,
+                FragmentMzs = new[] { baseValue + 0.25, baseValue + 0.75 },
+                FragmentIntensities = new[] { (float)baseValue, (float)(baseValue + 1) },
+                ReferenceXicRts = new[] { baseValue + 1.5, baseValue + 2.5 },
+                ReferenceXicIntensities = new[] { baseValue * 2.0, baseValue * 3.0 },
+            };
+        }
+
+        private static FdrEntry RowById(List<FdrEntry> rows, uint id)
+        {
+            return rows.First(e => e.EntryId == id);
+        }
+
+        private static void AssertStreamRowsEqual(List<FdrEntry> expected, List<FdrEntry> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                var e = expected[i];
+                var a = actual[i];
+                Assert.AreEqual(e.EntryId, a.EntryId);
+                Assert.AreEqual(e.IsDecoy, a.IsDecoy);
+                Assert.AreEqual(e.Charge, a.Charge);
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.ApexRt, a.ApexRt);
+                Assert.AreEqual(e.StartRt, a.StartRt);
+                Assert.AreEqual(e.EndRt, a.EndRt);
+                Assert.AreEqual(e.CoelutionSum, a.CoelutionSum);
+                Assert.AreEqual(e.BoundsArea, a.BoundsArea);
+                Assert.AreEqual(e.BoundsSnr, a.BoundsSnr);
+                Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
+                CollectionAssert.AreEqual(e.Features, a.Features);
+                CollectionAssert.AreEqual(e.FragmentMzs, a.FragmentMzs);
+                CollectionAssert.AreEqual(e.FragmentIntensities, a.FragmentIntensities);
+                CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
+                CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
             }
         }
 
