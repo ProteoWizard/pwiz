@@ -1010,6 +1010,14 @@ namespace pwiz.Osprey.Tasks
         /// no resident pool, no second parquet re-read. <see cref="BuildScoreToQTable"/> sorts by
         /// score, so the collection order does not matter: the resulting table is byte-identical
         /// to the resident build on the same (score, q) multiset.
+        ///
+        /// Byte-identity invariant: the resident build SKIPS a row whose parquet feature is missing
+        /// / out-of-range / wrong-length (its <c>nSkipped</c> tally), while the score pass instead
+        /// resolves such a row to a basic-feature vector and folds it here -- so identity holds only
+        /// when <c>nSkipped == 0</c>. That is guaranteed on the 1st pass, where every entry's
+        /// <see cref="FdrEntry.ParquetIndex"/> is a valid in-range row of its own file's parquet
+        /// (1:1), which is the only place this accumulator runs. Not thread-safe by design: the
+        /// score-pass emit loop that drives <see cref="Add"/> (via the sink) is single-threaded.
         /// </summary>
         internal sealed class FirstPassScoreQTableAccumulator
         {

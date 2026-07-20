@@ -331,6 +331,65 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.0, Pass2FdrSidecar.LookupQForScore(0.0, new double[0], new double[0]), 1e-12);
         }
 
+        /// <summary>
+        /// The streaming transfer path (<see cref="Pass2FdrSidecar.FirstPassScoreQTableAccumulator"/>)
+        /// folds (score, q) pairs in score-pass (file, row) order off the sink, while the resident
+        /// <see cref="Pass2FdrSidecar.BuildFullPopulationScoreQTable"/> folds them in entry order.
+        /// Their byte-identity rests entirely on <see cref="Pass2FdrSidecar.BuildScoreToQTable"/>
+        /// being ORDER-INDEPENDENT -- the same (score, q) multiset in any order must yield a
+        /// byte-identical table. This test locks that invariant (the streaming transfer q-table's
+        /// only unverified assumption) and checks the accumulator collects the pairs it is fed.
+        /// </summary>
+        [TestMethod]
+        public void TestScoreQTableOrderIndependent()
+        {
+            const int n = 5000;
+            var scores = new List<double>(n);
+            var qs = new List<double>(n);
+            var rand = new Random(20260719);
+            for (int i = 0; i < n; i++)
+            {
+                scores.Add(rand.NextDouble() * 10.0 - 5.0);
+                // Include exact duplicate (score, q) pairs so the sort's tie region is exercised.
+                qs.Add(Math.Round(rand.NextDouble(), 3));
+            }
+
+            // Reference table from the fed order.
+            Pass2FdrSidecar.BuildScoreToQTable(scores, qs, out double[] scoresRef, out double[] qRef);
+
+            // Feed the SAME (score, q) pairs to the accumulator (its Add is what the sink calls),
+            // then shuffle the pairs together and rebuild. The accumulator forwards to
+            // BuildScoreToQTable, so its table must equal the reference; the shuffled rebuild must
+            // too (order-independence).
+            var acc = new Pass2FdrSidecar.FirstPassScoreQTableAccumulator();
+            var order = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                acc.Add(scores[i], qs[i]);
+                order[i] = i;
+            }
+            Assert.AreEqual(n, acc.Count);
+
+            for (int i = n - 1; i > 0; i--)
+            {
+                int j = rand.Next(i + 1);
+                int t = order[i]; order[i] = order[j]; order[j] = t;
+            }
+            var scoresShuf = new List<double>(n);
+            var qsShuf = new List<double>(n);
+            foreach (int k in order)
+            {
+                scoresShuf.Add(scores[k]);
+                qsShuf.Add(qs[k]);
+            }
+            Pass2FdrSidecar.BuildScoreToQTable(scoresShuf, qsShuf, out double[] scoresShufTab, out double[] qShufTab);
+
+            CollectionAssert.AreEqual(scoresRef, scoresShufTab,
+                "score->q table ScoresDesc must be byte-identical regardless of fold order");
+            CollectionAssert.AreEqual(qRef, qShufTab,
+                "score->q table QDesc must be byte-identical regardless of fold order");
+        }
+
         // Verbatim copy of the FdrProjectionSet-overload comparer in
         // PercolatorEngine.RunPercolatorFdr (the scan-omitted projection sort). Same
         // isolation caveat as LegacyResidentComparison.

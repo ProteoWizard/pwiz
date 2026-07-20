@@ -780,10 +780,12 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the rehydrate/merge paths (including
-            // a --model-diagnostics resume, which needs resident entries for the batch report)
-            // and on FDRBench pass 1 / OSPREY_PASS2_QVALUE=transfer, which publish fat stubs
-            // above; FirstJoinTask falls back to ScoredEntries whenever this is null.
+            // Lean first-pass rows (issue #4397). Non-null on the lean paths -- including a
+            // --model-diagnostics or OSPREY_PASS2_QVALUE=transfer resume, which now STREAM Stage 5
+            // (the mdiag report off the score-pass Accumulator, the transfer score->q table off the
+            // sink) instead of walking a resident pool. Null only on the fat paths that still publish
+            // resident stubs above (FDRBench pass 1, non-Percolator / projection-off, reconciled-input
+            // worker join); FirstJoinTask falls back to ScoredEntries whenever this is null.
             ctx.Publish(new FdrProjections(projections));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
 
