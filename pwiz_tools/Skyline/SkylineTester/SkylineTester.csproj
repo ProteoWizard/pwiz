@@ -1,109 +1,55 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- SkylineTester - WinForms test-harness GUI (run tests / nightly / quality, build Skyline, zip
+       installers, chart memory). Multi-target net472 + net8.0-windows; the classic project was a
+       v4.7.2 WinExe. net8 notes: DotNetZip + Microsoft.Win32.TaskScheduler come from NuGet (net472
+       keeps the legacy on-disk HintPath DLLs); the EnvDTE "open the clicked source line in a running
+       Visual Studio" feature is net472-only VS COM automation (see TabOutput.cs #if NET472 - net8
+       falls back to launching devenv.exe); dropped the vestigial System.Deployment / System.ServiceModel
+       / System.Management references (no code references them). -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{65E16E9D-71FC-40D1-B3FF-AD16BEFF9AF4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>SkylineTester</RootNamespace>
     <AssemblyName>SkylineTester</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <FileAlignment>512</FileAlignment>
-    <IsWebBootstrapper>true</IsWebBootstrapper>
-    <PublishUrl>W:\software\test\donmarsh\SkylineTester\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://skyline.ms/software/test/SkylineTester/</InstallUrl>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.0</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <PublishWizardCompleted>true</PublishWizardCompleted>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <EnableSecurityDebugging>false</EnableSecurityDebugging>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestCertificateThumbprint>CBFFE402D869C902C9C12996226B5C653906E6C9</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestKeyFile>TestRunnerGUI_TemporaryKey.pfx</ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignManifests>false</SignManifests>
-  </PropertyGroup>
-  <PropertyGroup>
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon>SkylineTester.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup />
-  <PropertyGroup>
-    <StartupObject>
-    </StartupObject>
-  </PropertyGroup>
-  <PropertyGroup />
-  <PropertyGroup>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
   </PropertyGroup>
+
+  <!-- Stale local copy; the classic project excluded it and used TestRunnerLib.FormLookup (which
+       has GetTest). The SDK compile-glob would otherwise pick it up and shadow the real one. -->
   <ItemGroup>
+    <Compile Remove="FormLookup.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
+    <ProjectReference Include="..\Skyline.csproj" />
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj" />
+    <ProjectReference Include="..\TestUtil\TestUtil.csproj" />
+  </ItemGroup>
+
+  <!-- net8: managed NuGet equivalents of the legacy HintPath DLLs + the settings config provider -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="TaskScheduler" Version="2.11.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- net472: the legacy on-disk DLLs + EnvDTE VS COM automation the net8 path drops -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -111,136 +57,16 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Win32.TaskScheduler">
       <HintPath>.\Microsoft.Win32.TaskScheduler.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="AboutWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AboutWindow.Designer.cs">
-      <DependentUpon>AboutWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CommandShell.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="CreateZipInstallerWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CreateZipInstallerWindow.Designer.cs">
-      <DependentUpon>CreateZipInstallerWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DeleteWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DeleteWindow.Designer.cs">
-      <DependentUpon>DeleteWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Extensions.cs" />
-    <Compile Include="FindWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FindWindow.Designer.cs">
-      <DependentUpon>FindWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Main.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MemoryChartWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MemoryChartWindow.Designer.cs">
-      <DependentUpon>MemoryChartWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MyTreeView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="MyTreeView.Designer.cs">
-      <DependentUpon>MyTreeView.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ProcessUtilities.cs" />
-    <Compile Include="SafeDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SkylineTesterWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SkylineTesterWindow.Designer.cs">
-      <DependentUpon>SkylineTesterWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Summary.cs" />
-    <Compile Include="TabBase.cs" />
-    <Compile Include="TabBuild.cs" />
-    <Compile Include="TabForms.cs" />
-    <Compile Include="TabNightly.cs" />
-    <Compile Include="TabOutput.cs" />
-    <Compile Include="TabQuality.cs" />
-    <Compile Include="TabRunStats.cs" />
-    <Compile Include="TabTests.cs" />
-    <Compile Include="TabTutorials.cs" />
-    <Compile Include="Try.cs" />
-    <Compile Include="WakeupTimer.cs" />
-    <Compile Include="WindowThumbnail.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="WindowThumbnail.Designer.cs">
-      <DependentUpon>WindowThumbnail.cs</DependentUpon>
-    </Compile>
-    <Content Include="SkylineTester.ico" />
-    <EmbeddedResource Include="AboutWindow.resx">
-      <DependentUpon>AboutWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CreateZipInstallerWindow.resx">
-      <DependentUpon>CreateZipInstallerWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DeleteWindow.resx">
-      <DependentUpon>DeleteWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FindWindow.resx">
-      <DependentUpon>FindWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MemoryChartWindow.resx">
-      <DependentUpon>MemoryChartWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SkylineTesterWindow.resx">
-      <DependentUpon>SkylineTesterWindow.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <None Include="app.config" />
-    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
     <None Include="Run files\BuildSkyline32.skytr" />
     <None Include="Run files\BuildSkyline64.skytr" />
     <None Include="Run files\OnePassQuality.skytr" />
@@ -248,56 +74,5 @@
     <None Include="Run files\SubmitCheck.skytr" />
     <None Include="Run files\TutorialsDemo.skytr" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
-      <Name>ZedGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Skyline.csproj">
-      <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
-      <Name>Skyline</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
-      <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>
-      <Name>TestRunnerLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestUtil\TestUtil.csproj">
-      <Project>{1a76f2b4-353a-4bcf-9d15-70d4b387e480}</Project>
-      <Name>TestUtil</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>
