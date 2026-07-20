@@ -61,7 +61,7 @@ namespace pwiz.Skyline.ToolsUI
         public int ControlId => User32.GetDlgCtrlID(Hwnd);
 
         public override string Name => string.Empty;
-        public override string Label => User32.GetWindowText(Hwnd);
+        public override string Label => User32.GetWindowTextNoBlock(Hwnd);
         public override bool IsEnabled => User32.IsWindowEnabled(Hwnd);
 
         // A GESTURE, though, does go through the dialog's UI thread (DialogWatcher marshals it there), so it is
@@ -107,10 +107,12 @@ namespace pwiz.Skyline.ToolsUI
 
         // Its window text is its VALUE, not its label -- otherwise a file dialog's file-name box would answer to
         // whatever path happens to be typed in it. The label, when given, is the caption of the static beside it.
-        // Read by SENDING WM_GETTEXT (see User32.SendGetText): GetWindowText off-thread returns only the stored
-        // caption, which is empty for a ComboBoxEx's edit that keeps its own text.
+        // Read by SENDING WM_GETTEXT (User32.GetWindowTextComplete), which Win32 does cross-thread within our own
+        // process, so the box reads back correctly from ANY thread and needs no marshaling. The non-blocking read
+        // will not do here: off-thread it returns only the stored caption, which a ComboBoxEx's edit leaves empty
+        // because it keeps its own text.
         public override string Label => _label;
-        public override object GetValueNow() => User32.SendGetText(Hwnd);
+        public override object GetValueNow() => User32.GetWindowTextComplete(Hwnd);
 
         public void SetValueNow(object value) => SetText(value?.ToString() ?? string.Empty);
 
@@ -154,7 +156,7 @@ namespace pwiz.Skyline.ToolsUI
         // localized "Address:" label without touching the path; a caption with no ": " is returned unchanged.
         public override object GetValueNow()
         {
-            var text = User32.GetWindowText(Hwnd);
+            var text = User32.GetWindowTextNoBlock(Hwnd);
             var separator = text?.IndexOf(@": ", StringComparison.Ordinal) ?? -1;
             return separator < 0 ? text : text.Substring(separator + 2);
         }

@@ -433,11 +433,25 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
+        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the
+        /// driver of a native dialog, so the wait lives here in the test rather than baked into the dialog itself.
+        /// </summary>
+        protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
+        {
+            TDlg dlg = null;
+            WaitForCondition(() => null != (dlg = NativeDialog.GetOpenDialogs(CancellationToken.None)
+                .OfType<TDlg>().FirstOrDefault()));
+            return dlg;
+        }
+
+        /// <summary>
         /// Shows a native dialog and drives it with an action that runs on the UI (event) thread -- for a simple,
-        /// single fire-and-forget gesture (e.g. <see cref="NativeOpenFileDialog.EnterPathAndAccept"/>). A gesture
-        /// that has to interleave with the dialog's own modal loop -- a multi-step navigation, or one that waits on
-        /// the dialog (a DismissWith... verb) -- must run on the test thread instead; use
-        /// <see cref="RunLongNativeDlg{TDlg}"/> for that (the analog of <see cref="RunLongDlg{TDlg}"/>).
+        /// single fire-and-forget gesture (e.g. <see cref="NativeFileDialog.EnterPath"/> then
+        /// <see cref="NativeOpenFileDialog.Accept"/>). A gesture that has to interleave with the dialog's own modal
+        /// loop -- a multi-step navigation, or one that waits on the dialog (a DismissWith... verb) -- must run on
+        /// the test thread instead; use <see cref="RunLongNativeDlg{TDlg}"/> for that (the analog of
+        /// <see cref="RunLongDlg{TDlg}"/>).
         /// </summary>
         protected static void RunNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
             [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
@@ -448,7 +462,7 @@ namespace pwiz.SkylineTestUtil
                 showDlgAction();
                 showDlgActionCompleted = true;
             });
-            var dlg = NativeDialog.WaitForDialog<TDlg>();
+            var dlg = WaitForNativeDlg<TDlg>();
             SkylineBeginInvoke(() => exerciseDlgAction(dlg));
             WaitForConditionUI(() => showDlgActionCompleted);
         }
@@ -471,7 +485,7 @@ namespace pwiz.SkylineTestUtil
                 showDlgAction();
                 showDlgActionCompleted = true;
             });
-            var dlg = NativeDialog.WaitForDialog<TDlg>();
+            var dlg = WaitForNativeDlg<TDlg>();
             exerciseDlgAction(dlg);
             WaitForConditionUI(() => showDlgActionCompleted);
         }
@@ -591,7 +605,8 @@ namespace pwiz.SkylineTestUtil
         {
             RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
             {
-                dlg.EnterPathAndAccept(path);
+                dlg.EnterPath(path);
+                dlg.Accept();
             });
         }
 

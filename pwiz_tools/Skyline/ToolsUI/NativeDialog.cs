@@ -46,17 +46,12 @@ namespace pwiz.Skyline.ToolsUI
     public class NativeDialog : StandaloneWindow
     {
         protected const string DIALOG_CLASS_NAME = @"#32770"; // Win32 dialog window class
-        private const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
-        private const int POLL_INTERVAL_MILLIS = 100;
         private const int VK_RETURN = 0x0D;
 
 
         protected NativeDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(cancellationToken, windowHandle)
         {
         }
-
-        /// <summary>How long the wait helpers poll for a control before throwing.</summary>
-        public int MillisTimeout { get; set; } = DEFAULT_TIMEOUT_MILLIS;
 
         /// <summary>
         /// Which KIND of native dialog this is -- reported as <see cref="FormInfo.SubType"/>. The kinds the connector
@@ -76,7 +71,7 @@ namespace pwiz.Skyline.ToolsUI
         public const string TYPE_NAME = @"Dialog";
 
         /// <summary>The dialog window's caption.</summary>
-        public override string Title => User32.GetWindowText(Hwnd);
+        public override string Title => User32.GetWindowTextNoBlock(Hwnd);
 
         // UiElement: a native dialog is the root of its own path, so most of these are not used for matching
         // (the dialog is found by its form id, not walked into as a child). They are implemented so the
@@ -96,7 +91,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>A native dialog is never a progress form reporting work in flight.</summary>
         public override bool IsProgressing => false;
         /// <summary>The dialog's message body (its Static-control text) else its caption.</summary>
-        public override string DetailedMessage => NativeBodyText(Hwnd) ?? User32.GetWindowText(Hwnd);
+        public override string DetailedMessage => NativeBodyText(Hwnd) ?? User32.GetWindowTextNoBlock(Hwnd);
 
         /// <summary>Wraps a raw modal window handle (one with no managed Form) as a generic native dialog, for the
         /// modal-watch's Win32-only queries. NOT classified as a file dialog -- see <see cref="Create"/>.</summary>
@@ -106,12 +101,13 @@ namespace pwiz.Skyline.ToolsUI
         // The message body of a native dialog box (a Win32 #32770, e.g. a system message box), read from its child
         // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has
         // none -- so among the Static children with non-empty text, take the LONGEST, so the message wins over any
-        // short label. In-process, so GetWindowText reads the static's text directly.
+        // short label. A Static keeps no text of its own, so its stored caption IS its text: read without blocking,
+        // since the thread that owns the dialog may be busy and never pump a send.
         private static string NativeBodyText(IntPtr hwnd)
         {
             return User32.EnumChildWindows(hwnd)
                 .Where(child => User32.GetClassName(child) == @"Static")
-                .Select(User32.GetWindowText)
+                .Select(User32.GetWindowTextNoBlock)
                 .Where(text => !string.IsNullOrEmpty(text))
                 .OrderByDescending(text => text.Length)
                 .FirstOrDefault();
@@ -248,23 +244,12 @@ namespace pwiz.Skyline.ToolsUI
                     return new NativeTextBox(hwnd, CancellationToken);
                 case NativeControl.STATIC_CLASS:
                     // A Static with no text is an icon or a spacer, not a label.
-                    return string.IsNullOrEmpty(User32.GetWindowText(hwnd))
+                    return string.IsNullOrEmpty(User32.GetWindowTextNoBlock(hwnd))
                         ? null
                         : (NativeControl) new NativeLabel(hwnd, CancellationToken);
                 default:
                     return null;
             }
-        }
-
-        /// <summary>
-        /// Waits for a native dialog of the given type to appear in this process and returns its
-        /// automation wrapper.
-        /// </summary>
-        public static T WaitForDialog<T>(int millisTimeout = DEFAULT_TIMEOUT_MILLIS,
-            CancellationToken cancellationToken = default(CancellationToken)) where T : NativeDialog
-        {
-            return PollUntil(millisTimeout, typeof(T).Name,
-                () => GetOpenDialogs(cancellationToken).OfType<T>().FirstOrDefault());
         }
 
         /// <summary>Accepts the dialog by pressing Enter, which activates its default button. OkDialog runs the Win32
@@ -364,21 +349,6 @@ namespace pwiz.Skyline.ToolsUI
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
                 return windowProcessId == processId;
             });
-        }
-
-        protected static TResult PollUntil<TResult>(int millisTimeout, string description, Func<TResult> find)
-            where TResult : class
-        {
-            var stopwatch = Stopwatch.StartNew();
-            while (true)
-            {
-                var value = find();
-                if (value != null)
-                    return value;
-                if (stopwatch.ElapsedMilliseconds > millisTimeout)
-                    throw new TimeoutException(string.Format(@"Timed out after {0} ms waiting for {1}.", millisTimeout, description));
-                Thread.Sleep(POLL_INTERVAL_MILLIS);
-            }
         }
 
         // A button caption matches the requested text ignoring case and the '&' mnemonic marker.

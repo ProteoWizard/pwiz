@@ -60,20 +60,6 @@ namespace pwiz.Skyline.ToolsUI
                 .HasDescendantWithControlId(FILE_NAME_COMBO_ID);
         }
 
-        /// <summary>
-        /// Opens the file at the given path. The full path is typed into the file name box and then Enter is
-        /// pressed, the same way a user can paste a full path and press Enter to navigate to the folder and open
-        /// the file in one action -- so this does not depend on whatever folder the dialog happened to open in. The
-        /// path is set on the Edit INSIDE the file-name combo (setting it on the combo itself would trigger the
-        /// auto-complete that discards the directory portion).
-        /// </summary>
-        public void EnterPathAndAccept(string path)
-        {
-            var edit = FileNameTextBox;
-            edit.SetText(path);
-            PostEnter(edit.Hwnd);
-        }
-
         /// <summary>Accepts by clicking the Open button (BM_CLICK on IDOK). A posted Enter is NOT reliable here: on
         /// the multiselect dialog a single typed file name raises the combo's autocomplete drop-down, which swallows
         /// the Enter (it selects the drop-down item instead of committing) -- so the dialog never closes. Clicking

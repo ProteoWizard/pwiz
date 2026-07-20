@@ -18,10 +18,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -34,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     /// the MCP UI-introspection layer (enumerated by <see cref="JsonToolServer.GetOpenForms"/> as a
     /// native form, and captured by <see cref="JsonUiService.GetFormImage"/> by its reported id
     /// even though it is not a WinForms form), it can be dismissed, and a file can be opened
-    /// through it with <see cref="NativeOpenFileDialog.EnterPathAndAccept"/>.
+    /// through it with <see cref="NativeFileDialog.EnterPath"/> and <see cref="NativeOpenFileDialog.Accept"/>.
     /// </summary>
     [TestClass]
     public class NativeFileDialogTest : McpConnectorTest
@@ -52,32 +50,34 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => Settings.Default.AllowMcpScreenCapture = true);
 
+            // Show the native Open dialog, introspect it through the connector, then cancel it. RunLongNativeDlg
+            // shows it and hands back its wrapper once it appears, and returns once ShowOpenFileDialog has come back
+            // (i.e. the dialog has closed) -- so the test drives the middle and needs no waits of its own.
             var documentBefore = SkylineWindow.Document;
-            // Show the native Open dialog without blocking the test thread, then wait for it to
-            // appear and obtain its automation wrapper.
-            SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            var fileDialog = NativeDialog.WaitForDialog<NativeOpenFileDialog>();
+            RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, fileDialog =>
+            {
+                // GetOpenForms includes the native dialog, flagged as native.
+                var nativeForms = McpConnector.GetOpenForms().Where(form => form.IsNative).ToArray();
+                Assert.AreEqual(1, nativeForms.Length,
+                    @"Expected exactly one native form while the Open dialog is showing.");
+                var nativeForm = nativeForms[0];
 
-            // GetOpenForms includes the native dialog, flagged as native.
-            var nativeForms = McpConnector.GetOpenForms().Where(form => form.IsNative).ToArray();
-            Assert.AreEqual(1, nativeForms.Length,
-                @"Expected exactly one native form while the Open dialog is showing.");
-            var nativeForm = nativeForms[0];
-
-            // GetFormImage resolves the native id (rather than throwing "form not found" as it
-            // would for a missing WinForms form) and attempts a screen capture. When a desktop is
-            // available it returns a PNG file; in a headless/offscreen environment it returns an
-            // availability message instead. Either is acceptable; a thrown ArgumentException would
-            // mean the native id was not routed to the UI Automation path.
-            var image = JsonUiService.GetFormImageBytes(nativeForm.Id);
-            if (image.Data != null)
+                // GetFormImage resolves the native id (rather than throwing "form not found" as it would for a
+                // missing WinForms form) and captures the window by taking a screen copy of its rectangle.
+                // EXPERIMENT (temporary): REQUIRE the capture to succeed, so a machine that cannot screen-capture
+                // fails here. On a nightly machine whose Remote Desktop session has been disconnected the app can
+                // still show windows but CopyFromScreen fails, so ScreenCapture.IsDesktopAvailable() is false and
+                // GetFormImageBytes returns the "capture unavailable" message with no Data -- which now trips the
+                // assert below (regression #4229). A thrown ArgumentException would instead mean the native id was
+                // not routed to the capture path at all.
+                var image = JsonUiService.GetFormImageBytes(nativeForm.Id);
+                Assert.IsNotNull(image.Data,
+                    @"Expected a screen capture of the native dialog, but none was produced: " + image.Message);
                 AssertPngSignature(image.Data);
-            else
-                Assert.IsNotNull(image.Message);
 
-            // Dismiss the dialog and confirm it leaves the document unchanged.
-            fileDialog.DismissWithCancelButton();
-            WaitForCondition(() => !NativeDialog.GetOpenDialogs(CancellationToken.None).Any());
+                fileDialog.DismissWithCancelButton();
+            });
+            // Cancelling opened nothing, so the document is untouched.
             Assert.AreSame(documentBefore, SkylineWindow.Document);
 
             // Exercise the open flow used by OpenDocument: save the current document, start a new
@@ -91,10 +91,14 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.NewDocument();
                 Settings.Default.ActiveDirectory = System.IO.Path.GetTempPath();
             });
-            var documentBeforeOpen = SkylineWindow.Document;
-            SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            NativeDialog.WaitForDialog<NativeOpenFileDialog>().EnterPathAndAccept(savePath);
-            WaitForDocumentChangeLoaded(documentBeforeOpen);
+            RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            {
+                dlg.EnterPath(savePath);
+                dlg.Accept();
+            });
+            // RunNativeDlg has already waited for ShowOpenFileDialog (which opens the file) to complete, so the
+            // document has changed here; only its background loading remains to wait on.
+            WaitForDocumentLoaded();
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
 
             TestMultiselectNavigateThenSelect();

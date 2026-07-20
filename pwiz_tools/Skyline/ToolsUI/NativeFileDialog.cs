@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -38,11 +39,6 @@ namespace pwiz.Skyline.ToolsUI
         // EnumerateChildren as a read-only element so a caller can read the dialog's current folder from GetControls.
         private const string ADDRESS_BAR_CLASS = @"ToolbarWindow32";
         private const int ADDRESS_BAR_ID = 1001;
-
-        // How long EnterPath re-sets the file name waiting for it to read back (a freshly-shown or just-navigated
-        // dialog is still settling and can discard a too-early set), and its poll interval.
-        private const int SET_CONFIRM_MILLIS = 3000;
-        private const int SET_POLL_MILLIS = 100;
 
         protected NativeFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
@@ -74,9 +70,8 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Types the file name(s) into the dialog's file-name field WITHOUT accepting; call
-        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open/save. Sets the text and confirms it
-        /// registered, retrying if not: a freshly-shown dialog is still initializing and the shell overwrites a
-        /// too-early set, so a single set can be silently lost -- and the dialog would then open nothing.
+        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open/save. Confirms the text registered, and
+        /// throws if it did not, so a lost set is reported rather than leaving the dialog to open nothing.
         ///
         /// <para>To select several files in a multiselect Open dialog, FIRST navigate to their folder (EnterPath
         /// the folder path, accept), THEN EnterPath their names -- BARE names in that folder, double-quoted and
@@ -87,44 +82,45 @@ namespace pwiz.Skyline.ToolsUI
             BringToForeground();
             var textBox = FileNameTextBox;
             textBox.SetText(path);
-            // A folder path the shell consumes to navigate (clearing the box) is not confirmed here -- the caller
-            // confirms the navigation through the "Address" control. A file name that must OPEN has to land in the
-            // box, and a freshly-shown or just-navigated dialog is still settling and can discard a too-early set,
-            // so re-set it until it reads back (or a bounded time elapses). The read runs ON the box's UI thread
-            // (CallFunction): an off-thread read of a ComboBoxEx edit returns empty, and a cross-thread WM_GETTEXT
-            // can block on a busy shell.
-            if (System.IO.Directory.Exists(path))
+            // Read back what the box actually HOLDS, rather than predicting what the shell will make of the path.
+            // An EMPTY box means the shell consumed the path to navigate -- the caller confirms that through the
+            // "Address" control; the path itself means a file name is staged to open. Anything else means the set
+            // did not take. The read SENDS WM_GETTEXT (NativeTextBox.GetValueNow), which is thread-agnostic.
+            var actual = textBox.GetValueNow() as string;
+            if (string.IsNullOrEmpty(actual) || Equals(actual, path))
                 return;
-            for (int waited = 0; waited < SET_CONFIRM_MILLIS; waited += SET_POLL_MILLIS)
-            {
-                if (Equals(textBox.CallFunction(() => textBox.GetValueNow() as string), path))
-                    return;
-                Thread.Sleep(SET_POLL_MILLIS);
-                textBox.SetText(path);
-            }
+            throw new InvalidOperationException(LlmInstruction.Format(
+                @"Tried to set file path to '{0}' but it says '{1}'", path, actual));
         }
 
         /// <summary>The control id of this dialog's file-name Edit -- 1148 for the Open dialog's classic combo,
         /// 1001 for the Save dialog's DirectUI-hosted field.</summary>
         protected abstract int FileNameControlId { get; }
 
-        /// <summary>The dialog's file-name field, found by its CONTROL ID and WAITED FOR until it is actually shown.
+        /// <summary>The dialog's file-name field, found by its CONTROL ID, or a RETRYABLE error if the shell has
+        /// not shown it yet.
         ///
-        /// <para>Both halves matter. By control id, because the field is not "the dialog's only text box": the
-        /// address bar carries a second, collapsed Edit. And waited for, because a native dialog becomes
-        /// discoverable -- its window exists, GetOpenForms reports it, and it classifies as a file dialog -- a moment
-        /// BEFORE the shell has finished showing and populating it. Typing into the field in that window does
-        /// nothing: the shell overwrites the text as it finishes initializing, and the dialog then accepts an empty
-        /// name. So a caller driving a dialog the instant it appears (which is exactly what the connector and the
-        /// tests do) MUST wait for the field to be visible first.</para></summary>
-        protected NativeTextBox FileNameTextBox =>
-            PollUntil(MillisTimeout, @"the dialog's file name field", () =>
+        /// <para>By control id, because the field is not "the dialog's only text box": the address bar carries a
+        /// second, collapsed Edit. Not-shown-yet is possible because a native dialog becomes discoverable -- its
+        /// window exists, GetOpenForms reports it, and it classifies as a file dialog -- a moment BEFORE the shell
+        /// has finished showing and populating it, and typing into the field in that window does nothing (the shell
+        /// overwrites the text as it initializes, and the dialog then accepts an empty name).</para>
+        ///
+        /// <para>Rather than BLOCK here polling for the field, this throws an instruction the caller acts on, so the
+        /// wait lives with the DRIVER, not inside the primitive both drivers share: the model waits and re-issues
+        /// the call, and a test driving the dialog waits on its own state (as SelectFilesInOpenDialog does). A single
+        /// tool call never sits inside a 30-second sleep.</para></summary>
+        protected NativeTextBox FileNameTextBox
+        {
+            get
             {
                 var hwnd = FindFileNameEdit();
-                return hwnd != IntPtr.Zero && User32.IsWindowVisible(hwnd)
-                    ? new NativeTextBox(hwnd, CancellationToken)
-                    : null;
-            });
+                if (hwnd == IntPtr.Zero || !User32.IsWindowVisible(hwnd))
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"The file dialog is still opening. Wait a moment and try again."));
+                return new NativeTextBox(hwnd, CancellationToken);
+            }
+        }
 
         /// <summary>The window handle of the file-name Edit, or IntPtr.Zero until it exists. By default the Edit
         /// itself carries <see cref="FileNameControlId"/> (the Save dialog's Edit, the plain Open dialog's combo
