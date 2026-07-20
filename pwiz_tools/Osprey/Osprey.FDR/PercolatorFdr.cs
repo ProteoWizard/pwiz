@@ -1487,6 +1487,12 @@ namespace pwiz.Osprey.FDR
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
+            // This pass streams every file's parquet rows before the [PATH] line below, so it is a
+            // determinate O(files) I/O step (43s at 82 files, minutes at 500). Report per-file
+            // progress through the standard throttled reporter so a large join never goes silent.
+            var ingestProgress = new ProgressReporter(
+                string.Format(@"Streaming first-pass ingest from {0} file(s)", nFiles), nFiles,
+                intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             for (int f = 0; f < nFiles; f++)
             {
                 string file = fileNames[f];
@@ -1514,7 +1520,9 @@ namespace pwiz.Osprey.FDR
                     if (isDecoy) nInputDecoys++; else nInputTargets++;
                     g++;
                 }
+                ingestProgress.Report(f + 1);
             }
+            ingestProgress.Dispose();
             int n = g;
             logInfo(string.Format(
                 @"[PATH] {0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
