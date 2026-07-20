@@ -24,7 +24,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json.Linq;
@@ -579,7 +578,7 @@ namespace pwiz.Skyline.ToolsUI
             }));
             if (exception != null)
             {
-                throw new TargetInvocationException(exception);
+                ExceptionUtil.WrapAndThrowException(exception);
             }
             return result?.ToString();
         }

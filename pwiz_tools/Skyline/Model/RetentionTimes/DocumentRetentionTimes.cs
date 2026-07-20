@@ -757,16 +757,38 @@ namespace pwiz.Skyline.Model.RetentionTimes
         /// </summary>
         public DocumentRetentionTimes ChangeLibrary(Library oldLibrary, Library newLibrary)
         {
-            if (!_libraryAlignments.TryGetValue(oldLibrary.Name, out var oldEntry))
+            // If the document aligns to the renamed library, swap the library in the alignment target so
+            // that it continues to compare equal. Otherwise renaming the library (for example by doing a
+            // "Save As") would make the alignment target look different and all of the retention time
+            // alignments would be needlessly discarded and recomputed.
+            var newAlignmentTarget = AlignmentTarget;
+            if (AlignmentTarget is AlignmentTarget.LibraryTarget libraryTarget &&
+                Equals(libraryTarget.Library.Name, oldLibrary.Name))
             {
+                newAlignmentTarget = libraryTarget.ChangeLibrary(newLibrary);
+            }
+
+            _libraryAlignments.TryGetValue(oldLibrary.Name, out var oldEntry);
+            if (oldEntry == null && ReferenceEquals(newAlignmentTarget, AlignmentTarget))
+            {
+                // Neither the alignment target nor the library alignments reference the renamed library.
                 return this;
             }
 
-            var newLibraryAlignments = _libraryAlignments.Where(entry => entry.Key != oldLibrary.Name)
-                .ToDictionary(entry => entry.Key, entry => entry.Value);
-            newLibraryAlignments[newLibrary.Name] =
-                new LibraryAlignment(newLibrary, oldEntry.Alignments);
-            return ChangeProp(ImClone(this), im => im._libraryAlignments = newLibraryAlignments);
+            var newLibraryAlignments = _libraryAlignments;
+            if (oldEntry != null)
+            {
+                newLibraryAlignments = _libraryAlignments.Where(entry => entry.Key != oldLibrary.Name)
+                    .ToDictionary(entry => entry.Key, entry => entry.Value);
+                newLibraryAlignments[newLibrary.Name] =
+                    new LibraryAlignment(newLibrary, oldEntry.Alignments);
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.AlignmentTarget = newAlignmentTarget;
+                im._libraryAlignments = newLibraryAlignments;
+            });
         }
 
         private Dictionary<MsDataFileUri, PiecewiseLinearMap> _deserializedAlignmentFunctions;

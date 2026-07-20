@@ -110,8 +110,8 @@ namespace pwiz.Osprey.Test
         /// a <c>(entry_id, charge)</c> group. The never-asserted corner -- exercised
         /// here -- is the scan-tie / gap-fill case: the reconciled re-sort is a STABLE
         /// <c>OrderBy(EntryId).ThenBy(Charge).ThenBy(ScanNumber)</c> with NO ParquetIndex
-        /// tiebreak (<c>ParquetScoreCache.WriteScoresParquet</c>) and gap-fill rows are
-        /// appended (<c>ReconciledParquetWriter.ApplyRescoredRows</c>). Two clean 8-file
+        /// tiebreak, which the streaming transfer reproduces by merging gap-fill rows into
+        /// canonical position (<c>ParquetScoreCache.StreamReconciledScoresParquet</c>). Two clean 8-file
         /// Carafe runs were byte-identical end-to-end but never asserted this in
         /// isolation.
         ///
@@ -119,11 +119,11 @@ namespace pwiz.Osprey.Test
         /// group: multiple distinct scans, a scan-tie (two rows sharing
         /// <c>(EntryId, Charge, ScanNumber)</c> with different original ParquetIndex),
         /// and an appended gap-fill row (the <see cref="uint.MaxValue"/> sentinel). The
-        /// reconciled parquet is produced by the REAL Stage-6 paths -- the gap-fill is
-        /// appended through <c>ReconciledParquetWriter.ApplyRescoredRows</c>, written and
-        /// stably re-sorted by <c>ParquetScoreCache.WriteScoresParquet</c>, and read back
-        /// through <c>BuildReconciledIdentityToRow</c> -- so the tie/gap-fill placement
-        /// is production's, not a mock. The projection itself is baked by the real
+        /// reconciled parquet is produced by the REAL Stage-6 path -- the gap-fill is
+        /// merged into canonical scan position by
+        /// <c>ParquetScoreCache.StreamReconciledScoresParquet</c> and read back through
+        /// <c>BuildReconciledIdentityToRow</c> -- so the tie/gap-fill placement is
+        /// production's, not a mock. The projection itself is baked by the real
         /// <see cref="FdrProjectionSet.BuildFromEntries"/> resolver path.
         /// </summary>
         [TestMethod]
@@ -149,9 +149,10 @@ namespace pwiz.Osprey.Test
             var rowG = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false); // gap-fill sentinel
             var survivors = new List<FdrEntry> { rowS, rowR, rowT, rowG, rowP, rowU, rowQ };
 
-            // Build the reconciled parquet through the REAL Stage-6 paths on fresh clones
-            // (the writer reassigns ParquetIndex, so cloning keeps the survivor buffer's
-            // original ParquetIndex -- the legacy sort tiebreak -- intact).
+            // Build the reconciled parquet through the REAL Stage-6 streaming path: write
+            // the survivor rows as the original scores parquet, then stream-transfer them
+            // with the gap-fill row, whose scan (15) the merge interleaves between the
+            // scan-10 and scan-20 rows -- exactly where the former load-all + re-sort put it.
             var reconEntries = new List<FdrEntry>
             {
                 MakeSurvivor(100, 2, 10, 0, 10.0, false),
@@ -162,16 +163,17 @@ namespace pwiz.Osprey.Test
                 MakeSurvivor(200, 3, 25, 5, 60.0, true),
             };
             var reconGapFill = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false);
-            ReconciledParquetWriter.ApplyRescoredRows(
-                reconEntries, new List<FdrEntry> { reconGapFill }, fileName, s => { },
-                out int nAppended);
-            Assert.AreEqual(1, nAppended, @"gap-fill row must append through the real Stage-6 path");
 
-            string reconciledPath = Path.Combine(Path.GetTempPath(),
-                @"osprey_pass2sort_" + Guid.NewGuid().ToString(@"N") + @".parquet");
+            string tmpStem = @"osprey_pass2sort_" + Guid.NewGuid().ToString(@"N");
+            string originalPath = Path.Combine(Path.GetTempPath(), tmpStem + @".scores.parquet");
+            string reconciledPath = Path.Combine(Path.GetTempPath(), tmpStem + @".scores-reconciled.parquet");
             try
             {
-                ParquetScoreCache.WriteScoresParquet(reconciledPath, reconEntries, null, null, fileName);
+                ParquetScoreCache.WriteScoresParquet(originalPath, reconEntries, null, null, fileName);
+                var streamResult = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, reconciledPath, new Dictionary<uint, FdrEntry>(),
+                    new List<FdrEntry> { reconGapFill }, null, null, fileName, s => { });
+                Assert.AreEqual(1, streamResult.NAppended, @"gap-fill row must append through the real Stage-6 path");
 
                 // REAL identity -> reconciled-row map (last-write-wins collapses a scan-tie).
                 var reconMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(reconciledPath);
@@ -223,6 +225,8 @@ namespace pwiz.Osprey.Test
             }
             finally
             {
+                if (File.Exists(originalPath))
+                    File.Delete(originalPath);
                 if (File.Exists(reconciledPath))
                     File.Delete(reconciledPath);
             }
