@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -148,6 +150,48 @@ namespace pwiz.SkylineTestFunctional
 
             CollectionAssert.AreEquivalent(filePaths, selectedFiles,
                 @"The multiselect dialog did not return the files that were selected by name.");
+        }
+
+        /// <summary>
+        /// Drives an OPEN multiselect Open dialog to <paramref name="folder"/> and selects the files named there
+        /// (<paramref name="fileNames"/> are BARE names within that folder), exactly as an MCP client would through
+        /// the connector: navigate to the folder, confirm the arrival by reading the dialog's "Address" control
+        /// (get_value) and waiting for the file-name box to clear, then enter the quoted names and click Open.
+        /// (A list of full paths does not work for a multiselect; the names must be bare and in the current folder.)
+        /// Call on the test thread (inside a <see cref="AbstractFunctionalTest.RunLongNativeDlg{TDlg}"/> exercise).
+        /// </summary>
+        private static void SelectFilesInOpenDialog(NativeOpenFileDialog dlg, string folder,
+            IEnumerable<string> fileNames)
+        {
+            var quotedNames = string.Join(@" ", fileNames.Select(name => @"""" + name + @""""));
+
+            // Navigate to the folder. Accepting a folder path makes the shell change into that folder and CLEAR the
+            // file-name box -- but that clear is ASYNCHRONOUS, landing a short while after the navigation. Confirm
+            // the arrival by reading the "Address" control, then wait for the box to actually go empty: that is the
+            // clear landing, and once it has, the names typed next cannot be wiped by a still-pending clear -- so a
+            // single type-and-open sticks and no re-type-until-it-holds loop is needed.
+            dlg.EnterPath(folder);
+            dlg.Accept();
+            WaitForCondition(() => DialogShowsFolder(dlg, folder),
+                @"The Open dialog did not navigate to the requested folder.");
+            WaitForCondition(() => string.IsNullOrEmpty(dlg.GetFormValue(@"File name")),
+                @"The Open dialog did not clear the file-name box after navigating.");
+
+            // The box is empty and settled, so the names hold: type them and open in one go.
+            dlg.EnterPath(quotedNames);
+            dlg.Accept();
+            if (!TryWaitForCondition(() => !dlg.IsOpen))
+                Assert.Fail(@"The Open dialog did not open the selected files (file-name box holds [" +
+                            dlg.GetFormValue(@"File name") + @"], showing folder [" + dlg.GetFormValue(@"Address") + @"]).");
+        }
+
+        // Whether the Open dialog is showing the given folder -- read from its "Address" control with get_value, the
+        // way an MCP client confirms a navigation (trailing separator and case ignored).
+        private static bool DialogShowsFolder(NativeOpenFileDialog dlg, string folder)
+        {
+            var current = dlg.GetFormValue(@"Address");
+            return current != null &&
+                   current.TrimEnd('\\').Equals(folder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
         }
 
         private static void AssertPngSignature(byte[] bytes)

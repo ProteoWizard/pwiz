@@ -108,8 +108,8 @@ namespace pwiz.Skyline.ToolsUI
         ///
         /// <para>Rather than BLOCK here polling for the field, this throws an instruction the caller acts on, so the
         /// wait lives with the DRIVER, not inside the primitive both drivers share: the model waits and re-issues
-        /// the call, and a test driving the dialog waits on its own state (as SelectFilesInOpenDialog does). A single
-        /// tool call never sits inside a 30-second sleep.</para></summary>
+        /// the call, and a test driving the dialog waits on its own state. A single tool call never sits inside a
+        /// 30-second sleep.</para></summary>
         protected NativeTextBox FileNameTextBox
         {
             get

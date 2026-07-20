@@ -491,63 +491,6 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Drives an OPEN multiselect Open dialog to <paramref name="folder"/> and selects the files named there
-        /// (<paramref name="fileNames"/> are BARE names within that folder), exactly as an MCP client would through
-        /// the connector: navigate to the folder and confirm the arrival by reading the dialog's "Address" control
-        /// (get_value), then enter the quoted names and click Open, checking whether the dialog closed and clicking
-        /// again if the file-name combo's autocomplete drop-down swallowed the click. (A list of full paths does not
-        /// work for a multiselect; the names must be bare and in the current folder.) Call on the test thread
-        /// (inside a <see cref="RunLongNativeDlg{TDlg}"/> exercise).
-        /// </summary>
-        protected static void SelectFilesInOpenDialog(NativeOpenFileDialog dlg, string folder,
-            IEnumerable<string> fileNames)
-        {
-            var quotedNames = string.Join(@" ", fileNames.Select(name => @"""" + name + @""""));
-
-            // Navigate to the folder, then confirm we got there by reading the "Address" control before selecting.
-            dlg.EnterPath(folder);
-            dlg.Accept();
-            WaitForCondition(() => DialogShowsFolder(dlg, folder),
-                @"The Open dialog did not navigate to the requested folder.");
-
-            // Select and open the files. Typing the names and clicking Open are done TOGETHER, and repeated until
-            // the dialog closes, because the shell can clear the file-name box for a short while after a navigation
-            // settles: a name typed once and left sitting can be discarded before the Open click reads it, so the
-            // click opens nothing and the dialog stays up with an empty box. Re-typing right before each click keeps
-            // the race window tiny and, once the view has settled, the name sticks and the dialog opens. This is how
-            // an MCP client drives it too: set the file name, click Open, and if the dialog is still there (its box
-            // was cleared) set the name and click again. EnterPath confirms the name registered (reading it back by
-            // "File name"), so a successful open also proves the box is readable and settable by that name.
-            // The settle wait is generous on purpose: a click that DID commit closes the dialog well within it, so
-            // the loop returns before it could type and click again -- the files are never added twice. Only a click
-            // that was lost (box cleared, dialog still up) reaches the next attempt, which re-types and clicks.
-            const int openAttempts = 8;
-            const int openSettleMillis = 2500;
-            for (int attempt = 0; attempt < openAttempts && dlg.IsOpen; attempt++)
-            {
-                dlg.EnterPath(quotedNames);
-                dlg.Accept();
-                if (TryWaitForCondition(openSettleMillis, () => !dlg.IsOpen))
-                    return;
-            }
-            // The loop also exits if the last Accept opened the files just after its settle wait expired (dlg.IsOpen
-            // went false); only a still-open dialog is a real failure.
-            if (!dlg.IsOpen)
-                return;
-            Assert.Fail(@"The Open dialog did not open the selected files (file-name box holds [" +
-                        dlg.GetFormValue(@"File name") + @"], showing folder [" + dlg.GetFormValue(@"Address") + @"]).");
-        }
-
-        // Whether the Open dialog is showing the given folder -- read from its "Address" control with get_value, the
-        // way an MCP client confirms a navigation (trailing separator and case ignored).
-        private static bool DialogShowsFolder(NativeOpenFileDialog dlg, string folder)
-        {
-            var current = dlg.GetFormValue(@"Address");
-            return current != null &&
-                   current.TrimEnd('\\').Equals(folder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
         /// Shows a dialog and tests the dialog by invoking an action on the test thread.
         /// Unlike <see cref="RunDlg{TDlg}"/>, the test action runs on the test thread instead of the
         /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
