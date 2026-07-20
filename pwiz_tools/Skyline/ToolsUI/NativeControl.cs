@@ -158,7 +158,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             var text = User32.GetWindowTextNoBlock(Hwnd);
             var separator = text?.IndexOf(@": ", StringComparison.Ordinal) ?? -1;
-            return separator < 0 ? text : text.Substring(separator + 2);
+            return separator < 0 ? text : text?.Substring(separator + 2);
         }
     }
 }

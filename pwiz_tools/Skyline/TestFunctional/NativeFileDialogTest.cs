@@ -99,7 +99,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.SaveDocument(savePath);
                 SkylineWindow.NewDocument();
-                Settings.Default.ActiveDirectory = System.IO.Path.GetTempPath();
+                Settings.Default.ActiveDirectory = Path.GetTempPath();
             });
             RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
             {
@@ -138,12 +138,11 @@ namespace pwiz.SkylineTestFunctional
             RunLongNativeDlg<NativeOpenFileDialog>(
                 () =>
                 {
-                    using (var dlg = new System.Windows.Forms.OpenFileDialog
-                        { Multiselect = true, InitialDirectory = Path.GetTempPath() })
-                    {
-                        if (dlg.ShowDialog(SkylineWindow) == System.Windows.Forms.DialogResult.OK)
-                            selectedFiles = dlg.FileNames;
-                    }
+                    using var dlg = new System.Windows.Forms.OpenFileDialog();
+                    dlg.Multiselect = true;
+                    dlg.InitialDirectory = Path.GetTempPath();
+                    if (dlg.ShowDialog(SkylineWindow) == System.Windows.Forms.DialogResult.OK)
+                        selectedFiles = dlg.FileNames;
                 },
                 // Navigate to the folder (confirmed through GetControls) and select the files by name.
                 fileDialog => SelectFilesInOpenDialog(fileDialog, selectDir, fileNames));
