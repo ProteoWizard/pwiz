@@ -891,14 +891,21 @@ namespace pwiz.Osprey.Tasks
             // value; min is a safe reducer). ONLY gap-fill peaks (no per-file record) consult it.
             // These light uint->double maps stay resident while the heavier per-file record maps +
             // tables are built and released one file at a time.
+            //
+            // This first pass ALSO gates the whole transfer on every mapped file's 1st-pass sidecar
+            // being readable: a missing/corrupt sidecar would silently leave that file's moved peaks
+            // at Stage-6's q=1.0 (dropped from the output). Rather than degrade one file, fail the
+            // transfer here (BEFORE any entry is mutated) so the caller falls back to the 2nd-pass
+            // retrain -- hard-fail over warn-and-proceed on silently-invalid output.
             var globalExpPrecQ = new Dictionary<uint, double>();
             var globalExpPepQ = new Dictionary<uint, double>();
             foreach (var kvp in perFileEntries)
             {
                 if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
                     continue;
-                FdrScoresSidecar.ReadRecords(
-                    FdrScoresSidecar.Pass1Path(inputFile), FdrScoresSidecar.Pass.FirstPass, rec =>
+                string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+                bool readOk = FdrScoresSidecar.ReadRecords(
+                    pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
                 {
                     if (!globalExpPrecQ.TryGetValue(rec.EntryId, out double curPrec) ||
                         rec.ExperimentPrecursorQvalue < curPrec)
@@ -907,6 +914,15 @@ namespace pwiz.Osprey.Tasks
                         rec.ExperimentPeptideQvalue < curPep)
                         globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
                 });
+                if (!readOk)
+                {
+                    ctx.LogWarning(string.Format(
+                        "OSPREY_PASS2_QVALUE=transfer: 1st-pass sidecar for '{0}' is missing or " +
+                        "unreadable ({1}); falling back to the 2nd-pass Percolator retrain rather " +
+                        "than silently dropping this file's reconciliation-moved peaks.",
+                        kvp.Key, pass1Path));
+                    return false;
+                }
             }
 
             var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
