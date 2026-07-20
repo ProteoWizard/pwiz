@@ -1219,7 +1219,7 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to No peptide modified sequence column specified.
         /// </summary>
@@ -1228,7 +1228,7 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("MassListRowReader_NextRow_No_peptide_sequence_column_specified", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Exporting method {0}....
         /// </summary>
@@ -1984,7 +1984,7 @@ namespace pwiz.Skyline.Model {
                         "_RT__min_", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to {0} &quot;{1}&quot;.
         /// </summary>
@@ -1993,7 +1993,7 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The same fragment (product m/z {0}) is declared more than once on a single line of the transition list. See column {1}..
         /// </summary>
@@ -2004,7 +2004,7 @@ namespace pwiz.Skyline.Model {
                         "t__See_column__1__", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Missing ion mobility units.
         /// </summary>
