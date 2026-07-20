@@ -1,3 +1,4 @@
+using Pwiz.Util.Misc;
 using SCIEX.Apis.Data.v1;
 using SCIEX.Apis.Data.v1.Contracts;
 
@@ -113,7 +114,14 @@ internal sealed class Wiff2File : AbstractWiffFile
             ?? throw new InvalidOperationException("CreateSampleDataApi returned null");
 
         var sampleRequest = _api.RequestFactory.CreateSamplesReadRequest();
-        sampleRequest.AbsolutePathToWiffFile = Path.GetFullPath(wiff2Path);
+        // The SCIEX.Apis SDK derives the sample/experiment/storage-location ids from this path
+        // and resolves them through an ANSI native file layer (Clearcore2.SampleData
+        // FileIdGenerator). A path with characters outside the current code page mangles that
+        // lookup -> FileNotFoundException on the first GetExperiments/GetSpectra call. Feed it the
+        // Windows 8.3 short name for any non-ASCII component (cpp's WiffFile2 sidesteps this by
+        // handing the SDK a narrow ANSI-code-page std::string). WiffPath keeps the original for
+        // metadata / SourceFile emission.
+        sampleRequest.AbsolutePathToWiffFile = Filesystem.GetNonUnicodePath(Path.GetFullPath(wiff2Path));
 
         _allSamples = new List<ISample>();
         var sampleReader = _api.GetSamples(sampleRequest);
