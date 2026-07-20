@@ -899,36 +899,52 @@ namespace pwiz.Osprey.Tasks
             // retrain -- hard-fail over warn-and-proceed on silently-invalid output.
             var globalExpPrecQ = new Dictionary<uint, double>();
             var globalExpPepQ = new Dictionary<uint, double>();
-            foreach (var kvp in perFileEntries)
+            // Per-file progress: reading every file's 1st-pass sidecar ran silently for minutes on
+            // an 82-file join. Console-only; disposed on every exit (including the fallback return).
+            using (var scanProgress = new ProgressReporter(
+                string.Format(@"Reading 1st-pass sidecars for cross-file experiment q from {0} file(s)",
+                    perFileEntries.Count), perFileEntries.Count))
             {
-                if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
-                    continue;
-                string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
-                bool readOk = FdrScoresSidecar.ReadRecords(
-                    pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
+                int scanIdx = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    if (!globalExpPrecQ.TryGetValue(rec.EntryId, out double curPrec) ||
-                        rec.ExperimentPrecursorQvalue < curPrec)
-                        globalExpPrecQ[rec.EntryId] = rec.ExperimentPrecursorQvalue;
-                    if (!globalExpPepQ.TryGetValue(rec.EntryId, out double curPep) ||
-                        rec.ExperimentPeptideQvalue < curPep)
-                        globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
-                });
-                if (!readOk)
-                {
-                    ctx.LogWarning(string.Format(
-                        "OSPREY_PASS2_QVALUE=transfer: 1st-pass sidecar for '{0}' is missing or " +
-                        "unreadable ({1}); falling back to the 2nd-pass Percolator retrain rather " +
-                        "than silently dropping this file's reconciliation-moved peaks.",
-                        kvp.Key, pass1Path));
-                    return false;
+                    scanProgress.Report(++scanIdx);
+                    if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
+                        continue;
+                    string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+                    bool readOk = FdrScoresSidecar.ReadRecords(
+                        pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
+                    {
+                        if (!globalExpPrecQ.TryGetValue(rec.EntryId, out double curPrec) ||
+                            rec.ExperimentPrecursorQvalue < curPrec)
+                            globalExpPrecQ[rec.EntryId] = rec.ExperimentPrecursorQvalue;
+                        if (!globalExpPepQ.TryGetValue(rec.EntryId, out double curPep) ||
+                            rec.ExperimentPeptideQvalue < curPep)
+                            globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
+                    });
+                    if (!readOk)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "OSPREY_PASS2_QVALUE=transfer: 1st-pass sidecar for '{0}' is missing or " +
+                            "unreadable ({1}); falling back to the 2nd-pass Percolator retrain rather " +
+                            "than silently dropping this file's reconciliation-moved peaks.",
+                            kvp.Key, pass1Path));
+                        return false;
+                    }
                 }
             }
 
             var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
             int nUnchanged = 0, nMoved = 0, nGapFill = 0, nSkipped = 0, nMissingSidecar = 0, nFilesDone = 0;
+            // Per-file progress: building each file's per-run tables + classifying its survivors ran
+            // silently for minutes on an 82-file join (the gap between Stage 6 and the summary below).
+            var transferProgress = new ProgressReporter(
+                string.Format(@"Transferring per-run q-values across {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count);
+            int transferIdx = 0;
             foreach (var kvp in perFileEntries)
             {
+                transferProgress.Report(++transferIdx);
                 if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
                 {
                     nSkipped += kvp.Value.Count;
@@ -992,6 +1008,7 @@ namespace pwiz.Osprey.Tasks
                 }
                 nFilesDone++;
             }
+            transferProgress.Dispose();
 
             ctx.LogInfo(string.Format(
                 "OSPREY_PASS2_QVALUE=transfer: per-run q transfer over {0} file(s) -- {1} unchanged " +

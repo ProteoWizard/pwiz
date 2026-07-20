@@ -616,13 +616,20 @@ namespace pwiz.Osprey.Tasks
             // needs the resident pool. FirstJoin consumes the projection set identically
             // whether Run or this path produced it.
             //
-            // --model-diagnostics is the one resume-only exception to Run's lean choice:
-            // Run streams the report off the first-pass Percolator score pass (the streaming
-            // Accumulator), but a resume SKIPS that score pass (sidecar q-values), so FirstJoin's
-            // resume path emits the report via the batch ModelDiagnosticsReport.Write, which reads
-            // the RESIDENT per-file entries. Force the fat pool here so that report is populated
-            // (matches pre-lean behavior); the compute Run path stays lean.
-            bool needsResidentPool = NeedsResidentPool(config) || config.ModelDiagnostics;
+            // --model-diagnostics forces the fat pool ONLY for a FULL resume, where FirstJoin
+            // ALSO skips the first-pass score pass (every 1st-pass sidecar already on disk) and
+            // emits the report via the batch ModelDiagnosticsReport.Write, which reads the
+            // RESIDENT per-file entries. On a Stage-1-4 (-LinkFrom) resume the 1st-pass sidecars
+            // are absent, so FirstPassFDR RE-RUNS and streams the report off its score pass
+            // (ModelDiagnosticsData.Accumulator) exactly like a compute run -- no resident pool
+            // needed. Probing the sidecars keeps the lean counts-only path for the common
+            // -LinkFrom A/B resume (whose forced fat pool OOM'd an 82-file mdiag run) while
+            // preserving the batch-write path's resident entries for the full-resume re-report,
+            // so the fat pool is never on the row-count scaling path. The full elimination (stream
+            // the batch report from the sidecar+parquet too) is a documented follow-up.
+            // See TODO-20260720_osprey_pass2_per_run_qvalue.
+            bool needsResidentPool = NeedsResidentPool(config) ||
+                                     (config.ModelDiagnostics && FirstPassSidecarsPresent(config));
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -1488,6 +1495,30 @@ namespace pwiz.Osprey.Tasks
                    !OspreyEnvironment.UseFdrProjection ||
                    config.FdrMethod != FdrMethod.Percolator ||
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+        }
+
+        /// <summary>
+        /// True when every input file already has its <c>.1st-pass.fdr_scores.bin</c> sidecar on
+        /// disk, so FirstJoin will REHYDRATE first-pass FDR (skip its score pass) rather than
+        /// recompute. Under <c>--model-diagnostics</c> that skip routes the report to the batch
+        /// <c>ModelDiagnosticsReport.Write</c>, which reads the RESIDENT per-file entries -- the
+        /// one case a resume still needs the fat pool. A Stage-1-4 (<c>-LinkFrom</c>) resume links
+        /// only the Stage-4 <c>.scores.parquet</c>, so the 1st-pass sidecars are ABSENT, FirstPassFDR
+        /// re-runs, and its score pass streams the report -- no resident pool needed. Absent sidecars
+        /// therefore mean "stay lean" (correct); present sidecars mean "keep fat" (conservative,
+        /// matching the batch-write path). Mirrors <see cref="FdrScoresSidecar.Pass1Path"/> as used by
+        /// <c>FirstJoinTask</c>'s rehydrate-output enumeration.
+        /// </summary>
+        private static bool FirstPassSidecarsPresent(OspreyConfig config)
+        {
+            if (config.InputFiles == null || config.InputFiles.Count == 0)
+                return false;
+            foreach (var inputFile in config.InputFiles)
+            {
+                if (!File.Exists(FdrScoresSidecar.Pass1Path(inputFile)))
+                    return false;
+            }
+            return true;
         }
 
         /// <summary>
