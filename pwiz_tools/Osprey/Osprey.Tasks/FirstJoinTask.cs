@@ -678,16 +678,33 @@ namespace pwiz.Osprey.Tasks
                     }
                     string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
 
-                    // Read the file's 1st-pass records (row order == parquet row order == the order
-                    // the score-pass sink wrote them), then zip with the parquet scalars by that row
-                    // ordinal -- the same (features/scalars indexed by row) binding the resident
-                    // overlay uses. entry_id is carried on both sides, so a mismatch fails loud
-                    // rather than folding misaligned rows.
+                    // Buffer this ONE file's 1st-pass records so we can zip them with the parquet
+                    // scalars by row ordinal (row order == parquet row order == the order the score-pass
+                    // sink wrote them). Buffering the sidecar is the smaller of the two per-file streams
+                    // (a fixed 60 B/record vs the parquet's modseq strings) and is bounded to a single
+                    // file -- a few hundred MB at most for the largest file, released at the end of this
+                    // iteration -- never the whole-run resident pool the batch write held.
                     var records = new List<FdrScoreRecord>();
                     if (!FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, records.Add))
                     {
                         ctx.LogWarning(string.Format(
                             @"[MODEL-DIAGNOSTICS] resume: failed to read {0}; skipping its rows.", sidecarPath));
+                        continue;
+                    }
+
+                    // Per-file best-effort: an incomplete / mismatched file (its sidecar and parquet
+                    // disagree on row count -- the realistic "one bad file" case) is skipped with a
+                    // warning BEFORE any of its rows are folded into the shared accumulator, so one bad
+                    // file corrupts neither the report nor the remaining files. (A same-count entry_id
+                    // scramble -- a deeper corruption that cannot arise while both sides read the parquet
+                    // in row order -- still trips the defensive throws below and aborts the whole report
+                    // rather than render partially-folded data.) ProbeCwtRowMetadata is a footer-only read.
+                    long parquetRowCount = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath).RowCount;
+                    if (parquetRowCount != records.Count)
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: {0} row-count mismatch (parquet {1} vs sidecar {2}); skipping its rows.",
+                            fileName, parquetRowCount, records.Count));
                         continue;
                     }
 
@@ -724,9 +741,11 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 // Never let a diagnostics-only artifact take down a real run (matches Write /
-                // WriteFromAccumulator, which also log-and-swallow).
+                // WriteFromAccumulator, which also log-and-swallow). Log the full exception
+                // (type + message + stack + inner), not just Message: a resume sidecar/parquet
+                // mismatch or IO fault is otherwise near-undiagnosable from the swallowed line.
                 ctx.LogInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] resume report generation failed: {0}", ex.Message));
+                    @"[MODEL-DIAGNOSTICS] resume report generation failed: {0}", ex));
             }
         }
 
