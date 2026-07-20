@@ -958,51 +958,20 @@ namespace pwiz.Osprey.Tasks
                     double newScore = ScoreWithFrozenModel(
                         entry.Features, standardizer, avgWeights, avgBias, scratch);
 
-                    if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord rec1))
+                    FdrScoreRecord? rec1 = null;
+                    if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
+                        rec1 = recFound;
+                    // Gap-fill peaks (no 1st-pass record) take the precursor's cross-file pass-1
+                    // experiment q, so ClampExperimentQToBestRun (a floor that only raises) lands
+                    // them at the precursor's best-run q; a precursor with no record anywhere -> 1.
+                    double gapExpPrecQ = globalExpPrecQ.TryGetValue(entry.EntryId, out double gPrec) ? gPrec : 1.0;
+                    double gapExpPepQ = globalExpPepQ.TryGetValue(entry.EntryId, out double gPep) ? gPep : 1.0;
+                    switch (AssignPerRunQ(entry, newScore, rec1,
+                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, gapExpPrecQ, gapExpPepQ))
                     {
-                        // Bit-exact equality is the reliable MOVED discriminator: an UNCHANGED
-                        // survivor's reconciled features ARE its original Stage-4 features
-                        // (ReconciledParquetWriter streams unchanged rows through untouched), and
-                        // the sidecar Score was computed from those same parquet features with this
-                        // same averaged model -- so the recomputation is bit-identical. A MOVED peak
-                        // carries rescored features, so its score differs.
-                        if (newScore == rec1.Score)
-                        {
-                            entry.Score = rec1.Score;
-                            entry.RunPrecursorQvalue = rec1.RunPrecursorQvalue;
-                            entry.RunPeptideQvalue = rec1.RunPeptideQvalue;
-                            entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
-                            entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
-                            entry.Pep = rec1.Pep;
-                            nUnchanged++;
-                        }
-                        else
-                        {
-                            entry.Score = newScore;
-                            entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
-                            entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
-                            // Experiment q is a pass-1 property (best-peak anchor) -- carry it.
-                            entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
-                            entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
-                            entry.Pep = rec1.Pep;
-                            nMoved++;
-                        }
-                    }
-                    else
-                    {
-                        // GAP-FILL: a new detection of a precursor that passed in a sibling run.
-                        // Run q from this file's tables; experiment q = the precursor's pass-1
-                        // experiment q (so ClampExperimentQToBestRun -- a floor that only raises --
-                        // resolves it to the precursor's best-run q). A precursor with no pass-1
-                        // record anywhere keeps q=1.
-                        entry.Score = newScore;
-                        entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
-                        entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
-                        entry.ExperimentPrecursorQvalue =
-                            globalExpPrecQ.TryGetValue(entry.EntryId, out double gExpPrec) ? gExpPrec : 1.0;
-                        entry.ExperimentPeptideQvalue =
-                            globalExpPepQ.TryGetValue(entry.EntryId, out double gExpPep) ? gExpPep : 1.0;
-                        nGapFill++;
+                        case PerRunClass.Unchanged: nUnchanged++; break;
+                        case PerRunClass.Moved: nMoved++; break;
+                        default: nGapFill++; break;
                     }
                 }
                 nFilesDone++;
@@ -1020,6 +989,79 @@ namespace pwiz.Osprey.Tasks
                     ? string.Format("; {0} entr(y/ies) skipped for missing features", nSkipped)
                     : string.Empty));
             return true;
+        }
+
+        /// <summary>How a survivor was classified against its 1st-pass sidecar record.</summary>
+        internal enum PerRunClass
+        {
+            /// <summary>Reconciliation did not move the peak (recomputed score == the sidecar's).</summary>
+            Unchanged,
+            /// <summary>Reconciliation moved the peak to a different position (score differs).</summary>
+            Moved,
+            /// <summary>A new detection with no 1st-pass record (gap-fill).</summary>
+            GapFill,
+        }
+
+        /// <summary>
+        /// Assign one survivor's pass-2 q-values per the per-run-only invariant and return its
+        /// classification. Pure (no I/O): the caller supplies the recomputed frozen-model score
+        /// (<paramref name="newScore"/>), the entry's 1st-pass sidecar record
+        /// (<paramref name="firstPass"/>, null for a gap-fill), that file's per-run lookup tables,
+        /// and the precursor's cross-file pass-1 experiment q (used ONLY for a gap-fill). The
+        /// experiment q is NEVER derived from a table -- it is the pass-1 carry, frozen by the
+        /// best-peak anchor:
+        /// <list type="bullet">
+        /// <item>UNCHANGED (<paramref name="newScore"/> == the record's Score, bit-exact): carry the
+        /// full 1st-pass record verbatim.</item>
+        /// <item>MOVED: run q re-mapped from the tables; experiment q + PEP carried from the record.</item>
+        /// <item>GAP-FILL (no record): run q from the tables; experiment q =
+        /// <paramref name="gapFillExpPrecQ"/> / <paramref name="gapFillExpPepQ"/>.</item>
+        /// </list>
+        /// </summary>
+        internal static PerRunClass AssignPerRunQ(
+            FdrEntry entry,
+            double newScore,
+            FdrScoreRecord? firstPass,
+            double[] precScoresDesc,
+            double[] precQDesc,
+            double[] pepScoresDesc,
+            double[] pepQDesc,
+            double gapFillExpPrecQ,
+            double gapFillExpPepQ)
+        {
+            if (firstPass.HasValue)
+            {
+                FdrScoreRecord rec1 = firstPass.Value;
+                // Bit-exact equality is the reliable MOVED discriminator: an UNCHANGED survivor's
+                // reconciled features ARE its original Stage-4 features (ReconciledParquetWriter
+                // streams unchanged rows through untouched), and the sidecar Score was computed from
+                // those same parquet features with this same averaged model -- so the recomputation
+                // is bit-identical. A MOVED peak carries rescored features, so its score differs.
+                if (newScore == rec1.Score)
+                {
+                    entry.Score = rec1.Score;
+                    entry.RunPrecursorQvalue = rec1.RunPrecursorQvalue;
+                    entry.RunPeptideQvalue = rec1.RunPeptideQvalue;
+                    entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
+                    entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
+                    entry.Pep = rec1.Pep;
+                    return PerRunClass.Unchanged;
+                }
+                entry.Score = newScore;
+                entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
+                entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
+                // Experiment q is a pass-1 property (best-peak anchor) -- carry it, never re-map.
+                entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
+                entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
+                entry.Pep = rec1.Pep;
+                return PerRunClass.Moved;
+            }
+            entry.Score = newScore;
+            entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
+            entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
+            entry.ExperimentPrecursorQvalue = gapFillExpPrecQ;
+            entry.ExperimentPeptideQvalue = gapFillExpPepQ;
+            return PerRunClass.GapFill;
         }
 
         /// <summary>

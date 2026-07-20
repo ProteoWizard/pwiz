@@ -331,6 +331,71 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.0, Pass2FdrSidecar.LookupQForScore(0.0, new double[0], new double[0]), 1e-12);
         }
 
+        /// <summary>
+        /// The core of the per-run-only redesign
+        /// (<see cref="Pass2FdrSidecar.AssignPerRunQ"/>): pass 2 may change ONLY the per-run
+        /// q of a reconciliation-moved peak; the experiment q is a pass-1 property carried
+        /// through unchanged (the best-peak anchor). Exercises all three classes against a
+        /// hand-built per-file (score -&gt; run q) table.
+        /// </summary>
+        [TestMethod]
+        public void TestAssignPerRunQCarriesExperimentQ()
+        {
+            // Per-file tables: score DESCENDING, q non-decreasing along it (a better score ->
+            // a lower q). Distinct precursor/peptide tables prove the two levels stay separate.
+            var precScoresDesc = new[] { 10.0, 5.0, 0.0 };
+            var precQDesc = new[] { 0.001, 0.01, 0.5 };
+            var pepScoresDesc = new[] { 10.0, 5.0, 0.0 };
+            var pepQDesc = new[] { 0.002, 0.02, 0.6 };
+
+            // A well-identified 1st-pass record for a precursor: high score, low q at every level.
+            // rec.Score is the averaged-model score the pass-2 recomputation reproduces bit-exact.
+            var rec = new FdrScoreRecord(
+                entryId: 1, score: 10.0,
+                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002,
+                experimentPrecursorQvalue: 0.0005, experimentPeptideQvalue: 0.0006,
+                pep: 0.03, runProteinQvalue: 0.004);
+
+            // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
+            var unchanged = new FdrEntry { EntryId = 1 };
+            var clsU = Pass2FdrSidecar.AssignPerRunQ(unchanged, 10.0, rec,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 1.0, 1.0);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Unchanged, clsU);
+            Assert.AreEqual(10.0, unchanged.Score, 1e-12);
+            Assert.AreEqual(0.001, unchanged.RunPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.002, unchanged.RunPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.0005, unchanged.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.0006, unchanged.ExperimentPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.03, unchanged.Pep, 1e-12);
+
+            // (b) MOVED: reconciliation dropped the score to 5.0 -> run q re-maps UP (worse), but
+            // the experiment q is CARRIED from the 1st-pass record unchanged. This is the whole
+            // invariant: only per-run q moves, and only toward higher (less confident) values.
+            var moved = new FdrEntry { EntryId = 1 };
+            var clsM = Pass2FdrSidecar.AssignPerRunQ(moved, 5.0, rec,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 1.0, 1.0);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Moved, clsM);
+            Assert.AreEqual(5.0, moved.Score, 1e-12);
+            Assert.AreEqual(0.01, moved.RunPrecursorQvalue, 1e-12);   // table lookup at score 5
+            Assert.AreEqual(0.02, moved.RunPeptideQvalue, 1e-12);     // peptide table, distinct value
+            Assert.AreEqual(0.0005, moved.ExperimentPrecursorQvalue, 1e-12); // CARRIED, not re-mapped
+            Assert.AreEqual(0.0006, moved.ExperimentPeptideQvalue, 1e-12);   // CARRIED, not re-mapped
+            Assert.IsTrue(moved.RunPrecursorQvalue > rec.RunPrecursorQvalue,
+                "a moved peak's per-run q can only worsen");
+
+            // (c) GAP-FILL: no 1st-pass record -> run q from the table; experiment q takes the
+            // precursor's supplied cross-file pass-1 value (the clamp later floors it correctly).
+            var gap = new FdrEntry { EntryId = 2 };
+            var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 0.004, 0.006);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);
+            Assert.AreEqual(5.0, gap.Score, 1e-12);
+            Assert.AreEqual(0.01, gap.RunPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.02, gap.RunPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.004, gap.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.006, gap.ExperimentPeptideQvalue, 1e-12);
+        }
+
         // Verbatim copy of the FdrProjectionSet-overload comparer in
         // PercolatorEngine.RunPercolatorFdr (the scan-omitted projection sort). Same
         // isolation caveat as LegacyResidentComparison.
