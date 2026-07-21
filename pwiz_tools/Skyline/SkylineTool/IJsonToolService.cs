@@ -356,17 +356,17 @@ namespace SkylineTool
         object PerformAction(UiElementPath path, string action, object value);
 
         /// <summary>
-        /// Clicks an item on the MAIN Skyline window.s menu bar by its visible path, e.g.
-        /// "File > Import > Peptide Search". Each segment is matched against a menu item.s text (mnemonic
-        /// .&amp;. and trailing ellipsis ignored), case-insensitively. Waits out the click and reports in the
+        /// Clicks an item on the MAIN Skyline window's menu bar by its visible path, e.g.
+        /// "File > Import > Peptide Search". Each segment is matched against a menu item's text (mnemonic
+        /// '&amp;' and trailing ellipsis ignored), case-insensitively. Waits out the click and reports in the
         /// <see cref="ActionResult"/> whether it completed or left a dialog open (whose text is in
         /// <see cref="ActionResult.Message"/>) for the caller to drive next.
         ///
         /// <para>The main menu is the one menu that needs no form id, so it has its own method. EVERY other menu --
-        /// a form.s toolbar, a grid.s or a graph.s right-click menu -- is reached by
+        /// a form's toolbar, a grid's or a graph's right-click menu -- is reached by
         /// <see cref="ClickControlMenuItem"/>.</para>
         /// </summary>
-        /// <param name="menuPath">Menu path; segments separated by .>. (also .|. or ./.).</param>
+        /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
         ActionResult ClickMainMenuItem(string menuPath);
 
         /// <summary>
@@ -382,22 +382,22 @@ namespace SkylineTool
         ActionResult ClickFormButton(string formId, string button);
 
         /// <summary>
-        /// Clicks an item on a menu belonging to a form, or to a control on it, by its .>.-separated path, e.g.
+        /// Clicks an item on a menu belonging to a form, or to a control on it, by its '>'-separated path, e.g.
         /// "Reports > Replicates". WHICH menu is meant follows from <paramref name="control"/>:
         /// <list type="bullet">
-        /// <item>EMPTY -- the form.s own menu: its menu bar, else its first toolbar, else its right-click menu.</item>
-        /// <item>a TOOLSTRIP (a toolbar, a grid.s nav bar) -- an item on that strip.</item>
-        /// <item>any OTHER control (a grid, a tree, a graph) -- an item on that control.s RIGHT-CLICK menu, which is
+        /// <item>EMPTY -- the form's own menu: its menu bar, else its first toolbar, else its right-click menu.</item>
+        /// <item>a TOOLSTRIP (a toolbar, a grid's nav bar) -- an item on that strip.</item>
+        /// <item>any OTHER control (a grid, a tree, a graph) -- an item on that control's RIGHT-CLICK menu, which is
         /// the only menu such a control has. For a grid, move to the target cell first with
         /// <see cref="SetCurrentCellAddress"/>.</item>
         /// </list>
-        /// Each level.s dropdown is opened as the path is walked, so items built on demand (the Document Grid.s
+        /// Each level's dropdown is opened as the path is walked, so items built on demand (the Document Grid's
         /// report list) are present before the next segment is matched.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        /// <param name="control">The menu-owning control.s visible label, or its type when it has no label; empty
-        /// for the form.s own menu.</param>
-        /// <param name="menuPath">Menu path; segments separated by .>. (also .|. or ./.).</param>
+        /// <param name="control">The menu-owning control's visible label, or its type when it has no label; empty
+        /// for the form's own menu.</param>
+        /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
         ActionResult ClickControlMenuItem(string formId, string control, string menuPath);
 
         /// <summary>

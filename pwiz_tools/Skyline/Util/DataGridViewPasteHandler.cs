@@ -112,27 +112,24 @@ namespace pwiz.Skyline.Util
                 return;
             }
 
+            e.Handled = HandleKey(e);
+        }
+
+        protected virtual bool HandleKey(KeyEventArgs e)
+        {
             if (ClipboardHelper.IsPaste(e.KeyData))
             {
                 var clipboardText = ClipboardHelper.GetClipboardText(DataGridView);
-                if (null == clipboardText)
+                if (null != clipboardText)
                 {
-                    return;
-                }
-                using (var reader = new StringReader(clipboardText))
-                {
-                    e.Handled = PerformUndoableOperation(UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
+                    using var reader = new StringReader(clipboardText);
+                    return PerformUndoableOperation(UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
                         monitor => Paste(monitor, reader),
-                        new BatchModifyInfo(BatchModifyAction.Paste, ViewName,
-                            RowFilter, clipboardText));
+                        new BatchModifyInfo(BatchModifyAction.Paste, ViewName, RowFilter, clipboardText));
                 }
             }
-            else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
-            {
-                e.Handled = PerformUndoableOperation(
-                    UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
-                    new BatchModifyInfo(BatchModifyAction.Clear, ViewName, RowFilter));
-            }
+
+            return false;
         }
 
         /// <summary>
@@ -265,44 +262,7 @@ namespace pwiz.Skyline.Util
             return anyChanges;
         }
 
-        private bool ClearCells(ILongWaitBroker longWaitBroker)
-        {
-            if (DataGridView.SelectedRows.Count > 0)
-            {
-                return false;
-            }
-            var columnIndexes = DataGridView.SelectedCells.Cast<DataGridViewCell>().Select(cell => cell.ColumnIndex).Distinct().ToArray();
-            if (columnIndexes.Any(columnIndex => DataGridView.Columns[columnIndex].ReadOnly))
-            {
-                return false;
-            }
-            bool anyChanges = false;
-            var cellsByRow = DataGridView.SelectedCells.Cast<DataGridViewCell>().ToLookup(cell => cell.RowIndex).ToArray();
-            Array.Sort(cellsByRow, (g1,g2)=>g1.Key.CompareTo(g2.Key));
-            for (int iGrouping = 0; iGrouping < cellsByRow.Length; iGrouping++)
-            {
-                if (longWaitBroker.IsCanceled)
-                {
-                    return anyChanges;
-                }
-                longWaitBroker.ProgressValue = 100 * iGrouping / cellsByRow.Length;
-                longWaitBroker.Message = string.Format(UtilResources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows, iGrouping, cellsByRow.Length);
-                var rowGrouping = cellsByRow[iGrouping];
-                var cells = rowGrouping.ToArray();
-                Array.Sort(cells, (c1, c2) => c1.ColumnIndex.CompareTo(c2.ColumnIndex));
-                foreach (var cell in cells)
-                {
-                    if (!TrySetValue(cell, string.Empty))
-                    {
-                        return anyChanges;
-                    }
-                    anyChanges = true;
-                }
-            }
-            return anyChanges;
-        }
-
-        private bool TrySetValue(DataGridViewCell cell, string strValue)
+        protected bool TrySetValue(DataGridViewCell cell, string strValue)
         {
             IDataGridViewEditingControl editingControl = null;
             DataGridViewEditingControlShowingEventHandler onEditingControlShowing =
@@ -425,6 +385,24 @@ namespace pwiz.Skyline.Util
 
         public BindingListSource BindingListSource { get; }
 
+        /// <summary>
+        /// Adds Delete (clear the selected cells) to the base's Ctrl-V. Only a bound grid offers it: here
+        /// <see cref="ExecuteOperation"/> makes the clear a single undoable document modification, so the
+        /// user can take it back. On an unbound grid the cell edits are the change and nothing records
+        /// them, which is why the base leaves Delete alone.
+        /// </summary>
+        protected override bool HandleKey(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
+            {
+                return PerformUndoableOperation(
+                    UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
+                    new BatchModifyInfo(BatchModifyAction.Clear, ViewName, RowFilter));
+            }
+
+            return base.HandleKey(e);
+        }
+
         private SkylineDataSchema SkylineDataSchema => BindingListSource?.ViewInfo?.DataSchema as SkylineDataSchema;
 
         protected override string ViewName => BindingListSource?.ViewInfo?.Name;
@@ -462,6 +440,48 @@ namespace pwiz.Skyline.Util
                 Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
                 SkylineDataSchema.RollbackBatchModifyDocument();
             }
+        }
+
+        private bool ClearCells(ILongWaitBroker longWaitBroker)
+        {
+            if (DataGridView.SelectedRows.Count > 0)
+            {
+                return false;
+            }
+
+            if (DataGridView.SelectedCells.Cast<DataGridViewCell>().Select(cell => cell.ColumnIndex).Distinct()
+                .Any(columnIndex => DataGridView.Columns[columnIndex].ReadOnly))
+            {
+                return false;
+            }
+
+            bool anyChanges = false;
+            var cellsByRow = DataGridView.SelectedCells.Cast<DataGridViewCell>().GroupBy(cell => cell.RowIndex)
+                .OrderBy(group => group.Key).ToList();
+            for (int iGrouping = 0; iGrouping < cellsByRow.Count; iGrouping++)
+            {
+                if (longWaitBroker.IsCanceled)
+                {
+                    return anyChanges;
+                }
+
+                longWaitBroker.ProgressValue = 100 * iGrouping / cellsByRow.Count;
+                longWaitBroker.Message = string.Format(
+                    UtilResources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows,
+                    iGrouping, cellsByRow.Count);
+                var rowGrouping = cellsByRow[iGrouping];
+                foreach (var cell in rowGrouping.OrderBy(cellValue => cellValue.ColumnIndex))
+                {
+                    if (!TrySetValue(cell, string.Empty))
+                    {
+                        return anyChanges;
+                    }
+
+                    anyChanges = true;
+                }
+            }
+
+            return anyChanges;
         }
     }
 }
