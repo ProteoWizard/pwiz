@@ -308,7 +308,27 @@ namespace pwiz.SkylineTest
             // 18. Unimod with brackets OK
             valuesUnimod[0] = "LGGLRPES[uniMoD:21]PESLTSVSR";
             ImportNoException(peptideIdPath, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
-            // 19. Peak boundaries file does not exist
+
+            // 19. Replicate-name keying through the CLI: a boundaries file with a ReplicateName column and
+            // NO FileName column keys on the (vendor-independent) replicate name and yields the same result
+            // as FileName keying. This exercises the real --import-peak-boundaries file path (including the
+            // minutes/seconds detection). Chrom05.sky replicate "13" is the single file Q_2012_0918_RJ_13.raw.
+            string minStart = (26.17).ToString(cult), maxEnd = (26.92).ToString(cult), charge2 = 2.ToString(cult);
+            string replicateHeader = string.Join(csvSep, "PeptideModifiedSequence", "ReplicateName", "MinStartTime", "MaxEndTime", "PrecursorCharge");
+            string replicateRow = string.Join(csvSep, "TPEVDDEALEK", "13", minStart, maxEnd, charge2);
+            var replicateKeyedFile = TestFilesDir.GetTestPath("ReplicateKeyed.csv");
+            File.WriteAllText(replicateKeyedFile, TextUtil.LineSeparate(replicateHeader, replicateRow));
+            var docByReplicate = ImportFileToDoc(originalDocumentPath, replicateKeyedFile);
+
+            string fileHeader = string.Join(csvSep, "PeptideModifiedSequence", "FileName", "MinStartTime", "MaxEndTime", "PrecursorCharge");
+            string fileRow = string.Join(csvSep, "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", minStart, maxEnd, charge2);
+            var fileKeyedFile = TestFilesDir.GetTestPath("FileKeyed.csv");
+            File.WriteAllText(fileKeyedFile, TextUtil.LineSeparate(fileHeader, fileRow));
+            var docByFile = ImportFileToDoc(originalDocumentPath, fileKeyedFile);
+
+            AssertEx.DocumentCloned(docByFile, docByReplicate);
+
+            // 20. Peak boundaries file does not exist
             TestPeakBoundariesNotFound(originalDocumentPath);
         }
 
