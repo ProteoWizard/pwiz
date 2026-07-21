@@ -81,6 +81,7 @@ namespace pwiz.SkylineTestFunctional
             // The "Note" column is editable; find its index among the visible columns -- that is the
             // column coordinate SetGridText expects.
             int noteColumn = -1;
+            string noteHeader = null;
             RunUI(() =>
             {
                 var noteColumnObj = documentGrid.FindColumn(PropertyPath.Root.Property(@"Note"));
@@ -88,6 +89,8 @@ namespace pwiz.SkylineTestFunctional
                 var visibleColumns = documentGrid.DataGridView.Columns.Cast<DataGridViewColumn>()
                     .Where(col => col.Visible).OrderBy(col => col.DisplayIndex).ToList();
                 noteColumn = visibleColumns.IndexOf(noteColumnObj);
+                // The column's localized header, so the assertion below holds in any UI language.
+                noteHeader = noteColumnObj.HeaderText;
             });
             Assert.IsTrue(noteColumn >= 0);
 
@@ -107,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
             string gridText = McpConnector.GetGridText(gridId, null);
             var lines = gridText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
             Assert.AreEqual(3, lines.Length, @"GetGridText should return a header row plus two peptide rows.");
-            StringAssert.Contains(lines[0], @"Note", @"GetGridText header row is missing the Note column.");
+            StringAssert.Contains(lines[0], noteHeader, @"GetGridText header row is missing the Note column.");
             StringAssert.Contains(gridText, @"First note");
             StringAssert.Contains(gridText, @"Second note");
 

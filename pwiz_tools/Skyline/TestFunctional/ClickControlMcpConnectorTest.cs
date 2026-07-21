@@ -39,8 +39,8 @@ namespace pwiz.SkylineTestFunctional
     ///   * <see cref="JsonToolServer.ClickControlMenuItem"/> -- the Document Grid "Reports" dropdown,
     ///     whose items are built on demand and so are not reachable by ClickFormButton;
     ///   * a select_tab action on a TabControl -- selecting a Peptide Settings tab by its text.
-    /// Forms are found by type name and controls/items matched by visible text, so the test is
-    /// translation-proof where it uses control names and runs in en otherwise.
+    /// Forms are found by type name and controls/items matched by their localized visible text, read from
+    /// resources, so the test runs in any UI language.
     /// </summary>
     [TestClass]
     public class ClickControlMcpConnectorTest : McpConnectorTest
@@ -89,7 +89,8 @@ namespace pwiz.SkylineTestFunctional
             string auditFormId = GetOpenFormId<AuditLogForm>();
 
             bool before = SkylineWindow.Document.Settings.DataSettings.AuditLogging;
-            McpConnector.ClickFormButton(auditFormId, @"Enable audit logging");
+            // The checkbox is created in code from a string-table entry, so match it by that same string.
+            McpConnector.ClickFormButton(auditFormId, AuditLogStrings.AuditLogForm_AuditLogForm_Enable_audit_logging);
             WaitForConditionUI(() => SkylineWindow.Document.Settings.DataSettings.AuditLogging != before);
             RunUI(() => Assert.AreNotEqual(before, SkylineWindow.Document.Settings.DataSettings.AuditLogging,
                 @"ClickFormButton did not toggle the Enable audit logging checkbox."));
@@ -129,7 +130,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
             var tabControl = new UiElementPath(
                 new UiElementPath(null, settingsId, null, @"Form"), null, null, @"TabControl");
-            McpConnector.PerformAction(tabControl, @"select_tab", @"Quantification");
+            McpConnector.PerformAction(tabControl, @"select_tab",
+                GetLocalizedText<PeptideSettingsUI>(@"tabQuantification"));
             WaitForConditionUI(() => peptideSettings.SelectedTab == PeptideSettingsUI.TABS.Quantification);
             RunUI(() => Assert.AreEqual(PeptideSettingsUI.TABS.Quantification, peptideSettings.SelectedTab,
                 @"select_tab did not select the Quantification tab."));

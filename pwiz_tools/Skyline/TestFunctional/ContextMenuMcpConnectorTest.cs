@@ -20,6 +20,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -73,7 +74,10 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == @"GraphSummary" && form.HasGraph).Id;
             var contextMenu = new UiElementPath(
                 new UiElementPath(null, graphId, null, @"Form"), null, null, @"ContextMenu");
-            var logScaleItem = new UiElementPath(contextMenu, @"Log Scale", null, null);
+            // The per-peptide "Log Scale" item, matched by its localized caption from the context menu's
+            // resources (the item bound to Settings.Default.AreaLogScale).
+            string logScaleText = GetLocalizedText<PeakAreasContextMenu>(@"peptideLogScaleContextMenuItem");
+            var logScaleItem = new UiElementPath(contextMenu, logScaleText, null, null);
             McpConnector.PerformAction(logScaleItem, @"click", null);
 
             // The menu item has CheckOnClick=true, so the click flipped it from unchecked to checked,

@@ -54,7 +54,9 @@ namespace pwiz.SkylineTestFunctional
                 documentSettingsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             string dlgId = GetOpenFormId<DefineAnnotationDlg>();
-            var namePath = new UiElementPath(new UiElementPath(null, dlgId, null, @"Form"), @"Name", null, null);
+            // Address the name box by the localized label that names it, read from the dialog's resources.
+            var namePath = new UiElementPath(new UiElementPath(null, dlgId, null, @"Form"),
+                GetLocalizedText<DefineAnnotationDlg>(@"lblName"), null, null);
 
             // paste into the empty name box inserts the text (no clipboard).
             McpConnector.PerformAction(namePath, @"paste", @"FirstName");

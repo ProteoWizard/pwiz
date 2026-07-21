@@ -75,7 +75,7 @@ namespace pwiz.SkylineTestFunctional
             // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
             // IJsonToolService exposes) until the native FileDialog shows up, rather than the
             // internal NativeDialog helper.
-            McpConnector.ClickFormButton(wizardId, @"Add Files");
+            McpConnector.ClickFormButton(wizardId, GetLocalizedText<BuildPeptideSearchLibraryControl>(@"btnAddFile"));
             string addFilesId = WaitForNativeFileDialog();
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,

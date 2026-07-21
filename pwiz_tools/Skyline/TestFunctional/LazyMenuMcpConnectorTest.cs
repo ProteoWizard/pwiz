@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -33,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
     /// items (even "Add...") on DropDownOpening, so the walk must open each level before matching.
     /// </summary>
     [TestClass]
-    public class LazyMenuMcpConnectorTest : AbstractFunctionalTest
+    public class LazyMenuMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestLazyMenuMcpConnector()
@@ -48,7 +49,8 @@ namespace pwiz.SkylineTestFunctional
 
             // "Add..." under Group Comparisons exists only after the submenu's DropDownOpening builds it;
             // reaching it confirms the menu walk opens each submenu level. Its click opens the dialog.
-            Program.MainJsonToolServer.ClickMainMenuItem(@"View > Live Reports > Group Comparisons > Add");
+            Program.MainJsonToolServer.ClickMainMenuItem(MenuPath<ViewMenu>(
+                @"viewToolStripMenuItem", @"liveReportsMenuItem", @"groupComparisonsMenuItem", @"addGroupComparisonMenuItem"));
             var editGroupComparisonDlg = WaitForOpenForm<EditGroupComparisonDlg>();
             Assert.IsNotNull(editGroupComparisonDlg,
                 @"ClickMainMenuItem did not reach the lazily-built 'Add' item under Group Comparisons.");

@@ -498,7 +498,13 @@ namespace pwiz.Skyline.ToolsUI
                         @"No {0} at index {1}; the parent has {2} of that type.", path.Type, path.Index.Value,
                         candidates.Count));
                 var indexed = candidates[path.Index.Value];
-                if (path.Text != null && !indexed.MatchesText(path.Text, false))
+                // Text (if also set) must match the indexed control -- by a strict OR a loose match, the same
+                // either-way test the Type/Text branch below uses. Strict is essential here, not redundant: the
+                // Text a path carries is usually the normalized label GetControls emitted, which can carry a
+                // symbol of its own (a Japanese mnemonic's parentheses, e.g. "名前(N)"; a trailing ':'), and the
+                // loose match rejects a symbol-bearing key by design -- so a loose-only check would fail to
+                // re-resolve a path the connector itself produced.
+                if (path.Text != null && !indexed.MatchesText(path.Text, true) && !indexed.MatchesText(path.Text, false))
                     throw new ArgumentException(LlmInstruction.Format(
                         @"The {0} at index {1} does not match the Text '{2}' in the path.", path.Type, path.Index.Value,
                         path.Text));

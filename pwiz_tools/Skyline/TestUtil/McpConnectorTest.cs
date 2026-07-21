@@ -299,6 +299,17 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// The localized tooltip an image-only control displays, read from its component's resources -- the
+        /// <see cref="GetLocalizedText{T}"/> counterpart for a control that is matched by its
+        /// "&lt;name&gt;.ToolTipText" entry rather than a caption (e.g. the pick-list's green-check commit
+        /// button, whose only text is a tooltip). Normalized the same way the connector normalizes a label.
+        /// </summary>
+        protected static string GetLocalizedToolTip<T>(string controlName) where T : ContainerControl
+        {
+            return UiElement.NormalizeLabel(new ComponentResourceManager(typeof(T)).GetString(controlName + @".ToolTipText"));
+        }
+
+        /// <summary>
         /// Builds a localized, normalized menu path (e.g. "File &gt; Import &gt; Document") for
         /// <see cref="IJsonToolService.ClickMainMenuItem"/> from the menu items' field names. Every segment is read
         /// from type <typeparamref name="T"/>'s resources -- the class that declares the menu items: a menu

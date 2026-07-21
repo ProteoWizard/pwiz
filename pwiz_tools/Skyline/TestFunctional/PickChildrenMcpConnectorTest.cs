@@ -21,6 +21,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
@@ -96,8 +97,9 @@ namespace pwiz.SkylineTestFunctional
             // Right-click > Pick Children opens the (modeless) pick-list popup, via the tree's context
             // menu (a path of Type "ContextMenu" on the tree), with the item matched by visible text.
             var treeContextMenu = new UiElementPath(targetsTree, null, null, @"ContextMenu");
+            string pickChildrenText = GetLocalizedText<TreeNodeContextMenu>(@"pickChildrenContextMenuItem");
             McpConnector.PerformAction(
-                new UiElementPath(treeContextMenu, @"Pick Children", null, null), @"click", null);
+                new UiElementPath(treeContextMenu, pickChildrenText, null, null), @"click", null);
             var popup = WaitForOpenForm<PopupPickList>();
             string popupId = GetOpenFormId<PopupPickList>();
 
@@ -119,8 +121,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(!wasChecked, popup.GetItemChecked(0),
                 @"check_item/uncheck_item did not toggle the pick-list item."));
 
-            // Commit with the green-check "OK" button (image-only ToolStrip item, matched by tooltip).
-            McpConnector.ClickFormButton(popupId, @"OK");
+            // Commit with the green-check "OK" button (image-only ToolStrip item, matched by its localized
+            // tooltip -- "OK" in en/ja but "确定" in zh-CHS, so read it from the pick-list's resources).
+            McpConnector.ClickFormButton(popupId, GetLocalizedToolTip<PopupPickList>(@"tbbOk"));
             WaitForClosedForm(popup);
 
             int transitionsAfter = 0;

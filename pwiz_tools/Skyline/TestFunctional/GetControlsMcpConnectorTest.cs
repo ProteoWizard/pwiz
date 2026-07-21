@@ -60,6 +60,12 @@ namespace pwiz.SkylineTestFunctional
             var controls = McpConnector.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");
 
+            // Match controls by the localized captions the connector reports, read from the dialog's
+            // resources, so the test runs in any UI language.
+            string nameLabel = GetLocalizedText<DefineAnnotationDlg>(@"lblName");
+            string appliesToLabel = GetLocalizedText<DefineAnnotationDlg>(@"lblAppliesTo");
+            string okLabel = GetLocalizedText<DefineAnnotationDlg>(@"btnOK");
+
             // GetControls reports each control's Path -- already parented onto the form, so it can be passed
             // straight back to act on the control (no re-parenting) -- plus its state and current Value, but
             // not its actions (those come from the get_actions action).
@@ -68,19 +74,19 @@ namespace pwiz.SkylineTestFunctional
 
             // The name field has no caption of its own -- it is discoverable by the "Name" label that
             // names it, and get_actions reports that it can be value-set.
-            var nameField = controls.FirstOrDefault(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
+            var nameField = controls.FirstOrDefault(c => c.Path.Type == @"TextBox" && c.Path.Text == nameLabel);
             Assert.IsNotNull(nameField, @"Expected a TextBox discoverable by the label 'Name'.");
             CollectionAssert.Contains(ActionNames(nameField.Path), @"set_value");
 
             // The Applies-to list is discoverable by its "Applies to" label and supports an item action.
             var appliesToList = controls.FirstOrDefault(c => c.Path.Type == @"CheckedListBox");
             Assert.IsNotNull(appliesToList, @"Expected the Applies-to CheckedListBox.");
-            Assert.AreEqual(@"Applies to", appliesToList.Path.Text);
+            Assert.AreEqual(appliesToLabel, appliesToList.Path.Text);
             CollectionAssert.Contains(ActionNames(appliesToList.Path), @"check_item",
                 @"The list should report the check_item action.");
 
             // The OK button is discoverable by its own caption and supports a click.
-            var okButton = controls.FirstOrDefault(c => c.Path.Text == @"OK");
+            var okButton = controls.FirstOrDefault(c => c.Path.Text == okLabel);
             Assert.IsNotNull(okButton, @"Expected an OK button discoverable by its caption.");
             CollectionAssert.Contains(ActionNames(okButton.Path), @"click");
 

@@ -59,8 +59,13 @@ namespace pwiz.SkylineTestFunctional
             // hang off it as Parent.
             var formPath = new UiElementPath(null, dlgId, null, @"Form");
 
+            // Localized captions the connector reports, read from the dialog's resources, so the test
+            // runs in any UI language.
+            string nameLabel = GetLocalizedText<DefineAnnotationDlg>(@"lblName");
+            string cancelButton = GetLocalizedText<DefineAnnotationDlg>(@"btnCancel");
+
             // set_value: locate the name box by the label that names it, set its value.
-            var namePath = new UiElementPath(formPath, @"Name", null, null);
+            var namePath = new UiElementPath(formPath, nameLabel, null, null);
             McpConnector.PerformAction(namePath, @"set_value", @"MyAnnotation");
             RunUI(() => Assert.AreEqual(@"MyAnnotation", NameTextBox(defineAnnotationDlg).Text,
                 @"PerformAction set_value did not set the name box."));
@@ -95,7 +100,7 @@ namespace pwiz.SkylineTestFunctional
             // Round-trip: the Path GetControls returns is already parented onto the form, so it resolves the
             // same control as-is (no re-parenting), and Name is echoed.
             var nameInfo = McpConnector.GetControls(dlgId)
-                .First(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
+                .First(c => c.Path.Type == @"TextBox" && c.Path.Text == nameLabel);
             Assert.IsNotNull(nameInfo.Path.Parent, @"GetControls should return a path parented onto the form.");
             Assert.IsFalse(string.IsNullOrEmpty(nameInfo.Name), @"Expected GetControls to echo the control Name.");
             Assert.AreEqual(@"MyAnnotation", (string) McpConnector.PerformAction(nameInfo.Path, @"get_value", null),
@@ -109,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
             // action: that runs on the UI thread, and a connector action posts its gesture to that thread and
             // waits for it -- from the thread itself, that deadlocks. Click from this (test) thread, the way a
             // connector client does, then wait for the dialog the click closed.
-            McpConnector.PerformAction(new UiElementPath(formPath, @"Cancel", null, null), @"click", null);
+            McpConnector.PerformAction(new UiElementPath(formPath, cancelButton, null, null), @"click", null);
             WaitForClosedForm(defineAnnotationDlg);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);

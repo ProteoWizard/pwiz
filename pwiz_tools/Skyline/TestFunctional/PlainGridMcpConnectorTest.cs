@@ -55,17 +55,20 @@ namespace pwiz.SkylineTestFunctional
             // The visible index of the "Pattern" column (matched by its column Name, not its header).
             var rulesGrid = (DataGridView)ruleSetEditor.Controls.Find(@"dataGridViewRules", true).First();
             int patternColumn = -1;
+            string patternHeader = null;
             RunUI(() =>
             {
                 var visibleColumns = rulesGrid.Columns.Cast<DataGridViewColumn>()
                     .Where(col => col.Visible).OrderBy(col => col.DisplayIndex).ToList();
                 patternColumn = visibleColumns.FindIndex(col => col.Name == @"colPattern");
+                // The column's localized header, so the assertion below holds in any UI language.
+                patternHeader = rulesGrid.Columns[@"colPattern"].HeaderText;
             });
             Assert.IsTrue(patternColumn >= 0);
 
             // GetGridText reads the plain grid -- its header row names the Pattern column.
             string gridText = McpConnector.GetGridText(editorId, @"dataGridViewRules");
-            StringAssert.Contains(gridText.Split('\n')[0], @"Pattern");
+            StringAssert.Contains(gridText.Split('\n')[0], patternHeader);
 
             // Move to the Pattern cell of the first row, then SetGridText types "D" there, like a user
             // editing it.
