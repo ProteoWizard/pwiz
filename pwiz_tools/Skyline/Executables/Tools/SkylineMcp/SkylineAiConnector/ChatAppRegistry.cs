@@ -435,15 +435,24 @@ namespace SkylineAiConnector
                     string json = File.ReadAllText(configPath);
                     if (!string.IsNullOrWhiteSpace(json))
                     {
-                        root = JsonNode.Parse(json)?.AsObject();
+                        // "as", not AsObject(): a well-formed file whose root is not an object (an array,
+                        // say) is as unusable to us as a malformed one, and AsObject() throws for it.
+                        root = JsonNode.Parse(json) as JsonObject;
+                        if (root == null)
+                            TryBackupFile(configPath); // Replaced below -- keep whatever was there.
                     }
                 }
-                catch
+                catch (JsonException)
                 {
                     // The existing config is malformed. Back it up before we overwrite it with a fresh
                     // config below, so the user can recover whatever was there if it mattered.
                     TryBackupFile(configPath);
                 }
+                // Any other failure -- most likely the file being locked by the chat app that owns it --
+                // means we do not know what is in the config, only that something is. Overwriting it here
+                // would silently discard every other MCP server the user has registered, and the ".bak"
+                // copy would fail under the same lock, so there would be nothing to recover from. Let it
+                // out instead: every caller reports the failure and leaves the file alone.
             }
 
             if (root == null)

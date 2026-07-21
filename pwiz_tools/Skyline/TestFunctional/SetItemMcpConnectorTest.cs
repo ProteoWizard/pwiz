@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestFunctional
     /// control that support them:
     ///   * a CheckedListBox -- the Define Annotation "Applies to" list (item matched by text);
     ///   * a TreeView -- the Customize Report field tree (item is a '>'-separated node path).
-    /// Matched by the English item/node text, so the test runs in en.
+    /// Items are matched by their localized text, so the test runs in any UI language.
     /// </summary>
     [TestClass]
     public class SetItemMcpConnectorTest : McpConnectorTest
@@ -64,25 +64,32 @@ namespace pwiz.SkylineTestFunctional
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             string dlgId = GetOpenFormId<DefineAnnotationDlg>();
             var appliesTo = new UiElementPath(
-                new UiElementPath(null, dlgId, null, @"Form"), @"Applies to", null, null);
+                new UiElementPath(null, dlgId, null, @"Form"),
+                GetLocalizedText<DefineAnnotationDlg>(@"lblAppliesTo"), null, null);
+            // The list's items are AnnotationTargetItem objects, whose text is the localized plural
+            // name of the target.
+            string replicatesText = AnnotationDef.AnnotationTargetPluralName(
+                AnnotationDef.AnnotationTarget.replicate);
+            string peptidesText = AnnotationDef.AnnotationTargetPluralName(
+                AnnotationDef.AnnotationTarget.peptide);
 
             // check_item / uncheck_item set the "Replicates" item's check explicitly (idempotent).
-            McpConnector.PerformAction(appliesTo, @"check_item", @"Replicates");
+            McpConnector.PerformAction(appliesTo, @"check_item", replicatesText);
             RunUI(() => Assert.IsTrue(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"check_item did not check the Replicates item."));
-            McpConnector.PerformAction(appliesTo, @"uncheck_item", @"Replicates");
+            McpConnector.PerformAction(appliesTo, @"uncheck_item", replicatesText);
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"uncheck_item did not uncheck the Replicates item."));
 
             // select_item highlights an item (separate from checking it).
-            McpConnector.PerformAction(appliesTo, @"select_item", @"Peptides");
+            McpConnector.PerformAction(appliesTo, @"select_item", peptidesText);
             RunUI(() =>
             {
                 var checkedListBox = (CheckedListBox)defineAnnotationDlg.Controls
                     .Find(@"checkedListBoxAppliesTo", true).First();
-                Assert.AreEqual(@"Peptides", checkedListBox.GetItemText(checkedListBox.SelectedItem),
+                Assert.AreEqual(peptidesText, checkedListBox.GetItemText(checkedListBox.SelectedItem),
                     @"select_item did not select the Peptides item.");
             });
 

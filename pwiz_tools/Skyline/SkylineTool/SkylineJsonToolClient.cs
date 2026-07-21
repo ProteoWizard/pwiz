@@ -347,14 +347,22 @@ namespace SkylineTool
 
                 if (root.TryGetProperty(nameof(JSON_RPC.result), out var resultElement))
                 {
-                    if (resultElement.ValueKind == JsonValueKind.Null)
-                        return null;
-                    if (resultElement.ValueKind == JsonValueKind.Number)
-                        return resultElement.GetRawText();
-                    if (resultElement.ValueKind == JsonValueKind.Object ||
-                        resultElement.ValueKind == JsonValueKind.Array)
-                        return resultElement.GetRawText();
-                    return resultElement.GetString();
+                    switch (resultElement.ValueKind)
+                    {
+                        case JsonValueKind.Null:
+                            return null;
+                        // Anything that is not a JSON string keeps its JSON form: a number, a bool (what
+                        // get_value returns for a check box or radio button), or a whole object or array.
+                        // GetString() throws on all of these, so none of them may fall through to it.
+                        case JsonValueKind.Number:
+                        case JsonValueKind.True:
+                        case JsonValueKind.False:
+                        case JsonValueKind.Object:
+                        case JsonValueKind.Array:
+                            return resultElement.GetRawText();
+                        default:
+                            return resultElement.GetString();
+                    }
                 }
 
                 return null;

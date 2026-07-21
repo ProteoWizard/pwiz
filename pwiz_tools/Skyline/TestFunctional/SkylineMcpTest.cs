@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
         // shipped stamped 26.1.1.077 while its own info.properties Requires line
         // demanded 26.1.1.083 - a ZIP that fails its own stated requirement.)
         // When you rebuild SkylineAiConnector.zip, update this to match.
-        private const string EXPECTED_ZIP_VERSION = "26.1.1.189";
+        private const string EXPECTED_ZIP_VERSION = "26.1.1.201";
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =

@@ -21,6 +21,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -70,8 +71,10 @@ namespace pwiz.SkylineTestFunctional
             // buttons surface as direct children -- listed by their text (A/B/C for N-term, X/Y/Z for C-term).
             var menuStrip = new UiElementPath(mainWindowPath, null, null, @"MenuStrip");
             var ionTypes = new UiElementPath(
-                new UiElementPath(new UiElementPath(menuStrip, @"View", null, null), @"Libraries", null, null),
-                @"Ion Types", null, null);
+                new UiElementPath(
+                    new UiElementPath(menuStrip, GetLocalizedText<ViewMenu>(@"viewToolStripMenuItem"), null, null),
+                    GetLocalizedText<ViewMenu>(@"librariesMenuItem"), null, null),
+                GetLocalizedText<ViewMenu>(@"ionTypesMenuItem"), null, null);
             var ionButtons = (ControlInfo[]) McpConnector.PerformAction(ionTypes, @"get_children", null);
             var ionButtonLabels = ionButtons.Select(button => button.Path?.Text).ToArray();
             foreach (var ionType in new[] { @"A", @"B", @"C", @"X", @"Y", @"Z" })
@@ -81,13 +84,18 @@ namespace pwiz.SkylineTestFunctional
             // Change 2: the menu walk reaches the ion-type checkbox hosted in the Ion Types submenu and
             // clicking it toggles the backing setting. Start from a known state so the toggle has direction.
             RunUI(() => Settings.Default.ShowBIons = false);
-            McpConnector.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
+            // The menu items come from ViewMenu's resources, but the "B" button's text does not: the ion
+            // type letters are hard-coded in Transition.cs (IonTypeExtension VALUES localizes only
+            // "precursor" and "custom"), so a/b/c/x/y/z read the same in every language.
+            string bIonMenuPath = MenuPath<ViewMenu>(
+                @"viewToolStripMenuItem", @"librariesMenuItem", @"ionTypesMenuItem") + @" > B";
+            McpConnector.ClickMainMenuItem(bIonMenuPath);
             WaitForConditionUI(() => Settings.Default.ShowBIons);
             RunUI(() => Assert.IsTrue(Settings.Default.ShowBIons,
                 @"Clicking the hosted 'B' ion-type button did not turn b-ions on."));
 
             // Clicking it again toggles it back off (the button is a checkbox).
-            McpConnector.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
+            McpConnector.ClickMainMenuItem(bIonMenuPath);
             WaitForConditionUI(() => !Settings.Default.ShowBIons);
             RunUI(() => Assert.IsFalse(Settings.Default.ShowBIons,
                 @"Clicking the hosted 'B' ion-type button again did not turn b-ions back off."));

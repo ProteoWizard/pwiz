@@ -2213,7 +2213,13 @@ namespace pwiz.SkylineTestUtil
             {
                 _shotManager ??= new ScreenshotManager(SkylineWindow, TutorialPath);
                 using (var bitmap = captureImage())
+                {
+                    // The connector returns no image data when there is no desktop to capture. Say that,
+                    // rather than letting the null reach SaveToFile as a NullReferenceException.
+                    AssertEx.IsNotNull(bitmap,
+                        $@"No image captured for screenshot {ScreenshotCounter}. The connector returned no image data, which happens when no desktop is available to capture.");
                     ScreenCapture.SaveToFile(_shotManager.ScreenshotDestFile(ScreenshotCounter), bitmap);
+                }
             }
             ScreenshotCounter++;
         }

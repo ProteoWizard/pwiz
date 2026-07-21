@@ -101,7 +101,7 @@ namespace TestPerf
 
             // A big document (75 MB of XML, 10 replicates) loads behind a progress dialog; wait it out.
             WaitForDocumentLoaded(10 * 60 * 1000);
-            PauseForScreenShot(GetOpenFormId<SkylineWindow>(), "Targets from the FragPipe search"); // s-01
+            PauseForMcpScreenShot(GetOpenFormId<SkylineWindow>(), "Targets from the FragPipe search"); // s-01
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace TestPerf
             McpConnector.ClickControlMenuItem(peakAreas, string.Empty, string.Join(@" > ",
                 GetLocalizedText<PeakAreasContextMenu>("areaNormalizeContextMenuItem"), defaultNone));
 
-            PauseForScreenShot(peakAreas, "Peak areas across the samples: " + peptideSequence);
+            PauseForMcpScreenShot(peakAreas, "Peak areas across the samples: " + peptideSequence);
         }
 
         /// <summary>

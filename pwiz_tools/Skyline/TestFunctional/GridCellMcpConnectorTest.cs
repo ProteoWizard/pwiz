@@ -116,7 +116,8 @@ namespace pwiz.SkylineTestFunctional
                         new UiElementPath(null, gridId, null, @"Form"), null, null, @"DataboundGridControl"),
                     null, null, @"DataGridView"),
                 null, null, @"ContextMenu");
-            var sortDescending = new UiElementPath(gridContextMenu, @"Sort Descending", null, null);
+            var sortDescending = new UiElementPath(gridContextMenu,
+                GetLocalizedText<DataboundGridControl>(@"sortDescendingToolStripMenuItem"), null, null);
             McpConnector.PerformAction(sortDescending, @"click", null);
             WaitForConditionUI(() => documentGrid.IsComplete);
 

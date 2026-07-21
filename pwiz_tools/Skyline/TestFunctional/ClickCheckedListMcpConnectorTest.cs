@@ -37,7 +37,8 @@ namespace pwiz.SkylineTestFunctional
     ///   * checking an item in the "Applies to" CheckedListBox the way a user does -- a set_selected_index
     ///     action to the item, then a click that toggles the selected item's check;
     ///   * <see cref="JsonToolServer.GetFormValue"/> reads the CheckedListBox's checked items.
-    /// Matched by the English label/item text, so the test runs in en.
+    /// Labels and items are matched by their localized text, read from the dialog's resources, so the
+    /// test runs in any UI language.
     /// </summary>
     [TestClass]
     public class ClickCheckedListMcpConnectorTest : McpConnectorTest
@@ -61,15 +62,20 @@ namespace pwiz.SkylineTestFunctional
 
             // SetFormValue against the "Name" LABEL sets the editable field it labels (the Name
             // TextBox, AnnotationName), not the label itself.
-            McpConnector.SetFormValue(dlgId, @"Name", @"McpConnectorAnnotation");
+            McpConnector.SetFormValue(dlgId, GetLocalizedText<DefineAnnotationDlg>(@"lblName"),
+                @"McpConnectorAnnotation");
             RunUI(() => Assert.AreEqual(@"McpConnectorAnnotation", defineAnnotationDlg.AnnotationName,
                 @"SetFormValue did not set the Name field through its label."));
 
             // SetFormValue into the multi-line value-list TextBox: newline-separated text becomes
             // separate list values (bare '\n' is normalized to the CRLF the dialog splits on). The
             // Values box is enabled only for a Value List, so set the type first.
-            McpConnector.SetFormValue(dlgId, @"Type", @"Value List");
-            McpConnector.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
+            // The Type combo's items are ListPropertyType objects, whose text is the localized
+            // annotation type name, so ask for the Value List item by that same string.
+            McpConnector.SetFormValue(dlgId, GetLocalizedText<DefineAnnotationDlg>(@"lblType"),
+                ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.value_list));
+            McpConnector.SetFormValue(dlgId, GetLocalizedText<DefineAnnotationDlg>(@"lblValues"),
+                "Healthy\nDiseased");
             RunUI(() => CollectionAssert.AreEqual(new[] { @"Healthy", @"Diseased" },
                 defineAnnotationDlg.Items.ToArray(),
                 @"SetFormValue did not set the multi-line value list as separate values."));
@@ -79,16 +85,20 @@ namespace pwiz.SkylineTestFunctional
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate)));
 
             // The Applies-to CheckedListBox, addressed by its "Applies to" label. Find the index of the
-            // "Replicates" item to select it.
+            // "Replicates" item to select it. Its items are AnnotationTargetItem objects, whose text is
+            // the localized plural name of the target.
+            string replicatesText = AnnotationDef.AnnotationTargetPluralName(
+                AnnotationDef.AnnotationTarget.replicate);
             var appliesTo = new UiElementPath(
-                new UiElementPath(null, dlgId, null, @"Form"), @"Applies to", null, null);
+                new UiElementPath(null, dlgId, null, @"Form"),
+                GetLocalizedText<DefineAnnotationDlg>(@"lblAppliesTo"), null, null);
             int replicatesIndex = -1;
             RunUI(() =>
             {
                 var checkedListBox = (CheckedListBox) defineAnnotationDlg.Controls
                     .Find(@"checkedListBoxAppliesTo", true).First();
                 for (int i = 0; i < checkedListBox.Items.Count; i++)
-                    if (checkedListBox.GetItemText(checkedListBox.Items[i]) == @"Replicates")
+                    if (checkedListBox.GetItemText(checkedListBox.Items[i]) == replicatesText)
                         replicatesIndex = i;
             });
             Assert.IsTrue(replicatesIndex >= 0, @"Expected a Replicates item in the Applies-to list.");
@@ -104,7 +114,8 @@ namespace pwiz.SkylineTestFunctional
                 @"Selecting and clicking did not check the Replicates item in the Applies-to list."));
 
             // GetFormValue on the CheckedListBox returns the checked items' text, one per line.
-            Assert.AreEqual(@"Replicates", McpConnector.GetFormValue(dlgId, @"Applies to"), 
+            Assert.AreEqual(replicatesText,
+                McpConnector.GetFormValue(dlgId, GetLocalizedText<DefineAnnotationDlg>(@"lblAppliesTo")),
                 @"GetFormValue did not return the checked Applies-to items.");
 
             // Clicking it again toggles it back off (it is still the selected item).

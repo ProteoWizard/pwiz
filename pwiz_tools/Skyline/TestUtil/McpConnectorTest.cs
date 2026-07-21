@@ -264,8 +264,17 @@ namespace pwiz.SkylineTestUtil
         /// way an MCP client requests it -- by form id, no in-process form object) and saves it as the next numbered
         /// tutorial screenshot. The capture only runs while recording screenshots (a real desktop); a normal run just
         /// advances the counter.
+        ///
+        /// <para>Deliberately NOT named PauseForScreenShot: an overload taking a string would hide
+        /// <see cref="AbstractFunctionalTest.PauseForScreenShot(string,int?,System.Func{Bitmap,Bitmap})"/> for every
+        /// subclass, so an ordinary PauseForScreenShot("Import Results dialog") would silently bind here and be read
+        /// as a form id. This also never shows the PauseAndContinueForm -- it only captures -- so it is not the same
+        /// operation under a different signature.</para>
         /// </summary>
-        protected void PauseForScreenShot(string formId, string description = null)
+        /// <param name="formId">Id of the form to capture, as GetControls and the other verbs report it.</param>
+        /// <param name="description">Documents the shot at the call site. Nothing displays it: the capture is
+        /// unattended, so there is no pause form to show it on.</param>
+        protected void PauseForMcpScreenShot(string formId, string description = null)
         {
             SaveMcpConnectorScreenShot(() =>
             {

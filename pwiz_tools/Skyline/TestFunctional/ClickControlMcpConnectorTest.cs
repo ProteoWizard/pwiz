@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -103,12 +104,19 @@ namespace pwiz.SkylineTestFunctional
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
             string gridId = GetOpenFormId<DocumentGridForm>();
 
-            McpConnector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Proteins");
-            WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Proteins");
+            // The dropdown button's caption comes from the NavBar's resources; the built-in report names
+            // are the localized row-source names SkylineViewContext.GetDocumentGridRowSources assigns,
+            // which is also what BindingListSource.ViewInfo.Name reports.
+            string reports = GetLocalizedText<Common.DataBinding.Controls.NavBar>(@"navBarButtonViews");
+            string proteins = Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins;
+            string peptides = Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides;
 
-            McpConnector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Peptides");
-            WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Peptides");
-            RunUI(() => Assert.AreEqual(@"Peptides", documentGrid.BindingListSource.ViewInfo.Name,
+            McpConnector.ClickControlMenuItem(gridId, string.Empty, reports + @" > " + proteins);
+            WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == proteins);
+
+            McpConnector.ClickControlMenuItem(gridId, string.Empty, reports + @" > " + peptides);
+            WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == peptides);
+            RunUI(() => Assert.AreEqual(peptides, documentGrid.BindingListSource.ViewInfo.Name,
                 @"ClickControlMenuItem did not switch the Document Grid report."));
         }
 

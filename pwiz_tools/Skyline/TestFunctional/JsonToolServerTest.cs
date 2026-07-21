@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -114,6 +115,49 @@ namespace pwiz.SkylineTestFunctional
             TestUiMode(server);
             TestUndoRedo(server);
             TestBlockedAndDisabledUIControls(server);
+            TestClientReadsBoolResult(server);
+        }
+
+        /// <summary>
+        /// get_value on a check box is the only verb whose result crosses the wire as a JSON bool, and the
+        /// client has to unwrap that kind as well as a string, a number and an object. Every other test drives
+        /// the server in process (Program.MainJsonToolServer), which hands back the raw object and so never
+        /// exercises the client's unwrapping at all -- this one goes through a real pipe client, the way an
+        /// external tool does.
+        /// </summary>
+        private void TestClientReadsBoolResult(JsonToolServer server)
+        {
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
+            string settingsId = server.GetOpenForms()
+                .First(f => f.Type == nameof(PeptideSettingsUI)).Id;
+
+            // Matched on the control Name, which the designer assigns in code, so this does not depend on
+            // the UI language.
+            var raggedEnds = server.GetControls(settingsId).First(c => c.Name == @"cbRaggedEnds").Path;
+
+            // A listening server of its own: the shared one is driven through HandleRequest and never started,
+            // and starting it here would leave a live pipe thread behind for whatever runs next.
+            using (var pipeServer = new JsonToolServer(@"test-client-" + Guid.NewGuid()))
+            {
+                pipeServer.Start();
+                var pipe = new NamedPipeClientStream(@".", pipeServer.PipeName, PipeDirection.InOut);
+                pipe.Connect(5000);
+                pipe.ReadMode = PipeTransmissionMode.Message;
+                using (var client = new SkylineJsonToolClient(pipe))
+                {
+                    // Both states, so neither JsonValueKind.True nor False falls through to GetString().
+                    foreach (bool expected in new[] { true, false })
+                    {
+                        server.PerformAction(raggedEnds, @"set_value", expected);
+                        object value = client.PerformAction(raggedEnds, @"get_value", null);
+                        AssertEx.AreEqual(expected, bool.Parse((string) value),
+                            @"The client did not read back the check box's checked state.");
+                    }
+                }
+            }
+
+            OkDialog(peptideSettings, () => peptideSettings.DialogResult = DialogResult.Cancel);
         }
 
         /// <summary>
@@ -1986,8 +2030,12 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             }
 
             // 3. Disable a menu item and verify that invoking it throws
-            var fileMenu = SkylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>().First(i => i.Text.Contains("File"));
-            var saveItem = fileMenu.DropDownItems.OfType<ToolStripMenuItem>().First(i => i.Text.Contains("Save"));
+            // Found by Name, which the designer assigns in code, rather than by Text, which ApplyResources
+            // localizes -- matching on English text fails every non-English run.
+            var fileMenu = SkylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>()
+                .First(i => Equals(i.Name, @"fileToolStripMenuItem"));
+            var saveItem = fileMenu.DropDownItems.OfType<ToolStripMenuItem>()
+                .First(i => Equals(i.Name, @"saveMenuItem"));
             bool originalEnabled = false;
             RunUI(() => {
                 originalEnabled = saveItem.Enabled;
