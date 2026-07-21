@@ -1,445 +1,116 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- SkylineBatch - WinForms app for running Skyline command batches. Multi-target
+       net472;net8.0-windows (classic v4.7.2). net472 keeps the exact on-disk HintPath DLLs +
+       the ClickOnce (System.Deployment) / System.Web assemblies it always used; net8 pulls the
+       managed equivalents from NuGet, and the ClickOnce auto-update path is #if NET472-guarded
+       (Program.cs - net8 is never network-deployed). Vestigial System.Configuration.Install
+       reference dropped. -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7AB2D7AD-6760-450E-BCCD-B08502307B99}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>SkylineBatch</RootNamespace>
     <AssemblyName>SkylineBatch</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <IsWebBootstrapper>true</IsWebBootstrapper>
-    <TargetFrameworkProfile />
-    <PublishUrl>T:\www\site\skyline.ms\html\software\SkylineBatch24\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>true</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch24/</InstallUrl>
-    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Skyline Batch</ProductName>
-    <PublisherName>MacCoss Lab, UW</PublisherName>
-    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
-    <WebPage>index.html</WebPage>
-    <ApplicationRevision>459</ApplicationRevision>
-    <ApplicationVersion>23.1.1.459</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <PublishWizardCompleted>true</PublishWizardCompleted>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestCertificateThumbprint>586806A1F7B1C85AD63BC46CA599EC4142EBE84A</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignManifests>false</SignManifests>
-  </PropertyGroup>
-  <PropertyGroup>
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon>SkylineBatch.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup />
-  <PropertyGroup />
-  <PropertyGroup />
-  <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-  <PropertyGroup />
-  <PropertyGroup />
-  <PropertyGroup>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
   </PropertyGroup>
+
   <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="Properties\app.manifest" />
-    <None Include="Resources\downtriangle.png" />
-    <None Include="Resources\download.png" />
-    <None Include="Resources\downloadSelected.png" />
-    <Content Include="..\..\SharedBatch\LaunchBatch\obj\$(Configuration)\LaunchBatch.exe">
-      <Link>LaunchBatch.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="Resources\Panorama.png" />
-    <None Include="Resources\PanoramaSelected.png" />
-    <None Include="Resources\Panorama.bmp" />
-    <None Include="Resources\OpenRemoteFolder.png" />
-    <Content Include="SkylineBatch.ico" />
-    <Content Include="..\..\SkylineRunner\Binaries\SkylineDailyRunner.exe">
-      <Link>SkylineDailyRunner.exe</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\SkylineRunner\Binaries\SkylineRunner.exe">
-      <Link>SkylineRunner.exe</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Include="Resources\OpenFolder.bmp" />
-    <None Include="Resources\SkylineData.ico" />
-    <None Include="Resources\SkylineDoc.ico" />
-    <Content Include="SkylineBatch_configs.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <EmbeddedResource Include="DownloadDlg.resx">
-      <DependentUpon>DownloadDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DownloadingFileControl.resx">
-      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EditRemoteFileSourcesForm.resx">
-      <DependentUpon>EditRemoteFileSourcesForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="RemoteFileControl.resx">
-      <DependentUpon>RemoteFileControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="RemoteFileForm.resx">
-      <DependentUpon>RemoteFileForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataServerForm.resx">
-      <DependentUpon>DataServerForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CommandArgNames.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CommandArgNames.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\..\CommandArgUsage.ja.resx">
-      <Link>CommandArgUsage.ja.resx</Link>
-      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
-      <DependentUpon>CommandArgUsage.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\..\CommandArgUsage.resx">
-      <Link>CommandArgUsage.resx</Link>
-      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\..\CommandArgUsage.zh-CHS.resx">
-      <Link>CommandArgUsage.zh-CHS.resx</Link>
-      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
-      <DependentUpon>CommandArgUsage.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ConnectionErrorForm.resx">
-      <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="InvalidConfigSetupForm.resx">
-      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="LogForm.resx">
-      <DependentUpon>LogForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <None Include="Resources\Comment.bmp" />
-    <None Include="Resources\add.bmp" />
-    <None Include="Resources\Delete.bmp" />
-    <None Include="Resources\downarrow.bmp" />
-    <None Include="Resources\uparrow.bmp" />
-    <EmbeddedResource Include="RemoteSourceForm.resx">
-      <DependentUpon>RemoteSourceForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ReportsAddForm.resx">
-      <DependentUpon>ReportsAddForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <None Include="App.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>PublicSettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
+    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj" />
   </ItemGroup>
+
+  <!-- Skyline's command-arg usage strings (pwiz.Skyline.CommandArgUsage), linked from the main
+       Skyline project so RefineInputLocalization can localize refine-setting help without
+       referencing all of Skyline. Localized resx are inferred as ja / zh-Hans satellites. The
+       classic project still referenced the pre-rename CommandArgUsage.zh-CHS.resx (now zh-Hans). -->
   <ItemGroup>
-    <Compile Include="DownloadDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DownloadDlg.Designer.cs">
-      <DependentUpon>DownloadDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DownloadingFileControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DownloadingFileControl.Designer.cs">
-      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="EditRemoteFileSourcesForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="EditRemoteFileSourcesForm.Designer.cs">
-      <DependentUpon>EditRemoteFileSourcesForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="RemoteFileControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="RemoteFileControl.Designer.cs">
-      <DependentUpon>RemoteFileControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="RemoteFileForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="RemoteFileForm.Designer.cs">
-      <DependentUpon>RemoteFileForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataServerForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataServerForm.Designer.cs">
-      <DependentUpon>DataServerForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ConnectionErrorForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ConnectionErrorForm.Designer.cs">
-      <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataServerInfo.cs" />
-    <Compile Include="RDirectorySelector.cs" />
-    <Compile Include="CommandArgNames.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CommandArgNames.resx</DependentUpon>
-    </Compile>
     <Compile Include="..\..\..\CommandArgUsage.Designer.cs">
       <Link>CommandArgUsage.Designer.cs</Link>
       <DependentUpon>CommandArgUsage.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="CommandWriter.cs" />
-    <Compile Include="RefineInputLocalization.cs" />
-    <Compile Include="RefineInputObject.cs" />
-    <Compile Include="RefineSettings.cs" />
-    <Compile Include="PanoramaServerConnector.cs" />
-    <Compile Include="RemoteSourceForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="RemoteSourceForm.Designer.cs">
-      <DependentUpon>RemoteSourceForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="RScriptForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="RScriptForm.Designer.cs">
-      <DependentUpon>RScriptForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ServerConnector.cs" />
-    <Compile Include="ServerFilesManager.cs" />
-    <Compile Include="SkylineBatchConfigManager.cs" />
-    <Compile Include="FileSettings.cs" />
-    <Compile Include="InvalidConfigSetupForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="InvalidConfigSetupForm.Designer.cs">
-      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="RVersionControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="RVersionControl.Designer.cs">
-      <DependentUpon>RVersionControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ReportSettings.cs" />
-    <Compile Include="ReportsAddForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ReportsAddForm.Designer.cs">
-      <DependentUpon>ReportsAddForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SkylineBatchConfig.cs" />
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MainForm.Designer.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SkylineBatchConfigForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SkylineBatchConfigForm.Designer.cs">
-      <DependentUpon>SkylineBatchConfigForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ConfigRunner.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings.cs" />
-    <Compile Include="MainSettings.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="RInstallations.cs" />
-    <Compile Include="LogForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LogForm.Designer.cs">
-      <DependentUpon>LogForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SkylineTemplate.cs" />
-    <Compile Include="Server.cs" />
-    <Compile Include="XMLTags.cs" />
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.resx">
+      <Link>CommandArgUsage.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.ja.resx">
+      <Link>CommandArgUsage.ja.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\CommandArgUsage.zh-Hans.resx">
+      <Link>CommandArgUsage.zh-Hans.resx</Link>
+      <LogicalName>pwiz.Skyline.CommandArgUsage.resources</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FluentFTP">
-      <HintPath>..\..\..\..\Shared\Lib\FluentFTP.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net">
-      <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
-    </Reference>
+
+  <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the settings config provider -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="FluentFTP" Version="33.1.6" />
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- net472: the exact on-disk DLLs + the ClickOnce / System.Web assemblies the net8 path drops -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="FluentFTP"><HintPath>..\..\..\..\Shared\Lib\FluentFTP.dll</HintPath></Reference>
+    <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="System.Collections.Immutable"><HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath></Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Configuration.Install" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Management" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Numerics" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
+
+  <!-- Config-file icon loaded at runtime via BaseDirectory; the app icon is embedded via ApplicationIcon -->
   <ItemGroup>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="RScriptForm.resx">
-      <DependentUpon>RScriptForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="RVersionControl.resx">
-      <DependentUpon>RVersionControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SkylineBatchConfigForm.resx">
-      <DependentUpon>SkylineBatchConfigForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.ja.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.zh-CHS.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <Content Include="SkylineBatch_configs.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
+
+  <!-- Bundled SkylineRunner shims + LaunchBatch launcher. Copied when the pre-built binaries are
+       present (the net472 build produces them); the net8 build gets them if present, otherwise
+       skips - net8-native bundling of the ported SkylineDailyRunner/LaunchBatch is a follow-on. -->
   <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
+    <Content Include="..\..\SkylineRunner\Binaries\SkylineDailyRunner.exe" Condition="Exists('..\..\SkylineRunner\Binaries\SkylineDailyRunner.exe')">
+      <Link>SkylineDailyRunner.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\SkylineRunner\Binaries\SkylineRunner.exe" Condition="Exists('..\..\SkylineRunner\Binaries\SkylineRunner.exe')">
+      <Link>SkylineRunner.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\SharedBatch\LaunchBatch\obj\$(Configuration)\LaunchBatch.exe" Condition="Exists('..\..\SharedBatch\LaunchBatch\obj\$(Configuration)\LaunchBatch.exe')">
+      <Link>LaunchBatch.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
+
   <ItemGroup>
-    <COMReference Include="IWshRuntimeLibrary">
-      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj">
-      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
-      <Name>PanoramaClient</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
-      <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
-      <Name>SharedBatch</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  <Target Name="AfterPublish">
-  </Target>
-  -->
+
 </Project>
