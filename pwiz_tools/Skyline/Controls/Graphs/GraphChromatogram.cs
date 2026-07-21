@@ -2098,6 +2098,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     infoPrimary.Transform(Transform);
 
                     var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
+                    if (peptideDocNode == null)
+                    {
+                        // The peptide for this cached path is no longer present in the current
+                        // document (a document change can leave the tree selection referencing a
+                        // removed node until the next update catches up). Skip it; the following
+                        // update will redraw against the current selection.
+                        continue;
+                    }
                     int iColor = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                     Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
 
