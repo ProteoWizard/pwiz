@@ -1628,6 +1628,44 @@ namespace pwiz.Osprey.Test
             AssertRazorCascadeAssignment(reversedResult);
         }
 
+        [TestMethod]
+        public void TestSharedPeptidesRazorTiebreakFavorsLowestGroupId()
+        {
+            // Regression guard for issue #4441: when two groups have the SAME unique-peptide
+            // count and both own a contested shared peptide, the round winner must be the
+            // LOWEST group id -- mirroring Rust's max_by_key((unique_len, Reverse(id))). This
+            // is the one cross-impl detail the cascading test never exercises (that case is
+            // always decided by a strict unique-count difference, never a tie).
+            //   PA unique {A1, A2}   shares X (with PB) and Y (with PC)   -> 4 peptides, gid 0
+            //   PB unique {B1, B2}   shares X (with PA)                   -> 3 peptides, gid 1
+            //   PC unique {C1}       shares Y (with PA)                   -> 2 peptides, gid 2
+            // Distinct total peptide counts pin the group ids (assigned count-descending), so
+            // PA=0, PB=1, PC=2. Round 1: PA and PB both have unique count 2 and both own the
+            // unassigned SHARED_X; the lowest-id tiebreak makes PA the round winner, so PA
+            // claims X (and Y). A highest-id tiebreak would instead hand X to PB, failing this.
+            var library = new List<LibraryEntry>
+            {
+                MakeLibEntry(1, "UNIQ_A1", new[] { "PA" }, false),
+                MakeLibEntry(2, "UNIQ_A2", new[] { "PA" }, false),
+                MakeLibEntry(3, "UNIQ_B1", new[] { "PB" }, false),
+                MakeLibEntry(4, "UNIQ_B2", new[] { "PB" }, false),
+                MakeLibEntry(5, "UNIQ_C1", new[] { "PC" }, false),
+                MakeLibEntry(6, "SHARED_X", new[] { "PA", "PB" }, false),
+                MakeLibEntry(7, "SHARED_Y", new[] { "PA", "PC" }, false)
+            };
+
+            var result = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.Razor, null);
+
+            Assert.AreEqual(3, result.Groups.Count);
+            var paGroup = result.Groups.First(g => g.Accessions.Contains("PA"));
+            var pbGroup = result.Groups.First(g => g.Accessions.Contains("PB"));
+            // Equal-unique-count tie (PA and PB each have 2 unique) resolves to the lowest
+            // group id (PA), so the contested SHARED_X is razor-assigned to PA, not PB.
+            Assert.AreEqual(1, result.PeptideToGroupMap["SHARED_X"].Count);
+            Assert.IsTrue(paGroup.UniquePeptides.Contains("SHARED_X"), "SHARED_X should go to PA on the lowest-id tiebreak");
+            Assert.IsFalse(pbGroup.UniquePeptides.Contains("SHARED_X"), "SHARED_X must NOT go to PB when unique counts tie");
+        }
+
         // Asserts the expected razor rollup for the cascading topology used by the two
         // tests above: SHARED_X ends up unique to the PB group, SHARED_Y unique to the
         // PA group, each shared peptide mapped to exactly one group. Group IDs are not
