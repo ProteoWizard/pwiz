@@ -46,10 +46,7 @@ namespace SkylineTool
     ///
     /// <para><b>Usage</b>:</para>
     /// <code>
-    /// var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
-    /// pipe.Connect(5000);
-    /// pipe.ReadMode = PipeTransmissionMode.Message;
-    /// using (var client = new SkylineJsonToolClient(pipe))
+    /// using (var client = SkylineJsonToolClient.Connect(pipeName))
     /// {
     ///     string path = client.GetDocumentPath();
     ///     var status = client.GetDocumentStatus();
@@ -91,8 +88,53 @@ namespace SkylineTool
         /// </summary>
         public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
 
+        /// <summary>
+        /// Connects to Skyline's tool pipe and returns a client for it. The preferred way in: the connection has
+        /// two settings this class depends on and neither is obvious from the outside, so it owns both rather than
+        /// asking every caller to remember them.
+        ///
+        /// <para><see cref="PipeOptions.Asynchronous"/> is what lets <see cref="CancellationToken"/> abandon a call
+        /// at all, and message <see cref="PipeStream.ReadMode"/> is what makes a response arrive as one message
+        /// (<see cref="ReadAllBytes"/> reads until <see cref="PipeStream.IsMessageComplete"/>). Getting either wrong
+        /// fails quietly and far from the mistake, so the constructor rejects a pipe that has neither.</para>
+        /// </summary>
+        /// <param name="pipeName">Skyline's pipe name, from its connection-*.json discovery file.</param>
+        /// <param name="timeoutMillis">How long to wait for Skyline to accept the connection.</param>
+        public static SkylineJsonToolClient Connect(string pipeName, int timeoutMillis = 5000)
+        {
+            var pipe = new NamedPipeClientStream(@".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            try
+            {
+                pipe.Connect(timeoutMillis);
+                pipe.ReadMode = PipeTransmissionMode.Message;
+                return new SkylineJsonToolClient(pipe);
+            }
+            catch
+            {
+                pipe.Dispose(); // Do not leak the handle when the connection never became a client.
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Wraps a pipe the caller connected itself. Prefer <see cref="Connect(string,int)"/>, which opens the pipe
+        /// the way this class needs it; this overload exists for a caller that must own the connection.
+        /// </summary>
+        /// <exception cref="ArgumentException">The pipe was not opened for overlapped I/O, or is not in message
+        /// read mode -- see <see cref="Connect(string,int)"/> for why both matter.</exception>
         public SkylineJsonToolClient(NamedPipeClientStream pipe)
         {
+            if (pipe == null)
+                throw new ArgumentNullException(nameof(pipe));
+            if (!pipe.IsAsync)
+                throw new ArgumentException(
+                    @"The pipe must be opened with PipeOptions.Asynchronous, or a call can never be abandoned.",
+                    nameof(pipe));
+            // ReadMode can only be read once connected, and every caller connects before wrapping.
+            if (pipe.IsConnected && pipe.ReadMode != PipeTransmissionMode.Message)
+                throw new ArgumentException(
+                    @"The pipe must be in message read mode, or a response longer than one buffer is truncated.",
+                    nameof(pipe));
             _pipe = pipe;
         }
 

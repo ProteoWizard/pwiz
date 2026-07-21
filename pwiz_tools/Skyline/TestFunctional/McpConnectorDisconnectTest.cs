@@ -136,10 +136,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static SkylineJsonToolClient ConnectClient(string pipeName)
         {
-            var pipe = new NamedPipeClientStream(@".", pipeName, PipeDirection.InOut);
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-            return new SkylineJsonToolClient(pipe);
+            return SkylineJsonToolClient.Connect(pipeName);
         }
     }
 }

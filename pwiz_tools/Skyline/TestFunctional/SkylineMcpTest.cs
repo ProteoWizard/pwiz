@@ -464,10 +464,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         {
             // Connect to the same pipe the MCP server uses for a normal-operation
             // sanity check before the version-mismatch probe.
-            var pipe = new NamedPipeClientStream(@".", server.PipeName, PipeDirection.InOut);
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-            using (var client = new SkylineJsonToolClient(pipe))
+            using (var client = SkylineJsonToolClient.Connect(server.PipeName))
             {
                 string version = client.GetVersion();
                 Assert.IsFalse(string.IsNullOrEmpty(version));
@@ -687,10 +684,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         /// </summary>
         private void ValidateGetGraphImageBytesPipe(JsonToolServer server, string graphId)
         {
-            var pipe = new NamedPipeClientStream(@".", server.PipeName, PipeDirection.InOut);
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-            using (var client = new SkylineJsonToolClient(pipe))
+            using (var client = SkylineJsonToolClient.Connect(server.PipeName))
             {
                 var bytes = client.GetGraphImageBytes(graphId);
                 Assert.IsNotNull(bytes, "GetGraphImageBytes should return a non-null result for a valid graph");

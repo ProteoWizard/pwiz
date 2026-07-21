@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -286,29 +285,21 @@ public class SkylineConnection : IJsonToolService, IDisposable
 
     private static (SkylineConnection Connection, string Error) TryConnectToInstance(ConnectionInfo info)
     {
-        // PipeOptions.Asynchronous so the response read is real overlapped I/O and can be CANCELLED. That is what
-        // lets a call that has run too long be abandoned: cancelling the read releases the pipe handle, so disposing
-        // the connection actually disconnects it -- and Skyline, seeing the disconnect, abandons the call. A pipe
-        // opened for synchronous I/O cannot do this: Windows holds the handle open until the pending blocking read
-        // returns, so the connection would never really drop and Skyline would keep waiting.
-        var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut,
-            PipeOptions.Asynchronous);
+        // Connect opens the pipe for overlapped I/O, which is what lets a call that has run too long be abandoned:
+        // cancelling the read releases the pipe handle, so disposing the connection actually disconnects it -- and
+        // Skyline, seeing the disconnect, abandons the call. It also disposes the pipe if connecting fails.
         try
         {
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-            var client = new SkylineJsonToolClient(pipe);
+            var client = SkylineJsonToolClient.Connect(info.PipeName);
             return (new SkylineConnection(client) { SkylineVersion = info.SkylineVersion }, null);
         }
         catch (TimeoutException)
         {
-            pipe.Dispose();
             return (null, "Skyline is not responding. " +
                           "It may be busy processing data or showing a dialog. Try again in a moment.");
         }
         catch (IOException)
         {
-            pipe.Dispose();
             return (null, null); // Connection failed silently - try next
         }
     }

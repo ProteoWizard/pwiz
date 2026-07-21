@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -141,10 +140,7 @@ namespace pwiz.SkylineTestFunctional
             using (var pipeServer = new JsonToolServer(@"test-client-" + Guid.NewGuid()))
             {
                 pipeServer.Start();
-                var pipe = new NamedPipeClientStream(@".", pipeServer.PipeName, PipeDirection.InOut);
-                pipe.Connect(5000);
-                pipe.ReadMode = PipeTransmissionMode.Message;
-                using (var client = new SkylineJsonToolClient(pipe))
+                using (var client = SkylineJsonToolClient.Connect(pipeServer.PipeName))
                 {
                     // Both states, so neither JsonValueKind.True nor False falls through to GetString().
                     foreach (bool expected in new[] { true, false })
