@@ -378,6 +378,7 @@ namespace pwiz.Osprey.Tasks
             // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
             // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
             bool needsResidentPool = NeedsResidentPool(ctx.Config);
+            GuardResidentPool(ctx.Config, needsResidentPool);
 
             FdrProjectionSet projections = null;
             int totalScored = 0;
@@ -630,6 +631,7 @@ namespace pwiz.Osprey.Tasks
             // See TODO-20260720_osprey_pass2_per_run_qvalue.
             bool needsResidentPool = NeedsResidentPool(config) ||
                                      (config.ModelDiagnostics && FirstPassSidecarsPresent(config));
+            GuardResidentPool(config, needsResidentPool);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -1519,6 +1521,51 @@ namespace pwiz.Osprey.Tasks
                     return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Fail fast when a run would build the RESIDENT first-pass pool -- an O(files) memory
+        /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstJoin.Rehydrate</c>
+        /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
+        /// operator explicitly accepted unbounded memory (<c>OSPREY_ALLOW_UNBOUNDED_MEMORY</c>, or
+        /// the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch which is itself an explicit resident
+        /// opt-in), throw with the trigger named so the failure is actionable rather than an opaque
+        /// OOM at scale. Triggers: the HPC reconciled-input merge, <c>--fdrbench-pass 1</c>, a
+        /// non-Percolator FdrMethod, and <c>--model-diagnostics</c> on a full resume. Streaming the
+        /// remaining resident paths is tracked in
+        /// <c>TODO-osprey_stage6_rescored_buffer_streaming.md</c>.
+        /// </summary>
+        private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
+        {
+            string error = ResidentPoolGuardError(config, needsResidentPool,
+                OspreyEnvironment.AllowUnboundedMemory, OspreyEnvironment.UseFdrProjection);
+            if (error != null)
+                throw new InvalidOperationException(error);
+        }
+
+        /// <summary>
+        /// Pure core of <see cref="GuardResidentPool"/> (env statics passed in so it is unit
+        /// testable): returns the actionable error message when the run would take the resident
+        /// first-pass pool without an explicit unbounded-memory opt-in, or <c>null</c> when the
+        /// pool is not needed or the operator opted in. <paramref name="useFdrProjection"/> == false
+        /// is the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch, itself an explicit resident opt-in.
+        /// </summary>
+        internal static string ResidentPoolGuardError(
+            OspreyConfig config, bool needsResidentPool, bool allowUnbounded, bool useFdrProjection)
+        {
+            if (!needsResidentPool || allowUnbounded || !useFdrProjection)
+                return null;
+            string trigger =
+                config.ExpectReconciledInput ? @"the reconciled-input merge (HPC --task SecondPassFDR)"
+                : config.FdrMethod != FdrMethod.Percolator ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
+                : (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ? @"--fdrbench-pass 1"
+                : config.ModelDiagnostics ? @"--model-diagnostics on a full resume"
+                : @"this configuration";
+            return string.Format(
+                @"{0} requires the RESIDENT first-pass pool, which holds every entry in memory and " +
+                @"grows O(files) -- it does not scale to large file counts and can exhaust memory. " +
+                @"Set OSPREY_ALLOW_UNBOUNDED_MEMORY=1 to accept unbounded memory and proceed " +
+                @"(intended for testing / small runs); otherwise this path is unavailable.", trigger);
         }
 
         /// <summary>

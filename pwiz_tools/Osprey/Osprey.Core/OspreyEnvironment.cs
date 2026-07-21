@@ -197,6 +197,20 @@ namespace pwiz.Osprey.Core
         public static readonly bool Pass2TransferQ =
             string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
 
+        /// <summary>
+        /// OSPREY_ALLOW_UNBOUNDED_MEMORY: opt in to the RESIDENT first-pass pool paths, which
+        /// hold every entry resident and grow O(files) so they do not scale to large file
+        /// counts. DEFAULT OFF: with this unset, a run that would take such a path fails fast
+        /// with an error naming the trigger, rather than silently exhausting memory -- so no
+        /// user reaches an O(files) memory path by accident. Set to a non-zero value ONLY for
+        /// our own testing (A/B byte-identity oracles, small runs, HPC test harnesses). The
+        /// existing <see cref="UseFdrProjection"/>=false (OSPREY_FDR_PROJECTION=0) switch is
+        /// itself an explicit resident-path opt-in and is honored the same way. Read once at
+        /// process start. See ai/todos/active/TODO-20260720_osprey_pass2_per_run_qvalue.md.
+        /// </summary>
+        public static readonly bool AllowUnboundedMemory =
+            IsSetAndNotZero(@"OSPREY_ALLOW_UNBOUNDED_MEMORY");
+
         private static string NormalizePass2QValue(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
