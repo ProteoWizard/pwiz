@@ -4,10 +4,13 @@ setlocal
 REM # ------------------------------------------------------------------------
 REM # Skyline build + test entry point. TeamCity calls this from tcbuild.bat;
 REM # runs locally too. Builds the net8 SDK-style Skyline tree, stages the test
-REM # binaries, and runs the whole suite (Test + TestData + TestFunctional)
-REM # through the Skyline TestRunner harness -- the harness the functional tests
-REM # are written for (offscreen mode, per-test form lifecycle, requeue-on-flake)
-REM # -- rather than `dotnet test`, which can't run the functional (UI) tests.
+REM # binaries, and runs the standard TeamCity per-commit check -- three sequential
+REM # TestRunner passes (pass0 build check over CommonTest+Test+TestData; the
+REM # localized ja/zh import tests; a pass1 functional subset) -- through the
+REM # Skyline TestRunner harness the functional tests are written for (per-test
+REM # form lifecycle, requeue-on-flake), rather than `dotnet test`, which can't run
+REM # the functional (UI) tests. See the test step below for the exact commands and
+REM # the SKYLINE_TEST_ARGS escape hatch for custom / full-suite runs.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
@@ -38,8 +41,8 @@ REM #   SKYLINE_TEST_ARGS      extra args appended verbatim to the TestRunner
 REM #                          command (e.g. test=Foo,Bar for a smoke run).
 REM #
 REM # Scope:
-REM #   Builds + tests Skyline.csproj and the net8-ported test projects Test,
-REM #   TestData, TestFunctional, TestConnected (plus the TestRunner harness).
+REM #   Builds + tests Skyline.csproj and the net8-ported test projects CommonTest,
+REM #   Test, TestData, TestFunctional, TestConnected (plus the TestRunner harness).
 REM #   TestConnected's network-service tests self-skip when their credentials
 REM #   aren't configured. TestPerf and TestTutorial are intentionally EXCLUDED
 REM #   from the standard build -- run those separately when needed.
@@ -102,7 +105,7 @@ REM # Build targets: Skyline.csproj pulls in every ProjectReference (BiblioSpec,
 REM # CommonMsData, ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp
 REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
 REM # and TestRunner is the harness that stages + runs them.
-set BUILD_TARGET=Skyline.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestRunner\TestRunner.csproj
+set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestRunner\TestRunner.csproj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
@@ -131,10 +134,9 @@ REM # Test step
 REM #
 REM # Stage every project's net8 output into one bin\staging-net8\<Config> (the
 REM # single-bin layout TestRunner + the Docker workers assume) plus a bundled
-REM # portable .NET 8 runtime for the workers, then run the staged TestRunner.
-REM # No filter: the whole discovered suite runs. TestFunctional (UI) tests need
-REM # this harness -- offscreen mode + the form lifecycle -- which `dotnet test`
-REM # can't provide.
+REM # portable .NET 8 runtime for the workers, then run the staged TestRunner
+REM # (the harness the functional UI tests are written for; `dotnet test` can't
+REM # run them). The test commands themselves follow below.
 REM # ------------------------------------------------------------------------
 echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 (%CONFIG%)']
 pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG%
@@ -142,34 +144,60 @@ set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Net8Tests.ps1 failed & goto error)
 
 set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
-
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
+
+REM # The standard TeamCity per-commit check: three sequential TestRunner passes,
+REM # run on the host from the staging dir (pass0/pass1 build checks, not the
+REM # parallel Docker full suite), mirroring the old net472 SkylineWindows config:
+REM #   1. pass0 build check over CommonTest + Test + TestData (unit/data tests,
+REM #      small-molecule versions on).
+REM #   2. localized import tests (~\.TestImport) under Japanese + Chinese.
+REM #   3. pass1 functional subset (instrument info, QC traces, TIC chromatogram,
+REM #      DIA search), logged to TestPass1Subset.log.
+REM # offscreen=0 matches the TC agents' interactive desktop session. Stop on the
+REM # first failing pass, like the sequential TC build steps.
+REM #
+REM # SKYLINE_TEST_ARGS escape hatch: if set, skip the three CI passes and run a
+REM # single TestRunner with those args instead (local smoke / full-suite runs),
+REM # honoring --parallel. e.g. SKYLINE_TEST_ARGS=test=Foo,Bar.
+pushd "%STAGE_DIR%"
+
+if defined SKYLINE_TEST_ARGS goto custom_run
+
+echo ##teamcity[progressMessage 'TestRunner pass0 build check ^(CommonTest, Test, TestData^)']
+call :run_tests buildcheck=1 test=CommonTest.dll,Test.dll,TestData.dll offscreen=0 pass0=on pass2=off teamcitytestdecoration=1 runsmallmoleculeversions=on
+if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner pass0 build check failed" & popd & goto error)
+
+echo ##teamcity[progressMessage 'TestRunner localized import tests ^(ja, zh^)']
+call :run_tests test=~\.TestImport offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on language=ja,zh loop=1
+if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner localized import tests failed" & popd & goto error)
+
+echo ##teamcity[progressMessage 'TestRunner pass1 functional subset']
+call :run_tests log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram,TestDiaSearchFixedWindows offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on
+if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner pass1 functional subset failed" & popd & goto error)
+
+popd
+goto tests_done
+
+:custom_run
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 mkdir "%TC_TEST_RESULTS%"
-
-REM # No skip list: every discovered test runs. A test that can't run in parallel
-REM # (shared resource, or needs a host-only vendor SDK / network) marks itself with
-REM # [NoParallelTesting("reason")] -- TestRunner routes those to the host worker
-REM # instead of a Docker worker, so they still run rather than being skipped.
-set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%"
+set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %SKYLINE_TEST_ARGS%
 if defined TEAMCITY_VERSION set RUNNER_ARGS=%RUNNER_ARGS% teamcitytestdecoration=on
-if defined SKYLINE_TEST_ARGS set RUNNER_ARGS=%RUNNER_ARGS% %SKYLINE_TEST_ARGS%
-
 if %SEQUENTIAL%==1 (
     set RUNNER_MODE=parallelmode=off
-    echo ##teamcity[progressMessage 'TestRunner ^(host, sequential^)']
+    echo ##teamcity[progressMessage 'TestRunner ^(custom, host sequential^)']
 ) else (
     set RUNNER_MODE=parallelmode=server workercount=%SKYLINE_TEST_WORKERS%
-    echo ##teamcity[progressMessage 'TestRunner ^(parallel, %SKYLINE_TEST_WORKERS% workers^)']
+    echo ##teamcity[progressMessage 'TestRunner ^(custom, parallel %SKYLINE_TEST_WORKERS% workers^)']
 )
-
-pushd "%STAGE_DIR%"
 echo "%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
 "%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
 set EXIT=%ERRORLEVEL%
 popd
-if %EXIT% NEQ 0 (set ERROR_TEXT=TestRunner reported test failures & goto error)
+if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
 
+:tests_done
 popd
 exit /b 0
 
@@ -183,6 +211,14 @@ goto :eof
 echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
 dotnet build "%~1" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
+goto :eof
+
+REM # Run one TestRunner pass from the staging dir (cwd is already %STAGE_DIR%).
+REM # All args are forwarded verbatim via %*; sets EXIT to the runner's result.
+:run_tests
+echo "%STAGE_DIR%\TestRunner.exe" %*
+"%STAGE_DIR%\TestRunner.exe" %*
+if errorlevel 1 (set EXIT=1) else (set EXIT=0)
 goto :eof
 
 :build_hardklor

@@ -19,7 +19,7 @@
 param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Debug',
     [string] $StagingDir = '',
-    [string[]] $Projects = @('Skyline', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner'),
+    [string[]] $Projects = @('Skyline', 'CommonTest', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner'),
     # Bundle a portable .NET 8 Desktop runtime into <staging>\dotnet so the Docker workers can run
     # the net8 apphost without any runtime installed in the container (pointed at via DOTNET_ROOT).
     [switch] $NoRuntime,
