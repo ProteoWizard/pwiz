@@ -19,7 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+#if NET472
 using System.Deployment.Application;
+#endif
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -303,15 +305,27 @@ namespace AutoQC
             return true;
         }
 
+        // ClickOnce (System.Deployment) is net472-only; on net8 the app is never network-deployed.
+        private static bool IsNetworkDeployed =>
+#if NET472
+            ApplicationDeployment.IsNetworkDeployed;
+#else
+            false;
+#endif
+
         private static string GetFirstArg(string[] args)
         {
             string arg;
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
+#if NET472
                 var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
                 arg = activationData != null && activationData.Length > 0
                     ? activationData[0]
                     : string.Empty;
+#else
+                arg = string.Empty;
+#endif
             }
             else
             {
@@ -343,7 +357,7 @@ namespace AutoQC
                 var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 var configFileIconPath = Path.Combine(baseDirectory, "AutoQC_configs.ico");
 
-                if (ApplicationDeployment.IsNetworkDeployed)
+                if (IsNetworkDeployed)
                 {
                     FileUtil.AddFileTypeClickOnce(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
                         Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
@@ -362,7 +376,7 @@ namespace AutoQC
         {
             if (!Settings.Default.KeepAutoQcRunning) return;
 
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
                 if (!string.IsNullOrEmpty(_install.Version) && !_install.BareVersion.Equals(_lastInstalledVersion))
                 {
@@ -479,11 +493,13 @@ namespace AutoQC
         public static Install FromAssembly()
         {
             string productVersion = null;
+#if NET472
             if (ApplicationDeployment.IsNetworkDeployed)
             {
                 productVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
             }
             else
+#endif
             {
                 try
                 {

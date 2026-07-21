@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using IWshRuntimeLibrary;
 using SharedBatch;
 using File = System.IO.File;
 
@@ -128,10 +127,13 @@ namespace AutoQC
                 ProgramLog.Info($"Adding {AUTOQCSTARTEREXE} shortcut to Startup folder.");
 
                 // http://softvernow.com/2018/07/30/create-shortcut-using-c/
-                WshShell wsh = new WshShell();
-                var shortcut =
-                    wsh.CreateShortcut(shortcutInfo.ShortcutPath) as IWshShortcut;
-             
+                // Late-bound COM (WScript.Shell) rather than a compile-time IWshRuntimeLibrary COM
+                // reference: dotnet build's .NET Core MSBuild can't run the tlbimp ResolveComReference
+                // task, so bind the shell via ProgID + dynamic instead. Works on both net472 and net8.
+                var wshType = Type.GetTypeFromProgID(@"WScript.Shell");
+                dynamic wsh = wshType != null ? Activator.CreateInstance(wshType) : null;
+                dynamic shortcut = wsh?.CreateShortcut(shortcutInfo.ShortcutPath);
+
                 if (shortcut != null)
                 {
                     shortcut.Description = $"Shortcut to {AUTOQCSTARTEREXE}";
