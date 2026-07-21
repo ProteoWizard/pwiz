@@ -328,8 +328,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.SelectSettingsListItems(listType, itemNames);
-            return $"Selected {itemNames.Length} item(s) in {listType}.";
+            var result = connection.SelectSettingsListItems(listType, itemNames);
+            return DescribeAction(result, $"Selected {itemNames.Length} item(s) in {listType}.");
         });
     }
 
@@ -449,8 +449,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.ImportProperties(csvText);
-            return "Properties imported.";
+            var result = connection.ImportProperties(csvText);
+            return DescribeAction(result, "Properties imported.");
         });
     }
 

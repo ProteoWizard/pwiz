@@ -99,7 +99,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void AddReportFromDefinition(ReportDefinition definition) { CallClientVoid(c => c.AddReportFromDefinition(definition)); }
     public void ReorderElements(string[] elementLocators) { CallClientVoid(c => c.ReorderElements(elementLocators)); }
     public void InsertSmallMoleculeTransitionList(string textCsv) { CallClientVoid(c => c.InsertSmallMoleculeTransitionList(textCsv)); }
-    public void ImportProperties(string csvText) { CallClientVoid(c => c.ImportProperties(csvText)); }
+    public ActionResult ImportProperties(string csvText) { return CallClient(c => c.ImportProperties(csvText)); }
     public void SetReplicate(string replicateName) { CallClientVoid(c => c.SetReplicate(replicateName)); }
     public void SetUiMode(string mode) { CallClientVoid(c => c.SetUiMode(mode)); }
     public void SetUndoRedoPosition(int index) { CallClientVoid(c => c.SetUndoRedoPosition(index)); }
@@ -120,8 +120,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
     public ImageBytesMetadata GetFormImageBytes(string formId) { return CallClient(c => c.GetFormImageBytes(formId)); }
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
-    public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
-    public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
+    public ActionResult SelectSettingsListItems(string listType, string[] itemNames) { return CallClient(c => c.SelectSettingsListItems(listType, itemNames)); }
+    public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null) { return CallClient(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
     public ActionResult ClickFormButton(string formId, string button) { return CallClient(c => c.ClickFormButton(formId, button)); }
     public string GetGridText(string formId, string gridId) { return CallClient(c => c.GetGridText(formId, gridId)); }
 

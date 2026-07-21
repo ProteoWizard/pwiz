@@ -590,9 +590,9 @@ namespace pwiz.Skyline.ToolsUI
             // enumeration of the UndoManager stacks which are not thread-safe.
             List<string> undoDescriptions = null;
             List<string> redoDescriptions = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            EnsureCompleted(InvokeOnMainWindow(mainWindow =>
             {
-                var undoMgr = Program.MainWindow.GetUndoManager();
+                var undoMgr = mainWindow.SkylineWindow.GetUndoManager();
                 undoDescriptions = undoMgr.UndoDescriptions.ToList();
                 redoDescriptions = undoMgr.RedoDescriptions.ToList();
             }));
@@ -878,29 +878,32 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        // TODO: hangs the connection if this raises a dialog (the empty-protein prompt). InvokeOnUiThread is a plain
-        // Invoke: the delegate does not return while a modal is up, so it does not either -- and it holds the pipe
-        // server's one thread while it waits, so nothing else can get in, not even the verb that would dismiss the
-        // dialog. Route through DialogWatcher (as InvokeOnMainWindow does), which posts, waits cancellably, and
-        // reports the dialog instead of blocking on it.
-        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
+        /// <summary>
+        /// Imports FASTA text. Reports the empty-protein prompt (raised when <paramref name="keepEmptyProteins"/>
+        /// is null) rather than blocking on it: the import runs under a LongWaitDlg, which the wait rides through,
+        /// and any dialog left for the user comes back in the <see cref="ActionResult"/> for the caller to drive.
+        /// </summary>
+        public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
             bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
-            JsonUiService.InvokeOnUiThread(() =>
-                Program.MainWindow.ImportFasta(new StringReader(textFasta),
+            return InvokeOnMainWindow(mainWindow =>
+                mainWindow.SkylineWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
                     @"Import FASTA from MCP",
                     new SkylineWindow.ImportFastaInfo(false, textFasta),
                     keepEmpty));
         }
 
-        // TODO: hangs the connection if this raises a dialog (see ImportFasta).
-        public void ImportProperties(string csvText)
+        /// <summary>
+        /// Imports annotation/property values. Like <see cref="ImportFasta"/>, runs its work under a LongWaitDlg
+        /// and reports any dialog it leaves open instead of blocking the connection on it.
+        /// </summary>
+        public ActionResult ImportProperties(string csvText)
         {
-            JsonUiService.InvokeOnUiThread(() =>
-                Program.MainWindow.ImportAnnotations(new StringReader(csvText),
+            return InvokeOnMainWindow(mainWindow =>
+                mainWindow.SkylineWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations,
-                        Program.MainWindow.Document.DocumentType,
+                        mainWindow.SkylineWindow.Document.DocumentType,
                         @"Import properties from MCP")));
         }
 
@@ -1247,8 +1250,11 @@ namespace pwiz.Skyline.ToolsUI
             return selector.GetSelectedItems(settings);
         }
 
-        // TODO: hangs the connection if this raises a dialog (see ImportFasta).
-        public void SelectSettingsListItems(string listType, string[] itemNames)
+        /// <summary>
+        /// Selects items in a settings list. Like <see cref="ImportFasta"/>, reports any dialog the change
+        /// raises instead of blocking the connection on it.
+        /// </summary>
+        public ActionResult SelectSettingsListItems(string listType, string[] itemNames)
         {
             var selector = ResolveDocumentSelector(listType);
 
@@ -1258,11 +1264,11 @@ namespace pwiz.Skyline.ToolsUI
                     @"{0} requires exactly one item.", listType));
             }
 
-            JsonUiService.InvokeOnUiThread(() =>
+            return InvokeOnMainWindow(mainWindow =>
             {
                 try
                 {
-                    Program.MainWindow.ModifyDocument(
+                    mainWindow.SkylineWindow.ModifyDocument(
                         LlmInstruction.Format(@"Select {0} items", listType),
                         doc => doc.ChangeSettings(selector.SetSelectedItems(doc.Settings, itemNames)),
                         docPair => AuditLogEntry.CreateSimpleEntry(
@@ -2041,7 +2047,7 @@ namespace pwiz.Skyline.ToolsUI
             // Override document operations to go through SkylineWindow UI,
             // so --in/--new/--save/--out show LongWaitDlg progress and properly
             // update DocumentFilePath and clean state.
-            commandLine.DocumentOperations = new SkylineWindowDocumentOperations();
+            commandLine.DocumentOperations = new SkylineWindowDocumentOperations(RequestCancellation);
 
             commandLine.Run(parsedArgs, true);
 
@@ -2053,9 +2059,9 @@ namespace pwiz.Skyline.ToolsUI
             if (!ReferenceEquals(docAfter, docBefore) &&
                 !ReferenceEquals(docAfter, Program.MainWindow.Document))
             {
-                Program.MainWindow.Invoke(new Action(() =>
+                EnsureCompleted(InvokeOnMainWindow(mainWindow =>
                 {
-                    Program.MainWindow.ModifyDocument(
+                    mainWindow.SkylineWindow.ModifyDocument(
                         ToolsUIResources.ToolService_RunCommand_Run_command,
                         doc => docAfter,
                         docPair => AuditLogEntry.CreateSimpleEntry(
@@ -2072,19 +2078,36 @@ namespace pwiz.Skyline.ToolsUI
         /// SkylineWindow UI methods, providing LongWaitDlg progress and proper
         /// DocumentFilePath/clean-state management.
         /// </summary>
-        // TODO: any of these Invokes hangs the connection if what it runs raises a dialog -- an --in whose raw files
-        // have moved puts up MissingFileDlg, and the Invoke does not return while it is up, holding the pipe server's
-        // one thread so nothing can dismiss it (see ImportFasta). Route through DialogWatcher, which posts, waits
-        // cancellably, and reports the dialog. Note the command itself must stay OFF the UI thread: it waits here for
-        // the background loaders, and a loader reports progress with a blocking Invoke to the UI thread.
+        // Note the command itself must stay OFF the UI thread: it waits here for the background loaders, and a
+        // loader reports progress with a blocking Invoke to the UI thread.
         private class SkylineWindowDocumentOperations : IDocumentOperations
         {
+            private readonly CancellationToken _cancellationToken;
+
+            public SkylineWindowDocumentOperations(CancellationToken cancellationToken)
+            {
+                _cancellationToken = cancellationToken;
+            }
+
+            /// <summary>
+            /// Runs <paramref name="action"/> on the main window through the dialog-watch, so a step that raises a
+            /// dialog -- an --in whose raw files have moved puts up MissingFileDlg -- does not hold the pipe
+            /// server's one thread while it is up. The dialog becomes the error this throws (there is no
+            /// ActionResult to return through <see cref="IDocumentOperations"/>), which leaves the server free to
+            /// take the request that dismisses it.
+            /// </summary>
+            private void InvokeOnMainWindow(Action<SkylineWindow> action)
+            {
+                DialogWatcher.EnsureCompleted(JsonUiService.InvokeOnMainWindow(
+                    standaloneWindow => action(standaloneWindow.SkylineWindow), _cancellationToken));
+            }
+
             public bool Dirty
             {
                 get
                 {
                     bool dirty = false;
-                    Program.MainWindow.Invoke(new Action(() => dirty = Program.MainWindow.Dirty));
+                    InvokeOnMainWindow(mainWindow => dirty = mainWindow.Dirty);
                     return dirty;
                 }
             }
@@ -2092,10 +2115,10 @@ namespace pwiz.Skyline.ToolsUI
             public SrmDocument OpenDocument(string skylineFile)
             {
                 bool success = false;
-                Program.MainWindow.Invoke(new Action(() =>
+                InvokeOnMainWindow(mainWindow =>
                 {
-                    success = Program.MainWindow.LoadFile(skylineFile);
-                }));
+                    success = mainWindow.LoadFile(skylineFile);
+                });
                 if (!success)
                     return null;
                 return WaitForDocumentLoaded();
@@ -2103,7 +2126,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public SrmDocument NewDocument(string skylineFile, bool overwrite)
             {
-                Program.MainWindow.Invoke(new Action(() =>
+                InvokeOnMainWindow(mainWindow =>
                 {
                     if (skylineFile != null && overwrite)
                     {
@@ -2112,14 +2135,14 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     // Forced — dirty check is handled by the CLI layer
                     // before reaching this point via --discard-changes.
-                    Program.MainWindow.NewDocument(true);
+                    mainWindow.NewDocument(true);
                     if (skylineFile != null)
                     {
                         // Save empty document to set DocumentFilePath so subsequent
                         // --save commands know the correct path
-                        Program.MainWindow.SaveDocument(skylineFile);
+                        mainWindow.SaveDocument(skylineFile);
                     }
-                }));
+                });
                 return WaitForDocumentLoaded();
             }
 
@@ -2161,13 +2184,13 @@ namespace pwiz.Skyline.ToolsUI
             public bool SaveDocument(SrmDocument doc, string saveFile)
             {
                 bool success = false;
-                Program.MainWindow.Invoke(new Action(() =>
+                InvokeOnMainWindow(mainWindow =>
                 {
                     // Apply any in-memory modifications (from --refine, etc.) before saving
-                    var currentDoc = Program.MainWindow.Document;
+                    var currentDoc = mainWindow.Document;
                     if (!ReferenceEquals(doc, currentDoc))
                     {
-                        Program.MainWindow.ModifyDocument(
+                        mainWindow.ModifyDocument(
                             ToolsUIResources.ToolService_RunCommand_Run_command,
                             d => doc,
                             docPair => AuditLogEntry.CreateSimpleEntry(
@@ -2177,10 +2200,10 @@ namespace pwiz.Skyline.ToolsUI
                     // Use no-arg SaveDocument when path is null (--save without --in),
                     // which falls back to the window's current DocumentFilePath
                     if (string.IsNullOrEmpty(saveFile))
-                        success = Program.MainWindow.SaveDocument();
+                        success = mainWindow.SaveDocument();
                     else
-                        success = Program.MainWindow.SaveDocument(saveFile);
-                }));
+                        success = mainWindow.SaveDocument(saveFile);
+                });
                 return success;
             }
         }

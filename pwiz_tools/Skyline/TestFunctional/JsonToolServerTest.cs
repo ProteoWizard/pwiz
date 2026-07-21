@@ -150,6 +150,15 @@ namespace pwiz.SkylineTestFunctional
                         AssertEx.AreEqual(expected, bool.Parse((string) value),
                             @"The client did not read back the check box's checked state.");
                     }
+
+                    // An omitted optional argument reaches the server as a trailing JSON null, which Dispatch
+                    // converts to null -- the same value it would have filled in from the parameter's default.
+                    // The client sends every parameter rather than varying the argument count, so this is the
+                    // path every optional argument takes.
+                    var locations = client.GetLocations(@"group");
+                    Assert.IsNotNull(locations, @"GetLocations with an omitted rootLocator returned nothing.");
+                    AssertEx.AreEqual(server.GetLocations(@"group").Length, locations.Length,
+                        @"GetLocations through the client did not match the same call in process.");
                 }
             }
 

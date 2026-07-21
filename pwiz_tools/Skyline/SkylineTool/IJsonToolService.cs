@@ -218,7 +218,7 @@ namespace SkylineTool
         /// <summary>
         /// Sets which items from a settings list are active in the document.
         /// </summary>
-        void SelectSettingsListItems(string listType, string[] itemNames);
+        ActionResult SelectSettingsListItems(string listType, string[] itemNames);
 
         // --- Document modification ---
 
@@ -232,13 +232,13 @@ namespace SkylineTool
         /// </summary>
         /// <param name="textFasta">FASTA-formatted protein sequences.</param>
         /// <param name="keepEmptyProteins">"true" to keep proteins with no matching peptides.</param>
-        void ImportFasta(string textFasta, string keepEmptyProteins = null);
+        ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null);
 
         /// <summary>
         /// Imports annotation properties from CSV text where the first column
         /// contains ElementLocator paths.
         /// </summary>
-        void ImportProperties(string csvText);
+        ActionResult ImportProperties(string csvText);
 
         // --- Commands ---
 

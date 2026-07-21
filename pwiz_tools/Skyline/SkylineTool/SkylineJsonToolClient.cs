@@ -161,9 +161,7 @@ namespace SkylineTool
 
         public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null)
         {
-            return dataSource == null
-                ? CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics))
-                : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
+            return CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
         }
 
         // UI interaction
@@ -195,9 +193,7 @@ namespace SkylineTool
         }
         public string[] GetSettingsListNames(string listType, string groupName = null)
         {
-            return groupName == null
-                ? CallTyped<string[]>(nameof(GetSettingsListNames), listType)
-                : CallTyped<string[]>(nameof(GetSettingsListNames), listType, groupName);
+            return CallTyped<string[]>(nameof(GetSettingsListNames), listType, groupName);
         }
         public string[] GetSettingsListSelectedItems(string listType)
         {
@@ -206,9 +202,7 @@ namespace SkylineTool
 
         public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null)
         {
-            return dataSource == null
-                ? CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName)
-                : CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName, dataSource);
+            return CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName, dataSource);
         }
 
         public void AddReportFromDefinition(ReportDefinition definition)
@@ -220,7 +214,7 @@ namespace SkylineTool
         {
             Call(nameof(InsertSmallMoleculeTransitionList), textCSV);
         }
-        public void ImportProperties(string csvText) { Call(nameof(ImportProperties), csvText); }
+        public ActionResult ImportProperties(string csvText) { return CallTyped<ActionResult>(nameof(ImportProperties), csvText); }
         public void SetReplicate(string replicateName) { Call(nameof(SetReplicate), replicateName); }
         public void SetUiMode(string mode) { Call(nameof(SetUiMode), mode); }
         public void SetUndoRedoPosition(int index) { Call(nameof(SetUndoRedoPosition), index); }
@@ -231,31 +225,22 @@ namespace SkylineTool
         // 2-arg methods
         public LocationEntry[] GetLocations(string level, string rootLocator = null)
         {
-            return rootLocator == null
-                ? CallTyped<LocationEntry[]>(nameof(GetLocations), level)
-                : CallTyped<LocationEntry[]>(nameof(GetLocations), level, rootLocator);
+            return CallTyped<LocationEntry[]>(nameof(GetLocations), level, rootLocator);
         }
 
         public void SetSelectedElement(string elementLocator, string additionalLocators = null)
         {
-            if (additionalLocators == null)
-                Call(nameof(SetSelectedElement), elementLocator);
-            else
-                Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
+            Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
         }
 
         public string GetGraphData(string graphId, string filePath = null)
         {
-            return filePath == null
-                ? Call(nameof(GetGraphData), graphId)
-                : Call(nameof(GetGraphData), graphId, filePath);
+            return Call(nameof(GetGraphData), graphId, filePath);
         }
 
         public string GetGraphImage(string graphId, string filePath = null)
         {
-            return filePath == null
-                ? Call(nameof(GetGraphImage), graphId)
-                : Call(nameof(GetGraphImage), graphId, filePath);
+            return Call(nameof(GetGraphImage), graphId, filePath);
         }
 
         public ImageBytesMetadata GetGraphImageBytes(string graphId)
@@ -265,9 +250,7 @@ namespace SkylineTool
 
         public string GetFormImage(string formId, string filePath = null)
         {
-            return filePath == null
-                ? Call(nameof(GetFormImage), formId)
-                : Call(nameof(GetFormImage), formId, filePath);
+            return Call(nameof(GetFormImage), formId, filePath);
         }
 
         public ImageBytesMetadata GetFormImageBytes(string formId)
@@ -280,17 +263,14 @@ namespace SkylineTool
             return Call(nameof(GetSettingsListItem), listType, itemName);
         }
 
-        public void SelectSettingsListItems(string listType, string[] itemNames)
+        public ActionResult SelectSettingsListItems(string listType, string[] itemNames)
         {
-            Call(nameof(SelectSettingsListItems), listType, itemNames);
+            return CallTyped<ActionResult>(nameof(SelectSettingsListItems), listType, itemNames);
         }
 
-        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
+        public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
-            if (keepEmptyProteins == null)
-                Call(nameof(ImportFasta), textFasta);
-            else
-                Call(nameof(ImportFasta), textFasta, keepEmptyProteins);
+            return CallTyped<ActionResult>(nameof(ImportFasta), textFasta, keepEmptyProteins);
         }
 
         // 3-arg methods
