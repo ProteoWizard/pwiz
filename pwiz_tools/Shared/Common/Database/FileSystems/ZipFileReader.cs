@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Database.FileSystems
@@ -55,10 +56,8 @@ namespace pwiz.Common.Database.FileSystems
         public ZipFileReader(string zipPath)
         {
             ZipPath = zipPath;
-            using (var stream = new FileStream(zipPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                Entries = ReadCentralDirectory(stream);
-            }
+            using var stream = new FileStream(zipPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            Entries = ReadCentralDirectory(stream).ToImmutable();
         }
 
         public string ZipPath { get; }
@@ -433,8 +432,8 @@ namespace pwiz.Common.Database.FileSystems
                 if (!IsStored)
                     throw new InvalidOperationException(
                         $@"Zip entry '{FileName}' is compressed and has no contiguous byte range.");
-                using (var stream = ZipFileReader.OpenZipFile())
-                    return ReadLocalDataOffset(stream, LocalHeaderOffset);
+                using var stream = ZipFileReader.OpenZipFile();
+                return ReadLocalDataOffset(stream, LocalHeaderOffset);
             }
 
             /// <summary>
