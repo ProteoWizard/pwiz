@@ -133,6 +133,12 @@
   <data name="Description_PrecursorMz" xml:space="preserve">
     <value>Precursor m/z of the selected MS/MS spectrum.</value>
   </data>
+  <data name="OtherMetadata" xml:space="preserve">
+    <value>Other Metadata</value>
+  </data>
+  <data name="Description_OtherMetadata" xml:space="preserve">
+    <value>Parameters the data file reports that Skyline does not interpret into its own fields.</value>
+  </data>
   <data name="Charge" xml:space="preserve">
     <value>Charge</value>
   </data>
@@ -282,6 +288,24 @@
   </data>
   <data name="Description_IsCentroided" xml:space="preserve">
     <value>Is this a centroided or high resolution spectrum.</value>
+  </data>
+  <data name="True" xml:space="preserve">
+    <value>True</value>
+  </data>
+  <data name="False" xml:space="preserve">
+    <value>False</value>
+  </data>
+  <data name="Polarity" xml:space="preserve">
+    <value>Polarity</value>
+  </data>
+  <data name="Description_Polarity" xml:space="preserve">
+    <value>Ion polarity of the scan (positive or negative).</value>
+  </data>
+  <data name="Polarity_Positive" xml:space="preserve">
+    <value>Positive</value>
+  </data>
+  <data name="Polarity_Negative" xml:space="preserve">
+    <value>Negative</value>
   </data>
   <data name="WindowGroup" xml:space="preserve">
     <value>Window Group</value>

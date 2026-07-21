@@ -74,6 +74,8 @@ targets['Container'] = \
     }
 }
 
+targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "Osprey Windows .NET"}}
+
 targets['BumbershootRelease'] = \
 {
     'master':
@@ -110,7 +112,7 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
-    ("pwiz_tools/OspreySharp/.*", {}),  # OspreySharp has no dedicated TeamCity build config yet; this silences the build-trigger-gate warning without firing unrelated builds. If/when OspreySharp gets wired into Skyline's build or its own config, map to the appropriate targets.
+    ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNet']),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All']),
     (".*\\.bat", targets['Windows']),

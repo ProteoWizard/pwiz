@@ -251,6 +251,8 @@ pwiz.CommonMsData.dll
 pwiz.CommonMsData.pdb
 pwiz.CommonUtil.dll
 pwiz.CommonUtil.pdb
+pwiz.PortableUtil.dll
+pwiz.PortableUtil.pdb
 pwiz_data_cli.dll
 PanoramaClient.dll
 PanoramaClient.pdb

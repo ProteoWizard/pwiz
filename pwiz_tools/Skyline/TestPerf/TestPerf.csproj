@@ -109,6 +109,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
@@ -139,6 +141,8 @@
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="BullseyeSharpTest.cs" />
     <Compile Include="DiaNnPeakImputationTest.cs" />
+    <Compile Include="DiannSearchPerfTest.cs" />
+    <Compile Include="DiannSearchLFQbenchTest.cs" />
     <Compile Include="PeakBoundaryImputationDiaTutorial.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
@@ -216,6 +220,10 @@
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>

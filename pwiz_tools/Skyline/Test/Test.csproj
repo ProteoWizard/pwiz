@@ -186,9 +186,12 @@
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="CopyFileWithProgressTest.cs" />
+    <Compile Include="FilterClauseSerializerTest.cs" />
     <Compile Include="FilteredMessageWriterTest.cs" />
     <Compile Include="ImmutableListTest.cs" />
+    <Compile Include="FormattableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
+    <Compile Include="SpectrumClassFilterParserTest.cs" />
     <Compile Include="TutorialCatalogTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="LongPathDirectoryTest.cs" />
@@ -330,6 +333,10 @@
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\PanoramaClient\PanoramaClient.csproj">
       <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>

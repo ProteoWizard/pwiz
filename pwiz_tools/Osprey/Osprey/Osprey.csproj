@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>pwiz.Osprey</RootNamespace>
+    <AssemblyName>Osprey</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj" />
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <ProjectReference Include="..\Osprey.Diagnostics\Osprey.Diagnostics.csproj" />
+    <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />
+    <ProjectReference Include="..\Osprey.IO\Osprey.IO.csproj" />
+    <ProjectReference Include="..\Osprey.Chromatography\Osprey.Chromatography.csproj" />
+    <ProjectReference Include="..\Osprey.Scoring\Osprey.Scoring.csproj" />
+    <ProjectReference Include="..\Osprey.FDR\Osprey.FDR.csproj" />
+    <ProjectReference Include="..\Osprey.Tasks\Osprey.Tasks.csproj" />
+  </ItemGroup>
+
+</Project>

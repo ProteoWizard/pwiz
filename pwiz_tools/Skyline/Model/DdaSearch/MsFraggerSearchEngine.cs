@@ -1105,6 +1105,82 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
             }
             base.Dispose();
         }
+
+        #region Default Presets
+
+        private const string PRESET_HIGH_X_DDA = @"MSFragger high-x DDA (Orbitrap, Q-Tof, Tribrid)";
+        private const string PRESET_HIGH_HIGH_DIA = @"MSFragger high-high DIA (Q-Exactive, Q-Tof)";
+        private const string PRESET_LOW_LOW = @"MSFragger low-low (Stellar, LTQ)";
+        private const string ENZYME_TRYPSIN = @"Trypsin";
+
+        public static IEnumerable<SearchSettingsPreset> GetDefaultPresets()
+        {
+            // high-x DDA: Orbitrap, Q-Tof, Tribrid
+            // Only calibrate_mass differs from MSFragger DDA defaults
+            var highXDdaSettings = new Dictionary<string, string>
+            {
+                { @"calibrate_mass", @"2" },
+            };
+            yield return new SearchSettingsPreset(
+                PRESET_HIGH_X_DDA,
+                SearchEngine.MSFragger,
+                new MzTolerance(20, MzTolerance.Units.ppm),
+                new MzTolerance(20, MzTolerance.Units.ppm),
+                maxVariableMods: 3,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: highXDdaSettings,
+                enzymeName: ENZYME_TRYPSIN,
+                maxMissedCleavages: 2);
+
+            // high-high DIA: Q-Exactive, Q-Tof
+            var highHighDiaSettings = new Dictionary<string, string>
+            {
+                { @"calibrate_mass", @"2" },
+                { @"precursor_charge", @"2 4" },
+                { @"use_topN_peaks", @"500" },
+                { @"output_report_topN", @"5" },
+                { @"require_precursor", @"1" },
+                { @"reuse_dia_fragment_peaks", @"0" },
+            };
+            yield return new SearchSettingsPreset(
+                PRESET_HIGH_HIGH_DIA,
+                SearchEngine.MSFragger,
+                new MzTolerance(10, MzTolerance.Units.ppm),
+                new MzTolerance(20, MzTolerance.Units.ppm),
+                workflowType: SearchWorkflowType.dia,
+                maxVariableMods: 3,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: highHighDiaSettings,
+                enzymeName: ENZYME_TRYPSIN,
+                maxMissedCleavages: 1);
+
+            // low-low: Stellar, LTQ
+            var lowLowSettings = new Dictionary<string, string>
+            {
+                { @"deisotope", @"0" },
+                { @"deneutralloss", @"0" },
+                { @"isotope_error", @"0" },
+                { @"use_topN_peaks", @"100" },
+                { @"max_fragment_charge", @"1" },
+            };
+            yield return new SearchSettingsPreset(
+                PRESET_LOW_LOW,
+                SearchEngine.MSFragger,
+                new MzTolerance(3),
+                new MzTolerance(0.2),
+                maxVariableMods: 3,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: lowLowSettings,
+                enzymeName: ENZYME_TRYPSIN,
+                maxMissedCleavages: 2);
+        }
+
+        #endregion
     }
 }
- 

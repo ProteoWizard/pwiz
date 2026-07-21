@@ -972,4 +972,15 @@ Would you like to continue?
   <data name="PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas" xml:space="preserve">
 	  <value>Peptide Normalized Areas</value>
   </data>
+  <data name="SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__" xml:space="preserve">
+    <value>The same fragment (product m/z {0}) is declared more than once on a single line of the transition list. See column {1}.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__" xml:space="preserve">
+    <value>{0} "{1}"</value>
+    <comment>for showing column information in an error message, e.g. '6 "Product Charge"'</comment>
+  </data>
+  <data name="PeakBoundaryImporter_ReadFirstLine__0__or__1_" xml:space="preserve">
+    <value>{0} or {1}</value>
+    <comment>Joins the two acceptable file-identity column names (FileName, ReplicateName) in a missing-header error; localize the word "or".</comment>
+  </data>
 </root>
