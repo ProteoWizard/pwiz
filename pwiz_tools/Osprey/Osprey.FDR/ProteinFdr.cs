@@ -537,11 +537,13 @@ namespace pwiz.Osprey.FDR
                     while (unassigned.Count > 0)
                     {
                         // Pick the group with the most unique peptides that still owns an
-                        // unassigned shared peptide. resultGroups is indexed by group ID,
-                        // so iterating it ascending with a strict '>' resolves equal-count
-                        // ties to the lowest group ID automatically. The unique count is
-                        // read live, so peptides claimed in earlier rounds raise a group's
-                        // count for later rounds (the greedy cascade).
+                        // unassigned shared peptide; ties on unique count resolve to the
+                        // lowest group ID via the explicit `group.Id < bestGroup.Id` test,
+                        // mirroring Rust's max_by_key((unique_len, Reverse(id))). The tiebreak
+                        // is explicit (not a side effect of resultGroups iteration order) so it
+                        // stays correct if that order ever changes. The unique count is read
+                        // live, so peptides claimed in earlier rounds raise a group's count for
+                        // later rounds (the greedy cascade).
                         ProteinGroup bestGroup = null;
                         foreach (var group in resultGroups)
                         {
@@ -557,7 +559,9 @@ namespace pwiz.Osprey.FDR
                             if (!ownsUnassigned)
                                 continue;
                             if (bestGroup == null ||
-                                group.UniquePeptides.Count > bestGroup.UniquePeptides.Count)
+                                group.UniquePeptides.Count > bestGroup.UniquePeptides.Count ||
+                                (group.UniquePeptides.Count == bestGroup.UniquePeptides.Count &&
+                                 group.Id < bestGroup.Id))
                             {
                                 bestGroup = group;
                             }

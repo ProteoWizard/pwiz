@@ -1668,10 +1668,11 @@ namespace pwiz.Osprey.Test
 
         // Asserts the expected razor rollup for the cascading topology used by the two
         // tests above: SHARED_X ends up unique to the PB group, SHARED_Y unique to the
-        // PA group, each shared peptide mapped to exactly one group. Group IDs are not
-        // asserted (the two 4-peptide groups tie on count, so their ID order is not
-        // pinned) -- only the accession-anchored assignment, which is what must be
-        // deterministic.
+        // PA group, each shared peptide mapped to exactly one group. Assertions are
+        // anchored on protein accession, never on group ID: group IDs are an internal
+        // implementation detail (and here the two 4-peptide-set groups even tie on the
+        // peptide-set count that seeds ID assignment, so their relative ID is not pinned).
+        // Only the accession-anchored assignment must be deterministic.
         private static void AssertRazorCascadeAssignment(ProteinParsimonyResult result)
         {
             Assert.AreEqual(3, result.Groups.Count);
