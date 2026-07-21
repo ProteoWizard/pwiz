@@ -982,4 +982,8 @@ Would you like to continue?
     <value>{0} "{1}"</value>
     <comment>for showing column information in an error message, e.g. '6 "Product Charge"'</comment>
   </data>
+  <data name="PeakBoundaryImporter_ReadFirstLine__0__or__1_" xml:space="preserve">
+    <value>{0} or {1}</value>
+    <comment>Joins the two acceptable file-identity column names (FileName, ReplicateName) in a missing-header error; localize the word "or".</comment>
+  </data>
 </root>
