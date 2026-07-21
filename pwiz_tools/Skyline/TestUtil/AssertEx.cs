@@ -1646,6 +1646,9 @@ namespace pwiz.SkylineTestUtil
                                 }
                                 if (allowForTinyNumericDifferences)
                                 {
+                                    if (dTarget == dActual)
+                                        continue; // Numerically identical, e.g. "0" vs net8's "-0"
+                                                  // (net8 keeps the sign of negative zero in ToString; net472 doesn't).
                                     // how much of that was decimal places?
                                     var precTarget = targetField.Length - String.Format("{0}.", (int)dTarget).Length;
                                     var precActual = actualField.Length - String.Format("{0}.", (int)dActual).Length;
