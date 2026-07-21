@@ -30,7 +30,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     /// <summary>
-    /// Tests <see cref="RandomAccessZipFile"/> and <see cref="SliceStream"/>: locating a
+    /// Tests <see cref="ZipFileReader"/> and <see cref="SliceStream"/>: locating a
     /// stored (uncompressed) zip entry and reading its bytes in place, without extraction.
     /// Also tests <see cref="SrmDocumentSharing.CanOpenInPlace"/>, the decision about whether a
     /// .sky.zip can be read this way at all.
@@ -59,7 +59,7 @@ namespace pwiz.SkylineTest
                 zipFile.Save(zipPath);
             }
 
-            var zip = new RandomAccessZipFile(zipPath);
+            var zip = new ZipFileReader(zipPath);
 
             var storedEntry = zip.FindEntryByFileName("sample.skyd");
             Assert.IsNotNull(storedEntry, "stored entry not found");
@@ -71,7 +71,7 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(deflatedEntry.IsStored, "expected .sky to be deflated");
 
             // Read the stored entry in place and confirm it is byte-identical to the original.
-            using (var stream = zip.OpenStoredEntry(storedEntry))
+            using (var stream = storedEntry.OpenRandomAccessStream())
             {
                 Assert.AreEqual(storedBytes.Length, stream.Length);
                 var readBack = ReadAll(stream);
@@ -79,13 +79,13 @@ namespace pwiz.SkylineTest
             }
 
             // Seek to an arbitrary interior range and confirm the slice matches.
-            using (var stream = zip.OpenStoredEntry(storedEntry))
+            using (var stream = storedEntry.OpenRandomAccessStream())
             {
                 const int start = 100 * 1024 + 37;
                 const int count = 8192;
                 Assert.AreEqual(start, stream.Seek(start, SeekOrigin.Begin));
                 var slice = new byte[count];
-                RandomAccessZipFile.ReadExactly(stream, slice, 0, count);
+                ZipFileReader.ReadExactly(stream, slice, 0, count);
                 for (int i = 0; i < count; i++)
                     Assert.AreEqual(storedBytes[start + i], slice[i], "mismatch at interior offset " + i);
                 Assert.AreEqual(start + count, stream.Position);
@@ -96,7 +96,7 @@ namespace pwiz.SkylineTest
             }
 
             // A compressed entry cannot be read in place.
-            AssertEx.ThrowsException<InvalidOperationException>(() => zip.OpenStoredEntry(deflatedEntry));
+            AssertEx.ThrowsException<InvalidOperationException>(() => deflatedEntry.OpenRandomAccessStream());
         }
 
         [TestMethod]
@@ -144,12 +144,12 @@ namespace pwiz.SkylineTest
                 zipFile.Save(zipPath);
             }
 
-            var zip = new RandomAccessZipFile(zipPath);
+            var zip = new ZipFileReader(zipPath);
             var entry = zip.FindEntryByFileName("data.skyd");
             var pool = new ConnectionPool();
-            var pooled = new PooledZipEntryStream(pool, zip, entry, @"C:\docs\data.skyd");
+            var pooled = new PooledZipEntryStream(pool, entry);
 
-            Assert.AreEqual(@"C:\docs\data.skyd", pooled.FilePath, "logical path");
+            Assert.AreEqual(zipPath + @"\data.skyd", pooled.FilePath, "logical path");
             Assert.IsFalse(pooled.IsOpen, "should not be open before use");
 
             // Accessing Stream connects (opens) the pooled stream; bytes must match in place.
@@ -167,11 +167,11 @@ namespace pwiz.SkylineTest
                 zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 5000)));
                 zf.Save(zipPath);
             }
-            var zip2 = new RandomAccessZipFile(zipPath);
+            var zip2 = new ZipFileReader(zipPath);
             var compressed = zip2.FindEntryByFileName("doc.sky");
             Assert.IsFalse(compressed.IsStored);
             AssertEx.ThrowsException<ArgumentException>(() =>
-                new PooledZipEntryStream(pool, zip2, compressed, null));
+                new PooledZipEntryStream(pool, compressed));
         }
 
         [TestMethod]
@@ -222,18 +222,25 @@ namespace pwiz.SkylineTest
             AssertEx.ThrowsException<InvalidOperationException>(() => skyPath.OpenRandomAccessStream());
 
             // Byte range for the SQLite VFS: stored yes (and it points at the right bytes), compressed no.
-            Assert.IsTrue(storedPath.TryGetZipByteRange(out var zp, out var ofs, out var len));
-            Assert.AreEqual(zipPath, zp);
+            var storedEntry = storedPath.GetZipEntry();
+            Assert.IsNotNull(storedEntry);
+            Assert.IsTrue(storedEntry.IsStored);
+            var len = storedEntry.UncompressedSize;
+            var ofs = storedEntry.GetStoredDataOffset();
+            Assert.AreEqual(zipPath, storedEntry.ZipFileReader.ZipPath);
             Assert.AreEqual(storedBytes.Length, len);
             Assert.IsTrue(ofs > 0);
             using (var fs = new FileStream(zipPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 fs.Seek(ofs, SeekOrigin.Begin);
                 var buf = new byte[len];
-                RandomAccessZipFile.ReadExactly(fs, buf, 0, (int) len);
+                ZipFileReader.ReadExactly(fs, buf, 0, (int) len);
                 CollectionAssert.AreEqual(storedBytes, buf, "byte range did not point at the entry data");
             }
-            Assert.IsFalse(skyPath.TryGetZipByteRange(out _, out _, out _));
+            // A compressed entry is not stored, so it exposes no in-place byte range.
+            var skyEntry = skyPath.GetZipEntry();
+            Assert.IsNotNull(skyEntry);
+            Assert.IsFalse(skyEntry.IsStored);
         }
 
         /// <summary>

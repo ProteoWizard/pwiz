@@ -18,10 +18,8 @@
  */
 
 using System;
-using System.Data.SQLite;
 using NHibernate;
 using NHibernate.Cfg;
-using pwiz.Common.Database.FileSystems;
 
 namespace pwiz.Common.Database.NHibernate
 {
@@ -65,29 +63,7 @@ namespace pwiz.Common.Database.NHibernate
         /// </summary>
         public static string ConnectionStringFromPath(string path)
         {
-            if (new FilePath(path).TryGetZipByteRange(out var zipFilePath, out var dataOffset, out var length))
-                return SqliteSliceVfs.GetConnectionString(zipFilePath, dataOffset, length);
-            return SQLiteConnectionStringBuilderFromFilePath(path).ToString();
-        }
-
-        /// <summary>
-        /// Returns a ConnectionStringBuilder with the datasource set to the specified path.  This method takes
-        /// care of the special settings needed to work with UNC paths.
-        /// </summary>
-        public static SQLiteConnectionStringBuilder SQLiteConnectionStringBuilderFromFilePath(string path)
-        {
-            // when SQLite parses the connection string, it treats backslash as an escape character
-            // This is not normally an issue, because backslashes followed by a non-reserved character
-            // are not treated specially.
-
-            // Also, in order to prevent a drive letter being prepended to UNC paths, we specify ToFullPath=false
-            return new SQLiteConnectionStringBuilder
-            {
-                // ReSharper disable LocalizableElement
-                DataSource = path.Replace("\\", "\\\\"),
-                // ReSharper restore LocalizableElement
-                ToFullPath = false,
-            };
+            return SqliteOperations.ConnectionStringBuilderFromFilePath(path).ToString();
         }
 
         public static Configuration ConfigureMappings(Configuration configuration, Type typeDb, string schemaFilename = DEFAULT_SCHEMA_FILENAME)

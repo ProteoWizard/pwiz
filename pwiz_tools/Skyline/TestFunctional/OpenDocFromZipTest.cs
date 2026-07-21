@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             // random-access files stored uncompressed.
             Assert.IsTrue(new SrmDocumentSharing(inPlaceZip).CanOpenInPlace(),
                 "shared .zip has entries that would prevent opening in place: " +
-                string.Join(", ", new RandomAccessZipFile(inPlaceZip).Entries.Select(e => e.ToString())));
+                string.Join(", ", new ZipFileReader(inPlaceZip).Entries.Select(e => e.ToString())));
 
             // Clear the document, then open the shared file. It should open in place, not extract.
             RunUI(() => SkylineWindow.NewDocument());
@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.FileExists(reSharedZip);
             Assert.IsTrue(new SrmDocumentSharing(reSharedZip).CanOpenInPlace(),
                 "re-shared .zip has entries that would prevent opening in place: " +
-                string.Join(", ", new RandomAccessZipFile(reSharedZip).Entries.Select(e => e.ToString())));
+                string.Join(", ", new ZipFileReader(reSharedZip).Entries.Select(e => e.ToString())));
 
             // The re-shared .zip must hold the same document: open it in place and compare.
             RunUI(() => SkylineWindow.NewDocument());

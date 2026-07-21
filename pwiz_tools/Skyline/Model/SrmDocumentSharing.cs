@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// True if the entry can be read from beginning to end, i.e. it is stored or deflated - see
-        /// <see cref="RandomAccessZipFile.OpenEntry"/>, which reads a zip entry with .NET's inflater
+        /// <see cref="ZipFileReader.Entry.OpenSequentialStream"/>, which reads a zip entry with .NET's inflater
         /// rather than DotNetZip's because it is markedly faster. Extracting the .zip goes through
         /// DotNetZip, which reads compression methods we do not, so an entry compressed some other
         /// way means the whole .zip has to be extracted.

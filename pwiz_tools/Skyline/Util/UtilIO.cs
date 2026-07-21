@@ -774,9 +774,9 @@ namespace pwiz.Skyline.Util
         public IPooledStream CreatePooledStream(string path, bool buffer)
         {
             // The file may be stored inside a .zip (e.g. a .skyd in an in-place .sky.zip).
-            var filePath = new FilePath(path);
-            if (filePath.TryGetZipEntry(out var zipFile, out var entry))
-                return new PooledZipEntryStream(ConnectionPool, zipFile, entry, path);
+            var entry = new FilePath(path).GetZipEntry();
+            if (entry != null)
+                return new PooledZipEntryStream(ConnectionPool, entry);
             return new PooledFileStream(this, path, buffer);
         }
 

@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsTrue(new SrmDocumentSharing(inPlaceZip).CanOpenInPlace(),
                 "shared .zip has entries that would prevent opening in place: " +
-                string.Join(", ", new RandomAccessZipFile(inPlaceZip).Entries.Select(e => e.ToString())));
+                string.Join(", ", new ZipFileReader(inPlaceZip).Entries.Select(e => e.ToString())));
 
             // Read the background proteome directly from inside the .zip, without extracting it, and
             // verify it has the same proteins as the original on disk. This exercises reading a

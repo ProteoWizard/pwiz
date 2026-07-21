@@ -36,27 +36,26 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public sealed class PooledZipEntryStream : ConnectionId<Stream>, IPooledStream
     {
-        public PooledZipEntryStream(ConnectionPool connectionPool, RandomAccessZipFile zipFile,
-            ZipEntryInfo entry, string logicalPath)
+        public PooledZipEntryStream(ConnectionPool connectionPool, ZipFileReader.Entry entry)
             : base(connectionPool)
         {
             if (!entry.IsStored)
                 throw new ArgumentException(
                     $@"Zip entry '{entry.FileName}' is compressed and cannot be read in place.", nameof(entry));
-            ZipFile = zipFile;
             Entry = entry;
-            FilePath = logicalPath ?? zipFile.ZipPath;
-            FileTime = File.GetLastWriteTime(zipFile.ZipPath);
+            FilePath = entry.LogicalPath;
+            FileTime = File.GetLastWriteTime(ZipPath);
         }
 
-        private RandomAccessZipFile ZipFile { get; }
-        private ZipEntryInfo Entry { get; }
+        private ZipFileReader.Entry Entry { get; }
         public string FilePath { get; }
         private DateTime FileTime { get; }
 
+        private string ZipPath => Entry.ZipFileReader.ZipPath;
+
         protected override IDisposable Connect()
         {
-            return ZipFile.OpenStoredEntry(Entry);
+            return Entry.OpenRandomAccessStream();
         }
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -73,7 +72,7 @@ namespace pwiz.Skyline.Util
                 // backing .zip file's last-write time is what matters.
                 try
                 {
-                    return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(ZipFile.ZipPath));
+                    return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(ZipPath));
                 }
                 catch (UnauthorizedAccessException)
                 {
@@ -92,7 +91,7 @@ namespace pwiz.Skyline.Util
             {
                 if (!IsModified)
                     return @"Unmodified";
-                return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(ZipFile.ZipPath));
+                return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(ZipPath));
             }
         }
 
@@ -108,7 +107,7 @@ namespace pwiz.Skyline.Util
 
         public override string ToString()
         {
-            return $@"PooledZipEntryStream({Entry.FileName} in {ZipFile.ZipPath})"; // Not L10N - debug only
+            return $@"PooledZipEntryStream({Entry.FileName} in {ZipPath})"; // Not L10N - debug only
         }
     }
 }

@@ -52,7 +52,7 @@ namespace pwiz.SkylineTest
             AssertEx.FileExists(skyZipPath);
 
             // The .skyd must be stored uncompressed, or it could not be read in place at all
-            var zip = new RandomAccessZipFile(skyZipPath);
+            var zip = new ZipFileReader(skyZipPath);
             var skydEntry = zip.FindEntryByFileName(SKYD_NAME);
             Assert.IsNotNull(skydEntry, "no " + SKYD_NAME + " in " + skyZipPath);
             Assert.IsTrue(skydEntry.IsStored, SKYD_NAME + " is not stored uncompressed");
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTest
 
             // Extract the same .skyd to a file, to compare reading it in place against reading it
             string skydOnDisk = TestFilesDir.GetTestPath(SKYD_NAME);
-            using (var entryStream = zip.OpenStoredEntry(skydEntry))
+            using (var entryStream = skydEntry.OpenRandomAccessStream())
             using (var fileStream = File.Create(skydOnDisk))
             {
                 entryStream.CopyTo(fileStream);

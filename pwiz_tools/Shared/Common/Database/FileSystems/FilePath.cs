@@ -56,7 +56,7 @@ namespace pwiz.Common.Database.FileSystems
         {
             if (!TryParseZip(out var zipFilePath, out var entryName))
                 return File.Exists(Path);
-            return new RandomAccessZipFile(zipFilePath).FindEntry(entryName) != null;
+            return new ZipFileReader(zipFilePath).FindEntry(entryName) != null;
         }
 
         /// <summary>
@@ -66,10 +66,10 @@ namespace pwiz.Common.Database.FileSystems
         /// </summary>
         public Stream OpenSequentialStream()
         {
-            if (!TryParseZip(out var zipFilePath, out var entryName))
+            var entry = GetZipEntry();
+            if (entry == null)
                 return File.OpenRead(Path);
-            var zip = new RandomAccessZipFile(zipFilePath);
-            return zip.OpenEntry(FindEntryOrThrow(zip, zipFilePath, entryName));
+            return entry.OpenSequentialStream();
         }
 
         /// <summary>
@@ -81,38 +81,27 @@ namespace pwiz.Common.Database.FileSystems
         /// </summary>
         public Stream OpenRandomAccessStream()
         {
-            if (!TryParseZip(out var zipFilePath, out var entryName))
+            var entry = GetZipEntry();
+            if (entry == null)
                 return File.OpenRead(Path);
-            var zip = new RandomAccessZipFile(zipFilePath);
-            return zip.OpenStoredEntry(FindEntryOrThrow(zip, zipFilePath, entryName));
+            return entry.OpenRandomAccessStream();
         }
 
-        private ZipEntryInfo FindEntryOrThrow(RandomAccessZipFile zip, string zipFilePath, string entryName)
+        /// <summary>
+        /// For a path inside a zip, returns the zip <see cref="ZipFileReader.Entry"/> (which knows
+        /// its containing <see cref="ZipFileReader"/>). Returns null for an ordinary path (not
+        /// inside a zip). Callers that need a pooled or seekable stream over the entry (e.g.
+        /// Skyline's PooledZipEntryStream) use this.
+        /// </summary>
+        public ZipFileReader.Entry GetZipEntry()
         {
-            var entry = zip.FindEntry(entryName);
+            if (!TryParseZip(out var zipFilePath, out var entryName))
+                return null;
+            var entry = new ZipFileReader(zipFilePath).FindEntry(entryName);
             if (entry == null)
                 throw new FileNotFoundException(string.Format(
                     Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
             return entry;
-        }
-
-        /// <summary>
-        /// For a path inside a zip, returns the containing <see cref="RandomAccessZipFile"/> and the
-        /// entry. Returns false for an ordinary path (not inside a zip). Callers that need a pooled
-        /// or seekable stream over the entry (e.g. Skyline's PooledZipEntryStream) use this.
-        /// </summary>
-        public bool TryGetZipEntry(out RandomAccessZipFile zipFile, out ZipEntryInfo entry)
-        {
-            zipFile = null;
-            entry = null;
-            if (!TryParseZip(out var zipFilePath, out var entryName))
-                return false;
-            zipFile = new RandomAccessZipFile(zipFilePath);
-            entry = zipFile.FindEntry(entryName);
-            if (entry == null)
-                throw new FileNotFoundException(string.Format(
-                    Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
-            return true;
         }
 
         /// <summary>
@@ -121,12 +110,9 @@ namespace pwiz.Common.Database.FileSystems
         /// </summary>
         public long GetLength()
         {
-            if (!TryParseZip(out var zipFilePath, out var entryName))
-                return new FileInfo(Path).Length;
-            var entry = new RandomAccessZipFile(zipFilePath).FindEntry(entryName);
+            var entry = GetZipEntry();
             if (entry == null)
-                throw new FileNotFoundException(string.Format(
-                    Resources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
+                return new FileInfo(Path).Length;
             return entry.UncompressedSize;
         }
 
@@ -139,29 +125,6 @@ namespace pwiz.Common.Database.FileSystems
             if (TryParseZip(out var zipFilePath, out _))
                 return File.GetLastWriteTime(zipFilePath);
             return File.GetLastWriteTime(Path);
-        }
-
-        /// <summary>
-        /// For a stored (uncompressed) zip entry, returns the containing zip file and the byte range
-        /// (offset and length) of the entry's data inside it - enough for code that reads the file in
-        /// place, such as the SQLite VFS used to open a .blib without extracting it. Returns false for
-        /// an ordinary path or a compressed entry.
-        /// </summary>
-        public bool TryGetZipByteRange(out string zipFilePath, out long dataOffset, out long length)
-        {
-            zipFilePath = null;
-            dataOffset = 0;
-            length = 0;
-            if (!TryParseZip(out var zipPath, out var entryName))
-                return false;
-            var zip = new RandomAccessZipFile(zipPath);
-            var entry = zip.FindEntry(entryName);
-            if (entry == null || !entry.IsStored)
-                return false;
-            zipFilePath = zipPath;
-            dataOffset = zip.GetStoredEntryDataOffset(entry);
-            length = entry.UncompressedSize;
-            return true;
         }
 
         /// <summary>
@@ -207,9 +170,7 @@ namespace pwiz.Common.Database.FileSystems
 
         protected bool Equals(FilePath other)
         {
-            // Case-sensitive: we cannot know whether the file system is case-sensitive, and entries
-            // inside a .zip are always case-sensitive.
-            return string.Equals(Path, other.Path, StringComparison.Ordinal);
+            return Equals(Path, other.Path);
         }
 
         public override bool Equals(object obj)
@@ -219,7 +180,7 @@ namespace pwiz.Common.Database.FileSystems
 
         public override int GetHashCode()
         {
-            return Path == null ? 0 : StringComparer.Ordinal.GetHashCode(Path);
+            return Path?.GetHashCode() ?? 0;
         }
     }
 }

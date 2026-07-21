@@ -244,7 +244,7 @@ namespace pwiz.Skyline
         /// </summary>
         private bool OpenSharedFileInPlace(string zipPath, FormEx parentWindow)
         {
-            var zip = new RandomAccessZipFile(zipPath);
+            var zip = new ZipFileReader(zipPath);
             var skyEntry = zip.Entries.FirstOrDefault(e =>
                 string.Equals(Path.GetExtension(e.FileName), SrmDocument.EXT, StringComparison.OrdinalIgnoreCase));
             if (skyEntry == null)

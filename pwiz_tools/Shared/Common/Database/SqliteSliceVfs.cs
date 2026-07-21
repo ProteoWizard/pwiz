@@ -49,8 +49,9 @@ namespace pwiz.Common.Database
         /// </summary>
         public static SQLiteConnection OpenConnection(string path)
         {
-            if (new FilePath(path).TryGetZipByteRange(out var zipFilePath, out var dataOffset, out var length))
-                return OpenConnection(zipFilePath, dataOffset, length);
+            var entry = new FilePath(path).GetZipEntry();
+            if (entry != null && entry.IsStored)
+                return OpenConnection(entry.ZipFileReader.ZipPath, entry.GetStoredDataOffset(), entry.UncompressedSize);
             return SqliteOperations.OpenConnection(path);
         }
 
@@ -86,8 +87,6 @@ namespace pwiz.Common.Database
         /// </summary>
         private static void EnsureVfsRegistered()
         {
-            if (_registered)
-                return;
             lock (RegisterLock)
             {
                 if (_registered)
