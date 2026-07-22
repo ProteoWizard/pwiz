@@ -125,16 +125,32 @@ namespace pwiz.Skyline.Model
 
         private bool IsFinal(SrmDocument doc)
         {
-            // The document is loaded, or the loader reached any final state
-            // (error, cancelled, or successfully complete). The old condition
-            // required both IsFinal AND IsError, so a loader that completed
-            // successfully but left doc.IsLoaded == false (e.g. WatersCacheTest
-            // on net8 - pwiz-sharp Reader_Waters emits chromatograms that
-            // Skyline's ChromCacheBuilder finishes producing without flipping
-            // doc into a loaded state) would hang here forever. Return true on
-            // any final loader state so the test surface fails fast rather
-            // than hanging past the blame-hang timeout.
-            return doc.IsLoaded || (LastProgress != null && LastProgress.IsFinal);
+            // The document is fully loaded: definitely final.
+            if (doc.IsLoaded)
+                return true;
+            // Not loaded and the loader has not reached a final state yet: keep waiting.
+            if (LastProgress == null || !LastProgress.IsFinal)
+                return false;
+            // A terminal error or cancellation is final regardless of load state.
+            if (LastProgress.IsError || LastProgress.IsCanceled)
+                return true;
+            // Successful-looking final status but the document is not loaded. This happens
+            // in two very different situations that must not be conflated:
+            //  1. Multi-file loading posts a *final* status as each file finishes, but leaves
+            //     the document at a checkpoint with more files still to import -- the loader
+            //     re-triggers to build them (e.g. ThermoFormatsTest importing a second file
+            //     into a document that already has a final cache). Returning true here would
+            //     abandon the remaining files' import.
+            //  2. The loader genuinely finished but left doc.IsLoaded == false (e.g.
+            //     WatersCacheTest on net8 - pwiz-sharp Reader_Waters emits chromatograms that
+            //     Skyline's ChromCacheBuilder finishes producing without flipping the doc into
+            //     a loaded state). Returning false here would hang forever.
+            // Distinguish them by whether any data file still needs importing into a cache:
+            // in case 1 the pending file is not cached (keep waiting), while in case 2 every
+            // file is already cached (final, so the test surface fails fast rather than hangs).
+            var results = doc.Settings.MeasuredResults;
+            return results == null ||
+                   results.Chromatograms.All(chromSet => chromSet.MSDataFilePaths.All(results.IsCachedFile));
         }
 
         public virtual void ResetProgress()
