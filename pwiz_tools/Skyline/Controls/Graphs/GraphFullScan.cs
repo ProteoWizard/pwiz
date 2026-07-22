@@ -95,6 +95,15 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
         private LibraryRankedSpectrumInfo _rmis;
 
+        // Most recent SpectrumGraphItem created by RankScan; carries ruler state
+        // (HoveredSeriesKey, PinnedSeriesKeys, SrmSettings) for the active scan.
+        private SpectrumGraphItem _currentGraphItem;
+        private readonly List<IonSeriesKey> _pinnedSeriesKeys = new List<IonSeriesKey>();
+        private bool _contextMenuOpen;
+        // Tracks the previous precursor identity so we can clear pinned rulers
+        // when the user navigates to a different peptide/precursor.
+        private object _lastPrecursorId;
+
         // status info to calculate point dot products
         private SpectrumPeaksInfo.MI[] _peaks;
         private GraphSpectrum.Precursor _precursor;
@@ -127,6 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.GraphPane.AllowLabelOverlap = true;
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMoveEvent += graphControl_MouseMove;
+            graphControl.MouseLeave += (s, e) => { if (!_contextMenuOpen) UpdateHoveredPeak(null); };
             graphControl.MouseClick += graphControl_MouseClick;
             graphControl.ZoomEvent += graphControl_ZoomEvent;
             graphControl.Resize += graphControl_Resize;
@@ -1836,6 +1846,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     LineWidth = Settings.Default.SpectrumLineWidth
                 };
 
+                // Reset pinned rulers whenever the user navigates to a different precursor.
+                if (!Equals(_lastPrecursorId, precursor.Id))
+                {
+                    _pinnedSeriesKeys.Clear();
+                    _lastPrecursorId = precursor.Id;
+                }
+
+                // RankScan only runs when a stick spectrum is being rendered (S, S+H, or
+                // non-IM single-pane stick); heatmap-only and H+M modes don't reach here.
+                graphItem.SrmSettings = settings;
+                graphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+
+                _currentGraphItem = graphItem;
                 return graphItem;
             }
             return null;
@@ -3202,7 +3225,87 @@ namespace pwiz.Skyline.Controls.Graphs
                 var isProteomic = (_msDataFileScanHelper.CurrentTransition?.Id as Transition)?.Group.IsProteomic;
                 (_documentContainer as GraphSpectrum.IStateProvider)
                     ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
+
+                AddRulerMenuItems(menuStrip);
             }
+        }
+
+        private void AddRulerMenuItems(ContextMenuStrip menuStrip)
+        {
+            // Rulers don't apply to small molecules / crosslinks — offer no ruler items.
+            if (_currentGraphItem == null || !_currentGraphItem.RulersApplicable)
+                return;
+
+            // Capture the hovered key now — MouseLeave fires when the context menu window
+            // appears on top of the graph, which would clear HoveredSeriesKey before the
+            // user can click "Pin Ruler".
+            var hoveredKey = _currentGraphItem?.HoveredSeriesKey;
+            bool hasPinned = _pinnedSeriesKeys.Count > 0;
+
+            // Suppress MouseLeave while the menu is open so the ruler stays visible.
+            _contextMenuOpen = true;
+            menuStrip.Closed += (s, e) =>
+            {
+                _contextMenuOpen = false;
+                if (!graphControl.ClientRectangle.Contains(
+                        graphControl.PointToClient(Cursor.Position)))
+                    UpdateHoveredPeak(null);
+            };
+
+            // Insert just below the first separator so ruler items sit close to the
+            // ion-type/charge items that BuildSpectrumMenu placed above it.
+            int insertAt = FindIndexAfterFirstSeparator(menuStrip);
+
+            // Master on/off toggle — always offered for applicable spectra so the feature
+            // can be turned back on after it has been disabled.
+            var toggleItem = new ToolStripMenuItem(SpectrumGraphItem.RulerToggleMenuText);
+            toggleItem.Click += (s, e) => ToggleRulersEnabled();
+            menuStrip.Items.Insert(insertAt++, toggleItem);
+
+            // Per-series Pin / Unpin items only while the feature is enabled.
+            if (SpectrumGraphItem.RulersEnabled)
+            {
+                if (hoveredKey.HasValue)
+                {
+                    var key = hoveredKey.Value;
+                    if (_pinnedSeriesKeys.Contains(key))
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinRuler);
+                        item.Click += (s, e) => UnpinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                    else
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_PinRuler);
+                        item.Click += (s, e) => PinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                }
+
+                if (hasPinned)
+                {
+                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinAllRulers);
+                    item.Click += (s, e) => UnpinAllRulers();
+                    menuStrip.Items.Insert(insertAt++, item);
+                }
+            }
+
+            // Trailing separator to visually group ruler items, unless the next item is
+            // already a separator (avoid two adjacent separators).
+            if (insertAt >= menuStrip.Items.Count || !(menuStrip.Items[insertAt] is ToolStripSeparator))
+                menuStrip.Items.Insert(insertAt, new ToolStripSeparator());
+        }
+
+        // Returns the index right after the first ToolStripSeparator in the menu, or
+        // the menu length (append at end) when no separator is found.
+        private static int FindIndexAfterFirstSeparator(ContextMenuStrip menuStrip)
+        {
+            for (int i = 0; i < menuStrip.Items.Count; i++)
+            {
+                if (menuStrip.Items[i] is ToolStripSeparator)
+                    return i + 1;
+            }
+            return menuStrip.Items.Count;
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
@@ -3239,6 +3342,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsMobilogramVisible && IsInMobilogramArea(pt))
             {
                 graphControl.Cursor = Cursors.Cross;
+                UpdateHoveredPeak(null);
                 return true;
             }
 
@@ -3248,12 +3352,39 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var pane = graphControl.MasterPane.FindChartRect(pt);
                 if (!ReferenceEquals(pane, _stickSpectrumPane))
+                {
+                    UpdateHoveredPeak(null);
                     return false;
+                }
             }
 
             var nearestLabel = GetNearestLabel(pt, labelPane);
             if (nearestLabel == null || nearestLabel.Tag == null)
+            {
+                // No label under cursor — but a stick under the cursor still warrants the ruler.
+                UpdateHoveredPeakFromStick(pt, labelPane);
                 return false;
+            }
+
+            // Update ruler hover for any labeled peak with a known ion assignment, even when
+            // the label isn't clickable (no matching transition in the document) — the ion
+            // still has a valid type+charge that the ruler can display.
+            // Match by label text rather than by Tag/rank: unranked matches (e.g. zh/zhh
+            // alternates of a ranked z peak) carry Rank=0, so a rank-based lookup is
+            // ambiguous. PeaksMatched includes both ranked and unranked matches.
+            if (_showIonSeriesAnnotations && _rmis != null && _currentGraphItem != null)
+            {
+                var peakRmi = _rmis.PeaksMatched.FirstOrDefault(
+                    p => _currentGraphItem.GetLabel(p).Equals(nearestLabel.Text));
+                UpdateHoveredPeak(peakRmi);
+            }
+            else
+            {
+                UpdateHoveredPeak(null);
+            }
+
+            // The remaining checks gate cursor=Hand to clickable labels only (i.e. those that
+            // navigate to a transition in the document). Ruler hover already updated above.
             var transition = (int) nearestLabel.Tag;
             if (transition < 0 || _transitionIndex == null || transition >= _transitionIndex.Length)
                 return false;
@@ -3262,6 +3393,117 @@ namespace pwiz.Skyline.Controls.Graphs
 
             graphControl.Cursor = Cursors.Hand;
             return true;
+        }
+
+        private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            // No hover ruler when the feature is disabled, or for small molecules / crosslinks.
+            if (!SpectrumGraphItem.RulersEnabled || (_currentGraphItem != null && !_currentGraphItem.RulersApplicable))
+                peakRmi = null;
+
+            var newKey = SpectrumGraphItem.GetBestSeriesKey(peakRmi);
+
+            if (_currentGraphItem == null)
+                return;
+            // Only redraw when the hovered ion series actually changes; same change-detection
+            // pattern as GraphSpectrum to avoid repaint loops.
+            if (Equals(newKey, _currentGraphItem.HoveredSeriesKey))
+                return;
+
+            _currentGraphItem.HoveredSeriesKey = newKey;
+            graphControl.Invalidate();
+        }
+
+        // Resolve the stick under the cursor (if any) to its matched RankedMI and update
+        // ruler hover accordingly. Used as the fallback when GetNearestLabel returns null
+        // — the user is hovering a stick body but not its label text.
+        private void UpdateHoveredPeakFromStick(PointF pt, MSGraphPane spectrumPane)
+        {
+            if (!_showIonSeriesAnnotations || _rmis == null)
+            {
+                UpdateHoveredPeak(null);
+                return;
+            }
+            if (spectrumPane.FindNearestStick(pt, out var nearestCurve, out var nearestIndex)
+                && nearestCurve != null
+                && nearestIndex >= 0 && nearestIndex < nearestCurve.NPts)
+            {
+                var observedMz = nearestCurve.Points[nearestIndex].X;
+                var peakRmi = _rmis.PeaksMatched.FirstOrDefault(p => p.ObservedMz == observedMz);
+                UpdateHoveredPeak(peakRmi);
+            }
+            else
+            {
+                UpdateHoveredPeak(null);
+            }
+        }
+
+        // Pins the ruler for a single ion series (the body of the "Pin Ruler" menu command).
+        private void PinRuler(IonSeriesKey key)
+        {
+            if (_pinnedSeriesKeys.Contains(key))
+                return;
+            _pinnedSeriesKeys.Add(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinRuler(IonSeriesKey key)
+        {
+            _pinnedSeriesKeys.Remove(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinAllRulers()
+        {
+            _pinnedSeriesKeys.Clear();
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        // Flips the global ruler on/off preference (the Enable/Disable menu command).
+        // Turning the feature off clears this host's pinned rulers so they don't reappear
+        // when it is turned back on. Public so the functional test can drive the same path
+        // the context-menu item invokes.
+        public void ToggleRulersEnabled()
+        {
+            SpectrumGraphItem.RulersEnabled = !SpectrumGraphItem.RulersEnabled;
+            if (!SpectrumGraphItem.RulersEnabled)
+                UnpinAllRulers();
+            UpdateHoveredPeak(null);
+            graphControl.Invalidate();
+        }
+
+        private void SyncPinnedSeriesToGraphItems()
+        {
+            if (_currentGraphItem != null)
+                _currentGraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+        }
+
+        // The sequence ruler is driven by mouse-over and context-menu commands, neither of
+        // which a functional test can synthesize. These public seams invoke the same code
+        // paths so SpectrumSequenceRulerTest can verify hover resolution and pin/unpin
+        // without a physical mouse. See ai/todos TODO-20260416_spectrumSequenceRuler.
+        public SpectrumGraphItem RulerGraphItem => _currentGraphItem;
+        public void HoverRulerPeak(LibraryRankedSpectrumInfo.RankedMI peak) => UpdateHoveredPeak(peak);
+        public void PinHoveredRuler()
+        {
+            var key = _currentGraphItem?.HoveredSeriesKey;
+            if (key.HasValue)
+                PinRuler(key.Value);
+        }
+
+        // Programmatic equivalent of clicking the "Show Annotations" toolstrip button.
+        // Annotated mode is required for the ruler to apply — in target-only mode the graph
+        // shows only document transitions, with no broader matched-peak set to align against.
+        // No-op when the toolstrip button isn't visible (the scan isn't a fragment scan).
+        public void ShowAnnotations(bool show)
+        {
+            if (!toolStripButtonShowAnnotations.Visible
+                || toolStripButtonShowAnnotations.Checked == show)
+                return;
+            toolStripButtonShowAnnotations.Checked = show;
         }
 
         // For use with CursorTrackingTip _cursorTip
@@ -3453,7 +3695,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddDetailRowNoBold(@"  ", @"  ", rt); // blank separator line
                 table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons,
                     GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
-                foreach (var mfi in rmi.MatchedIons)
+                foreach (var mfi in rmi.MatchedIonsSorted)
                     table.AddDetailRowNoBold(AbstractSpectrumGraphItem.GetLabel(mfi, rmi.Rank, false, !_showIonSeriesAnnotations),
                         mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
                         AbstractSpectrumGraphItem.GetMassErrorString(rmi, mfi), rt);

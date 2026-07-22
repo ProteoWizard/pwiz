@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
@@ -184,9 +186,46 @@ namespace pwiz.Skyline.Model.Lib
 
             public ImmutableList<MatchedFragmentIon> MatchedIons { get; private set; }
 
+            // Cached sorted view of MatchedIons. RankedMI is immutable, so the sorted list
+            // can be computed once and reused across the hot UI paths (GetLabel, AddAnnotations,
+            // tooltip rendering, sequence-ruler hover resolution) that previously paid the
+            // sort + allocation on every access.
+            private ImmutableList<MatchedFragmentIon> _matchedIonsSorted;
+
+            // Returns the matched ions sorted by ascending absolute ppm mass error. The ppm
+            // denominator is the predicted m/z to match Skyline's mass-error convention used
+            // elsewhere (e.g. GetMassErrorString), so the sort order is consistent with the
+            // mass error displayed to the user.
+            public ImmutableList<MatchedFragmentIon> MatchedIonsSorted
+            {
+                get
+                {
+                    if (_matchedIonsSorted != null)
+                        return _matchedIonsSorted;
+                    if (MatchedIons == null)
+                        return null;
+                    if (!MatchedIons.Any())
+                        return _matchedIonsSorted = ImmutableList<MatchedFragmentIon>.EMPTY;
+                    var sortedByError = MatchedIons.Select(mi =>
+                            new
+                            {
+                                mi,
+                                err =
+                                Math.Abs(SequenceMassCalc.GetPpm(mi.PredictedMz, mi.PredictedMz - ObservedMz))
+                            })
+                        .ToList();
+                    sortedByError.Sort((ion1, ion2) => ion1.err.CompareTo(ion2.err));
+                    return _matchedIonsSorted = ImmutableList.ValueOf(sortedByError.Select(ie => ie.mi));
+                }
+            }
+
             public RankedMI ChangeMatchedIons(IEnumerable<MatchedFragmentIon> matchedIons)
             {
-                return ChangeProp(ImClone(this), im => im.MatchedIons = ImmutableList.ValueOf(matchedIons));
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.MatchedIons = ImmutableList.ValueOf(matchedIons);
+                    im._matchedIonsSorted = null;
+                });
             }
 
             private bool Equals(RankedMI other)

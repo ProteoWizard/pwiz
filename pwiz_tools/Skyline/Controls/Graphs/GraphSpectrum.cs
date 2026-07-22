@@ -210,6 +210,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumDisplayInfo _spectrum;
         private NodeTip _toolTip;
+        private readonly List<IonSeriesKey> _pinnedSeriesKeys = new List<IonSeriesKey>();
+        // Identity of the precursor whose pinned rulers _pinnedSeriesKeys currently holds.
+        // Used to preserve pins across graph redraws (e.g. annotation-toggle context menu
+        // clicks) and only reset them when the user navigates to a different precursor.
+        private object _lastPrecursorId;
+        private bool _contextMenuOpen;
                 
         private string _userSelectedSpectrum;
         private SpectrumDisplayInfo _mirrorSpectrum;
@@ -228,6 +234,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMove += GraphControl_MouseMove;
+            graphControl.MouseLeave += (s, e) => { if (!_contextMenuOpen) UpdateHoveredPeak(null); };
             msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             Icon = Resources.SkylineData;
@@ -977,6 +984,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)
         {
             var precursor = selection.NodeTranGroup ?? SelectedPrecursor.DocNode;
+            // Reset pinned rulers whenever the user navigates to a different precursor.
+            // Same pattern used by GraphFullScan and ViewLibraryDlg. Idempotent for the
+            // mirror-spectrum call right after main, since both share the same selection.
+            if (!Equals(_lastPrecursorId, precursor.Id))
+            {
+                _pinnedSeriesKeys.Clear();
+                _lastPrecursorId = precursor.Id;
+            }
             var peptide = selection.GetPeptide(precursor);
 
             var group = precursor.TransitionGroup;
@@ -1044,7 +1059,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
-                LineWidth = Settings.Default.SpectrumLineWidth
+                LineWidth = Settings.Default.SpectrumLineWidth,
+                SrmSettings = settings
             };
         }
 
@@ -1178,6 +1194,9 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane.GraphObjList.Clear();
             GraphItem = null;
             AllowDisplayTip = false;
+            // Don't clear _pinnedSeriesKeys here — annotation-toggle context-menu commands
+            // also rebuild the graph and the user's pinned rulers should survive. The
+            // pinned list is reset only when MakeGraphItem detects a new precursor.
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
             GraphHelper.FormatFontSize(graphControl.GraphPane, Settings.Default.SpectrumFontSize);
@@ -1383,6 +1402,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (spectrum != null)
                     {
                         GraphItem = MakeGraphItem(spectrum, selection, settings);
+                        // Re-apply pinned rulers to the freshly-built item so they survive
+                        // annotation-toggle redraws on the same precursor.
+                        SyncPinnedSeriesToGraphItems();
                         AllowDisplayTip = true;
                     }
 
@@ -1420,6 +1442,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                 : mirrorSpectrum.SpectrumPeaksInfo;
                             MirrorGraphItem = MakeGraphItem(mirrorSpectrum, selection, settings, peaksInfo);
                             MirrorGraphItem.Invert = true;
+                            // Only the top item renders the ruler ladder; cross-link the
+                            // mirror so its matched peaks can extend the drop-line lookup.
+                            if (GraphItem != null)
+                                GraphItem.MirrorItem = MirrorGraphItem;
 
                             _graphHelper.AddSpectrum(MirrorGraphItem, false);
 
@@ -1690,6 +1716,81 @@ namespace pwiz.Skyline.Controls.Graphs
             ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             _stateProvider.BuildSpectrumMenu(IsNotSmallMolecule, sender, menuStrip);
+
+            // Rulers don't apply to small molecules / crosslinks — offer no ruler items.
+            if (GraphItem?.RulersApplicable != true)
+                return;
+
+            // Capture the hovered series key now — MouseLeave fires when the context menu
+            // window appears on top of the graph, which would clear HoveredSeriesKey before
+            // the user can click "Pin Ruler".
+            var hoveredKey = GraphItem?.HoveredSeriesKey;
+            bool hasPinned = _pinnedSeriesKeys.Count > 0;
+
+            // Suppress MouseLeave while the menu is open so the ruler stays visible.
+            _contextMenuOpen = true;
+            menuStrip.Closed += (s, e) =>
+            {
+                _contextMenuOpen = false;
+                if (!graphControl.ClientRectangle.Contains(
+                        graphControl.PointToClient(Cursor.Position)))
+                    UpdateHoveredPeak(null);
+            };
+
+            // Insert just below the first separator so ruler items sit close to the
+            // ion-type/charge items that BuildSpectrumMenu placed above it.
+            int insertAt = FindIndexAfterFirstSeparator(menuStrip);
+
+            // Master on/off toggle — always offered for applicable spectra so the feature
+            // can be turned back on after it has been disabled.
+            var toggleItem = new ToolStripMenuItem(SpectrumGraphItem.RulerToggleMenuText);
+            toggleItem.Click += (s, e) => ToggleRulersEnabled();
+            menuStrip.Items.Insert(insertAt++, toggleItem);
+
+            // Per-series Pin / Unpin items only while the feature is enabled.
+            if (SpectrumGraphItem.RulersEnabled)
+            {
+                if (hoveredKey.HasValue)
+                {
+                    var key = hoveredKey.Value;
+                    if (_pinnedSeriesKeys.Contains(key))
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinRuler);
+                        item.Click += (s, e) => UnpinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                    else
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_PinRuler);
+                        item.Click += (s, e) => PinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                }
+
+                if (hasPinned)
+                {
+                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinAllRulers);
+                    item.Click += (s, e) => UnpinAllRulers();
+                    menuStrip.Items.Insert(insertAt++, item);
+                }
+            }
+
+            // Trailing separator to visually group ruler items, unless the next item is
+            // already a separator (avoid two adjacent separators).
+            if (insertAt >= menuStrip.Items.Count || !(menuStrip.Items[insertAt] is ToolStripSeparator))
+                menuStrip.Items.Insert(insertAt, new ToolStripSeparator());
+        }
+
+        // Returns the index right after the first ToolStripSeparator in the menu, or
+        // the menu length (append at end) when no separator is found.
+        private static int FindIndexAfterFirstSeparator(ContextMenuStrip menuStrip)
+        {
+            for (int i = 0; i < menuStrip.Items.Count; i++)
+            {
+                if (menuStrip.Items[i] is ToolStripSeparator)
+                    return i + 1;
+            }
+            return menuStrip.Items.Count;
         }
 
         public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
@@ -1864,6 +1965,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            UpdateHoveredPeak(peakRmi);
+
             if (peakRmi != null)
             {
                 if (_toolTip == null)
@@ -1871,9 +1974,92 @@ namespace pwiz.Skyline.Controls.Graphs
                 _toolTip.SetTipProvider(new ToolTipImplementation(peakRmi), new Rectangle(e.Location, new Size()), e.Location);
                 return;
             }
+            // No Invalidate here: UpdateHoveredPeak above already invalidates when the
+            // ruler series actually changes, and hiding the tooltip popup doesn't need a
+            // graph repaint.
             _toolTip?.HideTip();
             _toolTip = null;
+        }
+
+        private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            // No hover ruler when the feature is disabled, or for small molecules / crosslinks.
+            if (!SpectrumGraphItem.RulersEnabled || (GraphItem != null && !GraphItem.RulersApplicable))
+                peakRmi = null;
+
+            var newKey = SpectrumGraphItem.GetBestSeriesKey(peakRmi);
+
+            // Only redraw when the hovered ion series actually changes.
+            // Stable comparison prevents a repaint loop: Invalidate → drawLabels rebuilds
+            // TextObjs → FindNearestObject may miss the label for one frame → null key →
+            // Invalidate → … (PointInBox=false breaks this, but the guard still avoids noise).
+            if (Equals(newKey, GraphItem?.HoveredSeriesKey))
+                return;
+
+            // Only the top item owns the ruler — the mirror item shares matched-peak data
+            // via GraphItem.MirrorItem and does not render its own ladder.
+            if (GraphItem != null)
+                GraphItem.HoveredSeriesKey = newKey;
+
             graphControl.Invalidate();
+        }
+
+        // Pins the ruler for a single ion series (the body of the "Pin Ruler" menu command).
+        private void PinRuler(IonSeriesKey key)
+        {
+            if (_pinnedSeriesKeys.Contains(key))
+                return;
+            _pinnedSeriesKeys.Add(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinRuler(IonSeriesKey key)
+        {
+            _pinnedSeriesKeys.Remove(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinAllRulers()
+        {
+            _pinnedSeriesKeys.Clear();
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        // Flips the global ruler on/off preference (the Enable/Disable menu command).
+        // Turning the feature off clears this host's pinned rulers so they don't reappear
+        // when it is turned back on. Public so the functional test can drive the same path
+        // the context-menu item invokes.
+        public void ToggleRulersEnabled()
+        {
+            SpectrumGraphItem.RulersEnabled = !SpectrumGraphItem.RulersEnabled;
+            if (!SpectrumGraphItem.RulersEnabled)
+                UnpinAllRulers();
+            UpdateHoveredPeak(null);
+            graphControl.Invalidate();
+        }
+
+        private void SyncPinnedSeriesToGraphItems()
+        {
+            // Only the top item owns the ruler — pinned keys live on GraphItem; the mirror
+            // contributes matched-peak data via GraphItem.MirrorItem.
+            if (GraphItem != null)
+                GraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+        }
+
+        // The sequence ruler is driven by mouse-over and context-menu commands, neither of
+        // which a functional test can synthesize. These public seams invoke the same code
+        // paths so SpectrumSequenceRulerTest can verify hover resolution and pin/unpin
+        // without a physical mouse. See ai/todos TODO-20260416_spectrumSequenceRuler.
+        public SpectrumGraphItem RulerGraphItem => GraphItem;
+        public void HoverRulerPeak(LibraryRankedSpectrumInfo.RankedMI peak) => UpdateHoveredPeak(peak);
+        public void PinHoveredRuler()
+        {
+            var key = GraphItem?.HoveredSeriesKey;
+            if (key.HasValue)
+                PinRuler(key.Value);
         }
 
         public void GraphControl_MouseMove(object sender, MouseEventArgs e)
