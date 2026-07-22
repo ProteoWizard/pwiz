@@ -1051,6 +1051,8 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.Peaks = value; }
         }
 
+        public CheckBox CbIncludeMinusOnePrecursor => FullScanSettingsControl.CbIncludeMinusOnePrecursor;
+
         public double? MinTime
         {
             get { return string.IsNullOrEmpty(textMinTime.Text) ? (double?)null : double.Parse(textMinTime.Text); }
