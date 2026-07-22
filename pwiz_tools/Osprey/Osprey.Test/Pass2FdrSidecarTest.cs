@@ -110,8 +110,8 @@ namespace pwiz.Osprey.Test
         /// a <c>(entry_id, charge)</c> group. The never-asserted corner -- exercised
         /// here -- is the scan-tie / gap-fill case: the reconciled re-sort is a STABLE
         /// <c>OrderBy(EntryId).ThenBy(Charge).ThenBy(ScanNumber)</c> with NO ParquetIndex
-        /// tiebreak (<c>ParquetScoreCache.WriteScoresParquet</c>) and gap-fill rows are
-        /// appended (<c>ReconciledParquetWriter.ApplyRescoredRows</c>). Two clean 8-file
+        /// tiebreak, which the streaming transfer reproduces by merging gap-fill rows into
+        /// canonical position (<c>ParquetScoreCache.StreamReconciledScoresParquet</c>). Two clean 8-file
         /// Carafe runs were byte-identical end-to-end but never asserted this in
         /// isolation.
         ///
@@ -119,11 +119,11 @@ namespace pwiz.Osprey.Test
         /// group: multiple distinct scans, a scan-tie (two rows sharing
         /// <c>(EntryId, Charge, ScanNumber)</c> with different original ParquetIndex),
         /// and an appended gap-fill row (the <see cref="uint.MaxValue"/> sentinel). The
-        /// reconciled parquet is produced by the REAL Stage-6 paths -- the gap-fill is
-        /// appended through <c>ReconciledParquetWriter.ApplyRescoredRows</c>, written and
-        /// stably re-sorted by <c>ParquetScoreCache.WriteScoresParquet</c>, and read back
-        /// through <c>BuildReconciledIdentityToRow</c> -- so the tie/gap-fill placement
-        /// is production's, not a mock. The projection itself is baked by the real
+        /// reconciled parquet is produced by the REAL Stage-6 path -- the gap-fill is
+        /// merged into canonical scan position by
+        /// <c>ParquetScoreCache.StreamReconciledScoresParquet</c> and read back through
+        /// <c>BuildReconciledIdentityToRow</c> -- so the tie/gap-fill placement is
+        /// production's, not a mock. The projection itself is baked by the real
         /// <see cref="FdrProjectionSet.BuildFromEntries"/> resolver path.
         /// </summary>
         [TestMethod]
@@ -149,9 +149,10 @@ namespace pwiz.Osprey.Test
             var rowG = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false); // gap-fill sentinel
             var survivors = new List<FdrEntry> { rowS, rowR, rowT, rowG, rowP, rowU, rowQ };
 
-            // Build the reconciled parquet through the REAL Stage-6 paths on fresh clones
-            // (the writer reassigns ParquetIndex, so cloning keeps the survivor buffer's
-            // original ParquetIndex -- the legacy sort tiebreak -- intact).
+            // Build the reconciled parquet through the REAL Stage-6 streaming path: write
+            // the survivor rows as the original scores parquet, then stream-transfer them
+            // with the gap-fill row, whose scan (15) the merge interleaves between the
+            // scan-10 and scan-20 rows -- exactly where the former load-all + re-sort put it.
             var reconEntries = new List<FdrEntry>
             {
                 MakeSurvivor(100, 2, 10, 0, 10.0, false),
@@ -162,16 +163,17 @@ namespace pwiz.Osprey.Test
                 MakeSurvivor(200, 3, 25, 5, 60.0, true),
             };
             var reconGapFill = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false);
-            ReconciledParquetWriter.ApplyRescoredRows(
-                reconEntries, new List<FdrEntry> { reconGapFill }, fileName, s => { },
-                out int nAppended);
-            Assert.AreEqual(1, nAppended, @"gap-fill row must append through the real Stage-6 path");
 
-            string reconciledPath = Path.Combine(Path.GetTempPath(),
-                @"osprey_pass2sort_" + Guid.NewGuid().ToString(@"N") + @".parquet");
+            string tmpStem = @"osprey_pass2sort_" + Guid.NewGuid().ToString(@"N");
+            string originalPath = Path.Combine(Path.GetTempPath(), tmpStem + @".scores.parquet");
+            string reconciledPath = Path.Combine(Path.GetTempPath(), tmpStem + @".scores-reconciled.parquet");
             try
             {
-                ParquetScoreCache.WriteScoresParquet(reconciledPath, reconEntries, null, null, fileName);
+                ParquetScoreCache.WriteScoresParquet(originalPath, reconEntries, null, null, fileName);
+                var streamResult = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, reconciledPath, new Dictionary<uint, FdrEntry>(),
+                    new List<FdrEntry> { reconGapFill }, null, null, fileName, s => { });
+                Assert.AreEqual(1, streamResult.NAppended, @"gap-fill row must append through the real Stage-6 path");
 
                 // REAL identity -> reconciled-row map (last-write-wins collapses a scan-tie).
                 var reconMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(reconciledPath);
@@ -223,6 +225,8 @@ namespace pwiz.Osprey.Test
             }
             finally
             {
+                if (File.Exists(originalPath))
+                    File.Delete(originalPath);
                 if (File.Exists(reconciledPath))
                     File.Delete(reconciledPath);
             }
@@ -325,6 +329,71 @@ namespace pwiz.Osprey.Test
 
             // An empty table returns the conservative q = 1.
             Assert.AreEqual(1.0, Pass2FdrSidecar.LookupQForScore(0.0, new double[0], new double[0]), 1e-12);
+        }
+
+        /// <summary>
+        /// The core of the per-run-only redesign
+        /// (<see cref="Pass2FdrSidecar.AssignPerRunQ"/>): pass 2 may change ONLY the per-run
+        /// q of a reconciliation-moved peak; the experiment q is a pass-1 property carried
+        /// through unchanged (the best-peak anchor). Exercises all three classes against a
+        /// hand-built per-file (score -&gt; run q) table.
+        /// </summary>
+        [TestMethod]
+        public void TestAssignPerRunQCarriesExperimentQ()
+        {
+            // Per-file tables: score DESCENDING, q non-decreasing along it (a better score ->
+            // a lower q). Distinct precursor/peptide tables prove the two levels stay separate.
+            var precScoresDesc = new[] { 10.0, 5.0, 0.0 };
+            var precQDesc = new[] { 0.001, 0.01, 0.5 };
+            var pepScoresDesc = new[] { 10.0, 5.0, 0.0 };
+            var pepQDesc = new[] { 0.002, 0.02, 0.6 };
+
+            // A well-identified 1st-pass record for a precursor: high score, low q at every level.
+            // rec.Score is the averaged-model score the pass-2 recomputation reproduces bit-exact.
+            var rec = new FdrScoreRecord(
+                entryId: 1, score: 10.0,
+                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002,
+                experimentPrecursorQvalue: 0.0005, experimentPeptideQvalue: 0.0006,
+                pep: 0.03, runProteinQvalue: 0.004);
+
+            // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
+            var unchanged = new FdrEntry { EntryId = 1 };
+            var clsU = Pass2FdrSidecar.AssignPerRunQ(unchanged, 10.0, rec,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 1.0, 1.0);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Unchanged, clsU);
+            Assert.AreEqual(10.0, unchanged.Score, 1e-12);
+            Assert.AreEqual(0.001, unchanged.RunPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.002, unchanged.RunPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.0005, unchanged.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.0006, unchanged.ExperimentPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.03, unchanged.Pep, 1e-12);
+
+            // (b) MOVED: reconciliation dropped the score to 5.0 -> run q re-maps UP (worse), but
+            // the experiment q is CARRIED from the 1st-pass record unchanged. This is the whole
+            // invariant: only per-run q moves, and only toward higher (less confident) values.
+            var moved = new FdrEntry { EntryId = 1 };
+            var clsM = Pass2FdrSidecar.AssignPerRunQ(moved, 5.0, rec,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 1.0, 1.0);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Moved, clsM);
+            Assert.AreEqual(5.0, moved.Score, 1e-12);
+            Assert.AreEqual(0.01, moved.RunPrecursorQvalue, 1e-12);   // table lookup at score 5
+            Assert.AreEqual(0.02, moved.RunPeptideQvalue, 1e-12);     // peptide table, distinct value
+            Assert.AreEqual(0.0005, moved.ExperimentPrecursorQvalue, 1e-12); // CARRIED, not re-mapped
+            Assert.AreEqual(0.0006, moved.ExperimentPeptideQvalue, 1e-12);   // CARRIED, not re-mapped
+            Assert.IsTrue(moved.RunPrecursorQvalue > rec.RunPrecursorQvalue,
+                "a moved peak's per-run q can only worsen");
+
+            // (c) GAP-FILL: no 1st-pass record -> run q from the table; experiment q takes the
+            // precursor's supplied cross-file pass-1 value (the clamp later floors it correctly).
+            var gap = new FdrEntry { EntryId = 2 };
+            var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 0.004, 0.006);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);
+            Assert.AreEqual(5.0, gap.Score, 1e-12);
+            Assert.AreEqual(0.01, gap.RunPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.02, gap.RunPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.004, gap.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.006, gap.ExperimentPeptideQvalue, 1e-12);
         }
 
         // Verbatim copy of the FdrProjectionSet-overload comparer in

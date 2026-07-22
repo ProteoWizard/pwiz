@@ -381,14 +381,19 @@ function Invoke-HpcChain {
     Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
 
     # Phase 3: per-file rescore workers (Stage 6), one independent worker per
-    # file. Each reloads its real mzML + Stage 4 parquet/calibration + the Stage 5
-    # sidecar pair, and writes <stem>.scores-reconciled.parquet + the 2nd-pass bin.
+    # file. Stage 6 STREAMS its MS2 from the .spectra.bin cache phase 1 wrote (there is
+    # no mzML fallback), so each worker gets phase 1's <stem>.spectra.bin + a 0-byte stub
+    # <stem>.mzML (the cache fingerprint check is skipped for a 0-byte source, so the
+    # stub is enough for path derivation and forces a cache hit -- the real 6 GB mzML is
+    # never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
+    # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet + the 2nd-pass bin.
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
         $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
         $ph3Dirs[$s] = $ph3
         New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
-        Copy-Item $mzmlByStem[$s] (Join-Path $ph3 (Split-Path -Leaf $mzmlByStem[$s]))
+        Copy-Item (Join-Path $ph1 "$s.spectra.bin")             (Join-Path $ph3 "$s.spectra.bin")
+        New-Item -ItemType File -Path (Join-Path $ph3 "$s.mzML") -Force | Out-Null
         Copy-Item (Join-Path $ph1 "$s.scores.parquet")          (Join-Path $ph3 "$s.scores.parquet")
         Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
@@ -400,12 +405,14 @@ function Invoke-HpcChain {
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
         # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
         # consumes only those plus the calibration / reconciliation / 1st-pass
-        # sidecars copied above -- never this worker's mzML, input scores.parquet,
-        # or library. Drop those big inputs now so at most one worker's mzML +
-        # library copy is on disk at a time (the out-of-disk failure was several of
-        # them coexisting with the straight-through leg's spectra caches).
+        # sidecars copied above -- never this worker's spectra cache, input
+        # scores.parquet, or library. Drop those big inputs now so at most one
+        # worker's 6 GB spectra.bin + library copy is on disk at a time (the
+        # out-of-disk failure was several of them coexisting with the
+        # straight-through leg's spectra caches).
         if (-not $KeepOutput) {
-            Remove-Item (Join-Path $ph3 (Split-Path -Leaf $mzmlByStem[$s])) -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 "$s.spectra.bin") -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 "$s.mzML") -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 "$s.scores.parquet") -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 $libName) -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 ($libName + '.libcache')) -Force -ErrorAction SilentlyContinue
@@ -506,8 +513,19 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
-            -Resolution $cfg.Resolution -ChainRoot $chainRoot
+        # mode 3's SecondPassFDR merge legitimately uses the RESIDENT first-pass pool
+        # (ExpectReconciledInput), which the OSPREY_ALLOW_UNBOUNDED_MEMORY guard otherwise blocks as
+        # an O(files) path. Opt in for the chain ONLY -- this is our own testing -- so modes 1/2 run
+        # with the guard armed, proving the default straight-through + resume paths stay lean. The
+        # HPC resident/rehydrate path is tracked for streaming in
+        # ai/todos/backlog/brendanx67/TODO-osprey_stage6_rescored_buffer_streaming.md.
+        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
+        try {
+            $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -ChainRoot $chainRoot
+        } finally {
+            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
+        }
         $sw3.Stop()
         Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance

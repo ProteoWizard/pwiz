@@ -724,7 +724,54 @@ namespace pwiz.Skyline
                 var modifiedDocument = importer.ModifyDocument(SrmDocument.DOCUMENT_TYPE.none,
                     commandArgs.ImportPeakBoundariesPath, progressMonitor, lineCount);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
+                WarnUnrecognizedPeakBoundaries(importer);
             }, SkylineResources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
+        }
+
+        /// <summary>
+        /// Reports each row the peak-boundary importer skipped (unrecognized peptide, file name, or
+        /// peptide/file/charge-state combination) as a console warning. The GUI surfaces these through a
+        /// dialog (see <see cref="FileUI.PeakBoundaryImporterUI"/>); the command line has no dialog, so
+        /// without this an --import-peak-boundaries file that matches nothing imports silently and still
+        /// reports success, leaving the user no way to tell "applied" from "matched nothing".
+        /// </summary>
+        private void WarnUnrecognizedPeakBoundaries(PeakBoundaryImporter importer)
+        {
+            WarnUnrecognizedItems(importer.UnrecognizedPeptides, p => p,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_);
+            WarnUnrecognizedItems(importer.UnrecognizedFiles, f => f,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_);
+            WarnUnrecognizedItems(importer.UnrecognizedChargeStates, c => c.PrintLine(' '),
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_and_were_ignored_);
+        }
+
+        /// <summary>
+        /// Writes a count-headed warning followed by up to <c>maxItemsToShow</c> of the offending values
+        /// (then an ellipsis when truncated), mirroring the bounded list the GUI shows. <paramref name="items"/>
+        /// maps each unrecognized value to the input-file line it first appeared on; the earliest rows are
+        /// shown first (dictionary order is arbitrary) so the list reliably points at the user's first bad rows.
+        /// </summary>
+        private void WarnUnrecognizedItems<TItem>(IDictionary<TItem, long> items, Func<TItem, string> printLine,
+            string singularHeader, string pluralHeaderFormat)
+        {
+            if (items.Count == 0)
+                return;
+            const int maxItemsToShow = 10;
+            _out.WriteLine(items.Count == 1 ? singularHeader : string.Format(pluralHeaderFormat, items.Count));
+            int shown = 0;
+            foreach (var item in items.OrderBy(pair => pair.Value))
+            {
+                if (shown++ == maxItemsToShow)
+                {
+                    _out.WriteLine(@"...");
+                    break;
+                }
+                _out.WriteLine(SkylineResources.CommandLine_ImportPeakBoundaries_Warning__line__0____1_,
+                    item.Value, printLine(item.Key));
+            }
         }
 
         private bool RefineDocument(CommandArgs commandArgs)
