@@ -44,27 +44,20 @@ namespace pwiz.Skyline.Model
         public SrmDocument Document { get; private set; }
         public int CountMissing { get; private set; }
         public List<string> AnnotationsAdded { get; private set; }
-        public HashSet<string> UnrecognizedPeptides { get; private set; }
-        public HashSet<string> UnrecognizedFiles { get; private set; }
-        public HashSet<UnrecognizedChargeState> UnrecognizedChargeStates { get; private set; }
-
-        // First input-file line on which each unrecognized item appeared, so callers (e.g. the command
-        // line) can point the user at the offending row. Populated alongside the sets above; the sets stay
-        // the deduped source of truth the GUI and audit log already consume.
-        public Dictionary<string, long> UnrecognizedPeptideLines { get; private set; }
-        public Dictionary<string, long> UnrecognizedFileLines { get; private set; }
-        public Dictionary<UnrecognizedChargeState, long> UnrecognizedChargeStateLines { get; private set; }
+        // Each unrecognized item mapped to the first input-file line it appeared on, so callers (e.g. the
+        // command line) can point the user at the offending row. The keys are the deduped set of
+        // unrecognized items the GUI and audit log consume (via .Keys).
+        public Dictionary<string, long> UnrecognizedPeptides { get; private set; }
+        public Dictionary<string, long> UnrecognizedFiles { get; private set; }
+        public Dictionary<UnrecognizedChargeState, long> UnrecognizedChargeStates { get; private set; }
 
         public PeakBoundaryImporter(SrmDocument document)
         {
             Document = document;
             AnnotationsAdded = new List<string>();
-            UnrecognizedFiles = new HashSet<string>();
-            UnrecognizedPeptides = new HashSet<string>();
-            UnrecognizedChargeStates = new HashSet<UnrecognizedChargeState>();
-            UnrecognizedPeptideLines = new Dictionary<string, long>();
-            UnrecognizedFileLines = new Dictionary<string, long>();
-            UnrecognizedChargeStateLines = new Dictionary<UnrecognizedChargeState, long>();
+            UnrecognizedFiles = new Dictionary<string, long>();
+            UnrecognizedPeptides = new Dictionary<string, long>();
+            UnrecognizedChargeStates = new Dictionary<UnrecognizedChargeState, long>();
         }
 
         public struct UnrecognizedChargeState : IEquatable<UnrecognizedChargeState>
@@ -311,10 +304,10 @@ namespace pwiz.Skyline.Model
 
             var docPair = SrmDocumentPair.Create(originalDocument, modifiedDocument.Document, documentType);
             var allInfo = new List<MessageInfo>();
-            AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, UnrecognizedPeptides);
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, UnrecognizedPeptides.Keys);
             AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
-                UnrecognizedFiles.Select(AuditLogPath.Create));
-            AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, UnrecognizedChargeStates);
+                UnrecognizedFiles.Keys.Select(AuditLogPath.Create));
+            AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, UnrecognizedChargeStates.Keys);
 
             var auditLogEntry = AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries,
                     docPair.OldDocumentType,
@@ -485,8 +478,8 @@ namespace pwiz.Skyline.Model
                 }
                 if (null == pepPaths)
                 {
-                    if (UnrecognizedPeptides.Add(modifiedPeptideString))
-                        UnrecognizedPeptideLines[modifiedPeptideString] = linesRead;
+                    if (!UnrecognizedPeptides.ContainsKey(modifiedPeptideString))
+                        UnrecognizedPeptides[modifiedPeptideString] = linesRead;
                     continue;
                 }
                 Adduct charge;
@@ -554,8 +547,8 @@ namespace pwiz.Skyline.Model
                 }
                 if (fileMatch == null)
                 {
-                    if (UnrecognizedFiles.Add(fileIdentity))
-                        UnrecognizedFileLines[fileIdentity] = linesRead;
+                    if (!UnrecognizedFiles.ContainsKey(fileIdentity))
+                        UnrecognizedFiles[fileIdentity] = linesRead;
                     continue;
                 }
                 var chromSet = fileMatch.Chromatograms;
@@ -626,8 +619,8 @@ namespace pwiz.Skyline.Model
                 if (!foundSample)
                 {
                     var unrecognizedChargeState = new UnrecognizedChargeState(charge, fileIdentity, modifiedPeptideString);
-                    if (UnrecognizedChargeStates.Add(unrecognizedChargeState))
-                        UnrecognizedChargeStateLines[unrecognizedChargeState] = linesRead;
+                    if (!UnrecognizedChargeStates.ContainsKey(unrecognizedChargeState))
+                        UnrecognizedChargeStates[unrecognizedChargeState] = linesRead;
                 }
             }
             // Remove peaks from the document that weren't in the file.

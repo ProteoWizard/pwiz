@@ -737,44 +737,40 @@ namespace pwiz.Skyline
         /// </summary>
         private void WarnUnrecognizedPeakBoundaries(PeakBoundaryImporter importer)
         {
-            WarnUnrecognizedItems(importer.UnrecognizedPeptides, importer.UnrecognizedPeptideLines, p => p,
+            WarnUnrecognizedItems(importer.UnrecognizedPeptides, p => p,
                 SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
                 SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_);
-            WarnUnrecognizedItems(importer.UnrecognizedFiles, importer.UnrecognizedFileLines, f => f,
+            WarnUnrecognizedItems(importer.UnrecognizedFiles, f => f,
                 SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
                 SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_);
-            WarnUnrecognizedItems(importer.UnrecognizedChargeStates, importer.UnrecognizedChargeStateLines, c => c.PrintLine(' '),
+            WarnUnrecognizedItems(importer.UnrecognizedChargeStates, c => c.PrintLine(' '),
                 SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_,
                 SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_and_were_ignored_);
         }
 
         /// <summary>
         /// Writes a count-headed warning followed by up to <c>maxItemsToShow</c> of the offending values
-        /// (then an ellipsis when truncated), mirroring the bounded list the GUI shows. Each value is
-        /// prefixed with the input-file line it first appeared on, from <paramref name="lineNumbers"/>.
+        /// (then an ellipsis when truncated), mirroring the bounded list the GUI shows. <paramref name="items"/>
+        /// maps each unrecognized value to the input-file line it first appeared on; the earliest rows are
+        /// shown first (dictionary order is arbitrary) so the list reliably points at the user's first bad rows.
         /// </summary>
-        private void WarnUnrecognizedItems<TItem>(ICollection<TItem> items, IDictionary<TItem, long> lineNumbers,
-            Func<TItem, string> printLine, string singularHeader, string pluralHeaderFormat)
+        private void WarnUnrecognizedItems<TItem>(IDictionary<TItem, long> items, Func<TItem, string> printLine,
+            string singularHeader, string pluralHeaderFormat)
         {
             if (items.Count == 0)
                 return;
             const int maxItemsToShow = 10;
             _out.WriteLine(items.Count == 1 ? singularHeader : string.Format(pluralHeaderFormat, items.Count));
-            // Show the earliest offending rows first (HashSet order is arbitrary) so the bounded list
-            // reliably points at the user's first bad rows and the cited line numbers read in order.
-            long LineOf(TItem item) => lineNumbers.TryGetValue(item, out var line) ? line : long.MaxValue;
             int shown = 0;
-            foreach (var item in items.OrderBy(LineOf))
+            foreach (var item in items.OrderBy(pair => pair.Value))
             {
                 if (shown++ == maxItemsToShow)
                 {
                     _out.WriteLine(@"...");
                     break;
                 }
-                var text = printLine(item);
-                if (lineNumbers.TryGetValue(item, out var lineNumber))
-                    text = string.Format(SkylineResources.CommandLine_ImportPeakBoundaries_Warning__line__0____1_, lineNumber, text);
-                _out.WriteLine(text);
+                _out.WriteLine(SkylineResources.CommandLine_ImportPeakBoundaries_Warning__line__0____1_,
+                    item.Value, printLine(item.Key));
             }
         }
 
