@@ -1059,7 +1059,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _synchronizationContext.Post(_ =>
                 {
-                    if (!IsDisposed && ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
+                    // Disposing as well as IsDisposed: this can run while the form is partway
+                    // through Dispose, when the child controls are already gone.
+                    if (!IsDisposed && !Disposing &&
+                        ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
                         graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
                         graphControl.MasterPane.Title.IsVisible = true;
