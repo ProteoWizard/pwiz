@@ -28,6 +28,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks;
 
@@ -736,6 +737,58 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The --verbose anchor-purity (entrapment-FDP) computation: among the target-side
+        /// anchors that clear a q threshold, count target vs FDRBench entrapment and compute
+        /// the ratio-corrected estimators (docs/fractional-entrapment.md). Decoys are excluded,
+        /// the ratio correction scales with r, and the empty gate is divide-by-zero safe.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationAnchorPurityFdp()
+        {
+            var matches = new List<CalibrationMatch>();
+            for (int i = 0; i < 8; i++) matches.Add(PurityMatch(false, false, 0.005)); // targets pass @1%
+            for (int i = 0; i < 2; i++) matches.Add(PurityMatch(false, true, 0.008));  // entrapment pass @1%
+            matches.Add(PurityMatch(false, false, 0.05)); // one more target, only clears >=5%
+            matches.Add(PurityMatch(false, true, 0.05));  // one more entrapment, only clears >=5%
+            for (int i = 0; i < 3; i++) matches.Add(PurityMatch(true, false, 0.001)); // decoys: low q but excluded
+            var arr = matches.ToArray();
+
+            // At q<=1%, r=1: 8 target + 2 entrapment; the 3 low-q decoys are excluded.
+            var at1 = Calibrator.ComputeAnchorPurity(arr, 0.01, 1.0);
+            Assert.AreEqual(8, at1.NTarget);
+            Assert.AreEqual(2, at1.NEntrapment);
+            Assert.AreEqual(10, at1.Total);
+            Assert.AreEqual(0.2, at1.RawFraction, TOLERANCE);
+            Assert.AreEqual(0.2, at1.FdpLower, TOLERANCE, "lower bound = N_E/(r*total), r=1");
+            Assert.AreEqual(0.4, at1.FdpCombined, TOLERANCE, "combined = (1+1/r)*N_E/total = 2x at r=1");
+
+            // Ratio correction at r=0.5: lower bound doubles, combined = 3x the raw fraction.
+            var atHalf = Calibrator.ComputeAnchorPurity(arr, 0.01, 0.5);
+            Assert.AreEqual(0.4, atHalf.FdpLower, TOLERANCE);
+            Assert.AreEqual(0.6, atHalf.FdpCombined, TOLERANCE);
+
+            // Loosening to q<=10% admits the extra target + entrapment pair.
+            var at10 = Calibrator.ComputeAnchorPurity(arr, 0.10, 1.0);
+            Assert.AreEqual(9, at10.NTarget);
+            Assert.AreEqual(3, at10.NEntrapment);
+            Assert.AreEqual(0.25, at10.RawFraction, TOLERANCE);
+
+            // A gate nothing clears is divide-by-zero safe.
+            var none = Calibrator.ComputeAnchorPurity(arr, 0.0001, 1.0);
+            Assert.AreEqual(0, none.Total);
+            Assert.AreEqual(0.0, none.FdpCombined, TOLERANCE);
+
+            // A pure target set reports 0% entrapment-FDP.
+            var pure = new[] { PurityMatch(false, false, 0.001), PurityMatch(false, false, 0.002) };
+            Assert.AreEqual(0.0, Calibrator.ComputeAnchorPurity(pure, 0.01, 1.0).FdpCombined, TOLERANCE);
+        }
+
+        private static CalibrationMatch PurityMatch(bool isDecoy, bool isEntrapment, double qValue)
+        {
+            return new CalibrationMatch { IsDecoy = isDecoy, IsEntrapment = isEntrapment, QValue = qValue };
+        }
+
+        /// <summary>
         /// Cross-attempt match accumulation keeps the better match per library entry,
         /// carrying that match's S/N and RTs with it, and resolves ties in favour of
         /// the incumbent.
@@ -1157,7 +1210,7 @@ namespace pwiz.Osprey.Test
             {
                 EntryId = entryId,
                 CorrelationScore = correlationScore,
-                // ScoreCalibrationEntry seeds DiscriminantScore from the correlation
+                // ScoreResolvedCalibrationEntry seeds DiscriminantScore from the correlation
                 // sum; LDA later replaces it.
                 DiscriminantScore = correlationScore,
                 QValue = 1.0,
@@ -1185,6 +1238,77 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < triples.Length; i += 3)
                 map[(uint)triples[i]] = new KeyValuePair<double, double>(triples[i + 1], triples[i + 2]);
             return map;
+        }
+
+        #endregion
+
+        #region Streaming calibration window resolution
+
+        /// <summary>
+        /// Verifies the streaming-calibration window resolver
+        /// (<see cref="Calibrator.TryResolveCalibrationWindow"/>) reproduces the resident
+        /// window resolution's four branches: a direct key hit with the Contains collision
+        /// guard, the neighbour +/-1 keys (taken WITHOUT a Contains check), the linear scan
+        /// for the first containing window, and no-match. This is the permanent verifier for
+        /// the fallback sub-paths a standard tiled-DIA golden file may never exercise -- the
+        /// only place streaming calibration could silently diverge from the resident path.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingCalibrationWindowResolution()
+        {
+            // Three windows, added out of key order so the file-order linear scan is exercised:
+            //   C narrow at key 7000, A wide at key 5000, B wide at key 6000.
+            var ms2 = new List<Spectrum>
+            {
+                MakeCalWindowMs2(700.00, 0.02, 0.02), // C: Contains [699.98, 700.02), key 7000
+                MakeCalWindowMs2(500.00, 0.50, 0.50), // A: Contains [499.50, 500.50), key 5000
+                MakeCalWindowMs2(600.00, 2.00, 2.00), // B: Contains [598.00, 602.00), key 6000
+            };
+            string path = Path.GetTempFileName();
+            try
+            {
+                SpectraCache.SaveSpectraCache(path, ms2, new List<MS1Spectrum>());
+                var index = SpectraWindowIndex.BuildFromCache(path);
+                Assert.IsNotNull(index);
+
+                int key;
+                // 1. Direct hit + Contains -> the entry's own window key.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(500.00, index, out key));
+                Assert.AreEqual(5000, key);
+                // 2. Direct hit + NOT Contains: round(699.96*10)=7000 hits C, but 699.96 is
+                //    below C's [699.98, 700.02) -> the collision guard returns false (no fallthrough).
+                Assert.IsFalse(Calibrator.TryResolveCalibrationWindow(699.96, index, out key));
+                // 3. Neighbour -1: round(500.12*10)=5001 absent, 5000 present -> 5000 (no Contains check).
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(500.12, index, out key));
+                Assert.AreEqual(5000, key);
+                // 4. Neighbour +1: round(599.92*10)=5999 absent, 5998 absent, 6000 present -> 6000.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(599.92, index, out key));
+                Assert.AreEqual(6000, key);
+                // 5. Linear scan: round(598.50*10)=5985, +/-1 absent, but 598.50 is in B [598, 602) -> 6000.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(598.50, index, out key));
+                Assert.AreEqual(6000, key);
+                // 6. No window contains 800.0 -> false.
+                Assert.IsFalse(Calibrator.TryResolveCalibrationWindow(800.00, index, out key));
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        // A minimal MS2 with a specific isolation window (center +/- offsets) and two peaks,
+        // for the window-resolution test.
+        private static Spectrum MakeCalWindowMs2(double center, double lowerOffset, double upperOffset)
+        {
+            return new Spectrum
+            {
+                ScanNumber = (uint)(center * 10),
+                RetentionTime = 10.0,
+                PrecursorMz = center,
+                IsolationWindow = new IsolationWindow(center, lowerOffset, upperOffset),
+                Mzs = new[] { 150.0, 250.0 },
+                Intensities = new[] { 100f, 200f }
+            };
         }
 
         #endregion

@@ -73,13 +73,16 @@ namespace pwiz.Osprey.Test
         {
             var generator = new DecoyGenerator(Enzyme.Trypsin);
             var target = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
-            target.Modifications.Add(new Modification
+            target.Modifications = new[]
             {
-                Position = 3, // T in PEPTIDEK
-                UnimodId = 35,
-                MassDelta = 15.994915,
-                Name = "Oxidation"
-            });
+                new Modification
+                {
+                    Position = 3, // T in PEPTIDEK
+                    UnimodId = 35,
+                    MassDelta = 15.994915,
+                    Name = "Oxidation"
+                }
+            };
 
             var decoy = generator.Generate(target);
 
@@ -392,12 +395,15 @@ namespace pwiz.Osprey.Test
 
             // Library entry with two fragments in the SAME bin (~500 Th)
             var entryTwoFrags = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entryTwoFrags.Fragments.Add(new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f });
-            entryTwoFrags.Fragments.Add(new LibraryFragment { Mz = 500.3, RelativeIntensity = 1.0f });
+            entryTwoFrags.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 500.3, RelativeIntensity = 1.0f }
+            };
 
             // Library entry with one fragment in that bin
             var entryOneFrag = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            entryOneFrag.Fragments.Add(new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f });
+            entryOneFrag.Fragments = new[] { new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f } };
 
             double scoreTwoFrags = scorer.XcorrAtScan(spectrum, entryTwoFrags);
             double scoreOneFrag = scorer.XcorrAtScan(spectrum, entryOneFrag);
@@ -428,7 +434,7 @@ namespace pwiz.Osprey.Test
             };
 
             var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entry.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            entry.Fragments = new[] { new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f } };
 
             double score = scorer.LibCosine(spectrum, entry, tolerance);
 
@@ -440,8 +446,11 @@ namespace pwiz.Osprey.Test
 
             // Better test: add a second fragment that is unmatched.
             var entry2 = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            entry2.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
-            entry2.Fragments.Add(new LibraryFragment { Mz = 800.0, RelativeIntensity = 1.0f });
+            entry2.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 800.0, RelativeIntensity = 1.0f }
+            };
 
             double score2 = scorer.LibCosine(spectrum, entry2, tolerance);
 
@@ -460,8 +469,11 @@ namespace pwiz.Osprey.Test
                 Intensities = new[] { 100.0f, 10000.0f, 5000.0f }
             };
             var entry3 = new LibraryEntry(3, "TEST3", "TEST3", 2, 300.0, 10.0);
-            entry3.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
-            entry3.Fragments.Add(new LibraryFragment { Mz = 600.0, RelativeIntensity = 0.5f });
+            entry3.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 600.0, RelativeIntensity = 0.5f }
+            };
 
             double score3 = scorer.LibCosine(spectrum3, entry3, tolerance);
 
@@ -881,19 +893,25 @@ namespace pwiz.Osprey.Test
 
             // Target 1: ABCDEFK -> reversal = FEDCBAK
             var target1 = new LibraryEntry(1, "ABCDEFK", "ABCDEFK", 2, 500.0, 10.0);
-            target1.Fragments.Add(new LibraryFragment
+            target1.Fragments = new[]
             {
-                Mz = 300.0, RelativeIntensity = 1.0f,
-                Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 3, Charge = 1 }
-            });
+                new LibraryFragment
+                {
+                    Mz = 300.0, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 3, Charge = 1 }
+                }
+            };
 
             // Target 2: IS the reversal of target 1 (FEDCBAK)
             var target2 = new LibraryEntry(2, "FEDCBAK", "FEDCBAK", 2, 500.0, 12.0);
-            target2.Fragments.Add(new LibraryFragment
+            target2.Fragments = new[]
             {
-                Mz = 350.0, RelativeIntensity = 1.0f,
-                Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 1 }
-            });
+                new LibraryFragment
+                {
+                    Mz = 350.0, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 1 }
+                }
+            };
 
             // Target 1's decoy (FEDCBAK) collides with target 2.
             // The generator should detect this and fall back to cycling.
@@ -918,6 +936,100 @@ namespace pwiz.Osprey.Test
                 "Cycled sequence must differ from original");
             Assert.AreNotEqual("FEDCBAK", cycled,
                 "Cycled sequence must differ from the collision target");
+        }
+
+        /// <summary>
+        /// A StopAfterStage5 worker loads the library lean (fragment peaks
+        /// dropped), so decoy generation runs in omit mode. It must produce the
+        /// SAME set of valid targets and decoys, with byte-identical six identity
+        /// scalars (Id, ModifiedSequence, Charge, PrecursorMz, IsDecoy,
+        /// ProteinIds), as a full-fragment run -- differing only in that the decoy
+        /// fragment lists are empty. This guards the byte-identity of the
+        /// FirstPassFDR target+decoy set, whose members the FDR stages look up by
+        /// the six scalars alone.
+        /// </summary>
+        [TestMethod]
+        public void TestDecoyGenerationOmitFragments()
+        {
+            var config = new OspreyConfig(); // DecoyMethod defaults to Reverse
+
+            var full = MakeDecoyTestTargets();
+            // Simulate the lean load: same entries, but no retained fragments.
+            var lean = MakeDecoyTestTargets();
+            foreach (var t in lean)
+                t.Fragments = Array.Empty<LibraryFragment>();
+
+            var fullDecoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                full, config, null, false, out var fullValid);
+            var leanDecoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                lean, config, null, true, out var leanValid);
+
+            // Valid-target membership is sequence / collision driven, never
+            // fragment-content driven, so the two runs keep the same targets.
+            Assert.AreEqual(fullValid.Count, leanValid.Count);
+            for (int i = 0; i < fullValid.Count; i++)
+                Assert.AreEqual(fullValid[i].Id, leanValid[i].Id);
+
+            // Same decoys, six identity scalars byte-identical...
+            Assert.IsTrue(fullDecoys.Count > 0, "Expected at least one decoy");
+            Assert.AreEqual(fullDecoys.Count, leanDecoys.Count);
+            for (int i = 0; i < fullDecoys.Count; i++)
+            {
+                var fd = fullDecoys[i];
+                var ld = leanDecoys[i];
+                Assert.AreEqual(fd.Id, ld.Id);
+                Assert.AreEqual(fd.ModifiedSequence, ld.ModifiedSequence);
+                Assert.AreEqual(fd.Charge, ld.Charge);
+                Assert.AreEqual(fd.PrecursorMz, ld.PrecursorMz, 1e-10);
+                Assert.AreEqual(fd.IsDecoy, ld.IsDecoy);
+                CollectionAssert.AreEqual(fd.ProteinIds.ToArray(), ld.ProteinIds.ToArray());
+
+                // ...but the lean decoy carries no fragments (dead weight for FDR),
+                // while the full-mode decoy still recalculates them.
+                Assert.IsTrue(fd.Fragments.Count > 0, "Full-mode decoy should keep fragments");
+                Assert.AreEqual(0, ld.Fragments.Count, "Lean-mode decoy fragments must be empty");
+            }
+        }
+
+        /// <summary>
+        /// Two trypsin (C-terminal K) targets whose reversals collide with
+        /// neither each other nor the originals, so both yield reversed decoys.
+        /// </summary>
+        private static List<LibraryEntry> MakeDecoyTestTargets()
+        {
+            var t1 = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 471.2567, 25.3);
+            t1.ProteinIds = new[] { "P11111" };
+            t1.Fragments = new[]
+            {
+                new LibraryFragment
+                {
+                    Mz = 147.11, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 1, Charge = 1 }
+                },
+                new LibraryFragment
+                {
+                    Mz = 262.14, RelativeIntensity = 0.5f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 2, Charge = 1 }
+                }
+            };
+
+            var t2 = new LibraryEntry(2, "SAMPLERK", "SAMPLERK", 3, 402.55, 30.1);
+            t2.ProteinIds = new[] { "Q22222" };
+            t2.Fragments = new[]
+            {
+                new LibraryFragment
+                {
+                    Mz = 175.12, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 1, Charge = 1 }
+                },
+                new LibraryFragment
+                {
+                    Mz = 288.20, RelativeIntensity = 0.4f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 2, Charge = 1 }
+                }
+            };
+
+            return new List<LibraryEntry> { t1, t2 };
         }
 
         /// <summary>
@@ -988,7 +1100,7 @@ namespace pwiz.Osprey.Test
 
             // Library with one fragment at 400 Th
             var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entry.Fragments.Add(new LibraryFragment { Mz = 400.0, RelativeIntensity = 1.0f });
+            entry.Fragments = new[] { new LibraryFragment { Mz = 400.0, RelativeIntensity = 1.0f } };
 
             double score = scorer.XcorrAtScan(spectrum, entry);
 
@@ -998,7 +1110,7 @@ namespace pwiz.Osprey.Test
 
             // Library with fragment at 700 Th (no matching peak)
             var noMatch = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            noMatch.Fragments.Add(new LibraryFragment { Mz = 700.0, RelativeIntensity = 1.0f });
+            noMatch.Fragments = new[] { new LibraryFragment { Mz = 700.0, RelativeIntensity = 1.0f } };
 
             double noMatchScore = scorer.XcorrAtScan(spectrum, noMatch);
 
@@ -1099,11 +1211,11 @@ namespace pwiz.Osprey.Test
 
             // Library with fragment at 300 (matching strong peak)
             var entryStrong = new LibraryEntry(1, "T1", "T1", 2, 200.0, 5.0);
-            entryStrong.Fragments.Add(new LibraryFragment { Mz = 300.0, RelativeIntensity = 1.0f });
+            entryStrong.Fragments = new[] { new LibraryFragment { Mz = 300.0, RelativeIntensity = 1.0f } };
 
             // Library with fragment at 1500 (matching weak peak)
             var entryWeak = new LibraryEntry(2, "T2", "T2", 2, 200.0, 5.0);
-            entryWeak.Fragments.Add(new LibraryFragment { Mz = 1500.0, RelativeIntensity = 1.0f });
+            entryWeak.Fragments = new[] { new LibraryFragment { Mz = 1500.0, RelativeIntensity = 1.0f } };
 
             double scoreStrong = scorer.XcorrAtScan(spectrum, entryStrong);
             double scoreWeak = scorer.XcorrAtScan(spectrum, entryWeak);
@@ -1229,6 +1341,135 @@ namespace pwiz.Osprey.Test
                     nWithLowQ, nPassing));
         }
 
+        /// <summary>
+        /// The --verbose calibration training report (the out-CalibrationTrainingReport
+        /// overload) must capture a coherent picture of the training run: a seed feature,
+        /// final model weights, per-feature target/decoy means, a stop reason, the 1% / 0.1%
+        /// yield, and a per-feature contribution decomposition whose shares sum to 100%.
+        /// Also verifies the report is a pure read-out -- the overload returns the same
+        /// nPassing as the plain call on the same input.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationTrainingReport()
+        {
+            var matches = BuildSyntheticCalibrationMatches();
+            var matchesCopy = BuildSyntheticCalibrationMatches();
+
+            int nPassingPlain = CalibrationScorer.TrainAndScoreCalibration(matchesCopy, false);
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(
+                matches, false, out CalibrationTrainingReport report);
+
+            Assert.AreEqual(nPassingPlain, nPassing,
+                "Report overload must return the same nPassing as the plain overload");
+            Assert.IsNotNull(report, "Report must be populated for a non-empty match set");
+
+            // Structural completeness.
+            Assert.AreEqual(4, report.FeatureNames.Length, "Expected 4 calibration features");
+            Assert.IsNotNull(report.FinalWeights, "Final weights must be captured");
+            Assert.AreEqual(4, report.FinalWeights.Length);
+            Assert.AreEqual(4, report.FeatureMeanTarget.Length);
+            Assert.AreEqual(4, report.FeatureMeanDecoy.Length);
+            Assert.IsFalse(string.IsNullOrEmpty(report.StopReason), "A stop reason must be recorded");
+            Assert.IsTrue(report.SeedFeatureIndex >= 0 && report.SeedFeatureIndex < 4,
+                string.Format("Seed feature index out of range: {0}", report.SeedFeatureIndex));
+
+            // Counts are consistent with the input (200 target / 200 decoy).
+            Assert.AreEqual(200, report.NTargets);
+            Assert.AreEqual(200, report.NDecoys);
+            Assert.AreEqual(400, report.NTotal);
+
+            // Yield is monotone across thresholds and matches nPassing at 1%.
+            Assert.IsTrue(report.NTargetsAt1Pct >= report.NTargetsAtTenthPct,
+                "1% target yield must be >= 0.1% yield");
+            int nWithLowQ = 0;
+            foreach (var m in matches)
+                if (!m.IsDecoy && m.QValue <= 0.01)
+                    nWithLowQ++;
+            Assert.AreEqual(nWithLowQ, report.NTargetsAt1Pct,
+                "Report 1% yield must match the targets with q<=0.01");
+
+            // Contribution decomposition: for well-separated targets/decoys the composite
+            // is non-degenerate, so the report emits a contribution line per feature whose
+            // shares sum to ~100%. Parse the shares out of the formatted table.
+            var lines = new List<string>(report.ToReportLines("unit-test"));
+            double shareSum = 0;
+            int shareRows = 0;
+            foreach (string line in lines)
+            {
+                // A contribution row starts (after indent) with a known feature name and
+                // ends with "<number>%". Other lines carrying '%' (seed FDR, iteration
+                // cutoffs, the yield line) do not start with a feature name, so they are
+                // excluded -- this isolates exactly the 4 feature rows.
+                string trimmed = line.TrimStart();
+                bool isFeatureRow = false;
+                foreach (string fname in report.FeatureNames)
+                {
+                    if (trimmed.StartsWith(fname + " "))
+                    {
+                        isFeatureRow = true;
+                        break;
+                    }
+                }
+                if (!isFeatureRow)
+                    continue;
+                int pctIdx = line.IndexOf('%');
+                string beforePct = line.Substring(0, pctIdx);
+                int sp = beforePct.LastIndexOf(' ');
+                string token = beforePct.Substring(sp + 1);
+                if (double.TryParse(token, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out double share))
+                {
+                    shareSum += share;
+                    shareRows++;
+                }
+            }
+            Assert.AreEqual(4, shareRows, "Expected a contribution share row per feature");
+            Assert.IsTrue(Math.Abs(shareSum - 100.0) < 0.5,
+                string.Format("Feature shares should sum to ~100%, got {0:F2}", shareSum));
+        }
+
+        /// <summary>
+        /// Build a synthetic 200-pair calibration match set (120 well-separated "good"
+        /// targets, 80 noisy, 200 noise decoys) suitable for exercising the iterative LDA.
+        /// Deterministic (fixed seed) so tests are reproducible.
+        /// </summary>
+        private static CalibrationMatch[] BuildSyntheticCalibrationMatches()
+        {
+            var rng = new Random(12345);
+            int nPairs = 200;
+            var matches = new CalibrationMatch[nPairs * 2];
+            for (int p = 0; p < nPairs; p++)
+            {
+                uint baseId = (uint)(p + 1);
+                bool isGoodTarget = p < 120;
+                double corr = isGoodTarget ? 3.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 2.0;
+                double libcos = isGoodTarget ? 0.6 + rng.NextDouble() * 0.3 : rng.NextDouble() * 0.4;
+                double top6 = isGoodTarget ? 4.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 3.0;
+                double xcorr = isGoodTarget ? 0.5 + rng.NextDouble() * 1.5 : rng.NextDouble() * 0.5;
+                matches[p * 2] = new CalibrationMatch
+                {
+                    EntryId = baseId,
+                    IsDecoy = false,
+                    Sequence = string.Format("PEPTIDE{0}K", p),
+                    CorrelationScore = corr,
+                    LibcosineApex = libcos,
+                    Top6MatchedApex = (byte)Math.Min(6, (int)top6),
+                    XcorrScore = xcorr
+                };
+                matches[p * 2 + 1] = new CalibrationMatch
+                {
+                    EntryId = baseId | 0x80000000,
+                    IsDecoy = true,
+                    Sequence = string.Format("DECOY_PEPTIDE{0}K", p),
+                    CorrelationScore = rng.NextDouble() * 2.0,
+                    LibcosineApex = rng.NextDouble() * 0.3,
+                    Top6MatchedApex = (byte)(rng.Next(4)),
+                    XcorrScore = rng.NextDouble() * 0.4
+                };
+            }
+            return matches;
+        }
+
         // Helper: Pearson correlation for test use
         private static double ComputePearson(double[] x, double[] y)
         {
@@ -1338,8 +1579,10 @@ namespace pwiz.Osprey.Test
 
             // End to end: the two scoring entry points must agree exactly.
             var entry = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+            var entryFrags = new List<LibraryFragment>();
             foreach (double mz in new[] { 150.001, 175.5, 400.25, 500.0, 700.75, 1200.5, 1999.98 })
-                entry.Fragments.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+                entryFrags.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+            entry.Fragments = entryFrags;
 
             double denseScore = scorer.XcorrFromPreprocessed(dense, entry, new bool[nBins]);
             double sparseScore = scorer.XcorrFromSparse(sparse, entry, new bool[nBins]);
@@ -1368,7 +1611,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0f, sparse.CenteredAt(nBins));
 
             var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entry.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            entry.Fragments = new[] { new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f } };
             Assert.AreEqual(0.0, scorer.XcorrFromSparse(sparse, entry, new bool[nBins]), 0.0);
         }
 
@@ -1393,11 +1636,14 @@ namespace pwiz.Osprey.Test
 
             // HRAM bins are 0.02 Th, so 500.001 and 500.009 land in the same bin.
             var twoFrags = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
-            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.009, RelativeIntensity = 1.0f });
+            twoFrags.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 500.009, RelativeIntensity = 1.0f }
+            };
 
             var oneFrag = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            oneFrag.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
+            oneFrag.Fragments = new[] { new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f } };
 
             Assert.AreEqual(scorer.BinConfig.MzToBin(500.001), scorer.BinConfig.MzToBin(500.009),
                 "Test premise: both fragments must fall in the same HRAM bin");

@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net; // HttpStatusCode
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -1169,6 +1168,7 @@ namespace pwiz.Skyline
             }
 
             SrmDocument document = Document;
+            RenamedDocumentLibrary renamedLibrary = null;
 
             try
             {
@@ -1182,13 +1182,29 @@ namespace pwiz.Skyline
                         longWaitDlg.Message = Path.GetFileName(fileName);
                         longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
-                            document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
                             // If the user has chosen "Save As", and the document has a
-                            // document specific spectral library, copy this library to 
-                            // the new name.
+                            // document specific spectral library, copy this library to
+                            // the new name and rename the library within the document
+                            // before serializing. This ensures the saved file references
+                            // the library by its new name (including on each precursor's
+                            // spectrum header info) so that re-opening it does not require
+                            // a slow settings update. The copied library files are committed
+                            // (and the open document is updated) only after the .sky file has
+                            // been written successfully, so that cancelling or failing the save
+                            // leaves neither the open document nor the library files changed.
+                            var documentToSave = document;
                             if (!Equals(DocumentFilePath, fileName))
-                                SaveDocumentLibraryAs(fileName);
+                            {
+                                renamedLibrary = RenameDocumentLibraryAs(document, fileName);
+                                if (renamedLibrary != null)
+                                    documentToSave = renamedLibrary.Document;
+                            }
 
+                            documentToSave.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
+
+                            // The .sky file was written successfully. Commit the renamed library files
+                            // and then the .sky file itself.
+                            renamedLibrary?.Commit();
                             saver.Commit();
                         });
 
@@ -1202,11 +1218,41 @@ namespace pwiz.Skyline
             {
                 return false;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 var message = TextUtil.LineSeparate(string.Format(SkylineResources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), ex.Message);
                 MessageDlg.ShowWithException(this, message, ex);
                 return false;
+            }
+            finally
+            {
+                // On success the library files were already committed above, and this disposes the
+                // (already committed) savers harmlessly. On cancel or failure it deletes the copied files.
+                renamedLibrary?.Dispose();
+            }
+
+            // The save succeeded. Now that the .sky file has been written, update the open document to
+            // reference the renamed library. Deferring this until after a successful save avoids leaving
+            // the open document pointing at a renamed library when the save is cancelled or fails.
+            if (renamedLibrary != null)
+            {
+                if (!SetDocument(renamedLibrary.Document, document))
+                {
+                    // A background loader changed the document while it was being saved (rare).
+                    // Reapply the library rename to the current document.
+                    SrmDocument docOriginal, docNew;
+                    do
+                    {
+                        docOriginal = Document;
+                        docNew = ChangeDocumentLibraryName(docOriginal, fileName);
+                    }
+                    while (!SetDocument(docNew, docOriginal));
+                    document = docNew;
+                }
+                else
+                {
+                    document = renamedLibrary.Document;
+                }
             }
 
             DocumentFilePath = fileName;
@@ -1235,11 +1281,13 @@ namespace pwiz.Skyline
 
             // We allow silent failures because it is OK for the cache to remain unoptimized
             // or the layout to not be saved.  These aren't critical as long as the document
-            // was saved correctly.
-            catch (UnauthorizedAccessException) {}
-            catch (IOException) {}
-            catch (OperationCanceledException) {}
-            catch (TargetInvocationException) {}
+            // was saved correctly.  A programming defect still gets reported, but the document
+            // is already saved, so this function continues on rather than rethrowing.
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    Program.ReportException(x);
+            }
 
             // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
             //           DocumentSaved lets subscribers know about a new DocumentFilePath. Example: FilesTree uses this event 
@@ -1282,50 +1330,123 @@ namespace pwiz.Skyline
             }
         }
 
-        private void SaveDocumentLibraryAs(string newDocFilePath)
+        /// <summary>
+        /// When saving to a new name ("Save As"), copies the document-specific spectral library
+        /// to the new name and updates the document to reference the library by its new name. This
+        /// includes renaming the library on each precursor's spectrum header info so that the saved
+        /// file does not require a slow settings update the next time it is opened. Returns the
+        /// updated document (which has also been set as the current document), or the current
+        /// document unchanged if there is no document-specific library to rename.
+        /// </summary>
+        /// <summary>
+        /// If the document has a document-specific spectral library and this is a "Save As" to a new
+        /// name, copies the library files to the new name and returns a <see cref="RenamedDocumentLibrary"/>
+        /// holding the copied (not yet committed) files together with the document renamed to reference
+        /// the library by its new name. Returns null when there is no library to rename.
+        /// The caller must <see cref="RenamedDocumentLibrary.Commit"/> the returned object only after the
+        /// .sky file has been written successfully; disposing it without committing deletes the copied
+        /// files, so cancelling or failing the save leaves the library files unchanged.
+        /// </summary>
+        private RenamedDocumentLibrary RenameDocumentLibraryAs(SrmDocument document, string newDocFilePath)
         {
             string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
-            // If the document has a document-specific library, and the files for it
-            // exist on disk, and it's not stale due to conversion of document to small molecule representation
-            var document = Document;
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
-            if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                && File.Exists(oldDocLibFile)
-                && !Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
+            // If the document has no document-specific library, or the files for it do not
+            // exist on disk, or it's stale due to conversion of document to small molecule
+            // representation, there is nothing to rename.
+            if (!document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
+                || !File.Exists(oldDocLibFile)
+                || Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
             {
-                using (var saverLib = new FileSaver(newDocLibFile))
-                {
-                    FileSaver saverRedundant = null;
-                    if (File.Exists(oldRedundantDocLibFile))
-                    {
-                        string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
-                        saverRedundant = new FileSaver(newRedundantDocLibFile);
-                    }
-                    using (saverRedundant)
-                    {
-                        saverLib.CopyFile(oldDocLibFile);
-                        if (saverRedundant != null)
-                        {
-                            saverRedundant.CopyFile(oldRedundantDocLibFile);
-                        }
-                        saverLib.Commit();
-                        if (saverRedundant != null)
-                        {
-                            saverRedundant.Commit();
-                        }
-                    }
-                }
-
-                // Update the document library settings to point to the new library.
-                SrmDocument docOriginal, docNew;
-                do
-                {
-                    docOriginal = Document;
-                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangeDocumentLibraryPath(newDocFilePath));                        
-                }
-                while (!SetDocument(docNew, docOriginal));
+                return null;
             }
+
+            var fileSavers = new List<FileSaver>();
+            try
+            {
+                var saverLib = new FileSaver(newDocLibFile);
+                fileSavers.Add(saverLib);
+                saverLib.CopyFile(oldDocLibFile);
+                if (File.Exists(oldRedundantDocLibFile))
+                {
+                    var saverRedundant = new FileSaver(BiblioSpecLiteSpec.GetRedundantName(newDocFilePath));
+                    fileSavers.Add(saverRedundant);
+                    saverRedundant.CopyFile(oldRedundantDocLibFile);
+                }
+            }
+            catch
+            {
+                foreach (var fileSaver in fileSavers)
+                    fileSaver.Dispose();
+                throw;
+            }
+
+            // Rename the document library settings to point to the new library, and rename the library
+            // on each precursor's spectrum header info to match. The document is not applied to the open
+            // window here; the caller does that only after the .sky file has been written successfully.
+            return new RenamedDocumentLibrary(ChangeDocumentLibraryName(document, newDocFilePath), fileSavers);
+        }
+
+        /// <summary>
+        /// Holds the copied but not yet committed document-specific spectral library files produced for a
+        /// "Save As", together with the document whose library settings and precursor spectrum header info
+        /// have been renamed to match the new file name. <see cref="Commit"/> renames the copied files into
+        /// place and must be called only after the .sky file has been written successfully. Disposing without
+        /// committing deletes the copied files.
+        /// </summary>
+        private class RenamedDocumentLibrary : IDisposable
+        {
+            private readonly List<FileSaver> _fileSavers;
+
+            public RenamedDocumentLibrary(SrmDocument document, IEnumerable<FileSaver> fileSavers)
+            {
+                Document = document;
+                _fileSavers = fileSavers.ToList();
+            }
+
+            /// <summary>
+            /// The document renamed to reference the copied library by its new name.
+            /// </summary>
+            public SrmDocument Document { get; }
+
+            public void Commit()
+            {
+                foreach (var fileSaver in _fileSavers)
+                    fileSaver.Commit();
+            }
+
+            public void Dispose()
+            {
+                foreach (var fileSaver in _fileSavers)
+                    fileSaver.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Returns a copy of <paramref name="document"/> whose document-specific spectral library
+        /// has been renamed for the new document path. Both the library settings and the library
+        /// name stored on each precursor's spectrum header info are updated, so that the saved
+        /// document is self-consistent and does not require a slow settings update when re-opened.
+        /// </summary>
+        private static SrmDocument ChangeDocumentLibraryName(SrmDocument document, string newDocFilePath)
+        {
+            var oldName = document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .FirstOrDefault(spec => spec != null && spec.IsDocumentLibrary)?.Name;
+            var newName = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newDocFilePath).Name;
+            var docNew = document.ChangeSettingsNoDiff(document.Settings.ChangeDocumentLibraryPath(newDocFilePath));
+            if (oldName == null || Equals(oldName, newName))
+                return docNew;
+
+            return (SrmDocument) docNew.ChangeAll(node =>
+            {
+                if (node is TransitionGroupDocNode nodeGroup && nodeGroup.LibInfo != null &&
+                    Equals(nodeGroup.LibInfo.LibraryName, oldName))
+                {
+                    return nodeGroup.ChangeLibInfo(nodeGroup.LibInfo.ChangeLibraryName(newName));
+                }
+                return node;
+            }, (int) SrmDocument.Level.TransitionGroups);
         }
 
         private void SaveLayout(string fileName)
@@ -3427,6 +3548,11 @@ namespace pwiz.Skyline
             ShowEncyclopeDiaSearchDlg();
         }
 
+        private void diannSearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDiannSearchDlg();
+        }
+
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
@@ -3515,6 +3641,79 @@ namespace pwiz.Skyline
                     // Nothing to do; the dialog does all the work.
                 }
             }
+        }
+
+        public void ShowDiannSearchDlg()
+        {
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            if (!EnsureDiannInstalled())
+                return;
+
+            using (var dlg = new DiannSearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loops until DIA-NN is installed, the user lets us install it, or the user cancels.
+        /// Returns true if DIA-NN is available, false if the user declined to proceed.
+        /// If the Windows uninstall registry exposes an existing DIA-NN install, the user
+        /// is asked whether to reuse that install or download our bundled version.
+        /// </summary>
+        private bool EnsureDiannInstalled()
+        {
+            if (!File.Exists(DiannHelpers.DiannBinary))
+            {
+                var registered = DiannHelpers.TryGetRegisteredDiannPath();
+                if (!string.IsNullOrEmpty(registered))
+                {
+                    var choice = MultiButtonMsgDlg.Show(this,
+                        string.Format(AlertsResources.EnsureDiannInstalled_Use_existing_or_download__0____1__,
+                            registered, DiannHelpers.DIANN_VERSION),
+                        AlertsResources.EnsureDiannInstalled_Use_Existing,
+                        AlertsResources.EnsureDiannInstalled_Download,
+                        true);
+                    if (choice == DialogResult.Cancel)
+                        return false;
+                    if (choice == DialogResult.Yes)
+                    {
+                        if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
+                            Settings.Default.SearchToolList.Remove(
+                                Settings.Default.SearchToolList[SearchToolType.DIANN]);
+                        Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                            registered, string.Empty, Path.GetDirectoryName(registered), false));
+                    }
+                    // choice == DialogResult.No: fall through to the download dialog
+                }
+            }
+
+            while (!File.Exists(DiannHelpers.DiannBinary))
+            {
+                using var downloadDlg = new DiannDownloadDlg();
+                var result = downloadDlg.ShowDialog(this);
+                if (result == DialogResult.OK)
+                    continue; // download succeeded - loop to re-check
+                if (result == DiannDownloadDlg.SpecifyManuallyResult)
+                {
+                    ShowSearchToolsDlg();
+                    continue; // re-check after user edits the list
+                }
+                return false; // user canceled
+            }
+            return true;
         }
 
         public void ShowFeatureDetectionDlg()

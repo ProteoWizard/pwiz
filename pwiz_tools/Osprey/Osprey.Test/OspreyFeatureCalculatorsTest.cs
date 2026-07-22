@@ -105,6 +105,26 @@ namespace pwiz.Osprey.Test
                 new List<XicData> { new XicData(0, rts, invFrag) }, bounds);
             context.ClearByproducts();
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, invPeak), TOLERANCE);
+
+            // An all-zero XIC is a VALID peak (the reference exists) whose three features
+            // all condition to exactly 0.0 -- log10(0 + 1) -- which is the same value the
+            // invalid-peak sentinel above produces. That collision is intended: "no signal"
+            // and "no peak" are the same thing to the SVM. Pinned here so a future change to
+            // the sentinel (or to the +1 offset) has to face the question deliberately.
+            var zeroFrag = new double[10];
+            var zeroPeak = new FakePeakData(
+                new List<XicData> { new XicData(0, rts, zeroFrag) }, bounds);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(3).Calculate(context, zeroPeak), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(4).Calculate(context, zeroPeak), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, zeroPeak), TOLERANCE);
+
+            // The three log-conditioned features carry "(log10)" in their display label, so
+            // the feature-contribution report cannot present a per-decade weight as though
+            // it were per intensity unit.
+            Assert.AreEqual("Peak apex intensity (log10)", OspreyFeatureCalculators.Get(3).DisplayName);
+            Assert.AreEqual("Peak area (log10)", OspreyFeatureCalculators.Get(4).DisplayName);
+            Assert.AreEqual("Peak sharpness (log10)", OspreyFeatureCalculators.Get(5).DisplayName);
         }
 
         /// <summary>

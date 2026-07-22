@@ -34,12 +34,12 @@ namespace pwiz.Osprey.FDR
     /// (b), FdrProjection struct-shrink S0 / increment C1). The six per-row q-value
     /// OUTPUTS the score pass produces no longer live on the struct: the write-back
     /// hands each row's values to a per-pass <see cref="IFdrOutputSink"/> as an
-    /// <see cref="FdrQValues"/> value (the 2nd pass streams them straight to the
-    /// sidecar; the 1st pass keeps only {RunPeptideQ, RunProteinQ} resident in a
-    /// parallel <see cref="FdrProjectionOutputs"/> array and streams the other four to
-    /// the phase-1 partial sidecar -- issue #4355 struct-shrink S1). Dropping the 48 B
-    /// of q-values takes the resident 2nd-pass peak buffer from 80 -> 32 B, and the
-    /// 1st-pass peak buffer from 80 -> 48 B. Replaces the full <see cref="FdrEntry"/> stub buffer that was
+    /// <see cref="FdrQValues"/> value that both passes stream straight to the per-file
+    /// <c>.fdr_scores.bin</c> sidecar -- never resident (issue #4355 struct-shrink S2;
+    /// S1 kept a 16 B/row 1st-pass {RunPeptideQ, RunProteinQ} array, which first-pass
+    /// protein FDR + compaction now re-read off the sidecar instead). Dropping the
+    /// q-value outputs takes the resident peak buffer from 80 B to this 32 B on both
+    /// passes. Replaces the full <see cref="FdrEntry"/> stub buffer that was
     /// held resident across first-pass Percolator + protein FDR + the 1st-pass sidecar
     /// write + compaction; full <see cref="FdrEntry"/> survivors are reloaded from
     /// parquet + the sidecar after compaction (see <c>FirstJoinTask</c>). Held in a
@@ -163,12 +163,74 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public string[] PeptideById { get; }
 
+        /// <summary>
+        /// Per-file row counts when this set is COUNTS-ONLY (issue #4355 struct-shrink S3,
+        /// Stage B): the 1st-pass streaming score path holds no resident <see cref="FdrProjection"/>
+        /// rows at all -- it streams identity + features straight from parquet -- so the set
+        /// carries only the ordered file names + each file's row count. <c>null</c> on the
+        /// normal / 2nd-pass resident set, where the count is <c>PerFile[f].Value.Count</c>.
+        /// </summary>
+        private readonly int[] _leanRowCounts;
+
         public FdrProjectionSet(
             List<KeyValuePair<string, List<FdrProjection>>> perFile, string[] peptideById)
+            : this(perFile, peptideById, null)
+        {
+        }
+
+        private FdrProjectionSet(
+            List<KeyValuePair<string, List<FdrProjection>>> perFile, string[] peptideById,
+            int[] leanRowCounts)
         {
             PerFile = perFile;
             PeptideById = peptideById;
+            _leanRowCounts = leanRowCounts;
         }
+
+        /// <summary>
+        /// A COUNTS-ONLY set: the ordered file names + each file's parquet row count, with NO
+        /// resident <see cref="FdrProjection"/> rows and an empty <see cref="PeptideById"/>
+        /// (issue #4355 struct-shrink S3, Stage B). Used by the 1st-pass streaming score path,
+        /// which streams every row (identity + features) straight from parquet, so the O(rows)
+        /// projection buffer is never allocated. Downstream first-pass protein FDR / compaction /
+        /// survivor reload read only the file names (Stage A already moved them off the rows), and
+        /// the score-pass sink reads per-file counts via <see cref="RowCount"/>.
+        /// </summary>
+        public static FdrProjectionSet CountsOnly(IReadOnlyList<string> fileNames, IReadOnlyList<int> rowCounts)
+        {
+            if (fileNames == null) throw new ArgumentNullException(nameof(fileNames));
+            if (rowCounts == null) throw new ArgumentNullException(nameof(rowCounts));
+            if (fileNames.Count != rowCounts.Count)
+                throw new ArgumentException(@"fileNames and rowCounts must be the same length");
+            var perFile = new List<KeyValuePair<string, List<FdrProjection>>>(fileNames.Count);
+            var counts = new int[fileNames.Count];
+            for (int f = 0; f < fileNames.Count; f++)
+            {
+                perFile.Add(new KeyValuePair<string, List<FdrProjection>>(
+                    fileNames[f], new List<FdrProjection>()));
+                counts[f] = rowCounts[f];
+            }
+            return new FdrProjectionSet(perFile, Array.Empty<string>(), counts);
+        }
+
+        /// <summary>
+        /// Row count for a file: the resident row-list count on a normal / 2nd-pass set, or the
+        /// stored per-file count on a <see cref="CountsOnly"/> set (whose row lists are empty).
+        /// The score-pass sink keys its per-file sidecar flush on this, so both shapes work.
+        /// </summary>
+        public int RowCount(int fileIdx)
+        {
+            return _leanRowCounts != null ? _leanRowCounts[fileIdx] : PerFile[fileIdx].Value.Count;
+        }
+
+        /// <summary>
+        /// True when this set carries only per-file row counts (via <see cref="CountsOnly"/>) with
+        /// no resident <see cref="FdrProjection"/> rows -- the 1st-pass streaming score path builds
+        /// it so the score pass can stream every row from parquet (issue #4355 struct-shrink S3,
+        /// Stage B). The Tasks layer branches on this to pick the streaming score path over the
+        /// resident one.
+        /// </summary>
+        public bool IsCountsOnly => _leanRowCounts != null;
 
         /// <summary>Total projection rows across all files.</summary>
         public int TotalRows
@@ -176,6 +238,12 @@ namespace pwiz.Osprey.FDR
             get
             {
                 int n = 0;
+                if (_leanRowCounts != null)
+                {
+                    foreach (int c in _leanRowCounts)
+                        n += c;
+                    return n;
+                }
                 foreach (var kvp in PerFile)
                     n += kvp.Value.Count;
                 return n;
@@ -321,13 +389,28 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public sealed class Builder
         {
+            private readonly bool _countsOnly;
             private readonly Dictionary<string, int> _insertionIdByPeptide =
                 new Dictionary<string, int>(StringComparer.Ordinal);
             private readonly List<string> _distinctByInsertion = new List<string>();
             private readonly List<KeyValuePair<string, List<FdrProjection>>> _perFile =
                 new List<KeyValuePair<string, List<FdrProjection>>>();
+            private readonly List<string> _countsOnlyFileNames = new List<string>();
+            private readonly List<int> _countsOnlyCounts = new List<int>();
             private List<FdrProjection> _rows;
+            private int _curFileCount;
             private ushort _fileIdx;
+
+            /// <summary>
+            /// <paramref name="countsOnly"/> builds a <see cref="CountsOnly"/> set -- per-file row
+            /// counts, no resident rows and no interned peptide table -- for the 1st-pass streaming
+            /// score path, which re-reads every row's identity + features from parquet (issue #4355
+            /// struct-shrink S3, Stage B). The default full-row build feeds the resident score path.
+            /// </summary>
+            public Builder(bool countsOnly = false)
+            {
+                _countsOnly = countsOnly;
+            }
 
             /// <summary>
             /// Open a file's row list. Files must be added in the same order the join
@@ -335,6 +418,12 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public void BeginFile(string fileName, int capacityHint = 0)
             {
+                if (_countsOnly)
+                {
+                    _countsOnlyFileNames.Add(fileName);
+                    _curFileCount = 0;
+                    return;
+                }
                 _rows = capacityHint > 0
                     ? new List<FdrProjection>(capacityHint)
                     : new List<FdrProjection>();
@@ -345,11 +434,17 @@ namespace pwiz.Osprey.FDR
             /// Append one parquet row of the open file. <see cref="FdrProjection.ParquetIndex"/>
             /// is the running per-file row ordinal, matching
             /// <c>LoadFdrStubsFromParquet</c>'s <c>ParquetIndex = stubs.Count</c>.
-            /// <see cref="FdrProjection.Score"/> stays 0 -- the FDR pass writes it back.
+            /// <see cref="FdrProjection.Score"/> stays 0 -- the FDR pass writes it back. In
+            /// counts-only mode nothing is materialized -- only the running row count advances.
             /// </summary>
             public void AddRow(uint entryId, byte charge, bool isDecoy, double coelutionSum,
                 string modifiedSequence)
             {
+                if (_countsOnly)
+                {
+                    _curFileCount++;
+                    return;
+                }
                 string modseq = modifiedSequence ?? string.Empty;
                 if (!_insertionIdByPeptide.TryGetValue(modseq, out int insertionId))
                 {
@@ -365,6 +460,11 @@ namespace pwiz.Osprey.FDR
             /// <summary>Close the open file and advance <see cref="FdrProjection.FileIdx"/>.</summary>
             public void EndFile()
             {
+                if (_countsOnly)
+                {
+                    _countsOnlyCounts.Add(_curFileCount);
+                    return;
+                }
                 _rows = null;
                 _fileIdx++;
             }
@@ -372,10 +472,14 @@ namespace pwiz.Osprey.FDR
             /// <summary>
             /// Sort the distinct peptides Ordinal, remap every row's insertion-order
             /// <see cref="FdrProjection.PeptideId"/> to its ordinal rank, and return the set.
-            /// The remap table is one int per distinct peptide (~9 MB at 2.3M peptides).
+            /// The remap table is one int per distinct peptide (~9 MB at 2.3M peptides). In
+            /// counts-only mode returns a <see cref="CountsOnly"/> set (file names + counts).
             /// </summary>
             public FdrProjectionSet Build()
             {
+                if (_countsOnly)
+                    return CountsOnly(_countsOnlyFileNames, _countsOnlyCounts);
+
                 var peptideById = _distinctByInsertion.ToArray();
                 Array.Sort(peptideById, StringComparer.Ordinal); // Array.Sort OK: _distinctByInsertion is de-duplicated (grow-only via _insertionIdByPeptide), no two strings are equal, so the Ordinal comparer never ties -- the same argument BuildFromEntries makes for its List.Sort.
 

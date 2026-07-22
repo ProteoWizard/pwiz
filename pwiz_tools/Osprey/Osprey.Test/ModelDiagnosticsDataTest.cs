@@ -59,6 +59,211 @@ namespace pwiz.Osprey.Test
             TestIdYieldPerScope();
             TestCrossRunDetection();
             TestPassingSetHonorsFdrLevel();
+            TestCalibrationBuildCalFile();
+            TestStreamingAccumulatorMatchesBatch();
+        }
+
+        // The streaming pass-1 accumulator (fed per-row off the projection score-pass sink so an
+        // 82-file --model-diagnostics run need not hold the resident pre-compaction pool) must
+        // produce a byte-identical data model to the batch Build over the resident pool. A 3-file
+        // entrapment fixture populates EVERY card -- real targets + decoys, entrapment + p_decoys,
+        // pair indices, a precursor seen across files (cross-file best-per-precursor merge),
+        // q-failing entries + distinct run vs experiment q (cross-run gates), and a trained model
+        // (Model tab). Both paths serialize under the sidecar settings and must match exactly.
+        private static void TestStreamingAccumulatorMatchesBatch()
+        {
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var pair = new Dictionary<uint, uint>();
+            var f1 = new List<FdrEntry>();
+            var f2 = new List<FdrEntry>();
+            var f3 = new List<FdrEntry>();
+            for (int i = 0; i < 6; i++)
+            {
+                uint tid = (uint)(100 + i);
+                // Real target + decoy, seen in f1 AND f2 with different scores/q so the cross-file
+                // best-per-precursor reduction (max score, min q) is exercised; f3 keeps the first 3.
+                f1.Add(Entry(tid, false, 8.0 - i, 0.001 * (i + 1), "T" + i, 2));
+                f1.Add(Entry(tid | DECOY_BIT, true, 1.0 + 0.1 * i, 0.5, "D" + i, 2));
+                f2.Add(Entry(tid, false, 7.5 - i, 0.002 * (i + 1), "T" + i, 2));
+                f2.Add(Entry(tid | DECOY_BIT, true, 1.2 + 0.1 * i, 0.5, "D" + i, 2));
+                cls[tid] = EntrapmentClass.Target;
+                pair[tid] = (uint)i;
+                if (i < 3)
+                    f3.Add(Entry(tid, false, 6.0 - i, 0.001 * (i + 1), "T" + i, 2));
+            }
+            // Entrapment (p_target) + p_decoy, paired by index to the targets above.
+            for (int i = 0; i < 4; i++)
+            {
+                uint pid = (uint)(200 + i);
+                f1.Add(Entry(pid, false, 5.5 - i, 0.003 + 0.001 * i, "P" + i, 2));
+                f1.Add(Entry(pid | DECOY_BIT, true, 0.9 + 0.05 * i, 0.5, "PD" + i, 2));
+                cls[pid] = EntrapmentClass.PTarget;
+                pair[pid] = (uint)i;
+            }
+            // A precursor whose run q passes but experiment q fails, in two runs (experiment gate).
+            f2.Add(EntryRunExp(300, 0.001, 0.20, "G"));
+            f3.Add(EntryRunExp(300, 0.001, 0.20, "G"));
+            cls[300] = EntrapmentClass.Target;
+
+            var perFileEntries = WrapFiles(f1, f2, f3);
+            const double r = 1.0, runFdr = 0.01;
+            const FdrLevel level = FdrLevel.Peptide;
+
+            // A trained model so the Model tab (feature table + per-feature histograms) is compared.
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", false),
+            };
+            var facc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++) facc.Add(new[] { 2.0, 0.5 }, false);
+            for (int i = 0; i < 10; i++) facc.Add(new[] { -1.0, 0.0 }, true);
+            var contrib = facc.Build(new List<double[]> { new[] { 2.0, -1.0 } }, infos);
+
+            // Batch build (the resident-path oracle).
+            var batch = ModelDiagnosticsData.Build(perFileEntries, contrib, cls, pair, r, runFdr, level);
+
+            // Streaming build: feed each row through the accumulator in nested (file, row) order,
+            // exactly as the projection score-pass sink does (protein q is unused, so pass 0).
+            var runNames = perFileEntries.Select(kv => kv.Key).ToArray();
+            var acc = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+            {
+                foreach (var e in perFileEntries[fi].Value)
+                {
+                    acc.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                }
+            }
+            var streamed = acc.Build(contrib);
+
+            // Byte-identity under the sidecar settings the HTML embed round-trips through.
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+                FloatParseHandling = FloatParseHandling.Double,
+            };
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batch, settings),
+                JsonConvert.SerializeObject(streamed, settings),
+                @"streaming --model-diagnostics accumulator must byte-match the resident batch build");
+
+            // Guard against a vacuous all-null match: the fixture must actually populate the cards.
+            Assert.IsTrue(batch.HasEntrapment);
+            Assert.IsNotNull(batch.FdpViews);
+            Assert.IsTrue(batch.FdpViews.Count > 0);
+            Assert.IsNotNull(batch.CrossRun);
+            Assert.IsNotNull(batch.WinFraction);
+            Assert.IsTrue(batch.WinFraction.HasEntrapment);
+            Assert.AreEqual(2, batch.Model.Count);
+            Assert.IsTrue(batch.NTarget > 0 && batch.NPTarget > 0 && batch.NDecoy > 0);
+
+            // Degrade path: a plain target+decoy run with NO manifest (null classByBaseId /
+            // pairByBaseId) -- the accumulator must still byte-match the batch build there.
+            var batchNM = ModelDiagnosticsData.Build(perFileEntries, contrib, null, null, r, runFdr, level);
+            var accNM = new ModelDiagnosticsData.Accumulator(runNames, null, null, r, runFdr, level);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+                foreach (var e in perFileEntries[fi].Value)
+                    accNM.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batchNM, settings),
+                JsonConvert.SerializeObject(accNM.Build(contrib), settings),
+                @"streaming accumulator must byte-match the batch build on the no-manifest degrade path");
+            Assert.IsFalse(batchNM.HasEntrapment, @"no manifest -> is_decoy-only split, no entrapment");
+        }
+
+        /// <summary>
+        /// BuildCalFile shapes one file's raw calibration ingredients into a CalFileRow:
+        /// the LDA contribution table (weighted share, sorted, reds a negative row), the
+        /// class-binned composite score histogram, the entrapment-FDP-vs-q curve + anchor
+        /// yield swept from the per-match (q, class) arrays, and the scalar corrections.
+        /// </summary>
+        private static void TestCalibrationBuildCalFile()
+        {
+            // 3 features: coelution dominates, xcorr helps, top6 has a NEGATIVE weighted
+            // contribution (separates decoys up) -> must sort last and flag Unexpected.
+            var inp = new ModelDiagnosticsData.CalFileInput
+            {
+                File = @"fileA",
+                Calibrated = true,
+                FeatureNames = new[] { @"coelution_corr", @"top6_matched", @"xcorr" },
+                Weights = new[] { 1.0, 0.5, 0.4 },
+                MeanTarget = new[] { 0.8, 0.30, 0.6 },
+                MeanDecoy = new[] { 0.3, 0.40, 0.2 }, // top6 gap negative -> weighted<0
+                Degenerate = false,
+                EntrapmentRatio = 1.0,
+                HasEntrapment = true,
+                MassUnit = @"ppm",
+                Ms1Mean = 0.9, Ms1Sd = 1.5, Ms1Count = 350, Ms1Tol = 5.4,
+                Ms2Mean = 0.05, Ms2Sd = 1.6, Ms2Count = 3000, Ms2Tol = 4.8,
+                RtNPoints = 503, RtResidualSd = 0.22, RtRSquared = 0.9977, RtMad = 0.13,
+                RtToleranceMin = 0.58, RtWindowBefore = 4.77,
+            };
+            // 10 target anchors at q=0.005, 2 entrapment at q=0.008, 5 decoys (excluded from FDP),
+            // plus a target + entrapment that only clear q<=5%.
+            var scores = new List<double>();
+            var qs = new List<double>();
+            var cls = new List<int>();
+            for (int i = 0; i < 10; i++) { scores.Add(2.0 + 0.01 * i); qs.Add(0.005); cls.Add(0); }
+            for (int i = 0; i < 2; i++) { scores.Add(1.0 + 0.01 * i); qs.Add(0.008); cls.Add(2); }
+            for (int i = 0; i < 5; i++) { scores.Add(-1.0 - 0.01 * i); qs.Add(0.001); cls.Add(1); }
+            scores.Add(0.5); qs.Add(0.05); cls.Add(0);
+            scores.Add(0.4); qs.Add(0.05); cls.Add(2);
+            inp.MatchScores = scores.ToArray();
+            inp.MatchQ = qs.ToArray();
+            inp.MatchClass = cls.ToArray();
+
+            var row = ModelDiagnosticsData.BuildCalFile(inp);
+
+            // scalars pass through
+            Assert.AreEqual(@"fileA", row.File);
+            Assert.IsTrue(row.Calibrated);
+            Assert.AreEqual(0.9, row.Ms1Mean, 1e-9);
+            Assert.AreEqual(503, row.RtNPoints);
+            Assert.AreEqual(0.9977, row.RtRSquared, 1e-9);
+
+            // feature contributions: coelution is the largest share, top6 is last + reds.
+            Assert.AreEqual(3, row.Features.Count);
+            Assert.AreEqual(@"coelution_corr", row.Features[0].Label);
+            var top6 = row.Features.First(f => f.Label == @"top6_matched");
+            Assert.IsTrue(top6.Weighted < 0, @"top6 has a negative weighted contribution");
+            Assert.IsTrue(top6.Unexpected, @"negative weighted contribution reds the row");
+            Assert.AreEqual(@"top6_matched", row.Features[row.Features.Count - 1].Label,
+                @"smallest |contribution| sorts last");
+            double sumPercent = row.Features.Sum(f => f.Percent);
+            Assert.AreEqual(100.0, sumPercent, 1e-6, @"contribution shares sum to 100%");
+
+            // composite score histogram: right class totals, decoys excluded from target etc.
+            Assert.AreEqual(11, row.Scores.Target.Sum(), @"10 + 1 target anchors");
+            Assert.AreEqual(5, row.Scores.Decoy.Sum());
+            Assert.AreEqual(3, row.Scores.PTarget.Sum(), @"2 + 1 entrapment");
+            Assert.AreEqual(5L, row.Scores.DecoyN);
+
+            // yield + FDP swept over the grid: at q<=1% -> 10 target, 2 entrapment; r=1 -> combined = 2*frac.
+            int oneIdx = row.Yield.Q.ToList().IndexOf(0.01);
+            Assert.IsTrue(oneIdx >= 0);
+            Assert.AreEqual(10, row.Yield.TargetsRun[oneIdx]);
+            Assert.AreEqual(10, row.CalPeptides);
+            Assert.AreEqual(2, row.Entrapment);
+            Assert.AreEqual(2.0 * 2 / 12, row.AnchorFdp, 1e-9, @"combined FDP = (1+1/r)*N_E/total at r=1");
+            Assert.IsNotNull(row.Fdp);
+            Assert.AreEqual(2.0 * 2 / 12, row.Fdp.Combined[oneIdx], 1e-9);
+            Assert.AreEqual(2.0 / (1.0 * 12), row.Fdp.LowerBound[oneIdx], 1e-9);
+            // at q<=5% the extra target+entrapment are admitted: 11 target, 3 entrapment.
+            int fiveIdx = row.Yield.Q.ToList().IndexOf(0.05);
+            Assert.AreEqual(11, row.Yield.TargetsRun[fiveIdx]);
+            Assert.AreEqual(11, row.Fdp.NTargetAccepted[fiveIdx], @"NTargetAccepted holds accepted targets");
+
+            // no-entrapment file: FDP card suppressed, yield still present.
+            inp.HasEntrapment = false;
+            var row2 = ModelDiagnosticsData.BuildCalFile(inp);
+            Assert.IsNull(row2.Fdp);
+            Assert.IsNotNull(row2.Yield);
+            Assert.IsTrue(double.IsNaN(row2.AnchorFdp));
         }
 
         // The "passing at run FDR" set (per-file Summary counts AND cross-run detection)
@@ -1003,6 +1208,76 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < files.Length; i++)
                 list.Add(new KeyValuePair<string, List<FdrEntry>>("file" + (i + 1), files[i]));
             return list;
+        }
+
+        /// <summary>
+        /// Frontier math on a fully hand-computable case: N=4 runs, r=1 (combined factor 2),
+        /// 10% target. 100 real precursors detected in all 4 runs (run-q 0.005, best-peak exp-q
+        /// 0.01); 100 real detected in only 1 run (exp-q 0.20, off the exp grid); 10 entrapment
+        /// detected in 1 run (exp-q 0.20). Every asserted value is derived by hand.
+        /// </summary>
+        [TestMethod]
+        public void TestReproducibilityFrontier()
+        {
+            var precs = new List<ModelDiagnosticsData.FrontierPrec>();
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.01, 0.005, 4));
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.20, 0.005, 1));
+            for (int i = 0; i < 10; i++) precs.Add(MakeFrontierPrec(true, 0.20, 0.005, 1));
+
+            var f = ModelDiagnosticsData.BuildFrontier(precs, 4, 1.0, 0.10);
+            Assert.IsNotNull(f);
+            Assert.AreEqual(4, f.N);
+            Assert.AreEqual(0.10, f.Target, 1e-9);
+            // per-run: k=1 admits all 200 real at 20/210 = 9.5% FDP (<= 10%); k>=2 keeps only the
+            // 100 four-run real (entrapment does not reproduce) at 0% FDP.
+            CollectionAssert.AreEqual(new[] { 200, 100, 100, 100 }, f.PerRun.Yield);
+            Assert.AreEqual(1, f.PeakK);
+            Assert.AreEqual(200, f.PerRunPeak);
+            // best-peak "standard": real with exp-q <= 10% -> only the 100 with exp-q 0.01.
+            Assert.AreEqual(100, f.BestPeak);
+            Assert.AreEqual(0.0, f.BestPeakFdp, 1e-9);
+            Assert.AreEqual(1.0, f.GainPct, 1e-9);        // (200-100)/100
+            Assert.AreEqual(0.5, f.SacrificePct, 1e-9);   // (200-100)/200
+            // experiment-wide sees only the 100 exp-q-0.01 real (the 0.20 group is off-grid).
+            Assert.AreEqual(100, f.ExpPeak);
+            // content overlap at the peak: per-run-optimal = all 200 real; exp-optimal = the 100
+            // exp-q-0.01 real. Intersection 100, union 200 => Jaccard 0.5.
+            Assert.AreEqual(0.5, f.OverlapJaccard, 1e-9);
+        }
+
+        private static ModelDiagnosticsData.FrontierPrec MakeFrontierPrec(bool entrapment, double expQ, double runQ, int nRuns)
+        {
+            var p = new ModelDiagnosticsData.FrontierPrec { IsEntrapment = entrapment, MinExpQ = expQ };
+            p.RunQBins[ModelDiagnosticsData.FrontierBin(runQ)] = (ushort)nRuns;
+            return p;
+        }
+
+        /// <summary>
+        /// A precursor with several pre-compaction candidates in ONE file must count as one run for
+        /// that file, not one per candidate. Without the per-file dedup the run count would exceed
+        /// N (and index past the histogram in BuildFrontier); this pins the file-not-row semantic.
+        /// </summary>
+        [TestMethod]
+        public void TestFrontierPerFileDedup()
+        {
+            var frontier = new Dictionary<string, ModelDiagnosticsData.FrontierPrec>();
+            var fileMinQ = new Dictionary<string, double>();
+            // file 0: three candidates for the same precursor (best run-q 0.005).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.010, 0.02);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.005, 0.01);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.020, 0.03);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+            // file 1: one candidate for the same precursor (run-q 0.008).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.008, 0.05);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+
+            var fp = frontier["PEP|2"];
+            int total = 0;
+            foreach (var c in fp.RunQBins) total += c;
+            Assert.AreEqual(2, total);                 // two files, not four candidate rows
+            Assert.AreEqual(0.01, fp.MinExpQ, 1e-9);   // min effective exp-q across all rows
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.005)]);  // file 0 at its best run-q
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.008)]);  // file 1
         }
     }
 }
