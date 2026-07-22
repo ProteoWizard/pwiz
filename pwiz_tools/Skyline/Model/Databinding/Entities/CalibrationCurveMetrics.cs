@@ -75,6 +75,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return ChangeProp(ImClone(this), im => im.RSquared = rSquared);
         }
 
+        [Format(Formats.Integer, NullValue = TextUtil.EXCEL_NA)]
+        public int? FittedParameters { get; private set; }
+        public CalibrationCurveMetrics ChangeFittedParameters(int? fittedParameters)
+        {
+            return ChangeProp(ImClone(this), im => im.FittedParameters = fittedParameters);
+        }
+
+        [Format(Formats.Percent, NullValue = TextUtil.EXCEL_NA)]
+        public double? RelativeStandardError { get; private set; }
+
+        public CalibrationCurveMetrics ChangeRelativeStandardError(double? relStdError)
+        {
+            return ChangeProp(ImClone(this), im => im.RelativeStandardError = relStdError);
+        }
+
         public string ErrorMessage { get; private set; }
         public CalibrationCurveMetrics ChangeErrorMessage(string errorMessage)
         {
@@ -135,6 +150,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
                    rSquared.ToString(@"0.####");
+        }
+
+        public static string RelativeStandardErrorDisplayText(double relStdError)
+        {
+            return QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_RelativeStandardError +
+                   relStdError.ToString(@"0.##%");
         }
     }
 }
