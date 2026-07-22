@@ -111,9 +111,7 @@ namespace pwiz.Skyline.Controls.Graphs
         // as it moves, goes away after a few seconds of no movement
         private readonly CursorTrackingTip _cursorTip;
 
-        // Used to get back to the UI thread without touching this form's handle. Control.Invoke
-        // reads Control.Handle, which recreates a destroyed handle on the calling thread, and
-        // that deadlocks the UI thread if it happens while this form is being disposed.
+        // Used by PostToUiThread to get back to the UI thread without touching this form's handle
         private readonly WindowsFormsSynchronizationContext _synchronizationContext;
 
         private MSGraphControl graphControl => graphControlExtension.Graph;
@@ -876,7 +874,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void SetSpectra(MsDataSpectrum[] spectra)
         {
-            BeginInvoke(new Action(() => SetSpectraUI(spectra)));
+            PostToUiThread(() => SetSpectraUI(spectra));
         }
 
         private void SetSpectraUI(MsDataSpectrum[] spectra)
@@ -941,7 +939,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanException(Exception ex)
         {
-            BeginInvoke(new Action(() => HandleLoadScanExceptionUI(ex)));
+            PostToUiThread(() => HandleLoadScanExceptionUI(ex));
         }
 
         private void HandleLoadScanExceptionUI(Exception ex)
@@ -1050,6 +1048,23 @@ namespace pwiz.Skyline.Controls.Graphs
             worker.RunWorkerAsync();
         }
 
+        /// <summary>
+        /// Runs an action on the UI thread. Use this instead of Control.Invoke or
+        /// Control.BeginInvoke for anything called from a background thread: those read
+        /// Control.Handle, which recreates a destroyed handle on the calling thread, and
+        /// that deadlocks the UI thread if it happens while this form is being disposed.
+        /// </summary>
+        private void PostToUiThread(Action action)
+        {
+            _synchronizationContext.Post(_ =>
+            {
+                // Disposing as well as IsDisposed: this can run while the form is partway
+                // through Dispose, when the child controls are already gone.
+                if (!IsDisposed && !Disposing)
+                    action();
+            }, null);
+        }
+
         private void LoadingTextIfNoChange()
         {
             // Only set the title to Loading... when it takes more than 200 miliseconds to get scans
@@ -1057,18 +1072,16 @@ namespace pwiz.Skyline.Controls.Graphs
             Thread.Sleep(200);
             if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
             {
-                _synchronizationContext.Post(_ =>
+                PostToUiThread(() =>
                 {
-                    // Disposing as well as IsDisposed: this can run while the form is partway
-                    // through Dispose, when the child controls are already gone.
-                    if (!IsDisposed && !Disposing &&
-                        ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
+                    // Need to check again once on the UI thread
+                    if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
                         graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
                         graphControl.MasterPane.Title.IsVisible = true;
                         graphControl.Refresh();
                     }
-                }, null);
+                });
             }
         }
 
