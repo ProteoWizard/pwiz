@@ -125,7 +125,6 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat ELECTRON_IONIZATION = VERSION_25_11; // Adds Electron Ionization support
         public static readonly DocumentFormat VERSION_26_1 = new DocumentFormat(26.1); // Release format
         public static readonly DocumentFormat VERSION_26_11 = new DocumentFormat(26.11); // M-1 precursor isotope
-        public static readonly DocumentFormat MINUS_ONE_PRECURSOR = VERSION_26_11;
         public static readonly DocumentFormat CURRENT = VERSION_26_11;
 
         private readonly double _versionNumber;

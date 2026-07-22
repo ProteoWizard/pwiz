@@ -2196,15 +2196,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            if (documentFormat < DocumentFormat.MINUS_ONE_PRECURSOR)
-            {
-                if (result.TransitionSettings.FullScan.IncludeMinusOnePrecursor)
-                {
-                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(
-                        result.TransitionSettings.FullScan.ChangeIncludeMinusOnePrecursor(false)));
-                }
-            }
-
             return result;
         }
 
