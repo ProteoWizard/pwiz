@@ -513,8 +513,19 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
-            -Resolution $cfg.Resolution -ChainRoot $chainRoot
+        # mode 3's SecondPassFDR merge legitimately uses the RESIDENT first-pass pool
+        # (ExpectReconciledInput), which the OSPREY_ALLOW_UNBOUNDED_MEMORY guard otherwise blocks as
+        # an O(files) path. Opt in for the chain ONLY -- this is our own testing -- so modes 1/2 run
+        # with the guard armed, proving the default straight-through + resume paths stay lean. The
+        # HPC resident/rehydrate path is tracked for streaming in
+        # ai/todos/backlog/brendanx67/TODO-osprey_stage6_rescored_buffer_streaming.md.
+        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
+        try {
+            $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -ChainRoot $chainRoot
+        } finally {
+            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
+        }
         $sw3.Stop()
         Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
