@@ -273,6 +273,9 @@
   <data name="TransitionLibraries_PickMostIntenseIons" xml:space="preserve">
     <value>If a library spectrum is available, pick its most intense ions</value>
   </data>
+  <data name="TransitionFullScan_IncludeMinusOnePrecursor" xml:space="preserve">
+    <value>Include M-1 precursor</value>
+  </data>
   <data name="TransitionFullScan_PrecursorIsotopeFilter" xml:space="preserve">
     <value>Peaks</value>
   </data>
@@ -829,9 +832,6 @@
   </data>
   <data name="RefinementSettings_AddLabelType" xml:space="preserve">
     <value>Add</value>
-  </data>
-  <data name="RefinementSettings_AddMinusOnePrecursor" xml:space="preserve">
-    <value>Add M-1 precursor transition</value>
   </data>
   <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
     <value>Auto-select all peptides</value>

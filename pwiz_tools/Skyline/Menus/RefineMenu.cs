@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Menus
                         {
                             using var longWaitDlg = new LongWaitDlg(SkylineWindow);
                             longWaitDlg.Message = MenusResources.SkylineWindow_ShowRefineDlg_Refining_document;
-                            longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
+                            longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
                             {
                                 var srmSettingsChangeMonitor =
                                     new SrmSettingsChangeMonitor(progressMonitor,

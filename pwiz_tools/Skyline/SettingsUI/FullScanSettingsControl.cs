@@ -184,6 +184,17 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorIsotopeFilter.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public bool IncludeMinusOnePrecursor
+        {
+            get { return cbIncludeMinusOnePrecursor.Checked; }
+            set { cbIncludeMinusOnePrecursor.Checked = value; }
+        }
+
+        public bool IsIncludeMinusOnePrecursorEnabled
+        {
+            get { return cbIncludeMinusOnePrecursor.Enabled; }
+        }
+
         public double? PrecursorRes
         {
             get
@@ -366,6 +377,17 @@ namespace pwiz.Skyline.SettingsUI
                 PrecursorIsotopesCurrent == FullScanPrecursorIsotopes.None || !MS2Only
                     ? string.Empty
                     : DocSettingsResources.FullScanAcquisitionMethod_EI_TOOLTIP);
+            UpdateMinusOnePrecursorEnabled();
+        }
+
+        private void UpdateMinusOnePrecursorEnabled()
+        {
+            // The M-1 isotope peak can only be extracted with MS1 filtering on a high resolution mass analyzer
+            cbIncludeMinusOnePrecursor.Enabled = PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None &&
+                                                 !MS2Only &&
+                                                 TransitionFullScan.IsHighResAnalyzer(PrecursorMassAnalyzer);
+            if (!cbIncludeMinusOnePrecursor.Enabled)
+                cbIncludeMinusOnePrecursor.Checked = false;
         }
 
         private bool MS2Only => AcquisitionMethod == FullScanAcquisitionMethod.EI; // Does MS2 acquisition mode preclude MS1 analysis?
@@ -398,6 +420,7 @@ namespace pwiz.Skyline.SettingsUI
                     textPrecursorIsotopeFilter.Text = FullScan.PrecursorIsotopeFilter.HasValue
                                                           ? FullScan.PrecursorIsotopeFilter.Value.ToString(LocalizationHelper.CurrentCulture)
                                                           : string.Empty;
+                    cbIncludeMinusOnePrecursor.Checked = FullScan.IncludeMinusOnePrecursor;
                     if (FullScan.IsotopeEnrichments != null)
                         comboEnrichments.SelectedItem = FullScan.IsotopeEnrichments.Name;
                     if (!comboPrecursorAnalyzerType.Enabled)
@@ -424,6 +447,7 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
                 textPrecursorIsotopeFilter.Enabled = true;
             }
+            UpdateMinusOnePrecursorEnabled();
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
         }
@@ -476,6 +500,7 @@ namespace pwiz.Skyline.SettingsUI
                     productResMz,
                     PrecursorIsotopesCurrent,
                     precursorIsotopeFilter,
+                    IncludeMinusOnePrecursor,
                     PrecursorMassAnalyzer,
                     precursorRes,
                     precursorResMz,
@@ -1040,7 +1065,7 @@ namespace pwiz.Skyline.SettingsUI
             int sepMS2FromSel = cbHighSelectivity.Top - groupBoxMS2.Bottom;
             labelEnrichments.Visible = false;
             comboEnrichments.Visible = false;
-            groupBoxMS1.Height -= comboEnrichments.Bottom - textPrecursorIsotopeFilter.Bottom;
+            groupBoxMS1.Height -= comboEnrichments.Bottom - cbIncludeMinusOnePrecursor.Bottom;
 
             var isWorkflowDda =
                 workflow == ImportPeptideSearchDlg.Workflow.dda ||

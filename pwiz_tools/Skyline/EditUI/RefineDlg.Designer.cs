@@ -32,7 +32,6 @@ namespace pwiz.Skyline.EditUI
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RefineDlg));
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.cbRemovePeptidesMissingLibrary = new System.Windows.Forms.CheckBox();
-            this.cbAddMinusOnePrecursor = new System.Windows.Forms.CheckBox();
             this.cbAutoTransitions = new System.Windows.Forms.CheckBox();
             this.cbAutoPrecursors = new System.Windows.Forms.CheckBox();
             this.cbAutoPeptides = new System.Windows.Forms.CheckBox();
@@ -127,16 +126,9 @@ namespace pwiz.Skyline.EditUI
             this.cbRemovePeptidesMissingLibrary.Name = "cbRemovePeptidesMissingLibrary";
             this.helpTip.SetToolTip(this.cbRemovePeptidesMissingLibrary, resources.GetString("cbRemovePeptidesMissingLibrary.ToolTip"));
             this.cbRemovePeptidesMissingLibrary.UseVisualStyleBackColor = true;
-            //
-            // cbAddMinusOnePrecursor
-            //
-            resources.ApplyResources(this.cbAddMinusOnePrecursor, "cbAddMinusOnePrecursor");
-            this.cbAddMinusOnePrecursor.Name = "cbAddMinusOnePrecursor";
-            this.cbAddMinusOnePrecursor.UseVisualStyleBackColor = true;
-            this.cbAddMinusOnePrecursor.CheckedChanged += new System.EventHandler(this.cbAddMinusOnePrecursor_CheckedChanged);
-            //
+            // 
             // cbAutoTransitions
-            //
+            // 
             resources.ApplyResources(this.cbAutoTransitions, "cbAutoTransitions");
             this.cbAutoTransitions.Name = "cbAutoTransitions";
             this.helpTip.SetToolTip(this.cbAutoTransitions, resources.GetString("cbAutoTransitions.ToolTip"));
@@ -303,7 +295,6 @@ namespace pwiz.Skyline.EditUI
             // tabDocument
             // 
             this.tabDocument.Controls.Add(this.cbRemovePeptidesMissingLibrary);
-            this.tabDocument.Controls.Add(this.cbAddMinusOnePrecursor);
             this.tabDocument.Controls.Add(this.cbAutoTransitions);
             this.tabDocument.Controls.Add(this.cbAutoPrecursors);
             this.tabDocument.Controls.Add(this.cbAutoPeptides);
@@ -702,7 +693,6 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.TextBox textMinIdotProduct;
         private System.Windows.Forms.Label labelMinIdotProduct;
         private System.Windows.Forms.CheckBox cbRemovePeptidesMissingLibrary;
-        private System.Windows.Forms.CheckBox cbAddMinusOnePrecursor;
         private System.Windows.Forms.CheckBox cbMaxPrecursorOnly;
         private System.Windows.Forms.TabPage tabConsistency;
         private System.Windows.Forms.ComboBox comboNormalizeTo;

@@ -2176,6 +2176,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            if (documentFormat < DocumentFormat.MINUS_ONE_PRECURSOR)
+            {
+                if (result.TransitionSettings.FullScan.IncludeMinusOnePrecursor)
+                {
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(
+                        result.TransitionSettings.FullScan.ChangeIncludeMinusOnePrecursor(false)));
+                }
+            }
+
             return result;
         }
 
@@ -2960,6 +2969,7 @@ namespace pwiz.Skyline.Model.DocSettings
                               // MS1 filtering changed select peaks
                               newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
                               newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter ||
+                              newTran.FullScan.IncludeMinusOnePrecursor != oldTran.FullScan.IncludeMinusOnePrecursor ||
                               (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged) ||
                               !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
                               !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz);

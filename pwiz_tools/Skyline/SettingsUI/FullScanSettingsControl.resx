@@ -525,6 +525,18 @@
   <data name="&gt;&gt;textPrecursorIsotopeFilter.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="&gt;&gt;cbIncludeMinusOnePrecursor.Name" xml:space="preserve">
+    <value>cbIncludeMinusOnePrecursor</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeMinusOnePrecursor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeMinusOnePrecursor.Parent" xml:space="preserve">
+    <value>groupBoxMS1</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeMinusOnePrecursor.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilter</value>
   </data>
@@ -697,7 +709,7 @@
     <value>111, 21</value>
   </data>
   <data name="comboEnrichments.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="labelEnrichments.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -712,7 +724,7 @@
     <value>139, 13</value>
   </data>
   <data name="labelEnrichments.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="labelEnrichments.Text" xml:space="preserve">
     <value>Isotope la&amp;beling enrichment:</value>
@@ -746,6 +758,24 @@
   </data>
   <data name="textPrecursorIsotopeFilter.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <data name="cbIncludeMinusOnePrecursor.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbIncludeMinusOnePrecursor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbIncludeMinusOnePrecursor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 125</value>
+  </data>
+  <data name="cbIncludeMinusOnePrecursor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 17</value>
+  </data>
+  <data name="cbIncludeMinusOnePrecursor.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="cbIncludeMinusOnePrecursor.Text" xml:space="preserve">
+    <value>an&amp;d M-1</value>
   </data>
   <data name="labelPrecursorIsotopeFilter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

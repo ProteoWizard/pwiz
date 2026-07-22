@@ -1019,26 +1019,6 @@ namespace pwiz.Skyline.EditUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to M-1 precursor transitions can only be added with a high resolution precursor mass analyzer..
-        /// </summary>
-        public static string RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_M_1_precursor_transitions_can_only_be_added_with_a_high_resolution_precursor_mass_analyzer_ {
-            get {
-                return ResourceManager.GetString("RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_M_1_precursor_transitions_can_only" +
-                        "_be_added_with_a_high_resolution_precursor_mass_analyzer_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to MS1 full-scan filtering must be enabled to add M-1 precursor transitions..
-        /// </summary>
-        public static string RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_MS1_full_scan_filtering_must_be_enabled_to_add_M_1_precursor_transitions_ {
-            get {
-                return ResourceManager.GetString("RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_MS1_full_scan_filtering_must_be_en" +
-                        "abled_to_add_M_1_precursor_transitions_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to all.
         /// </summary>
         public static string RefineDlg_RefineDlg_all {

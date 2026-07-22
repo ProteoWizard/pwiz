@@ -176,7 +176,6 @@
     <Compile Include="AssociateProteinsWhileLoadingTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoSelectPeptidesTest.cs" />
-    <Compile Include="RefineAddMinusOnePrecursorTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="AutoZoomTest.cs" />
     <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
@@ -438,6 +437,7 @@
     <Compile Include="MassErrorGraphsTest.cs" />
     <Compile Include="MidasModificationTest.cs" />
     <Compile Include="MidasTest.cs" />
+    <Compile Include="MinusOnePrecursorTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
     <Compile Include="ModifiedAreaProportionTest.cs" />
     <Compile Include="MultiSelectPeakAreaGraphTest.cs" />

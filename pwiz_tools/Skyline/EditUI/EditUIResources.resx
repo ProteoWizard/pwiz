@@ -417,12 +417,6 @@ Example: Looplink: T [4]
   <data name="RefineDlg_OkDialog_The_label_type__0__cannot_be_added_There_are_no_modifications_for_this_type" xml:space="preserve">
     <value>The label type '{0}' cannot be added. There are no modifications for this type.</value>
   </data>
-  <data name="RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_MS1_full_scan_filtering_must_be_enabled_to_add_M_1_precursor_transitions_" xml:space="preserve">
-    <value>MS1 full-scan filtering must be enabled to add M-1 precursor transitions.</value>
-  </data>
-  <data name="RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_M_1_precursor_transitions_can_only_be_added_with_a_high_resolution_precursor_mass_analyzer_" xml:space="preserve">
-    <value>M-1 precursor transitions can only be added with a high resolution precursor mass analyzer.</value>
-  </data>
   <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
     <value>all</value>
   </data>
