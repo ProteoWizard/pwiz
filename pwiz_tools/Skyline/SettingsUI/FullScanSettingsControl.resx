@@ -691,7 +691,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelPrecursorPPM.Location" type="System.Drawing.Point, System.Drawing">
-    <value>290, 91</value>
+    <value>290, 81</value>
   </data>
   <data name="labelPrecursorPPM.Size" type="System.Drawing.Size, System.Drawing">
     <value>27, 13</value>
@@ -736,7 +736,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelPrecursorIsotopeFilterPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>81, 105</value>
+    <value>81, 95</value>
   </data>
   <data name="labelPrecursorIsotopeFilterPercent.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -751,7 +751,7 @@
     <value>False</value>
   </data>
   <data name="textPrecursorIsotopeFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 102</value>
+    <value>14, 92</value>
   </data>
   <data name="textPrecursorIsotopeFilter.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 20</value>
@@ -766,7 +766,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbIncludeMinusOnePrecursor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 125</value>
+    <value>13, 115</value>
   </data>
   <data name="cbIncludeMinusOnePrecursor.Size" type="System.Drawing.Size, System.Drawing">
     <value>68, 17</value>
@@ -784,7 +784,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelPrecursorIsotopeFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 85</value>
+    <value>11, 75</value>
   </data>
   <data name="labelPrecursorIsotopeFilter.Size" type="System.Drawing.Size, System.Drawing">
     <value>40, 13</value>
@@ -829,7 +829,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelPrecursorAt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 86</value>
+    <value>246, 76</value>
   </data>
   <data name="labelPrecursorAt.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -841,7 +841,7 @@
     <value>&amp;At:</value>
   </data>
   <data name="textPrecursorAt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>244, 102</value>
+    <value>244, 92</value>
   </data>
   <data name="textPrecursorAt.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 20</value>
@@ -859,7 +859,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelPrecursorTh.Location" type="System.Drawing.Point, System.Drawing">
-    <value>290, 105</value>
+    <value>290, 95</value>
   </data>
   <data name="labelPrecursorTh.Size" type="System.Drawing.Size, System.Drawing">
     <value>25, 13</value>
@@ -874,7 +874,7 @@
     <value>False</value>
   </data>
   <data name="textPrecursorRes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 102</value>
+    <value>153, 92</value>
   </data>
   <data name="textPrecursorRes.Size" type="System.Drawing.Size, System.Drawing">
     <value>85, 20</value>
@@ -889,7 +889,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelPrecursorRes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>150, 86</value>
+    <value>150, 76</value>
   </data>
   <data name="labelPrecursorRes.Size" type="System.Drawing.Size, System.Drawing">
     <value>89, 13</value>
