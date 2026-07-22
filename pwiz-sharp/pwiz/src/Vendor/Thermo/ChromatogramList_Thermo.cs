@@ -339,15 +339,31 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
                 chrom.Params.Set(CVID.MS_negative_scan);
         }
 
-        if (entry.Device != Device.MS)
-            return FillNonMsDeviceChromatogram(chrom, entry);
-
-        return entry.Kind switch
+        // The Thermo RawFileReader SDK parses the SRM/SIM filter strings it is handed
+        // (via GetChromatogramDataEx) using the current thread culture. Under a comma-decimal
+        // culture such as French it rejects the period-formatted filters pwiz builds --
+        // "InvalidFilterFormatException: SRM ms2 363.706 [455.239-455.241]". Force
+        // InvariantCulture around the SDK calls so extraction is culture-independent, and
+        // restore the caller's culture afterward.
+        var savedCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
+        try
         {
-            CVID.MS_SIM_chromatogram => FillSimChromatogram(chrom, entry),
-            CVID.MS_SRM_chromatogram => FillSrmChromatogram(chrom, entry),
-            _ => FillTicChromatogram(chrom),
-        };
+            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+            if (entry.Device != Device.MS)
+                return FillNonMsDeviceChromatogram(chrom, entry);
+
+            return entry.Kind switch
+            {
+                CVID.MS_SIM_chromatogram => FillSimChromatogram(chrom, entry),
+                CVID.MS_SRM_chromatogram => FillSrmChromatogram(chrom, entry),
+                _ => FillTicChromatogram(chrom),
+            };
+        }
+        finally
+        {
+            System.Threading.Thread.CurrentThread.CurrentCulture = savedCulture;
+        }
     }
 
     private Chromatogram FillNonMsDeviceChromatogram(Chromatogram chrom, IndexEntry entry)
