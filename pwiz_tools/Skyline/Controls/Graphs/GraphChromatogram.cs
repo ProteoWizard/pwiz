@@ -2046,6 +2046,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromGroupInfo == null)
                     continue;
 
+                // Skip a group whose cached path no longer resolves to a peptide in the current
+                // document (a document change can briefly leave the tree selection referencing a
+                // removed node until the next update catches up). Checked before any peak work so a
+                // skipped group cannot influence auto-zoom; the next update redraws against the
+                // current selection.
+                var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
+                if (peptideDocNode == null)
+                    continue;
+
                 ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
 
                 // Collect the chromatogram info for the transition children
@@ -2097,7 +2106,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Apply any transform the user has chosen
                     infoPrimary.Transform(Transform);
 
-                    var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
                     int iColor = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                     Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
 
