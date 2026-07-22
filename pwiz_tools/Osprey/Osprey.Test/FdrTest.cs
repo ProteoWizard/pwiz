@@ -1564,6 +1564,137 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestSharedPeptidesRazorCascadingAssignment()
+        {
+            // Regression guard for issue #4441: the razor rollup must be deterministic and
+            // match Rust. If someone reintroduces a per-peptide greedy over Dictionary order,
+            // this test fails (the assignment below flips).
+            // Cascading razor topology that the former per-peptide greedy got wrong:
+            //   PA unique {A1, A2}          shares X (with PB) and Y (with PC)
+            //   PB unique {B1, B2, B3}      shares X (with PA)
+            //   PC unique {C1}              shares Y (with PA)
+            // The correct iterative group-batch set cover (matching Rust
+            // osprey-fdr/src/protein.rs) assigns X to PB (3 unique > PA's 2), THEN
+            // Y to PA (2 unique > PC's 1) -- deterministically, regardless of the
+            // order the shared peptides happen to be enumerated. The old per-peptide
+            // greedy, walking shared peptides in Dictionary (hash) order, could
+            // instead process Y first, inflate PA's unique count to 3, tie PB on X,
+            // and hand X to PA -- the wrong, order-dependent answer.
+            var library = new List<LibraryEntry>
+            {
+                MakeLibEntry(1, "UNIQ_A1", new[] { "PA" }, false),
+                MakeLibEntry(2, "UNIQ_A2", new[] { "PA" }, false),
+                MakeLibEntry(3, "UNIQ_B1", new[] { "PB" }, false),
+                MakeLibEntry(4, "UNIQ_B2", new[] { "PB" }, false),
+                MakeLibEntry(5, "UNIQ_B3", new[] { "PB" }, false),
+                MakeLibEntry(6, "UNIQ_C1", new[] { "PC" }, false),
+                MakeLibEntry(7, "SHARED_X", new[] { "PA", "PB" }, false),
+                MakeLibEntry(8, "SHARED_Y", new[] { "PA", "PC" }, false)
+            };
+
+            var result = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.Razor, null);
+
+            AssertRazorCascadeAssignment(result);
+        }
+
+        [TestMethod]
+        public void TestSharedPeptidesRazorDeterministicAcrossInputOrder()
+        {
+            // Regression guard for issue #4441 (companion to the cascading test above).
+            // Path-independence: the razor rollup must be identical no matter what
+            // order the library entries arrive in. The old greedy depended on
+            // Dictionary enumeration order, which under .NET randomized string
+            // hashing is not stable across processes; the group-batch set cover
+            // chooses each round's winner globally, so it is order-independent.
+            var forwardLibrary = new List<LibraryEntry>
+            {
+                MakeLibEntry(1, "UNIQ_A1", new[] { "PA" }, false),
+                MakeLibEntry(2, "UNIQ_A2", new[] { "PA" }, false),
+                MakeLibEntry(3, "UNIQ_B1", new[] { "PB" }, false),
+                MakeLibEntry(4, "UNIQ_B2", new[] { "PB" }, false),
+                MakeLibEntry(5, "UNIQ_B3", new[] { "PB" }, false),
+                MakeLibEntry(6, "UNIQ_C1", new[] { "PC" }, false),
+                MakeLibEntry(7, "SHARED_X", new[] { "PA", "PB" }, false),
+                MakeLibEntry(8, "SHARED_Y", new[] { "PA", "PC" }, false)
+            };
+            var reversedLibrary = new List<LibraryEntry>(forwardLibrary);
+            reversedLibrary.Reverse();
+
+            var forwardResult = ProteinFdr.BuildProteinParsimony(forwardLibrary, SharedPeptideMode.Razor, null);
+            var reversedResult = ProteinFdr.BuildProteinParsimony(reversedLibrary, SharedPeptideMode.Razor, null);
+
+            // Both orderings must produce the same, correct rollup.
+            AssertRazorCascadeAssignment(forwardResult);
+            AssertRazorCascadeAssignment(reversedResult);
+        }
+
+        [TestMethod]
+        public void TestSharedPeptidesRazorTiebreakFavorsLowestGroupId()
+        {
+            // Regression guard for issue #4441: when two groups have the SAME unique-peptide
+            // count and both own a contested shared peptide, the round winner must be the
+            // LOWEST group id -- mirroring Rust's max_by_key((unique_len, Reverse(id))). This
+            // is the one cross-impl detail the cascading test never exercises (that case is
+            // always decided by a strict unique-count difference, never a tie).
+            //   PA unique {A1, A2}   shares X (with PB) and Y (with PC)   -> 4 peptides, gid 0
+            //   PB unique {B1, B2}   shares X (with PA)                   -> 3 peptides, gid 1
+            //   PC unique {C1}       shares Y (with PA)                   -> 2 peptides, gid 2
+            // Distinct total peptide counts pin the group ids (assigned count-descending), so
+            // PA=0, PB=1, PC=2. Round 1: PA and PB both have unique count 2 and both own the
+            // unassigned SHARED_X; the lowest-id tiebreak makes PA the round winner, so PA
+            // claims X (and Y). A highest-id tiebreak would instead hand X to PB, failing this.
+            var library = new List<LibraryEntry>
+            {
+                MakeLibEntry(1, "UNIQ_A1", new[] { "PA" }, false),
+                MakeLibEntry(2, "UNIQ_A2", new[] { "PA" }, false),
+                MakeLibEntry(3, "UNIQ_B1", new[] { "PB" }, false),
+                MakeLibEntry(4, "UNIQ_B2", new[] { "PB" }, false),
+                MakeLibEntry(5, "UNIQ_C1", new[] { "PC" }, false),
+                MakeLibEntry(6, "SHARED_X", new[] { "PA", "PB" }, false),
+                MakeLibEntry(7, "SHARED_Y", new[] { "PA", "PC" }, false)
+            };
+
+            var result = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.Razor, null);
+
+            Assert.AreEqual(3, result.Groups.Count);
+            var paGroup = result.Groups.First(g => g.Accessions.Contains("PA"));
+            var pbGroup = result.Groups.First(g => g.Accessions.Contains("PB"));
+            // Equal-unique-count tie (PA and PB each have 2 unique) resolves to the lowest
+            // group id (PA), so the contested SHARED_X is razor-assigned to PA, not PB.
+            Assert.AreEqual(1, result.PeptideToGroupMap["SHARED_X"].Count);
+            Assert.IsTrue(paGroup.UniquePeptides.Contains("SHARED_X"), "SHARED_X should go to PA on the lowest-id tiebreak");
+            Assert.IsFalse(pbGroup.UniquePeptides.Contains("SHARED_X"), "SHARED_X must NOT go to PB when unique counts tie");
+        }
+
+        // Asserts the expected razor rollup for the cascading topology used by the two
+        // tests above: SHARED_X ends up unique to the PB group, SHARED_Y unique to the
+        // PA group, each shared peptide mapped to exactly one group. Assertions are
+        // anchored on protein accession, never on group ID: group IDs are an internal
+        // implementation detail (and here the two 4-peptide-set groups even tie on the
+        // peptide-set count that seeds ID assignment, so their relative ID is not pinned).
+        // Only the accession-anchored assignment must be deterministic.
+        private static void AssertRazorCascadeAssignment(ProteinParsimonyResult result)
+        {
+            Assert.AreEqual(3, result.Groups.Count);
+            Assert.AreEqual(1, result.PeptideToGroupMap["SHARED_X"].Count);
+            Assert.AreEqual(1, result.PeptideToGroupMap["SHARED_Y"].Count);
+
+            var paGroup = result.Groups.First(g => g.Accessions.Contains("PA"));
+            var pbGroup = result.Groups.First(g => g.Accessions.Contains("PB"));
+            var pcGroup = result.Groups.First(g => g.Accessions.Contains("PC"));
+
+            Assert.IsTrue(pbGroup.UniquePeptides.Contains("SHARED_X"), "SHARED_X should be razor-assigned to PB");
+            Assert.IsFalse(paGroup.UniquePeptides.Contains("SHARED_X"), "SHARED_X should NOT go to PA");
+            Assert.IsTrue(paGroup.UniquePeptides.Contains("SHARED_Y"), "SHARED_Y should be razor-assigned to PA");
+            Assert.IsFalse(pcGroup.UniquePeptides.Contains("SHARED_Y"), "SHARED_Y should NOT go to PC");
+
+            // No shared peptides remain unresolved on any group.
+            Assert.AreEqual(0, paGroup.SharedPeptides.Count);
+            Assert.AreEqual(0, pbGroup.SharedPeptides.Count);
+            Assert.AreEqual(0, pcGroup.SharedPeptides.Count);
+        }
+
+        [TestMethod]
         public void TestSharedPeptidesUniqueMode()
         {
             var library = new List<LibraryEntry>
