@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -66,7 +67,11 @@ namespace pwiz.SkylineTestFunctional
             AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
             AssertComplete(McpConnector.DismissWithAcceptButton(fileDialogId));
             WaitForCondition(() => !McpConnector.GetOpenForms().Any(form => form.IsNative));
-            WaitForConditionUI(() => Equals(SkylineWindow.DocumentFilePath, savePath));
+            // Case-insensitive: the native Save dialog stores the path with the drive letter upper-cased
+            // ("C:\..."), while savePath can be lower-cased ("c:\...") under the parallel Docker test runner
+            // (a case-sensitive compare here waited out the full WaitForConditionUI timeout).
+            WaitForConditionUI(() =>
+                string.Equals(SkylineWindow.DocumentFilePath, savePath, StringComparison.OrdinalIgnoreCase));
 
             // 2) Save As over the existing file: accepting the file dialog raises the native "replace?" message
             // box. The interface must SURFACE it (report not-completed and name it) rather than hang.

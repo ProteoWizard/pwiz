@@ -109,7 +109,10 @@ namespace pwiz.SkylineTestFunctional
             // RunNativeDlg has already waited for ShowOpenFileDialog (which opens the file) to complete, so the
             // document has changed here; only its background loading remains to wait on.
             WaitForDocumentLoaded();
-            Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
+            // Case-insensitive: opening through the native dialog returns the drive letter upper-cased
+            // ("C:\..."), while savePath can be lower-cased ("c:\...") under the parallel Docker test runner,
+            // and Windows file paths are case-insensitive.
+            Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath, true);
 
             TestMultiselectNavigateThenSelect();
         }
@@ -147,7 +150,10 @@ namespace pwiz.SkylineTestFunctional
                 // Navigate to the folder (confirmed through GetControls) and select the files by name.
                 fileDialog => SelectFilesInOpenDialog(fileDialog, selectDir, fileNames));
 
-            CollectionAssert.AreEquivalent(filePaths, selectedFiles,
+            // Case-insensitive: the native dialog returns paths with the drive letter upper-cased.
+            CollectionAssert.AreEquivalent(
+                filePaths.Select(p => p.ToLowerInvariant()).ToArray(),
+                selectedFiles.Select(p => p.ToLowerInvariant()).ToArray(),
                 @"The multiselect dialog did not return the files that were selected by name.");
         }
 
