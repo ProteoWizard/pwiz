@@ -53,18 +53,30 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         _raw = raw;
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
 
-        if (!simAsSpectra)
-            HasSimChromatograms = BuildSimIndex();
+        // Build the index under InvariantCulture. The Thermo SDK renders scan filters
+        // (GetFilterForScanNumber(...).ToString()) using the current thread culture, and those
+        // strings are matched -- as dictionary keys -- against the period-formatted
+        // GetAutoFilters() output. Under a comma-decimal culture such as French the two forms
+        // diverge, the lookup misses, and no SIM/SRM chromatograms get built. GetChromatogram
+        // wraps extraction for the same reason.
+        bool hasSim = false, hasSrm = false;
+        RunInvariant(() =>
+        {
+            if (!simAsSpectra)
+                hasSim = BuildSimIndex();
 
-        if (!srmAsSpectra)
-            HasSrmChromatograms = BuildSrmIndex();
+            if (!srmAsSpectra)
+                hasSrm = BuildSrmIndex();
 
-        // Analog/UV controllers: LC pump pressure, UV absorbance, CAD, etc. pwiz C++ iterates
-        // these and picks a CV term based on the device's Y-axis label.
-        BuildNonMsDeviceIndex();
+            // Analog/UV controllers: LC pump pressure, UV absorbance, CAD, etc. pwiz C++ iterates
+            // these and picks a CV term based on the device's Y-axis label.
+            BuildNonMsDeviceIndex();
 
-        // Restore MS selection so subsequent spectrum/chromatogram reads see the MS device.
-        try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
+            // Restore MS selection so subsequent spectrum/chromatogram reads see the MS device.
+            try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
+        });
+        HasSimChromatograms = hasSim;
+        HasSrmChromatograms = hasSrm;
     }
 
     private void BuildNonMsDeviceIndex()
@@ -343,13 +355,9 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         // (via GetChromatogramDataEx) using the current thread culture. Under a comma-decimal
         // culture such as French it rejects the period-formatted filters pwiz builds --
         // "InvalidFilterFormatException: SRM ms2 363.706 [455.239-455.241]". Force
-        // InvariantCulture around the SDK calls so extraction is culture-independent, and
-        // restore the caller's culture afterward.
-        var savedCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
-        try
+        // InvariantCulture around the SDK calls so extraction is culture-independent.
+        return RunInvariant(() =>
         {
-            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
             if (entry.Device != Device.MS)
                 return FillNonMsDeviceChromatogram(chrom, entry);
 
@@ -359,11 +367,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
                 CVID.MS_SRM_chromatogram => FillSrmChromatogram(chrom, entry),
                 _ => FillTicChromatogram(chrom),
             };
-        }
-        finally
-        {
-            System.Threading.Thread.CurrentThread.CurrentCulture = savedCulture;
-        }
+        });
     }
 
     private Chromatogram FillNonMsDeviceChromatogram(Chromatogram chrom, IndexEntry entry)
@@ -609,5 +613,33 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         arr.Set(kind, "", units);
         arr.Data.AddRange(values);
         return arr;
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> with the thread culture forced to InvariantCulture,
+    /// restoring the caller's culture afterward. The Thermo RawFileReader SDK renders and
+    /// parses scan-filter strings (e.g. "SRM ms2 363.706 [455.239-455.241]") using the current
+    /// thread culture; under a comma-decimal culture such as French those strings use commas and
+    /// no longer round-trip against the period-formatted filters pwiz builds and matches on.
+    /// </summary>
+    private static void RunInvariant(Action action)
+    {
+        var savedCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
+        try
+        {
+            System.Threading.Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            action();
+        }
+        finally
+        {
+            System.Threading.Thread.CurrentThread.CurrentCulture = savedCulture;
+        }
+    }
+
+    private static T RunInvariant<T>(Func<T> func)
+    {
+        T result = default!;
+        RunInvariant(() => { result = func(); });
+        return result;
     }
 }
