@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -42,7 +43,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
-using Thread = System.Threading.Thread;
 using Transition = pwiz.Skyline.Model.Transition;
 using PeakType = pwiz.Skyline.Model.Results.MsDataFileScanHelper.PeakType;
 
@@ -111,6 +111,11 @@ namespace pwiz.Skyline.Controls.Graphs
         // as it moves, goes away after a few seconds of no movement
         private readonly CursorTrackingTip _cursorTip;
 
+        // Used to get back to the UI thread without touching this form's handle. Control.Invoke
+        // reads Control.Handle, which recreates a destroyed handle on the calling thread, and
+        // that deadlocks the UI thread if it happens while this form is being disposed.
+        private readonly WindowsFormsSynchronizationContext _synchronizationContext;
+
         private MSGraphControl graphControl => graphControlExtension.Graph;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
@@ -136,6 +141,15 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.MouseDownEvent += graphControl_SplitterMouseDown;
             graphControl.MouseMove += graphControl_SplitterMouseMove;
             graphControl.MouseUpEvent += graphControl_SplitterMouseUp;
+
+            _synchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
+            if (_synchronizationContext == null)
+            {
+                // If constructed before the WindowsFormsSynchronizationContext exists, create one.
+                // When the real one gets created it will use the same marshaling control, so the
+                // one created here does not need to be disposed. (Same as Receiver.cs)
+                _synchronizationContext = new WindowsFormsSynchronizationContext();
+            }
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -1043,16 +1057,15 @@ namespace pwiz.Skyline.Controls.Graphs
             Thread.Sleep(200);
             if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
             {
-                Invoke(new Action(() =>
+                _synchronizationContext.Post(_ =>
                 {
-                    // Need to check again once on the UI thread
-                    if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
+                    if (!IsDisposed && ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
                         graphControl.MasterPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
                         graphControl.MasterPane.Title.IsVisible = true;
                         graphControl.Refresh();
                     }
-                }));
+                }, null);
             }
         }
 
