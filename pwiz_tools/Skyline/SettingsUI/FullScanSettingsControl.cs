@@ -184,16 +184,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorIsotopeFilter.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        public bool IncludeMinusOnePrecursor
-        {
-            get { return cbIncludeMinusOnePrecursor.Checked; }
-            set { cbIncludeMinusOnePrecursor.Checked = value; }
-        }
-
-        public bool IsIncludeMinusOnePrecursorEnabled
-        {
-            get { return cbIncludeMinusOnePrecursor.Enabled; }
-        }
+        public CheckBox CbIncludeMinusOnePrecursor => cbIncludeMinusOnePrecursor;
 
         public double? PrecursorRes
         {
@@ -386,8 +377,6 @@ namespace pwiz.Skyline.SettingsUI
             cbIncludeMinusOnePrecursor.Enabled = PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None &&
                                                  !MS2Only &&
                                                  TransitionFullScan.IsHighResAnalyzer(PrecursorMassAnalyzer);
-            if (!cbIncludeMinusOnePrecursor.Enabled)
-                cbIncludeMinusOnePrecursor.Checked = false;
         }
 
         private bool MS2Only => AcquisitionMethod == FullScanAcquisitionMethod.EI; // Does MS2 acquisition mode preclude MS1 analysis?
@@ -500,7 +489,7 @@ namespace pwiz.Skyline.SettingsUI
                     productResMz,
                     PrecursorIsotopesCurrent,
                     precursorIsotopeFilter,
-                    IncludeMinusOnePrecursor,
+                    cbIncludeMinusOnePrecursor.Checked && cbIncludeMinusOnePrecursor.Enabled,
                     PrecursorMassAnalyzer,
                     precursorRes,
                     precursorResMz,

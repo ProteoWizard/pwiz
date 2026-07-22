@@ -47,19 +47,20 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
+                var cbIncludeMinusOnePrecursor = transitionSettingsUI.CbIncludeMinusOnePrecursor;
                 transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.None;
-                Assert.IsFalse(transitionSettingsUI.IsIncludeMinusOnePrecursorEnabled);
-                Assert.IsFalse(transitionSettingsUI.IncludeMinusOnePrecursor);
+                Assert.IsFalse(cbIncludeMinusOnePrecursor.Enabled);
+                Assert.IsFalse(cbIncludeMinusOnePrecursor.Checked);
 
                 transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.qit;
-                Assert.IsFalse(transitionSettingsUI.IsIncludeMinusOnePrecursorEnabled);
-                Assert.IsFalse(transitionSettingsUI.IncludeMinusOnePrecursor);
+                Assert.IsFalse(cbIncludeMinusOnePrecursor.Enabled);
+                Assert.IsFalse(cbIncludeMinusOnePrecursor.Checked);
 
                 transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;
                 transitionSettingsUI.Peaks = 3;
-                Assert.IsTrue(transitionSettingsUI.IsIncludeMinusOnePrecursorEnabled);
-                transitionSettingsUI.IncludeMinusOnePrecursor = true;
+                Assert.IsTrue(cbIncludeMinusOnePrecursor.Enabled);
+                cbIncludeMinusOnePrecursor.Checked = true;
                 transitionSettingsUI.OkDialog();
             });
             WaitForDocumentLoaded();
@@ -71,8 +72,10 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
-                Assert.IsTrue(transitionSettingsUI.IncludeMinusOnePrecursor);
-                transitionSettingsUI.IncludeMinusOnePrecursor = false;
+                var cbIncludeMinusOnePrecursor = transitionSettingsUI.CbIncludeMinusOnePrecursor;
+                Assert.IsTrue(cbIncludeMinusOnePrecursor.Enabled);
+                Assert.IsTrue(cbIncludeMinusOnePrecursor.Checked);
+                cbIncludeMinusOnePrecursor.Checked = false;
                 transitionSettingsUI.OkDialog();
             });
             WaitForDocumentLoaded();
