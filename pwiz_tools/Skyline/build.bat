@@ -154,8 +154,12 @@ REM #      small-molecule versions on).
 REM #   2. localized import tests (~\.TestImport) under Japanese + Chinese.
 REM #   3. pass1 functional subset (instrument info, QC traces, TIC chromatogram,
 REM #      DIA search), logged to TestPass1Subset.log.
-REM # offscreen=0 matches the TC agents' interactive desktop session. Stop on the
-REM # first failing pass, like the sequential TC build steps.
+REM # offscreen=0 matches the TC agents' interactive desktop session. All three
+REM # passes always run (the compile already succeeded to get here) even if an
+REM # earlier pass has failing tests -- we want the full picture every commit, not
+REM # a report that stops at the first red pass. Each pass reports its own results
+REM # via teamcitytestdecoration; TESTS_FAILED accumulates so the build still ends
+REM # red if any pass had a failure.
 REM #
 REM # SKYLINE_TEST_ARGS escape hatch: if set, skip the three CI passes and run a
 REM # single TestRunner with those args instead (local smoke / full-suite runs),
@@ -164,19 +168,23 @@ pushd "%STAGE_DIR%"
 
 if defined SKYLINE_TEST_ARGS goto custom_run
 
+set TESTS_FAILED=0
+set FAILED_PASSES=
+
 echo ##teamcity[progressMessage 'TestRunner pass0 build check ^(CommonTest, Test, TestData^)']
 call :run_tests buildcheck=1 test=CommonTest.dll,Test.dll,TestData.dll offscreen=0 pass0=on pass2=off teamcitytestdecoration=1 runsmallmoleculeversions=on
-if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner pass0 build check failed" & popd & goto error)
+if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_PASSES=%FAILED_PASSES% pass0-buildcheck")
 
 echo ##teamcity[progressMessage 'TestRunner localized import tests ^(ja, zh^)']
 call :run_tests test=~\.TestImport offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on language=ja,zh loop=1
-if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner localized import tests failed" & popd & goto error)
+if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_PASSES=%FAILED_PASSES% import-ja-zh")
 
 echo ##teamcity[progressMessage 'TestRunner pass1 functional subset']
 call :run_tests log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram,TestDiaSearchFixedWindows offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on
-if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner pass1 functional subset failed" & popd & goto error)
+if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_PASSES=%FAILED_PASSES% pass1-subset")
 
 popd
+if %TESTS_FAILED% NEQ 0 (set EXIT=1 & set "ERROR_TEXT=TestRunner reported failures in:%FAILED_PASSES%" & goto error)
 goto tests_done
 
 :custom_run
