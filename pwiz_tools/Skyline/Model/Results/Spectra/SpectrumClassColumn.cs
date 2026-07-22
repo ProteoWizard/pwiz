@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return false;
             }
 
-            if (columnName.StartsWith(CV_ID_PREFIX))
+            if (columnName.StartsWith(CV_ID_PREFIX, StringComparison.Ordinal))
             {
                 var rest = columnName.Substring(CV_ID_PREFIX.Length);
                 int split = 0;
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return true;
             }
 
-            if (columnName.StartsWith(CV_USERPARAM_PREFIX))
+            if (columnName.StartsWith(CV_USERPARAM_PREFIX, StringComparison.Ordinal))
             {
                 var hex = columnName.Substring(CV_USERPARAM_PREFIX.Length);
                 if (hex.Length == 0 || hex.Length % 2 != 0)

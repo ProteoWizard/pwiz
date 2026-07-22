@@ -108,8 +108,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 otherParamPool.Add(new SpectrumMetadataTerm(
                     valueCache.CacheValue(protoOtherParam.Accession),
                     valueCache.CacheValue(protoOtherParam.Name),
-                    valueCache.CacheValue(NullForEmpty(protoOtherParam.Value)),
+                    // A value-less flag term is captured with an empty (non-null) value; preserve that
+                    // emptiness rather than folding it to null, so "Is Declared" still sees the term.
+                    valueCache.CacheValue(protoOtherParam.Value),
                     valueCache.CacheValue(NullForEmpty(protoOtherParam.Unit)),
+                    valueCache.CacheValue(NullForEmpty(protoOtherParam.UnitAccession)),
                     valueCache.CacheValue(NullForEmpty(protoOtherParam.Definition))));
             }
             _scanIds = proto.Spectra.Select(spectrum=>new ScanId(spectrum)).ToImmutable();
@@ -198,7 +201,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 Name = t.Name ?? string.Empty,
                 Value = t.Value ?? string.Empty,
                 Unit = t.Unit ?? string.Empty,
-                Definition = t.Definition ?? string.Empty
+                Definition = t.Definition ?? string.Empty,
+                UnitAccession = t.UnitAccession ?? string.Empty
             }));
             var scanDescriptions = ToFactorWithNull(_scanDescriptions);
             proto.ScanDescriptions.AddRange(scanDescriptions.Levels.Skip(1));

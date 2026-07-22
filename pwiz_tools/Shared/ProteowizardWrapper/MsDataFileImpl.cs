@@ -1596,6 +1596,7 @@ namespace pwiz.ProteowizardWrapper
             CVID.MS_scan_attribute       // MS:1000503
         };
 
+        private static readonly object _spectrumCvTermCatalogLock = new object();
         private static IList<SpectrumMetadataTerm> _spectrumCvTermCatalog;
 
         /// <summary>
@@ -1608,42 +1609,48 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public static IList<SpectrumMetadataTerm> GetSpectrumCvTermCatalog()
         {
-            if (_spectrumCvTermCatalog != null)
+            // Built once from the compiled-in vocabulary and cached. Lock so a race can't build it twice
+            // or publish a half-filled list; return a read-only view so the shared cache can't be mutated.
+            lock (_spectrumCvTermCatalogLock)
             {
-                return _spectrumCvTermCatalog;
-            }
+                if (_spectrumCvTermCatalog != null)
+                {
+                    return _spectrumCvTermCatalog;
+                }
 
-            // A term that is a parent of some other term is a grouping/category node in the ontology
-            // ("spectrum property", "scan attribute", "spectrum aggregation type", ...), not a measurable
-            // per-spectrum value, so only leaf terms are offered.
-            var parentTerms = new HashSet<CVID>();
-            foreach (var cvid in CV.cvids())
-            {
-                foreach (CVID parent in CV.cvTermInfo(cvid).parentsIsA)
+                // A term that is a parent of some other term is a grouping/category node in the ontology
+                // ("spectrum property", "scan attribute", "spectrum aggregation type", ...), not a measurable
+                // per-spectrum value, so only leaf terms are offered.
+                var parentTerms = new HashSet<CVID>();
+                foreach (var cvid in CV.cvids())
                 {
-                    parentTerms.Add(parent);
+                    foreach (CVID parent in CV.cvTermInfo(cvid).parentsIsA)
+                    {
+                        parentTerms.Add(parent);
+                    }
                 }
-            }
 
-            var isSpectrumLevel = new Dictionary<CVID, bool>();
-            var catalog = new List<SpectrumMetadataTerm>();
-            foreach (var cvid in CV.cvids())
-            {
-                if (INTERPRETED_CVIDS.Contains(cvid) || parentTerms.Contains(cvid))
+                var isSpectrumLevel = new Dictionary<CVID, bool>();
+                var catalog = new List<SpectrumMetadataTerm>();
+                foreach (var cvid in CV.cvids())
                 {
-                    continue;
+                    if (INTERPRETED_CVIDS.Contains(cvid) || parentTerms.Contains(cvid))
+                    {
+                        continue;
+                    }
+                    var info = CV.cvTermInfo(cvid);
+                    if (info.isObsolete)
+                    {
+                        continue;
+                    }
+                    if (IsSpectrumLevelCvTerm(cvid, isSpectrumLevel))
+                    {
+                        catalog.Add(new SpectrumMetadataTerm(info.id, info.name, null, null,
+                            definition: CleanDefinition(info.def)));
+                    }
                 }
-                var info = CV.cvTermInfo(cvid);
-                if (info.isObsolete)
-                {
-                    continue;
-                }
-                if (IsSpectrumLevelCvTerm(cvid, isSpectrumLevel))
-                {
-                    catalog.Add(new SpectrumMetadataTerm(info.id, info.name, null, null, CleanDefinition(info.def)));
-                }
+                return _spectrumCvTermCatalog = catalog.AsReadOnly();
             }
-            return _spectrumCvTermCatalog = catalog;
         }
 
         private static bool IsSpectrumLevelCvTerm(CVID cvid, Dictionary<CVID, bool> memo)

@@ -64,17 +64,25 @@ namespace pwiz.SkylineTestData.Results
         public void TestResultFileMetaDataOtherParams()
         {
             // A term that is shared by more than one spectrum, to exercise the global distinct pool.
+            // Unit accession and definition are DISTINCT non-null fields, so a positional mix-up between
+            // them (unit accession vs. definition) is caught by the round trip.
             var basePeakIntensity = new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity",
-                @"12345.6", @"number of detector counts", @"The intensity of the greatest peak in the mass spectrum.");
+                @"12345.6", @"number of detector counts", @"MS:1000131",
+                @"The intensity of the greatest peak in the mass spectrum.");
+            // A value-less flag term: its value is captured as empty (non-null), and that emptiness must
+            // survive the round trip so "Is Declared" still sees the term as present (an empty value that
+            // came back as null would read as absent).
+            var flag = new SpectrumMetadataTerm(@"MS:1000128", @"profile spectrum", string.Empty, null);
             // A user param with no unit and no definition (null fields must round-trip as null).
             var userParam = new SpectrumMetadataTerm(@"my custom flag", @"my custom flag", @"true", null);
             var totalIonCurrent = new SpectrumMetadataTerm(@"MS:1000285", @"total ion current",
-                @"98765.4", @"number of detector counts", @"The sum of all the separate ion currents.");
+                @"98765.4", @"number of detector counts", @"MS:1000131",
+                @"The sum of all the separate ion currents.");
 
             var spectra = new[]
             {
                 new SpectrumMetadata(@"scan=1", 1.0)
-                    .ChangeOtherParams(new[] { basePeakIntensity, userParam }),
+                    .ChangeOtherParams(new[] { basePeakIntensity, userParam, flag }),
                 new SpectrumMetadata(@"scan=2", 2.0)
                     .ChangeOtherParams(new[] { basePeakIntensity, totalIonCurrent }),
                 new SpectrumMetadata(@"scan=3", 3.0), // no otherParams at all
@@ -119,6 +127,7 @@ namespace pwiz.SkylineTestData.Results
                 Assert.AreEqual(expected[i].Name, actual[i].Name);
                 Assert.AreEqual(expected[i].Value, actual[i].Value);
                 Assert.AreEqual(expected[i].Unit, actual[i].Unit);
+                Assert.AreEqual(expected[i].UnitAccession, actual[i].UnitAccession);
                 Assert.AreEqual(expected[i].Definition, actual[i].Definition);
             }
         }

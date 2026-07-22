@@ -59,6 +59,7 @@ message ResultFileMetaDataProto {
 		string value = 3;
 		string unit = 4;
 		string definition = 5;
+		string unitAccession = 6;
 	}
 
 	message Precursor {

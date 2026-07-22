@@ -402,6 +402,10 @@ namespace pwiz.Skyline.EditUI
 
         private void AddFilterColumn(FilterColumn filterColumn)
         {
+            // The combobox and its reverse lookup are keyed by the displayed caption, so a caption can be
+            // offered only once. Distinct CV terms cannot collide (the caption carries the unique accession);
+            // the only possible clash is a vendor userParam named identically to a built-in property caption.
+            // Interpreted properties are added first (see DisplayCurrentPage) and intentionally win that clash.
             if (_propertyColumns.ContainsKey(filterColumn.Caption))
             {
                 return;
