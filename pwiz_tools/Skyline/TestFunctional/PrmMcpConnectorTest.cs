@@ -85,10 +85,19 @@ namespace pwiz.SkylineTestFunctional
                 QuotePaths(new[] { file1, file2 }));
             McpConnector.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);
 
-            // The wizard's search-file list now holds both files.
+            // The wizard's search-file list now holds both files. Compare case-insensitively: the native Open
+            // dialog returns the drive letter upper-cased ("C:\..."), while the expected paths can be
+            // lower-cased ("c:\...") -- e.g. the parallel Docker test runner's results path -- and Windows
+            // file paths are case-insensitive.
             WaitForConditionUI(() => wizard.BuildPepSearchLibControl.SearchFilenames.Length == 2);
-            CollectionAssert.AreEquivalent(new[] { file1, file2 },
-                wizard.BuildPepSearchLibControl.SearchFilenames);
+            string[] expectedFiles = { file1, file2 };
+            string[] actualFiles = null;
+            RunUI(() => actualFiles = wizard.BuildPepSearchLibControl.SearchFilenames);
+            CollectionAssert.AreEquivalent(
+                expectedFiles.Select(p => p.ToLowerInvariant()).ToArray(),
+                actualFiles.Select(p => p.ToLowerInvariant()).ToArray(),
+                "Selected files did not match.\r\nExpected: " + string.Join(" | ", expectedFiles) +
+                "\r\nActual:   " + string.Join(" | ", actualFiles));
 
             OkDialog(wizard, wizard.Close);
         }
