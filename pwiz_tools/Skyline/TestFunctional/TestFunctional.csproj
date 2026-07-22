@@ -185,6 +185,7 @@
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="ExportHugeParquetReportTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
+    <Compile Include="MedianPolishScenariosTest.cs" />
     <Compile Include="ParquetReportExporterTest.cs" />
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
     <Compile Include="OpenPeakAreasFromStartPageTest.cs" />
@@ -196,6 +197,7 @@
     <Compile Include="RetentionTimeManagerSaveAsTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RetentionTimeRegressionExceptionTest.cs" />
+    <Compile Include="RtLoessGraphTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
