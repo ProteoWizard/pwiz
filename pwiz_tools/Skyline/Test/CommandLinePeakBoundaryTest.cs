@@ -23,9 +23,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -330,6 +332,112 @@ namespace pwiz.SkylineTest
 
             // 20. Peak boundaries file does not exist
             TestPeakBoundariesNotFound(originalDocumentPath);
+        }
+
+        /// <summary>
+        /// A peak-boundaries file that references an unknown file, peptide, or charge state imports those
+        /// rows as no-ops. Through the CLI that used to be completely silent (success, no output), so a
+        /// file that matched nothing looked identical to one that applied. Verify each skipped category now
+        /// produces a Warning line, that a clean import produces none, and that the list is bounded.
+        /// </summary>
+        [TestMethod]
+        public void TestCommandLineImportPeakBoundaryWarnings()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
+            var cult = LocalizationHelper.CurrentCulture;
+            var cultI = CultureInfo.InvariantCulture;
+            string csvSep = TextUtil.CsvSeparator.ToString(cultI);
+            var originalDocumentPath = TestFilesDir.GetTestPath("Chrom05.sky");
+
+            // A fully valid row: peptide, file, and charge all present in Chrom05.sky
+            string[] baseValues =
+            {
+                "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (4.0).ToString(cult), (3.5).ToString(cult),
+                (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
+            };
+            string headerRow = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(baseValues.Length));
+
+            string BuildFile(params string[][] rows)
+            {
+                var lines = new List<string> { headerRow };
+                lines.AddRange(rows.Select(r => string.Join(csvSep, r)));
+                return TextUtil.LineSeparate(lines.ToArray());
+            }
+
+            string[] WithField(PeakBoundaryImporter.Field field, string value)
+            {
+                var values = (string[]) baseValues.Clone();
+                values[(int) field] = value;
+                return values;
+            }
+
+            // A clean import warns about nothing
+            string cleanOutput = ImportPeakBoundariesText(originalDocumentPath, BuildFile(baseValues));
+            Assert.AreEqual(0, FindErrorLines(cleanOutput).Count());
+            foreach (var warning in new[]
+                     {
+                         SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                         SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                         SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_
+                     })
+            {
+                StringAssert.DoesNotMatch(cleanOutput, new Regex(Regex.Escape(warning)));
+            }
+
+            // The single data row sits on line 2 (line 1 is the header), so every warning below cites line 2.
+            // Unrecognized file name -> file warning (single item -> singular header)
+            AssertWarns(originalDocumentPath, BuildFile(WithField(PeakBoundaryImporter.Field.filename, "Q_2012_0918_RJ_15.raw")),
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                "Q_2012_0918_RJ_15.raw", 2);
+
+            // Unrecognized peptide -> peptide warning
+            AssertWarns(originalDocumentPath, BuildFile(WithField(PeakBoundaryImporter.Field.modified_peptide, "PEPTIDER")),
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                "PEPTIDER", 2);
+
+            // Valid peptide and file but a charge state not in the document -> charge-state warning. The listed
+            // value is the peptide/file/charge triplet; assert the peptide+file prefix (charge rendering aside).
+            AssertWarns(originalDocumentPath, BuildFile(WithField(PeakBoundaryImporter.Field.charge, 5.ToString(cult))),
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_,
+                "TPEVDDEALEK Q_2012_0918_RJ_13.raw", 2);
+
+            // More than ten unrecognized peptides -> plural header (with the count) and a bounded, ellipsized list
+            const string aminoAcids = "RKASTNQVWY LG"; // 12 valid one-letter residues (space skipped below)
+            var manyRows = aminoAcids.Where(c => c != ' ')
+                .Select(c => WithField(PeakBoundaryImporter.Field.modified_peptide, "PEPTIDE" + c)).ToArray();
+            Assert.AreEqual(12, manyRows.Length);
+            string manyOutput = ImportPeakBoundariesText(originalDocumentPath, BuildFile(manyRows));
+            Assert.AreEqual(0, FindErrorLines(manyOutput).Count());
+            StringAssert.Contains(manyOutput, string.Format(
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_,
+                manyRows.Length));
+            Assert.IsTrue(SplitLines(manyOutput).Any(line => line == @"..."),
+                "Expected an ellipsis line truncating the unrecognized-peptide list");
+            // Exactly ten items are shown (the bound), each a "line N: PEPTIDE..." entry. Build the matcher
+            // from the resource string so it stays valid when the "line {0}: {1}" text is localized.
+            string lineFormat = SkylineResources.CommandLine_ImportPeakBoundaries_Warning__line__0____1_;
+            string linePattern = "^" + Regex.Escape(lineFormat)
+                .Replace(Regex.Escape("{0}"), @"\d+")
+                .Replace(Regex.Escape("{1}"), @"PEPTIDE\w+") + "$";
+            int shownItems = SplitLines(manyOutput).Count(line => Regex.IsMatch(line, linePattern));
+            Assert.AreEqual(10, shownItems);
+            // Earliest rows first: the first data row (line 2) is shown, the last (line 13) is truncated away
+            string firstResiduePeptide = "PEPTIDE" + aminoAcids.First(c => c != ' ');
+            string lastResiduePeptide = "PEPTIDE" + aminoAcids.Last(c => c != ' ');
+            StringAssert.Contains(manyOutput, string.Format(lineFormat, 2, firstResiduePeptide));
+            StringAssert.DoesNotMatch(manyOutput, new Regex(Regex.Escape(string.Format(lineFormat, 13, lastResiduePeptide))));
+        }
+
+        private static void AssertWarns(string documentPath, string importText, string expectedHeader,
+            string expectedItemValue, long expectedLine)
+        {
+            string output = ImportPeakBoundariesText(documentPath, importText);
+            // A skipped row is a warning, not an error: the import still succeeds
+            Assert.AreEqual(0, FindErrorLines(output).Count());
+            StringAssert.Contains(output, expectedHeader);
+            // The offending value is listed prefixed with the input-file line it appeared on
+            StringAssert.Contains(output, string.Format(
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__line__0____1_, expectedLine, expectedItemValue));
         }
 
         private static ReportSpec MakeReportSpec()
