@@ -14,12 +14,13 @@ REM #   2. CleanSkyline.bat: wipe bin/obj/TestResults from every touched
 REM #      Skyline sub-project so a stale build from a prior commit can't
 REM #      leak into this one.
 REM #   3. build.bat: dotnet restore + build + test. The test phase runs the
-REM #      standard TeamCity per-commit check -- three TestRunner passes (pass0
+REM #      standard TeamCity per-commit check -- the full English suite PLUS the
+REM #      three extra modes the old net472 SkylineWindows config ran (French pass0
 REM #      build check over CommonTest+Test+TestData; the localized ja/zh import
-REM #      tests; a pass1 functional subset), matching how the old net472
-REM #      SkylineWindows config ran them. All three passes run even if an earlier
-REM #      one has failing tests (only a compile failure short-circuits); the build
-REM #      still ends red if any pass failed. Args forwarded verbatim.
+REM #      tests; a pass1 functional subset), so the net8 build runs a superset of
+REM #      what it did before. Every mode runs even if an earlier one has failing
+REM #      tests (only a compile failure short-circuits); the build still ends red
+REM #      if any mode failed. Args forwarded verbatim.
 REM #   4. git ls-files --deleted: catches builds that delete tracked files.
 REM #   5. git status --porcelain: catches builds that produce stray files
 REM #      not covered by .gitignore.

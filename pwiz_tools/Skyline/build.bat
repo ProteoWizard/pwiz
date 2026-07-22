@@ -4,13 +4,13 @@ setlocal
 REM # ------------------------------------------------------------------------
 REM # Skyline build + test entry point. TeamCity calls this from tcbuild.bat;
 REM # runs locally too. Builds the net8 SDK-style Skyline tree, stages the test
-REM # binaries, and runs the standard TeamCity per-commit check -- three sequential
-REM # TestRunner passes (pass0 build check over CommonTest+Test+TestData; the
-REM # localized ja/zh import tests; a pass1 functional subset) -- through the
-REM # Skyline TestRunner harness the functional tests are written for (per-test
-REM # form lifecycle, requeue-on-flake), rather than `dotnet test`, which can't run
-REM # the functional (UI) tests. See the test step below for the exact commands and
-REM # the SKYLINE_TEST_ARGS escape hatch for custom / full-suite runs.
+REM # binaries, and runs the standard TeamCity per-commit check -- the full English
+REM # suite PLUS three extra modes (French pass0 build check over
+REM # CommonTest+Test+TestData; the localized ja/zh import tests; a pass1 functional
+REM # subset) -- through the Skyline TestRunner harness the functional tests are
+REM # written for (per-test form lifecycle, requeue-on-flake), rather than
+REM # `dotnet test`, which can't run the functional (UI) tests. See the test step
+REM # below for the exact commands and the SKYLINE_TEST_ARGS escape hatch.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
@@ -145,31 +145,47 @@ if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Net8Tests.ps1 failed & goto error)
 
 set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
+if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
+mkdir "%TC_TEST_RESULTS%"
 
-REM # The standard TeamCity per-commit check: three sequential TestRunner passes,
-REM # run on the host from the staging dir (pass0/pass1 build checks, not the
-REM # parallel Docker full suite), mirroring the old net472 SkylineWindows config:
-REM #   1. pass0 build check over CommonTest + Test + TestData (unit/data tests,
-REM #      small-molecule versions on).
-REM #   2. localized import tests (~\.TestImport) under Japanese + Chinese.
-REM #   3. pass1 functional subset (instrument info, QC traces, TIC chromatogram,
-REM #      DIA search), logged to TestPass1Subset.log.
-REM # offscreen=0 matches the TC agents' interactive desktop session. All three
-REM # passes always run (the compile already succeeded to get here) even if an
-REM # earlier pass has failing tests -- we want the full picture every commit, not
-REM # a report that stops at the first red pass. Each pass reports its own results
-REM # via teamcitytestdecoration; TESTS_FAILED accumulates so the build still ends
-REM # red if any pass had a failure.
+REM # TeamCity per-commit check: the existing full English suite PLUS the three
+REM # extra modes the old net472 SkylineWindows config ran, so the net8 build runs
+REM # a SUPERSET of what it did before (not a subset):
+REM #   (a) full suite  -- normal English pass over every staged test DLL.
+REM #   (b) pass0 build check over CommonTest + Test + TestData (French culture,
+REM #       small-molecule versions on).
+REM #   (c) localized import tests (~\.TestImport) under Japanese + Chinese.
+REM #   (d) pass1 functional subset (instrument info, QC traces, TIC chromatogram,
+REM #       DIA search), logged to TestPass1Subset.log.
+REM # The extra modes use offscreen=0 (the TC agents have an interactive desktop).
+REM # Every mode always runs (the compile already succeeded to get here) even if an
+REM # earlier one has failing tests -- we want the full picture every commit, not a
+REM # report that stops at the first red mode. Each reports its own results via
+REM # teamcitytestdecoration; TESTS_FAILED accumulates so the build still ends red
+REM # if any mode had a failure.
 REM #
-REM # SKYLINE_TEST_ARGS escape hatch: if set, skip the three CI passes and run a
-REM # single TestRunner with those args instead (local smoke / full-suite runs),
-REM # honoring --parallel. e.g. SKYLINE_TEST_ARGS=test=Foo,Bar.
+REM # SKYLINE_TEST_ARGS escape hatch: if set, skip all of the above and run a single
+REM # TestRunner with those args instead (local smoke runs), honoring --parallel.
+REM # e.g. SKYLINE_TEST_ARGS=test=Foo,Bar.
 pushd "%STAGE_DIR%"
 
 if defined SKYLINE_TEST_ARGS goto custom_run
 
+REM # Full-suite run mode: host-sequential by default, Docker workers with --parallel.
+if %SEQUENTIAL%==1 (
+    set RUNNER_MODE=parallelmode=off
+) else (
+    set RUNNER_MODE=parallelmode=server workercount=%SKYLINE_TEST_WORKERS%
+)
+set TC_DECORATION=
+if defined TEAMCITY_VERSION set TC_DECORATION=teamcitytestdecoration=on
+
 set TESTS_FAILED=0
 set FAILED_PASSES=
+
+echo ##teamcity[progressMessage 'TestRunner full suite ^(English^)']
+call :run_tests %RUNNER_MODE% loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %TC_DECORATION%
+if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_PASSES=%FAILED_PASSES% full-suite")
 
 echo ##teamcity[progressMessage 'TestRunner pass0 build check ^(CommonTest, Test, TestData^)']
 call :run_tests buildcheck=1 test=CommonTest.dll,Test.dll,TestData.dll offscreen=0 pass0=on pass2=off teamcitytestdecoration=1 runsmallmoleculeversions=on
@@ -188,8 +204,6 @@ if %TESTS_FAILED% NEQ 0 (set EXIT=1 & set "ERROR_TEXT=TestRunner reported failur
 goto tests_done
 
 :custom_run
-if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
-mkdir "%TC_TEST_RESULTS%"
 set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %SKYLINE_TEST_ARGS%
 if defined TEAMCITY_VERSION set RUNNER_ARGS=%RUNNER_ARGS% teamcitytestdecoration=on
 if %SEQUENTIAL%==1 (
