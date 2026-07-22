@@ -1979,6 +1979,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchControl?.Cancel();
             ImportPeptideSearch.SearchEngine?.Dispose();
 
+            // Stop (and join) any background score-type detection the build-library grid started when files
+            // were added, so no background work -- or the temp file it feeds to BlibBuild -- outlives this wizard.
+            BuildPepSearchLibControl?.Grid?.CancelScoreTypeDetection();
+
             base.OnFormClosing(e);
         }
 
