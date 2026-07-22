@@ -1052,10 +1052,12 @@ namespace pwiz.SkylineTestUtil
         private const double AUDIT_LOG_NUMERIC_ABSOLUTE_FLOOR = 1e-12;
 
         // Matches a numeric literal: optional leading '-', an integer part, an optional
-        // fractional part, and an optional exponent. Quotes around a number (e.g. "0.151...")
-        // are not part of the match, so they are compared as ordinary non-numeric text.
+        // fractional part (with '.' or ',' as the separator, since audit logs are recorded in the
+        // current culture and French uses commas), and an optional exponent. Quotes around a
+        // number (e.g. "0.151...") are not part of the match, so they are compared as ordinary
+        // non-numeric text.
         private static readonly Regex NUMERIC_TOKEN_REGEX =
-            new Regex(@"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", RegexOptions.Compiled);
+            new Regex(@"-?\d+(?:[.,]\d+)?(?:[eE][-+]?\d+)?", RegexOptions.Compiled);
 
         /// <summary>
         /// Compares two audit-log texts line-by-line, tolerating only tiny floating-point
@@ -1175,8 +1177,10 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Non-integer (float) tokens: accept when within a tight relative/absolute tolerance.
-            if (double.TryParse(expectedToken, NumberStyles.Float, CultureInfo.InvariantCulture, out var expectedValue) &&
-                double.TryParse(actualToken, NumberStyles.Float, CultureInfo.InvariantCulture, out var actualValue))
+            // Parse culture-uncertain because audit logs are recorded in the current culture (French
+            // uses ',' as the decimal separator).
+            if (CommonTextUtil.TryParseDoubleUncertainCulture(expectedToken, out var expectedValue) &&
+                CommonTextUtil.TryParseDoubleUncertainCulture(actualToken, out var actualValue))
             {
                 var diff = Math.Abs(expectedValue - actualValue);
                 var tolerance = Math.Max(AUDIT_LOG_NUMERIC_ABSOLUTE_FLOOR,
@@ -1196,8 +1200,10 @@ namespace pwiz.SkylineTestUtil
 
         private static bool IsIntegerToken(string token)
         {
-            // An integer token has neither a decimal point nor an exponent marker.
-            return token.IndexOf('.') < 0 && token.IndexOf('e') < 0 && token.IndexOf('E') < 0;
+            // An integer token has neither a decimal separator ('.' or the current-culture ','
+            // used in e.g. French audit logs) nor an exponent marker.
+            return token.IndexOf('.') < 0 && token.IndexOf(',') < 0 &&
+                   token.IndexOf('e') < 0 && token.IndexOf('E') < 0;
         }
 
         public class ColumnTolerances
