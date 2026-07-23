@@ -1420,7 +1420,7 @@ namespace pwiz.Osprey.FDR
                                 rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
                             Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
                             standardizer.TransformSlice(featureBuf);
-                            finalScores[gi] = ScoreStandardizedRow(gbtModels, avgWeights, avgBias, featureBuf);
+                            finalScores[gi] = ScoreStandardizedRow(null, avgWeights, avgBias, featureBuf);
 
                             contribAcc.Add(featureBuf, proj.IsDecoy);
                             gi++;
@@ -2877,6 +2877,11 @@ namespace pwiz.Osprey.FDR
         ///   survivor observation, keyed (fileKey, entryId). Observations absent here keep their
         ///   stored 1st-pass score.</param>
         /// <param name="survivors">Every reported survivor (fileKey, entryId) to emit q/PEP for.</param>
+        /// <param name="survivorRunQ">Out: run-level precursor q per reported (fileKey, entryId).</param>
+        /// <param name="survivorExpQ">Out: experiment-level precursor q per reported (fileKey, entryId).</param>
+        /// <param name="survivorPep">Out: PEP per reported (fileKey, entryId).</param>
+        /// <param name="stratumBaseIds">Null for the full-population competition; non-null restricts
+        ///   the competition to these base_ids (protein-compact).</param>
         public static void ComputeFullPopulationPrecursorFdrStreaming(
             IReadOnlyList<string> fileKeys,
             Func<string, (uint[] entryIds, double[] scores)> readFileScalars,

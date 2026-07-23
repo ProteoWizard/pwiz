@@ -110,8 +110,9 @@ namespace pwiz.Osprey.Scoring
             // One small StringBuilder reused per row (cleared each iteration), so the largest
             // live allocation is a single line -- never the whole file.
             var line = new StringBuilder(96);
-            using (var writer = new StreamWriter(path, false) { NewLine = "\n" })
+            using (var writer = new StreamWriter(path, false))
             {
+                writer.NewLine = "\n";
                 writer.WriteLine(HeaderLine);
                 foreach (var r in rows)
                 {

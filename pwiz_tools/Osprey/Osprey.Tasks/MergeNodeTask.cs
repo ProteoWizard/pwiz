@@ -547,7 +547,7 @@ namespace pwiz.Osprey.Tasks
                         || rq < existingB[3]
                         || (rq == existingB[3] && e.Charge < existingB[4]))
                     {
-                        sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, (double)e.Charge };
+                        sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, e.Charge };
                     }
                 }
             }

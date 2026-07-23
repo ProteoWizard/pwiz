@@ -396,7 +396,7 @@ namespace pwiz.Osprey.Core
             string v = Environment.GetEnvironmentVariable(name);
             if (string.IsNullOrEmpty(v))
                 return null;
-            return int.TryParse(v, out int result) ? result : (int?)null;
+            return int.TryParse(v, out int result) ? result : null;
         }
 
         /// <summary>Env double override (invariant culture, so "0.5" parses regardless of
@@ -408,7 +408,7 @@ namespace pwiz.Osprey.Core
                 return null;
             return double.TryParse(v, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out double result)
-                ? result : (double?)null;
+                ? result : null;
         }
 
         private static bool IsSet(string name)

@@ -1429,7 +1429,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Projection-buffer counterpart of the <see cref="FdrEntry"/>
-        /// <see cref="RunPercolatorFdr(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{string,System.Collections.Generic.List{FdrEntry}}},OspreyConfig,PipelineContext,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
+        /// <see cref="RunPercolatorFdr(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{string,System.Collections.Generic.List{FdrEntry}}},OspreyConfig,PipelineContext,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},PercolatorResults)"/>
         /// facade: run Percolator FDR over the thin <see cref="FdrProjectionSet"/>
         /// buffer, supplying the PIN feature names + the Stage 5 diagnostics config and
         /// owning the diagnostic-only process exit. Used by the projection 1st-pass

@@ -488,7 +488,7 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogWarning("transfer-compete: frozen 1st-pass model has no usable model/standardizer.");
                 return false;
             }
-            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
             int nFeatures = scorer.NumFeatures;
 
             // 1. Frozen-model score for each reconciled survivor, STREAMED one file at a

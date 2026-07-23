@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -2546,7 +2547,7 @@ namespace pwiz.Osprey.Test
             // in the library. Detect SHARED + ONLYP1 (P2's discriminating peptide is NOT
             // detected), so among detected peptides SHARED looks unique to P1's group --
             // but in the library it is shared, so it is NOT library-unique.
-            var library = new List<pwiz.Osprey.Core.LibraryEntry>
+            var library = new List<LibraryEntry>
             {
                 MakeLibEntry(1, "SHARED", new[] { "P1", "P2" }, false),
                 MakeLibEntry(2, "ONLYP1", new[] { "P1" }, false),
@@ -2567,7 +2568,7 @@ namespace pwiz.Osprey.Test
                 "osprey_test_pg_" + Guid.NewGuid().ToString("N") + ".tsv");
             try
             {
-                pwiz.Osprey.Tasks.OspreyReportWriter.WriteProteinGroups(path, result, library, config);
+                OspreyReportWriter.WriteProteinGroups(path, result, library, config);
                 var lines = File.ReadAllLines(path);
                 Assert.AreEqual("Protein.Group\tProtein.Names\tN.Peptides\tN.Proteotypic\t" +
                                 "PG.Q.Value\tPasses.PG.FDR\tGrouping.Peptides\tLibrary.Unique.Peptides",
@@ -2753,7 +2754,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestPerReplicateProteinCount()
         {
-            var library = new List<pwiz.Osprey.Core.LibraryEntry>
+            var library = new List<LibraryEntry>
             {
                 MakeLibEntry(1, "PEPA", new[] { "PROT_A" }, false),
                 MakeLibEntry(2, "PEPB", new[] { "PROT_B" }, false),
