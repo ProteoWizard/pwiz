@@ -226,6 +226,30 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return metadata => (column.GetValue(metadata) != null) == declaredWanted;
             }
 
+            // Equals/Not Equals with a numeric operand compares per value: numerically where the term's
+            // value is a number (so "1.0e03" equals "1000"), by string otherwise. Unlike the ordered
+            // comparisons, equality never hard-fails on a present non-numeric value - a string term is
+            // simply compared as text - so a numeric-looking operand cannot abort extraction.
+            if ((Equals(op, FilterOperations.OP_EQUALS) || Equals(op, FilterOperations.OP_NOT_EQUALS)) &&
+                OperandIsNumeric(spec))
+            {
+                var numericPredicate = spec.Predicate.MakePredicate(dataSchema, typeof(double));
+                var stringPredicate = spec.Predicate.MakePredicate(dataSchema, typeof(string));
+                return metadata =>
+                {
+                    var raw = column.GetValue(metadata) as string;
+                    if (string.IsNullOrEmpty(raw))
+                    {
+                        // Absent or value-less term: keep the value operators' null semantics
+                        // (equals -> no match, not-equals -> match).
+                        return numericPredicate(null);
+                    }
+                    return double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+                        ? numericPredicate(number)
+                        : stringPredicate(raw);
+                };
+            }
+
             var type = DetermineCvOperandType(spec);
             var rawPredicate = spec.Predicate.MakePredicate(dataSchema, type);
             var columnDisplay = column.GetLocalizedColumnName(CultureInfo.CurrentCulture);
@@ -237,10 +261,23 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
+        /// True when the spec's operand parses as an invariant number. There is no stored type for these
+        /// terms, so a numeric operand is what makes an equality comparison numeric (see the per-value
+        /// dispatch in <see cref="CompileCvSpec"/>).
+        /// </summary>
+        private static bool OperandIsNumeric(FilterSpec spec)
+        {
+            var operand = spec.Predicate.InvariantOperandText;
+            return operand != null &&
+                   double.TryParse(operand, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
+        }
+
+        /// <summary>
         /// Decides whether a CV/user-parameter spec is a numeric or a string comparison. There is no
-        /// stored type for these terms (a value is numeric only if it parses as an invariant number), so
-        /// the operator and operand imply it: ordered comparisons are numeric; "contains"/"starts with"
-        /// are string; equals/not-equals are numeric only when the operand itself is a number.
+        /// stored type for these terms, so the operator implies it: the ordered comparisons are numeric
+        /// (and hard-fail on a non-numeric value); everything else here - "contains"/"starts with" and
+        /// non-numeric-operand equality - compares as text. Numeric-operand equality is handled per value
+        /// in <see cref="CompileCvSpec"/> before this is reached.
         /// </summary>
         private static Type DetermineCvOperandType(FilterSpec spec)
         {
@@ -250,16 +287,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 Equals(op, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL))
             {
                 return typeof(double);
-            }
-
-            if (Equals(op, FilterOperations.OP_EQUALS) || Equals(op, FilterOperations.OP_NOT_EQUALS))
-            {
-                var operand = spec.Predicate.InvariantOperandText;
-                if (operand != null &&
-                    double.TryParse(operand, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
-                {
-                    return typeof(double);
-                }
             }
 
             return typeof(string);

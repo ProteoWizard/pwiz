@@ -266,6 +266,21 @@ namespace pwiz.SkylineTest
             // of the unit the term happens to carry.
             var sameAccessionDifferentUnitTerm = CvSpectrum(@"pct", accession, name, @"1000", @"percent of base peak");
             Assert.IsTrue(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(sameAccessionDifferentUnitTerm));
+
+            // Equals/Not Equals with a numeric operand does NOT hard-fail the way the ordered comparisons
+            // do. It compares numerically where the term's value is a number (so scientific notation still
+            // matches "1000"), and by string otherwise, so a string term meeting a numeric operand is just
+            // compared as text rather than aborting extraction.
+            var scientific = CvSpectrum(@"sci", accession, name, @"1.0e03", unit);
+            Assert.IsTrue(Numeric(FilterOperations.OP_EQUALS, @"1000")(scientific));
+            Assert.IsFalse(Numeric(FilterOperations.OP_EQUALS, @"999")(scientific));
+            // The string term "filter string" holds non-numeric text; "equals 5" must string-compare
+            // (no match, no throw), while a term whose value really is "5" matches via the numeric path.
+            Assert.IsFalse(StringFilter(FilterOperations.OP_EQUALS, @"5")(thermo));
+            var literalFive = CvSpectrum(@"five", @"MS:1000512", @"filter string", @"5", null);
+            Assert.IsTrue(StringFilter(FilterOperations.OP_EQUALS, @"5")(literalFive));
+            Assert.IsTrue(StringFilter(FilterOperations.OP_NOT_EQUALS, @"5")(thermo));
+            Assert.IsFalse(StringFilter(FilterOperations.OP_NOT_EQUALS, @"5")(literalFive));
         }
 
         private void TestCvParamDeclaredFilter()
