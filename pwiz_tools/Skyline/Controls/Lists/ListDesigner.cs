@@ -48,6 +48,9 @@ namespace pwiz.Skyline.Controls.Lists
             colPropertyType.DisplayMember = @"Label";
             SetListDef(_listDefOriginal.ListDef);
             _listProperties.ListChanged += (sender,args)=>OnListPropertiesChanged();
+            // Let the user paste tab-separated property definitions into the grid (Ctrl-V). The grid is not
+            // bound to a Skyline-document BindingListSource, so it uses the plain DataGridViewPasteHandler.
+            DataGridViewPasteHandler.Attach(dataGridViewProperties);
         }
 
         private void SetListDef(ListDef listDef)

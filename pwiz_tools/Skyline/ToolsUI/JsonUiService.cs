@@ -22,10 +22,13 @@ using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -47,16 +50,39 @@ namespace pwiz.Skyline.ToolsUI
         private const string EXT_PNG = @".png";
         private const string GRAPH_FILE_PREFIX = @"skyline-graph";
 
+        // How much of a window's message GetOpenForms reports. Enough to see WHAT is in the way and why; a form list
+        // is a summary, and the whole text is there for the asking (get_form_image, or the message an action throws).
+        private const int MAX_DETAIL_CHARS = 200;
+
+        /// <summary>What a window says, cut down to fit in a form listing (see <see cref="FormInfo.DetailedMessage"/>).
+        /// Newlines collapse to spaces so one form stays one line.</summary>
+        internal static string TruncateDetail(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return null;
+            var oneLine = Regex.Replace(message, @"\s+", @" ").Trim();
+            return oneLine.Length <= MAX_DETAIL_CHARS
+                ? oneLine
+                : oneLine.Substring(0, MAX_DETAIL_CHARS) + @"...";
+        }
+
         // Level 1: Primitives - UI thread marshaling
 
         /// <summary>
-        /// Executes an action on the UI thread.
-        /// Exceptions propagate to the caller via wrapping to preserve the original stack trace.
+        /// Executes an action on THE UI THREAD -- the main window's, or the StartPage's before it exists. What the
+        /// action throws is re-thrown AS ITSELF, with its original stack, so the hop is invisible to the caller.
+        ///
+        /// <para>It targets the one UI thread and nothing else, and it is not the way to drive a FORM: a verb that
+        /// knows which window it is working with goes through a form-scoped helper (JsonToolServer's InvokeOnForm /
+        /// InvokeOnMainWindow, or UiElement's PerformAction / CallFunction), which puts the work on THAT window's
+        /// thread and brings the dialog-watch and the request's cancellation with it. What is left for this is the
+        /// handful of reads and sets that are about Skyline itself rather than any window -- the selection, the UI
+        /// mode, the document.</para>
         /// </summary>
         public static void InvokeOnUiThread(Action action)
         {
             Exception caught = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            RequireMainOrStart().Invoke(new Action(() =>
             {
                 try
                 {
@@ -71,19 +97,12 @@ namespace pwiz.Skyline.ToolsUI
                 ExceptionUtil.WrapAndThrowException(caught);
         }
 
-        /// <summary>
-        /// Executes a function on the UI thread and returns the result.
-        /// Must be called from a background thread (pipe server thread).
-        /// Exceptions propagate to the caller.
-        /// </summary>
+        /// <summary>Executes a function on the UI thread and returns its result (see
+        /// <see cref="InvokeOnUiThread(System.Action)"/>).</summary>
         public static T InvokeOnUiThread<T>(Func<T> func)
         {
-            Assume.IsTrue(Program.MainWindow.InvokeRequired);
             T result = default(T);
-            Program.MainWindow.Invoke(new Action(() =>
-            {
-                result = func();
-            }));
+            InvokeOnUiThread(() => { result = func(); });
             return result;
         }
 
@@ -94,8 +113,123 @@ namespace pwiz.Skyline.ToolsUI
         /// and Skyline's Immediate Window. Shows the Immediate Window and writes
         /// the header before returning.
         /// </summary>
+        /// <summary>Returns the main Skyline window, or throws an LLM-facing error if it does not exist yet
+        /// (only the start page is showing). For verbs that genuinely need the document / main window
+        /// itself, so they fail with a clear message instead of a NullReferenceException.</summary>
+        public static SkylineWindow RequireMainWindow()
+        {
+            return Program.MainWindow ?? throw new InvalidOperationException(LlmInstruction.Format(
+                @"This requires the main Skyline window, which is not available while the start page is showing."));
+        }
+
+        public static FormEx RequireMainOrStart()
+        {
+            return (FormEx) Program.MainWindow ?? Program.StartWindow ?? throw new InvalidOperationException(LlmInstruction.Format(
+                @"Neither the main Skyline window nor the Start Page are showing"));
+        }
+
+        // ---- Document / selection reads shared by both tool servers -------------------------------------
+        // These live here, not on ToolService, so that JsonToolServer does not need a ToolService to answer them:
+        // the JSON server can be started on its own (see Program.StartToolService), before the main window even
+        // exists, while the legacy ToolService is started only when an interactive tool runs.
+
+        /// <summary>The path of the open document, or null when none is open (or the main window does not exist).</summary>
+        public static string GetDocumentPath()
+        {
+            return Program.MainWindow?.DocumentFilePath;
+        }
+
+        /// <summary>The text of the selected node in the Targets tree -- what the selection "reads as".</summary>
+        public static string GetSelectionText()
+        {
+            string name = null;
+            InvokeOnUiThread(() => name = RequireMainWindow().SequenceTree.SelectedNode.Text);
+            return name;
+        }
+
+        /// <summary>The name of the replicate the chromatogram graphs are showing.</summary>
+        public static string GetReplicateName()
+        {
+            string name = null;
+            InvokeOnUiThread(() => name = RequireMainWindow().SelectedGraphChromName);
+            return name;
+        }
+
+        /// <summary>The element locator of the current selection at the given level ("replicate", "molecule", ...),
+        /// or null when nothing is selected at that level.</summary>
+        public static string GetSelectedElementLocator(string elementType)
+        {
+            ElementRef result = null;
+            Exception exception = null;
+            InvokeOnUiThread(() =>
+            {
+                try
+                {
+                    result = GetSelectedElementRefNow(elementType);
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            });
+            if (exception != null)
+            {
+                throw new TargetInvocationException(exception);
+            }
+            return result?.ToString();
+        }
+
+        private static ElementRef GetSelectedElementRefNow(string elementType)
+        {
+            var mainWindow = RequireMainWindow();
+            var document = mainWindow.DocumentUI;
+
+            SrmDocument.Level nodeLevel;
+            if (elementType == ReplicateRef.PROTOTYPE.ElementType)
+            {
+                if (!document.Settings.HasResults)
+                {
+                    return null;
+                }
+
+                return ReplicateRef.FromChromatogramSet(document.Settings.MeasuredResults
+                    .Chromatograms[mainWindow.ComboResults.SelectedIndex]);
+            }
+
+            if (elementType == TransitionRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Transitions;
+            }
+            else if (elementType == PrecursorRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.TransitionGroups;
+            }
+            else if (elementType == MoleculeRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Molecules;
+            }
+            else if (elementType == MoleculeGroupRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.MoleculeGroups;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format(
+                    ToolsUIResources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
+            }
+
+            var selectedPath = mainWindow.SelectedPath;
+            if (selectedPath.Length <= (int) nodeLevel)
+            {
+                return null;
+            }
+            var elementRefs = new ElementRefs(document);
+            return elementRefs.GetNodeRef(selectedPath.GetPathTo((int) nodeLevel));
+        }
+
         public static TextWriter CreateImmediateWindowTee(TextWriter capture, string header)
         {
+            RequireMainWindow();
             TextWriter immediateWriter = null;
             Program.MainWindow.Invoke(new Action(() =>
             {
@@ -208,57 +342,160 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        // Level 3: Complete UI operations - Graphs
-
-        public static FormInfo[] GetOpenForms()
+        public static ActionResult InvokeOnMainWindow(Action<SkylineStandaloneForm> action, CancellationToken cancellationToken)
         {
-            return InvokeOnUiThread(() =>
+            var mainWindow = RequireMainWindow();
+            return DialogWatcher.PerformAction(mainWindow, () =>
             {
-                var skylineWindow = Program.MainWindow;
-                var results = new List<FormInfo>();
-                var dockedForms = new HashSet<Form>();
-                foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
-                {
-                    dockedForms.Add(form);
-                    var dockState = form.DockState;
-                    if (dockState == DockState.Hidden || dockState == DockState.Unknown)
-                        continue;
-                    var zedGraph = TryGetZedGraphControl(form);
-                    results.Add(new FormInfo
-                    {
-                        Type = form.GetType().Name,
-                        Title = GetFormTitle(form),
-                        HasGraph = zedGraph != null,
-                        DockState = dockState.ToString(),
-                        Id = GetFormId(form),
-                    });
-                }
-
-                // Enumerate non-docked forms (dialogs, popups)
-                foreach (var form in FormUtil.OpenForms)
-                {
-                    if (form == skylineWindow || dockedForms.Contains(form))
-                        continue;
-                    if (!form.Visible)
-                        continue;
-                    results.Add(new FormInfo
-                    {
-                        Type = form.GetType().Name,
-                        Title = GetFormTitle(form),
-                        HasGraph = false,
-                        DockState = @"Dialog",
-                        Id = GetFormId(form),
-                    });
-                }
-                return results.ToArray();
-            });
+                var skylineStandaloneWindow =
+                    new SkylineStandaloneForm(mainWindow, mainWindow.Handle, cancellationToken);
+                action(skylineStandaloneWindow);
+            }, cancellationToken);
         }
 
-        public static string GetGraphData(string graphId, string filePath)
+        public static ActionResult InvokeOnForm(string formId, Action<StandaloneWindow> action,
+            CancellationToken cancellationToken)
         {
+            var window = ResolveForm(formId, cancellationToken);
+            return DialogWatcher.PerformAction(window.Hwnd, () =>
+            {
+                action(window);
+            }, cancellationToken);
+        }
+
+        // Level 3: Complete UI operations - Generic form interaction
+
+        // Populates a ContextMenuStrip the way right-clicking the graph would: it invokes the graph's
+        // ContextMenuBuilder handlers (which add the Skyline-specific items) with a point at the
+        // control's center, so the correct graph pane is chosen for a multi-pane graph. The event can
+        // only be raised from inside ZedGraphControl, so its backing delegate is fetched by reflection.
+        internal static void PopulateGraphContextMenu(ZedGraphControl zedGraph, ContextMenuStrip menuStrip)
+        {
+            var field = typeof(ZedGraphControl).GetField(@"ContextMenuBuilder",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            var builder = field?.GetValue(zedGraph) as ZedGraphControl.ContextMenuBuilderEventHandler;
+            if (builder == null)
+                throw new ArgumentException(new LlmInstruction(@"This graph has no context menu."));
+            var centerPoint = new System.Drawing.Point(zedGraph.Width / 2, zedGraph.Height / 2);
+            // menuStrip is the control's reused ContextMenuStrip, so it may still hold items from a previous
+            // populate or a prior real right-click; empty it first (as ZedGraph's own contextMenuStrip1_Opening
+            // does) before the builder repopulates it.
+            menuStrip.Items.Clear();
+            builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
+        }
+
+        // Verifies the resolved element supports the action (it is the kind the action targets); the
+        // interactable gate is applied later by UiAction.Invoke. Returns the element; throws a clear error
+        // (listing the element's actions) if the action does not apply.
+        internal static UiElement RequireAction(UiElement element, UiAction action)
+        {
+            if (!action.AppliesTo(element))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The control '{0}' does not support the action '{1}'. It supports: {2}.",
+                    element.Label ?? element.Name, action.SnakeCaseName,
+                    string.Join(@", ", element.SupportedActions.Select(a => a.SnakeCaseName))));
+            return element;
+        }
+
+        // Resolves a UiElementPath to the single element it refers to, given the already-resolved
+        // <paramref name="root"/> form (the FormElement or NativeDialog the path's root segment names -- the
+        // caller resolves it from that segment's Text, e.g. with path.GetRoot()). Each non-root segment names
+        // a child of the element its Parent resolves to, by Index (its position in the parent's child list),
+        // Text (its visible label), and/or Type -- every property that is set must match.
+        internal static UiElement ResolvePath(UiElementPath path, UiElement root)
+        {
+            if (path == null)
+                throw new ArgumentException(new LlmInstruction(@"A path is required."));
+
+            UiElement element;
+            if (path.Parent == null)
+            {
+                // The root segment names a form (the caller resolved it), so its Type must be "Form" or unset.
+                if (!string.IsNullOrEmpty(path.Type) && !string.Equals(path.Type, @"Form", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"The root of a path must be a form (Type 'Form' or unset), not '{0}'.", path.Type));
+                element = root;
+            }
+            else
+            {
+                element = ResolvePath(path.Parent, root).GetChild(path);
+            }
+            // Record the resolved element's own path, so its get_children parents the controls it lists.
+            element.Path = path;
+            return element;
+        }
+
+        // Level 3: Complete UI operations - Graphs
+
+        /// <summary>Every window a connector caller can address, as the FormInfo the get_open_forms verb reports --
+        /// the same set <see cref="FindFormById"/> matches an id against, so a form that is listed here can always
+        /// be resolved.
+        ///
+        /// <para>Normally ONE trip to the main window describes them all: every form lives on its thread, so from
+        /// there each can report itself in full. Describing each form through ITS OWN window instead would post a
+        /// message to a window that may be closing -- and a destroyed window drops the message, so the read would
+        /// never return.</para>
+        ///
+        /// <para>UNLESS a window belongs to another thread. Skyline shows exactly one such window: the
+        /// BackgroundThreadLongWaitDlg that LongOperationRunner puts up for a long grid paste -- and it runs the WORK
+        /// on the main thread and only the DIALOG on a thread of its own, so the main thread is busy and not pumping.
+        /// The trip would never come back, and the caller would be unable to see the very dialog that would let it
+        /// cancel. So when a window comes from another thread, take no trip: describe each window from here, and the
+        /// caller gets what can be read from any thread (no DockState, HasGraph or DetailedMessage) and, crucially,
+        /// the dialog.</para></summary>
+        public static FormInfo[] GetOpenForms(CancellationToken cancellationToken = default)
+        {
+            // Walked once, and kept in the order it came back (Z-order, topmost first -- load-bearing; see ResolveForm).
+            var topLevelWindows = StandaloneWindow.GetTopLevelWindows(cancellationToken).ToList();
+            FormInfo[] openForms = null;
+            var asyncResult = Program.MainWindow?.BeginInvoke(new Action(() =>
+            {
+                openForms = topLevelWindows.Concat(GetDockedForms(cancellationToken))
+                    .Select(form => form.GetFormInfo()).ToArray();
+            }));
+            asyncResult?.AsyncWaitHandle.WaitOne(MAIN_THREAD_TIMEOUT_MILLIS);
+            return openForms ?? topLevelWindows.Select(form => form.GetFormInfo()).ToArray();
+        }
+
+        // How long to give the main thread to describe the forms before describing them here instead. A thread that is
+        // pumping runs the work at once; one that has not in this long is busy with something long.
+        private const int MAIN_THREAD_TIMEOUT_MILLIS = 2000;
+
+        /// <summary>Resolves a formId to the window it addresses -- a managed form (StandaloneForm) or a native
+        /// dialog (NativeDialog), so no verb special-cases a native dialog. Throws if no open window has the id.
+        ///
+        /// <para>An id can name more than one open window: a file dialog's message box carries the file dialog's own
+        /// caption, so both are "Dialog:Save As" (see <see cref="NativeDialog.DialogTypeName"/>). The TOPMOST wins --
+        /// which is the box, the one actually in the way and the one a user would have to deal with first. That falls
+        /// out of the enumeration: EnumWindows walks top-level windows in Z-ORDER, topmost first, so the first match
+        /// is the topmost. Load-bearing, so do not reorder these walks.</para>
+        ///
+        /// <para>Built with the CANCELLATION OF THE REQUEST that asked for it, so every marshal and wait the
+        /// returned element (and the tree under it) makes can be abandoned when that client disconnects. The token
+        /// comes from the JsonToolServer verb serving the request; in-process callers pass None.</para></summary>
+        public static StandaloneWindow ResolveForm(string formId, CancellationToken cancellationToken)
+        {
+            ValidateFormIdFormat(formId);
+            // The form is the root of its path; record it so get_controls parents the controls onto it.
+            var formPath = new UiElementPath(null, formId, null, @"Form");
+            foreach (var dialog in NativeDialog.GetOpenDialogs(cancellationToken))   // topmost first
+                if (dialog.FormId == formId)
+                {
+                    dialog.Path = formPath;
+                    return dialog;
+                }
+            // The managed form, already built (with its handle) by GetOpenFormElements; recording its path is a
+            // plain field set, so no UI-thread marshal is needed.
+            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
+            formElement.Path = formPath;
+            return formElement;
+        }
+
+        public static string GetGraphData(string graphId, string filePath, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var form = ((StandaloneForm) FindFormById(graphId, cancellationToken)).Form as DockableFormEx;
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(graphId) as DockableFormEx;
                 var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
                 if (zedGraph == null)
                 {
@@ -341,67 +578,68 @@ namespace pwiz.Skyline.ToolsUI
         public static readonly LlmInstruction LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE =
             new LlmInstruction(@"Screen capture is not available. The desktop session may be disconnected (e.g. Docker container, disconnected Remote Desktop, or locked workstation). Reconnect the desktop session and try again.");
 
-        public static string GetFormImage(string formId, string filePath)
+        public static string GetFormImage(string formId, string filePath, CancellationToken cancellationToken = default(CancellationToken))
         {
-            string denial = CheckImageToolPreflight(formId,
-                () => FindFormById(formId),
-                requiresScreenCapture: true);
+            ValidateFormIdFormat(formId);
+            // ResolveForm throws "form not found" before any permission prompt, so a bad id never prompts.
+            var form = ResolveForm(formId, cancellationToken);
+            string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
-            return InvokeOnUiThread(() =>
+            // The form captures itself in its own thread context (a managed form on the UI thread with
+            // redaction; a native dialog by window handle on this thread).
+            using (var bitmap = form.CaptureImage())
             {
-                // Re-resolve the form on the UI thread so a close during the
-                // pipe-thread work in CheckScreenCaptureAvailability surfaces
-                // as the same "form not found" ArgumentException as a bad
-                // formId, not as ObjectDisposedException during capture.
-                var form = FindFormById(formId);
-                using (var bitmap = CaptureGrantedForm(form))
-                {
-                    filePath = filePath ?? GetMcpTmpFilePath(
-                        FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
-                    DirectoryEx.CreateForFilePath(filePath);
-                    bitmap.Save(filePath, ImageFormat.Png);
-                }
-                return filePath.ToForwardSlashPath();
-            });
+                filePath = filePath ?? GetMcpTmpFilePath(FORM_FILE_PREFIX, form.Title, EXT_PNG);
+                DirectoryEx.CreateForFilePath(filePath);
+                bitmap.Save(filePath, ImageFormat.Png);
+            }
+            return filePath.ToForwardSlashPath();
         }
 
-        public static ImageBytesMetadata GetFormImageBytes(string formId)
+        public static ImageBytesMetadata GetFormImageBytes(string formId, CancellationToken cancellationToken = default(CancellationToken))
         {
-            string denial = CheckImageToolPreflight(formId,
-                () => FindFormById(formId),
-                requiresScreenCapture: true);
+            ValidateFormIdFormat(formId);
+            var form = ResolveForm(formId, cancellationToken);
+            string denial = CheckScreenCaptureAvailability();
             if (denial != null)
             {
-                // Permission denial / desktop unavailable: return a structured
-                // Message instead of bytes. The wrapper emits Message as plain
-                // text content (no error flag) so the response shape matches
+                // Permission denial / desktop unavailable: return a structured Message instead of bytes. The
+                // wrapper emits Message as plain text content (no error flag) so the response shape matches
                 // what the legacy file-based path returned for the same condition.
                 return new ImageBytesMetadata { Message = denial };
             }
-            return InvokeOnUiThread(() =>
+            using (var bitmap = form.CaptureImage())
             {
-                var form = FindFormById(formId);
-                using (var bitmap = CaptureGrantedForm(form))
+                return new ImageBytesMetadata
                 {
-                    return new ImageBytesMetadata
-                    {
-                        Data = BitmapToPngBytes(bitmap),
-                        FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG)
-                            .ToForwardSlashPath(),
-                        MimeType = MIME_TYPE_PNG
-                    };
-                }
-            });
+                    Data = BitmapToPngBytes(bitmap),
+                    FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, form.Title, EXT_PNG).ToForwardSlashPath(),
+                    MimeType = MIME_TYPE_PNG
+                };
+            }
+        }
+
+        // Captures a screenshot of a native window (e.g. the Open/Save file dialog) by its handle, on the
+        // calling (pipe) thread -- the capture is a screen copy and must not marshal to the UI thread, which
+        // may be blocked in the dialog's modal loop. GetWindowRect returns logical coordinates, scaled to
+        // physical pixels to match the screen copy (the same convention as ScreenCapture.GetForeignWindowRects).
+        internal static System.Drawing.Bitmap CaptureNativeWindow(IntPtr windowHandle)
+        {
+            User32.SetForegroundWindow(windowHandle);
+            var rect = new User32.RECT();
+            User32.GetWindowRect(windowHandle, ref rect);
+            var screenRect = rect.Rectangle * ScreenCapture.GetScalingFactor();
+            return ScreenCapture.CaptureScreen(screenRect);
         }
 
         // Validates that the given id identifies a form bearing a ZedGraph
         // control. Throws ArgumentException if the form is missing or is not
         // a graph form. Used both as the existence-check step in
         // CheckImageToolPreflight and as the first step of actual rendering.
-        private static void EnsureGraphForm(string graphId, out DockableFormEx form, out ZedGraphControl graph)
+        private static void EnsureGraphForm(string graphId, out DockableFormEx form, out ZedGraphControl graph, CancellationToken cancellationToken = default(CancellationToken))
         {
-            form = FindFormById(graphId) as DockableFormEx;
+            form = ((StandaloneForm) FindFormById(graphId, cancellationToken)).Form as DockableFormEx;
             graph = form != null ? TryGetZedGraphControl(form) : null;
             if (graph == null)
             {
@@ -419,26 +657,13 @@ namespace pwiz.Skyline.ToolsUI
             return graph.MasterPane.GetImage(graph.MasterPane.IsAntiAlias);
         }
 
-        // Shared pre-flight for the image-capture tools (form and graph variants).
-        // Runs format validation on the pipe thread, guards against a null
-        // MainWindow, and runs the type-specific existence check on the UI thread
-        // -- in that order so that bad input throws ArgumentException regardless
-        // of environment. Optionally runs the screen-capture availability check
-        // (form variants only). Returns null when the caller may proceed, or an
-        // LLM-facing message the caller must surface. Throws ArgumentException
-        // for bad input (id format wrong, referenced form not found, wrong form
-        // type) -- those are caller-contract violations and must reach the
-        // caller regardless of environment.
-        //
-        // Note: when MainWindow is null we use LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE
-        // for all variants, including graphs. The wording is slightly off for
-        // graphs (which do not capture from the screen), but the user-facing
-        // intent ("try again momentarily") is correct.
+        // Shared pre-flight for the image-capture tools. Returns null when the caller may proceed, or an LLM-facing
+        // message it must surface. Bad input (id format, form not found, wrong form type) throws ArgumentException
+        // instead -- a caller-contract violation, which must reach the caller whatever the environment, so the
+        // validation runs BEFORE the screen-capture availability check.
         private static string CheckImageToolPreflight(string id, Action ensureExistsOnUi, bool requiresScreenCapture)
         {
             ValidateFormIdFormat(id);
-            if (Program.MainWindow == null)
-                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             // Passing an Action binds InvokeOnUiThread to the void overload,
             // which preserves ArgumentException across the thread boundary.
             InvokeOnUiThread(ensureExistsOnUi);
@@ -482,16 +707,6 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Captures a screenshot of an open form (with redaction). Caller owns
-        // the bitmap. Must be called on the UI thread, and only after
-        // CheckScreenCaptureAvailability has returned null.
-        private static System.Drawing.Bitmap CaptureGrantedForm(Form form)
-        {
-            ScreenCapture.ActivateForm(form);
-            var screenRect = ScreenCapture.GetWindowRectangle(form);
-            return ScreenCapture.CaptureAndRedact(screenRect, form);
-        }
-
         private const string MIME_TYPE_PNG = @"image/png";
 
         private static byte[] BitmapToPngBytes(System.Drawing.Bitmap bitmap)
@@ -509,8 +724,20 @@ namespace pwiz.Skyline.ToolsUI
         /// Returns the display title for a form, used both in GetOpenForms output
         /// and in FindFormById matching.
         /// </summary>
-        private static string GetFormTitle(Form form)
+        internal static string GetFormTitle(Form form, IntPtr hwnd = default(IntPtr))
         {
+            // ANOTHER thread owns this form: do not read Text, and do not read Handle either. Control.Text SENDS
+            // WM_GETTEXT to the owning thread and waits for it to pump -- and a form is owned by another thread
+            // exactly when a BackgroundThreadLongWaitDlg is up, which is when the MAIN thread is busy and NOT pumping,
+            // so reading the main window's title (or any other form's) would never come back. (Reading Handle is no
+            // better: its getter throws when the cross-thread check is on.) Go to the handle the caller already has:
+            // User32.GetWindowTextNoBlock reads another thread's window rather than asking it, so it cannot wait. For a
+            // top-level form the caption IS its Text, so the title -- and the id built from it -- are the same either way.
+            if (form.InvokeRequired)
+            {
+                var caption = hwnd != IntPtr.Zero ? User32.GetWindowTextNoBlock(hwnd) : null;
+                return !string.IsNullOrEmpty(caption) ? caption : form.GetType().Name;
+            }
             if (form is DockableFormEx dockable)
                 return !string.IsNullOrEmpty(dockable.Text) ? dockable.Text
                     : !string.IsNullOrEmpty(dockable.TabText) ? dockable.TabText
@@ -519,14 +746,15 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Builds a stable form identifier from type name and title.
+        /// Builds a stable form identifier from type name and title. Pass the form's handle when it is already in
+        /// hand: the title of a form owned by another thread can only be read from it (see GetFormTitle).
         /// </summary>
-        private static string GetFormId(Form form)
+        internal static string GetFormId(Form form, IntPtr hwnd = default(IntPtr))
         {
-            return form.GetType().Name + @":" + GetFormTitle(form);
+            return form.GetType().Name + @":" + GetFormTitle(form, hwnd);
         }
 
-        private static ZedGraphControl TryGetZedGraphControl(DockableFormEx form)
+        internal static ZedGraphControl TryGetZedGraphControl(DockableFormEx form)
         {
             // Use reflection to find any public property that returns ZedGraphControl,
             // so that new graph forms are automatically supported.
@@ -538,45 +766,60 @@ namespace pwiz.Skyline.ToolsUI
             return null;
         }
 
-        /// <summary>
-        /// Finds a form by its TypeName:Title identifier from GetOpenForms.
-        /// Searches docked forms first, then non-docked forms (dialogs).
-        /// </summary>
-        private static Form FindFormById(string formId)
+        // The forms docked in the main Skyline window, each as a FormElement, or empty when the main window is not
+        // up. Callable from any thread: the docked forms are child windows read through the main window's DockPanel,
+        // which must be on its UI thread, so this Invokes the read (and the FormElement construction, which captures
+        // each handle) onto that thread. Hidden/unknown-state docked forms are skipped (not on screen).
+        private static IList<StandaloneWindow> GetDockedForms(CancellationToken cancellationToken)
         {
-            ValidateFormIdFormat(formId);
-            int colonIndex = formId.IndexOf(':');
-            string typeName = formId.Substring(0, colonIndex);
-            string title = formId.Substring(colonIndex + 1);
-
-            var skylineWindow = Program.MainWindow;
-
-            // Search docked forms
-            foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
+            Assume.IsNotNull(Program.MainWindow);
+            Assume.IsFalse(Program.MainWindow.InvokeRequired);
+            var result = new List<StandaloneWindow>();
+            foreach (var form in Program.MainWindow.DockPanel.Contents.OfType<DockableFormEx>())
             {
                 var dockState = form.DockState;
                 if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                     continue;
-                if (form.GetType().Name == typeName && GetFormTitle(form) == title)
-                    return form;
+                result.Add(StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Finds a managed form by its TypeName:Title identifier -- the main window, a form docked in it, or an
+        /// open dialog -- and returns it as the already-built <see cref="StandaloneForm"/> (its window handle already
+        /// captured). Matches the same set <see cref="GetOpenForms"/> reports, and may be called from any thread.
+        /// </summary>
+        private static StandaloneWindow FindFormById(string formId, CancellationToken cancellationToken)
+        {
+            ValidateFormIdFormat(formId);
+            // The top-level windows are enumerated from here, off any thread, and that is the whole search for all but
+            // a docked form. It matters that this takes NO trip to the main window: the one window Skyline shows on a
+            // thread of its own -- the BackgroundThreadLongWaitDlg over a long grid paste -- is up precisely while the
+            // main thread is busy doing that paste, and a trip through it would never come back (see GetOpenForms).
+            var window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId);
+            if (window == null && Program.MainWindow != null)
+            {
+                // Not a top-level window, so it can only be one docked in the main window -- which can only be read on
+                // the main window's thread. Plain Invoke: that thread pumps whenever it is busy for long, so this gets
+                // dispatched, and there is nothing here worth the dialog-watch.
+                Program.MainWindow.Invoke(new Action(() =>
+                    window = GetFormWithId(GetDockedForms(cancellationToken), formId)));
             }
 
-            // Search non-docked forms (dialogs)
-            var dockedForms = new HashSet<Form>(
-                skylineWindow.DockPanel.Contents.OfType<DockableFormEx>());
-            foreach (var form in FormUtil.OpenForms)
+            if (window != null)
             {
-                if (form == skylineWindow || dockedForms.Contains(form))
-                    continue;
-                if (!form.Visible)
-                    continue;
-                if (form.GetType().Name == typeName && GetFormTitle(form) == title)
-                    return form;
+                return window;
             }
 
             throw new ArgumentException(LlmInstruction.Format(
                 @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
                 formId));
+        }
+
+        private static StandaloneWindow GetFormWithId(IEnumerable<StandaloneWindow> windows, string formId)
+        {
+            return windows.FirstOrDefault(window => window.FormId == formId);
         }
 
         /// <summary>

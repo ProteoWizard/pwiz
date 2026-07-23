@@ -62,6 +62,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
@@ -432,6 +433,64 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
+        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the
+        /// driver of a native dialog, so the wait lives here in the test rather than baked into the dialog itself.
+        /// </summary>
+        protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
+        {
+            TDlg dlg = null;
+            WaitForCondition(() => null != (dlg = NativeDialog.GetOpenDialogs(CancellationToken.None)
+                .OfType<TDlg>().FirstOrDefault()));
+            return dlg;
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the UI (event) thread -- for a simple,
+        /// single fire-and-forget gesture (e.g. <see cref="NativeFileDialog.EnterPath"/> then
+        /// <see cref="NativeOpenFileDialog.Accept"/>). A gesture that has to interleave with the dialog's own modal
+        /// loop -- a multi-step navigation, or one that waits on the dialog (a DismissWith... verb) -- must run on
+        /// the test thread instead; use <see cref="RunLongNativeDlg{TDlg}"/> for that (the analog of
+        /// <see cref="RunLongDlg{TDlg}"/>).
+        /// </summary>
+        protected static void RunNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = WaitForNativeDlg<TDlg>();
+            SkylineBeginInvoke(() => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the TEST thread -- the native-dialog
+        /// analog of <see cref="RunLongDlg{TDlg}"/>. Use this when the action does more than a single gesture: a
+        /// native dialog is driven by thread-agnostic Win32 messages that its modal loop (running on the UI thread)
+        /// pumps, so a multi-step interaction -- navigate a multiselect Open dialog to a folder and then select
+        /// files in it, or read the dialog's state (GetControls) between steps, or wait on it (a DismissWith...
+        /// verb) -- has to run off the UI thread, leaving that loop free to pump each step. (An action marshaled
+        /// onto the UI thread would block the loop and could never pump between steps.)
+        /// </summary>
+        protected static void RunLongNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = WaitForNativeDlg<TDlg>();
+            exerciseDlgAction(dlg);
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
         /// Shows a dialog and tests the dialog by invoking an action on the test thread.
         /// Unlike <see cref="RunDlg{TDlg}"/>, the test action runs on the test thread instead of the
         /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
@@ -476,6 +535,22 @@ namespace pwiz.SkylineTestUtil
         protected static void ShowAndCancelDlg<TDlg>(Action showAction) where TDlg : Form
         {
             ShowAndDismissDlg<TDlg>(showAction, dlg=>dlg.CancelButton.PerformClick());
+        }
+
+        /// <summary>
+        /// Opens a document the way a user would: by bringing up the native Open dialog via
+        /// the same code path as the File &gt; Open menu command, then driving that dialog with
+        /// UI Automation to type the path and click Open. Use this in place of calling
+        /// <see cref="SkylineWindow"/>.OpenFile directly when a test should exercise the real
+        /// open-file UI. Waits for the document to finish loading before returning.
+        /// </summary>
+        public static void FileOpen(string path)
+        {
+            RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            {
+                dlg.EnterPath(path);
+                dlg.Accept();
+            });
         }
 
         protected static void FocusDocument()
@@ -1411,12 +1486,19 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
+        /// <summary>
+        /// The folder under Documentation that holds this tutorial's screenshots. Published tutorials live in
+        /// "Tutorials"; a tutorial still under development overrides this to return "Tutorial-Drafts", and the
+        /// override is removed when the tutorial is published.
+        /// </summary>
+        protected virtual string TutorialDocumentationFolder => "Tutorials";
+
         protected string TutorialPath
         {
             get
             {
                 return IsTutorial
-                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
+                    ? TestContext.GetProjectDirectory($"Documentation\\{TutorialDocumentationFolder}\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
                     : null;
             }
         }
@@ -2115,6 +2197,31 @@ namespace pwiz.SkylineTestUtil
             Thread.Sleep(1500); // Wait for UI to settle down
             _shotManager.ActivateScreenshotForm(screenshotForm);
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
+        }
+
+        /// <summary>
+        /// Saves a screenshot captured through the connector (IFormElement.CaptureImage) as the next numbered
+        /// tutorial screenshot (s-NN.png), advancing the screenshot counter. The image is taken (via the passed
+        /// delegate) only when recording screenshots; the counter advances either way so numbering stays stable.
+        /// This is the connector-driven counterpart to <see cref="PauseForScreenShot(string,int?,Func{Bitmap,Bitmap})"/>,
+        /// used by JsonTutorialTest so a tutorial can be captured through the JSON tool service rather than the
+        /// screen-grab path.
+        /// </summary>
+        protected void SaveMcpConnectorScreenShot(Func<Bitmap> captureImage)
+        {
+            if (IsRecordingScreenShots)
+            {
+                _shotManager ??= new ScreenshotManager(SkylineWindow, TutorialPath);
+                using (var bitmap = captureImage())
+                {
+                    // The connector returns no image data when there is no desktop to capture. Say that,
+                    // rather than letting the null reach SaveToFile as a NullReferenceException.
+                    AssertEx.IsNotNull(bitmap,
+                        $@"No image captured for screenshot {ScreenshotCounter}. The connector returned no image data, which happens when no desktop is available to capture.");
+                    ScreenCapture.SaveToFile(_shotManager.ScreenshotDestFile(ScreenshotCounter), bitmap);
+                }
+            }
+            ScreenshotCounter++;
         }
 
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)

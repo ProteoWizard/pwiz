@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using SkylineTool;
@@ -327,8 +328,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.SelectSettingsListItems(listType, itemNames);
-            return $"Selected {itemNames.Length} item(s) in {listType}.";
+            var result = connection.SelectSettingsListItems(listType, itemNames);
+            return DescribeAction(result, $"Selected {itemNames.Length} item(s) in {listType}.");
         });
     }
 
@@ -448,8 +449,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.ImportProperties(csvText);
-            return "Properties imported.";
+            var result = connection.ImportProperties(csvText);
+            return DescribeAction(result, "Properties imported.");
         });
     }
 
@@ -507,11 +508,19 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_get_open_forms"),
-     Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines " +
-        "with form type, title, whether it contains a ZedGraph graph, dock state, and a stable " +
-        "identifier in TypeName:Title format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'). " +
+     Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines with form type, " +
+        "title, whether it contains a ZedGraph graph, dock state, a stable identifier in TypeName:Title " +
+        "format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'), whether the form is a native OS window, " +
+        "its SubType, and Message. (New columns are appended, so a positional reader keyed on the earlier ones " +
+        "keeps working.) " +
         "Use the identifier with skyline_get_graph_data, skyline_get_graph_image, and skyline_get_form_image. " +
-        "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog.")]
+        "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog. " +
+        "IsNative=True marks a native OS dialog, whose Type is always 'Dialog'; its SubType says which kind -- " +
+        "'OpenFileDialog', 'SaveFileDialog', 'FolderBrowserDialog' or 'MessageBox'. That matters because a file " +
+        "dialog's error box carries the file dialog's own caption, so both share one Id: SubType tells them apart, " +
+        "and a verb addressing that Id acts on the TOPMOST (the box -- the one in the way). " +
+        "Message is what a window SAYS (a message box's body, an alert's text), truncated -- read it to see whether " +
+        "a form is blocking you and why, without capturing an image. skyline_get_form_image works for these too.")]
     public static string GetOpenForms()
     {
         return Invoke(connection =>
@@ -521,12 +530,267 @@ public static class SkylineTools
                 return "No forms are currently open in Skyline.";
 
             var sb = new StringBuilder();
-            sb.AppendLine("Type\tTitle\tHasGraph\tDockState\tId");
+            // The first five columns are the ORIGINAL set, in their original order, so a reader that matches by
+            // position still finds them. Every column added since -- IsNative, SubType, Message -- is appended.
+            sb.AppendLine("Type\tTitle\tHasGraph\tDockState\tId\tIsNative\tSubType\tMessage");
             foreach (var form in forms)
-                sb.AppendLine($"{form.Type}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t{form.Id}");
+                sb.AppendLine($"{form.Type}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t{form.Id}\t" +
+                              $"{form.IsNative}\t{form.SubType}\t{form.DetailedMessage}");
             return sb.ToString().TrimEnd();
         });
     }
+
+    [McpServerTool(Name = "skyline_get_controls"),
+     Description("List the interactive controls on a form so you can discover what is there -- and how " +
+        "to address it -- without reading source code. Returns tab-separated lines with each control's " +
+        "Type, the visible Label that names it (its own caption, or the label beside a caption-less " +
+        "field), Enabled, and internal Name (informational). Hidden controls (e.g. on an unselected tab) " +
+        "are not listed -- select the tab first. Use the 'get_value' action for a " +
+        "control's current value and 'get_actions' for the actions it supports. Address a control by its " +
+        "Label (e.g. set_form_value with \"Ion match tolerance\"); a control with no Label is addressed by " +
+        "its Type (e.g. \"TreeView\"). Get the formId from skyline_get_open_forms.")]
+    public static string GetControls(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var controls = connection.GetControls(formId);
+            if (controls == null || controls.Length == 0)
+                return $"No interactive controls found on {formId}.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Type\tLabel\tEnabled\tName");
+            foreach (var c in controls)
+                sb.AppendLine($"{c.Path?.Type}\t{c.Path?.Text}\t{c.Enabled}\t{c.Name}");
+            return sb.ToString().TrimEnd();
+        });
+    }
+
+    [McpServerTool(Name = "skyline_perform_action"),
+     Description("The most general way to interact with a control, menu item, or list item: locate it by " +
+        "its Label (the visible text that names it) and/or its Type (for a caption-less control, e.g. " +
+        "\"TreeView\") among the form's controls, then perform an action. Only the properties you set are " +
+        "used to match. Actions: 'get_actions' (lists the actions this control supports, each with a " +
+        "description and the value it takes -- call this first when unsure); 'get_children' " +
+        "(lists child elements as JSON UiElementPaths -- each already parented onto the element you listed, " +
+        "so pass one straight back as 'path'); 'click'; 'set_value' (uses 'value'); 'get_value' " +
+        "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
+        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
+        "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
+        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'select_tab' (a TabControl, value the tab text); " +
+        "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
+        "its index, e.g. [\"Peptides\", 0]); 'paste' (value the text to paste into a text box, a grid, the " +
+        "Targets tree, or the main Skyline window -- without using the clipboard); 'select_all' (selects all " +
+        "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
+        "tree, value the new name for the selected node). " +
+        "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
+        "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
+        "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
+        "path is given it is used as-is and label/type are ignored. Discover controls with " +
+        "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
+    public static string PerformAction(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
+        [Description("Action: get_actions, get_children, click, set_value, get_value, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, select_tab, expand, collapse, paste, select_all, rename_node")] string action,
+        [Description("Visible label that names the control (optional)")] string label = null,
+        [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
+        [Description("Value for set_value/set_grid_text, the text for paste/rename_node, a [column, row] array for set_current_cell_address, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("A full UiElementPath as JSON (e.g. one straight from get_children, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
+    {
+        return Invoke(connection =>
+        {
+            var target = string.IsNullOrEmpty(path)
+                ? new UiElementPath(new UiElementPath(null, form, null, "Form"), label, null, type)
+                : JsonSerializer.Deserialize<UiElementPath>(path,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            // The result is the action's return (raw JSON for arrays, a string for get_value, or empty).
+            var text = connection.PerformAction(target, action, value)?.ToString();
+            return string.IsNullOrEmpty(text) ? $"Performed '{action}'." : text;
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_main_menu_item"),
+     Description("Click an item on the MAIN Skyline window's menu bar by its visible path, e.g. " +
+        "'File > Import > Peptide Search'. Segments are separated by '>' and matched against each " +
+        "menu item's visible text (the mnemonic '&' and a trailing ellipsis are ignored) or its " +
+        "control name, case-insensitively. The click is posted asynchronously, so a menu item that " +
+        "opens a dialog returns immediately; call skyline_get_open_forms to find the resulting form. " +
+        "For a menu on any OTHER window -- a form's toolbar, or a control's right-click menu -- use " +
+        "skyline_click_control_menu_item.")]
+    public static string ClickMainMenuItem(
+        [Description("Menu path with '>'-separated segments, e.g. 'File > Import > Peptide Search'")] string menuPath)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.ClickMainMenuItem(menuPath);
+            return DescribeAction(result, $"Clicked menu item: {menuPath}");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_control_menu_item"),
+     Description("Click an item on a menu belonging to a form, or to a control on it, by its path, e.g. " +
+        "'Reports > Replicates' (the 'Reports' toolbar button, then 'Replicates' in its dropdown). Which menu " +
+        "is meant follows from 'control': leave it EMPTY for the form's own menu (its menu bar, else its first " +
+        "toolbar, else its right-click menu); name a TOOLBAR to click an item on that toolbar; name any OTHER " +
+        "control (a grid, a tree, a graph) to click an item on that control's RIGHT-CLICK menu. Each level's " +
+        "dropdown is opened first so items built on demand -- which skyline_click_form_button cannot reach -- are " +
+        "present before matching. Segments are '>'-separated and matched by item name or visible text. Use for " +
+        "the Document Grid 'Reports' dropdown, a graph's right-click menu, etc.")]
+    public static string ClickControlMenuItem(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control that owns the menu, from skyline_get_controls. Empty for the form's own menu.")] string control,
+        [Description("Menu path with '>'-separated segments, e.g. 'Reports > Replicates'")] string menuPath)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.ClickControlMenuItem(formId, control, menuPath);
+            return DescribeAction(result, $"Clicked menu item '{menuPath}' on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_form_button"),
+     Description("Click a control on an open form, matching it by control name or visible text: a " +
+        "button, a checkbox or radio button, a toolbar/menu item, an item in a checked-list box (its " +
+        "check is toggled), or any other control. To dismiss a dialog instead, use " +
+        "skyline_dismiss_with_accept_button / skyline_dismiss_with_cancel_button / skyline_dismiss_with_button, " +
+        "which wait for it to close. The click is posted asynchronously, so a button that opens another " +
+        "dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
+    public static string ClickFormButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control name or visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.ClickFormButton(formId, button);
+            return DescribeAction(result, $"Clicked '{button}' on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_dismiss_with_accept_button"),
+     Description("Accept (confirm) an open dialog by pressing its default button -- the equivalent of pressing " +
+        "Enter, without matching a localized 'OK' caption -- then wait until the dialog has closed. Use this to " +
+        "commit a native file dialog (Type 'Dialog', IsNative=True -- it has no caption-addressable button) or to " +
+        "click a WinForms dialog's default button. If accepting opens another dialog it reports not-completed and " +
+        "names it (drive that one next).")]
+    public static string DismissWithAcceptButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.DismissWithAcceptButton(formId);
+            return DescribeAction(result, $"Accepted {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_dismiss_with_cancel_button"),
+     Description("Cancel (dismiss) an open dialog by pressing its cancel button, or closing it when it has none, " +
+        "then wait until it has closed. A message box with only affirmative choices (e.g. Yes/No) has no cancel " +
+        "affordance -- dismiss such a box with skyline_dismiss_with_button instead.")]
+    public static string DismissWithCancelButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.DismissWithCancelButton(formId);
+            return DescribeAction(result, $"Cancelled {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_dismiss_with_button"),
+     Description("Dismiss an open dialog by clicking the button with the given caption, then wait until it has " +
+        "closed -- e.g. 'No' on a 'replace it?' message box, when neither the default (accept) nor the cancel " +
+        "button is wanted. A native file dialog has no caption-addressable button, so commit one with " +
+        "skyline_dismiss_with_accept_button.")]
+    public static string DismissWithButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("The visible caption of the button to click, e.g. 'No' or 'Yes'")] string button)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.DismissWithButton(formId, button);
+            return DescribeAction(result, $"Clicked '{button}' on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_form_value"),
+     Description("Set the value of a control on an open form. For a native file dialog " +
+        "(Type 'FileDialog') the value is the file name(s) to open and controlId is ignored; select " +
+        "several files by quoting each path and separating with spaces, e.g. \"C:\\a.raw\" \"C:\\b.raw\". " +
+        "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
+        "item of the control named by controlId; a matched label sets the field it labels. controlId " +
+        "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
+    public static string SetFormValue(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
+        [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
+            "or space-separated quoted file paths for a native file dialog")] string value)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.SetFormValue(formId, controlId, value);
+            return DescribeAction(result, $"Set value on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_form_value"),
+     Description("Get the current value of a control on an open form, found by its visible label: a text " +
+        "box's text, a combo box's selected item, a check/radio's checked state ('True'/'False'), or a " +
+        "CheckedListBox's checked items (their text, one per line). Pass null for controlId when the form " +
+        "has a single valued control.")]
+    public static string GetFormValue(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("The control's visible label, or null when the form has a single valued control")] string controlId)
+    {
+        return Invoke(connection => connection.GetFormValue(formId, controlId) ?? string.Empty);
+    }
+
+    [McpServerTool(Name = "skyline_set_grid_text"),
+     Description("Paste tab-separated values into a grid on a form, starting at its current cell, the " +
+        "way typing/pasting there would. Move to the target cell first with skyline_set_current_cell_address. " +
+        "Use for the Document Grid and other data grids -- e.g. to fill annotation columns or a rules " +
+        "grid. The text may be a multi-cell block: separate cell values with tabs and rows with " +
+        "newlines (it fills down and to the right). Works for DataboundGridControl grids and plain " +
+        "DataGridView grids.")]
+    public static string SetGridText(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
+        [Description("Tab-separated (and newline-separated) values to paste at the current cell")] string text)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.SetGridText(formId, controlId, text);
+            return DescribeAction(result, $"Pasted grid text on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_current_cell_address"),
+     Description("Move the current cell of a grid on a form, so the next skyline_set_grid_text pastes " +
+        "there, or a context menu (a path with Type 'ContextMenu' on the grid) opens for that " +
+        "cell. column and row are zero-based indices into the grid's visible columns and its rows -- " +
+        "the same indices skyline_get_grid_text reports.")]
+    public static string SetCurrentCellAddress(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
+        [Description("Zero-based column index (into the grid's visible columns)")] int column,
+        [Description("Zero-based row index")] int row)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.SetCurrentCellAddress(formId, controlId, column, row);
+            return DescribeAction(result, $"Moved to cell (column {column}, row {row}) on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_grid_text"),
+     Description("Get all the data in a grid on a form as tab-separated text: the column headers " +
+        "followed by every row, columns separated by tabs and rows by newlines. Use for the Document " +
+        "Grid and other data grids. Works for DataboundGridControl grids and plain DataGridView grids.")]
+    public static string GetGridText(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string gridId)
+    {
+        return Invoke(connection => connection.GetGridText(formId, gridId));
+    }
+
 
     [McpServerTool(Name = "skyline_get_graph_data"),
      Description("Extract tab-separated data from a Skyline graph. Returns the same data as " +
@@ -1181,6 +1445,53 @@ public static class SkylineTools
     /// When Skyline is not connected, returns a helpful message instead of throwing.
     /// The connection is established per-call and disposed after each call.
     /// </summary>
+    // Turns an ActionResult into the tool's reply: the plain done-message when the action completed, or that
+    // message plus the reason it is not known to have completed (e.g. a dialog it left open) otherwise.
+    private static string DescribeAction(ActionResult result, string doneMessage)
+    {
+        if (result.Completed)
+            return doneMessage;
+        // When the action left a dialog open, name it so the caller can drive it directly (get_controls /
+        // set_value / dismiss / click) without a get_open_forms round-trip.
+        string formHint = string.IsNullOrEmpty(result.FormId)
+            ? " poll skyline_get_open_forms for any dialog it opened."
+            : $" it left form '{result.FormId}' open; drive it with get_controls / set_form_value / dismiss / click.";
+        return string.IsNullOrEmpty(result.Message)
+            ? $"{doneMessage} This did not complete;{formHint}"
+            : $"{doneMessage} This did not complete: {result.Message}.{formHint}";
+    }
+
+    /// <summary>
+    /// How long one Skyline call may block before the MCP gives up on it. Skyline's pipe server is single-instance
+    /// and serves one request at a time, so a verb riding a long operation (a big document load sitting behind its
+    /// LongWaitDlg) would otherwise pin the connection and lock out every later call -- including the very call that
+    /// would cancel the dialog. On timeout we drop the connection; Skyline peeks the pipe, sees the client is gone,
+    /// abandons the waiting call (the work itself keeps running) and is immediately free to serve the next one.
+    /// </summary>
+    private static readonly TimeSpan CallTimeout = TimeSpan.FromSeconds(30);
+
+    // The message a timed-out call returns. It has to tell the caller two non-obvious things: the operation is still
+    // running (nothing was undone), and Skyline is nevertheless reachable again right now.
+    private const string CALL_TIMED_OUT_MESSAGE =
+        "This call did not finish in time and was abandoned, so the connection to Skyline was dropped and Skyline " +
+        "can accept new commands again. Skyline is STILL DOING the work it started (a long document load, an " +
+        "import) -- nothing was undone or cancelled. Call skyline_get_open_forms to find the progress dialog, then " +
+        "skyline_dismiss_with_cancel_button on it to actually cancel the operation, or simply wait and retry.";
+
+    /// <summary>
+    /// Runs one call to Skyline, giving up after <see cref="CallTimeout"/>. The deadline is applied to the response
+    /// read itself (which is cancellable overlapped I/O), so the timeout releases the pipe handle -- and the
+    /// <c>using (connection)</c> around this then really disconnects, which is the signal Skyline abandons the call on.
+    /// </summary>
+    private static T RunWithTimeout<T>(SkylineConnection connection, Func<T> call)
+    {
+        using (var timeout = new CancellationTokenSource(CallTimeout))
+        {
+            connection.CancellationToken = timeout.Token;
+            return call();
+        }
+    }
+
     private static string Invoke(Func<SkylineConnection, string> action)
     {
         SkylineConnection connection = null;
@@ -1193,12 +1504,17 @@ public static class SkylineTools
 
             using (connection)
             {
-                string result = action(connection);
+                string result = RunWithTimeout(connection, () => action(connection));
                 return AppendDiagnosticLog(result);
             }
         }
         catch (Exception ex)
         {
+            // Gave up waiting. The read was cancelled and the connection dropped (the using block above) -- which is
+            // what tells Skyline to abandon the call it was still working on.
+            if (ex is OperationCanceledException)
+                return CALL_TIMED_OUT_MESSAGE;
+
             // Check if this is a broken pipe (Skyline exited mid-call)
             if (ex is IOException)
             {
@@ -1252,13 +1568,16 @@ public static class SkylineTools
 
             using (connection)
             {
-                var result = action(connection);
+                var result = RunWithTimeout(connection, () => action(connection));
                 AppendDiagnosticLog(result);
                 return result;
             }
         }
         catch (Exception ex)
         {
+            if (ex is OperationCanceledException)
+                return ErrorResult(CALL_TIMED_OUT_MESSAGE);
+
             if (ex is IOException)
             {
                 return ErrorResult("Skyline disconnected during the operation. " +
