@@ -466,37 +466,17 @@
   <!-- net472 gets its version from the Jam-generated Properties\AssemblyInfo.cs
        (generate-skyline-AssemblyInfo.cs). A plain `dotnet build` (net8) never runs
        Jam, so with GenerateAssemblyInfo=false the assembly would report 1.0.0.0 and
-       Install.MajorVersion/MinorVersion would be wrong. Stamp it here, Jam-free:
-       compose Skyline's scheme YEAR.ORDINAL.DOY (DOY accumulates across years like
-       Jamfile.jam: (YY - YEAR)*365 + day-of-year of the git commit date) and write
-       the AssemblyInformationalVersion attribute (Install reads it, stripping the
-       "(developer build)"/"(automated build)" suffix). YEAR/ORDINAL mirror
-       SKYLINE_YEAR/SKYLINE_ORDINAL in Jamfile.jam; the git-date pieces come from
-       pwiz-sharp\build\PwizVersion.targets. Override with -p:SkylineInformationalVersion=… . -->
-  <Import Project="..\..\pwiz-sharp\build\PwizVersion.targets"
-          Condition="'$(TargetFramework)' == 'net8.0-windows' and Exists('..\..\pwiz-sharp\build\PwizVersion.targets')" />
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <SkylineVersionYear>26</SkylineVersionYear>
-    <SkylineVersionOrdinal>1</SkylineVersionOrdinal>
-    <!-- 0 = release, 1 = daily, 9 = feature-complete daily (mirrors SKYLINE_BRANCH
-         in Jamfile.jam). This is the .Build component, which TestDocumentFormatCurrent
-         keys off (skips the version/format sync check on feature-complete builds). -->
-    <SkylineVersionBranch>1</SkylineVersionBranch>
-    <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_SkylineBuildKindSuffix>
-    <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_SkylineBuildKindSuffix>
-  </PropertyGroup>
+       Install.MajorVersion/MinorVersion would be wrong. Stamp it here, Jam-free,
+       from the central SkylineVersion.targets (also consumed by standalone tools
+       that must stamp the same version) and write the AssemblyInformationalVersion
+       attribute (Install reads it, stripping the "(developer build)"/"(automated
+       build)" suffix). Override with -p:SkylineInformationalVersion=... . -->
+  <Import Project="SkylineVersion.targets"
+          Condition="'$(TargetFramework)' == 'net8.0-windows'" />
   <Target Name="StampNet8InformationalVersion"
           Condition="'$(TargetFramework)' == 'net8.0-windows'"
-          DependsOnTargets="ComputePwizBuildVersion"
+          DependsOnTargets="ComputeSkylineVersion"
           BeforeTargets="CoreCompile">
-    <PropertyGroup>
-      <!-- Floor at 0: a commit dated before SkylineVersionYear (e.g. building an older commit
-           after the base year was bumped) would otherwise yield a negative, invalid version component. -->
-      <_SkylineDoy>$([System.Math]::Max(0, $([MSBuild]::Add($([MSBuild]::Multiply($([MSBuild]::Subtract($(PwizVersionYear2), $(SkylineVersionYear))), 365)), $(PwizVersionDayOfYearRaw)))))</_SkylineDoy>
-      <!-- Plain numeric version YEAR.ORDINAL.BRANCH.DOY, e.g. 26.1.1.181 -->
-      <SkylineNumericVersion Condition="'$(SkylineNumericVersion)' == ''">$(SkylineVersionYear).$(SkylineVersionOrdinal).$(SkylineVersionBranch).$(_SkylineDoy)</SkylineNumericVersion>
-      <SkylineInformationalVersion Condition="'$(SkylineInformationalVersion)' == ''">$(SkylineNumericVersion)-$(PwizVersionGitHash) ($(_SkylineBuildKindSuffix))</SkylineInformationalVersion>
-    </PropertyGroup>
     <ItemGroup>
       <AssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute">
         <_Parameter1>$(SkylineNumericVersion)</_Parameter1>
