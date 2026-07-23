@@ -216,13 +216,13 @@ namespace pwiz.Osprey.Scoring
             double bestRankScore = double.MinValue;
             int bestPeakIdx = -1;
 
-            // Peak-pick model selection. The learned linear model is now the DEFAULT, keyed by
-            // scoring resolution; the pure product form is an opt-in escape hatch. Precedence:
+            // Peak-pick model selection. The pure product form is the DEFAULT (Rust parity +
+            // committed golden); the learned resolution-keyed linear model is opt-in. Precedence:
             //   1. OSPREY_PICK_LDA_MODEL (env json) -> that model (override for testing new models);
-            //   2. else OSPREY_PICK_LEGACY -> null == the pure product pick
-            //      (coelution * rt_penalty * ln_intensity, no median-polish factor; Rust parity);
-            //   3. else (DEFAULT) -> the hardcoded model for this resolution (Stellar for unit,
-            //      Astral for HRAM), via context.Resolution.HasMs1Features.
+            //   2. else OSPREY_PICK_LDA -> the hardcoded model for this resolution (Stellar for
+            //      unit, Astral for HRAM), via context.Resolution.HasMs1Features;
+            //   3. else (DEFAULT) -> null == the pure product pick
+            //      (coelution * rt_penalty * ln_intensity, no median-polish factor).
             // The model + the per-candidate capture (OSPREY_PICK_DUMP_CANDIDATES) both consume the
             // SAME four raw terms (coelution, ln_intensity, rt_penalty, median_polish); the
             // per-candidate median-polish cosine is computed once below and reused by both.
@@ -232,10 +232,10 @@ namespace pwiz.Osprey.Scoring
             PickLdaModel pickModel;
             if (envModel != null)
                 pickModel = envModel;                                              // (1) env override
-            else if (OspreyEnvironment.PickLegacy)
-                pickModel = null;                                                  // (2) legacy product pick
+            else if (OspreyEnvironment.PickLda)
+                pickModel = PickLdaModel.ForResolution(context.Resolution.HasMs1Features); // (2) opt-in model
             else
-                pickModel = PickLdaModel.ForResolution(context.Resolution.HasMs1Features); // (3) default
+                pickModel = null;                                                  // (3) default: legacy product pick
             bool modelActive = pickModel != null;
             bool doDump = context.PickDump != null && !overrideBounds.HasValue;
             bool needMedianPolish = modelActive || doDump;

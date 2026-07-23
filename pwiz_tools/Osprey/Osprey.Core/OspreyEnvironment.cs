@@ -176,17 +176,17 @@ namespace pwiz.Osprey.Core
         public static readonly string PickLdaModelPath = Environment.GetEnvironmentVariable(@"OSPREY_PICK_LDA_MODEL");
 
         /// <summary>
-        /// OSPREY_PICK_LEGACY: escape hatch to the pure product-form peak pick
-        /// (coelution * rt_penalty * ln_intensity, with no median-polish factor) instead of the
-        /// resolution-keyed default linear model. This is the standard / Rust-parity pick. Purpose:
-        /// run the old product pick for Rust cross-impl parity and the committed regression
-        /// golden, which the learned default no longer matches. Precedence in the picker:
+        /// OSPREY_PICK_LDA: opt in to the learned resolution-keyed linear peak-pick model
+        /// (Stellar for unit, Astral for HRAM) instead of the default pure product-form pick
+        /// (coelution * rt_penalty * ln_intensity, no median-polish factor). The DEFAULT is the
+        /// legacy product pick -- the standard / Rust-parity pick that matches the committed
+        /// regression golden -- so the model is off unless requested, and flipping the model on
+        /// by default is a coordinated golden re-baseline. Precedence in the picker:
         ///   1. OSPREY_PICK_LDA_MODEL set -> that model (test override);
-        ///   2. else OSPREY_PICK_LEGACY set -> this legacy product pick;
-        ///   3. else (default) -> the hardcoded resolution-keyed model (Stellar for unit, Astral
-        ///      for HRAM). Default OFF.
+        ///   2. else OSPREY_PICK_LDA set -> the hardcoded resolution-keyed model;
+        ///   3. else (default) -> the legacy product pick. Default OFF.
         /// </summary>
-        public static readonly bool PickLegacy = IsSetAndNotZero(@"OSPREY_PICK_LEGACY");
+        public static readonly bool PickLda = IsSetAndNotZero(@"OSPREY_PICK_LDA");
 
         /// <summary>
         /// Semi-supervised training iterations for <c>--fdr-method gbdt</c>
