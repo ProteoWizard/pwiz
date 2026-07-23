@@ -632,7 +632,10 @@ public sealed class DiaNNSpecLibReader : BuildParser
         var qValueField       = MustFindParquetField(schema, "Q.Value", filepath);
         var decoyField        = MustFindParquetField(schema, "Decoy", filepath);
         var proteotypicField  = MustFindParquetField(schema, "Proteotypic", filepath);
-        var flagsField        = MustFindParquetField(schema, "Flags", filepath);
+        // DIA-NN 1.9.1 doesn't emit a Flags column - tolerate it and default the flags to 0 for
+        // those rows (the Flags bits aren't consumed downstream in BiblioSpec anyway). Every OTHER
+        // column stays required via MustFindParquetField, so a renamed/dropped field still errors.
+        var flagsField        = FindDataField(schema, "Flags");
         var productMzField    = MustFindParquetField(schema, "Product.Mz", filepath);
         var relIntenField     = MustFindParquetField(schema, "Relative.Intensity", filepath);
         // Fragment.{Type,Charge,Series.Number,Loss.Type} are read by cpp but discarded
@@ -660,7 +663,9 @@ public sealed class DiaNNSpecLibReader : BuildParser
             float[]  qvalue      = await ReadFloatColumn (rgReader, qValueField).ConfigureAwait(false);
             long[]   decoy       = await ReadLongColumn  (rgReader, decoyField).ConfigureAwait(false);
             long[]   proteotypic = await ReadLongColumn  (rgReader, proteotypicField).ConfigureAwait(false);
-            long[]   flags       = await ReadLongColumn  (rgReader, flagsField).ConfigureAwait(false);
+            long[]   flags       = flagsField != null
+                ? await ReadLongColumn(rgReader, flagsField).ConfigureAwait(false)
+                : new long[precursorId.Length];
             float[]  productMz   = await ReadFloatColumn (rgReader, productMzField).ConfigureAwait(false);
             float[]  relInten    = await ReadFloatColumn (rgReader, relIntenField).ConfigureAwait(false);
 

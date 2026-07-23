@@ -256,10 +256,21 @@ public class BlibMaker : IDisposable
         }
         else if (_overwrite)
         {
-            File.Delete(_libName);
+            // Swallow a delete failure so it doesn't throw out of Init(); the real guard is the
+            // File.Exists check that follows - Verbosity.Error fires either way if the file is
+            // still on disk. (Same hardening as AbortCurrentLibrary.)
+            string? removeError = null;
+            try
+            {
+                File.Delete(_libName);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                removeError = ex.Message;
+            }
             if (File.Exists(_libName))
             {
-                Verbosity.Error($"Failed to remove existing redundant library '{_libName}'.");
+                Verbosity.Error($"Failed to remove existing redundant library '{_libName}'{(removeError != null ? ": " + removeError : string.Empty)}.");
             }
         }
         else
@@ -309,6 +320,9 @@ public class BlibMaker : IDisposable
     {
         Verbosity.Debug("Deleting current library.");
 
+        // Disposing closes the connection (the managed analog of cpp's sqlite3_close_v2),
+        // releasing the file lock before the delete below - which matters for an empty-result
+        // build (e.g. when DIA-NN produced 0 precursors and the redundant library is aborted).
         if (_db != null)
         {
             _db.Dispose();
@@ -317,7 +331,16 @@ public class BlibMaker : IDisposable
 
         if (!string.IsNullOrEmpty(_libName) && File.Exists(_libName))
         {
-            File.Delete(_libName);
+            // Warn rather than throw out of abort if the file can't be removed (parity with
+            // cpp's error_code bfs::remove).
+            try
+            {
+                File.Delete(_libName);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Verbosity.Warn($"Could not remove '{_libName}' during abort: {ex.Message}");
+            }
         }
     }
 
