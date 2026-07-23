@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
                     .Where(col => col.Visible).OrderBy(col => col.DisplayIndex).ToList();
                 patternColumn = visibleColumns.FindIndex(col => col.Name == @"colPattern");
                 // The column's localized header, so the assertion below holds in any UI language.
-                patternHeader = rulesGrid.Columns[@"colPattern"].HeaderText;
+                patternHeader = rulesGrid.Columns[@"colPattern"]?.HeaderText;
             });
             Assert.IsTrue(patternColumn >= 0);
 
