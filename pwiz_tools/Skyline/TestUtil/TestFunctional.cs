@@ -2786,21 +2786,24 @@ namespace pwiz.SkylineTestUtil
             if (!(x is IOException ioException) || ioException.HResult != ERROR_SHARING_VIOLATION)
                 return x;
 
-            var match = Regex.Match(ioException.Message, "'(.*)'");
+            // Non-greedy so a message with more than one quoted span does not swallow everything between
+            var match = Regex.Match(ioException.Message, "'([^']+)'");
             if (!match.Success)
                 return x;
 
             try
             {
-                string lockedFilepath = match.Captures[0].Value.Trim('\'');
-                if (!File.Exists(lockedFilepath))
-                    return new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
+                string lockedPath = match.Groups[1].Value;
+                if (!File.Exists(lockedPath) && !Directory.Exists(lockedPath))
+                    return new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedPath), x);
 
                 int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
                 Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
-                var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedPath);
+                if (processesLockingFile.Count == 0)
+                    return x;   // Nothing to add beyond the original message; keep it
                 var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-                return new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+                return new IOException(string.Format("file '{0}' locked by: {1}", lockedPath, names), x);
             }
             catch (Exception)
             {
