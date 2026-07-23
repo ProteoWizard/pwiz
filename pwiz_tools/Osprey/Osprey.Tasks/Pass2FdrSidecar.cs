@@ -165,13 +165,20 @@ namespace pwiz.Osprey.Tasks
                     // streams through a sink and produces none. Route --model-diagnostics to
                     // the resident path so ComputePass2Resident can return the model. Off the
                     // default output path, so byte-identity is unaffected (#4377).
-                    // OSPREY_PASS2_QVALUE=transfer also takes the resident path: the transfer
-                    // needs each survivor's RECONCILED features loaded onto entry.Features (which
-                    // ComputePass2Resident does) so the frozen 1st-pass model can re-score them.
-                    // The projection path streams features to a sink and never lands them resident.
+                    // The frozen-model modes (transfer, transfer-compete, protein-compact) also
+                    // take the resident path: transfer needs each survivor's RECONCILED features
+                    // on entry.Features (ComputePass2Resident does that), and transfer-compete /
+                    // protein-compact re-score with the frozen 1st-pass model over the full
+                    // pre-compaction population / protein stratum -- a competition the projection
+                    // engine does not do (it trains + competes over the survivor set only). Their
+                    // frozen score pass itself STREAMS one file at a time inside
+                    // ComputePass2TransferCompeteFull, so routing them resident does NOT hold all
+                    // features resident. protein-compact + OSPREY_PROTEIN_COMPACT_RETRAIN=1 is the
+                    // exception: it retrains, so it stays on the projection (streaming-retrain) path.
                     if (OspreyEnvironment.UseFdrProjection && config.FdrMethod.UsesPercolatorFramework() &&
                         !config.ModelDiagnostics && !OspreyEnvironment.Pass2TransferQ &&
-                        !OspreyEnvironment.Pass2TransferCompete)
+                        !OspreyEnvironment.Pass2TransferCompete &&
+                        !(OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2ProteinCompactRetrain))
                     {
                         // Projection 2nd pass (issue #4374 + #4355 struct-shrink S0 / C1):
                         // stream the reconciled PIN features through the SAME projection
@@ -482,13 +489,45 @@ namespace pwiz.Osprey.Tasks
             var sw = System.Diagnostics.Stopwatch.StartNew();
             int nFeatures = scorer.NumFeatures;
 
-            // 1. Frozen-model score for each reconciled survivor (their reconciled features are
-            //    resident on the entries). Keyed by (file, entry_id); entry_id is unique per file.
+            // 1. Frozen-model score for each reconciled survivor, STREAMED one file at a
+            //    time: load that file's reconciled PIN features, score with the frozen 1st-pass
+            //    weights, keep only the scalar score, and release the features before the next
+            //    file. The ~300k paired targets+decoys are never all resident -- peak memory is
+            //    one file's features (flat in file count, <= the retrain's streaming ingest).
+            //    Uses the SAME loader + identity key the resident reload used
+            //    (LoadReconciledFeaturesByIdentity keyed by (EntryId,Charge,ScanNumber), the
+            //    MapFeaturesByIdentity key), so each survivor's score is byte-identical to the
+            //    old resident path. Keyed by (file, entry_id); entry_id is unique per file.
             var survivorScore = new Dictionary<(string, uint), double>();
             foreach (var kvp in perFileEntries)
+            {
+                if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
+                    continue;
+                string effectiveParquetPath =
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
+                Dictionary<(uint, byte, uint), double[]> featByIdentity;
+                try
+                {
+                    featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        "{0}: failed to reload PIN features from {1}: {2}",
+                        mode, effectiveParquetPath, ex.Message));
+                    continue;
+                }
                 foreach (var e in kvp.Value)
-                    if (e.Features != null && e.Features.Length == nFeatures)
-                        survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(e.Features);
+                {
+                    if (featByIdentity.TryGetValue(
+                            (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
+                        feats != null && feats.Length == nFeatures)
+                    {
+                        survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
+                    }
+                }
+                // featByIdentity released here (one file resident at a time).
+            }
 
             // 2. Reported survivors to emit (every post-reconciliation entry) + per-file scalar
             //    sidecar paths. Validate every sidecar up front so we fail fast (and fall back to
@@ -585,6 +624,41 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
+            // Frozen 2nd-pass (transfer-compete / protein-compact): apply the FROZEN 1st-pass
+            // model to the reconciled survivors and recompute q/PEP by a fresh target-decoy
+            // competition over the full pre-compaction population (transfer-compete) or the
+            // protein stratum (protein-compact) -- NO retrain. ComputePass2TransferCompeteFull
+            // STREAMS each file's features to score, so run it FIRST and return on success:
+            // pre-loading every survivor's features resident (below) would defeat the memory
+            // win. Falls through to the resident retrain only if the frozen model / stratum is
+            // absent. (protein-compact + OSPREY_PROTEIN_COMPACT_RETRAIN=1 deliberately skips
+            // this and retrains -- the diagnostic A/B lever.)
+            if (OspreyEnvironment.Pass2TransferCompete ||
+                (OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2ProteinCompactRetrain))
+            {
+                HashSet<uint> stratum = null;
+                bool haveInputs =
+                    ctx.TryGet<FirstPassPercolatorModel>(out var frozen) && frozen?.Results != null;
+                if (haveInputs && OspreyEnvironment.Pass2ProteinCompact)
+                {
+                    haveInputs = ctx.TryGet<ProteinCompactStratum>(out var pcStratum) &&
+                                 pcStratum?.BaseIds != null && pcStratum.BaseIds.Count > 0;
+                    if (haveInputs)
+                        stratum = pcStratum.BaseIds;
+                }
+                if (haveInputs && ComputePass2TransferCompeteFull(
+                        ctx, perFileEntries, perFileParquetPaths, config, frozen.Results, stratum))
+                {
+                    // Frozen recompute streamed the score pass + wrote q/PEP onto the
+                    // survivors; the resident full-feature reload below is skipped.
+                    return null;
+                }
+                ctx.LogWarning(string.Format(
+                    "OSPREY_PASS2_QVALUE={0} could not run the frozen recompute (frozen model, " +
+                    "1st-pass scalars, or protein stratum absent); falling back to the 2nd-pass retrain.",
+                    OspreyEnvironment.Pass2QValue));
+            }
+
             // Reload PIN features from the reconciled parquets.
             // PerFileScoringTask's bundle-hydration path
             // explicitly nulls Features after stub load (see
@@ -678,51 +752,17 @@ namespace pwiz.Osprey.Tasks
                 // on it, so transfer-compete works unchanged for trees.
                 case FdrMethod.Percolator:
                 case FdrMethod.Gbdt:
-                    // OSPREY_PASS2_QVALUE=transfer-compete: apply the FROZEN 1st-pass model to
-                    // the reconciled targets+decoys (no retrain) and recompute q + PEP by a
-                    // fresh target-decoy competition over that full, non-depleted population --
-                    // frozen weights fed to the standard competition q/PEP math (not a
-                    // co-monotone score->q table). Fixes both the retrain's decoy-depleted
-                    // null and the table transfer's stepped/quantized q.
-                    if (OspreyEnvironment.Pass2TransferCompete)
+                    // OSPREY_PASS2_QVALUE=transfer-compete / protein-compact (frozen) are handled
+                    // at the TOP of ComputePass2Resident (before the resident feature reload) so
+                    // their frozen score pass streams one file at a time -- see
+                    // ComputePass2TransferCompeteFull. Only the retrain A/B toggle and
+                    // OSPREY_PASS2_QVALUE=transfer reach here.
+                    if (OspreyEnvironment.Pass2ProteinCompact && OspreyEnvironment.Pass2ProteinCompactRetrain)
                     {
-                        if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenCompeteModel) &&
-                            frozenCompeteModel?.Results != null &&
-                            ComputePass2TransferCompeteFull(
-                                ctx, perFileEntries, perFileParquetPaths, config, frozenCompeteModel.Results))
-                        {
-                            // Full-population q was written directly onto the survivors; no
-                            // retrained 2nd-pass model view (the pass-2 FDR calibration still
-                            // renders from the recomputed q-values).
-                            return null;
-                        }
-                        ctx.LogWarning(
-                            "OSPREY_PASS2_QVALUE=transfer-compete could not run the full-population " +
-                            "recompute (frozen model or 1st-pass scalars absent); falling back to the " +
-                            "2nd-pass Percolator retrain.");
-                    }
-                    // OSPREY_PASS2_QVALUE=protein-compact: same frozen-model recompute as
-                    // transfer-compete, but the target-decoy competition is CONSTRAINED to the
-                    // protein stratum (peptides of proteins detected in the 1st pass by >=2
-                    // peptides) published by FirstJoin -> reduced multiple testing lowers q for
-                    // marginal present-protein peptides while off-stratum survivors keep their
-                    // 1st-pass q. Falls back to the retrain if the frozen model, scalars, or
-                    // stratum are absent.
-                    if (OspreyEnvironment.Pass2ProteinCompact)
-                    {
-                        if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenPcModel) &&
-                            frozenPcModel?.Results != null &&
-                            ctx.TryGet<ProteinCompactStratum>(out var pcStratum) &&
-                            pcStratum?.BaseIds != null && pcStratum.BaseIds.Count > 0 &&
-                            ComputePass2TransferCompeteFull(
-                                ctx, perFileEntries, perFileParquetPaths, config,
-                                frozenPcModel.Results, pcStratum.BaseIds))
-                        {
-                            return null;
-                        }
-                        ctx.LogWarning(
-                            "OSPREY_PASS2_QVALUE=protein-compact could not run (frozen model, 1st-pass " +
-                            "scalars, or protein stratum absent); falling back to the 2nd-pass retrain.");
+                        ctx.LogInfo(
+                            "OSPREY_PROTEIN_COMPACT_RETRAIN=1: skipping the frozen-model + stratum " +
+                            "competition; RETRAINING the 2nd-pass over the stratum-expanded compacted pool " +
+                            "(frozen-vs-retrain FDR A/B).");
                     }
                     // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
                     // the decoy-depleted reconciled+compacted set, apply the FROZEN 1st-pass

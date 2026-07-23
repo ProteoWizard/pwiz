@@ -332,6 +332,15 @@ namespace pwiz.Osprey.Core
         public static readonly bool Pass2ProteinCompact =
             string.Equals(Pass2QValue, PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
 
+        /// <summary>Diagnostic A/B toggle (OSPREY_PROTEIN_COMPACT_RETRAIN): when set with
+        /// OSPREY_PASS2_QVALUE=protein-compact, SKIP the frozen 1st-pass model + stratum
+        /// competition and instead RETRAIN the 2nd-pass Percolator over the same
+        /// stratum-expanded compacted pool. Isolates the frozen-vs-retrain FDR-calibration
+        /// difference (same reported set, only the 2nd-pass scoring changes) for the
+        /// FDRBench/entrapment oracle. Off (frozen) by default.</summary>
+        public static readonly bool Pass2ProteinCompactRetrain =
+            IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
+
         private static string NormalizePass2QValue(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
