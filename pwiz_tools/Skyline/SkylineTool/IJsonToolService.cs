@@ -551,20 +551,23 @@ namespace SkylineTool
         ActionResult ClickGraph(string formId, Rectangle bounds);
 
         /// <summary>
-        /// Types text into one control on a form, whether or not it has the focus -- for what only real typing
-        /// does, above all raising Skyline's auto-completion popup when typing on the document tree. The
-        /// characters go to that control's own window, so the caller never has to arrange focus first, and the
-        /// control is verified enabled before anything is sent.
+        /// Types text into one control on a form, whether or not it has the focus. Named for what it does: it
+        /// delivers the CHARACTERS to that control's own window, it does not simulate key presses -- so the
+        /// caller never has to arrange focus first, and the control is verified enabled first.
         ///
         /// <para>The text is literal -- no key names and nothing to escape. To press a key, use
         /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
         /// needs neither the clipboard nor a keystroke.</para>
+        ///
+        /// <para>NOT for the Targets tree: <c>SequenceTree.OnKeyPress</c> forwards each character on with
+        /// <c>SendKeys.Send</c>, which posts to the FOCUSED window -- so the characters land in whatever
+        /// application is in front, arrive out of order, and leave the tree stuck editing a label.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it
         /// (its visible label, or its Type for a caption-less control).</param>
         /// <param name="text">The text to type, taken literally.</param>
-        ActionResult SendKeys(string formId, string controlId, string text);
+        ActionResult SendText(string formId, string controlId, string text);
 
         /// <summary>
         /// Presses one key on a control, whether or not it has the focus -- e.g. to accept or step through the

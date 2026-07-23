@@ -890,22 +890,24 @@ public static class SkylineTools
         });
     }
 
-    [McpServerTool(Name = "skyline_send_keys"),
-     Description("Type text into one control on a form -- for what only real typing does, above all raising " +
-        "Skyline's auto-completion popup when typing on the document tree. The characters go to that " +
-        "control's own window, so it does NOT need the focus and you never have to arrange focus first; the " +
-        "control is verified enabled first. The text is LITERAL -- no key names, nothing to escape. To press " +
-        "a key (Enter, Down, Ctrl+V) use skyline_send_key_stroke; to PASTE use skyline_perform_action with " +
-        "action='paste', which takes the text and so needs neither the clipboard nor Ctrl+V. Discover control " +
-        "names with skyline_get_controls.")]
-    public static string SendKeys(
+    [McpServerTool(Name = "skyline_send_text"),
+     Description("Type text into one control on a form. Named for what it does: it delivers the CHARACTERS " +
+        "to that control's own window, it does not simulate key presses -- so the control does NOT need the " +
+        "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
+        "LITERAL -- no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
+        "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
+        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: Skyline's " +
+        "auto-completion forwards each character through the FOCUSED window, so the characters land in " +
+        "whatever application is in front, arrive out of order, and leave the tree stuck editing a label. " +
+        "Discover control names with skyline_get_controls.")]
+    public static string SendText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
         [Description("The text to type, taken literally")] string text)
     {
         return Invoke(connection =>
         {
-            var result = connection.SendKeys(formId, controlId, text);
+            var result = connection.SendText(formId, controlId, text);
             return DescribeAction(result, $"Typed into '{controlId}' on {formId}.");
         });
     }

@@ -304,9 +304,9 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetValue", (e, value) => { e.SetValueNow(UiElement.ConvertValue(value)); return null; })
             .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
 
-        public static readonly UiAction SendKeys = SimpleAction<IKeyboardElement, string>(
-                @"SendKeys", (e, text) => { e.SendKeysNow(text); return null; })
-            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus -- for what only real typing does, above all raising Skyline's auto-completion popup when typing on the document tree. To press a key rather than type, use 'send_key_stroke'; to paste, use 'paste' (it takes the text, so it needs no clipboard)."),
+        public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
+                @"SendText", (e, text) => { e.SendTextNow(text); return null; })
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses -- for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Do NOT type into the Targets tree: Skyline's auto-completion forwards each character through the FOCUSED window, so the characters land in whatever application is in front, arrive out of order, and leave the tree stuck editing a label."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
         public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
@@ -386,7 +386,7 @@ namespace pwiz.Skyline.ToolsUI
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
-            GetActions, GetChildren, Click, GetValue, SetValue, SendKeys, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
+            GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
             SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
             Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
         };

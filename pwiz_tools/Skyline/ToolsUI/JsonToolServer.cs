@@ -1117,10 +1117,10 @@ namespace pwiz.Skyline.ToolsUI
         // Both find the control the way set_value does (by the label/type GetControls reports). InvokeNow gates
         // it -- a missing, blocked or disabled control throws -- before anything is sent, and runs the gesture
         // on the form's UI thread.
-        public ActionResult SendKeys(string formId, string controlId, string text)
+        public ActionResult SendText(string formId, string controlId, string text)
         {
             return InvokeOnForm<StandaloneForm>(formId, form =>
-                UiActions.SendKeys.InvokeNow(form.FindElement(controlId, UiActions.SendKeys), text));
+                UiActions.SendText.InvokeNow(form.FindElement(controlId, UiActions.SendText), text));
         }
 
         public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke)

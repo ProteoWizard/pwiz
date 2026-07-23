@@ -103,7 +103,7 @@ namespace pwiz.Skyline.ToolsUI
     /// while <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
     public interface IKeyboardElement
     {
-        void SendKeysNow(string text);
+        void SendTextNow(string text);
         void SendKeyStrokeNow(string keyStroke);
     }
 
@@ -660,7 +660,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // Keyboard input goes to this control itself, so it does not need the focus. UiAction has already gated
         // the control (VerifyEnabled) and marshaled onto its UI thread. See KeyGesture for how the two differ.
-        public virtual void SendKeysNow(string text)
+        public virtual void SendTextNow(string text)
         {
             KeyGesture.SendText(Control, text);
         }

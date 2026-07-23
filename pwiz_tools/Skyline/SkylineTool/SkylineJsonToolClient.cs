@@ -263,9 +263,9 @@ namespace SkylineTool
             return CallTyped<ActionResult>(nameof(ClickGraph), formId, bounds);
         }
 
-        public ActionResult SendKeys(string formId, string controlId, string text)
+        public ActionResult SendText(string formId, string controlId, string text)
         {
-            return CallTyped<ActionResult>(nameof(SendKeys), formId, controlId, text);
+            return CallTyped<ActionResult>(nameof(SendText), formId, controlId, text);
         }
 
         public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke)
