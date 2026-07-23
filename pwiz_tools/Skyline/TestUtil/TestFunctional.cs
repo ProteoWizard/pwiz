@@ -2491,6 +2491,14 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.GetProjectDirectory(@"TestTutorial\TutorialAuditLogs"); }
         }
 
+        /// <summary>
+        /// The file this test records its audit log entries to, for tests that need to manipulate it.
+        /// </summary>
+        protected string RecordedAuditLogFilePath
+        {
+            get { return GetLogFilePath(AuditLogDir); }
+        }
+
         private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
         private readonly Dictionary<int, AuditLogEntry> _lastLoggedEntries = new Dictionary<int, AuditLogEntry>();
 
@@ -2683,14 +2691,7 @@ namespace pwiz.SkylineTestUtil
 
         private void WriteDiffEntryToFile(string folderPath, AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
         {
-            var filePath = GetLogFilePath(folderPath);
-            using (var fs = File.Open(filePath, FileMode.Append))
-            {
-                using (var sw = new StreamWriter(fs))
-                {
-                    sw.Write(AuditLogEntryDiffToString(entry, lastLoggedEntry));
-                }
-            }
+            AppendToLogFile(GetLogFilePath(folderPath), AuditLogEntryDiffToString(entry, lastLoggedEntry));
         }
 
         private string AuditLogEntryDiffToString(AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
@@ -2718,13 +2719,34 @@ namespace pwiz.SkylineTestUtil
 
         private void WriteEntryToFile(string folderPath, AuditLogEntry entry)
         {
-            var filePath = GetLogFilePath(folderPath);
-            using (var fs = File.Open(filePath, FileMode.Append))
+            AppendToLogFile(GetLogFilePath(folderPath), AuditLogEntryToString(entry) + Environment.NewLine);
+        }
+
+        /// <summary>
+        /// Appends to the audit log recorded for this test. The file is opened and closed once per
+        /// logged entry, which invites transient sharing violations from virus scanners and file
+        /// indexers, so share the file with them and retry when they get there first.
+        /// </summary>
+        private void AppendToLogFile(string filePath, string text)
+        {
+            try
             {
-                using (var sw = new StreamWriter(fs))
+                TryHelper.TryTwice(() =>
                 {
-                    sw.WriteLine(AuditLogEntryToString(entry));
-                }
+                    using (var fs = File.Open(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                    {
+                        using (var sw = new StreamWriter(fs))
+                        {
+                            sw.Write(text);
+                        }
+                    }
+                }, nameof(AppendToLogFile));
+            }
+            catch (Exception x)
+            {
+                // This runs during SetDocument, so the exception ends up in a message box shown by
+                // SkylineWindow.ModifyDocument. Name the process holding the lock while it is still known.
+                throw DescribeFileLocks(x);
             }
         }
 
@@ -2745,6 +2767,30 @@ namespace pwiz.SkylineTestUtil
 
         // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
         private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
+        /// <summary>
+        /// If this is a file locking issue, wrap the exception in one that reports the locking process,
+        /// which is otherwise impossible to determine once the test has ended.
+        /// </summary>
+        private static Exception DescribeFileLocks(Exception x)
+        {
+            if (!(x is IOException ioException) || ioException.HResult != ERROR_SHARING_VIOLATION)
+                return x;
+
+            var match = Regex.Match(ioException.Message, "'(.*)'");
+            if (!match.Success)
+                return x;
+
+            string lockedFilepath = match.Captures[0].Value.Trim('\'');
+            if (!File.Exists(lockedFilepath))
+                return new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
+
+            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
+            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
+            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+            return new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+        }
 
         private void WaitForSkyline()
         {
@@ -2779,29 +2825,8 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                // if it's a file locking issue, wrap the exception to report the locking process
-                if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
-                {
-                    var match = Regex.Match(ioException.Message, "'(.*)'");
-                    if (match.Success)
-                    {
-                        string lockedFilepath = match.Captures[0].Value.Trim('\'');
-                        if (!File.Exists(lockedFilepath))
-                        {
-                            x = new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
-                        }
-                        else
-                        {
-                            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
-                            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
-                            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
-                            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-                            x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
-                        }
-                    }
-                }
-                // Save exception for reporting from main thread.
-                Program.AddTestException(x);
+                // Save exception for reporting from main thread, naming the locking process if that is the issue
+                Program.AddTestException(DescribeFileLocks(x));
             }
 
             EndTest();

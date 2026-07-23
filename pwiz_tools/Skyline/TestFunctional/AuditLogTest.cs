@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -501,6 +502,30 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("Reason 3", GetAuditLogEntryFromRow(auditLogForm, 3).Reason);
                 Assert.AreEqual("Reason 4", GetAuditLogEntryFromRow(auditLogForm, 3).AllInfo[1].Reason);
             });
+
+            VerifyLoggingSurvivesLockedLogFile(auditLogForm);
+        }
+
+        /// <summary>
+        /// The test harness records every document change to a log file, opening and closing it once per
+        /// entry, so verify that this survives another process holding that file open the way virus
+        /// scanners and file indexers do. A failure to append surfaces as a message box from
+        /// SkylineWindow.ModifyDocument that no test is expecting.
+        /// </summary>
+        private void VerifyLoggingSurvivesLockedLogFile(AuditLogForm auditLogForm)
+        {
+            var logFilePath = RecordedAuditLogFilePath;
+            Assert.IsTrue(File.Exists(logFilePath), "no audit log recorded at {0}", logFilePath);
+            long lengthBeforeLock = new FileInfo(logFilePath).Length;
+
+            using (File.Open(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                RunUI(() => ChangeReason(auditLogForm, "Reason", 3, "Reason 5"));
+                AuditLogUtil.WaitForAuditLogForm(auditLogForm);
+                RunUI(() => Assert.AreEqual("Reason 5", GetAuditLogEntryFromRow(auditLogForm, 3).Reason));
+                Assert.IsTrue(new FileInfo(logFilePath).Length > lengthBeforeLock,
+                    "audit log entry was not recorded while the log file was locked");
+            }
         }
 
         private static AuditLogEntry GetAuditLogEntryFromRow(AuditLogForm form, int row)
