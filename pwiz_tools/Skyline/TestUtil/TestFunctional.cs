@@ -2729,24 +2729,27 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private void AppendToLogFile(string filePath, string text)
         {
+            // Write in a single call so that a retry cannot append what a partial write already recorded
+            var bytes = Encoding.UTF8.GetBytes(text);
             try
             {
+                // Short retry interval because this runs on the UI thread during SetDocument
                 TryHelper.TryTwice(() =>
                 {
                     using (var fs = File.Open(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                     {
-                        using (var sw = new StreamWriter(fs))
-                        {
-                            sw.Write(text);
-                        }
+                        fs.Write(bytes, 0, bytes.Length);
                     }
-                }, nameof(AppendToLogFile));
+                }, 3, 100, nameof(AppendToLogFile));
             }
             catch (Exception x)
             {
                 // This runs during SetDocument, so the exception ends up in a message box shown by
                 // SkylineWindow.ModifyDocument. Name the process holding the lock while it is still known.
-                throw DescribeFileLocks(x);
+                var described = DescribeFileLocks(x);
+                if (ReferenceEquals(described, x))
+                    throw;  // Nothing to add, so keep the original stack trace
+                throw described;
             }
         }
 
@@ -2770,7 +2773,13 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// If this is a file locking issue, wrap the exception in one that reports the locking process,
-        /// which is otherwise impossible to determine once the test has ended.
+        /// which is otherwise impossible to determine once the test has ended. Returns the exception
+        /// unchanged if there is nothing to add.
+        /// <para>
+        /// This works from an exception message carrying an absolute path, where the shared
+        /// <see cref="FileLockingProcessFinder.ToFileLockingException"/> expects a bare file name to
+        /// locate beneath a given directory.
+        /// </para>
         /// </summary>
         private static Exception DescribeFileLocks(Exception x)
         {
@@ -2781,15 +2790,24 @@ namespace pwiz.SkylineTestUtil
             if (!match.Success)
                 return x;
 
-            string lockedFilepath = match.Captures[0].Value.Trim('\'');
-            if (!File.Exists(lockedFilepath))
-                return new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
+            try
+            {
+                string lockedFilepath = match.Captures[0].Value.Trim('\'');
+                if (!File.Exists(lockedFilepath))
+                    return new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
 
-            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
-            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
-            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
-            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-            return new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+                int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
+                Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
+                var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                return new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
+            }
+            catch (Exception)
+            {
+                // The restart manager is not always available to say who holds the lock, and losing
+                // the original exception to that would be worse than not knowing
+                return x;
+            }
         }
 
         private void WaitForSkyline()
