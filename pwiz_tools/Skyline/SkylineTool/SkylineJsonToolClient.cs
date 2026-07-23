@@ -22,6 +22,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 // ReSharper disable InvalidXmlDocComment (for direct link into .NET 8.0)
 
@@ -45,10 +46,7 @@ namespace SkylineTool
     ///
     /// <para><b>Usage</b>:</para>
     /// <code>
-    /// var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
-    /// pipe.Connect(5000);
-    /// pipe.ReadMode = PipeTransmissionMode.Message;
-    /// using (var client = new SkylineJsonToolClient(pipe))
+    /// using (var client = SkylineJsonToolClient.Connect(pipeName))
     /// {
     ///     string path = client.GetDocumentPath();
     ///     var status = client.GetDocumentStatus();
@@ -77,8 +75,66 @@ namespace SkylineTool
         /// </summary>
         public string LastLog { get; private set; }
 
+        /// <summary>
+        /// Gives up on a call that is still waiting for Skyline's response. A caller that will not wait forever (the
+        /// MCP bounds every call) sets this, then disposes the connection: Skyline sees the disconnect and abandons
+        /// the call, freeing its single-instance pipe server for the next one.
+        ///
+        /// <para>The wait is an asynchronous read for exactly this reason. A caller blocked in a SYNCHRONOUS read
+        /// cannot drop the connection at all -- Windows keeps the pipe handle open until the pending read returns, so
+        /// disposing the stream does not actually disconnect it and Skyline goes on waiting. Cancelling an overlapped
+        /// read releases the handle, so the dispose really does disconnect. Requires the pipe to have been opened with
+        /// <see cref="PipeOptions.Asynchronous"/>.</para>
+        /// </summary>
+        public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
+
+        /// <summary>
+        /// Connects to Skyline's tool pipe and returns a client for it. The preferred way in: the connection has
+        /// two settings this class depends on and neither is obvious from the outside, so it owns both rather than
+        /// asking every caller to remember them.
+        ///
+        /// <para><see cref="PipeOptions.Asynchronous"/> is what lets <see cref="CancellationToken"/> abandon a call
+        /// at all, and message <see cref="PipeStream.ReadMode"/> is what makes a response arrive as one message
+        /// (<see cref="ReadAllBytes"/> reads until <see cref="PipeStream.IsMessageComplete"/>). Getting either wrong
+        /// fails quietly and far from the mistake, so the constructor rejects a pipe that has neither.</para>
+        /// </summary>
+        /// <param name="pipeName">Skyline's pipe name, from its connection-*.json discovery file.</param>
+        /// <param name="timeoutMillis">How long to wait for Skyline to accept the connection.</param>
+        public static SkylineJsonToolClient Connect(string pipeName, int timeoutMillis = 5000)
+        {
+            var pipe = new NamedPipeClientStream(@".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            try
+            {
+                pipe.Connect(timeoutMillis);
+                pipe.ReadMode = PipeTransmissionMode.Message;
+                return new SkylineJsonToolClient(pipe);
+            }
+            catch
+            {
+                pipe.Dispose(); // Do not leak the handle when the connection never became a client.
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Wraps a pipe the caller connected itself. Prefer <see cref="Connect(string,int)"/>, which opens the pipe
+        /// the way this class needs it; this overload exists for a caller that must own the connection.
+        /// </summary>
+        /// <exception cref="ArgumentException">The pipe was not opened for overlapped I/O, or is not in message
+        /// read mode -- see <see cref="Connect(string,int)"/> for why both matter.</exception>
         public SkylineJsonToolClient(NamedPipeClientStream pipe)
         {
+            if (pipe == null)
+                throw new ArgumentNullException(nameof(pipe));
+            if (!pipe.IsAsync)
+                throw new ArgumentException(
+                    @"The pipe must be opened with PipeOptions.Asynchronous, or a call can never be abandoned.",
+                    nameof(pipe));
+            // ReadMode can only be read once connected, and every caller connects before wrapping.
+            if (pipe.IsConnected && pipe.ReadMode != PipeTransmissionMode.Message)
+                throw new ArgumentException(
+                    @"The pipe must be in message read mode, or a response longer than one buffer is truncated.",
+                    nameof(pipe));
             _pipe = pipe;
         }
 
@@ -95,16 +151,32 @@ namespace SkylineTool
         public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
         public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
+        public int ModalNestingCount() { return CallTyped<int>(nameof(ModalNestingCount)); }
         public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
+        public ControlInfo[] GetControls(string formId) { return CallTyped<ControlInfo[]>(nameof(GetControls), formId); }
+        // Returns the result as raw JSON text (object/array) or a string; the caller interprets it by action.
+        public object PerformAction(UiElementPath path, string action, object value) { return Call(nameof(PerformAction), path, action, value); }
         public string GetUiMode() { return Call(nameof(GetUiMode)); }
         public UndoRedoEntry[] GetUndoRedo() { return CallTyped<UndoRedoEntry[]>(nameof(GetUndoRedo)); }
 
         public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null)
         {
-            return dataSource == null
-                ? CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics))
-                : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
+            return CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
         }
+
+        // UI interaction
+        public ActionResult ClickMainMenuItem(string menuPath) { return CallTyped<ActionResult>(nameof(ClickMainMenuItem), menuPath); }
+        public ActionResult ClickFormButton(string formId, string button) { return CallTyped<ActionResult>(nameof(ClickFormButton), formId, button); }
+        public ActionResult ClickControlMenuItem(string formId, string control, string menuPath) { return CallTyped<ActionResult>(nameof(ClickControlMenuItem), formId, control, menuPath); }
+        public ActionResult SetFormValue(string formId, string controlId, string value) { return CallTyped<ActionResult>(nameof(SetFormValue), formId, controlId, value); }
+        public string GetFormValue(string formId, string controlId) { return Call(nameof(GetFormValue), formId, controlId); }
+        public string[] GetOptions(string formId, string controlId) { return CallTyped<string[]>(nameof(GetOptions), formId, controlId); }
+        public ActionResult SetGridText(string formId, string controlId, string text) { return CallTyped<ActionResult>(nameof(SetGridText), formId, controlId, text); }
+        public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row) { return CallTyped<ActionResult>(nameof(SetCurrentCellAddress), formId, controlId, column, row); }
+        public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
+        public ActionResult DismissWithButton(string formId, string button) { return CallTyped<ActionResult>(nameof(DismissWithButton), formId, button); }
+        public ActionResult DismissWithCancelButton(string formId) { return CallTyped<ActionResult>(nameof(DismissWithCancelButton), formId); }
+        public ActionResult DismissWithAcceptButton(string formId) { return CallTyped<ActionResult>(nameof(DismissWithAcceptButton), formId); }
 
         // 1-arg methods
         public string GetSelectedElementLocator(string elementType)
@@ -121,9 +193,7 @@ namespace SkylineTool
         }
         public string[] GetSettingsListNames(string listType, string groupName = null)
         {
-            return groupName == null
-                ? CallTyped<string[]>(nameof(GetSettingsListNames), listType)
-                : CallTyped<string[]>(nameof(GetSettingsListNames), listType, groupName);
+            return CallTyped<string[]>(nameof(GetSettingsListNames), listType, groupName);
         }
         public string[] GetSettingsListSelectedItems(string listType)
         {
@@ -132,9 +202,7 @@ namespace SkylineTool
 
         public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null)
         {
-            return dataSource == null
-                ? CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName)
-                : CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName, dataSource);
+            return CallTyped<ReportDocTopicDetail>(nameof(GetReportDocTopic), topicName, dataSource);
         }
 
         public void AddReportFromDefinition(ReportDefinition definition)
@@ -146,7 +214,7 @@ namespace SkylineTool
         {
             Call(nameof(InsertSmallMoleculeTransitionList), textCSV);
         }
-        public void ImportProperties(string csvText) { Call(nameof(ImportProperties), csvText); }
+        public ActionResult ImportProperties(string csvText) { return CallTyped<ActionResult>(nameof(ImportProperties), csvText); }
         public void SetReplicate(string replicateName) { Call(nameof(SetReplicate), replicateName); }
         public void SetUiMode(string mode) { Call(nameof(SetUiMode), mode); }
         public void SetUndoRedoPosition(int index) { Call(nameof(SetUndoRedoPosition), index); }
@@ -157,31 +225,22 @@ namespace SkylineTool
         // 2-arg methods
         public LocationEntry[] GetLocations(string level, string rootLocator = null)
         {
-            return rootLocator == null
-                ? CallTyped<LocationEntry[]>(nameof(GetLocations), level)
-                : CallTyped<LocationEntry[]>(nameof(GetLocations), level, rootLocator);
+            return CallTyped<LocationEntry[]>(nameof(GetLocations), level, rootLocator);
         }
 
         public void SetSelectedElement(string elementLocator, string additionalLocators = null)
         {
-            if (additionalLocators == null)
-                Call(nameof(SetSelectedElement), elementLocator);
-            else
-                Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
+            Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
         }
 
         public string GetGraphData(string graphId, string filePath = null)
         {
-            return filePath == null
-                ? Call(nameof(GetGraphData), graphId)
-                : Call(nameof(GetGraphData), graphId, filePath);
+            return Call(nameof(GetGraphData), graphId, filePath);
         }
 
         public string GetGraphImage(string graphId, string filePath = null)
         {
-            return filePath == null
-                ? Call(nameof(GetGraphImage), graphId)
-                : Call(nameof(GetGraphImage), graphId, filePath);
+            return Call(nameof(GetGraphImage), graphId, filePath);
         }
 
         public ImageBytesMetadata GetGraphImageBytes(string graphId)
@@ -191,9 +250,7 @@ namespace SkylineTool
 
         public string GetFormImage(string formId, string filePath = null)
         {
-            return filePath == null
-                ? Call(nameof(GetFormImage), formId)
-                : Call(nameof(GetFormImage), formId, filePath);
+            return Call(nameof(GetFormImage), formId, filePath);
         }
 
         public ImageBytesMetadata GetFormImageBytes(string formId)
@@ -206,17 +263,14 @@ namespace SkylineTool
             return Call(nameof(GetSettingsListItem), listType, itemName);
         }
 
-        public void SelectSettingsListItems(string listType, string[] itemNames)
+        public ActionResult SelectSettingsListItems(string listType, string[] itemNames)
         {
-            Call(nameof(SelectSettingsListItems), listType, itemNames);
+            return CallTyped<ActionResult>(nameof(SelectSettingsListItems), listType, itemNames);
         }
 
-        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
+        public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
-            if (keepEmptyProteins == null)
-                Call(nameof(ImportFasta), textFasta);
-            else
-                Call(nameof(ImportFasta), textFasta, keepEmptyProteins);
+            return CallTyped<ActionResult>(nameof(ImportFasta), textFasta, keepEmptyProteins);
         }
 
         // 3-arg methods
@@ -315,14 +369,22 @@ namespace SkylineTool
 
                 if (root.TryGetProperty(nameof(JSON_RPC.result), out var resultElement))
                 {
-                    if (resultElement.ValueKind == JsonValueKind.Null)
-                        return null;
-                    if (resultElement.ValueKind == JsonValueKind.Number)
-                        return resultElement.GetRawText();
-                    if (resultElement.ValueKind == JsonValueKind.Object ||
-                        resultElement.ValueKind == JsonValueKind.Array)
-                        return resultElement.GetRawText();
-                    return resultElement.GetString();
+                    switch (resultElement.ValueKind)
+                    {
+                        case JsonValueKind.Null:
+                            return null;
+                        // Anything that is not a JSON string keeps its JSON form: a number, a bool (what
+                        // get_value returns for a check box or radio button), or a whole object or array.
+                        // GetString() throws on all of these, so none of them may fall through to it.
+                        case JsonValueKind.Number:
+                        case JsonValueKind.True:
+                        case JsonValueKind.False:
+                        case JsonValueKind.Object:
+                        case JsonValueKind.Array:
+                            return resultElement.GetRawText();
+                        default:
+                            return resultElement.GetString();
+                    }
                 }
 
                 return null;
@@ -342,13 +404,17 @@ namespace SkylineTool
             _pipe.Dispose();
         }
 
-        private static byte[] ReadAllBytes(PipeStream stream)
+        // Reads the response, honoring CancellationToken so a caller that has waited long enough can abandon the call
+        // (see CancellationToken). ReadAsync is what makes that possible: on a pipe opened Asynchronous it is real
+        // overlapped I/O, so cancelling it releases the handle and the connection can then actually be dropped.
+        private byte[] ReadAllBytes(PipeStream stream)
         {
             var memoryStream = new MemoryStream();
             do
             {
                 var buffer = new byte[65536];
-                int count = stream.Read(buffer, 0, buffer.Length);
+                int count = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken)
+                    .GetAwaiter().GetResult();
                 if (count == 0)
                     return memoryStream.ToArray();
                 memoryStream.Write(buffer, 0, count);

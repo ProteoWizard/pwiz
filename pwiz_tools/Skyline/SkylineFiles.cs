@@ -189,6 +189,17 @@ namespace pwiz.Skyline
 
         private void openMenuItem_Click(object sender, EventArgs e)
         {
+            ShowOpenFileDialog();
+        }
+
+        /// <summary>
+        /// Shows the native Open dialog and opens whatever document the user selects.
+        /// Factored out of <see cref="openMenuItem_Click"/> so that automated tests can
+        /// invoke the same code path the menu command uses and drive the resulting native
+        /// dialog with UI Automation.
+        /// </summary>
+        public void ShowOpenFileDialog()
+        {
             if (!CheckSaveDocument())
                 return;
             using (OpenFileDialog dlg = new OpenFileDialog())

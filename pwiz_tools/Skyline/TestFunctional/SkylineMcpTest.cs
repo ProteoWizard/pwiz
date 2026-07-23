@@ -52,6 +52,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        private const int EXPECTED_TOOL_COUNT = 58;
+
         // The version stamped into the committed SkylineAiConnector.zip: both
         // tool-inf/info.properties (what the Tool Store shows) and the bundled
         // binaries. This is intentionally a hand-entered constant, NOT the running
@@ -63,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
         // shipped stamped 26.1.1.077 while its own info.properties Requires line
         // demanded 26.1.1.083 - a ZIP that fails its own stated requirement.)
         // When you rebuild SkylineAiConnector.zip, update this to match.
-        private const string EXPECTED_ZIP_VERSION = "26.1.1.159";
+        private const string EXPECTED_ZIP_VERSION = "26.1.1.201";
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -172,8 +174,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             Action<Process, JsonToolServer> scenario)
         {
             string testGuid = @"test-" + Guid.NewGuid();
-            var toolService = new ToolService(testGuid, SkylineWindow);
-            var server = new JsonToolServer(toolService, testGuid);
+            var server = new JsonToolServer(testGuid);
 
             string connectionFilePath = null;
             Process mcpProcess = null;
@@ -463,10 +464,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         {
             // Connect to the same pipe the MCP server uses for a normal-operation
             // sanity check before the version-mismatch probe.
-            var pipe = new NamedPipeClientStream(@".", server.PipeName, PipeDirection.InOut);
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-            using (var client = new SkylineJsonToolClient(pipe))
+            using (var client = SkylineJsonToolClient.Connect(server.PipeName))
             {
                 string version = client.GetVersion();
                 Assert.IsFalse(string.IsNullOrEmpty(version));
@@ -686,10 +684,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         /// </summary>
         private void ValidateGetGraphImageBytesPipe(JsonToolServer server, string graphId)
         {
-            var pipe = new NamedPipeClientStream(@".", server.PipeName, PipeDirection.InOut);
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-            using (var client = new SkylineJsonToolClient(pipe))
+            using (var client = SkylineJsonToolClient.Connect(server.PipeName))
             {
                 var bytes = client.GetGraphImageBytes(graphId);
                 Assert.IsNotNull(bytes, "GetGraphImageBytes should return a non-null result for a valid graph");
@@ -705,11 +700,22 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         private static string FindFirstGraphId(Process mcpProcess, StreamWriter stdin, StreamReader stdout, ref int id)
         {
             string formsText = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_open_forms");
-            foreach (var line in formsText.ReadLines().Skip(1))   // skip header
+            var lines = formsText.ReadLines().ToArray();
+            if (lines.Length == 0)
+                return null;
+            // The columns are found by NAME, from the header row: get_open_forms grows a column now and then
+            // (SubType, Message), and a positional read silently starts reporting the wrong field when it does.
+            var header = lines[0].ParseDsvFields(TextUtil.SEPARATOR_TSV).ToList();
+            int iHasGraph = header.IndexOf(@"HasGraph");
+            int iId = header.IndexOf(@"Id");
+            Assert.IsTrue(iHasGraph >= 0 && iId >= 0,
+                @"get_open_forms did not report a HasGraph and an Id column: " + lines[0]);
+            foreach (var line in lines.Skip(1))
             {
                 var cols = line.ParseDsvFields(TextUtil.SEPARATOR_TSV);
-                if (cols.Length >= 5 && string.Equals(cols[2], @"True", StringComparison.OrdinalIgnoreCase))
-                    return cols[4];   // Id column
+                if (cols.Length > Math.Max(iHasGraph, iId) &&
+                    string.Equals(cols[iHasGraph], @"True", StringComparison.OrdinalIgnoreCase))
+                    return cols[iId];
             }
             return null;
         }

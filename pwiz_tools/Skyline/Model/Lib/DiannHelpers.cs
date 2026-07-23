@@ -805,7 +805,7 @@ namespace pwiz.Skyline.Model.Lib
         /// the output directory. Used by perf tests to avoid the ~20-min library-prediction
         /// step on every iteration; off by default so production runs always regenerate.
         /// </summary>
-        public bool ReuseCachedLibrary { get; set; } = false;
+        public bool ReuseCachedLibrary { get; set; }
 
         /// <summary>
         /// When true, the search command line includes DIA-NN's `--reuse-quant` flag, so
@@ -813,7 +813,7 @@ namespace pwiz.Skyline.Model.Lib
         /// Used by perf tests for incremental rebuilds; off by default because production
         /// runs should always pick up new search-parameter or library changes.
         /// </summary>
-        public bool ReuseQuantFiles { get; set; } = false;
+        public bool ReuseQuantFiles { get; set; }
 
         public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings { get; }
 

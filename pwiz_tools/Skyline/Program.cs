@@ -78,7 +78,7 @@ namespace pwiz.Skyline
         public static bool? StartPageOverride { get; private set; }
 
         public static string MainToolServiceName { get; private set; }
-        
+
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
@@ -331,6 +331,20 @@ namespace pwiz.Skyline
                     }
                 }
                 SystemEvents.DisplaySettingsChanged += SystemEventsOnDisplaySettingsChanged;
+
+                // Start the tool service before the main window is created, so the JSON/MCP server can
+                // introspect and drive the StartPage too (the main window does not exist while the
+                // StartPage is showing). UI-thread marshaling goes through InvokeOnUiThread /
+                // BeginInvokeOnUiThread, which target whichever of those windows is currently up. Only the JSON
+                // server actually comes up here: with no main window yet there is nothing for the legacy
+                // ToolService to bind to, and nothing needs it until an external tool is run.
+                MainToolServiceName = Guid.NewGuid().ToString();
+                if (Settings.Default.EnableMcpAutoConnect)
+                {
+                    StartToolService();
+                    MainJsonToolServer.WriteConnectionInfo();
+                }
+
                 // Careful, a throw out of the SkylineWindow constructor without this
                 // catch causes Skyline just to appear to silently never start.  Makes for
                 // some difficult debugging.
@@ -382,12 +396,6 @@ namespace pwiz.Skyline
                 if (!UnitTest)  // Covers Unit and Functional tests
                     SendAnalyticsHitAsync();
 
-                MainToolServiceName = Guid.NewGuid().ToString();
-                if (Settings.Default.EnableMcpAutoConnect)
-                {
-                    StartToolService();
-                    MainJsonToolServer.WriteConnectionInfo();
-                }
                 // NOTE: Nothing after Application.Run() reliably executes.
                 // SkylineWindow.OnHandleDestroyed calls Process.Kill() to avoid native
                 // vendor DLL errors. All shutdown cleanup must happen before that point.
@@ -570,30 +578,43 @@ namespace pwiz.Skyline
             return SendGa4AnalyticsHit(out _, useDebugUrl);
         }
 
+        /// <summary>
+        /// Starts the JSON tool server -- the connector / MCP surface -- and, when there is a main window, the
+        /// legacy BinaryFormatter <see cref="ToolService"/> alongside it. The two are independent: the JSON server
+        /// needs nothing from the legacy one, so it can run BEFORE the main window exists (while the StartPage is
+        /// showing), which is what lets the MCP introspect and drive the StartPage.
+        ///
+        /// <para>The legacy service, by contrast, is inseparable from the main window -- it pushes that window's
+        /// document-change notifications -- so it starts if and only if the window is there to subscribe to. That
+        /// is no restriction in practice: the only thing that needs it is an external tool with a
+        /// $(SkylineConnection) argument (see ToolDescriptionRunUI), which is run from the main window.</para>
+        /// </summary>
         public static void StartToolService()
         {
-            if (MainToolService == null)
+            if (MainJsonToolServer == null)
+            {
+                MainJsonToolServer = new JsonToolServer(MainToolServiceName);
+                MainJsonToolServer.Start();
+            }
+            if (MainWindow != null && MainToolService == null)
             {
                 MainToolService = new ToolService(MainToolServiceName, MainWindow);
-                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
                 MainToolService.RunAsync();
-
-                MainJsonToolServer = new JsonToolServer(MainToolService, MainToolServiceName);
-                MainJsonToolServer.Start();
+                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
             }
         }
 
         public static void StopToolService()
         {
+            if (MainJsonToolServer != null)
+            {
+                MainJsonToolServer.Dispose();
+                MainJsonToolServer = null;
+            }
             if (MainToolService != null)
             {
-                if (MainJsonToolServer != null)
-                {
-                    MainJsonToolServer.Dispose();
-                    MainJsonToolServer = null;
-                }
-
-                MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                if (MainWindow != null)
+                    MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
                 MainToolService.Stop();
                 MainToolService = null;
             }
@@ -860,6 +881,9 @@ namespace pwiz.Skyline
 
         public static SkylineWindow MainWindow { get; private set; }
         public static StartPage StartWindow { get; private set; }
+
+        // The UI-thread marshaling primitives (UiThreadWindow, InvokeOnUiThread, BeginInvokeOnUiThread) moved
+        // to pwiz.Skyline.ToolsUI.JsonUiService, which now owns the connector's UI-thread machinery.
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
         

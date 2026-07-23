@@ -161,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
+    <Compile Include="AlertWatchTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddIrtStandardsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
@@ -328,6 +329,11 @@
     <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
+    <Compile Include="NativeFileDialogTest.cs" />
+    <Compile Include="McpConnectorDisconnectTest.cs" />
+    <Compile Include="McpConnectorBackgroundDialogTest.cs" />
+    <Compile Include="McpConnectorFormThreadingTest.cs" />
+    <Compile Include="NativeMessageBoxTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
     <Compile Include="NormalizeToCalibrationCurveTest.cs" />
@@ -458,6 +464,23 @@
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
+    <Compile Include="ClickCheckedListMcpConnectorTest.cs" />
+    <Compile Include="ClickControlMcpConnectorTest.cs" />
+    <Compile Include="ClipboardMcpConnectorTest.cs" />
+    <Compile Include="ContextMenuMcpConnectorTest.cs" />
+    <Compile Include="GetControlsMcpConnectorTest.cs" />
+    <Compile Include="IonTypeMenuMcpConnectorTest.cs" />
+    <Compile Include="GridCellMcpConnectorTest.cs" />
+    <Compile Include="LazyMenuMcpConnectorTest.cs" />
+    <Compile Include="PerformActionMcpConnectorTest.cs" />
+    <Compile Include="PickChildrenMcpConnectorTest.cs" />
+    <Compile Include="PivotListViewMcpConnectorTest.cs" />
+    <Compile Include="PlainGridMcpConnectorTest.cs" />
+    <Compile Include="SetFormValueMcpConnectorTest.cs" />
+    <Compile Include="SetGridTextMcpConnectorTest.cs" />
+    <Compile Include="SetItemMcpConnectorTest.cs" />
+    <Compile Include="PrmMcpConnectorTest.cs" />
+    <Compile Include="RunCommandMcpConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerLegacyDlgTest.cs" />

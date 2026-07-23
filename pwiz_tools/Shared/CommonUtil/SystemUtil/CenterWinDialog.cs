@@ -2,7 +2,6 @@
 // Winforms-How can I make MessageBox appear centered on MainForm?
 
 using System;
-using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -27,31 +26,28 @@ namespace pwiz.Common.SystemUtil
 
         private void findDialog()
         {
-            // Enumerate windows to find the message box
+            // Enumerate this thread's windows to find the message box (a #32770 dialog) and center it.
             if (mTries < 0) return;
-            User32.EnumThreadWindowsProc callback = checkWindow;
-            if (User32.EnumThreadWindows(Kernel32.GetCurrentThreadId(), callback, IntPtr.Zero))
+            bool found = false;
+            foreach (var hWnd in User32.EnumThreadWindows((uint) Kernel32.GetCurrentThreadId()))
             {
-                if (++mTries < 10) mOwner.BeginInvoke(new MethodInvoker(findDialog));
+                if (User32.GetClassName(hWnd) != @"#32770")
+                    continue;
+                // Got it: center the dialog on the owner form.
+                Rectangle frmRect = new Rectangle(mOwner.Location, mOwner.Size);
+                var dlgRect = new User32.RECT();
+                User32.GetWindowRect(hWnd, ref dlgRect);
+                User32.MoveWindow(hWnd,
+                    frmRect.Left + (frmRect.Width - dlgRect.right + dlgRect.left) / 2,
+                    frmRect.Top + (frmRect.Height - dlgRect.bottom + dlgRect.top) / 2,
+                    dlgRect.right - dlgRect.left,
+                    dlgRect.bottom - dlgRect.top, true);
+                found = true;
+                break;
             }
-        }
-        private bool checkWindow(IntPtr hWnd, IntPtr lp)
-        {
-            // Checks if <hWnd> is a dialog
-            StringBuilder sb = new StringBuilder(260);
-            User32.GetClassName(hWnd, sb, sb.Capacity);
-            if (sb.ToString() != @"#32770") return true;
-            // Got it
-            Rectangle frmRect = new Rectangle(mOwner.Location, mOwner.Size);
-
-            var dlgRect = new User32.RECT();
-            User32.GetWindowRect(hWnd, ref dlgRect);
-            User32.MoveWindow(hWnd,
-                frmRect.Left + (frmRect.Width - dlgRect.right + dlgRect.left) / 2,
-                frmRect.Top + (frmRect.Height - dlgRect.bottom + dlgRect.top) / 2,
-                dlgRect.right - dlgRect.left,
-                dlgRect.bottom - dlgRect.top, true);
-            return false;
+            // Not found yet (the box may not have appeared): try again a few times.
+            if (!found && ++mTries < 10)
+                mOwner.BeginInvoke(new MethodInvoker(findDialog));
         }
         public void Dispose()
         {
