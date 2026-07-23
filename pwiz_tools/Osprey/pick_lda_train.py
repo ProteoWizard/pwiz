@@ -48,7 +48,15 @@ def qvalues(scores, is_decoy):
     return out
 
 def train(a, platform, out_json, max_iter=10):
-    key = a[:, 0] * 10_000_000 + a[:, 1] * 2 + a[:, 2]   # (file,base_id,is_decoy) unique precursor id
+    # Dense per-(file, base_id) index so the packed precursor key cannot collide: base_id is a
+    # raw 31-bit library id (Id & 0x7FFFFFFF) that exceeds any fixed multiplier on large
+    # libraries, and file*10_000_000 + base_id*2 would then alias rows from different precursors.
+    # key = pair_index*2 + is_decoy keeps a target and its paired decoy adjacent so `key // 2`
+    # still recovers the (file, base_id) pair below. pair_index is the lexicographic rank of
+    # (file, base_id), so for non-colliding data this reproduces the old grouping exactly.
+    _, pair_index = np.unique(a[:, [0, 1]].astype(np.int64), axis=0, return_inverse=True)
+    pair_index = np.asarray(pair_index).reshape(-1)
+    key = pair_index.astype(np.int64) * 2 + a[:, 2].astype(np.int64)   # (file,base_id,is_decoy) unique precursor id
     feats = a[:, 3:7]
     is_dec = a[:, 2]
     # normalization: mean/std over ALL candidate rows (frozen into the model)

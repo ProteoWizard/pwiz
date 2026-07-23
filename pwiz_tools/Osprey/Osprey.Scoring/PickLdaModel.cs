@@ -23,6 +23,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using pwiz.Osprey.Core;
 
@@ -47,6 +48,13 @@ namespace pwiz.Osprey.Scoring
     internal sealed class PickLdaModel
     {
         private const int N = 4; // coelution, ln_intensity, rt_penalty, median_polish
+
+        // The fixed feature order Score() applies weights[i] to. A loaded model MUST declare its
+        // features in this exact order (see the JSON validation in LoadFromEnv) so a re-ordered or
+        // older-schema file cannot silently map weights to the wrong term. Matches pick_lda_train.py's
+        // FEATURES and the OSPREY_PICK_DUMP_CANDIDATES TSV columns.
+        private static readonly string[] ExpectedFeatures =
+            { @"coelution", @"ln_intensity", @"rt_penalty", @"median_polish" };
 
         private readonly double[] _weights;
         private readonly double[] _means;
@@ -136,6 +144,18 @@ namespace pwiz.Osprey.Scoring
                 throw new FormatException(string.Format(
                     @"OSPREY_PICK_LDA_MODEL: pick model JSON at '{0}' must define weights, means, " +
                     @"and scales as length-{1} arrays.", path, N));
+            }
+
+            // The weights are positional (Score applies weights[i] to the i-th raw term), so a file
+            // whose features are in a different order -- or absent -- would silently score the wrong
+            // term. Require the names and the exact expected order rather than trusting array position.
+            if (dto.Features == null || dto.Features.Length != N ||
+                !dto.Features.SequenceEqual(ExpectedFeatures))
+            {
+                throw new FormatException(string.Format(
+                    @"OSPREY_PICK_LDA_MODEL: pick model JSON at '{0}' must list features as [{1}] in " +
+                    @"that exact order; got [{2}].", path, string.Join(@", ", ExpectedFeatures),
+                    dto.Features == null ? @"<missing>" : string.Join(@", ", dto.Features)));
             }
 
             return new PickLdaModel(dto.Weights, dto.Means, dto.Scales);
