@@ -331,9 +331,10 @@ namespace pwiz.Osprey.Scoring
                 }
                 else
                 {
-                    // Legacy / standard pick (OSPREY_PICK_LEGACY): the pure product form, exactly
+                    // Default (product-form) pick: the pure product form, exactly
                     // coelution * rt_penalty * ln_intensity, with no median-polish factor. This is
-                    // the Rust cross-impl-parity / regression-golden pick.
+                    // the default (the learned model is opt-in via OSPREY_PICK_LDA) and the Rust
+                    // cross-impl-parity / regression-golden pick.
                     rankScore = coelutionScore * rtPenalty * intensityWeight;
                 }
 

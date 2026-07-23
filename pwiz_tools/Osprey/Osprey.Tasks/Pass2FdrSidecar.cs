@@ -655,10 +655,24 @@ namespace pwiz.Osprey.Tasks
                     // survivors; the resident full-feature reload below is skipped.
                     return null;
                 }
-                ctx.LogWarning(string.Format(
-                    "OSPREY_PASS2_QVALUE={0} could not run the frozen recompute (frozen model, " +
-                    "1st-pass scalars, or protein stratum absent); falling back to the 2nd-pass retrain.",
-                    OspreyEnvironment.Pass2QValue));
+                // Fail-fast: an explicitly requested frozen mode must NEVER silently degrade to the
+                // anti-conservative retrain. Absent inputs (the frozen 1st-pass model / protein
+                // stratum are not in this process -- a warm rerun that loaded cached scores and
+                // skipped 1st-pass training, or a distributed SecondPassFDR merge node that never
+                // trained pass 1) or a missing/corrupt 1st-pass sidecar mean the flag cannot be
+                // honored; abort with actionable guidance rather than reporting looser FDR than a
+                // cold straight-through run under the same flag. (protein-compact +
+                // OSPREY_PROTEIN_COMPACT_RETRAIN=1 retrains by design and never reaches here.)
+                throw new InvalidOperationException(string.Format(
+                    "OSPREY_PASS2_QVALUE={0} could not run the frozen recompute (the frozen 1st-pass " +
+                    "model, 1st-pass scalar sidecars, or protein stratum are absent -- e.g. a warm " +
+                    "rerun or a distributed merge node that did not train pass 1 in-process). Run the " +
+                    "frozen modes on the straight-through path, rerun without the score cache, or unset " +
+                    "OSPREY_PASS2_QVALUE for the default retrain{1}.",
+                    OspreyEnvironment.Pass2QValue,
+                    OspreyEnvironment.Pass2ProteinCompact
+                        ? ", or set OSPREY_PROTEIN_COMPACT_RETRAIN=1 to retrain over the stratum"
+                        : string.Empty));
             }
 
             // Reload PIN features from the reconciled parquets.
