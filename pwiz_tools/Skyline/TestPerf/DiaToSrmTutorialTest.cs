@@ -71,7 +71,7 @@ namespace TestPerf
             // multi-injection import of Step 1.9 wants, one subfolder per replicate -- so nothing has to be copied
             // into place at run time, and the files the webinar ships but the tutorial never reads (the PRTC .raw
             // runs -- PRTC.sky has no results) are left out.
-            TestFilesZip = @"https://proteome.gs.washington.edu/~nicksh/test/Webinar22_DIAtoSRM.zip";
+            TestFilesZip = @"https://skyline.ms/tutorials/Webinar22_DIAtoSRM.zip";
 
             // The gas-phase fractionated runs are huge (~36 GB of .mzML); extract them once to a shared persistent
             // location and reuse them in place across runs rather than re-extracting every run. (The .elib is
