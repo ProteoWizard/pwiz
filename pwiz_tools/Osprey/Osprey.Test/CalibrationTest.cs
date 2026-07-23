@@ -22,10 +22,13 @@
  */
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks;
 
@@ -470,7 +473,9 @@ namespace pwiz.Osprey.Test
                         AbsResiduals = new[] { 0.1, 0.2, 0.3, 0.4 }
                     },
                     P20AbsResidual = 0.15,
-                    MAD = 0.12
+                    MAD = 0.12,
+                    // Final RT search-window half-width persisted per issue #4364.
+                    RtSearchWindowHalfWidth = 1.5
                 }
             };
 
@@ -480,6 +485,7 @@ namespace pwiz.Osprey.Test
 
             Assert.IsTrue(json.Contains("\"ms1_calibration\""));
             Assert.IsTrue(json.Contains("-2.5"));
+            Assert.IsTrue(json.Contains("\"rt_search_window_halfwidth\""));
 
             // Deserialize back
             var loaded = Newtonsoft.Json.JsonConvert.DeserializeObject<CalibrationParams>(json);
@@ -488,6 +494,84 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(RTCalibrationMethod.LOESS, loaded.RtCalibration.Method);
             Assert.IsNotNull(loaded.RtCalibration.ModelParams);
             Assert.AreEqual(4, loaded.RtCalibration.ModelParams.LibraryRts.Length);
+            Assert.IsTrue(loaded.RtCalibration.RtSearchWindowHalfWidth.HasValue);
+            Assert.AreEqual(1.5, loaded.RtCalibration.RtSearchWindowHalfWidth.Value, TOLERANCE);
+        }
+
+        /// <summary>
+        /// The final RT search-window half-width is the single shared definition
+        /// <c>clamp(3 * MAD * 1.4826, [min, max])</c> used by the scoring path, the
+        /// persisted JSON, and the console summary (issue #4364). Verifies the clamp
+        /// and that FromRTCalibration only persists the field when the clamps are
+        /// supplied.
+        /// </summary>
+        [TestMethod]
+        public void TestRtSearchWindowHalfWidth()
+        {
+            // 3 * 1.4826 * MAD, unclamped when inside [min, max].
+            double mad = 0.30;
+            double expected = 3.0 * mad * 1.4826; // ~1.334
+            Assert.AreEqual(expected,
+                RTCalibration.SearchWindowHalfWidth(mad, 0.5, 3.0), TOLERANCE);
+
+            // Clamped up to the min floor for a tiny MAD.
+            Assert.AreEqual(0.5,
+                RTCalibration.SearchWindowHalfWidth(0.001, 0.5, 3.0), TOLERANCE);
+
+            // Clamped down to the max ceiling for a large MAD.
+            Assert.AreEqual(3.0,
+                RTCalibration.SearchWindowHalfWidth(5.0, 0.5, 3.0), TOLERANCE);
+
+            // Fit a small calibration and confirm FromRTCalibration persists the
+            // window only when the clamps are supplied.
+            double[] libraryRts = new double[50];
+            double[] measuredRts = new double[50];
+            for (int i = 0; i < 50; i++)
+            {
+                libraryRts[i] = i;
+                measuredRts[i] = 2.0 * i + 5.0;
+            }
+            var cal = new RTCalibrator(
+                new RTCalibratorConfig { Bandwidth = 0.3, OutlierRetention = 1.0 })
+                .Fit(libraryRts, measuredRts);
+
+            var withoutClamps = RTCalibrationJson.FromRTCalibration(cal);
+            Assert.IsFalse(withoutClamps.RtSearchWindowHalfWidth.HasValue);
+
+            var withClamps = RTCalibrationJson.FromRTCalibration(cal, 0.5, 3.0);
+            Assert.IsTrue(withClamps.RtSearchWindowHalfWidth.HasValue);
+            Assert.AreEqual(
+                RTCalibration.SearchWindowHalfWidth(cal.Stats().MAD, 0.5, 3.0),
+                withClamps.RtSearchWindowHalfWidth.Value, TOLERANCE);
+        }
+
+        /// <summary>
+        /// <see cref="RTCalibration.SearchWindowRaw"/> is the unclamped
+        /// <c>3 * MAD * 1.4826</c> the console summary reports as the computed
+        /// tolerance. Verifies the formula and the small / large / in-range MAD
+        /// cases that select the summary's floor / cap / in-range wording.
+        /// </summary>
+        [TestMethod]
+        public void TestSearchWindowRaw()
+        {
+            // Unclamped 3 * 1.4826 * MAD.
+            double mad = 0.30;
+            Assert.AreEqual(3.0 * mad * 1.4826,
+                RTCalibration.SearchWindowRaw(mad), TOLERANCE);
+            Assert.AreEqual(0.0, RTCalibration.SearchWindowRaw(0.0), TOLERANCE);
+
+            // The raw value vs the clamped SearchWindowHalfWidth selects which
+            // branch the summary reports: below the floor, above the ceiling, or
+            // in range (equal).
+            Assert.IsTrue(RTCalibration.SearchWindowRaw(0.001)
+                < RTCalibration.SearchWindowHalfWidth(0.001, 0.5, 3.0));
+            Assert.IsTrue(RTCalibration.SearchWindowRaw(5.0)
+                > RTCalibration.SearchWindowHalfWidth(5.0, 0.5, 3.0));
+            Assert.AreEqual(RTCalibration.SearchWindowRaw(0.30),
+                RTCalibration.SearchWindowHalfWidth(0.30, 0.5, 3.0), TOLERANCE);
+
+            // A NaN MAD propagates, so the summary treats it as undetermined.
+            Assert.IsTrue(double.IsNaN(RTCalibration.SearchWindowRaw(double.NaN)));
         }
 
         /// <summary>
@@ -553,6 +637,678 @@ namespace pwiz.Osprey.Test
                 "someone changed s_calXcorrScorer to a non-unit BinConfig. " +
                 "On .NET Framework this causes LOH allocation pressure from " +
                 "pre-preprocessing ~200K HRAM spectra for calibration.");
+        }
+
+        #endregion
+
+        #region Calibration retry ladder (issue #4401)
+
+        /// <summary>
+        /// The calibration retry ladder: how many sampling attempts run, how the
+        /// sample grows on a shortfall, and when a short attempt is accepted,
+        /// retried, or degraded to fallback tolerances.
+        ///
+        /// Guards issue #4401, where C# implemented only attempt 1 and any file whose
+        /// confident-peptide count landed in [50, MinCalibrationPoints) silently ran
+        /// with uncalibrated tolerances. The Stellar/Astral regression files never
+        /// enter that band, so only a test like this one exercises it.
+        /// Mirrors Rust pipeline.rs:709-714 and :1000-1048.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationRetryLadder()
+        {
+            const int minPoints = 200;      // RTCalibrationConfig.MinCalibrationPoints
+            const int minFitPoints = 15;    // MIN_LINEAR_FIT_POINTS
+            const int sampleSize = 100000;  // RTCalibrationConfig.CalibrationSampleSize
+            const double retry = 2.0;       // RTCalibrationConfig.CalibrationRetryFactor
+            const int seaAdTargets = 1580119; // SEA-AD Carafe library target count
+
+            // --- max_attempts derivation ---
+            // Sample is a strict subset and the factor grows it -> the full 3-rung ladder.
+            Assert.AreEqual(3, Calibrator.ComputeMaxAttempts(sampleSize, retry, seaAdTargets));
+            // Library smaller than the sample: attempt 1 already sees every target.
+            Assert.AreEqual(1, Calibrator.ComputeMaxAttempts(sampleSize, retry, 50000));
+            // sampleSize == 0 already means "use all".
+            Assert.AreEqual(1, Calibrator.ComputeMaxAttempts(0, retry, seaAdTargets));
+            // A factor that cannot grow the sample would rescore an identical set.
+            Assert.AreEqual(1, Calibrator.ComputeMaxAttempts(sampleSize, 1.0, seaAdTargets));
+
+            // --- attempt 1 short (the three SEA-AD files: 193 / 178 / 141) -> retry, doubled ---
+            foreach (int nConfident in new[] { 193, 178, 141 })
+            {
+                var d = Calibrator.DecideLadderAction(
+                    1, 3, false, nConfident, minPoints, sampleSize, retry, seaAdTargets);
+                Assert.AreEqual(Calibrator.CalibrationLadderAction.Retry, d.Action,
+                    string.Format("{0} confident peptides on attempt 1 must retry, not fall back", nConfident));
+                Assert.AreEqual(200000, d.NextSampleSize);
+            }
+
+            // --- attempt 2 still short -> the final attempt uses ALL targets (0) ---
+            var attempt2 = Calibrator.DecideLadderAction(
+                2, 3, false, 193, minPoints, 200000, retry, seaAdTargets);
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Retry, attempt2.Action);
+            Assert.AreEqual(0, attempt2.NextSampleSize, "final attempt must sample ALL targets");
+
+            // Growth clamps to ALL when the doubled sample would exceed the target count.
+            var clamped = Calibrator.DecideLadderAction(
+                1, 3, false, 193, minPoints, sampleSize, retry, 150000);
+            Assert.AreEqual(0, clamped.NextSampleSize);
+
+            // --- final attempt, at or above the absolute floor -> fit anyway ---
+            var banded = Calibrator.DecideLadderAction(
+                3, 3, true, 193, minPoints, 0, retry, seaAdTargets);
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Fit, banded.Action);
+            Assert.IsTrue(banded.BelowTarget);
+            Assert.AreEqual(193, banded.EffectiveMinPoints,
+                "effectiveMinPoints = min(nConfident, MinCalibrationPoints)");
+
+            // Exactly at the fit floor still fits; one below degrades. A fit on a few
+            // dozen confident peptides beats searching at the raw library RT, so the
+            // floor is MIN_LINEAR_FIT_POINTS, not the old 50-point absolute minimum.
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Fit, Calibrator.DecideLadderAction(
+                3, 3, true, minFitPoints, minPoints, 0, retry, seaAdTargets).Action);
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Fallback, Calibrator.DecideLadderAction(
+                3, 3, true, minFitPoints - 1, minPoints, 0, retry, seaAdTargets).Action);
+            // 50 points -- which used to be the hard floor -- now fits, linearly.
+            var fifty = Calibrator.DecideLadderAction(3, 3, true, 50, minPoints, 0, retry, seaAdTargets);
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Fit, fifty.Action);
+            Assert.IsTrue(fifty.BelowTarget);
+            Assert.IsTrue(Calibrator.SelectFitPlan(50, 0.3, minPoints).LinearFit);
+
+            // --- a healthy file fits on attempt 1 and is NOT flagged below target ---
+            var healthy = Calibrator.DecideLadderAction(
+                1, 3, false, 823, minPoints, sampleSize, retry, seaAdTargets);
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Fit, healthy.Action);
+            Assert.IsFalse(healthy.BelowTarget);
+            Assert.AreEqual(minPoints, healthy.EffectiveMinPoints,
+                "a clean file keeps MinPoints == MinCalibrationPoints, so its fit is unchanged");
+
+            // --- a one-rung ladder (small library) cannot retry: band fits, sub-floor degrades ---
+            var smallLib = Calibrator.DecideLadderAction(
+                1, 1, true, 193, minPoints, sampleSize, retry, 50000);
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Fit, smallLib.Action);
+            Assert.IsTrue(smallLib.BelowTarget);
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Fallback, Calibrator.DecideLadderAction(
+                1, 1, true, 10, minPoints, sampleSize, retry, 50000).Action);
+
+            // No confident peptides at all, with rungs left, still climbs the ladder.
+            Assert.AreEqual(Calibrator.CalibrationLadderAction.Retry, Calibrator.DecideLadderAction(
+                1, 3, false, 0, minPoints, sampleSize, retry, seaAdTargets).Action);
+        }
+
+        /// <summary>
+        /// The --verbose anchor-purity (entrapment-FDP) computation: among the target-side
+        /// anchors that clear a q threshold, count target vs FDRBench entrapment and compute
+        /// the ratio-corrected estimators (docs/fractional-entrapment.md). Decoys are excluded,
+        /// the ratio correction scales with r, and the empty gate is divide-by-zero safe.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationAnchorPurityFdp()
+        {
+            var matches = new List<CalibrationMatch>();
+            for (int i = 0; i < 8; i++) matches.Add(PurityMatch(false, false, 0.005)); // targets pass @1%
+            for (int i = 0; i < 2; i++) matches.Add(PurityMatch(false, true, 0.008));  // entrapment pass @1%
+            matches.Add(PurityMatch(false, false, 0.05)); // one more target, only clears >=5%
+            matches.Add(PurityMatch(false, true, 0.05));  // one more entrapment, only clears >=5%
+            for (int i = 0; i < 3; i++) matches.Add(PurityMatch(true, false, 0.001)); // decoys: low q but excluded
+            var arr = matches.ToArray();
+
+            // At q<=1%, r=1: 8 target + 2 entrapment; the 3 low-q decoys are excluded.
+            var at1 = Calibrator.ComputeAnchorPurity(arr, 0.01, 1.0);
+            Assert.AreEqual(8, at1.NTarget);
+            Assert.AreEqual(2, at1.NEntrapment);
+            Assert.AreEqual(10, at1.Total);
+            Assert.AreEqual(0.2, at1.RawFraction, TOLERANCE);
+            Assert.AreEqual(0.2, at1.FdpLower, TOLERANCE, "lower bound = N_E/(r*total), r=1");
+            Assert.AreEqual(0.4, at1.FdpCombined, TOLERANCE, "combined = (1+1/r)*N_E/total = 2x at r=1");
+
+            // Ratio correction at r=0.5: lower bound doubles, combined = 3x the raw fraction.
+            var atHalf = Calibrator.ComputeAnchorPurity(arr, 0.01, 0.5);
+            Assert.AreEqual(0.4, atHalf.FdpLower, TOLERANCE);
+            Assert.AreEqual(0.6, atHalf.FdpCombined, TOLERANCE);
+
+            // Loosening to q<=10% admits the extra target + entrapment pair.
+            var at10 = Calibrator.ComputeAnchorPurity(arr, 0.10, 1.0);
+            Assert.AreEqual(9, at10.NTarget);
+            Assert.AreEqual(3, at10.NEntrapment);
+            Assert.AreEqual(0.25, at10.RawFraction, TOLERANCE);
+
+            // A gate nothing clears is divide-by-zero safe.
+            var none = Calibrator.ComputeAnchorPurity(arr, 0.0001, 1.0);
+            Assert.AreEqual(0, none.Total);
+            Assert.AreEqual(0.0, none.FdpCombined, TOLERANCE);
+
+            // A pure target set reports 0% entrapment-FDP.
+            var pure = new[] { PurityMatch(false, false, 0.001), PurityMatch(false, false, 0.002) };
+            Assert.AreEqual(0.0, Calibrator.ComputeAnchorPurity(pure, 0.01, 1.0).FdpCombined, TOLERANCE);
+        }
+
+        private static CalibrationMatch PurityMatch(bool isDecoy, bool isEntrapment, double qValue)
+        {
+            return new CalibrationMatch { IsDecoy = isDecoy, IsEntrapment = isEntrapment, QValue = qValue };
+        }
+
+        /// <summary>
+        /// Cross-attempt match accumulation keeps the better match per library entry,
+        /// carrying that match's S/N and RTs with it, and resolves ties in favour of
+        /// the incumbent.
+        ///
+        /// The decisive detail: the winner is chosen on CorrelationScore -- the field
+        /// holding Rust's CalibrationMatch.score (batch.rs:2773 sets it to the
+        /// co-elution correlation sum, despite the doc comment at batch.rs:869 calling
+        /// it XCorr). It must NOT be DiscriminantScore, which LDA overwrites in place
+        /// between attempts.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationMatchAccumulation()
+        {
+            var accumulated = new Dictionary<uint, Calibrator.AccumulatedMatch>();
+
+            // Attempt 1.
+            Calibrator.MergeCalibrationMatches(accumulated,
+                Bag(Match(10, 1.0), Match(11, 5.0), Match(12, 3.0)),
+                Snr(10, 6.0, 11, 6.1, 12, 6.2),
+                Rts(10, 1.0, 1.1, 11, 2.0, 2.1, 12, 3.0, 3.1));
+
+            // LDA runs on the accumulated set between attempts and overwrites
+            // DiscriminantScore in place. Entry 11's discriminant becomes huge while
+            // its CorrelationScore stays 5.0.
+            accumulated[11].Match.DiscriminantScore = 999.0;
+
+            // Attempt 2: entry 10 improves, entry 11 is challenged by a match with a
+            // BETTER correlation but a lower (raw) discriminant, entry 12 ties, 13 is new.
+            Calibrator.MergeCalibrationMatches(accumulated,
+                Bag(Match(10, 2.0), Match(11, 7.0), Match(12, 3.0), Match(13, 4.0)),
+                Snr(10, 7.0, 11, 7.1, 12, 9.9, 13, 7.3),
+                Rts(10, 1.0, 1.2, 11, 2.0, 2.2, 12, 3.0, 9.9, 13, 4.0, 4.1));
+
+            Assert.AreEqual(4, accumulated.Count);
+
+            // Entry 10: higher correlation wins, and its S/N + measured RT travel with it.
+            Assert.AreEqual(2.0, accumulated[10].Match.CorrelationScore, TOLERANCE);
+            Assert.AreEqual(7.0, accumulated[10].Snr, TOLERANCE);
+            Assert.AreEqual(1.2, accumulated[10].MeasuredRt, TOLERANCE);
+
+            // Entry 11: correlation 7.0 > 5.0 wins, even though the incumbent's
+            // LDA-written DiscriminantScore (999.0) dwarfs the challenger's. Comparing
+            // DiscriminantScore here would wrongly keep the incumbent.
+            Assert.AreEqual(7.0, accumulated[11].Match.CorrelationScore, TOLERANCE);
+            Assert.AreEqual(7.1, accumulated[11].Snr, TOLERANCE);
+
+            // Entry 12: an exact tie keeps the incumbent (strict >), so its S/N and RT
+            // are attempt 1's, not the 9.9 sentinels from attempt 2.
+            Assert.AreEqual(6.2, accumulated[12].Snr, TOLERANCE);
+            Assert.AreEqual(3.1, accumulated[12].MeasuredRt, TOLERANCE);
+
+            // Entry 13: seen only on attempt 2.
+            Assert.AreEqual(4.0, accumulated[13].Match.CorrelationScore, TOLERANCE);
+        }
+
+        /// <summary>
+        /// The graduated fit tier: a full-bandwidth LOESS when there are enough
+        /// points, a progressively stiffer (wider-bandwidth) LOESS as the point set
+        /// thins, and a global linear fit once even that is over-flexible.
+        ///
+        /// The invariant that motivates it: a LOESS local window holds
+        /// <c>bandwidth * n</c> points, so a fixed bandwidth lets the window collapse
+        /// as n falls. The tier holds the window near the size the default config
+        /// yields at MinCalibrationPoints (0.3 * 200 = 60 points).
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationGraduatedFitPlan()
+        {
+            const double bw = 0.3;      // RTCalibrationConfig.LoessBandwidth
+            const int minPoints = 200;  // RTCalibrationConfig.MinCalibrationPoints
+
+            // At or above the target, nothing changes -- this is what keeps the
+            // Stellar/Astral goldens bit-identical.
+            foreach (int n in new[] { 200, 633, 729 })
+            {
+                var plan = Calibrator.SelectFitPlan(n, bw, minPoints);
+                Assert.IsFalse(plan.LinearFit);
+                Assert.AreEqual(bw, plan.Bandwidth, TOLERANCE,
+                    "a healthy point count must keep the configured bandwidth");
+            }
+
+            // In the band, bandwidth widens so the local window stays near 60 points.
+            foreach (int n in new[] { 199, 193, 150, 120, 100 })
+            {
+                var plan = Calibrator.SelectFitPlan(n, bw, minPoints);
+                Assert.IsFalse(plan.LinearFit, "n={0} must still use LOESS", n);
+                Assert.IsTrue(plan.Bandwidth >= bw, "bandwidth must never narrow");
+                Assert.IsTrue(plan.Bandwidth <= 1.0, "bandwidth must stay a valid fraction");
+                Assert.AreEqual(60.0, plan.Bandwidth * n, 1.0,
+                    "the local window should hold ~60 points regardless of n");
+            }
+
+            // 193 points -- the worst SEA-AD file before the retry ladder -- already
+            // gives 58-point windows at the default bandwidth, so the tier barely
+            // moves it. The stiffening is real only as n approaches the linear cutoff.
+            Assert.AreEqual(0.311, Calibrator.SelectFitPlan(193, bw, minPoints).Bandwidth, 0.001);
+            Assert.AreEqual(0.600, Calibrator.SelectFitPlan(100, bw, minPoints).Bandwidth, 0.001);
+
+            // Below the cutoff: a global line, whatever the bandwidth would have been.
+            foreach (int n in new[] { 99, 75, 50 })
+                Assert.IsTrue(Calibrator.SelectFitPlan(n, bw, minPoints).LinearFit,
+                    "n={0} must fall back to a linear fit", n);
+
+            // A degenerate config whose target sits below the linear cutoff must not
+            // produce a band: n >= minPoints still takes the unchanged LOESS path.
+            Assert.IsFalse(Calibrator.SelectFitPlan(60, bw, 50).LinearFit);
+            Assert.IsTrue(Calibrator.SelectFitPlan(40, bw, 50).LinearFit);
+
+            // The widened bandwidth is clamped to a valid fraction even when the
+            // target window exceeds the point count.
+            Assert.AreEqual(1.0, Calibrator.SelectFitPlan(120, 0.9, 200).Bandwidth, TOLERANCE);
+        }
+
+        /// <summary>
+        /// The linear tier fits a true global robust (Theil-Sen) line, recovers exact
+        /// slope/intercept on collinear input, reports itself as
+        /// <see cref="RTCalibrationMethod.Linear"/>, and -- unlike LOESS -- does not
+        /// bend toward a single outlier.
+        /// </summary>
+        [TestMethod]
+        public void TestLinearRtCalibrationFit()
+        {
+            // measured = 2 * library + 5, 60 points (inside the linear tier).
+            const int n = 60;
+            double[] libraryRts = new double[n];
+            double[] measuredRts = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                libraryRts[i] = i;
+                measuredRts[i] = 2.0 * i + 5.0;
+            }
+
+            var linear = new RTCalibrator(new RTCalibratorConfig
+            {
+                LinearFit = true,
+                MinPoints = n,
+                OutlierRetention = 1.0
+            }).Fit(libraryRts, measuredRts);
+
+            Assert.AreEqual(RTCalibrationMethod.Linear, linear.Method);
+            Assert.AreEqual(25.0, linear.Predict(10.0), 1e-9);
+            // Extrapolates along the line rather than flattening at the last knot.
+            Assert.AreEqual(2.0 * (n - 1) + 5.0, linear.Predict(n - 1), 1e-9);
+            Assert.AreEqual(1.0, linear.Stats().RSquared, 1e-9);
+            Assert.AreEqual(0.0, linear.Stats().ResidualSD, 1e-9);
+
+            // A single gross outlier perturbs the line only slightly (it is spread
+            // across all points), and the fit stays linear rather than tracking it.
+            measuredRts[n / 2] += 50.0;
+            var perturbed = new RTCalibrator(new RTCalibratorConfig
+            {
+                LinearFit = true,
+                MinPoints = n,
+                OutlierRetention = 1.0
+            }).Fit(libraryRts, measuredRts);
+            Assert.AreEqual(RTCalibrationMethod.Linear, perturbed.Method);
+            // The outlier's own point is NOT interpolated to its measured value.
+            int outlierIndex = n / 2;
+            Assert.IsTrue(
+                Math.Abs(perturbed.Predict(outlierIndex) - measuredRts[outlierIndex]) > 20.0,
+                "a linear fit must not chase a single outlier");
+
+            // Degenerate x (all library RTs identical) yields a horizontal line at
+            // mean(y) instead of dividing by zero.
+            double[] flatX = new double[n];
+            double[] y = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                flatX[i] = 7.0;
+                y[i] = i;
+            }
+            var flat = new RTCalibrator(new RTCalibratorConfig
+            {
+                LinearFit = true,
+                MinPoints = n,
+                OutlierRetention = 1.0
+            }).Fit(flatX, y);
+            Assert.AreEqual((n - 1) / 2.0, flat.Predict(7.0), 1e-9);
+        }
+
+        /// <summary>
+        /// Theil-Sen must recover the true slope despite outliers that would lever an
+        /// ordinary least-squares line -- the reason the linear tier can trust a few
+        /// dozen confident peptides even when one or two of them are false positives.
+        /// </summary>
+        [TestMethod]
+        public void TestLinearRtCalibrationIsRobustToOutliers()
+        {
+            const int n = 60;
+            double[] libraryRts = new double[n];
+            double[] measuredRts = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                libraryRts[i] = i;
+                measuredRts[i] = 2.0 * i + 5.0;
+            }
+
+            // Three false positives, including two at the high-leverage RT extremes,
+            // which is exactly where OLS is worst.
+            measuredRts[0] += 40.0;
+            measuredRts[n - 1] -= 40.0;
+            measuredRts[n / 3] += 25.0;
+
+            var cal = new RTCalibrator(new RTCalibratorConfig
+            {
+                LinearFit = true,
+                MinPoints = n,
+                OutlierRetention = 1.0
+            }).Fit(libraryRts, measuredRts);
+
+            // The median of pairwise slopes is untouched by 3 bad points in 60.
+            double slope = (cal.Predict(50.0) - cal.Predict(10.0)) / 40.0;
+            Assert.AreEqual(2.0, slope, 1e-9, "Theil-Sen must recover the true slope");
+            Assert.AreEqual(25.0, cal.Predict(10.0), 1e-9, "and the true intercept");
+        }
+
+        /// <summary>
+        /// The two guards on a thin linear fit: its points must span enough of the
+        /// library RT range to determine a slope, and the resulting line must agree
+        /// with the library/mzML range mapping. Otherwise a mis-centred window would
+        /// be worse than no calibration at all.
+        /// </summary>
+        [TestMethod]
+        public void TestLowPointCalibrationGuards()
+        {
+            // --- RT span ---
+            // Points covering the full library range identify a slope.
+            var spread = new List<double>();
+            for (int i = 0; i < 20; i++)
+                spread.Add(i * 5.0); // 0..95 over a 0..100 library range
+            Assert.IsTrue(Calibrator.HasSufficientRtSpan(spread, 0.0, 100.0));
+
+            // The same 20 confident peptides bunched into one region do not.
+            var bunched = new List<double>();
+            for (int i = 0; i < 20; i++)
+                bunched.Add(40.0 + i * 0.5); // 40..49.5
+            Assert.IsFalse(Calibrator.HasSufficientRtSpan(bunched, 0.0, 100.0),
+                "a tight cluster cannot determine a gradient, however confident");
+
+            // Degenerate library range.
+            Assert.IsFalse(Calibrator.HasSufficientRtSpan(spread, 5.0, 5.0));
+
+            // --- fitted-line plausibility, against a range slope of 1.0 ---
+            const double rangeSlope = 1.0;
+            Assert.IsTrue(Calibrator.IsPlausibleLinearFit(
+                LineCalibration(0.0, 100.0, 1.0, 0.0), rangeSlope, 0.0, 100.0));
+
+            // A slope 3x the range mapping is not credible from a thin fit.
+            Assert.IsFalse(Calibrator.IsPlausibleLinearFit(
+                LineCalibration(0.0, 100.0, 3.0, 0.0), rangeSlope, 0.0, 100.0));
+            // Nor is one 3x flatter.
+            Assert.IsFalse(Calibrator.IsPlausibleLinearFit(
+                LineCalibration(0.0, 100.0, 1.0 / 3.0, 0.0), rangeSlope, 0.0, 100.0));
+            // A negative gradient does not preserve RT ordering.
+            Assert.IsFalse(Calibrator.IsPlausibleLinearFit(
+                LineCalibration(0.0, 100.0, -1.0, 100.0), rangeSlope, 0.0, 100.0));
+            // A plausible slope that predicts RTs outside the acquisition window.
+            Assert.IsFalse(Calibrator.IsPlausibleLinearFit(
+                LineCalibration(0.0, 100.0, 1.0, 60.0), rangeSlope, 0.0, 100.0));
+            // Exactly at the 2x ratio bound is still accepted.
+            Assert.IsTrue(Calibrator.IsPlausibleLinearFit(
+                LineCalibration(0.0, 50.0, 2.0, 0.0), rangeSlope, 0.0, 100.0));
+        }
+
+        /// <summary>
+        /// The RT-tolerance floor widens as the calibration thins, so a MAD that came
+        /// out small by luck cannot buy a window the fit does not support. It reduces
+        /// exactly to the configured floor at MinCalibrationPoints, which is what keeps
+        /// a healthy calibration bit-identical.
+        /// </summary>
+        [TestMethod]
+        public void TestEffectiveMinRtTolerance()
+        {
+            const double minTol = 0.5;
+            const double maxTol = 3.0;
+            const int minCal = 200;
+
+            // At or above the target the floor is untouched.
+            foreach (int n in new[] { 200, 729, 5000 })
+                Assert.AreEqual(minTol,
+                    RTCalibration.EffectiveMinRtTolerance(n, minTol, maxTol, minCal), TOLERANCE);
+
+            // Below it, the floor grows like sqrt(minCal / n).
+            Assert.AreEqual(0.5 * Math.Sqrt(2.0),
+                RTCalibration.EffectiveMinRtTolerance(100, minTol, maxTol, minCal), 1e-9);
+            Assert.AreEqual(1.0,
+                RTCalibration.EffectiveMinRtTolerance(50, minTol, maxTol, minCal), 1e-9);
+            Assert.AreEqual(0.5 * Math.Sqrt(8.0),
+                RTCalibration.EffectiveMinRtTolerance(25, minTol, maxTol, minCal), 1e-9);
+
+            // Monotone: fewer points never buys a tighter floor.
+            double prev = 0.0;
+            for (int n = 199; n >= 15; n -= 1)
+            {
+                double tol = RTCalibration.EffectiveMinRtTolerance(n, minTol, maxTol, minCal);
+                Assert.IsTrue(tol >= prev - 1e-12, "floor must not narrow as n falls");
+                prev = tol;
+            }
+
+            // Never exceeds the configured maximum, even at absurdly small n.
+            Assert.AreEqual(maxTol,
+                RTCalibration.EffectiveMinRtTolerance(1, minTol, maxTol, minCal), TOLERANCE);
+            // A degenerate n is treated as "unknown", not "infinitely uncertain".
+            Assert.AreEqual(minTol,
+                RTCalibration.EffectiveMinRtTolerance(0, minTol, maxTol, minCal), TOLERANCE);
+        }
+
+        /// <summary>
+        /// The predict-only range mapping used when calibration fails: it reproduces
+        /// the line exactly (including outside the library RT range), is the identity
+        /// when the two RT scales agree -- so the search behaves exactly as before --
+        /// and refuses a degenerate range.
+        /// </summary>
+        [TestMethod]
+        public void TestFromLinearMapping()
+        {
+            // A seconds-to-minutes library, the case the identity fallback gets wrong.
+            var cal = RTCalibration.FromLinearMapping(0.0, 6000.0, 1.0 / 60.0, 0.0);
+            Assert.AreEqual(RTCalibrationMethod.Linear, cal.Method);
+            Assert.AreEqual(50.0, cal.Predict(3000.0), 1e-9);
+            Assert.AreEqual(0.0, cal.Predict(0.0), 1e-9);
+            Assert.AreEqual(100.0, cal.Predict(6000.0), 1e-9);
+            // Extrapolates along the line rather than flattening at the end knots.
+            Assert.AreEqual(200.0, cal.Predict(12000.0), 1e-9);
+
+            // Matching scales -> identity -> the search behaves exactly as before.
+            var identity = RTCalibration.FromLinearMapping(0.0, 100.0, 1.0, 0.0);
+            foreach (double rt in new[] { 0.0, 12.5, 60.0, 100.0 })
+                Assert.AreEqual(rt, identity.Predict(rt), 1e-9);
+
+            // A degenerate library RT range yields no mapping.
+            Assert.IsNull(RTCalibration.FromLinearMapping(5.0, 5.0, 1.0, 0.0));
+            Assert.IsNull(RTCalibration.FromLinearMapping(5.0, 1.0, 1.0, 0.0));
+
+            // Non-finite bounds are rejected rather than producing a degenerate map,
+            // matching Rust's is_finite() guard in RTCalibration::from_linear_mapping.
+            // The infinite cases are the ones a bare `libMaxRt > libMinRt` test would
+            // wrongly ACCEPT (+Inf > 0 is true), so they are what pin this guard.
+            Assert.IsNull(RTCalibration.FromLinearMapping(0.0, double.PositiveInfinity, 1.0, 0.0));
+            Assert.IsNull(RTCalibration.FromLinearMapping(double.NegativeInfinity, 100.0, 1.0, 0.0));
+            // NaN already fell out of the old comparison (every NaN compare is false), so
+            // these two do not distinguish it. They guard the other plausible regression:
+            // simplifying to a bare `libMaxRt <= libMinRt`, which NaN would slip past.
+            Assert.IsNull(RTCalibration.FromLinearMapping(double.NaN, 100.0, 1.0, 0.0));
+            Assert.IsNull(RTCalibration.FromLinearMapping(0.0, double.NaN, 1.0, 0.0));
+        }
+
+        /// <summary>
+        /// A pass-2 LOESS refit is judged on R^2 alone, but a pass-2 LINEAR refit must
+        /// clear the span and plausibility guards too -- otherwise a line fitted to
+        /// points clustered in a narrow RT window (where R^2 ~ 1) could displace a
+        /// perfectly good pass-1 LOESS calibration.
+        /// </summary>
+        [TestMethod]
+        public void TestRefinedLinearFitMustClearPass1Guards()
+        {
+            var spread = new List<double>();
+            for (int i = 0; i < 20; i++)
+                spread.Add(i * 5.0); // 0..95 of a 0..100 library range
+            var bunched = new List<double>();
+            for (int i = 0; i < 20; i++)
+                bunched.Add(40.0 + i * 0.5); // 40..49.5
+
+            // A LOESS refit is always acceptable here: R^2 alone decides it, even when
+            // the points are bunched.
+            double[] x = spread.ToArray();
+            double[] y = new double[x.Length];
+            for (int i = 0; i < x.Length; i++)
+                y[i] = x[i] + 1.0;
+            var loess = new RTCalibrator(new RTCalibratorConfig
+            {
+                Bandwidth = 0.3,
+                MinPoints = x.Length,
+                OutlierRetention = 1.0
+            }).Fit(x, y);
+            Assert.AreEqual(RTCalibrationMethod.LOESS, loess.Method);
+            Assert.IsTrue(Calibrator.IsRefinedFitAcceptable(
+                loess, bunched, 0.0, 100.0, 1.0, 0.0, 100.0));
+
+            // A linear refit spanning the gradient and agreeing with the range mapping.
+            var good = LineCalibration(0.0, 100.0, 1.0, 0.0);
+            Assert.IsTrue(Calibrator.IsRefinedFitAcceptable(
+                good, spread, 0.0, 100.0, 1.0, 0.0, 100.0));
+
+            // Same line, but its points are bunched into one RT region: reject.
+            Assert.IsFalse(Calibrator.IsRefinedFitAcceptable(
+                good, bunched, 0.0, 100.0, 1.0, 0.0, 100.0),
+                "a line from a narrow RT span must not replace a pass-1 LOESS fit");
+
+            // Well-spread points, but the line disagrees with the range mapping: reject.
+            var steep = LineCalibration(0.0, 100.0, 3.0, 0.0);
+            Assert.IsFalse(Calibrator.IsRefinedFitAcceptable(
+                steep, spread, 0.0, 100.0, 1.0, 0.0, 100.0));
+        }
+
+        /// <summary>Build a linear RTCalibration spanning [xMin, xMax] with the given line.</summary>
+        private static RTCalibration LineCalibration(
+            double xMin, double xMax, double slope, double intercept)
+        {
+            const int n = 20;
+            double[] x = new double[n];
+            double[] y = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                x[i] = xMin + (xMax - xMin) * i / (n - 1);
+                y[i] = intercept + slope * x[i];
+            }
+            return new RTCalibrator(new RTCalibratorConfig
+            {
+                LinearFit = true,
+                MinPoints = n,
+                OutlierRetention = 1.0
+            }).Fit(x, y);
+        }
+
+        private static CalibrationMatch Match(uint entryId, double correlationScore)
+        {
+            return new CalibrationMatch
+            {
+                EntryId = entryId,
+                CorrelationScore = correlationScore,
+                // ScoreResolvedCalibrationEntry seeds DiscriminantScore from the correlation
+                // sum; LDA later replaces it.
+                DiscriminantScore = correlationScore,
+                QValue = 1.0,
+            };
+        }
+
+        private static ConcurrentBag<CalibrationMatch> Bag(params CalibrationMatch[] matches)
+        {
+            return new ConcurrentBag<CalibrationMatch>(matches);
+        }
+
+        /// <summary>Flat (entryId, snr) pairs.</summary>
+        private static ConcurrentDictionary<uint, double> Snr(params double[] pairs)
+        {
+            var map = new ConcurrentDictionary<uint, double>();
+            for (int i = 0; i < pairs.Length; i += 2)
+                map[(uint)pairs[i]] = pairs[i + 1];
+            return map;
+        }
+
+        /// <summary>Flat (entryId, libRt, measuredRt) triples.</summary>
+        private static ConcurrentDictionary<uint, KeyValuePair<double, double>> Rts(params double[] triples)
+        {
+            var map = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
+            for (int i = 0; i < triples.Length; i += 3)
+                map[(uint)triples[i]] = new KeyValuePair<double, double>(triples[i + 1], triples[i + 2]);
+            return map;
+        }
+
+        #endregion
+
+        #region Streaming calibration window resolution
+
+        /// <summary>
+        /// Verifies the streaming-calibration window resolver
+        /// (<see cref="Calibrator.TryResolveCalibrationWindow"/>) reproduces the resident
+        /// window resolution's four branches: a direct key hit with the Contains collision
+        /// guard, the neighbour +/-1 keys (taken WITHOUT a Contains check), the linear scan
+        /// for the first containing window, and no-match. This is the permanent verifier for
+        /// the fallback sub-paths a standard tiled-DIA golden file may never exercise -- the
+        /// only place streaming calibration could silently diverge from the resident path.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingCalibrationWindowResolution()
+        {
+            // Three windows, added out of key order so the file-order linear scan is exercised:
+            //   C narrow at key 7000, A wide at key 5000, B wide at key 6000.
+            var ms2 = new List<Spectrum>
+            {
+                MakeCalWindowMs2(700.00, 0.02, 0.02), // C: Contains [699.98, 700.02), key 7000
+                MakeCalWindowMs2(500.00, 0.50, 0.50), // A: Contains [499.50, 500.50), key 5000
+                MakeCalWindowMs2(600.00, 2.00, 2.00), // B: Contains [598.00, 602.00), key 6000
+            };
+            string path = Path.GetTempFileName();
+            try
+            {
+                SpectraCache.SaveSpectraCache(path, ms2, new List<MS1Spectrum>());
+                var index = SpectraWindowIndex.BuildFromCache(path);
+                Assert.IsNotNull(index);
+
+                int key;
+                // 1. Direct hit + Contains -> the entry's own window key.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(500.00, index, out key));
+                Assert.AreEqual(5000, key);
+                // 2. Direct hit + NOT Contains: round(699.96*10)=7000 hits C, but 699.96 is
+                //    below C's [699.98, 700.02) -> the collision guard returns false (no fallthrough).
+                Assert.IsFalse(Calibrator.TryResolveCalibrationWindow(699.96, index, out key));
+                // 3. Neighbour -1: round(500.12*10)=5001 absent, 5000 present -> 5000 (no Contains check).
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(500.12, index, out key));
+                Assert.AreEqual(5000, key);
+                // 4. Neighbour +1: round(599.92*10)=5999 absent, 5998 absent, 6000 present -> 6000.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(599.92, index, out key));
+                Assert.AreEqual(6000, key);
+                // 5. Linear scan: round(598.50*10)=5985, +/-1 absent, but 598.50 is in B [598, 602) -> 6000.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(598.50, index, out key));
+                Assert.AreEqual(6000, key);
+                // 6. No window contains 800.0 -> false.
+                Assert.IsFalse(Calibrator.TryResolveCalibrationWindow(800.00, index, out key));
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        // A minimal MS2 with a specific isolation window (center +/- offsets) and two peaks,
+        // for the window-resolution test.
+        private static Spectrum MakeCalWindowMs2(double center, double lowerOffset, double upperOffset)
+        {
+            return new Spectrum
+            {
+                ScanNumber = (uint)(center * 10),
+                RetentionTime = 10.0,
+                PrecursorMz = center,
+                IsolationWindow = new IsolationWindow(center, lowerOffset, upperOffset),
+                Mzs = new[] { 150.0, 250.0 },
+                Intensities = new[] { 100f, 200f }
+            };
         }
 
         #endregion

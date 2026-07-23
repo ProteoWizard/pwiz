@@ -95,9 +95,92 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// True when a dotMemory session is attached and ready to accept an
+        /// API-triggered snapshot -- i.e. the binary was launched under
+        /// <c>dotMemory start --use-api</c> (Profile-Osprey.ps1 -MemoryProfile).
+        /// The dotMemory analogue of <see cref="MeasureReady"/>: false, a caught
+        /// no-op, on ordinary and headless-batch runs where nothing is attached,
+        /// so the retention capture never fires outside a deliberate profiling run.
+        /// </summary>
+        public static bool SnapshotReady
+        {
+            get
+            {
+                try { return SnapshotReadyInternal(); }
+                catch { return false; }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static bool SnapshotReadyInternal()
+        {
+            return 0 != (JetBrains.Profiler.Api.MemoryProfiler.GetFeatures()
+                         & JetBrains.Profiler.Api.MemoryFeatures.Ready);
+        }
+
+        /// <summary>
+        /// Capture a named dotMemory retention snapshot, but ONLY when a dotMemory
+        /// session is attached (<see cref="SnapshotReady"/>). This is the "who holds
+        /// it" companion to the forced-GC <c>[MEM ...] managed_heap</c> probe: call it
+        /// at the same post-GC boundary and the snapshot's live set is the same
+        /// category of number as the logged floor (dotMemory forces its own full GC
+        /// before a snapshot), so the retention paths / dominators reconcile with the
+        /// number just logged. A no-op when no profiler is attached -- the printf
+        /// [MEM ...] layer and the real 82-file batch run are unaffected. Isolated in a
+        /// non-inlineable method so a missing JetBrains assembly is caught here rather
+        /// than tripping JIT of the caller (same shape as the MeasureProfiler wrappers).
+        ///
+        /// This guards ONLY on <see cref="SnapshotReady"/> (profiler attached), NOT on
+        /// <see cref="MemoryLoggingEnabled"/>: that is what keeps it safe on normal runs
+        /// (nothing is attached there). Callers that want the snapshot to line up with a
+        /// <c>[MEM ...]</c> line must themselves gate on <see cref="MemoryLoggingEnabled"/>
+        /// and call at a post-GC point. The sole caller,
+        /// <see cref="LogManagedHeapAfterGcIfEnabled"/>, does both -- and its own
+        /// <c>GC.Collect()</c> pair (not dotMemory's implicit pre-snapshot GC) is what
+        /// makes the captured live set reconcile with the logged floor.
+        /// </summary>
+        public static void CaptureRetentionSnapshot(string name)
+        {
+            if (!SnapshotReady)
+                return;
+            try { CaptureRetentionSnapshotInternal(name); }
+            catch { /* profiler detached mid-run or API not available */ }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void CaptureRetentionSnapshotInternal(string name)
+        {
+            JetBrains.Profiler.Api.MemoryProfiler.GetSnapshot(name);
+        }
+
+        /// <summary>
         /// Log peak working set and managed heap size to the given
         /// writer. Cheap to call; suitable for per-stage and end-of-run
         /// snapshots.
+        ///
+        /// NONE OF THESE NUMBERS IS A LIVE SET. Read them with the caveats below,
+        /// or use <see cref="LogManagedHeapAfterGcIfEnabled"/>, which forces a
+        /// collection first and is the only probe here that answers "will this fit".
+        ///
+        /// <c>managed_heap</c> is <c>GC.GetTotalMemory(false)</c>: bytes allocated
+        /// since the last collection, WITHOUT forcing one. It therefore includes
+        /// uncollected garbage, and two runs doing identical work can differ by tens
+        /// of GB purely on whether a gen-2 happened to land before the probe.
+        ///
+        /// <c>working_set</c> is resident memory, but Server GC expands heaps until it
+        /// nears the high-memory-load threshold (~90% of physical) before collecting,
+        /// so on a large box the working set reflects available RAM at least as much
+        /// as demand. Peak working set is close to useless for sizing.
+        ///
+        /// The net8.0 <c>GCMemoryInfo</c> triple is measured AS OF THE LAST GC,
+        /// not now -- <c>GC.GetGCMemoryInfo()</c> with no argument returns the most
+        /// recent collection's snapshot. Hence the <c>_last_gc</c> suffixes. Do NOT
+        /// subtract them from the live figures above: <c>working_set - gc_committed</c>
+        /// mixes a current value with a stale one and can go negative (it did, by
+        /// 10 GB, on an 82-file run).
+        ///   gc_committed_last_gc  - bytes the GC had committed from the OS.
+        ///   gc_heap_last_gc       - heap size, including fragmentation.
+        ///   gc_fragmented_last_gc - free bytes stranded between live objects.
         /// </summary>
         public static void LogMemoryStats(Action<string> log, string label)
         {
@@ -109,17 +192,76 @@ namespace pwiz.Osprey.Tasks
             long curWs = proc.WorkingSet64;
             long managed = GC.GetTotalMemory(false);
 
+            const double gb = 1024.0 * 1024.0 * 1024.0;
+            string gcDetail = string.Empty;
+#if NETCOREAPP || NET5_0_OR_GREATER
+            var gcInfo = GC.GetGCMemoryInfo();
+            gcDetail = string.Format(CultureInfo.InvariantCulture,
+                ", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
+                gcInfo.TotalCommittedBytes / gb,
+                gcInfo.HeapSizeBytes / gb,
+                gcInfo.FragmentedBytes / gb);
+#endif
+
             log(string.Format(CultureInfo.InvariantCulture,
-                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}",
+                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}{7}",
                 label,
-                curWs / (1024.0 * 1024.0 * 1024.0),
-                peakWs / (1024.0 * 1024.0 * 1024.0),
-                managed / (1024.0 * 1024.0 * 1024.0),
-                peakPaged / (1024.0 * 1024.0 * 1024.0),
+                curWs / gb,
+                peakWs / gb,
+                managed / gb,
+                peakPaged / gb,
                 GC.CollectionCount(2),
                 // Large Object Heap collection count is same as gen-2 in
                 // standard GC; report it explicitly to document intent.
-                GC.CollectionCount(2)));
+                GC.CollectionCount(2),
+                gcDetail));
+        }
+
+        /// <summary>
+        /// True when the OSPREY_LOG_MEMORY environment variable is set (any non-empty
+        /// value). Gates the per-stage [MEM ...] snapshots so ordinary runs stay quiet;
+        /// set it for a memory-profiling run (issue #4355).
+        /// </summary>
+        public static readonly bool MemoryLoggingEnabled =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY"));
+
+        /// <summary>
+        /// <see cref="LogMemoryStats"/> guarded by <see cref="MemoryLoggingEnabled"/> so
+        /// stage-boundary probes can stay in the pipeline at zero cost when disabled.
+        /// </summary>
+        public static void LogMemoryStatsIfEnabled(Action<string> log, string label)
+        {
+            if (MemoryLoggingEnabled)
+                LogMemoryStats(log, label);
+        }
+
+        /// <summary>
+        /// Force a full blocking collection, then log the resulting PERSISTENT managed
+        /// heap size -- the post-GC floor with transient garbage reclaimed -- as a
+        /// <c>[MEM {label}]</c> line. Guarded by <see cref="MemoryLoggingEnabled"/> so it
+        /// is a zero-cost no-op INCLUDING the collection on ordinary runs.
+        /// <paramref name="detail"/> is appended verbatim for run context (e.g.
+        /// <c>"(files=82, file_parallelism=1)"</c>).
+        ///
+        /// When a dotMemory session is also attached (Profile-Osprey.ps1
+        /// -MemoryProfile), this additionally captures a retention snapshot named
+        /// <paramref name="label"/> at this same post-GC boundary via
+        /// <see cref="CaptureRetentionSnapshot"/>, so the "who holds this live set"
+        /// view reconciles with the <c>managed_heap</c> number just logged. That
+        /// capture is a no-op when no profiler is attached, so the batch path is
+        /// unchanged.
+        /// </summary>
+        public static void LogManagedHeapAfterGcIfEnabled(Action<string> log, string label, string detail)
+        {
+            if (!MemoryLoggingEnabled || log == null)
+                return;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            log(string.Format(CultureInfo.InvariantCulture,
+                "[MEM {0}] managed_heap={1:F2} GB {2}",
+                label, GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
+            CaptureRetentionSnapshot(label);
         }
     }
 }

@@ -98,6 +98,16 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public List<string> JoinFileStems { get; set; }
 
+        /// <summary>
+        /// Join-wide set of base_ids that survived first-pass compaction, read
+        /// from the <c>reconciliation.json</c> envelope's <c>first_pass_base_ids</c>
+        /// (v3 required field) that FirstJoin wrote with every file in memory.
+        /// <see cref="RescoreCompaction"/> compacts to exactly this set so an HPC
+        /// per-file worker keeps the same cross-file entries the in-memory
+        /// straight-through pipeline keeps.
+        /// </summary>
+        public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
+
         /// <summary>Total non-Keep reconciliation actions across all files.</summary>
         public int TotalActions => ReconciliationActions.Count;
 
@@ -233,6 +243,11 @@ namespace pwiz.Osprey.Tasks
             // worker's join-wide reconciliation hash matches the planner's.
             // Mirrors the consistency check in Rust hydrate_for_rescore.
             List<string> joinFileStems = null;
+            // Join-wide passing base_id set from the reconciliation.json envelope
+            // (v3 required field, identical in every file's envelope). Populated
+            // from the first envelope in the loop below; RescoreCompaction compacts
+            // to exactly this set so a per-file worker matches the in-memory run.
+            HashSet<uint> globalBaseIds = null;
 
             for (int i = 0; i < perFileEntries.Count; i++)
             {
@@ -267,9 +282,31 @@ namespace pwiz.Osprey.Tasks
                         reconPath, ex.Message), ex);
                 }
 
+                // Capture the join-wide passing base_id set from the envelope
+                // (v3 required field; identical in every file's envelope by
+                // construction). Validate that every sibling envelope agrees:
+                // a mismatch means the on-disk envelopes were produced by
+                // different planner steps (corrupted hand-off), and silently
+                // taking the first file's set would compact its siblings against
+                // the wrong base_ids. Mirrors the file_stems consistency check
+                // below.
+                var envelopeBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds);
+                if (globalBaseIds == null)
+                {
+                    globalBaseIds = envelopeBaseIds;
+                }
+                else if (!globalBaseIds.SetEquals(envelopeBaseIds))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "HydrateReconciliationOverlay: reconciliation.json {0} carries a " +
+                        "different first_pass_base_ids set than its siblings (planner " +
+                        "inconsistency): {1} vs {2} base_ids.",
+                        reconPath, globalBaseIds.Count, envelopeBaseIds.Count));
+                }
+
                 // Capture / validate file_stems across all envelopes.
                 // ReconciliationFile.Load already rejects any envelope whose
-                // format_version != CurrentFormatVersion (currently 2), so by
+                // format_version != CurrentFormatVersion (currently 3), so by
                 // the time we reach here `envelope.FileStems` must be the
                 // planner's full join file set -- a non-empty list, identical
                 // across every envelope produced by a single planner step.
@@ -367,6 +404,7 @@ namespace pwiz.Osprey.Tasks
                 PerFileGapFill = perFileGapFill,
                 PerFileConsensusTargets = null,
                 JoinFileStems = joinFileStems ?? new List<string>(),
+                GlobalFirstPassBaseIds = globalBaseIds,
             };
         }
 
@@ -387,7 +425,7 @@ namespace pwiz.Osprey.Tasks
                 if (!string.IsNullOrEmpty(s))
                     result.Add(s);
             }
-            result.Sort(StringComparer.Ordinal);
+            result.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to dedup adjacent identical stems immediately below; equal keys are byte-identical so tie order is irrelevant
             for (int i = result.Count - 1; i > 0; i--)
             {
                 if (string.Equals(result[i], result[i - 1], StringComparison.Ordinal))

@@ -107,6 +107,32 @@ namespace pwiz.Osprey.IO
         public bool IsEmpty { get { return _seqToInfo.Count == 0; } }
 
         /// <summary>
+        /// Enumerate the manifest's per-sequence classification (sequence -&gt;
+        /// target / decoy / p_target / p_decoy). Read-only view used by the
+        /// model-diagnostics report to classify each precursor by its
+        /// modified sequence; pairing/library-rewrite consumers use
+        /// <see cref="ApplyToLibrary"/> instead.
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, PeptideKind>> Kinds()
+        {
+            foreach (var kv in _seqToInfo)
+                yield return new KeyValuePair<string, PeptideKind>(kv.Key, kv.Value.Kind);
+        }
+
+        /// <summary>
+        /// Enumerate the manifest's per-sequence <c>peptide_pair_index</c>
+        /// (sequence -&gt; pair index). Within a pair index the target and its
+        /// entrapment (p_target) share the value, which the model-diagnostics
+        /// paired-FDP estimator uses to compare an entrapment hit against its
+        /// paired target's score.
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, uint>> PairIndices()
+        {
+            foreach (var kv in _seqToInfo)
+                yield return new KeyValuePair<string, uint>(kv.Key, kv.Value.PairIndex);
+        }
+
+        /// <summary>
         /// Parse a FDRBench-style pairing manifest from disk. Expected
         /// header (tab-separated, in any column order, but the three
         /// required columns must all be present):
@@ -235,7 +261,8 @@ namespace pwiz.Osprey.IO
         /// manifest's <c>peptide_type</c> column is taken as the source
         /// of truth.
         /// </summary>
-        public ManifestApplyStats ApplyToLibrary(IList<LibraryEntry> library, PairingState state)
+        public ManifestApplyStats ApplyToLibrary(IList<LibraryEntry> library, PairingState state,
+            Action<string> logInfo = null)
         {
             var stats = new ManifestApplyStats();
             if (library == null || library.Count == 0 || state == null)
@@ -309,11 +336,30 @@ namespace pwiz.Osprey.IO
 
             // Replace library ProteinIds with the manifest's clean
             // accessions for every sequence the manifest covers and
-            // whose stored ProteinIds disagree.
+            // whose stored ProteinIds disagree. The manifest overrides
+            // nearly every entry of a library-decoy run (one source
+            // protein maps to many peptides), so materialize each
+            // replacement through a shared interner into a read-only
+            // array: a fresh List per entry would discard the loader's
+            // string interning for almost the whole resident library.
+            // Interning is identity-only, so output stays byte-identical.
             stats.NProteinsReplaced = proteinOverride.Count;
-            foreach (var kv in proteinOverride)
+            if (proteinOverride.Count > 0)
             {
-                library[kv.Key].ProteinIds = new List<string>(kv.Value);
+                var interner = new LibraryStringInterner();
+                foreach (var kv in proteinOverride)
+                    library[kv.Key].ProteinIds = interner.InternToArray(kv.Value);
+                if (logInfo != null)
+                {
+                    long total = interner.TotalReferences;
+                    double pct = total > 0
+                        ? 100.0 * (total - interner.DistinctCount) / total
+                        : 0.0;
+                    logInfo(string.Format(
+                        @"Library-decoy mode: interned manifest protein accessions " +
+                        @"({0} distinct / {1} total, {2:F1}% collapsed)",
+                        interner.DistinctCount, total, pct));
+                }
             }
 
             // Walk every target-side bucket; pair with the matching
@@ -325,7 +371,7 @@ namespace pwiz.Osprey.IO
                 if (k.IsTargetSide)
                     targetKeys.Add(k);
             }
-            targetKeys.Sort(BucketKeyOrderComparer.Instance);
+            targetKeys.Sort(BucketKeyOrderComparer.Instance); // Array.Sort OK: targetKeys are distinct bucket dictionary keys, so the comparer never ties
             foreach (var tKey in targetKeys)
             {
                 var dKey = new BucketKey(tKey.PairIndex, tKey.Partition,
@@ -335,14 +381,16 @@ namespace pwiz.Osprey.IO
                 var tIndices = buckets[tKey];
                 var tSorted = new List<int>(tIndices);
                 var dSorted = new List<int>(dIndices);
-                tSorted.Sort((a, b) =>
+                // Array.Sort OK (both sorts): the secondary key is the unique library entry Id,
+                // so the comparator never returns 0 and the unstable-sort tie path is unreachable.
+                tSorted.Sort((a, b) => // Array.Sort OK: (see above) secondary key is unique library entry Id, comparator never ties
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
                     if (c != 0)
                         return c;
                     return library[a].Id.CompareTo(library[b].Id);
                 });
-                dSorted.Sort((a, b) =>
+                dSorted.Sort((a, b) => // Array.Sort OK: (see above) secondary key is unique library entry Id, comparator never ties
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
                     if (c != 0)
@@ -402,7 +450,7 @@ namespace pwiz.Osprey.IO
         // Cheap ordinal equality on two protein-ID lists. Used to decide
         // whether the manifest's clean accessions would actually change
         // the library entry (skip the rewrite when they match).
-        private static bool ProteinListsEqual(IList<string> a, IList<string> b)
+        private static bool ProteinListsEqual(IReadOnlyList<string> a, IReadOnlyList<string> b)
         {
             if (a == null)
                 return b == null || b.Count == 0;

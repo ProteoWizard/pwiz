@@ -28,7 +28,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -1188,8 +1187,7 @@ namespace pwiz.Skyline
                 {
                     e.Cancel = true;
                     Program.NoSaveSettings = true;  // let the user close the window without errors next time
-                    var x = Settings.Default.SaveException;
-                    throw new TargetInvocationException(x.Message, x);
+                    ExceptionUtil.WrapAndThrowException(Settings.Default.SaveException);
                 }
             }
 

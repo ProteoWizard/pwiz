@@ -25,7 +25,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -927,7 +926,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // SQLiteExceptions are not considered programming defects and should be shown to the user
                 // as an ordinary error message
-                if (x is SQLiteException || x is TargetInvocationException && x.InnerException is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
+                if (x is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
                 {
                     var message = string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath);
                     // This will show the user the error message after which the operation can be treated as canceled.

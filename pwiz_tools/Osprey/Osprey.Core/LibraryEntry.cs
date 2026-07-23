@@ -45,14 +45,14 @@ namespace pwiz.Osprey.Core
         public uint Id { get; set; }
         public string Sequence { get; set; }
         public string ModifiedSequence { get; set; }
-        public List<Modification> Modifications { get; set; }
+        public IReadOnlyList<Modification> Modifications { get; set; }
         public byte Charge { get; set; }
         public double PrecursorMz { get; set; }
         public double RetentionTime { get; set; }
         public bool RtCalibrated { get; set; }
-        public List<LibraryFragment> Fragments { get; set; }
-        public List<string> ProteinIds { get; set; }
-        public List<string> GeneNames { get; set; }
+        public IReadOnlyList<LibraryFragment> Fragments { get; set; }
+        public IReadOnlyList<string> ProteinIds { get; set; }
+        public IReadOnlyList<string> GeneNames { get; set; }
         public bool IsDecoy { get; set; }
 
         public LibraryEntry(uint id, string sequence, string modifiedSequence,
@@ -64,10 +64,20 @@ namespace pwiz.Osprey.Core
             Charge = charge;
             PrecursorMz = precursorMz;
             RetentionTime = retentionTime;
-            Modifications = new List<Modification>();
-            Fragments = new List<LibraryFragment>();
-            ProteinIds = new List<string>();
-            GeneNames = new List<string>();
+            // Default to shared empty arrays. The four collection members are
+            // immutable containers (IReadOnlyList) that every producer -- the
+            // loaders, DecoyGenerator, tests -- fully REASSIGNS (an interned
+            // array, or a build-then-assign list); nothing mutates a member
+            // after assignment. Array.Empty caches one zero-length instance per
+            // element type, so the millions of entries with no modifications /
+            // proteins / genes (a 3.1M-entry HeLa library has ~2.2M unmodified
+            // peptides) share it instead of each owning a fresh empty list
+            // header + backing array. Values are unchanged, so the regression
+            // golden stays byte-identical.
+            Modifications = Array.Empty<Modification>();
+            Fragments = Array.Empty<LibraryFragment>();
+            ProteinIds = Array.Empty<string>();
+            GeneNames = Array.Empty<string>();
         }
 
         /// <summary>

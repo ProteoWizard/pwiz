@@ -41,7 +41,7 @@ namespace pwiz.Osprey.Test
         /// Build must: keep a well-formed 21-feature vector by reference, fall back
         /// to the basic vector when Features is null OR the wrong length, count
         /// targets / decoys and with- / without-feature entries correctly, preserve
-        /// input order, and compose the 4-component PSM id.
+        /// input order, and map the FdrEntry fields onto each PercolatorEntry.
         /// </summary>
         [TestMethod]
         public void TestBuildFeatureFallbackAndCounts()
@@ -76,7 +76,7 @@ namespace pwiz.Osprey.Test
             };
 
             var result = PercolatorEntryBuilder.Build(
-                perFileEntries, nFeat,
+                perFileEntries, nFeat, streamFeatures: false,
                 out int nWithFeatures, out int nWithoutFeatures,
                 out int nInputTargets, out int nInputDecoys);
 
@@ -99,14 +99,68 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(nFeat, result[2].Features.Length);
             Assert.AreEqual(2.0, result[2].Features[0]);
 
-            // Field mapping + 4-component PSM id (file_modseq_charge_scan).
-            Assert.AreEqual("fileA_PEPTIDEK_2_100", result[0].Id);
+            // Field mapping onto the flat PercolatorEntry. No psm_id string is
+            // built any more (issue #4355 step (b)); the score write-back zips
+            // results onto the stubs by position instead of re-joining by key.
             Assert.AreEqual("fileA", result[0].FileName);
             Assert.AreEqual("PEPTIDEK", result[0].Peptide);
             Assert.AreEqual(2, result[0].Charge);
             Assert.AreEqual(10u, result[0].EntryId);
             Assert.IsFalse(result[0].IsDecoy);
             Assert.IsTrue(result[1].IsDecoy);
+        }
+
+        /// <summary>
+        /// Streaming mode (issue #4355 Phase 4): Build must leave Features null on
+        /// every stub (the score pass reloads them per file from parquet), carry
+        /// ParquetIndex + CoelutionSum onto each PercolatorEntry, and count entries
+        /// with a resolvable parquet row (ParquetIndex != uint.MaxValue) as
+        /// "with features".
+        /// </summary>
+        [TestMethod]
+        public void TestBuildStreamingLeavesFeaturesNull()
+        {
+            int nFeat = ScoringTaskShared.NUM_PIN_FEATURES;
+
+            var full = new double[nFeat];
+            full[0] = 42.0;
+            var resolvable = new FdrEntry
+            {
+                EntryId = 10, ModifiedSequence = "PEPTIDEK", Charge = 2, ScanNumber = 100,
+                IsDecoy = false, CoelutionSum = 7.0, ParquetIndex = 5, Features = full
+            };
+            // Appended entry (e.g. Stage 6 gap-fill): no original parquet row.
+            var appended = new FdrEntry
+            {
+                EntryId = 11, ModifiedSequence = "DECOYR", Charge = 3, ScanNumber = 200,
+                IsDecoy = true, CoelutionSum = 4.0, ParquetIndex = uint.MaxValue, Features = null
+            };
+
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(
+                    "fileA", new List<FdrEntry> { resolvable, appended })
+            };
+
+            var result = PercolatorEntryBuilder.Build(
+                perFileEntries, nFeat, streamFeatures: true,
+                out int nWithFeatures, out int nWithoutFeatures,
+                out int nInputTargets, out int nInputDecoys);
+
+            Assert.AreEqual(2, result.Count);
+            // Features are never resident on the streaming stubs.
+            Assert.IsNull(result[0].Features);
+            Assert.IsNull(result[1].Features);
+            // ParquetIndex + CoelutionSum carried for per-file reload / ranking.
+            Assert.AreEqual(5u, result[0].ParquetIndex);
+            Assert.AreEqual(7.0, result[0].CoelutionSum);
+            Assert.AreEqual(uint.MaxValue, result[1].ParquetIndex);
+            Assert.AreEqual(4.0, result[1].CoelutionSum);
+            // Resolvable row counts as "with features"; the appended one does not.
+            Assert.AreEqual(1, nWithFeatures);
+            Assert.AreEqual(1, nWithoutFeatures);
+            Assert.AreEqual(1, nInputTargets);
+            Assert.AreEqual(1, nInputDecoys);
         }
     }
 }

@@ -24,6 +24,8 @@
 using System.Collections.Generic;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
@@ -60,6 +62,51 @@ namespace pwiz.Osprey.Tasks
     {
         public IReadOnlyDictionary<string, RTCalibration> Value { get; }
         public PerFileCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
+    }
+
+    /// <summary>
+    /// Per-file CAL-view calibration diagnostics for the <c>--model-diagnostics</c>
+    /// HTML report, captured during Stage 3 calibration and keyed by file name in
+    /// input order (parallels <see cref="PerFileCalibrations"/>). Empty on a normal
+    /// run and on the rehydrate / resume / HPC-worker paths, where the per-file
+    /// calibration MATCHES are not available (only the small calibration.json is
+    /// reloaded), so the rows cannot be reconstructed -- FirstJoinTask reads this
+    /// only under <c>config.ModelDiagnostics</c> and tolerates an empty map.
+    ///
+    /// <see cref="MassUnit"/> is the per-run mass-error unit ("ppm" or "Th") the CAL
+    /// view labels its MS1/MS2 axes with. It is captured alongside the rows because
+    /// <see cref="ModelDiagnosticsData.CalFileRow"/> deliberately does not carry it (it
+    /// is a per-run scalar on <see cref="ModelDiagnosticsData.CalibrationData"/>, and
+    /// the resolution mode that fixes it is resolved per-file at scoring time, not
+    /// derivable from config at the join). Null until the first calibrated file records
+    /// it; defaults to "ppm" downstream.
+    /// </summary>
+    internal sealed class PerFileCalibrationDiagnostics
+    {
+        public IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> Value { get; }
+        public string MassUnit { get; }
+        public PerFileCalibrationDiagnostics(
+            IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> value, string massUnit)
+        {
+            Value = value;
+            MassUnit = massUnit;
+        }
+    }
+
+    /// <summary>
+    /// Per-file isolation-window m/z intervals (half-open <c>[Lo, Hi)</c>) from
+    /// Stages 2-4 -- the gap-fill m/z filter's per-file coverage map. Straight
+    /// through, each file's list is built from its extracted isolation windows
+    /// (<c>center +/- width/2</c>); on an HPC merge node (no mzML) it is
+    /// rehydrated from the <c>isolation_scheme</c> block in calibration.json.
+    /// Always published non-null (empty when no scheme is available), so the
+    /// byproduct exists for every run. Parallels <see cref="PerFileCalibrations"/>
+    /// and is keyed by the same bare file stem.
+    /// </summary>
+    internal sealed class PerFileIsolationMz
+    {
+        public IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> Value { get; }
+        public PerFileIsolationMz(IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> value) { Value = value; }
     }
 
     /// <summary>Map of file name to its on-disk <c>.scores.parquet</c> path.</summary>
@@ -171,6 +218,20 @@ namespace pwiz.Osprey.Tasks
         public ScoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
     }
 
+    /// <summary>
+    /// The lean first-pass projection built straight from each file's .scores.parquet,
+    /// bypassing the fat <see cref="FdrEntry"/> stub buffer entirely (issue #4397:
+    /// rematerializing 191M stubs to convert them into 32 B rows cost ~53 GB).
+    /// <c>Value</c> is null when the run needs the resident stub pool instead
+    /// (--model-diagnostics / FDRBench pass 1) or on the rehydrate/merge paths, which
+    /// still publish fat stubs via <see cref="ScoredEntries"/>.
+    /// </summary>
+    internal sealed class FdrProjections
+    {
+        public FdrProjectionSet Value { get; }
+        public FdrProjections(FdrProjectionSet value) { Value = value; }
+    }
+
     /// <summary>The buffer after FirstJoin's first-pass FDR + compaction.</summary>
     internal sealed class CompactedEntries : PerFileEntries
     {
@@ -181,5 +242,19 @@ namespace pwiz.Osprey.Tasks
     internal sealed class RescoredEntries : PerFileEntries
     {
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+    }
+
+    /// <summary>
+    /// The FROZEN 1st-pass Percolator model (fold weights + biases + feature
+    /// standardizer, carried on <see cref="PercolatorResults"/>), captured at
+    /// first-pass FDR time. Published only under the OSPREY_PASS2_QVALUE=transfer
+    /// path so the merge-node 2nd-pass step can re-score reconciled features with
+    /// this frozen model (TRIC-style confidence transfer) instead of retraining a
+    /// decoy-depleted 2nd-pass SVM. Absent (never published) on the default
+    /// percolator path. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+    /// </summary>
+    internal sealed class FirstPassPercolatorModel
+    {
+        public PercolatorResults Results { get; set; }
     }
 }

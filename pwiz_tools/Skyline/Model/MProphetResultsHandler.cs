@@ -49,6 +49,12 @@ namespace pwiz.Skyline.Model
 
         private const string Q_VALUE_ANNOTATION = "QValue"; // : for now, we are not localizing column headers
 
+        /// <summary>
+        /// Header for the replicate-name column in the exported mProphet feature file. Not localized (like the
+        /// other feature-file headers), and shared with the peak-boundary import side so the two cannot drift.
+        /// </summary>
+        public const string REPLICATE_NAME_COLUMN = "ReplicateName";
+
         public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; } }
 
         public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + @"Score"; } }
@@ -250,7 +256,23 @@ namespace pwiz.Skyline.Model
                 writer.Write(first ? @"main_var_{0}" : @"var_{0}", peakFeatureCalculator.HeaderName.Replace(@" ", @"_"));
                 first = false;
             }
+            // ReplicateName is intentionally the LAST column (after the variable-length feature columns)
+            // so that adding it does not shift the index of any existing column for position-based parsers.
+            WriteTrailingField(writer, REPLICATE_NAME_COLUMN, separator, first);
             writer.WriteLine();
+        }
+
+        /// <summary>
+        /// Writes the final <see cref="WriteHeaderRow"/>/<see cref="WriteRow"/> column, which follows the
+        /// variable-length feature columns. <paramref name="first"/> is true when no feature column was
+        /// written, in which case the trailing separator already emitted after the fixed columns serves as
+        /// the delimiter and no extra separator is added (avoids an empty column).
+        /// </summary>
+        private static void WriteTrailingField(TextWriter writer, string value, char separator, bool first)
+        {
+            if (!first)
+                writer.Write(separator);
+            writer.WriteDsvField(value, separator);
         }
 
         private void WriteTransitionGroup(TextWriter writer,
@@ -332,6 +354,9 @@ namespace pwiz.Skyline.Model
                 writer.WriteDsvField(ToFieldString(featureColumn, cultureInfo), separator);
                 first = false;
             }
+            // ReplicateName is the last column - see WriteHeaderRow. The replicate name comes straight from
+            // the document's ChromatogramSet, giving callers a vendor-independent key alongside FileName.
+            WriteTrailingField(writer, features.Id.ChromatogramSet.Name, separator, first);
             writer.WriteLine();
         }
 

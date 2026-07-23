@@ -38,90 +38,171 @@ namespace pwiz.Osprey.IO
         /// <summary>Magic bytes at the start of every cache file.</summary>
         private static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("OSPRLBR\0");
 
-        /// <summary>Current cache format version.</summary>
-        private const uint VERSION = 1;
+        /// <summary>
+        /// Current cache format version. v2 stamps the source library's
+        /// identity hash (<see cref="pwiz.Osprey.Core.SearchIdentity.LibraryIdentityHash"/>)
+        /// into the header immediately after the version, so a cache built from
+        /// a different build of the same library path is detected and rebuilt.
+        /// v1 had no identity and a different header layout, so it reads as
+        /// <see cref="LibraryCacheStatus.Invalid"/> and is rebuilt once.
+        /// </summary>
+        private const uint VERSION = 2;
 
         /// <summary>
-        /// Save library entries to a binary cache file.
+        /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
+        /// attempt.
         /// </summary>
-        public static void SaveCache(string path, List<LibraryEntry> entries)
+        public enum LibraryCacheStatus
         {
-            using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
-            using (var w = new BinaryWriter(stream))
+            /// <summary>Cache was valid and its entries were read.</summary>
+            Loaded,
+            /// <summary>
+            /// Cache was structurally valid but was built from a different
+            /// version of the source library (stored identity hash mismatch).
+            /// Its entries were NOT read, so the caller should rebuild.
+            /// </summary>
+            IdentityMismatch,
+            /// <summary>
+            /// Cache was unreadable: bad magic bytes or an unsupported version.
+            /// </summary>
+            Invalid
+        }
+
+        /// <summary>
+        /// Save library entries to a binary cache file, stamping the source
+        /// library's identity hash into the header.
+        /// </summary>
+        public static void SaveCache(string path, List<LibraryEntry> entries, string libraryHash)
+        {
+            using (var saver = new FileSaver(path))
             {
-                w.Write(MAGIC);
-                w.Write(VERSION);
-                w.Write((ulong)entries.Count);
-
-                foreach (var entry in entries)
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var w = new BinaryWriter(stream))
                 {
-                    w.Write(entry.Id);
-                    WriteString(w, entry.Sequence);
-                    WriteString(w, entry.ModifiedSequence);
-                    w.Write(entry.Charge);
-                    w.Write(entry.PrecursorMz);
-                    w.Write(entry.RetentionTime);
-                    w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
-                    w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
+                    w.Write(MAGIC);
+                    w.Write(VERSION);
+                    WriteString(w, libraryHash ?? string.Empty);
+                    w.Write((ulong)entries.Count);
 
-                    // Modifications
-                    w.Write((uint)entry.Modifications.Count);
-                    foreach (var m in entry.Modifications)
+                    foreach (var entry in entries)
                     {
-                        w.Write((uint)m.Position);
-                        if (m.UnimodId.HasValue)
+                        w.Write(entry.Id);
+                        WriteString(w, entry.Sequence);
+                        WriteString(w, entry.ModifiedSequence);
+                        w.Write(entry.Charge);
+                        w.Write(entry.PrecursorMz);
+                        w.Write(entry.RetentionTime);
+                        w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
+                        w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
+
+                        // Modifications
+                        w.Write((uint)entry.Modifications.Count);
+                        foreach (var m in entry.Modifications)
                         {
-                            w.Write((byte)1);
-                            w.Write((uint)m.UnimodId.Value);
+                            w.Write((uint)m.Position);
+                            if (m.UnimodId.HasValue)
+                            {
+                                w.Write((byte)1);
+                                w.Write((uint)m.UnimodId.Value);
+                            }
+                            else
+                            {
+                                w.Write((byte)0);
+                            }
+                            w.Write(m.MassDelta);
+                            if (m.Name != null)
+                            {
+                                w.Write((byte)1);
+                                WriteString(w, m.Name);
+                            }
+                            else
+                            {
+                                w.Write((byte)0);
+                            }
                         }
-                        else
+
+                        // Fragments
+                        w.Write((uint)entry.Fragments.Count);
+                        foreach (var frag in entry.Fragments)
                         {
-                            w.Write((byte)0);
+                            w.Write(frag.Mz);
+                            w.Write(frag.RelativeIntensity);
+                            w.Write(IonTypeToByte(frag.Annotation.IonType));
+                            w.Write(frag.Annotation.Ordinal);
+                            w.Write(frag.Annotation.Charge);
+                            WriteNeutralLoss(w, frag.Annotation.NeutralLoss, frag.Annotation.CustomLossMass);
                         }
-                        w.Write(m.MassDelta);
-                        if (m.Name != null)
-                        {
-                            w.Write((byte)1);
-                            WriteString(w, m.Name);
-                        }
-                        else
-                        {
-                            w.Write((byte)0);
-                        }
+
+                        // Protein IDs
+                        w.Write((uint)entry.ProteinIds.Count);
+                        foreach (string pid in entry.ProteinIds)
+                            WriteString(w, pid);
+
+                        // Gene names
+                        w.Write((uint)entry.GeneNames.Count);
+                        foreach (string gn in entry.GeneNames)
+                            WriteString(w, gn);
                     }
 
-                    // Fragments
-                    w.Write((uint)entry.Fragments.Count);
-                    foreach (var frag in entry.Fragments)
-                    {
-                        w.Write(frag.Mz);
-                        w.Write(frag.RelativeIntensity);
-                        w.Write(IonTypeToByte(frag.Annotation.IonType));
-                        w.Write(frag.Annotation.Ordinal);
-                        w.Write(frag.Annotation.Charge);
-                        WriteNeutralLoss(w, frag.Annotation.NeutralLoss);
-                    }
-
-                    // Protein IDs
-                    w.Write((uint)entry.ProteinIds.Count);
-                    foreach (string pid in entry.ProteinIds)
-                        WriteString(w, pid);
-
-                    // Gene names
-                    w.Write((uint)entry.GeneNames.Count);
-                    foreach (string gn in entry.GeneNames)
-                        WriteString(w, gn);
+                    w.Flush();
                 }
-
-                w.Flush();
+                saver.Commit();
             }
         }
 
         /// <summary>
-        /// Load library entries from a binary cache file.
+        /// Load library entries from a binary cache file, identity-agnostic.
         /// Returns null if the file is invalid or has an unsupported version.
+        /// Thin overload of <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
+        /// with no expected identity hash (used by round-trip tests and the
+        /// source-missing fallback, where the cache is the only copy available).
         /// </summary>
         public static List<LibraryEntry> LoadCache(string path)
+        {
+            return LoadCache(path, null, out _);
+        }
+
+        /// <summary>
+        /// Overload accepting a log callback so the string-interning summary
+        /// (emitted once per load) reaches the pipeline log. See the primary
+        /// <see cref="LoadCache(string,string,Action{string},out LibraryCacheStatus)"/>.
+        /// </summary>
+        public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
+            out LibraryCacheStatus status)
+        {
+            return LoadCache(path, expectedLibraryHash, null, out status);
+        }
+
+        /// <summary>
+        /// Load library entries from a binary cache file, validating the source
+        /// library's identity hash against <paramref name="expectedLibraryHash"/>.
+        /// On bad magic or an unsupported version, returns null with
+        /// <paramref name="status"/> = <see cref="LibraryCacheStatus.Invalid"/>.
+        /// When <paramref name="expectedLibraryHash"/> is non-empty and the
+        /// stored hash differs, returns null with
+        /// <see cref="LibraryCacheStatus.IdentityMismatch"/> WITHOUT reading the
+        /// entries (skips a multi-GB read on a stale cache). Otherwise reads the
+        /// entries and returns <see cref="LibraryCacheStatus.Loaded"/>.
+        /// </summary>
+        public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
+            Action<string> logInfo, out LibraryCacheStatus status)
+        {
+            return LoadCache(path, expectedLibraryHash, false, logInfo, out status);
+        }
+
+        /// <summary>
+        /// Overload that can leave each entry's fragment peaks unretained. With
+        /// <paramref name="omitFragments"/> the fragment blocks are still read
+        /// (to advance the stream past them) but discarded, so the returned
+        /// entries keep their six identity scalars and an empty
+        /// <see cref="LibraryEntry.Fragments"/>. Used by a FirstPassFDR /
+        /// <c>StopAfterStage5</c> worker, whose FDR stages read only the scalars,
+        /// to skip retaining the ~3.2 GB (SEA-AD scale) of fragment arrays. The
+        /// scalars, modifications, protein IDs and gene names are unchanged, so
+        /// the six values every downstream stage reads are byte-identical.
+        /// </summary>
+        public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
+            bool omitFragments, Action<string> logInfo, out LibraryCacheStatus status)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(stream))
@@ -129,29 +210,55 @@ namespace pwiz.Osprey.IO
                 // Validate magic
                 byte[] magic = r.ReadBytes(8);
                 if (magic.Length != 8 || !BytesEqual(magic, MAGIC))
+                {
+                    status = LibraryCacheStatus.Invalid;
                     return null;
+                }
 
                 uint version = r.ReadUInt32();
                 if (version != VERSION)
+                {
+                    status = LibraryCacheStatus.Invalid;
                     return null;
+                }
+
+                // Identity hash stamped at write time (v2). When the caller
+                // supplies a non-empty expected hash and it disagrees, the cache
+                // was built from a different version of the source library at
+                // this path -- treat it as stale and skip reading the entries.
+                string storedLibraryHash = ReadString(r);
+                if (!string.IsNullOrEmpty(expectedLibraryHash) &&
+                    !string.Equals(storedLibraryHash, expectedLibraryHash, StringComparison.Ordinal))
+                {
+                    status = LibraryCacheStatus.IdentityMismatch;
+                    return null;
+                }
 
                 ulong count = r.ReadUInt64();
                 var entries = new List<LibraryEntry>((int)count);
 
+                // Intern the repeated strings (sequences, modification names,
+                // protein / gene accessions) as the interned arrays are filled,
+                // so no member is mutated after assignment. One pool per load
+                // call; only object identity changes, so output is unchanged.
+                var interner = new LibraryStringInterner();
+
                 for (ulong idx = 0; idx < count; idx++)
                 {
                     uint id = r.ReadUInt32();
-                    string sequence = ReadString(r);
-                    string modifiedSequence = ReadString(r);
+                    string sequence = interner.Intern(ReadString(r));
+                    string modifiedSequence = interner.Intern(ReadString(r));
                     byte charge = r.ReadByte();
                     double precursorMz = r.ReadDouble();
                     double retentionTime = r.ReadDouble();
                     bool rtCalibrated = r.ReadByte() != 0;
                     bool isDecoy = r.ReadByte() != 0;
 
-                    // Modifications
+                    // Modifications (share one empty array when none).
                     uint nMods = r.ReadUInt32();
-                    var modifications = new List<Modification>((int)nMods);
+                    var modifications = nMods == 0
+                        ? Array.Empty<Modification>()
+                        : new Modification[nMods];
                     for (uint mi = 0; mi < nMods; mi++)
                     {
                         int position = (int)r.ReadUInt32();
@@ -159,54 +266,79 @@ namespace pwiz.Osprey.IO
                         int? unimodId = hasUnimod ? (int?)r.ReadUInt32() : null;
                         double massDelta = r.ReadDouble();
                         bool hasName = r.ReadByte() != 0;
-                        string name = hasName ? ReadString(r) : null;
+                        string name = hasName ? interner.Intern(ReadString(r)) : null;
 
-                        modifications.Add(new Modification
+                        modifications[mi] = new Modification
                         {
                             Position = position,
                             UnimodId = unimodId,
                             MassDelta = massDelta,
                             Name = name
-                        });
+                        };
                     }
 
-                    // Fragments
+                    // Fragments. When omitting, still read each fragment's bytes
+                    // (to advance the stream to the protein-ID block that follows)
+                    // but discard them, leaving a shared empty array.
                     uint nFrags = r.ReadUInt32();
-                    var fragments = new List<LibraryFragment>((int)nFrags);
-                    for (uint fi = 0; fi < nFrags; fi++)
+                    // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact,
+                    // not valid for DIA search; fail fast rather than let one reach decoy generation
+                    // or a lean OmitFragments load (issue #4355 / PR #4434 review). A stale cache
+                    // built before this guard rebuilds from source, which fails fast there too.
+                    if (nFrags == 0)
+                        throw new InvalidDataException(string.Format(
+                            "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
+                            "BiblioSpec MS1 feature finding and are not valid for DIA search.",
+                            id, modifiedSequence));
+                    LibraryFragment[] fragments;
+                    if (omitFragments)
                     {
-                        double mz = r.ReadDouble();
-                        float relativeIntensity = r.ReadSingle();
-                        IonType ionType = ByteToIonType(r.ReadByte());
-                        byte ordinal = r.ReadByte();
-                        byte fragCharge = r.ReadByte();
-                        NeutralLoss neutralLoss = ReadNeutralLoss(r);
-
-                        fragments.Add(new LibraryFragment
+                        fragments = Array.Empty<LibraryFragment>();
+                        for (uint fi = 0; fi < nFrags; fi++)
+                            SkipFragment(r);
+                    }
+                    else
+                    {
+                        fragments = new LibraryFragment[nFrags];   // nFrags > 0: 0-fragment entries fail fast above
+                        for (uint fi = 0; fi < nFrags; fi++)
                         {
-                            Mz = mz,
-                            RelativeIntensity = relativeIntensity,
-                            Annotation = new FragmentAnnotation
+                            double mz = r.ReadDouble();
+                            float relativeIntensity = r.ReadSingle();
+                            IonType ionType = ByteToIonType(r.ReadByte());
+                            byte ordinal = r.ReadByte();
+                            byte fragCharge = r.ReadByte();
+                            var (lossCode, lossMass) = ReadNeutralLoss(r);
+
+                            fragments[fi] = new LibraryFragment
                             {
-                                IonType = ionType,
-                                Ordinal = ordinal,
-                                Charge = fragCharge,
-                                NeutralLoss = neutralLoss
-                            }
-                        });
+                                Mz = mz,
+                                RelativeIntensity = relativeIntensity,
+                                Annotation = new FragmentAnnotation
+                                {
+                                    IonType = ionType,
+                                    Ordinal = ordinal,
+                                    Charge = fragCharge,
+                                    NeutralLoss = lossCode,
+                                    CustomLossMass = lossMass
+                                }
+                            };
+                        }
                     }
 
-                    // Protein IDs
+                    // Protein IDs / gene names (share one empty array when none).
                     uint nProteins = r.ReadUInt32();
-                    var proteinIds = new List<string>((int)nProteins);
+                    var proteinIds = nProteins == 0
+                        ? Array.Empty<string>()
+                        : new string[nProteins];
                     for (uint pi = 0; pi < nProteins; pi++)
-                        proteinIds.Add(ReadString(r));
+                        proteinIds[pi] = interner.Intern(ReadString(r));
 
-                    // Gene names
                     uint nGenes = r.ReadUInt32();
-                    var geneNames = new List<string>((int)nGenes);
+                    var geneNames = nGenes == 0
+                        ? Array.Empty<string>()
+                        : new string[nGenes];
                     for (uint gi = 0; gi < nGenes; gi++)
-                        geneNames.Add(ReadString(r));
+                        geneNames[gi] = interner.Intern(ReadString(r));
 
                     var entry = new LibraryEntry(id, sequence, modifiedSequence,
                         charge, precursorMz, retentionTime);
@@ -220,6 +352,8 @@ namespace pwiz.Osprey.IO
                     entries.Add(entry);
                 }
 
+                interner.LogSummary(logInfo);
+                status = LibraryCacheStatus.Loaded;
                 return entries;
             }
         }
@@ -274,50 +408,79 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private static void WriteNeutralLoss(BinaryWriter w, NeutralLoss nl)
+        private static void WriteNeutralLoss(BinaryWriter w, NeutralLossCode code, double customMass)
         {
-            if (nl == null)
+            switch (code)
             {
-                w.Write((byte)0);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.H2O) ||
-                     Math.Abs(nl.Mass - NeutralLoss.H2O.Mass) < 1e-6)
-            {
-                w.Write((byte)1);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.NH3) ||
-                     Math.Abs(nl.Mass - NeutralLoss.NH3.Mass) < 1e-6)
-            {
-                w.Write((byte)2);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.H3PO4) ||
-                     Math.Abs(nl.Mass - NeutralLoss.H3PO4.Mass) < 1e-6)
-            {
-                w.Write((byte)3);
-            }
-            else
-            {
-                w.Write((byte)4);
-                w.Write(nl.Mass);
+                case NeutralLossCode.None:
+                    w.Write((byte)0);
+                    break;
+                case NeutralLossCode.H2O:
+                    w.Write((byte)1);
+                    break;
+                case NeutralLossCode.NH3:
+                    w.Write((byte)2);
+                    break;
+                case NeutralLossCode.H3PO4:
+                    w.Write((byte)3);
+                    break;
+                default:
+                    // Custom -- collapse to a named tag when the mass matches one
+                    // within 1e-6, matching the legacy reference-type writer so the
+                    // on-disk bytes are unchanged.
+                    if (Math.Abs(customMass - NeutralLoss.H2OMass) < 1e-6)
+                    {
+                        w.Write((byte)1);
+                    }
+                    else if (Math.Abs(customMass - NeutralLoss.NH3Mass) < 1e-6)
+                    {
+                        w.Write((byte)2);
+                    }
+                    else if (Math.Abs(customMass - NeutralLoss.H3PO4Mass) < 1e-6)
+                    {
+                        w.Write((byte)3);
+                    }
+                    else
+                    {
+                        w.Write((byte)4);
+                        w.Write(customMass);
+                    }
+                    break;
             }
         }
 
-        private static NeutralLoss ReadNeutralLoss(BinaryReader r)
+        private static (NeutralLossCode Code, double CustomMass) ReadNeutralLoss(BinaryReader r)
         {
             byte tag = r.ReadByte();
             switch (tag)
             {
-                case 0: return null;
-                case 1: return NeutralLoss.H2O;
-                case 2: return NeutralLoss.NH3;
-                case 3: return NeutralLoss.H3PO4;
+                case 0: return (NeutralLossCode.None, 0.0);
+                case 1: return (NeutralLossCode.H2O, 0.0);
+                case 2: return (NeutralLossCode.NH3, 0.0);
+                case 3: return (NeutralLossCode.H3PO4, 0.0);
                 case 4:
                     double mass = r.ReadDouble();
-                    return NeutralLoss.Custom(mass);
+                    return (NeutralLossCode.Custom, mass);
                 default:
                     throw new InvalidDataException(string.Format(
                         "Unknown neutral loss tag: {0}", tag));
             }
+        }
+
+        /// <summary>
+        /// Read past one fragment record without materializing it, advancing the
+        /// reader exactly as the full fragment read would. Must stay in lockstep
+        /// with the fragment write in <see cref="SaveCache"/> / the full read in
+        /// <see cref="LoadCache(string,string,bool,Action{string},out LibraryCacheStatus)"/>.
+        /// </summary>
+        private static void SkipFragment(BinaryReader r)
+        {
+            r.ReadDouble();     // Mz
+            r.ReadSingle();     // RelativeIntensity
+            r.ReadByte();       // IonType
+            r.ReadByte();       // Ordinal
+            r.ReadByte();       // Charge
+            ReadNeutralLoss(r); // NeutralLoss tag (+ optional custom mass)
         }
 
         private static bool BytesEqual(byte[] a, byte[] b)

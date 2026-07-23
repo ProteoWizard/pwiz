@@ -60,11 +60,15 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// Run coelution scoring for all library entries across all isolation windows.
         /// For each window, finds candidate entries whose precursor falls in the window,
-        /// extracts fragment XICs, detects CWT peaks, and scores at each peak.
+        /// extracts fragment XICs, detects CWT peaks, and scores at each peak. Each
+        /// window's MS2 spectra come from <paramref name="spectraProvider"/> (resident
+        /// or streaming), already MS2-calibrated; <paramref name="ms2Calibration"/> is
+        /// still consulted here for the calibrated fragment tolerance (the provider
+        /// owns the per-spectrum m/z calibration).
         /// </summary>
         public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
-            List<Spectrum> spectra,
+            IWindowSpectraProvider spectraProvider,
             List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             RTCalibration rtCalibration,
@@ -86,61 +90,13 @@ namespace pwiz.Osprey.Scoring
             // never shrinks, so gen-2 keeps the arrays for the full run.
             context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
 
-            // Apply MS2 calibration to a LOCAL copy of the spectra
-            // list, mirroring Rust run_search at pipeline.rs:6750-6772
-            // which builds `calibrated_spectra` and then operates on
-            // it via `spectra_ref`. Do NOT mutate the input parameter
-            // -- the Stage 6 rescore loop calls RunCoelutionScoring
-            // multiple times per file (rescore + gap-fill CWT +
-            // gap-fill forced) sharing the same spectra list, and
-            // mutating in place applies the m/z offset cumulatively
-            // across calls (mz - mean -> mz - 2*mean -> mz - 3*mean),
-            // which produces wrong fragment matches in the second and
-            // third calls. Verified via per-entry XIC dump: scan 8
-            // for entry 10110 had Rust intensity = 0 (peak shifted
-            // out of tolerance after a single calibration) but C#
-            // intensity = 8873 (peak still in range because the
-            // accumulated calibration moved a different peak in).
-            List<Spectrum> calibratedSpectra;
-            if (ms2Calibration.Calibrated)
-            {
-                calibratedSpectra = new List<Spectrum>(spectra.Count);
-                for (int si = 0; si < spectra.Count; si++)
-                {
-                    var s = spectra[si];
-                    double[] correctedMzs = new double[s.Mzs.Length];
-                    for (int mi = 0; mi < s.Mzs.Length; mi++)
-                        correctedMzs[mi] = MzCalibration.ApplyCalibration(s.Mzs[mi], ms2Calibration);
-                    calibratedSpectra.Add(new Spectrum
-                    {
-                        ScanNumber = s.ScanNumber,
-                        RetentionTime = s.RetentionTime,
-                        PrecursorMz = s.PrecursorMz,
-                        IsolationWindow = s.IsolationWindow,
-                        Mzs = correctedMzs,
-                        Intensities = s.Intensities
-                    });
-                }
-            }
-            else
-            {
-                // No calibration -> alias the input list (no copy).
-                calibratedSpectra = spectra;
-            }
-
-            // Group spectra by isolation window center (rounded key) for efficient lookup
-            var spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
-            foreach (var spectrum in calibratedSpectra)
-            {
-                int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
-                List<Spectrum> list;
-                if (!spectraByWindowKey.TryGetValue(key, out list))
-                {
-                    list = new List<Spectrum>();
-                    spectraByWindowKey[key] = list;
-                }
-                list.Add(spectrum);
-            }
+            // MS2 calibration of each spectrum and the window grouping live in the
+            // IWindowSpectraProvider: StreamingWindowSpectraProvider loads one window's
+            // MS2 from the .spectra.bin index on demand and calibrates it in place, so
+            // only the windows being scored concurrently are resident -- both Stage 4
+            // and the Stage-6 rescore / gap-fill passes stream this way (the latter
+            // simply re-reads windows on each pass; there is no shared resident list to
+            // preserve, so nothing here mutates a caller's m/z).
 
             // Determine RT tolerance - global, matching Rust's run_search.
             // Rust computes one tolerance for ALL entries: 3 * MAD * 1.4826,
@@ -169,10 +125,17 @@ namespace pwiz.Osprey.Scoring
                 // best-peak picks per Stellar file.
                 double mad = context.OriginalRtMad ?? rtCalibration.Stats().MAD;
                 double robustSd = mad * 1.4826;
-                double rtToleranceMad = robustSd * 3.0;
-                rtToleranceGlobal = Math.Max(
-                    config.RtCalibration.MinRtTolerance,
-                    Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
+                // Shared definition of the final search-window half-width so the
+                // scoring path, the persisted calibration JSON, and the console
+                // calibration summary all report the same number (issue #4364).
+                // The floor widens for a calibration fitted from few points: a MAD
+                // measured from a thin set can be small by luck, and clamping it to
+                // the configured 0.5 min would pair a tight window with a fit that
+                // does not support one (issue #4401). No-op at n >= MinCalibrationPoints.
+                rtToleranceGlobal = RTCalibration.SearchWindowHalfWidth(
+                    mad, rtCalibration.Stats().NPoints,
+                    config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
+                    config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
                 if (OspreyOutput.Verbose) _logInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
@@ -206,10 +169,9 @@ namespace pwiz.Osprey.Scoring
                     "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
                     calTol, unitStr));
 
-                // Use calibrated tolerance for all downstream scoring.
-                // (Spectra were already calibrated above into the local
-                // calibratedSpectra list before spectraByWindowKey was
-                // built, so no rebuild is needed here.)
+                // Use calibrated tolerance for all downstream scoring. (The
+                // provider already applied the per-spectrum m/z calibration, so
+                // only this fragment-tolerance value is set here.)
                 config.FragmentTolerance = searchFragTol;
 
                 if (OspreyOutput.Verbose) _logInfo(string.Format(
@@ -273,9 +235,21 @@ namespace pwiz.Osprey.Scoring
                 {
                     var window = windowsToScore[wIdx];
                     var swWindow = Stopwatch.StartNew();
+                    // Source this window's calibrated MS2 spectra by the same key
+                    // the grouping has always used. On the streaming path this is
+                    // where the window's peaks are read from disk; they fall out of
+                    // scope (and are collected) when this Parallel.For body returns.
+                    int windowKey = (int)Math.Round(window.Center * 10.0);
+                    var windowSpectra = spectraProvider.GetCalibratedWindow(windowKey);
+                    // When calibration failed, centre the window on the library/mzML RT
+                    // range mapping instead of the raw library RT. The tolerance above
+                    // is still FallbackRtTolerance -- the map predicts, it does not
+                    // narrow (issue #4401). Identity, hence a no-op, when the two RT
+                    // scales already agree.
                     var windowEntries = coelutionScorer.ScoreWindow(
-                        window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                        rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
+                        window, fullLibrary, windowSpectra, ms1Spectra,
+                        rtCalibration ?? context.FallbackRtMap,
+                        ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
                         scorer, context);
                     swWindow.Stop();
 
@@ -323,7 +297,7 @@ namespace pwiz.Osprey.Scoring
         public List<FdrEntry> DeduplicateDoubleCounting(
             List<FdrEntry> entries,
             List<LibraryEntry> library,
-            IList<Spectrum> spectra,
+            IReadOnlyList<double> ms2Rts,
             MzCalibrationResult ms2Cal,
             List<IsolationWindow> isolationWindows,
             OspreyConfig config)
@@ -355,9 +329,9 @@ namespace pwiz.Osprey.Scoring
             // RT neighborhood = 5 x median spectrum spacing.
             double rtNeighborhood;
             {
-                var sortedRts = new List<double>(spectra.Count);
-                foreach (var s in spectra) sortedRts.Add(s.RetentionTime);
-                sortedRts.Sort();
+                var sortedRts = new List<double>(ms2Rts.Count);
+                foreach (var rt in ms2Rts) sortedRts.Add(rt);
+                sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
                 // Dedup adjacent identicals
                 int writeIdx = 0;
                 for (int i = 0; i < sortedRts.Count; i++)
@@ -377,7 +351,7 @@ namespace pwiz.Osprey.Scoring
                     var intervals = new List<double>(sortedRts.Count - 1);
                     for (int i = 1; i < sortedRts.Count; i++)
                         intervals.Add(sortedRts[i] - sortedRts[i - 1]);
-                    intervals.Sort();
+                    intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
                     rtNeighborhood = 5.0 * intervals[intervals.Count / 2];
                 }
             }
@@ -573,7 +547,9 @@ namespace pwiz.Osprey.Scoring
             // un-sorted order), so an unsorted dedup output cascades into
             // SVM working-set divergence and ~190-precursor / ~270-peptide
             // first-pass FDR drift on Stellar Single.
-            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+            // Array.Sort OK: entries are deduplicated by pair so each EntryId is unique;
+            // the comparator never returns 0 and the unstable-sort tie path is unreachable.
+            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId)); // Array.Sort OK: (see above) EntryId is unique per deduped entry, so the comparator never ties
 
             int removed = entries.Count - deduped.Count;
             if (removed > 0)

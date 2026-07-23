@@ -1,0 +1,96 @@
+@echo off
+SETLOCAL
+
+set BASE_NAME=%1
+set DATA_DIR=%2
+set MODEL_NAME=%3
+set FILTER_RES=%4
+set FILTER_TIME=%5
+set PROCESS_COUNT=%6
+set SKYLINE_FILE=%7
+set SKYLINE_FILE=%SKYLINE_FILE:"=%
+set EXTRA_ARGS=%8
+set EXTRA_ARGS=%EXTRA_ARGS:"=%
+
+set STARTTIME=%TIME%
+
+set ROOT_DIR=%ROOT_ANALYSIS_DIR%\%BASE_NAME%
+set SKYD_FILE="%ROOT_ANALYSIS_DIR%\%SKYLINE_FILE%d"
+
+echo [%STARTTIME%] Running trial %MODEL_NAME%...
+echo [%STARTTIME%] Running trial %MODEL_NAME%... >> %LOG%
+
+rem GOTO IMPORT
+rem GOTO REPORT
+rem GOTO RSCRIPT
+
+rem Get rid of the skyd file from previous analysis, so it doesn't get re-used in this analysis
+rem if exist %SKYD_FILE% del /f /q %SKYD_FILE%
+
+rem Save to new location to allow parallel processing
+echo %SKYLINE_RUNNER% --timestamp --dir="%ROOT_DIR%" --in="%SKYLINE_FILE%" --out="%DATA_DIR%\%MODEL_NAME%\%SKYLINE_FILE%" --full-scan-product-res=%FILTER_RES% --full-scan-rt-filter-tolerance=%FILTER_TIME% >> %LOG%
+
+%SKYLINE_RUNNER% --timestamp --dir="%ROOT_DIR%" --in="%SKYLINE_FILE%" --out="%DATA_DIR%\%MODEL_NAME%\%SKYLINE_FILE%" --full-scan-product-res=%FILTER_RES% --full-scan-rt-filter-tolerance=%FILTER_TIME% >> %LOG%
+
+rem Simulate distributed processing on a cluster
+rem for %%i in (%ROOT_DIR%\%DATA_DIR%\*.mz5) do %SKYLINE_RUNNER% --timestamp --dir="%ROOT_DIR%" --in="%DATA_DIR%\%MODEL_NAME%\%SKYLINE_FILE%" --full-scan-product-res=%FILTER_RES% --full-scan-rt-filter-tolerance=%FILTER_TIME% --import-file="%%i" --import-no-join >> %LOG% 2>&1
+
+:IMPORT
+
+rem Do the analysis in the new location
+rem --import-threads=%PROCESS_COUNT% 
+echo %SKYLINE_RUNNER% --timestamp --memstamp --dir="%ROOT_DIR%" --in="%DATA_DIR%\%MODEL_NAME%\%SKYLINE_FILE%" --import-all="%DATA_DIR%" --import-naming-pattern="_([^_]*_[^_]*)$" --reintegrate-model-name="%MODEL_NAME%" --reintegrate-exclude-feature="Retention time difference squared" --reintegrate-create-model --reintegrate-overwrite-peaks --save --report-add="%ROOT_ANALYSIS_DIR%\scripts\SWATHbenchmark_report.skyr" --report-conflict-resolution=overwrite --report-name=SWATHbenchmark --report-file="%DATA_DIR%\%MODEL_NAME%\SWATHbenchmark.csv" --report-invariant %EXTRA_ARGS% >> %LOG%
+
+%SKYLINE_RUNNER% --timestamp --memstamp --dir="%ROOT_DIR%" --in="%DATA_DIR%\%MODEL_NAME%\%SKYLINE_FILE%" --import-all="%DATA_DIR%" --import-naming-pattern="_([^_]*_[^_]*)$" --reintegrate-model-name="%MODEL_NAME%" --reintegrate-exclude-feature="Retention time difference squared" --reintegrate-create-model --reintegrate-overwrite-peaks --save --report-add="%ROOT_ANALYSIS_DIR%\scripts\SWATHbenchmark_report.skyr" --report-conflict-resolution=overwrite --report-name=SWATHbenchmark --report-file="%DATA_DIR%\%MODEL_NAME%\SWATHbenchmark.csv" --report-invariant %EXTRA_ARGS% >> %LOG%
+if %ERRORLEVEL% NEQ 0 GOTO END
+
+GOTO RSCRIPT
+
+:REPORT
+
+rem Ouput report only for completed analysis
+echo %SKYLINE_RUNNER% --timestamp --dir="%ROOT_DIR%" --in="%DATA_DIR%\%MODEL_NAME%\%SKYLINE_FILE%" --report-add="%ROOT_ANALYSIS_DIR%\scripts\SWATHbenchmark_report.skyr" --report-conflict-resolution=overwrite --report-name="SWATHbenchmark" --report-file="%DATA_DIR%\%MODEL_NAME%\SWATHbenchmark.csv" --report-invariant >> %LOG%
+
+%SKYLINE_RUNNER% --timestamp --dir="%ROOT_DIR%" --in="%DATA_DIR%\%MODEL_NAME%\%SKYLINE_FILE%" --report-add="%ROOT_ANALYSIS_DIR%\scripts\SWATHbenchmark_report.skyr" --report-conflict-resolution=overwrite --report-name="SWATHbenchmark" --report-file="%DATA_DIR%\%MODEL_NAME%\SWATHbenchmark.csv" --report-invariant >> %LOG%
+
+:RSCRIPT
+
+rem Run analysis scripts in R
+set Analysis_Script="%ROOT_ANALYSIS_DIR%\scripts\generateReport.R"
+
+%R_Script% %Analysis_Script% "%ROOT_DIR%\%DATA_DIR%\%MODEL_NAME%" %BASE_NAME% >> %LOG% 2>&1
+
+:END
+
+set ENDTIME=%TIME%
+
+rem Change formatting for the start and end times
+for /F "tokens=1-4 delims=:.," %%a in ("%STARTTIME%") do (
+   set /A "start=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
+)
+for /F "tokens=1-4 delims=:.," %%a in ("%ENDTIME%") do (
+   set /A "end=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
+)
+
+rem Calculate the elapsed time by subtracting values
+set /A elapsed=end-start
+rem we might have measured the time inbetween days
+if %end% LSS %start% set /A elapsed=(24*60*60*100 - start) + end
+
+    rem Format the results for output
+set /A hh=elapsed/(60*60*100), rest=elapsed%%(60*60*100), mm=rest/(60*100), rest%%=60*100, ss=rest/100, cc=rest%%100
+if %hh% lss 10 set hh=0%hh%
+if %mm% lss 10 set mm=0%mm%
+if %ss% lss 10 set ss=0%ss%
+if %cc% lss 10 set cc=0%cc%
+
+set DURATION=%hh%:%mm%:%ss%.%cc%
+
+echo. >> %LOG%
+echo [%ENDTIME%] Completed trial %MODEL_NAME%... >> %LOG%
+echo [%ENDTIME%] =^> Elapsed time: %DURATION%
+echo [%ENDTIME%] =^> Elapsed time: %DURATION% >> %LOG%
+echo. >> %LOG%
+echo. >> %LOG%
+
+ENDLOCAL

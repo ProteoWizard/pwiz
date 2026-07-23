@@ -25,7 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Net;
-using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -1900,14 +1900,12 @@ namespace pwiz.Skyline.Util
         /// from disk.
         /// Exception such as these should be displayed to the user with <see cref="Alerts.ReportErrorDlg"/>
         /// so that they can report them as bugs.
-        /// If you add anything to the list of exceptions, you will want to add it also to
-        /// the WrapAndThrow() function below.
         /// </summary>
         public static bool IsProgrammingDefect(Exception exception)
         {
             // User-actionable exceptions with friendly messages
-            if (exception is InvalidDataException 
-                || exception is IOException 
+            if (exception is InvalidDataException
+                || exception is IOException
                 || exception is OperationCanceledException
                 || exception is UnauthorizedAccessException
                 || exception is UserMessageException)  // Covers all custom user-facing exceptions
@@ -1919,26 +1917,15 @@ namespace pwiz.Skyline.Util
         }
 
 
+        /// <summary>
+        /// Rethrows an exception which was caught on another thread (or otherwise stored for
+        /// later) without losing its type or its original stack trace.  Both matter: existing
+        /// code catches specific exception types, and the stack trace from the throw site is
+        /// what makes a reported error diagnosable.
+        /// </summary>
         public static void WrapAndThrowException(Exception x)
         {
-            // The thrown exception needs to be preserved to preserve
-            // the original stack trace from which it was thrown.  In some cases,
-            // its type must also be preserved, because existing code handles certain
-            // exception types.  If this case threw only TargetInvocationException,
-            // then more frequently the code would just have to have a blanket catch
-            // of the base exception type, which could hide coding errors.
-            if (x is InvalidDataException)
-                throw new InvalidDataException(x.Message, x);
-            if (x is IOException)
-                throw new IOException(x.Message, x);
-            if (x is OperationCanceledException)
-                throw new OperationCanceledException(x.Message, x);
-            if (x is UnauthorizedAccessException)
-                throw new UnauthorizedAccessException(x.Message, x);
-            if (x is UserMessageException)
-                throw new UserMessageException(x.Message, x);
-            Assume.IsTrue(IsProgrammingDefect(x));  // At least by IsProgrammingDefect's assessment it should be considered a defect
-            throw new TargetInvocationException(x.Message, x);
+            ExceptionDispatchInfo.Capture(x).Throw();
         }
 
         /// <summary>

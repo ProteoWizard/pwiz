@@ -60,6 +60,11 @@ namespace pwiz.Osprey.IO
             }
 
             var deduped = new List<LibraryEntry>(groups.Count);
+            // One interner for the merged (count > 1) groups' unioned protein /
+            // gene accessions, so the dedup pass keeps the loader's array-backed
+            // interning instead of re-wrapping each merge in a fresh List.
+            // Singleton groups (the vast majority) pass through untouched below.
+            var interner = new LibraryStringInterner();
 
             foreach (var group in groups.Values)
             {
@@ -98,7 +103,12 @@ namespace pwiz.Osprey.IO
                         totalIntensity += f.RelativeIntensity;
                     totalIntensities[e] = totalIntensity;
                 }
-                group.Sort((a, b) =>
+                // Array.Sort OK: picks the representative (group[0]) by fragment count then total
+                // intensity. Tie hazard, conversion deferred: two entries with identical fragment
+                // count AND identical total intensity would tie and either could become the kept
+                // representative (its Fragments/Id carry through). Not a #4362 approved U-site;
+                // adding a unique tiebreak here must be validated against the regression golden.
+                group.Sort((a, b) => // Array.Sort OK: (see above) tie hazard on (fragCount,intensity), conversion deferred; not a #4362 approved U-site
                 {
                     int fragCmp = b.Fragments.Count.CompareTo(a.Fragments.Count);
                     if (fragCmp != 0)
@@ -108,13 +118,15 @@ namespace pwiz.Osprey.IO
 
                 var best = group[0];
                 best.RetentionTime = avgRt;
-                best.ProteinIds = new List<string>(allProteins);
-                best.GeneNames = new List<string>(allGenes);
+                best.ProteinIds = interner.InternToArray(allProteins);
+                best.GeneNames = interner.InternToArray(allGenes);
                 deduped.Add(best);
             }
 
             // Sort deterministically before assigning IDs
-            deduped.Sort((a, b) =>
+            // Array.Sort OK: deduped holds one entry per (ModifiedSequence, Charge), so that key
+            // is unique and the comparator never returns 0.
+            deduped.Sort((a, b) => // Array.Sort OK: (see above) (ModifiedSequence, Charge) is unique, comparator never ties
             {
                 int cmp = string.Compare(a.ModifiedSequence, b.ModifiedSequence, StringComparison.Ordinal);
                 if (cmp != 0)

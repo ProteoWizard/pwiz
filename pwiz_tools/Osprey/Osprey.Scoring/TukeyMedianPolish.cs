@@ -290,7 +290,7 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         public static double LibCosine(
             TukeyMedianPolishResult polish,
-            IList<LibraryFragment> libraryFragments)
+            IReadOnlyList<LibraryFragment> libraryFragments)
         {
             if (polish == null)
                 return 0.0;
@@ -485,7 +485,7 @@ namespace pwiz.Osprey.Scoring
             }
             if (finite.Count == 0)
                 return double.NaN;
-            finite.Sort();
+            finite.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant since tied values are equal
             int mid = finite.Count / 2;
             if (finite.Count % 2 == 0)
                 return 0.5 * (finite[mid - 1] + finite[mid]);

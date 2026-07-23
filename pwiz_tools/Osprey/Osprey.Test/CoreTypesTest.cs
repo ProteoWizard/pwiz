@@ -69,31 +69,31 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestNeutralLossMass()
         {
-            Assert.AreEqual(18.010565, NeutralLoss.H2O.Mass, TOLERANCE);
-            Assert.AreEqual(17.026549, NeutralLoss.NH3.Mass, TOLERANCE);
-            Assert.AreEqual(97.976896, NeutralLoss.H3PO4.Mass, TOLERANCE);
+            Assert.AreEqual(18.010565, NeutralLoss.H2OMass, TOLERANCE);
+            Assert.AreEqual(17.026549, NeutralLoss.NH3Mass, TOLERANCE);
+            Assert.AreEqual(97.976896, NeutralLoss.H3PO4Mass, TOLERANCE);
         }
 
         [TestMethod]
         public void TestNeutralLossParse()
         {
             // Named losses
-            AssertNeutralLossEqual(NeutralLoss.H2O, NeutralLoss.Parse("H2O"));
-            AssertNeutralLossEqual(NeutralLoss.H2O, NeutralLoss.Parse("WATER"));
-            AssertNeutralLossEqual(NeutralLoss.NH3, NeutralLoss.Parse("NH3"));
-            AssertNeutralLossEqual(NeutralLoss.NH3, NeutralLoss.Parse("AMMONIA"));
-            AssertNeutralLossEqual(NeutralLoss.H3PO4, NeutralLoss.Parse("H3PO4"));
-            AssertNeutralLossEqual(NeutralLoss.H3PO4, NeutralLoss.Parse("PHOSPHO"));
+            AssertNeutralLossEqual(NeutralLossCode.H2O, NeutralLoss.Parse("H2O"));
+            AssertNeutralLossEqual(NeutralLossCode.H2O, NeutralLoss.Parse("WATER"));
+            AssertNeutralLossEqual(NeutralLossCode.NH3, NeutralLoss.Parse("NH3"));
+            AssertNeutralLossEqual(NeutralLossCode.NH3, NeutralLoss.Parse("AMMONIA"));
+            AssertNeutralLossEqual(NeutralLossCode.H3PO4, NeutralLoss.Parse("H3PO4"));
+            AssertNeutralLossEqual(NeutralLossCode.H3PO4, NeutralLoss.Parse("PHOSPHO"));
 
-            // Null returns
-            Assert.IsNull(NeutralLoss.Parse(""));
-            Assert.IsNull(NeutralLoss.Parse("NOLOSS"));
-            Assert.IsNull(NeutralLoss.Parse(null));
+            // None returns
+            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse("").Code);
+            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse("NOLOSS").Code);
+            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse(null).Code);
 
             // Custom numeric
             var custom = NeutralLoss.Parse("18.5");
-            Assert.IsNotNull(custom);
-            Assert.AreEqual(18.5, custom.Mass, TOLERANCE);
+            Assert.AreEqual(NeutralLossCode.Custom, custom.Code);
+            Assert.AreEqual(18.5, custom.CustomMass, TOLERANCE);
         }
 
         #endregion
@@ -306,35 +306,41 @@ namespace pwiz.Osprey.Test
         {
             var entry = new LibraryEntry(2, "PEPTIDER", "PEP[+80]TIDER", 3, 350.5, 15.0);
 
-            entry.Fragments.Add(new LibraryFragment
+            entry.Fragments = new[]
             {
-                Mz = 175.119,
-                RelativeIntensity = 1.0f,
-                Annotation = new FragmentAnnotation
+                new LibraryFragment
                 {
-                    IonType = IonType.Y,
-                    Ordinal = 3,
-                    Charge = 1
-                }
-            });
-            entry.Fragments.Add(new LibraryFragment
-            {
-                Mz = 274.187,
-                RelativeIntensity = 0.8f,
-                Annotation = new FragmentAnnotation
+                    Mz = 175.119,
+                    RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation
+                    {
+                        IonType = IonType.Y,
+                        Ordinal = 3,
+                        Charge = 1
+                    }
+                },
+                new LibraryFragment
                 {
-                    IonType = IonType.B,
-                    Ordinal = 4,
-                    Charge = 1
+                    Mz = 274.187,
+                    RelativeIntensity = 0.8f,
+                    Annotation = new FragmentAnnotation
+                    {
+                        IonType = IonType.B,
+                        Ordinal = 4,
+                        Charge = 1
+                    }
                 }
-            });
+            };
 
-            entry.Modifications.Add(new Modification
+            entry.Modifications = new[]
             {
-                Position = 2,
-                UnimodId = 21,
-                MassDelta = 79.966331
-            });
+                new Modification
+                {
+                    Position = 2,
+                    UnimodId = 21,
+                    MassDelta = 79.966331
+                }
+            };
 
             Assert.AreEqual(2, entry.Fragments.Count);
             Assert.AreEqual(1, entry.Modifications.Count);
@@ -622,10 +628,10 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        private static void AssertNeutralLossEqual(NeutralLoss expected, NeutralLoss actual)
+        private static void AssertNeutralLossEqual(NeutralLossCode expected,
+            (NeutralLossCode Code, double CustomMass) actual)
         {
-            Assert.IsNotNull(actual);
-            Assert.AreEqual(expected.Mass, actual.Mass, TOLERANCE);
+            Assert.AreEqual(expected, actual.Code);
         }
 
         #endregion

@@ -1244,6 +1244,26 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
+        public DiannSearchSettingsPresetList DiannSearchSettingsPresets
+        {
+            get
+            {
+                var list = (DiannSearchSettingsPresetList)this[@"DiannSearchSettingsPresets"];
+                if (list == null)
+                {
+                    list = new DiannSearchSettingsPresetList();
+                    list.AddDefaults();
+                    DiannSearchSettingsPresets = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"DiannSearchSettingsPresets"] = value;
+            }
+        }
+
+        [UserScopedSetting]
         public RemoteAccountList RemoteAccountList
         {
             get 
@@ -1807,7 +1827,9 @@ namespace pwiz.Skyline.Properties
                 enzymeName: DEFAULT_ENZYME_NAME,
                 maxMissedCleavages: 0);
 
-            // Engine-specific presets, sorted alphabetically
+            // Engine-specific presets, sorted alphabetically. DIA-NN presets live in
+            // their own list (DiannSearchSettingsPresetList) so the peptide-search wizard
+            // and the DIA-NN search wizard each see only what's applicable.
             foreach (var preset in CometSearchEngine.GetDefaultPresets()
                          .Concat(MsFraggerSearchEngine.GetDefaultPresets())
                          .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
@@ -1821,6 +1843,26 @@ namespace pwiz.Skyline.Properties
 
         public override Type SerialType => typeof(SearchSettingsPresetList);
         public override ICollection<SearchSettingsPreset> CreateEmptyList() => new SearchSettingsPresetList();
+        public override string FileExtension => @".skysp";
+    }
+
+
+    public sealed class DiannSearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
+    {
+        public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
+        {
+            foreach (var preset in DiannHelpers.GetDefaultPresets()
+                         .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
+                yield return preset;
+        }
+
+        public override int ExcludeDefaults => GetDefaults(RevisionIndexCurrent).Count();
+
+        public override string Title => PropertiesResources.SearchSettingsPresetList_Title_Edit_Settings_Presets;
+        public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
+
+        public override Type SerialType => typeof(DiannSearchSettingsPresetList);
+        public override ICollection<SearchSettingsPreset> CreateEmptyList() => new DiannSearchSettingsPresetList();
         public override string FileExtension => @".skysp";
     }
 

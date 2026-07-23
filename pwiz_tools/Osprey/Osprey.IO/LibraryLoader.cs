@@ -48,6 +48,28 @@ namespace pwiz.Osprey.IO
         public static List<LibraryEntry> Load(OspreyConfig config,
             Action<string> logInfo, Action<string> logWarning)
         {
+            return Load(config, LibraryLoadOptions.Default, logInfo, logWarning);
+        }
+
+        /// <summary>
+        /// Load spectral library from the configured source, using binary cache
+        /// when available. Matches Rust's .libcache mechanism for fast reload.
+        ///
+        /// With <see cref="LibraryLoadOptions.OmitFragments"/>, the returned
+        /// entries carry their six identity scalars but no fragment peaks -- the
+        /// dead weight for a FirstPassFDR / <c>StopAfterStage5</c> worker. The
+        /// cache-read path skips retaining the fragment blocks; the source-parse
+        /// path loads fragments in full (the min-fragment filter and
+        /// <see cref="LibraryDeduplicator"/> both need the counts), writes the
+        /// shared .libcache in full, then drops the retained arrays. So the
+        /// returned library is lean exactly when <see cref="LibraryLoadOptions.OmitFragments"/>
+        /// is set, and the on-disk cache is unaffected.
+        /// </summary>
+        public static List<LibraryEntry> Load(OspreyConfig config, LibraryLoadOptions options,
+            Action<string> logInfo, Action<string> logWarning)
+        {
+            // A null carrier means "no special handling" (a full load).
+            options = options ?? LibraryLoadOptions.Default;
             // Default the injected log callbacks to no-ops so a null delegate
             // cannot NRE this public API (matches PipelineContext's pattern).
             logInfo = logInfo ?? (_ => { });
@@ -62,16 +84,30 @@ namespace pwiz.Osprey.IO
                 ArtifactPaths.ResolveCacheDir(path),
                 Path.GetFileName(path) + ".libcache");
 
-            // Try loading from binary cache first, but only when it is at least
-            // as new as the source library. A cache older than its source is
-            // stale -- the library was rebuilt in place without clearing the
-            // cache -- and using it would silently load the PREVIOUS build,
-            // whose decoys and pairing no longer match the current manifest.
-            if (IsCacheFresh(cachePath, path))
+            // Reuse the binary cache only when it was built from the SAME
+            // version of the source library. The library's identity hash
+            // (file name + size + mtime, the same recipe .scores.parquet uses)
+            // is stamped into the cache header on write and checked here on
+            // read. A cache built from a different build at this path -- an
+            // in-place rebuild, or a timestamp-preserving swap that a mtime
+            // check would miss -- is ignored and rebuilt, since its decoys and
+            // pairing no longer match the current manifest. Compute the hash
+            // once and reuse it for both the read check and the save below.
+            // A null hash (source missing) skips the check and trusts the
+            // cache, since it is then the only copy available.
+            bool sourceExists = !string.IsNullOrEmpty(path) && File.Exists(path);
+            string libraryHash = sourceExists ? config.Identity.LibraryIdentityHash() : null;
+            if (File.Exists(cachePath))
             {
                 try
                 {
-                    var cached = LibraryCache.LoadCache(cachePath);
+                    LibraryCache.LibraryCacheStatus status;
+                    // The cache reader interns the repeated strings as it builds
+                    // each entry's arrays and logs a one-line collapse summary.
+                    // OmitFragments has it read-and-discard the fragment blocks so
+                    // the returned entries stay lean (no ~3.2 GB of peak arrays).
+                    var cached = LibraryCache.LoadCache(
+                        cachePath, libraryHash, options.OmitFragments, logInfo, out status);
                     if (cached != null && cached.Count > 0)
                     {
                         logInfo(string.Format(
@@ -79,19 +115,19 @@ namespace pwiz.Osprey.IO
                             cached.Count, cachePath));
                         return cached;
                     }
+                    if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
+                    {
+                        logInfo(string.Format(
+                            "Library cache '{0}' was built from a different version of the " +
+                            "source library; ignoring the stale cache and rebuilding from source.",
+                            cachePath));
+                    }
                 }
                 catch (Exception ex)
                 {
                     logWarning(string.Format(
                         "Failed to load library cache: {0}. Falling back to source.", ex.Message));
                 }
-            }
-            else if (File.Exists(cachePath))
-            {
-                logInfo(string.Format(
-                    "Library cache '{0}' is older than the source library; " +
-                    "ignoring the stale cache and rebuilding from source.",
-                    cachePath));
             }
 
             // Parse from source
@@ -103,12 +139,12 @@ namespace pwiz.Osprey.IO
             {
                 case LibraryFormat.DiannTsv:
                     var tsvLoader = new DiannTsvLoader();
-                    entries = tsvLoader.Load(path);
+                    entries = tsvLoader.Load(path, logInfo);
                     break;
 
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader();
-                    entries = blibLoader.Load(path);
+                    entries = blibLoader.Load(path, logInfo);
                     break;
 
                 default:
@@ -116,15 +152,30 @@ namespace pwiz.Osprey.IO
                         "Unsupported library format: {0}", config.LibrarySource.Format));
             }
 
-            // Deduplicate library entries
+            // Deduplicate library entries. The format loaders already interned
+            // their strings during construction (and logged a collapse summary),
+            // so entries carry shared instances by the time they get here.
             entries = LibraryDeduplicator.DeduplicateLibrary(entries);
 
             logInfo(string.Format("Loaded {0} library entries", entries.Count));
 
+            // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact and are
+            // not valid for DIA search; fail fast at load (issue #4355 / PR #4434 review), before the
+            // cache save, so a bad entry never reaches the cache, decoy generation (which would
+            // silently exclude it), or a lean OmitFragments load (which would retain a phantom and
+            // diverge the FirstPassFDR reconciliation bytes).
+            foreach (var entry in entries)
+                if (entry.Fragments.Count == 0)
+                    throw new InvalidDataException(string.Format(
+                        "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
+                        "BiblioSpec MS1 feature finding and are not valid for DIA search.",
+                        entry.Id, entry.ModifiedSequence));
+
             // Save binary cache for next run
             try
             {
-                LibraryCache.SaveCache(cachePath, entries);
+                // libraryHash is non-null here: the source existed to parse.
+                LibraryCache.SaveCache(cachePath, entries, libraryHash);
                 logInfo(string.Format(
                     "Saved library cache ({0} entries) to '{1}'",
                     entries.Count, cachePath));
@@ -134,24 +185,20 @@ namespace pwiz.Osprey.IO
                 logWarning(string.Format("Failed to save library cache: {0}", ex.Message));
             }
 
-            return entries;
-        }
+            // Drop the retained fragment arrays now that every fragment-count
+            // dependency is satisfied (the min-fragment filter in the loaders,
+            // LibraryDeduplicator's fragment-count tie-break, and the full cache
+            // save above). The six identity scalars are untouched, so a
+            // StopAfterStage5 worker gets the resident-memory win with output
+            // unchanged. Done here rather than in each loader so the source-parse
+            // path returns a library as lean as the cache-read path.
+            if (options.OmitFragments)
+            {
+                foreach (var entry in entries)
+                    entry.Fragments = Array.Empty<LibraryFragment>();
+            }
 
-        /// <summary>
-        /// True when the binary cache at <paramref name="cachePath"/> exists and is
-        /// at least as new as the source library at <paramref name="sourcePath"/>.
-        /// A cache older than its source is stale: the library was rebuilt in place,
-        /// so the cache holds the previous build and must be ignored. When the source
-        /// cannot be located the cache is trusted, since it is then the only copy
-        /// available (the historical behavior before this check existed).
-        /// </summary>
-        public static bool IsCacheFresh(string cachePath, string sourcePath)
-        {
-            if (!File.Exists(cachePath))
-                return false;
-            if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
-                return true;
-            return File.GetLastWriteTimeUtc(cachePath) >= File.GetLastWriteTimeUtc(sourcePath);
+            return entries;
         }
     }
 }
