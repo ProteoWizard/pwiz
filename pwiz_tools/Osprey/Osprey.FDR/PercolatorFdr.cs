@@ -1459,7 +1459,8 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             string passLabel,
             IFdrOutputSink sink,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -1486,6 +1487,12 @@ namespace pwiz.Osprey.FDR
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
+            // This pass streams every file's parquet rows before the [PATH] line below, so it is a
+            // determinate O(files) I/O step (43s at 82 files, minutes at 500). Report per-file
+            // progress through the standard throttled reporter so a large join never goes silent.
+            var ingestProgress = new ProgressReporter(
+                string.Format(@"Streaming first-pass ingest from {0} file(s)", nFiles), nFiles,
+                intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             for (int f = 0; f < nFiles; f++)
             {
                 string file = fileNames[f];
@@ -1513,7 +1520,9 @@ namespace pwiz.Osprey.FDR
                     if (isDecoy) nInputDecoys++; else nInputTargets++;
                     g++;
                 }
+                ingestProgress.Report(f + 1);
             }
+            ingestProgress.Dispose();
             int n = g;
             logInfo(string.Format(
                 @"[PATH] {0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
@@ -1616,6 +1625,11 @@ namespace pwiz.Osprey.FDR
             PercolatorResults trainResults = RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
                 return true;
+
+            // Publish the frozen first-pass model (fold weights + biases + standardizer) for the
+            // OSPREY_PASS2_QVALUE=transfer pass-2 step. No-op (null) on the default path, so this
+            // streaming first pass stays byte-identical. See TODO-osprey_pass2_per_run_only_qvalue.
+            captureModel?.Invoke(trainResults);
 
             // Release the pass-0 working sets before the score passes so only the bounded lookups
             // remain resident across the peak.
