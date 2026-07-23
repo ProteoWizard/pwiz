@@ -495,16 +495,16 @@ namespace SkylineTool
         /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
-        string GetGraphData(string graphId, string filePath = null);
+        string GetGraphData(string formId, string filePath = null);
 
         /// <summary>
         /// Exports a graph as a PNG image. Returns the file path.
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
-        string GetGraphImage(string graphId, string filePath = null);
+        string GetGraphImage(string formId, string filePath = null);
 
         /// <summary>
         /// Renders a graph as a PNG and returns the bytes inline together with a
@@ -512,8 +512,43 @@ namespace SkylineTool
         /// the inline payload is too large. The file is NOT written by this call.
         /// Companion to <see cref="GetGraphImage"/> (file-based).
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        ImageBytesMetadata GetGraphImageBytes(string graphId);
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ImageBytesMetadata GetGraphImageBytes(string formId);
+
+        /// <summary>
+        /// Returns the region of DATA coordinates the graph is currently zoomed to --
+        /// the X and Y axis ranges of the first (or only) pane -- as a
+        /// <see cref="Rectangle"/>. The returned edges can be handed straight back to
+        /// <see cref="ZoomGraphTo"/>, and they tell a caller what coordinate ranges are
+        /// valid to pass to <see cref="ClickGraph"/> (whose <see cref="Rectangle.Bottom"/>
+        /// edge is the X-axis line -- coordinates below it fall below the axis).
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
+        Rectangle GetGraphZoom(string formId);
+
+        /// <summary>
+        /// Zooms the graph's first (or only) pane so its axes span the DATA coordinates in
+        /// <paramref name="bounds"/> (<see cref="Rectangle.Left"/>/<see cref="Rectangle.Right"/>
+        /// set the X range, <see cref="Rectangle.Top"/>/<see cref="Rectangle.Bottom"/> the Y
+        /// range). Returns the zoom actually applied, which may differ from the request when
+        /// the graph clamps it to the available data range.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="bounds">The DATA-coordinate region to zoom to.</param>
+        Rectangle ZoomGraphTo(string formId, Rectangle bounds);
+
+        /// <summary>
+        /// Clicks or drags on the graph in DATA coordinates, reproducing a real mouse
+        /// gesture: the mouse goes down at the <see cref="Rectangle.Left"/>/<see cref="Rectangle.Top"/>
+        /// corner of <paramref name="bounds"/> and is released at the
+        /// <see cref="Rectangle.Right"/>/<see cref="Rectangle.Bottom"/> corner. A zero-size
+        /// rectangle is a single click (e.g. to select a data point); a rectangle whose Y
+        /// values fall below the X-axis drags a chromatogram peak boundary, exactly as the
+        /// same gesture would if performed by hand. Operates on the first (or only) pane.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="bounds">The DATA-coordinate gesture: down at Left/Top, up at Right/Bottom.</param>
+        ActionResult ClickGraph(string formId, Rectangle bounds);
 
         /// <summary>
         /// Captures a screenshot of any open form as a PNG image. Returns the file path.

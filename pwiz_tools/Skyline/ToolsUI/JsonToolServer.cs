@@ -1080,19 +1080,38 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(formId).DismissWithCancelButton();
         }
 
-        public string GetGraphData(string graphId, string filePath = null)
+        // The graph verbs all resolve the formId to its form and act on that form's single graph (its
+        // GraphElement), on the form's UI thread. There is no separate graph id -- a graph form is assumed to
+        // have exactly one graph -- so the parameter is the same formId GetOpenForms reports.
+
+        public string GetGraphData(string formId, string filePath = null)
         {
-            return JsonUiService.GetGraphData(graphId, filePath, RequestCancellation);
+            return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetData(filePath));
         }
 
-        public string GetGraphImage(string graphId, string filePath = null)
+        public string GetGraphImage(string formId, string filePath = null)
         {
-            return JsonUiService.GetGraphImage(graphId, filePath);
+            return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetImage(filePath));
         }
 
-        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        public ImageBytesMetadata GetGraphImageBytes(string formId)
         {
-            return JsonUiService.GetGraphImageBytes(graphId);
+            return CallOnForm<StandaloneForm, ImageBytesMetadata>(formId, form => form.FindGraph().GetImageBytes());
+        }
+
+        public SkylineTool.Rectangle GetGraphZoom(string formId)
+        {
+            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form => form.FindGraph().GetZoom());
+        }
+
+        public SkylineTool.Rectangle ZoomGraphTo(string formId, SkylineTool.Rectangle bounds)
+        {
+            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form => form.FindGraph().ZoomTo(bounds));
+        }
+
+        public ActionResult ClickGraph(string formId, SkylineTool.Rectangle bounds)
+        {
+            return InvokeOnForm<StandaloneForm>(formId, form => form.FindGraph().Click(bounds));
         }
 
         public string GetFormImage(string formId, string filePath = null)

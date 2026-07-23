@@ -984,6 +984,10 @@ namespace pwiz.Skyline.ToolsUI
                 // caller names when it asks for a menu item on a particular strip, and MainToolStrip finds the
                 // form's menu bar among these.
                 case ToolStrip toolStrip: return ToolStripElement.ForToolStrip(toolStrip, token);
+                // A ZedGraphControl (a graph) is its own element, so a graph form has a GraphElement to act on
+                // and does not walk into the graph's internal controls (its scrollbars). It derives from
+                // UserControl, so this case must win over the UserControl case below.
+                case ZedGraph.ZedGraphControl zedGraph: return new GraphElement(zedGraph, token);
                 // A UserControl (including a DataboundGridControl) is a boundary that owns its (flattened)
                 // children; everything else that contains controls is transparent. A nested Form (rare as a
                 // child) is treated as a plain container under this form's token.
@@ -1033,6 +1037,21 @@ namespace pwiz.Skyline.ToolsUI
         internal GridElement FindGrid(string controlId)
         {
             return (GridElement) FindElement(controlId ?? string.Empty, UiActions.SetGridText);
+        }
+
+        // The form's graph as a GraphElement. A graph form is assumed to have exactly one graph, so the graph
+        // verbs resolve a formId to this form and act on the element found here; there is no separate graph id.
+        // The ZedGraphControl is found the way GetOpenForms' HasGraph is (by the form's graph property), so a
+        // graph on a background dock tab -- whose controls report not-visible, and so are absent from the
+        // control walk -- is still found; ElementFor then wraps it as the GraphElement the factory builds for a
+        // ZedGraphControl. Throws a clear error when the form has no graph. Must be called on the form's UI thread.
+        internal GraphElement FindGraph()
+        {
+            var zedGraph = Form is DockableFormEx dockable ? JsonUiService.TryGetZedGraphControl(dockable) : null;
+            if (zedGraph == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.", FormId));
+            return (GraphElement) ElementFor(zedGraph);
         }
 
         // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single grid).

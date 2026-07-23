@@ -797,13 +797,13 @@ public static class SkylineTools
         "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +
         "curve data points. Use skyline_get_open_forms to discover graph IDs.")]
     public static string GetGraphData(
-        [Description("Graph identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string graphId,
+        [Description("Form identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string formId,
         [Description("Output file path. If not specified, saves to a temp directory. " +
             "Extension determines format (.tsv default).")] string filePath = null)
     {
         return Invoke(connection =>
         {
-            string result = connection.GetGraphData(graphId, filePath);
+            string result = connection.GetGraphData(formId, filePath);
             return string.IsNullOrEmpty(result)
                 ? "No data in graph."
                 : $"Graph data saved to: {result}\n\nUse the Read tool to examine the data.";
@@ -817,13 +817,77 @@ public static class SkylineTools
         "'inline' to require the inline form (errors if the image exceeds the inline cap or the " +
         "connected Skyline does not support inline images). Use skyline_get_open_forms to discover graph IDs.")]
     public static CallToolResult GetGraphImage(
-        [Description("Graph identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string graphId,
+        [Description("Form identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string formId,
         [Description("Return shape: 'auto' (default, inline with file fallback), 'inline' (always inline, error if too big or Skyline too old), or 'file' (write to disk and return the path).")] string returnFormat = RETURN_AUTO,
         [Description("Output file path. Honored only on the file path (returnFormat='file' or auto-fell-back-to-file). Ignored otherwise.")] string filePath = null)
     {
         return InvokeContent(connection => InvokeImage(connection, returnFormat, filePath,
-            bytesCall: c => c.GetGraphImageBytes(graphId),
-            fileCall: (c, fp) => SavedToPath("Graph image", c.GetGraphImage(graphId, fp))));
+            bytesCall: c => c.GetGraphImageBytes(formId),
+            fileCall: (c, fp) => SavedToPath("Graph image", c.GetGraphImage(formId, fp))));
+    }
+
+    [McpServerTool(Name = "skyline_get_graph_zoom"),
+     Description("Get the region of DATA coordinates a graph is currently zoomed to -- the X and Y axis " +
+        "ranges of its first pane. Returns Left/Right (the X-axis range) and Top/Bottom (the Y-axis range, " +
+        "Top the upper edge). These are the same coordinates skyline_click_graph and skyline_zoom_graph_to " +
+        "take, so they show what is valid to pass those tools: in particular the Bottom edge is the X-axis " +
+        "line, so a click below it drags a chromatogram peak boundary. Pair with skyline_get_graph_data for " +
+        "the data points themselves. Use skyline_get_open_forms to discover graph IDs.")]
+    public static string GetGraphZoom(
+        [Description("Form identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var r = connection.GetGraphZoom(formId);
+            return "Edge\tData value\n" +
+                   $"Left (X min)\t{r.Left}\n" +
+                   $"Right (X max)\t{r.Right}\n" +
+                   $"Top (Y max)\t{r.Top}\n" +
+                   $"Bottom (Y min)\t{r.Bottom}";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_zoom_graph_to"),
+     Description("Zoom a graph's first pane to a DATA-coordinate rectangle: left/right set the X-axis range " +
+        "and top/bottom the Y-axis range. Returns the zoom actually applied, which may be clamped to the " +
+        "available data range. Read the current zoom first with skyline_get_graph_zoom.")]
+    public static string ZoomGraphTo(
+        [Description("Form identifier from skyline_get_open_forms")] string formId,
+        [Description("Left edge: minimum X-axis (data) value")] double left,
+        [Description("Top edge: maximum Y-axis (data) value")] double top,
+        [Description("Right edge: maximum X-axis (data) value")] double right,
+        [Description("Bottom edge: minimum Y-axis (data) value")] double bottom)
+    {
+        return Invoke(connection =>
+        {
+            var r = connection.ZoomGraphTo(formId,
+                new SkylineTool.Rectangle { Left = left, Top = top, Right = right, Bottom = bottom });
+            return $"Zoomed to Left={r.Left}, Top={r.Top}, Right={r.Right}, Bottom={r.Bottom}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_graph"),
+     Description("Click or drag on a graph in DATA coordinates, reproducing a real mouse gesture: the mouse " +
+        "goes down at (left, top) and releases at (right, bottom). Set the two corners EQUAL to click a " +
+        "single point -- e.g. to select a data point such as an outlier on a regression graph (Skyline treats " +
+        "it exactly as a user click, so the point becomes selected). Make them differ to DRAG: a rectangle " +
+        "whose Y values fall below the X-axis (below the Bottom that skyline_get_graph_zoom reports) drags a " +
+        "chromatogram peak boundary, just as the same gesture would by hand. Get coordinates from " +
+        "skyline_get_graph_data (point values) and skyline_get_graph_zoom (visible range). Operates on the " +
+        "first pane. Use skyline_get_open_forms to discover graph IDs.")]
+    public static string ClickGraph(
+        [Description("Form identifier from skyline_get_open_forms")] string formId,
+        [Description("Mouse-down X (data) coordinate")] double left,
+        [Description("Mouse-down Y (data) coordinate")] double top,
+        [Description("Mouse-up X (data) coordinate; set equal to left for a single click")] double right,
+        [Description("Mouse-up Y (data) coordinate; set equal to top for a single click")] double bottom)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.ClickGraph(formId,
+                new SkylineTool.Rectangle { Left = left, Top = top, Right = right, Bottom = bottom });
+            return DescribeAction(result, $"Clicked graph '{formId}'.");
+        });
     }
 
     // Note: the handshake wording below describes the SHAPE of the response,
