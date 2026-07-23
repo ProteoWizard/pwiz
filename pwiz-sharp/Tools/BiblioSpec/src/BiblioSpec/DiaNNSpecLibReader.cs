@@ -284,13 +284,17 @@ public sealed class DiaNNSpecLibReader : BuildParser
             {
                 if (!psmByPrecursorId.TryGetValue(precursorIdStr, out var psm))
                 {
-                    // cpp parity: DiaNNSpecLibReader.cpp:1181 — silently skip contaminants.
+                    // cpp parity: DiaNNSpecLibReader.cpp:1373 — silently skip contaminants.
                     if (proteinGrp.StartsWith("contaminant_", StringComparison.Ordinal))
                         continue;
 
-                    throw new BlibException(false,
-                        $"could not find precursorId '{precursorIdStr}' in speclib; is " +
-                        $"'{Path.GetFileName(diannReportFilepath)}' the correct report TSV file?");
+                    // cpp parity: DiaNNSpecLibReader.cpp:1376-1380 (PR #4189) — DIA-NN may
+                    // report precursors that are not in the spectral library (e.g. an
+                    // identification without a confident predicted spectrum). Skip them
+                    // rather than aborting; we validate at the end that *some* report rows
+                    // matched.
+                    ++_missingFromSpeclibCount;
+                    continue;
                 }
 
                 // cpp parity: DiaNNSpecLibReader.cpp:1187 — normalise slashes then strip .dia suffix.
@@ -339,16 +343,14 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
                 if (rowPassesFilter && globalQValue < psm.Score)
                 {
+                    // cpp parity: DiaNNSpecLibReader.cpp:1418-1420 — a precursor present in
+                    // psmByPrecursorId must also be in EntryByName (both are keyed by the
+                    // speclib entry name), so a miss here means the report doesn't match the
+                    // speclib at all.
                     if (!_specLib.EntryByName.TryGetValue(precursorIdStr, out var entry))
-                    {
-                        // cpp parity: DiaNNSpecLibReader.cpp:1313-1320 (PR #4189) — DIA-NN
-                        // may report precursors that are not in the spectral library (e.g.
-                        // identifications without a confident predicted spectrum). Skip
-                        // them rather than aborting; we validate at the end that *some*
-                        // report rows matched.
-                        ++_missingFromSpeclibCount;
-                        continue;
-                    }
+                        throw new BlibException(false,
+                            $"could not find precursorId '{precursorIdStr}' in speclib; is " +
+                            $"'{Path.GetFileName(diannReportFilepath)}' the correct report TSV file?");
 
                     psm.Score = globalQValue;
                     psm.FileId = rtList[rtList.Count - 1].FileId;
@@ -359,7 +361,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
             }
         }
 
-        // cpp parity: DiaNNSpecLibReader.cpp:1374-1380 (PR #4189) — warn on report rows
+        // cpp parity: DiaNNSpecLibReader.cpp:1434-1438 (PR #4189) — warn on report rows
         // skipped due to missing speclib entries, and refuse to commit if *no* row matched.
         if (_missingFromSpeclibCount > 0)
             Verbosity.Warn($"Skipped {_missingFromSpeclibCount} report rows whose precursors were not in the spectral library.");
@@ -425,12 +427,16 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     /// <summary>
     /// Dispatch to <see cref="ReadDiannReportTsv"/> or <see cref="ReadDiannReportParquet"/>
-    /// based on the report file's extension. Both code paths yield the same shape of
-    /// <see cref="DiannReportRow"/> so the BuildLibrary loop is reader-agnostic.
+    /// based on the report file's CONTENT (not its extension). DIA-NN 1.9.1 honours the
+    /// literal <c>--out diann-output.parquet</c> filename Skyline passes but writes a
+    /// tab-separated report into it, so a <c>.parquet</c>-named file can actually be TSV.
+    /// Both code paths yield the same shape of <see cref="DiannReportRow"/> so the
+    /// BuildLibrary loop is reader-agnostic. cpp parity: DiaNNSpecLibReader.cpp:667
+    /// (Reader::open_file dispatches on <c>ParquetReader::is_parquet</c>).
     /// </summary>
     private static IEnumerable<DiannReportRow> ReadDiannReport(string reportPath)
     {
-        return reportPath.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase)
+        return IsParquet(reportPath)
             ? ReadDiannReportParquet(reportPath)
             : ReadDiannReportTsv(reportPath);
     }
@@ -600,13 +606,16 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// </summary>
     private string FindLibParquet()
     {
+        // cpp parity: DiaNNSpecLibReader.cpp:1149,1154 — the candidate must not only exist
+        // but actually BE a Parquet container; otherwise fall through to the binary speclib
+        // reader (a .parquet-named non-Parquet file is left for the caller to reject).
         if (_specLibFile.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase))
-            return File.Exists(_specLibFile) ? _specLibFile : string.Empty;
+            return File.Exists(_specLibFile) && IsParquet(_specLibFile) ? _specLibFile : string.Empty;
 
         if (_specLibFile.EndsWith(".parquet.skyline.speclib", StringComparison.OrdinalIgnoreCase))
         {
             string candidate = _specLibFile.Substring(0, _specLibFile.Length - ".skyline.speclib".Length);
-            if (File.Exists(candidate)) return candidate;
+            if (File.Exists(candidate) && IsParquet(candidate)) return candidate;
         }
         return string.Empty;
     }
@@ -884,11 +893,35 @@ public sealed class DiaNNSpecLibReader : BuildParser
         return diannReportFilepath;
     }
 
+    /// <summary>
+    /// Detect a Parquet file by CONTENT rather than by its <c>.parquet</c> extension.
+    /// DIA-NN 1.9.1 writes a TSV report into the literal <c>diann-output.parquet</c>
+    /// filename Skyline passes to <c>--out</c>, so an extension check misroutes it to the
+    /// Parquet reader ("not a parquet file"). Opening with Parquet.Net succeeds only for a
+    /// real Parquet container (its magic-byte framing); a TSV, an empty file, or an
+    /// unreadable path throws and we report non-Parquet. cpp parity:
+    /// DiaNNSpecLibReader.cpp:731 (<c>ParquetReader::is_parquet</c>, which returns
+    /// <c>parquet::arrow::OpenFile(...).ok()</c>).
+    /// </summary>
+    private static bool IsParquet(string filepath)
+    {
+        try
+        {
+            using var stream = File.OpenRead(filepath);
+            using var reader = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     private static bool HasRequiredHeaders(string reportFilepath)
     {
         try
         {
-            if (reportFilepath.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase))
+            if (IsParquet(reportFilepath))
             {
                 using var stream = File.OpenRead(reportFilepath);
                 using var reader = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
