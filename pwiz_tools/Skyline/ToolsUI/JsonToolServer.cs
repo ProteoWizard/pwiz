@@ -26,6 +26,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -2028,6 +2029,19 @@ namespace pwiz.Skyline.ToolsUI
             // could not run yet.
             JsonUiService.RequireMainWindow();
 
+            // Refuse while a modal dialog blocks the main window. A command modifies the document through the
+            // SkylineWindow, and DialogWatcher would post it onto the UI thread where the open modal's own message
+            // loop pumps it -- running it re-entrantly under, say, an open Peptide Settings dialog. The transient
+            // LongWaitDlg of a command still running after its client disconnected counts here too, keeping commands
+            // one-at-a-time: cancel that one (drive its progress dialog) or wait for it before starting another.
+            var blockingModals = DialogWatcher.GetOpenModals(RequestCancellation);
+            if (blockingModals.Count > 0)
+            {
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Cannot run a command while a dialog is open ({0}). Close it, or cancel a running command through its progress dialog, before running a command.",
+                    string.Join(@"; ", blockingModals.Select(m => m.DetailedMessage))));
+            }
+
             var capture = new StringWriter();
             string argsDisplay = string.Join(@" ", args);
             TextWriter output;
@@ -2037,40 +2051,59 @@ namespace pwiz.Skyline.ToolsUI
             else
                 output = JsonUiService.CreateImmediateWindowTee(capture, argsDisplay);
 
-            // Run on the current thread (already a background pipe server thread).
-            // The Immediate Window writer handles cross-thread writes via BeginInvoke.
-            var parsedArgs = args;
             var docBefore = Program.MainWindow.Document;
-            var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore,
-                Program.MainWindow.DocumentFilePath);
+            var docFilePath = Program.MainWindow.DocumentFilePath;
 
-            // Override document operations to go through SkylineWindow UI,
-            // so --in/--new/--save/--out show LongWaitDlg progress and properly
-            // update DocumentFilePath and clean state.
-            commandLine.DocumentOperations = new SkylineWindowDocumentOperations(RequestCancellation);
-
-            commandLine.Run(parsedArgs, true);
-
-            // If the command modified the document, apply it back to SkylineWindow
-            // as a single undo record with a RunCommand audit log entry.
-            // Skip if the host already has the current doc (from --in/--new/--save/--out
-            // going through SkylineWindowDocumentOperations).
-            var docAfter = commandLine.Document;
-            if (!ReferenceEquals(docAfter, docBefore) &&
-                !ReferenceEquals(docAfter, Program.MainWindow.Document))
+            // Run the command on a LongWaitDlg's background thread (so the user sees Skyline is busy and can cancel),
+            // driven from this pipe thread by DialogWatcher.CallFunction: it returns the captured output when the
+            // command finishes, throws if the command leaves an interactive dialog open (EnsureCompleted), and -- if
+            // the client disconnects first (the MCP drops the pipe after ~30s) -- abandons only the WAIT, throwing to
+            // free the pipe while the command keeps running under its dialog for the model to cancel by hand.
+            return DialogWatcher.CallFunction(IntPtr.Zero, () =>
             {
-                EnsureCompleted(InvokeOnMainWindow(mainWindow =>
+                SrmDocument docAfter = null;
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    mainWindow.SkylineWindow.ModifyDocument(
+                    longWaitDlg.Text = ToolsUIResources.ToolService_RunCommand_Run_command;
+                    longWaitDlg.Message = argsDisplay;
+
+                    // PerformWork runs the command on its own background thread while pumping the modal here; the
+                    // broker it hands back drives the dialog's progress and reports its Cancel to the command.
+                    longWaitDlg.PerformWork(Program.MainWindow, 500, (IProgressMonitor broker) =>
+                    {
+                        var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore, docFilePath)
+                        {
+                            LongWaitBroker = broker,
+                            // Document operations go through SkylineWindow UI, so --in/--new/--save/--out show
+                            // LongWaitDlg progress and update DocumentFilePath and clean state. Cancellation is the
+                            // dialog's Cancel button, NOT the client disconnect -- the command must outlive the drop.
+                            DocumentOperations = new SkylineWindowDocumentOperations(longWaitDlg.CancellationToken)
+                        };
+                        commandLine.Run(args, true);
+                        // Set only after Run returns: a cancel throws out of here, leaving docAfter null so nothing
+                        // is applied to the document below.
+                        docAfter = commandLine.Document;
+                    });
+                }
+
+                // If the command modified the document, apply it back to SkylineWindow as a single undo record with a
+                // RunCommand audit log entry. We are on the UI thread here (CallFunction posted us), so modify directly.
+                // Skip if the host already has the current doc (from --in/--new/--save/--out going through
+                // SkylineWindowDocumentOperations).
+                if (docAfter != null &&
+                    !ReferenceEquals(docAfter, docBefore) &&
+                    !ReferenceEquals(docAfter, Program.MainWindow.Document))
+                {
+                    Program.MainWindow.ModifyDocument(
                         ToolsUIResources.ToolService_RunCommand_Run_command,
                         doc => docAfter,
                         docPair => AuditLogEntry.CreateSimpleEntry(
                             MessageType.ran_command_line,
                             docPair.NewDocumentType, args));
-                }));
-            }
+                }
 
-            return capture.ToString();
+                return capture.ToString();
+            }, RequestCancellation);
         }
 
         /// <summary>
