@@ -2069,7 +2069,7 @@ namespace pwiz.Skyline.ToolsUI
 
                     // PerformWork runs the command on its own background thread while pumping the modal here; the
                     // broker it hands back drives the dialog's progress and reports its Cancel to the command.
-                    longWaitDlg.PerformWork(Program.MainWindow, 500, (IProgressMonitor broker) =>
+                    longWaitDlg.PerformWork(Program.MainWindow, 500, broker =>
                     {
                         var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore, docFilePath)
                         {
