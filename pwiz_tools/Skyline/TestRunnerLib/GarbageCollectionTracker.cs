@@ -175,6 +175,10 @@ namespace TestRunnerLib
             for (int retry = 0; retry < GC_RETRY_COUNT; retry++)
             {
                 Thread.Sleep(GC_RETRY_SLEEP_MS);
+                // Force a full GC on every runtime. CheckForLeaks never collects on its
+                // own, so without this the net8 retry loop only slept and re-read the
+                // WeakReferences - transiently-rooted objects were falsely reported as
+                // leaks. FlushMemory is net8-safe (already called unguarded before the check).
                 RunTests.MemoryManagement.FlushMemory();
                 leakMessage = CheckForLeaks();
                 if (leakMessage == null)
@@ -183,12 +187,14 @@ namespace TestRunnerLib
 
             // Phase 3: Still leaking after retries - pin survivors and report
             PinSurvivors();
+#if NET472
             if (MemoryProfiler.IsReady)
             {
                 var snapshotName = testName + @"_GC_LEAK";
                 log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
                 MemoryProfiler.Snapshot(snapshotName);
             }
+#endif
             return leakMessage;
         }
 

@@ -47,6 +47,26 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Resolves the name of an executable that ships next to the running application (in
+        /// <see cref="AppContext.BaseDirectory"/>) to a rooted path. .NET Framework's Process.Start
+        /// searched the current working directory for a bare executable name; .NET 8 does not, so a
+        /// bundled tool invoked by bare name (e.g. "msconvert") fails to launch on net8 unless it also
+        /// happens to be on PATH. Rooting the path to the application directory makes the launch work on
+        /// both frameworks. If the executable is not found next to the application, the original name is
+        /// returned unchanged so a PATH-based lookup can still succeed.
+        /// </summary>
+        public static string ResolveBundledExe(string exeName)
+        {
+            if (string.IsNullOrEmpty(exeName) || Path.IsPathRooted(exeName))
+            {
+                return exeName;
+            }
+            var fileName = string.IsNullOrEmpty(Path.GetExtension(exeName)) ? exeName + @".exe" : exeName;
+            var candidate = Path.Combine(AppContext.BaseDirectory, fileName);
+            return File.Exists(candidate) ? candidate : exeName;
+        }
+
+        /// <summary>
         /// True if <paramref name="a"/> and <paramref name="b"/> refer to the same
         /// path on disk. Normalizes both sides (GetFullPath + trailing-separator trim)
         /// and compares case-insensitively, which is the right semantics on Windows.

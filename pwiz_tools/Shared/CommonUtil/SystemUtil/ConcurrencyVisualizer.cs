@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2015 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,16 +20,22 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+#if NET472
 using Microsoft.ConcurrencyVisualizer.Instrumentation;
+#endif
 
 namespace pwiz.Common.SystemUtil
 {
     /// <summary>
-    /// Helper class for use with Microsoft's Concurrency Visualizer (optional download for Visual Studio)
+    /// Helper class for use with Microsoft's Concurrency Visualizer (optional download for Visual Studio).
+    /// On net8 the underlying Microsoft.ConcurrencyVisualizer.Markers assembly is not available, so
+    /// the methods become no-ops — VS profiling instrumentation only matters on the legacy build path.
     /// </summary>
     public static class ConcurrencyVisualizer
     {
+#if NET472
         private static readonly MarkerSeries _series = Markers.DefaultWriter.CreateMarkerSeries(@"events");
+#endif
         private static Control _control;
 
         /// <summary>
@@ -39,8 +45,10 @@ namespace pwiz.Common.SystemUtil
         {
             if (string.IsNullOrEmpty(Thread.CurrentThread.Name))
                 return;
+#if NET472
             MarkerSeries flagSeries = Markers.DefaultWriter.CreateMarkerSeries(Thread.CurrentThread.Name);
             flagSeries.WriteFlag(Thread.CurrentThread.Name);
+#endif
         }
 
         /// <summary>
@@ -56,7 +64,11 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static void CreateEvent(string name)
         {
+#if NET472
             _control.Invoke(new Action(() => _series.WriteFlag(name)));
+#else
+            _ = name; // no-op on net8 — ConcurrencyVisualizer is VS-tooling-only
+#endif
         }
     }
 }

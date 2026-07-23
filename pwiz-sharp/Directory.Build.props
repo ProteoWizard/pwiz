@@ -1,0 +1,107 @@
+<Project>
+
+  <!-- Optional per-user overrides (gitignored). Drop in $(IAgreeToVendorLicenses), local
+       NuGet feed creds, etc. Created by i-agree-to-the-vendor-licenses.bat in the repo root. -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.user.props')" />
+
+  <!-- ============================================================
+       Path anchors. MSBuild auto-discovers Directory.Build.props by
+       walking up the directory tree from every project file, so the
+       properties below are inherited by every csproj/vcxproj under
+       pwiz-sharp/ with no opt-in needed.
+
+       The anchor for everything is $(MSBuildThisFileDirectory) — by
+       definition the directory holding THIS file, which IS the
+       pwiz-sharp/ root. Every other path is derived from that. The
+       resolved paths are absolute (System.IO.Path::GetFullPath) so
+       downstream consumers (Exec, Content paths, MSBuild Inputs/
+       Outputs) don't have to re-canonicalize.
+
+       Replaces the per-csproj "..\..\..\..\<thing>" chains we
+       accumulated through the tree restructure. Adding a new csproj
+       at any depth needs only `$(PwizSharpRoot)<thing>`; restructure
+       moves never invalidate them.
+       ============================================================ -->
+  <PropertyGroup>
+    <!-- pwiz-sharp/ — root for every C# project, vendor csproj content paths,
+         installer outputs, MascotShim CMake tree, example_data fixtures, etc. -->
+    <PwizSharpRoot>$(MSBuildThisFileDirectory)</PwizSharpRoot>
+
+    <!-- ../pwiz — the cpp pwiz source tree (sibling of pwiz-sharp/ inside the
+         outer pwiz repo). Holds vendor test fixtures (data/vendor_readers/...),
+         the cpp BiblioSpec sources we port from, the cpp Skyline tools, etc. -->
+    <PwizCppRoot>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\pwiz'))</PwizCppRoot>
+
+    <!-- ../pwiz_tools — cpp Skyline + BiblioSpec tools tree (sibling). -->
+    <PwizCppToolsRoot>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\pwiz_tools'))</PwizCppToolsRoot>
+
+    <!-- ../pwiz_aux — auxiliary vendor SDK archives (Mobilion .7z, etc.). -->
+    <PwizCppAuxRoot>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\pwiz_aux'))</PwizCppAuxRoot>
+
+    <!-- ../libraries — vendor 7z archives (msparser, 7za.exe, bsdtar.exe, etc.). -->
+    <PwizLibrariesPath>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\libraries'))</PwizLibrariesPath>
+
+    <!-- pwiz-sharp/vendor-assemblies — destination of vendor SDK 7z extraction
+         (Bruker.csproj / Sciex.csproj / etc. ExtractVendorAssemblies targets
+         unpack into here, MobilionShim.vcxproj's MBI SDK lives here, etc.). -->
+    <PwizVendorAssembliesPath>$(PwizSharpRoot)vendor-assemblies</PwizVendorAssembliesPath>
+
+    <!-- pwiz-sharp/vendor-archives — staged vendor archives (Sciex Wiff2 deps,
+         Thermo's pre-packaged .7z, etc.). Distinct from pwiz_aux upstream
+         archives. -->
+    <PwizVendorArchivesPath>$(PwizSharpRoot)vendor-archives</PwizVendorArchivesPath>
+
+    <!-- pwiz-sharp/installer/build — Inno Setup output dir. -->
+    <PwizInstallerBuildDir>$(PwizSharpRoot)installer\build</PwizInstallerBuildDir>
+
+    <!-- pwiz-sharp/example_data — tiny round-trip fixtures (tiny.pwiz.1.1.mz5/
+         .mzMLb/.mzML) used by MsData.Tests' CppWritten identify/read tests. -->
+    <PwizExampleDataPath>$(PwizSharpRoot)example_data</PwizExampleDataPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- CS1591: missing-xml-comment is informational only.
+         CA1859: "change parameter from IList<T>/IReadOnlyList<T> to List<T>" is a perf
+                 micro-optimization suggestion. The list-vs-interface preference is a
+                 source-shape call, not a correctness one — keep as warning. -->
+    <WarningsNotAsErrors>CS1591;CA1859</WarningsNotAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>ProteoWizard</Company>
+    <Product>pwiz-sharp</Product>
+    <Copyright>Copyright (c) ProteoWizard</Copyright>
+    <Authors>ProteoWizard Contributors</Authors>
+  </PropertyGroup>
+
+  <!-- Assembly version, Jam-free. Scheme mirrors pwiz cpp's generate-version.jam:
+       major.minor.{YY}{DDD}, where {YY}{DDD} is the two-digit year and 3-digit
+       day-of-year of the git commit date. The actual date-stamped value is set by
+       SetPwizSharpVersion in Directory.Build.targets (which reads the git date via
+       build\PwizVersion.targets); the placeholder below (DDD sentinel 000) is what a
+       design-time/eval-only build sees before that target runs.
+       "(automated build)" for CI (build.bat sets AutomatedBuild=true), else
+       "(developer build)". -->
+  <PropertyGroup>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_BuildKindSuffix>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_BuildKindSuffix>
+    <PwizSharpVersionMajor>4</PwizSharpVersionMajor>
+    <PwizSharpVersionMinor>0</PwizSharpVersionMinor>
+    <Version Condition="'$(Version)' == ''">$(PwizSharpVersionMajor).$(PwizSharpVersionMinor).0</Version>
+    <!-- We append the short git hash to InformationalVersion ourselves (Jam-style
+         "-<hash>"); suppress the SDK's automatic "+<full sha>" so it isn't doubled. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+</Project>

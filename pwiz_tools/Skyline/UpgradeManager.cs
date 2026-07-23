@@ -19,6 +19,9 @@
 
 using System;
 using System.ComponentModel;
+// On net8 this namespace resolves to the stubs in SkylineNet8Stubs.cs (ClickOnce's real
+// System.Deployment.Application is net472-only). We need TrustNotGrantedException on both
+// frameworks so the trust-exception path in updateCheck_Complete compiles and runs on net8.
 using System.Deployment.Application;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -36,7 +39,11 @@ namespace pwiz.Skyline
     {
         private static bool _checkedAtStartup;
 
+#if NET472
         public static IDeployment _appDeployment = new AppDeploymentWrapper();
+#else
+        public static IDeployment _appDeployment = new NullDeployment();
+#endif
 
         public static IDeployment AppDeployment
         {
@@ -110,6 +117,11 @@ namespace pwiz.Skyline
 
         private void updateCheck_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
+            // A trust exception means an update exists but ClickOnce won't auto-install it, so offer
+            // the manual install link instead of surfacing a generic error dialog. Runs on net8 too:
+            // in production AppDeployment is NullDeployment (IsNetworkDeployed=false, never throws this),
+            // so this path is only exercised by tests that inject a deployment. Leaving it net472-only
+            // let the trust case fall through to the error MessageDlg below, desyncing UpgradeErrorsTest.
             var exTrust = e.Result as TrustNotGrantedException;
             if (exTrust != null)
             {
@@ -313,6 +325,21 @@ namespace pwiz.Skyline
             public Exception Error { get; private set; }
         }
 
+#if !NET472
+        private sealed class NullDeployment : IDeployment
+        {
+            public bool IsNetworkDeployed => false;
+            public Version CurrentVersion => null;
+            public UpdateCheckDetails CheckForDetailedUpdate() => new UpdateCheckDetails(false, null, null);
+            public void UpdateAsync(Action<UpdateProgress> updateProgress, Action<UpdateCompletedDetails> updateComplete) { }
+            public void UpdateAsyncCancel() { }
+            public void Restart() { Application.Restart(); }
+            public Version GetVersionFromUpdateLocation() => null;
+            public void OpenInstallLink(Control parentWindow) { }
+        }
+#endif
+
+#if NET472
         private sealed class AppDeploymentWrapper : IDeployment
         {
             private readonly ApplicationDeployment _applicationDeployment;
@@ -406,5 +433,6 @@ namespace pwiz.Skyline
                 WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
             }
         }
+#endif
     }
 }

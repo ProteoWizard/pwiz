@@ -22,7 +22,11 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+#if NET472
 using pwiz.CLI.Bruker.PrmScheduling;
+#else
+using Pwiz.Vendor.Bruker.PrmScheduling;
+#endif
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;

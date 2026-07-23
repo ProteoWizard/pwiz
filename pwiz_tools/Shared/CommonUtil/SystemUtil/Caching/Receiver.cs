@@ -81,20 +81,30 @@ namespace pwiz.Common.SystemUtil.Caching
 
         private void BeginInvoke(Action action)
         {
-            _synchronizationContext?.Post(_ =>
+            try
             {
-                try
+                _synchronizationContext?.Post(_ =>
                 {
-                    if (OwnerControl != null)
+                    try
                     {
-                        action();
+                        if (OwnerControl != null)
+                        {
+                            action();
+                        }
                     }
-                }
-                catch (Exception exception)
-                {
-                    Messages.WriteAsyncDebugMessage(@"Receiver.BeginInvoke unhandled exception {0}", exception);
-                }
-            }, null);
+                    catch (Exception exception)
+                    {
+                        Messages.WriteAsyncDebugMessage(@"Receiver.BeginInvoke unhandled exception {0}", exception);
+                    }
+                }, null);
+            }
+            // The SynchronizationContext.Post itself can throw (e.g. InvalidAsynchronousStateException)
+            // when the target UI thread has already exited -- this delivery runs on a background
+            // production thread, so an unhandled throw here would take down the whole run.
+            catch (Exception exception)
+            {
+                Messages.WriteAsyncDebugMessage(@"Receiver.BeginInvoke post failed {0}", exception);
+            }
         }
 
         private void OnProductStatusChanged()

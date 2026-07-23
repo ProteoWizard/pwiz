@@ -36,6 +36,12 @@ namespace pwiz.Skyline.Model
     public class DiaUmpireDdaConverter : AbstractDdaConverter, IProgressMonitor
     {
         private const string MSCONVERT_EXE = "msconvert";
+#if !NET472
+        // The managed msconvert reports verbose progress per iteration; over a multi-file DIA-Umpire
+        // search that floods Skyline's search log and back-pressures the converter, so ask it to
+        // report far less often. Native net472 msconvert has no such option.
+        private const int MSCONVERT_VERBOSE_PROGRESS_PERIOD = 2500;
+#endif
         private const string DIAUMPIRE_OUTPUT_SUFFIX = "-diaumpire";
 
         private readonly DiaUmpire.Config _diaUmpireConfig;
@@ -60,8 +66,7 @@ namespace pwiz.Skyline.Model
             if (diaUmpireConfig.WindowScheme == DiaUmpire.WindowScheme.SWATH_Variable)
                 Assume.IsTrue(diaUmpireConfig.VariableWindows.Any());
 
-            MsConvertOutputExtension = _diaUmpireConfig.UseMzMlSpillFile ? @".mzML" : @".mz5";
-            MsConvertOutputFormatParam = _diaUmpireConfig.UseMzMlSpillFile ? @"--mzML" : @"--mz5";
+            ApplyOutputFormat(_diaUmpireConfig.UseMzMlSpillFile ? @"mzML" : @"mz5");
         }
 
         public DiaUmpire.Config DiaUmpireConfig => _diaUmpireConfig;
@@ -87,9 +92,7 @@ namespace pwiz.Skyline.Model
 
         public override void SetRequiredOutputFormat(MsdataFileFormat format)
         {
-            string formatName = Enum.GetName(typeof(MsdataFileFormat), format);
-            MsConvertOutputExtension = '.' + formatName;
-            MsConvertOutputFormatParam = @"--" + formatName;
+            ApplyOutputFormat(Enum.GetName(typeof(MsdataFileFormat), format));
             SetSpectrumFiles(OriginalSpectrumSources);
         }
 
@@ -101,6 +104,14 @@ namespace pwiz.Skyline.Model
             try
             {
                 progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(ModelResources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
+
+#if !NET472
+                // The net8 managed DIA-Umpire engine is slower than the native C++ one, so run it
+                // multithreaded; the C++ presets pin Thread=1. Peak output is byte-identical across
+                // runs at higher thread counts, so re-recorded baselines stay stable. net472 keeps
+                // the preset's Thread=1 (its native engine is fast enough single-threaded).
+                _diaUmpireConfig.Parameters[@"Thread"] = Math.Max(1, Environment.ProcessorCount / 2);
+#endif
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -149,12 +160,15 @@ namespace pwiz.Skyline.Model
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                    var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
                         Arguments =
                             $"-v --32 -z {MsConvertOutputFormatParam} " +
+#if !NET472
+                            $"--verboseProgressPeriod {MSCONVERT_VERBOSE_PROGRESS_PERIOD} " +
+#endif
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
@@ -242,6 +256,20 @@ namespace pwiz.Skyline.Model
             status = status.ChangePercentComplete(_lastPercentComplete);
 
             return _parentProgressMonitor.UpdateProgress(status);
+        }
+
+        private void ApplyOutputFormat(string formatName)
+        {
+#if !NET472
+            // The net8 msconvert (msconvert-sharp) has no mz5 writer yet, but it does
+            // implement the equivalent HDF5 spill format mzMLb; use that in place of mz5.
+            // net472 keeps mz5 via the native C++ msconvert. The DIA-Umpire spectra are
+            // identical either way; only the intermediate container differs.
+            if (formatName == @"mz5")
+                formatName = @"mzMLb";
+#endif
+            MsConvertOutputExtension = '.' + formatName;
+            MsConvertOutputFormatParam = @"--" + formatName;
         }
 
         private static bool AreValuesEquivalent(string lhs, string rhs)

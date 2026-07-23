@@ -272,7 +272,13 @@ namespace SkylineNightly
 
                     try
                     {
+                        // Passive/non-invasive attach. The API changed between the legacy net40 ClrMD
+                        // (AttachFlag) and the modern net8 package (a suspend bool); Passive == don't suspend.
+#if NET472
                         using (var dataTarget = DataTarget.AttachToProcess(process.Id, 5000, AttachFlag.Passive))
+#else
+                        using (var dataTarget = DataTarget.AttachToProcess(process.Id, false))
+#endif
                         {
                             var runtime = dataTarget.ClrVersions[0].CreateRuntime();
                             foreach (var thread in runtime.Threads)

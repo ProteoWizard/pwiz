@@ -2,19 +2,15 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>SkylineAiConnector</RootNamespace>
     <AssemblyName>SkylineAiConnector</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon>SkylineAiConnector.ico</ApplicationIcon>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\SkylineTool\SkylineTool.csproj" />
@@ -22,10 +18,17 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- Build the MCP server (net8.0) before packaging, since cross-targeting
-       prevents a normal ProjectReference from net472 to net8.0 -->
+  <!-- Central Skyline version (YEAR.ORDINAL.BRANCH.DOY), shared with Skyline.csproj,
+       so the tool ZIP's info.properties tracks the Skyline version automatically. -->
+  <Import Project="..\..\..\..\SkylineVersion.targets" />
+
+  <!-- Build the MCP server before packaging. The server builds with a win-x64
+       RuntimeIdentifier and its full output is copied into the tool ZIP's
+       mcp-server\ folder by PackageToolZip below, so it stays a separate build
+       (restored + built via the SkylineMcp solution) rather than a ProjectReference. -->
   <Target Name="BuildMcpServer" BeforeTargets="PackageToolZip">
     <MSBuild Projects="$(MSBuildProjectDirectory)\..\SkylineMcpServer\SkylineMcpServer.csproj"
              Targets="Build"
@@ -33,7 +36,7 @@
   </Target>
 
   <!-- Package the Skyline External Tool ZIP after build -->
-  <Target Name="PackageToolZip" AfterTargets="Build">
+  <Target Name="PackageToolZip" AfterTargets="Build" DependsOnTargets="ComputeSkylineVersion">
     <PropertyGroup>
       <_ToolZipDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp\</_ToolZipDir>
       <_ToolZipPath>$(MSBuildProjectDirectory)\SkylineAiConnector.zip</_ToolZipPath>
@@ -47,9 +50,10 @@
     <MakeDir Directories="$(_ToolZipDir)tool-inf\" />
     <MakeDir Directories="$(_ToolZipDir)mcp-server\" />
 
-    <!-- Copy connector output (exe + all dependencies) -->
+    <!-- Copy connector output (exe + all dependencies). *.json picks up the net8
+         apphost companions (runtimeconfig.json + deps.json) the exe needs to launch. -->
     <ItemGroup>
-      <ConnectorFiles Include="$(_ConnectorBinDir)*.exe;$(_ConnectorBinDir)*.dll;$(_ConnectorBinDir)*.config" />
+      <ConnectorFiles Include="$(_ConnectorBinDir)*.exe;$(_ConnectorBinDir)*.dll;$(_ConnectorBinDir)*.config;$(_ConnectorBinDir)*.json" />
     </ItemGroup>
     <Copy SourceFiles="@(ConnectorFiles)" DestinationFolder="$(_ToolZipDir)" />
 
@@ -59,9 +63,9 @@
     </ItemGroup>
     <Copy SourceFiles="@(ToolInfFiles)" DestinationFolder="$(_ToolZipDir)tool-inf\%(RecursiveDir)" />
 
-    <!-- Stamp version into staged info.properties, reading the exact string
-         from AssemblyInfo.cs to preserve leading zeros (e.g. 26.1.1.070) -->
-    <Exec Command="powershell -NoProfile -Command &quot;$v = (Select-String -Path '$(MSBuildProjectDirectory)\Properties\AssemblyInfo.cs' -Pattern 'AssemblyVersion\(\&quot;(.+?)\&quot;\)').Matches[0].Groups[1].Value; (Get-Content '$(_ToolZipDir)tool-inf\info.properties') -replace '\$\{version\}',$v | Set-Content '$(_ToolZipDir)tool-inf\info.properties'&quot;" />
+    <!-- Stamp the central Skyline version (SkylineVersion.targets) into the staged
+         info.properties, replacing the ${version} placeholder. -->
+    <Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_ToolZipDir)tool-inf\info.properties') -replace '\$\{version\}','$(SkylineNumericVersion)' | Set-Content '$(_ToolZipDir)tool-inf\info.properties'&quot;" />
 
     <!-- Copy MCP server output -->
     <ItemGroup>

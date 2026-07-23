@@ -31,7 +31,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+#if NET472
 using Excel;
+#else
+using ExcelDataReader;
+#endif
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -651,8 +655,26 @@ namespace pwiz.SkylineTestUtil
             SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));
         }
 
+#if !NET472
+        private static bool _excelCodePagesRegistered;
+
+        // Modern ExcelDataReader throws NotSupportedException ("No data is available for
+        // encoding 1252.") on net8 when reading legacy .xls (BIFF) files unless the code-pages
+        // provider is registered first. .NET Framework registered these by default; net8 does not.
+        private static void EnsureExcelCodePagesRegistered()
+        {
+            if (_excelCodePagesRegistered)
+                return;
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            _excelCodePagesRegistered = true;
+        }
+#endif
+
         protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
         {
+#if !NET472
+            EnsureExcelCodePagesRegistered();
+#endif
             bool[] legacyFileValues = new[] {false};
             if (filePath.EndsWith(".xls"))
             {
@@ -2524,6 +2546,13 @@ namespace pwiz.SkylineTestUtil
 
         private static bool AreEquivalentAuditLogs(string expected, string actual)
         {
+            // First accept audit logs that differ only in tiny embedded floating-point values
+            // (e.g. a regression slope) between net8 (64-bit SSE2) and net472 (32-bit x87).
+            // Non-numeric text and integer tokens must still match exactly, so this only masks
+            // last-few-ULP noise, never a real regression. See
+            // AssertEx.AreAuditLogsEquivalentWithNumericTolerance for the exact rules.
+            if (AssertEx.AreAuditLogsEquivalentWithNumericTolerance(expected, actual, out _))
+                return true;
             try
             {
                 // Asserts that the files are the same other than generated GUIDs and timestamps
@@ -2700,7 +2729,9 @@ namespace pwiz.SkylineTestUtil
             EndTest();
 
             Settings.Default.Reset();
+#if NET472
             MsDataFileImpl.PerfUtilFactory.Reset();
+#endif
         }
 
         private void RunTest()
@@ -2830,6 +2861,12 @@ namespace pwiz.SkylineTestUtil
             {
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 ClipboardEx.Release();
+#if !NET472
+                // Release net8 WinForms' ModalMenuFilter hold on the last active window (see
+                // ReleaseModalMenuFilterWindow) before closing, so SkylineWindow and its document
+                // can be collected and are not reported as a cross-test GC leak.
+                RunUI(ReleaseModalMenuFilterWindow);
+#endif
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
             }
@@ -2843,6 +2880,34 @@ namespace pwiz.SkylineTestUtil
             {
             }
         }
+
+#if !NET472
+        // net8 WinForms tracks the last active top-level window during menu mode via
+        // ToolStripManager.ModalMenuFilter._lastActiveWindow, a HandleRef<HWND> whose Wrapper keeps
+        // the Form managed-alive. Unlike net472 (which tracked a bare HWND), this survives menu-mode
+        // exit, so each test's SkylineWindow (and its document) would be reported as a cross-test GC
+        // leak. WinForms exposes no public reset and is not reachable via InternalsVisibleTo, so
+        // clear the HandleRef fields reflectively. Must run on the UI thread - the filter instance is
+        // thread-static. Field names verified against Microsoft.WindowsDesktop.App 8.0.
+        private static void ReleaseModalMenuFilterWindow()
+        {
+            var filterType = typeof(System.Windows.Forms.ToolStripManager).GetNestedType(
+                @"ModalMenuFilter", System.Reflection.BindingFlags.NonPublic);
+            var instance = filterType?
+                .GetField(@"t_instance",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                ?.GetValue(null);
+            if (instance == null)
+                return; // no menu was shown on this thread - nothing to release
+            foreach (var fieldName in new[] { @"_lastActiveWindow", @"_activeHwnd" })
+            {
+                var field = filterType.GetField(fieldName,
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                    field.SetValue(instance, System.Activator.CreateInstance(field.FieldType));
+            }
+        }
+#endif
 
         private void CloseOpenForms(Type exceptType)
         {

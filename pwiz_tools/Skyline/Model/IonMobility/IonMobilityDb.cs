@@ -512,12 +512,16 @@ namespace pwiz.Skyline.Model.IonMobility
                 {
                     //Check for a valid SQLite file and that it has our schema
                     //Allow only one thread at a time to read from the same path
-                    using (var sessionFactory = GetSessionFactory(path))
+                    // NOTE: do NOT wrap sessionFactory in `using` here - ownership
+                    // transfers to the IonMobilityDb instance (its own Dispose releases
+                    // it). The `using` was benign on net472 NHibernate but net8's
+                    // NHibernate 5.5 correctly throws ObjectDisposedException when a
+                    // caller later calls OpenSession on the disposed factory (see
+                    // UpdateIonMobilities → OpenWriteSession chain).
+                    var sessionFactory = GetSessionFactory(path);
+                    lock (sessionFactory)
                     {
-                        lock (sessionFactory)
-                        {
-                            return new IonMobilityDb(path, sessionFactory).Load(loadMonitor, status);
-                        }
+                        return new IonMobilityDb(path, sessionFactory).Load(loadMonitor, status);
                     }
                 }
                 catch (UnauthorizedAccessException x)

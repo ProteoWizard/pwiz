@@ -1,0 +1,197 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Tools.BiblioSpec</RootNamespace>
+    <AssemblyName>Pwiz.Tools.BiblioSpec</AssemblyName>
+    <Description>BiblioSpec library: build / read / filter / search peptide-spectral .blib libraries. Port of pwiz_tools/BiblioSpec/src/.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj" />
+    <!-- IdentData supplies CV-mapped PSM types (mzIdentML, pepXML) that several
+         BiblioSpec readers translate from. -->
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\IdentData\IdentData.csproj" />
+    <!-- Analysis supplies SpectrumList_PeakPicker; PwizSharpSpecFileReader wraps the
+         vendor spectrum list with it so vendor-side centroiding kicks in for .wiff /
+         .raw / .baf / .lcd inputs (cpp parity: PwizReader.cpp:67-68 "peakPicking true 1-"). -->
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BiblioSpec's .blib format is a SQLite schema; this is the same package
+         pin (1.0.119) UIMF / Bruker / MsConvert use. The native Interop.dll
+         per-RID is included automatically. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Parquet.Net for DIA-NN v2 .parquet report support. The local
+         pwiz_tools/Shared/Lib/Parquet DLL is too old (3.x) and rejects column
+         names containing dots (e.g. "Protein.Group"). Use the modern NuGet
+         release instead. Pure-managed, MIT, no native deps. -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BiblioSpec.Tests" />
+  </ItemGroup>
+
+  <!-- ============================================================
+       Mascot support — wraps Matrix Science's proprietary msparser
+       via a small native shim (Tools/BiblioSpec/native/MascotShim/)
+       consumed via P/Invoke from MascotShimInterop.cs.
+       ============================================================ -->
+  <PropertyGroup>
+    <!-- msparser ships in pwiz-msconvert-pr/libraries/, so Mascot support is ON
+         by default. Pass -p:MascotSupport=false (or build.bat 'without-mascot')
+         to compile the Mascot reader out of BiblioSpec. -->
+    <MascotSupport Condition="'$(MascotSupport)' == ''">true</MascotSupport>
+
+    <!-- Same defaults the cpp Jamfile's msparser-path resolver uses
+         (Jamroot.jam:1273 for Windows, :1287 for Linux). Override with
+         -p:MascotParserPath=PATH on the dotnet command line. -->
+    <MascotShimDir>$(MSBuildThisFileDirectory)..\..\native\MascotShim</MascotShimDir>
+    <MascotShimBuildDir>$(MascotShimDir)\build</MascotShimBuildDir>
+    <!-- The actual built artifact, per platform + config. Used as BuildMascotShim's
+         Outputs so switching Configuration (e.g. a prior Debug build then Release)
+         rebuilds it. A config-agnostic stamp made the second config skip the build,
+         leaving its Content copy with no file (MSB3030 "MascotShim.dll not found"). -->
+    <MascotShimBuiltFile Condition="'$(OS)' == 'Windows_NT'">$(MascotShimBuildDir)\$(Configuration)\MascotShim.dll</MascotShimBuiltFile>
+    <MascotShimBuiltFile Condition="'$(OS)' != 'Windows_NT'">$(MascotShimBuildDir)/libMascotShim.so</MascotShimBuiltFile>
+    <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\msparser_3_1_0_x86_win64\vs2015</MascotParserPath>
+    <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/msparser_3_1_0_x86_linux64/gnu</MascotParserPath>
+
+    <!-- Vendor archive -> $(MascotParserPath) extraction, mirrors cpp
+         Jamroot.jam:626/674 and the Mobilion.csproj ExtractMobilionAssemblies
+         pattern. CI agents only ship the .7z; the headers + lib appear under
+         vs2015/ (Windows) or gnu/ (Linux) when the archive is extracted into
+         the libraries dir. Idempotent — incremental check on Inputs/Outputs
+         skips when the header already exists. -->
+    <MascotArchive Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\msparser_3_1_0_x86_win64.7z</MascotArchive>
+    <MascotArchive Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/msparser_3_1_0_x86_linux64.7z</MascotArchive>
+    <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <SevenZaExe Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/7zz</SevenZaExe>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MascotSupport)' == 'true'">
+    <!-- BlibBuilder._readerFactories uses #if MASCOT_SUPPORT to enrol the
+         Mascot reader without forcing every consumer to reference its type
+         unconditionally. -->
+    <DefineConstants>$(DefineConstants);MASCOT_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MascotSupport)' != 'true'">
+    <!-- Without the shim we can't link msparser, so the Mascot reader + its
+         spec-file companion + the P/Invoke surface all compile out. The 6
+         Mascot tests stay Inconclusive in this configuration. -->
+    <Compile Remove="MascotResultsReader.cs" />
+    <Compile Remove="MascotShimInterop.cs" />
+  </ItemGroup>
+
+  <!-- 1. Locate cmake.exe. Visual Studio ships it under
+       Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin; look there via
+       vswhere so a fresh dev box doesn't need a separate CMake install.
+       On Linux, fall back to the system cmake on $PATH. -->
+  <Target Name="LocateCMake"
+          Condition="'$(MascotSupport)' == 'true' AND '$(CMakeExe)' == ''">
+    <Exec Condition="'$(OS)' == 'Windows_NT'"
+          Command="&quot;C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe&quot; -latest -prerelease -find &quot;**\CMake\CMake\bin\cmake.exe&quot;"
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CMakeExe" />
+    </Exec>
+    <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+      <CMakeExe>cmake</CMakeExe>
+    </PropertyGroup>
+    <Error Condition="'$(CMakeExe)' == ''"
+           Text="Could not locate cmake.exe via vswhere. Install Visual Studio 2022+ with the C++ workload (which bundles CMake), set -p:CMakeExe=path\to\cmake.exe, or pass --without-mascot." />
+  </Target>
+
+  <!-- 2. Extract msparser SDK out of the encrypted 7z archive. cpp Jamroot's
+       msparser unpack at Jamroot.jam:626 (Windows) / :674 (Linux) does the
+       same step; Mobilion.csproj uses an equivalent ExtractMobilionAssemblies
+       target. Inputs/Outputs make it idempotent — skipped when the header
+       already exists. Gated on IAgreeToVendorLicenses=true (matches cpp's
+       i-agree-to-the-vendor-licenses flag + Mobilion's gate); dev boxes
+       that have manually pre-extracted msparser don't need to set it. -->
+  <Target Name="ExtractMascotAssemblies"
+          Condition="'$(MascotSupport)' == 'true' AND '$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="BuildMascotShim"
+          Inputs="$(MascotArchive)"
+          Outputs="$(MascotParserPath)\include\ms_mascotresfile_dat.hpp">
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(PwizLibrariesPath)&quot; &quot;$(MascotArchive)&quot;"
+          StandardOutputImportance="low" />
+  </Target>
+
+  <!-- 3. Configure + build MascotShim. The VS multi-config generator emits
+       MascotShim.dll under $(MascotShimBuildDir)\$(Configuration)\; Linux's
+       single-config Makefile generator emits libMascotShim.so directly under
+       $(MascotShimBuildDir)\. The Content items below pick the right path
+       per platform. -->
+  <Target Name="BuildMascotShim"
+          Condition="'$(MascotSupport)' == 'true'"
+          DependsOnTargets="LocateCMake"
+          BeforeTargets="ResolveAssemblyReferences;AssignTargetPaths;CoreCompile"
+          Inputs="$(MascotShimDir)\CMakeLists.txt;$(MascotShimDir)\MascotShim.cpp;$(MascotShimDir)\MascotShim.h"
+          Outputs="$(MascotShimBuiltFile)">
+    <Exec Condition="'$(OS)' == 'Windows_NT'"
+          Command="&quot;$(CMakeExe)&quot; -S &quot;$(MascotShimDir)&quot; -B &quot;$(MascotShimBuildDir)&quot; -A x64 -DMASCOT_PARSER_PATH=&quot;$(MascotParserPath)&quot;" />
+    <Exec Condition="'$(OS)' != 'Windows_NT'"
+          Command="&quot;$(CMakeExe)&quot; -S &quot;$(MascotShimDir)&quot; -B &quot;$(MascotShimBuildDir)&quot; -DCMAKE_BUILD_TYPE=$(Configuration) -DMASCOT_PARSER_PATH=&quot;$(MascotParserPath)&quot;" />
+    <Exec Command="&quot;$(CMakeExe)&quot; --build &quot;$(MascotShimBuildDir)&quot; --config $(Configuration)" />
+  </Target>
+
+  <ItemGroup Condition="'$(MascotSupport)' == 'true' AND '$(OS)' == 'Windows_NT'">
+    <Content Include="$(MascotShimBuildDir)\$(Configuration)\MascotShim.dll">
+      <Link>runtimes\win-x64\native\MascotShim.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <!-- msparser.dll is dynamically linked from MascotShim.dll, so it has to
+         land on the same load path. Debug links msparserD.lib + msparserD.dll;
+         Release links msparser.lib + msparser.dll. -->
+    <Content Condition="'$(Configuration)' == 'Debug'"
+             Include="$(MascotParserPath)\lib\msparserD.dll">
+      <Link>runtimes\win-x64\native\msparserD.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <Content Condition="'$(Configuration)' != 'Debug'"
+             Include="$(MascotParserPath)\lib\msparser.dll">
+      <Link>runtimes\win-x64\native\msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <!-- Quantitation / unimod XSDs — msparser's quant + unimod parsers
+         resolve them by path at runtime, so they have to land in a known
+         location. Ship them next to MascotShim.dll under a sibling
+         msparser-config/ folder; MascotResultsReader.cs locates the dir at
+         startup and passes it to mascot_dat_set_quant_config_dir. -->
+    <Content Include="$(MascotParserPath)\..\config\unimod_2.xsd">
+      <Link>runtimes\win-x64\native\msparser-config\unimod_2.xsd</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(MascotParserPath)\..\config\quantitation_1.xsd">
+      <Link>runtimes\win-x64\native\msparser-config\quantitation_1.xsd</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(MascotParserPath)\..\config\quantitation_2.xsd">
+      <Link>runtimes\win-x64\native\msparser-config\quantitation_2.xsd</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="'$(MascotSupport)' == 'true' AND '$(OS)' != 'Windows_NT'">
+    <!-- Linux msparser is a static archive — already linked in; only the
+         shim itself needs to ship. -->
+    <Content Include="$(MascotShimBuildDir)\libMascotShim.so">
+      <Link>runtimes/linux-x64/native/libMascotShim.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

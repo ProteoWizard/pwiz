@@ -1,285 +1,38 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- TestPerf - Skyline performance / large-data MSTest assembly (vendor import, tutorials,
+       IMS, FAIMS timing). Multi-target net472 + net8.0-windows. No .resx/designer; test
+       fixtures are *.zip / *.data read from the source tree (TestFilesZipPaths), not copied to
+       output. Compile items are auto-globbed. -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D0481E9D-BCBF-4DD7-977E-791801871B5B}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>TestPerf</RootNamespace>
     <AssemblyName>TestPerf</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>4.0</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <TargetFrameworkProfile />
-    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>..\bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>..\bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
+
+  <!-- BullseySharpTest.cs (typo in filename) is a stray duplicate of BullseyeSharpTest.cs -
+       same class TestPerf.BullseyeSharpTest. It was never in the legacy Compile list; exclude it
+       from the auto-glob so it does not collide with BullseyeSharpTest.cs. -->
   <ItemGroup>
-    <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
-    </Reference>
-    <Reference Include="DotNetZip">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MathNet.Numerics">
-      <HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Newtonsoft.Json">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Design" />
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="UIAutomationClient">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="UIAutomationTypes">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
+    <Compile Remove="BullseySharpTest.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AlphapeptdeepBuildLibraryTest.cs" />
-    <Compile Include="AcquisitionComparisonTutorialTest.cs" />
-    <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
-    <Compile Include="BullseyeSharpTest.cs" />
-    <Compile Include="DiaNnPeakImputationTest.cs" />
-    <Compile Include="DiannSearchPerfTest.cs" />
-    <Compile Include="DiannSearchLFQbenchTest.cs" />
-    <Compile Include="PeakBoundaryImputationDiaTutorial.cs" />
-    <Compile Include="DiaSearchTutorialTest.cs" />
-    <Compile Include="FeatureDetectionTest.cs" />
-    <Compile Include="PerfFeatureDetectionSIMscansTest.cs" />
-    <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />
-    <Compile Include="PerfAssociateProteinsHugeTest.cs" />
-    <Compile Include="DdaTutorialTest.cs" />
-    <Compile Include="DiaUmpireVendorFormatTest.cs" />
-    <Compile Include="DiaUmpireTutorialTest.cs" />
-    <Compile Include="DiaSwathTutorialTest.cs" />
-    <Compile Include="PerfAssociateProteinsTest.cs" />
-    <Compile Include="PerfCommandlineCreateImsDbTest.cs" />
-    <Compile Include="PerfDetectLockmassFunctionTest.cs" />
-    <Compile Include="EncyclopeDiaSearchTutorialTest.cs" />
-    <Compile Include="PerfHighEnergyIonMobilityOffsetForPRM.cs" />
-    <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
-    <Compile Include="PerfImportDiagonalPasefTest.cs" />
-    <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
-    <Compile Include="HiResMetabolomicsTutorial.cs" />
-    <Compile Include="ImportMassOnlyMoleculesTest.cs" />
-    <Compile Include="DriftTimePredictorTutorialTest.cs" />
-    <Compile Include="PeakSortingTest.cs" />
-    <Compile Include="PerfDecoysMatchTest.cs" />
-    <Compile Include="PerfElectronIonizationAllIonsTest.cs" />
-    <Compile Include="PerfImportAgilentSpectrumMillRampedIMSTest.cs" />
-    <Compile Include="PerfImportDiaPasefTest.cs" />
-    <Compile Include="PerfImportPasefMascotTest.cs" />
-    <Compile Include="PerfImportPrmPasefTest.cs" />
-    <Compile Include="PerfImportResultsAgilentIMSFringeValues.cs" />
-    <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
-    <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
-    <Compile Include="PerfImportResultsWatersIMSTest.cs" />
-    <Compile Include="PerfLockmassCmdlineTest.cs" />
-    <Compile Include="PerfLockmassTest.cs" />
-    <Compile Include="PerfMeasuredDriftTimes.cs" />
-    <Compile Include="PerfMeasuredInverseK0.cs" />
-    <Compile Include="PerfMobilIonTest.cs" />
-    <Compile Include="PerfMs3ChromatogramTest.cs" />
-    <Compile Include="PerfNegativeIonDIATest.cs" />
-    <Compile Include="PerfNonScoringTransitionsTest.cs" />
-    <Compile Include="PerfOpenSwathConvert.cs" />
-    <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
-    <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />
-    <Compile Include="PerfMinimizeResultsTest.cs" />
-    <Compile Include="PerfPeakTest.cs" />
-    <Compile Include="PerfPeakViewConvert.cs" />
-    <Compile Include="PerfThermoFAIMSTest.cs" />
-    <Compile Include="PerfThermoNegativeFAIMSTest.cs" />
-    <Compile Include="PerfThermoSureQuantFAIMSTest.cs" />
-    <Compile Include="PerfTicAreaTest.cs" />
-    <Compile Include="PerfUniquePeptidesTest.cs" />
-    <Compile Include="PerfWatersSonarTest.cs" />
-    <Compile Include="OrbiPrmTutorialTest.cs" />
-    <Compile Include="PerfSciexPrmCeOptTest.cs" />
-    <Compile Include="SmallMolDriftTimePredictorTest.cs" />
-    <Compile Include="SmallMolLibrariesTutorialTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
-      <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
-      <Name>BiblioSpec</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
-      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
-      <Name>CommonFileDialogs</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
-      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
-      <Name>CommonMsData</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
-      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
-      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
-      <Name>PortableUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
-      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
-      <Name>MSGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
-      <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
-      <Name>ProteomeDb</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
-      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
-      <Name>ProteowizardWrapper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
-      <Name>ZedGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Skyline.csproj">
-      <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
-      <Name>Skyline</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
-      <Project>{e3f0e34f-f9e6-4360-996f-e2054e4fa1ae}</Project>
-      <Name>TestRunnerLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestUtil\TestUtil.csproj">
-      <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
-      <Name>TestUtil</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
+
+  <!-- Embedded resource + fixtures. The *.zip data is consumed from the source tree via
+       TestFilesZipPaths (e.g. "TestPerf/DdaTutorialViews.zip"), so it is listed (not copied). -->
   <ItemGroup>
     <EmbeddedResource Include="ThermoDIA.ChorusRequest.xml" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="DdaTutorialViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
     <None Include="DriftTimePredictorViews.zip" />
@@ -288,12 +41,55 @@
     <None Include="PerfMs3ChromatogramTest.zip" />
     <None Include="SmallMolLibrariesTutorialViews.zip" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj" />
+    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj" />
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
+    <ProjectReference Include="..\Skyline.csproj" />
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj" />
+    <ProjectReference Include="..\TestUtil\TestUtil.csproj" />
+  </ItemGroup>
+
+  <!-- net8: managed test + support packages; DigitalRune docking, DotNetZip, Grpc, ServiceModel
+       etc. flow transitively through the Skyline/Shared ProjectReferences. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <!-- Raw assembly references don't flow transitively through Skyline's ProjectReference, so
+         reference DigitalRune here too (perf tests touch GraphChromatogram/GraphFullScan, which
+         derive from DigitalRune's DockableForm). -->
+    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
+  </ItemGroup>
+
+  <!-- net472: legacy assembly references, kept verbatim so the existing build path is unchanged. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
+    <Reference Include="DotNetZip"><HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
+    <Reference Include="log4net"><HintPath>..\..\Shared\Lib\log4net.dll</HintPath></Reference>
+    <Reference Include="MathNet.Numerics"><HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath></Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+    <Reference Include="Newtonsoft.Json"><HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="System.Data.SQLite"><HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath></Reference>
+    <Reference Include="System.Design" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
+  </ItemGroup>
+
 </Project>

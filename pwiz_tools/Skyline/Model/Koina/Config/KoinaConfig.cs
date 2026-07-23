@@ -23,6 +23,9 @@ using System.Text;
 using System.Xml.Serialization;
 using Grpc.Core;
 using pwiz.Skyline.Model.Koina.Communication;
+#if !NET472
+using Grpc.Net.Client;
+#endif
 
 namespace pwiz.Skyline.Model.Koina.Config
 {
@@ -37,10 +40,25 @@ namespace pwiz.Skyline.Model.Koina.Config
         public string ClientCertificate { get; set; }
         public string ClientKey { get; set; }
 
+#if NET472
         public Channel CreateChannel()
         {
             return new Channel(Server, GetChannelCredentials());
         }
+#else
+        // Grpc.Net.Client channels are HttpClient-backed; TLS + root-cert
+        // validation defer to the OS trust store. RootCertificate /
+        // ClientCertificate PEM strings from KoinaConfig.xml are ignored on
+        // net8 for now - Koina's public server (koina.wilhelmlab.org:443) uses
+        // a publicly-trusted cert so this covers the shipped config. If a
+        // custom PEM is ever needed, wire it via GrpcChannelOptions.HttpHandler.
+        public ChannelBase CreateChannel()
+        {
+            var scheme = RequireSsl ? "https" : "http";
+            var address = Server.Contains(@"://") ? Server : scheme + @"://" + Server;
+            return GrpcChannel.ForAddress(address);
+        }
+#endif
 
         private const string BEGIN_CERTIFICATE = @"-----BEGIN CERTIFICATE-----";
         private const string END_CERTIFICATE = @"-----END CERTIFICATE-----";

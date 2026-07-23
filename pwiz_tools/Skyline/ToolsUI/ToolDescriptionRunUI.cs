@@ -276,20 +276,32 @@ namespace pwiz.Skyline.ToolsUI
                         // need to only check one of these conditions.
                         if (startInfo.RedirectStandardInput && reportReader != null)
                         {
-                            StreamWriter streamWriter = p.StandardInput;
-                            if (reportCsvPath != null)
+                            try
                             {
-                                using (var newReader = new StreamReader(reportCsvPath))
+                                StreamWriter streamWriter = p.StandardInput;
+                                if (reportCsvPath != null)
                                 {
-                                    streamWriter.Write(newReader.ReadToEnd());
+                                    using (var newReader = new StreamReader(reportCsvPath))
+                                    {
+                                        streamWriter.Write(newReader.ReadToEnd());
+                                    }
                                 }
+                                else
+                                {
+                                    streamWriter.Write(reportReader.ReadToEnd());
+                                }
+                                streamWriter.Flush();
+                                streamWriter.Close();
                             }
-                            else
+                            catch (IOException)
                             {
-                                streamWriter.Write(reportReader.ReadToEnd());
+                                // The tool exited or never read its piped stdin report (e.g. an interactive
+                                // tool that talks over the Tool Service API instead of reading Console.In). On
+                                // .NET Framework writing to the non-reading child returned quietly; on .NET 8 the
+                                // blocked write throws "The pipe is being closed" when the tool exits. That is not
+                                // a tool-configuration failure, so don't surface it as a "reconfigure that tool"
+                                // error (which would pop a modal alert and, in tests, an unexpected dialog).
                             }
-                            streamWriter.Flush();
-                            streamWriter.Close();
                         }
                     }
                     catch (Exception ex)

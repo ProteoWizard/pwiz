@@ -118,7 +118,9 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(133, 334, 396, 1188, 164)
+                // Counts for the standalone MS Amanda (3.0.22.864) + Percolator; only percolator-validated
+                // PSMs enter the library, so these are lower than the retired in-process integration's.
+                ExpectedResultsFinal = new ExpectedResults(79, 192, 241, 723, 93)
             };
 
             RunFunctionalTest();
@@ -161,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165)
+                ExpectedResultsFinal = new ExpectedResults(106, 249, 301, 903, 121) // net8 Comet: FixPercolatorPepXml now excludes Percolator-unmatched PSMs (was 145, 338, 392, 1176, 165)
             };
 
             RunFunctionalTest();
@@ -1214,7 +1216,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (TestSettings.SearchEngine != SearchEngine.MSAmanda)
+                // Every engine reaching this point may still need the generic download-
+                // confirmation dialog handled. MSFragger's binary is downloaded by
+                // MsFraggerDownloadDlg above, but its Java and Crux dependencies still come
+                // through here; MSAmanda and the other engines download their tool here too
+                // (all on-demand on net8). Excluding any engine leaves its dialog unhandled.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)

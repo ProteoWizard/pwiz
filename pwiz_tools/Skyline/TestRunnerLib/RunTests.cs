@@ -165,9 +165,20 @@ namespace TestRunnerLib
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
+        // Escape hatch to skip the system-heap accounting (GetProcessHeapSizes) entirely. Normally left
+        // off: the accounting is segment-heap safe. HeapWalk/HeapLock fault with a fatal, non-catchable
+        // AccessViolation in a Windows Segment Heap process (the default on Windows Server + Windows
+        // containers, hence on the net8 Docker workers and the TeamCity build agents) -- and even on some
+        // classic HEAP_NO_SERIALIZE heaps -- so on net8 GetProcessHeapSizes reads committed/reserved via
+        // HeapSummary (which never walks) instead of walking; net472 keeps the historically-safe walk.
+        // Leak tracking therefore keeps working on net8. This flag is just a manual escape hatch now: the
+        // SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS env var or the skipsystemheaps=on arg forces it all off.
+        public static bool SkipSystemHeaps { get; set; } =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS"));
+
         public bool ReportSystemHeaps
         {
-            get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
+            get { return !RunPerfTests && !SkipSystemHeaps; }   // 12-hour perf runs get much slower with system heap reporting
         }
 
         public static bool WriteMiniDumps
@@ -455,7 +466,11 @@ namespace TestRunnerLib
                     Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
                 }
                 
-                // Report handle counts if requested (useful for debugging handle leaks)
+                // Report handle counts if requested (useful for debugging handle leaks).
+                // The per-type handle enumeration comes from the C++/CLI TestDiagnostics.dll
+                // (HandleEnumeratorWrapper), which is net472-only. On net8 a pure-C# P/Invoke
+                // reimplementation would be needed; skip per-type handle reporting for now.
+#if NET472
                 if (ReportHandles)
                 {
                     var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
@@ -473,6 +488,7 @@ namespace TestRunnerLib
 
                     Log("# Handles " + string.Join("\t", sortedHandleCounts.Select(c => c.Type + ": " + c.Count)) + Environment.NewLine);
                 }
+#endif
                 // CRT leak checking removed - was disabled (required special debug pwiz_cli_data.dll build)
 
                 if (heapOutput && ReportSystemHeaps)
@@ -888,6 +904,22 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
+            // HeapSummary yields committed/reserved/allocated totals without walking the heap, so it can
+            // read a segment heap where HeapWalk cannot. Available on Windows 8+ (kernelbase.dll). Wrapped
+            // in try/catch at the call site in case the export is unavailable on the host OS.
+            [StructLayoutAttribute(LayoutKind.Sequential)]
+            public struct HEAP_SUMMARY
+            {
+                public uint cb;                 // sizeof(HEAP_SUMMARY); must be set before the call
+                public UIntPtr cbAllocated;
+                public UIntPtr cbCommitted;
+                public UIntPtr cbReserved;
+                public UIntPtr cbMaxReserve;
+            }
+
+            [DllImport("kernelbase.dll", SetLastError = true)]
+            static extern bool HeapSummary(IntPtr hHeap, uint dwFlags, ref HEAP_SUMMARY lpSummary);
+
             public static bool HeapDiagnostics { get; set; }
 
             public struct HeapAllocationSizes
@@ -1006,6 +1038,11 @@ namespace TestRunnerLib
                 var buffer = new IntPtr[count];
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
+
+#if NET472
+                // net472: walk every heap for the full committed/reserved breakdown (and the optional
+                // per-block HeapDiagnostics histogram). This has been safe on the net472 CI agents for
+                // years -- their process heaps are all classic, lockable NT heaps.
                 for (int i = 0; i < count; i++)
                 {
                     var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
@@ -1056,6 +1093,33 @@ namespace TestRunnerLib
                     if (stringCounts != null)
                         sizes[i].StringCounts = stringCounts.OrderByDescending(p => p.Value).ToList();
                 }
+#else
+                // net8: never walk. HeapLock/HeapWalk fault with a fatal, non-catchable AccessViolation on
+                // a Windows Segment Heap (the default on Windows Server + Windows containers) AND on some
+                // classic-signature heaps -- e.g. HEAP_NO_SERIALIZE ones with a null lock -- and no cheap
+                // heap-type check reliably tells the safe ones from the unsafe ones across Windows builds
+                // (a segment-signature check still crashed on HeapLock on the TeamCity Windows Server
+                // agent). HeapSummary never walks and works on every heap, so use it for the
+                // committed/reserved totals. cbAllocated matches the walk's "busy bytes" Committed
+                // semantics (and is the more sensitive leak signal); leak tracking keeps working. The
+                // per-block HeapDiagnostics detail is net472-only.
+                for (int i = 0; i < count; i++)
+                {
+                    try
+                    {
+                        var summary = new HEAP_SUMMARY { cb = (uint)Marshal.SizeOf(typeof(HEAP_SUMMARY)) };
+                        if (HeapSummary(buffer[i], 0, ref summary))
+                        {
+                            sizes[i].Committed += (long)summary.cbAllocated.ToUInt64();
+                            sizes[i].Reserved += (long)summary.cbReserved.ToUInt64();
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // HeapSummary unavailable on this OS; leave this heap's totals at zero.
+                    }
+                }
+#endif
                 if (HeapDiagnostics)
                     TRACK_SIZES.ForEach(t => t.CloseDumpFile());
                 return sizes;
@@ -1321,7 +1385,12 @@ namespace TestRunnerLib
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
         {
-            var assembly = LoadFromAssembly.Try(GetAssemblyPath(testDll));
+            var dllPath = GetAssemblyPath(testDll);
+            // Not every test project is necessarily deployed next to TestRunner (each net8 SDK
+            // project builds to its own bin). A test DLL that isn't present simply has no tests.
+            if (!File.Exists(dllPath))
+                yield break;
+            var assembly = LoadFromAssembly.Try(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)

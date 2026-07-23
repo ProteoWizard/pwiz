@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,6 +25,8 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -306,12 +309,23 @@ namespace TestPerf
             {
                 RunUI(() =>
                 {
-                    // Run the search
-                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
                     importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                     importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 });
+
+                // Run the search. Click asynchronously so the test thread stays free to dismiss the
+                // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
+                // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
+                // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
+                SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+
+                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                if (downloaderDlg != null)
+                {
+                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                    WaitForClosedForm(waitDlg);
+                }
 
                 WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
                 Assert.IsTrue(searchSucceeded.Value);

@@ -1,0 +1,112 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Shimadzu</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Shimadzu</AssemblyName>
+    <Description>Shimadzu LCD reader. References Shimadzu's managed LabSolutions IO module.</Description>
+  </PropertyGroup>
+
+  <!--
+    Vendor archive: pwiz_aux/msrc/utility/vendor_api_Shimadzu.7z. ExtractShimadzuAssemblies
+    unpacks the managed entry assembly + its dependency closure plus the x64 native helpers
+    (CompressedTLMRawDataReader.dll etc.) on every build (idempotent). Sharp targets x64 only.
+    -->
+  <PropertyGroup>
+    <ShimadzuArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Shimadzu.7z</ShimadzuArchive>
+    <ShimadzuAssembliesDir>$(PwizVendorAssembliesPath)\Shimadzu</ShimadzuAssembliesDir>
+    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Shimadzu
+       compile without the SDK and throw from Read() while keeping Identify() working. The
+       SDK-only files reference Shimadzu.LabSolutions.IO.* directly, so they must be excluded
+       from compilation in that mode. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="ShimadzuRawData.cs" />
+    <Compile Remove="SpectrumList_Shimadzu.cs" />
+    <Compile Remove="ChromatogramList_Shimadzu.cs" />
+  </ItemGroup>
+
+  <Target Name="ExtractShimadzuAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(ShimadzuArchive)"
+          Outputs="$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll">
+    <MakeDir Directories="$(ShimadzuAssembliesDir)" />
+    <!-- Pull the top-level managed assemblies (no x86/ x64/ subfolder prefix) and the x64
+         native helpers used by the file-format readers (CompressedTLMRawDataReader, CRHAKEI2,
+         IOModuleQTFL, etc.). The cpp pwiz_aux project ships both x86 and x64 directories;
+         pwiz-sharp only builds x64. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ShimadzuAssembliesDir)&quot; &quot;$(ShimadzuArchive)&quot; &quot;vendor_api\Shimadzu\*.dll&quot; &quot;vendor_api\Shimadzu\x64\*.dll&quot;" StandardOutputImportance="low" />
+    <!-- Flatten the extracted layout so the references below are stable. -->
+    <ItemGroup>
+      <_ShimadzuExtractedTop Include="$(ShimadzuAssembliesDir)\vendor_api\Shimadzu\*.dll" />
+      <_ShimadzuExtractedX64 Include="$(ShimadzuAssembliesDir)\vendor_api\Shimadzu\x64\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ShimadzuExtractedTop)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_ShimadzuExtractedX64)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
+       plain .NET assemblies, not COM interop wrappers. The IoModule is the entry point — its
+       transitive dependencies (Shimadzu.GMNT.*, Shimadzu.SQCL.*, GCMSProtoCS, QTFLProtoCS,
+       Google.Protobuf, etc.) get copied as Content below so they're next to the managed
+       output for runtime resolution. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Reference Include="Shimadzu.LabSolutions.IO.IoModule">
+      <HintPath>$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Runtime dependencies: managed assemblies the SDK's late-bound type loads pull in plus
+       the x64 native DLLs (CompressedTLMRawDataReader, CRHAKEI2, IOModuleQTFL, etc.). All
+       must land next to Pwiz.Vendor.Shimadzu.dll for the SDK to open .lcd files.
+
+       This MUST be a target-emitted ItemGroup, not a top-level one. A top-level wildcard like
+       <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)\*.dll"/> is glob-resolved at project
+       LOAD time — i.e., before ExtractShimadzuAssemblies has a chance to populate the
+       directory. On a cold checkout (TC agent that's never built this project before) that
+       leaves the Content list empty (or partial), Pwiz.Vendor.Shimadzu.dll lands in bin without
+       IOModuleQTFL.dll / CRHAKEI2.dll / CompressedTLMRawDataReader.dll / the GCMS IoModule
+       assemblies, and the SDK's QtflRawDataMain backend silently returns empty results (because
+       the assembly it dynamic-dispatches to isn't there) — which is what caused the long string
+       of TC flakes we tried to paper over with ScanCount==0 retries. The reason it worked on
+       warm machines is that a prior build left the directory populated.
+
+       The target below depends on ExtractShimadzuAssemblies and runs before AssignTargetPaths,
+       so the wildcard evaluates the actual post-extract contents on every build (cold or warm)
+       and the items are added before MSBuild assembles the @(ContentWithTargetPath) collection
+       that feeds CopyFilesToOutputDirectory + cross-project Content propagation. -->
+  <Target Name="CollectShimadzuRuntime"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          DependsOnTargets="ExtractShimadzuAssemblies"
+          BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)\*.dll"
+                        Exclude="$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll" />
+      <Content Include="@(_ShimadzuRuntime)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <!-- See Sciex.csproj for the rationale: keep the dll out of downstream publish bundles
+             to avoid NETSDK1152 / single-file BundleRelativePath collisions. The dll still
+             lands in Shimadzu/bin/ via this Content entry, and ProjectReference propagation
+             pulls it from there into consumers' bin and (correctly) into their publish output. -->
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+        <Link>%(Filename)%(Extension)</Link>
+        <Visible>false</Visible>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+</Project>

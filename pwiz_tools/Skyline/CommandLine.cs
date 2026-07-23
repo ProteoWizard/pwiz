@@ -2663,19 +2663,31 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(PathEx.SafePath(filePath)));
 
-                using (var reader = new StreamReader(filePath))
+                try
                 {
-                    _doc = _doc.ImportDocumentXml(reader,
-                                                filePath,
-                                                commandArgs.DocImportResultsMerge.Value,
-                                                commandArgs.DocImportMergePeptides,
-                                                FindSpectralLibrary,
-                                                Settings.Default.StaticModList,
-                                                Settings.Default.HeavyModList,
-                                                null,   // Always add to the end
-                                                out _,
-                                                out _,
-                                                false);
+                    using (var reader = new StreamReader(filePath))
+                    {
+                        _doc = _doc.ImportDocumentXml(reader,
+                                                    filePath,
+                                                    commandArgs.DocImportResultsMerge.Value,
+                                                    commandArgs.DocImportMergePeptides,
+                                                    FindSpectralLibrary,
+                                                    Settings.Default.StaticModList,
+                                                    Settings.Default.HeavyModList,
+                                                    null,   // Always add to the end
+                                                    out _,
+                                                    out _,
+                                                    false);
+                    }
+                }
+                catch (Exception e) when (e is IOException || e is ArgumentException || e is NotSupportedException)
+                {
+                    // Malformed path (invalid chars, missing file, etc.). net472 raised
+                    // NotSupportedException on invalid path chars; net8 raises IOException.
+                    // Report and fail the import gracefully so the command-line returns
+                    // an error status instead of unwinding through Main.
+                    _out.WriteLine(@"Error: {0}", e.Message);
+                    return false;
                 }
             }
             return true;
@@ -4718,9 +4730,9 @@ namespace pwiz.Skyline
             }, x =>
             {
                 if (formatIncludesException)
-                    _out.WriteException(formatMessage, string0, x);
+                    _out.WriteException(EnsureErrorPrefix(formatMessage), string0, x);
                 else
-                    _out.WriteException(string.Format(formatMessage, string0), x, true);
+                    _out.WriteException(EnsureErrorPrefix(string.Format(formatMessage, string0)), x, true);
             });
         }
 
@@ -4730,7 +4742,25 @@ namespace pwiz.Skyline
             {
                 func();
                 return true;
-            }, x => _out.WriteException(message, x, !formatIncludesException));
+            }, x => _out.WriteException(EnsureErrorPrefix(message), x, !formatIncludesException));
+        }
+
+        /// <summary>
+        /// Prepends the "Error:" hint if the message doesn't already start with it, so
+        /// the write flips <see cref="CommandStatusWriter.IsErrorReported"/> and
+        /// downstream ValidateRunExitStatus sees a real error report. Resource strings
+        /// used with HandleExceptions historically expected the caller to hand-encode
+        /// the prefix (e.g. "Error: Failure attempting to..."); a few resources
+        /// (CommandLine_AssociateProteins_Failed_to_associate_proteins, etc.) omit it
+        /// and slipped through undetected on net472 where non-error prefixes weren't
+        /// checked.
+        /// </summary>
+        private static string EnsureErrorPrefix(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return message;
+            if (message.StartsWith(@"Error", StringComparison.InvariantCultureIgnoreCase))
+                return message;
+            return @"Error: " + message;
         }
 
         private static T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)

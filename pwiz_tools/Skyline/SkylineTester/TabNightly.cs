@@ -25,7 +25,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+#if NET472
 using System.ServiceModel;
+#endif
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
 using ZedGraph;
@@ -805,6 +807,7 @@ namespace SkylineTester
 
         BackgroundWorker SkylineTesterWindow.IMemoryGraphContainer.UpdateWorker { get; set; }
 
+#if NET472
         // Facilitates IPC so that we can receive signals from SkylineNightly
         [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
         public class NightlyListener: IEndTimeSetter
@@ -852,5 +855,44 @@ namespace SkylineTester
             [OperationContract]
             void SetEndTime(DateTime endTime);
         }
+#else
+        // net8 has no self-hosted WCF: ServiceHost / NetNamedPipeBinding require CoreWCF, a different
+        // (ASP.NET-Core-based) hosting model than the net472 System.ServiceModel self-host above. The
+        // nightly end-time IPC callback from SkylineNightly (itself still net472) is net472-only for
+        // now; this stub keeps the callers (InitNightlyListener / cleanup) framework-agnostic and
+        // no-ops the hosting. The stop-timer logic is retained so a future net8-native IPC (e.g. a
+        // plain named pipe or CoreWCF) can drive SetEndTime directly.
+        public class NightlyListener
+        {
+            private readonly Timer _stopTimer;
+
+            public NightlyListener(Timer stopTimer)
+            {
+                _stopTimer = stopTimer;
+            }
+
+            public void Stop()
+            {
+            }
+
+            public void SetEndTime(DateTime endTime)
+            {
+                if (_stopTimer == null)
+                    return;
+
+                _stopTimer.Stop();
+
+                var now = DateTime.Now;
+                if (endTime <= now)
+                {
+                    MainWindow.StopByTimer();
+                    return;
+                }
+
+                _stopTimer.Interval = (int) endTime.Subtract(now).TotalMilliseconds;
+                _stopTimer.Start();
+            }
+        }
+#endif
     }
 }

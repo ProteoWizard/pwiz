@@ -365,7 +365,7 @@ namespace SkylineTool
         /// metadata including title, table of contents, and file path.
         /// </summary>
         /// <param name="name">Tutorial folder name (e.g. "MethodEdit", "DIA-TTOF").</param>
-        /// <param name="language">Language code: "en" (default), "ja", "zh-CHS".</param>
+        /// <param name="language">Language code: "en" (default), "ja", "zh-Hans".</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
         TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null);
 

@@ -47,7 +47,14 @@ namespace TestPerf
             TestFilesPersistent = new[] { "2021_0810_Eclipse_LiPExp_05_SS3.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             UnzipTestFiles();
 
+#if NET472
             var processStartInfo =  new ProcessStartInfo(@"BullseyeSharp")
+#else
+            // net8: BullseyeSharp ships as the managed pwiz-sharp tool "bullseye-sharp.exe" bundled
+            // next to Skyline (and, via Content propagation, next to this test assembly). Resolve its
+            // absolute path because net8 Process.Start won't locate a bare exe name via the cwd.
+            var processStartInfo =  new ProcessStartInfo(PathEx.ResolveBundledExe(@"bullseye-sharp"))
+#endif
             {
                 Arguments = $@"""{GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk")}"" ""{GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3.raw")}"" ""{GetDataPath("testMatch.ms2")}"" ""{GetDataPath("testNoMatch.ms2")}""",
                 CreateNoWindow = true,
@@ -67,10 +74,13 @@ namespace TestPerf
             });
 
             // Now compare our output to the official output, ignoring differences like time stamps, or file paths
-            AssertEx.AreEquivalentDsvFiles(GetDataPath("expected\\2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"), 
-                GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"), 
+            AssertEx.AreEquivalentDsvFiles(GetDataPath("expected\\2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"),
+                GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"),
                 true, // Has headers
-                new []{0}); // Ignore differences in column 0 (file path)
+                new []{0}, // Ignore differences in column 0 (file path)
+                // The G7-formatted float columns can differ in the last significant digit vs the
+                // net472-era baseline (float32 accumulation/FMA order); accept a small relative tolerance.
+                relativeTolerance: 5e-6);
 
             void CompareMS2Files(string expected, string actual)
             {

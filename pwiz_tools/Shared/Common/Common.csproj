@@ -1,627 +1,101 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Common — multi-target net472 + net8.0-windows. The biggest mid-tier
+       Shared library. Depends on CommonUtil + MSGraph + ZedGraph (all already
+       multi-targeted) and a handful of HintPath legacy DLLs that have NuGet
+       equivalents on net8. -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.Common</RootNamespace>
     <AssemblyName>pwiz.Common</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <TargetFrameworkProfile />
+    <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
+    <!-- net472 keeps using Properties/AssemblyInfo.cs (legacy parity); net8 lets the
+         SDK generate the company/product/title/copyright attributes from project
+         metadata. AssemblyInfo.cs gates those lines with #if NET472. -->
+    <Company>University of Washington</Company>
+    <Product>Common</Product>
+    <AssemblyTitle>Common</AssemblyTitle>
+    <Copyright>Copyright © University of Washington 2009-2011</Copyright>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <!-- Old NETStandard.Library 1.6 (transitive via NHibernate→Antlr3.Runtime) requests
+         old versions of System.* meta-packages that net8 supersedes at runtime; the
+         NU1605 "downgrade" is benign here. Suppress only on net8 — net472 doesn't hit
+         the issue because it has its own BCL story. -->
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <!-- WebView2 was already a PackageReference in the legacy csproj; safe on both targets. -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.864.35" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\MSGraph\MSGraph.csproj" />
+    <ProjectReference Include="..\zedgraph\ZedGraph.csproj" />
+  </ItemGroup>
+
+  <!-- DocumentationGenerator.GetStyleSheetHtml() loads this stylesheet via
+       assembly.GetManifestResourceStream(typeof(DocumentationGenerator), "DocumentationGenerator.css")
+       and returns an empty stylesheet if it isn't embedded. SDK default globs don't embed .css. -->
+  <ItemGroup>
+    <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <!-- Legacy bundled DLLs — kept for the net472 path so behavior matches today. -->
     <Reference Include="Iesi.Collections">
       <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\Lib\log4net.dll</HintPath>
+      <Private>True</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Lib\MathNet.Numerics.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="NHibernate">
       <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Sprache">
       <HintPath>..\Lib\Sprache.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Drawing" />
+    <!-- Legacy used a $(PLATFORM)-substituted HintPath; SDK doesn't evaluate
+         $(PLATFORM) the same way. Use the NuGet package for both targets;
+         the package's bundled native handles the platform routing. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" Condition="'$(TargetFramework)' == 'net472'" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Colors\ColorPalettes.cs" />
-    <Compile Include="Colors\ColorScheme.cs" />
-    <Compile Include="Colors\DiscreteColorScheme.cs" />
-    <Compile Include="Colors\NumericColorScheme.cs" />
-    <Compile Include="Controls\AutoScrollTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\Clustering\DendrogramControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\CustomTextProgressBar.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\DataGridViewProgressBar.cs" />
-    <Compile Include="Controls\LiteDropDownList.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\MultiProgressControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\MultiProgressControl.Designer.cs">
-      <DependentUpon>MultiProgressControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
-    <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
-    <Compile Include="Controls\Clustering\DendrogramFormat.cs" />
-    <Compile Include="Controls\Clustering\DendrogramScale.cs" />
-    <Compile Include="Controls\CommonDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\DoubleBufferedListView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\ColumnLimitExceededColumn.cs" />
-    <Compile Include="DataAnalysis\alglib\alglibinternal.cs" />
-    <Compile Include="DataAnalysis\alglib\alglibmisc.cs" />
-    <Compile Include="DataAnalysis\alglib\ap.cs" />
-    <Compile Include="DataAnalysis\alglib\dataanalysis.cs" />
-    <Compile Include="DataAnalysis\alglib\diffequations.cs" />
-    <Compile Include="DataAnalysis\alglib\fasttransforms.cs" />
-    <Compile Include="DataAnalysis\alglib\integration.cs" />
-    <Compile Include="DataAnalysis\alglib\interpolation.cs" />
-    <Compile Include="DataAnalysis\alglib\linalg.cs" />
-    <Compile Include="DataAnalysis\alglib\optimization.cs" />
-    <Compile Include="DataAnalysis\alglib\solvers.cs" />
-    <Compile Include="DataAnalysis\alglib\specialfunctions.cs" />
-    <Compile Include="DataAnalysis\alglib\statistics.cs" />
-    <Compile Include="DataAnalysis\Clustering\ClusterDataSet.cs" />
-    <Compile Include="DataAnalysis\Clustering\ClusterMetricType.cs" />
-    <Compile Include="DataAnalysis\Clustering\ClusterRole.cs" />
-    <Compile Include="DataAnalysis\Clustering\PcaResults.cs" />
-    <Compile Include="DataAnalysis\LinearFitResult.cs" />
-    <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
-    <Compile Include="DataAnalysis\FoldChange\DesignMatrix.cs" />
-    <Compile Include="DataAnalysis\FoldChange\FoldChangeCalculator.cs" />
-    <Compile Include="DataAnalysis\LinearModel.cs" />
-    <Compile Include="DataAnalysis\Matrices\ImmutableMatrix.cs" />
-    <Compile Include="DataAnalysis\Matrices\QrFactorization.cs" />
-    <Compile Include="DataAnalysis\Matrices\QrFactorizationCache.cs" />
-    <Compile Include="DataAnalysis\Matrices\ReadOnlyMatrixStorage.cs" />
-    <Compile Include="DataAnalysis\MedianPolish.cs" />
-    <Compile Include="DataAnalysis\PValues.cs" />
-    <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
-    <Compile Include="DataAnalysis\LoessInterpolator.cs" />
-    <Compile Include="Database\NHibernate\AbstractSessionWithLock.cs" />
-    <Compile Include="Database\NHibernate\SessionFactoryFactory.cs" />
-    <Compile Include="Database\NHibernate\SessionWithLock.cs" />
-    <Compile Include="Database\NHibernate\StatelessSessionWithLock.cs" />
-    <Compile Include="Database\SqliteOperations.cs" />
-    <Compile Include="DataBinding\AbstractViewContext.cs" />
-    <Compile Include="DataBinding\AggregateOperation.cs" />
-    <Compile Include="DataBinding\AnnotatedValue.cs" />
-    <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\FilterHandlerAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
-    <!-- DataGridViewColumnTypeAttribute.cs removed -->
-    <Compile Include="DataBinding\Attributes\DataTypeSpecifierAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\RowSourceAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\HiddenAttribute.cs" />
-    <Compile Include="DataBinding\CaptionedValues.cs" />
-    <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
-    <Compile Include="DataBinding\Clustering\ClusteredProperties.cs" />
-    <Compile Include="DataBinding\Clustering\ClusteredReportResults.cs" />
-    <Compile Include="DataBinding\Clustering\ClusteringSpec.cs" />
-    <Compile Include="DataBinding\Clustering\ReportColorScheme.cs" />
-    <Compile Include="DataBinding\CollectionInfo.cs" />
-    <Compile Include="DataBinding\ColumnFormats.cs" />
-    <Compile Include="DataBinding\ColumnSelector.cs" />
-    <Compile Include="DataBinding\Controls\ClusteringEditor.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\ClusteringEditor.Designer.cs">
-      <DependentUpon>ClusteringEditor.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\ColumnListEditor.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\ColumnListEditor.Designer.cs">
-      <DependentUpon>ColumnListEditor.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\ColumnListView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.Designer.cs">
-      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\FindColumnDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\FindColumnDlg.Designer.cs">
-      <DependentUpon>FindColumnDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\DocumentationViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\DocumentationViewer.Designer.cs">
-      <DependentUpon>DocumentationViewer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\ManageLayoutsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\ManageLayoutsForm.Designer.cs">
-      <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\NameLayoutForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\NameLayoutForm.Designer.cs">
-      <DependentUpon>NameLayoutForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\PivotEditor.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\PivotEditor.Designer.cs">
-      <DependentUpon>PivotEditor.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\QuickFilterForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\QuickFilterForm.Designer.cs">
-      <DependentUpon>QuickFilterForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\DataPropertyDescriptor.cs" />
-    <Compile Include="DataBinding\DataSchemaLocalizer.cs" />
-    <Compile Include="DataBinding\ColumnCaption.cs" />
-    <Compile Include="DataBinding\ColumnDescriptor.cs" />
-    <Compile Include="DataBinding\ColumnPropertyDescriptor.cs" />
-    <Compile Include="DataBinding\ColumnSpec.cs" />
-    <Compile Include="DataBinding\Controls\BindingListSource.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\BoundDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\IViewEditor.cs" />
-    <Compile Include="DataBinding\Controls\Editor\ViewEditorWidget.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\AvailableFieldsTree.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ChooseColumnsTab.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ChooseColumnsTab.Designer.cs">
-      <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ViewEditor.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ViewEditor.Designer.cs">
-      <DependentUpon>ViewEditor.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\FilterTab.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\FilterTab.Designer.cs">
-      <DependentUpon>FilterTab.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ListViewHelper.cs" />
-    <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.Designer.cs">
-      <DependentUpon>ManageViewsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\SourceTab.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\Editor\SourceTab.Designer.cs">
-      <DependentUpon>SourceTab.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Controls\NavBar.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
-      <DependentUpon>NavBar.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DataBinding\Filtering\FilterClauseSerializer.cs" />
-    <Compile Include="DataBinding\Filtering\FilterHandler.cs" />
-    <Compile Include="DataBinding\Filtering\FilterClause.cs" />
-    <Compile Include="DataBinding\Filtering\FilterPage.cs" />
-    <Compile Include="DataBinding\Filtering\FilterPages.cs" />
-    <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />
-    <Compile Include="DataBinding\Internal\WrappedDataPropertyDescriptor.cs" />
-    <Compile Include="DataBinding\ReportExporter.cs" />
-    <Compile Include="DataBinding\ListColumnValue.cs" />
-    <Compile Include="DataBinding\RowItemEnumerator.cs" />
-    <Compile Include="DataBinding\TabularFileFormat.cs" />
-    <Compile Include="DataBinding\DataSchema.cs" />
-    <Compile Include="DataBinding\DisplayColumn.cs" />
-    <Compile Include="DataBinding\Documentation\DocumentationGenerator.cs" />
-    <Compile Include="DataBinding\DsvWriter.cs" />
-    <Compile Include="DataBinding\EventTaskScheduler.cs" />
-    <Compile Include="DataBinding\FilterInfo.cs" />
-    <Compile Include="DataBinding\FilterOperation.cs" />
-    <Compile Include="DataBinding\FilterPredicate.cs" />
-    <Compile Include="DataBinding\IErrorTextProvider.cs" />
-    <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
-    <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
-    <Compile Include="DataBinding\Internal\BindingListView.cs" />
-    <Compile Include="DataBinding\Clustering\Clusterer.cs" />
-    <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
-    <Compile Include="DataBinding\Internal\GroupAndTotaler.cs" />
-    <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />
-    <Compile Include="DataBinding\Internal\GroupedRow.cs" />
-    <Compile Include="DataBinding\Internal\IndexedPropertyDescriptor.cs" />
-    <Compile Include="DataBinding\Internal\IQueryRequest.cs" />
-    <Compile Include="DataBinding\Internal\Pivoter.cs" />
-    <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
-    <Compile Include="DataBinding\Internal\QueryResults.cs" />
-    <Compile Include="DataBinding\ItemProperties.cs" />
-    <Compile Include="DataBinding\IUiModeInfo.cs" />
-    <Compile Include="DataBinding\CaptionedDendrogramData.cs" />
-    <Compile Include="DataBinding\Layout\RowFilter.cs" />
-    <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
-    <Compile Include="DataBinding\IRowSource.cs" />
-    <Compile Include="DataBinding\Layout\IRowTransform.cs" />
-    <Compile Include="DataBinding\IViewTransformer.cs" />
-    <Compile Include="DataBinding\Layout\TransformStack.cs" />
-    <Compile Include="DataBinding\Layout\ViewLayoutList.cs" />
-    <Compile Include="DataBinding\NewRowHandler.cs" />
-    <Compile Include="DataBinding\PivotedColumnId.cs" />
-    <Compile Include="DataBinding\PivotKey.cs" />
-    <Compile Include="DataBinding\Layout\PivotSpec.cs" />
-    <Compile Include="DataBinding\PropertyPath.cs" />
-    <Compile Include="DataBinding\IViewContext.cs" />
-    <Compile Include="DataBinding\QueryLock.cs" />
-    <Compile Include="DataBinding\ReportResults.cs" />
-    <Compile Include="DataBinding\RowItem.cs" />
-    <Compile Include="DataBinding\LinkValue.cs" />
-    <Compile Include="DataBinding\RowItemValues.cs" />
-    <Compile Include="DataBinding\RowSourceInfo.cs" />
-    <Compile Include="DataBinding\RowSources\IListChanged.cs" />
-    <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
-    <Compile Include="DataBinding\SerializableViewGroups.cs" />
-    <Compile Include="DataBinding\SortableBindingList.cs" />
-    <Compile Include="DataBinding\Clustering\PivotedProperties.cs" />
-    <Compile Include="DataBinding\TotalOperation.cs" />
-    <Compile Include="DataBinding\TransformResults.cs" />
-    <Compile Include="DataBinding\Layout\ColumnId.cs" />
-    <Compile Include="DataBinding\Layout\ViewLayout.cs" />
-    <Compile Include="DataBinding\ViewGroup.cs" />
-    <Compile Include="DataBinding\ViewInfo.cs" />
-    <Compile Include="DataBinding\ViewSpecLayout.cs" />
-    <Compile Include="DataBinding\ViewSpecList.cs" />
-    <Compile Include="Graph\CurveDataHandler.cs" />
-    <Compile Include="Graph\DataColumn.cs" />
-    <Compile Include="Graph\DataFrame.cs" />
-    <Compile Include="Graph\CurveDataHandlers.cs" />
-    <Compile Include="Graph\DataFrameBuilder.cs" />
-    <Compile Include="Graph\GraphData.cs" />
-    <Compile Include="Graph\GraphPaneData.cs" />
-    <Compile Include="PeakFinding\ChromSmoother.cs" />
-    <Compile Include="PeakFinding\FoundPeak.cs" />
-    <Compile Include="PeakFinding\PeakBounds.cs" />
-    <Compile Include="PeakFinding\PeakFinder.cs" />
-    <Compile Include="PeakFinding\IFoundPeak.cs" />
-    <Compile Include="PeakFinding\IPeakFinder.cs" />
-    <Compile Include="PeakFinding\PeakAndValleyFinder.cs" />
-    <Compile Include="PeakFinding\PeakFinders.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <!-- net8 replacements. NHibernate 5.5+ supports net6+. log4net 2.x is net6+
+         compatible. MathNet, Sprache, System.Data.SQLite.Core all multi-target
+         to net6+. -->
+    <!-- NHibernate 5.5's transitive Antlr3.Runtime 3.5.1 pulls in NETStandard.Library 1.6
+         which forces NU1605 package downgrades on net8. Use the modern 5.5.x line that
+         drops the Antlr3.Runtime dep, OR upgrade Antlr to a net-compatible version. -->
+    <PackageReference Include="NHibernate" Version="5.5.2" />
+    <PackageReference Include="Iesi.Collections" Version="4.0.5" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <!-- MathNet 5.0 removed Control.LinearAlgebraProvider and the internal
+         Resources class. 4.15.x preserves the legacy API surface Skyline uses
+         while still targeting net6+. -->
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="Sprache" Version="2.3.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Controls\MultiProgressControl.ja.resx">
-      <DependentUpon>MultiProgressControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\MultiProgressControl.zh-CHS.resx">
-      <DependentUpon>MultiProgressControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\MultiProgressControl.resx">
-      <DependentUpon>MultiProgressControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.ja.resx">
-      <DependentUpon>ClusteringEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.resx">
-      <DependentUpon>ClusteringEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.zh-CHS.resx">
-      <DependentUpon>ClusteringEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.ja.resx">
-      <DependentUpon>ColumnListEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.resx">
-      <DependentUpon>ColumnListEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.zh-CHS.resx">
-      <DependentUpon>ColumnListEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.ja.resx">
-      <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.resx">
-      <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.zh-CHS.resx">
-      <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseViewsControl.ja.resx">
-      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseViewsControl.resx">
-      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseViewsControl.zh-CHS.resx">
-      <DependentUpon>ChooseViewsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\DocumentationViewer.ja.resx">
-      <DependentUpon>DocumentationViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\DocumentationViewer.zh-CHS.resx">
-      <DependentUpon>DocumentationViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.ja.resx">
-      <DependentUpon>FilterTab.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.zh-CHS.resx">
-      <DependentUpon>FilterTab.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.ja.resx">
-      <DependentUpon>FindColumnDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.resx">
-      <DependentUpon>FindColumnDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.zh-CHS.resx">
-      <DependentUpon>FindColumnDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.ja.resx">
-      <DependentUpon>ManageViewsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.zh-CHS.resx">
-      <DependentUpon>ManageViewsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\DocumentationViewer.resx">
-      <DependentUpon>DocumentationViewer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\SourceTab.ja.resx">
-      <DependentUpon>SourceTab.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\SourceTab.zh-CHS.resx">
-      <DependentUpon>SourceTab.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.ja.resx">
-      <DependentUpon>ViewEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.resx">
-      <DependentUpon>ViewEditor.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.resx">
-      <DependentUpon>FilterTab.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.resx">
-      <DependentUpon>ManageViewsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\SourceTab.resx">
-      <DependentUpon>SourceTab.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.zh-CHS.resx">
-      <DependentUpon>ViewEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ManageLayoutsForm.ja.resx">
-      <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ManageLayoutsForm.resx">
-      <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\ManageLayoutsForm.zh-CHS.resx">
-      <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\NameLayoutForm.ja.resx">
-      <DependentUpon>NameLayoutForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\NameLayoutForm.resx">
-      <DependentUpon>NameLayoutForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\NameLayoutForm.zh-CHS.resx">
-      <DependentUpon>NameLayoutForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\PivotEditor.ja.resx">
-      <DependentUpon>PivotEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\PivotEditor.resx">
-      <DependentUpon>PivotEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\NavBar.ja.resx">
-      <DependentUpon>NavBar.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\NavBar.resx">
-      <DependentUpon>NavBar.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\NavBar.zh-CHS.resx">
-      <DependentUpon>NavBar.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\PivotEditor.zh-CHS.resx">
-      <DependentUpon>PivotEditor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.ja.resx">
-      <DependentUpon>QuickFilterForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.resx">
-      <DependentUpon>QuickFilterForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.zh-CHS.resx">
-      <DependentUpon>QuickFilterForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.ja.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.zh-CHS.resx">
-      <DependentUpon>Resources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Delete.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\down-pro32.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\up-pro32.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\DropImageNoBackground.png" />
-    <None Include="Resources\FreezeCells.png" />
-    <None Include="Resources\HiddenColumns.bmp" />
-    <None Include="Resources\Cluster.bmp" />
-    <None Include="Resources\Alphabetical.bmp" />
-    <None Include="Resources\UnknownUiMode.png" />
-    <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
-    <None Include="Resources\agg_mean.bmp" />
-    <None Include="Resources\agg_median.bmp" />
-    <None Include="Resources\agg_sum.bmp" />
-    <None Include="Resources\agg_count.bmp" />
-    <None Include="Resources\agg_blank.bmp" />
-    <None Include="Resources\agg_groupby.bmp" />
-    <None Include="Resources\agg_min.bmp" />
-    <None Include="Resources\agg_max.bmp" />
-    <None Include="Resources\agg_stddev.bmp" />
-    <None Include="Resources\close.bmp" />
-    <None Include="Resources\BoolColumn.bmp" />
-    <None Include="Resources\Filter.bmp" />
-    <None Include="Resources\PlainLayout.bmp" />
-    <None Include="Resources\PivotAndFilter.bmp" />
-    <None Include="Resources\Pivot.bmp" />
-    <None Include="Resources\SublistColumn.bmp" />
-    <None Include="Resources\LinkColumn.bmp" />
-    <None Include="Resources\DataColumn.bmp" />
-    <None Include="Resources\TextColumn.bmp" />
-    <None Include="Resources\NumberColumn.bmp" />
-    <None Include="Resources\PivotColumn.bmp" />
-    <None Include="Resources\restore.bmp" />
-    <None Include="Resources\maximize.bmp" />
-    <None Include="Resources\MatchCase.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Web.WebView2">
-      <Version>1.0.2420.47</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MSGraph\MSGraph.csproj">
-      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
-      <Name>MSGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
-      <Name>ZedGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

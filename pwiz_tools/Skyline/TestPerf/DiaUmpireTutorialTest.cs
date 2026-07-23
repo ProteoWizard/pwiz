@@ -94,6 +94,9 @@ namespace TestPerf
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
             public PointF ChromatogramClickPoint;
+            // Peptide to select for the manual-review screenshots. Instrument-specific because the
+            // net8 OOP-MSAmanda re-baseline changed which peptides survive as (non-ambiguous) targets.
+            public string ExemplarPeptide;
 
             public string FastaPathForSearch => "DDA_search\\nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta";
             public string FastaPath =>
@@ -145,6 +148,7 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
+                ExemplarPeptide = "TDINQALNR",
             };
 
             TestTtofData();
@@ -164,6 +168,7 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
+                ExemplarPeptide = "TDINQALNR",
             };
 
             if (!IsCoverShotMode)
@@ -204,7 +209,9 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
-                ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
+                // AIDLIDEAASSIR (CLPB_ECOLI) apex ~48.16 min; TDINQALNR is no longer a net8 target here.
+                ChromatogramClickPoint = new PointF(48.16f, 5.5e5f),
+                ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
             if (!IsCoverShotMode)
@@ -224,7 +231,8 @@ namespace TestPerf
                 IrtFilterText = "iRT",
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
-                ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
+                ChromatogramClickPoint = new PointF(48.16f, 5.5e5f),
+                ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
             if (!IsCoverShotMode)
@@ -569,12 +577,23 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
+
+            // Run the search. Click asynchronously so the test thread stays free to dismiss the
+            // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
+            // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
+            // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
+            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (downloaderDlg != null)
+            {
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                WaitForClosedForm(waitDlg);
+            }
 
             try
             {
@@ -754,13 +773,13 @@ namespace TestPerf
             RunUIForScreenShot(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode);
             PauseForScreenShot("Manual review window layout with protein selected");
 
-            FindNode("TDINQALNR");
+            FindNode(_analysisValues.ExemplarPeptide);
             WaitForGraphs();
             PauseForScreenShot("Manual review window layout with peptide selected");
 
             FindNode("_HUMAN");
             WaitForGraphs();
-            FindNode("TDINQALNR");
+            FindNode(_analysisValues.ExemplarPeptide);
             RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
             PauseForChromGraphScreenShot("Snip just one chromatogram pane", "1_SW-A");

@@ -3,7 +3,7 @@
  *                  Bioinformatics Research Group, University of Applied Sciences Upper Austria
  *
  * Copyright 2020 University of Applied Sciences Upper Austria
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,369 +18,158 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using MSAmanda.Core;
-using MSAmanda.Utils;
-using MSAmanda.InOutput;
-using MSAmanda.InOutput.Output;
 using pwiz.BiblioSpec;
-using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
-using OperationCanceledException = System.OperationCanceledException;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
-    public class MSAmandaSearchWrapper : AbstractDdaSearchEngine
+    /// <summary>
+    /// Out-of-process wrapper around the MSAmanda standalone command-line tool.
+    /// Downloads MSAmanda.exe from GitHub on first use, generates a settings.xml
+    /// per input file, shells out, and returns the produced .mzid.gz path.
+    /// The in-process integration against FHOOE_IMP.MSAmanda.* .NET Framework
+    /// DLLs is intentionally gone - this wrapper is portable to net8.
+    /// </summary>
+    public class MSAmandaSearchWrapper : AbstractDdaSearchEngine, IProgressMonitor
     {
-        internal MSAmandaSettings Settings { get; }
-        private MSHelper helper;
-        private SettingsFile AvailableSettings;
-        private OutputMzid mzID;
-        private MSAmandaSearch SearchEngine;
-        private OutputParameters _outputParameters;
-        private MSAmandaSpectrumParser amandaInputParser;
-        private IProgressStatus _progressStatus;
-        private bool _success;
+        // Version pinned by cache-path only; upstream publishes just a rolling "latest.zip"
+        // under release/sa/latest/win/. We detect+embed the version in the install dir
+        // (so an upstream bump falls into a new cache dir and re-downloads).
+        public const string MSAMANDA_VERSION = @"3.0.22.864";
+        public const string MSAMANDA_FILENAME = @"MSAmanda-" + MSAMANDA_VERSION;
+        private const string MSAMANDA_EXE = @"MSAmanda.exe";
 
-        public int CurrentFile { get; private set; }
-        public int TotalFiles => SpectrumFileNames.Length;
+        private static readonly Uri MSAMANDA_URL = new Uri(
+            @"https://github.com/hgb-bin-proteomics/MSAmanda/raw/master/release/sa/latest/win/latest.zip");
 
-        public override event NotificationEventHandler SearchProgressChanged;
+        public static string MSAmandaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSAMANDA_FILENAME);
+        public static string MSAmandaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.MSAmanda,
+            Path.Combine(MSAmandaDirectory, MSAMANDA_EXE));
+        public static string MSAmandaArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.MSAmanda, "");
 
-        private const string UNIMOD_FILENAME = "Unimod.xml";
-        private const string ENZYME_FILENAME = "enzymes.xml";
-        private const string INSTRUMENTS_FILENAME = "Instruments.xml";
-        private const string AmandaMap = @"AmandaMap";
+        public static FileDownloadInfo[] FilesToDownload => new[]
+        {
+            new FileDownloadInfo
+            {
+                Filename = MSAMANDA_FILENAME, DownloadUrl = MSAMANDA_URL, InstallPath = MSAmandaDirectory,
+                // Upstream publishes a rolling, generic "latest.zip"; give the S3 mirror + download cache a
+                // distinctive, version-pinned name so it doesn't collide with any other tool's latest.zip.
+                MirrorFilename = MSAMANDA_FILENAME + @".zip",
+                OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.MSAmanda, ToolPath = MSAmandaBinary, ToolExtraArgs = MSAmandaArgs
+            }
+        };
 
+        // MSAmanda's fragment-ion "Instrument" strings. The set matches the
+        // possible values documented in the bundled settings.xml. This replaces
+        // the runtime-parsed Instruments.xml the old in-process wrapper used.
+        private static readonly string[] FRAGMENT_ION_SETS =
+        {
+            @"b, y",
+            @"a, b, y",
+            @"b, y, IMM",
+            @"b, y, H2O, NH3",
+            @"c, z+1",
+            @"c, z"
+        };
+
+        // Additional-settings knobs (surface a few useful MSAmanda toggles)
         private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
-
-        public static string MSAmandaTmp => Program.FunctionalTest ? TemporaryDirectory.TEMP_PREFIX : @"~SK_MSAmanda";
-
-        private readonly TemporaryDirectory _baseDir; // Created as %TMP%/~SK_MSAmanda/<random dirname>
-        // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
-
-        public MSAmandaSearchWrapper()
-        {
-            _baseDir = new TemporaryDirectory(tempPrefix: MSAmandaTmp + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
-            Settings = new MSAmandaSettings();
-            helper = new MSHelper();
-            helper.InitLogWriter(_baseDir.DirPath);
-            helper.SearchProgressChanged += Helper_SearchProgressChanged;
-            var folderForMappings = Path.Combine(_baseDir.DirPath, AmandaMap);
-            // creates dir if not existing
-            Directory.CreateDirectory(folderForMappings);
-            mzID = new OutputMzid(folderForMappings);
-            AvailableSettings = new SettingsFile(helper, Settings, mzID);
-            AvailableSettings.AllEnzymes = new List<MSAmandaEnzyme>();
-            AvailableSettings.AllModifications = new List<Modification>();
-
-            using (var d = new CurrentDirectorySetter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)))
-            {
-                if (!AvailableSettings.ParseEnzymeFile(ENZYME_FILENAME, "", AvailableSettings.AllEnzymes))
-                    throw new Exception(string.Format(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found, ENZYME_FILENAME));
-                if (!AvailableSettings.ParseUnimodFile(UNIMOD_FILENAME, AvailableSettings.AllModifications))
-                    throw new Exception(string.Format(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found, UNIMOD_FILENAME));
-                if (!AvailableSettings.ParseOboFiles())
-                    throw new Exception(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found);
-                if (!AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME))
-                    throw new Exception(string.Format(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found, INSTRUMENTS_FILENAME));
-            }
-
-            AdditionalSettings = new Dictionary<string, Setting>
-            {
-                {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 100000, 10)},
-                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 100)},
-                {CONSIDERED_CHARGES, new Setting(CONSIDERED_CHARGES, @"2,3")}
-            };
-
-            CurrentFile = 0;
-        }
-
-        public override void Dispose()
-        {
-            helper.Dispose();
-            mzID.Dispose();
-            amandaInputParser?.Dispose();
-            _baseDir.Dispose();
-            //AvailableSettings = new SettingsFile(null, Settings, mzID);
-            base.Dispose();
-        }
-
-        // Issue #4193: MSHelper.WriteMessage opens its log file unconditionally; if the
-        // Logs subdirectory created by InitLogWriter has been removed externally (e.g.
-        // by antivirus or Storage Sense cleaning up an empty temp folder), it throws
-        // DirectoryNotFoundException. The wrapper's exception-handling catch blocks
-        // call WriteMessage to report the underlying error, so a secondary failure
-        // there masks the real error and crashes the search before it can finish.
-        // Re-create the directory defensively and swallow any secondary failure so the
-        // original error survives in the search log and _success/SearchFinished still run.
-        private void SafeWriteMessage(string message)
-        {
-            try
-            {
-                Directory.CreateDirectory(Path.Combine(_baseDir.DirPath, @"Logs"));
-                helper.WriteMessage(message, true);
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch
-            {
-                // ignore: search is already failing; don't let a logging glitch mask the cause
-            }
-        }
-
-        private void Helper_SearchProgressChanged(string message)
-        {
-            if (message.Contains(@"Identifying Peptides") || message.Contains(@"decoy peptide hits"))
-                return;
-
-            if (message.Contains(@"Search failed"))
-            {
-                SearchProgressChanged?.Invoke(this, _progressStatus.ChangeMessage(message));
-                _success = false;
-            }
-            else if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
-            {
-                int percentProgress = amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra;
-                SearchProgressChanged?.Invoke(this, _progressStatus.ChangeMessage(message).ChangePercentComplete(percentProgress));
-            }
-        }
-
-        public override void SetEnzyme(DocSettings.Enzyme enzyme, int maxMissedCleavages)
-        {
-            MSAmandaEnzyme e = AvailableSettings.AllEnzymes.Find(enz => enz.Name.ToUpper() == enzyme.Name.ToUpper());
-            if (e != null)
-            {
-                Settings.MyEnzyme = e;
-                Settings.MissedCleavages = maxMissedCleavages;
-            }
-            else
-            {
-                MSAmandaEnzyme enz = new MSAmandaEnzyme()
-                {
-                    Name = enzyme.Name,
-                    CleavageSites = enzyme.IsNTerm ? enzyme.CleavageN : enzyme.CleavageC,
-                    CleavageInhibitors = enzyme.IsNTerm ? enzyme.RestrictN : enzyme.RestrictC,
-                    Offset = enzyme.IsNTerm ? 0 : 1,
-                    Specificity = enzyme.IsSemiCleaving
-                        ? MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.SEMI
-                        : MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.FULL
-                };
-                Settings.MyEnzyme = enz;
-                Settings.MissedCleavages = maxMissedCleavages;
-            }
-        }
-
-        public override void SetCutoffScore(double cutoffScore)
-        {
-            // Do nothing. MS Amanda does not seem to give this value to Percolator
-        }
+        private const string MAX_NO_DYN_MODIFS = "MaxNoDynModifs";
+        private const string MAX_RANK = "MaxRank";
+        private const string KEEP_INTERMEDIATE_FILES = "keep-intermediate-files";
 
         private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
 
-        public override string[] FragmentIons => Settings.ChemicalData.Instruments.Keys.ToArray();
+        // Captured configuration
+        private MzTolerance _precursorTol = new MzTolerance(5, MzTolerance.Units.ppm);
+        private MzTolerance _fragmentTol = new MzTolerance(0.02, MzTolerance.Units.mz);
+        private string _fragmentIons = @"b, y";
+        private Enzyme _enzyme;
+        private int _maxMissedCleavages = 2;
+        private int _maxVariableMods = 3;
+        private readonly List<StaticMod> _fixedMods = new List<StaticMod>();
+        private readonly List<StaticMod> _variableMods = new List<StaticMod>();
+
+        // Run-time state
+        private CancellationTokenSource _cancelToken;
+        private IProgressStatus _progressStatus;
+        private bool _success;
+        private List<string> _intermediateFiles;
+
+        public int CurrentFile { get; private set; }
+        public int TotalFiles => SpectrumFileNames?.Length ?? 0;
+
+        public override event NotificationEventHandler SearchProgressChanged;
+
+        public MSAmandaSearchWrapper()
+        {
+            AdditionalSettings = new Dictionary<string, Setting>
+            {
+                {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 100000, 1000, 1000000000)},
+                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 1000, 1000000000)},
+                {CONSIDERED_CHARGES, new Setting(CONSIDERED_CHARGES, @"2+,3+,4+")},
+                {MAX_NO_DYN_MODIFS, new Setting(MAX_NO_DYN_MODIFS, 4, 0, 10)},
+                {MAX_RANK, new Setting(MAX_RANK, 5, 1, 999)},
+                {KEEP_INTERMEDIATE_FILES, new Setting(KEEP_INTERMEDIATE_FILES, false)}
+            };
+        }
+
+        private bool KeepIntermediateFiles => (bool) AdditionalSettings[KEEP_INTERMEDIATE_FILES].Value;
+
+        public override string[] FragmentIons => FRAGMENT_ION_SETS;
         public override string[] Ms2Analyzers => new[] { @"Default" };
         public override string EngineName => @"MS Amanda";
         public override string CutoffScoreName => _cutoffScoreName;
         public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
         public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
         public override Bitmap SearchEngineLogo => Resources.MSAmandaLogo;
-        public override string  SearchEngineBlurb => string.Empty;
+        public override string SearchEngineBlurb => string.Empty;
 
-        public override void SetPrecursorMassTolerance(MzTolerance tol)
+        public override void SetPrecursorMassTolerance(MzTolerance tol) => _precursorTol = tol;
+        public override void SetFragmentIonMassTolerance(MzTolerance tol) => _fragmentTol = tol;
+        public override void SetFragmentIons(string ions) => _fragmentIons = ions ?? @"b, y";
+        public override void SetMs2Analyzer(string analyzer) { /* not used by MSAmanda */ }
+        public override void SetCutoffScore(double cutoffScore) { /* MSAmanda doesn't feed this into percolator */ }
+
+        public override void SetEnzyme(Enzyme enzyme, int maxMissedCleavages)
         {
-            Settings.Ms1Tolerance = new Tolerance(tol.Value, (MassUnit) tol.Unit);
-        }
-
-        public override void SetFragmentIonMassTolerance(MzTolerance tol)
-        {
-            Settings.Ms2Tolerance = new Tolerance(tol.Value, (MassUnit)tol.Unit);
-        }
-
-        public override void SetFragmentIons(string ions)
-        {
-            if (Settings.ChemicalData.Instruments.TryGetValue(ions, out var instrument))
-            {
-                Settings.ChemicalData.CurrentInstrumentSetting = instrument;
-            }
-        }
-
-        public override void SetMs2Analyzer(string analyzer)
-        {
-            // MS2 analyzer is not relevant in MS Amanda
-        }
-
-        private List<FastaDBFile> GetFastaFileList()
-        {
-            List<FastaDBFile> files = new List<FastaDBFile>();
-            foreach (string f in FastaFileNames)
-            {
-                AFastaFile file = new AFastaFile();
-                file.FullPath = f;
-                file.NeatName = Path.GetFileNameWithoutExtension(f);
-                files.Add(new FastaDBFile() { fastaTarged = file});
-            }
-            return files;
-        }
-
-        [NotNull]
-        private MSAmandaSearch InitializeEngine(CancellationTokenSource token, string spectrumFileName)
-        {
-            _outputParameters = new OutputParameters();
-            _outputParameters.FastaFiles = FastaFileNames.ToList();
-            _outputParameters.DBFile = FastaFileNames[0];
-            //2 == mzid
-            _outputParameters.SetOutputFileFormat(2);
-            _outputParameters.IsPercolatorOutput = true;
-            _outputParameters.SpectraFiles = new List<string>() { spectrumFileName};
-            Settings.GenerateDecoyDb = true;
-            Settings.ConsideredCharges.Clear();
-            foreach(var chargeStr in AdditionalSettings[CONSIDERED_CHARGES].Value.ToString().Split(','))
-                Settings.ConsideredCharges.Add(Convert.ToInt32(chargeStr));
-            Settings.ChemicalData.UseMonoisotopicMass = true;
-            Settings.ReportBothBestHitsForTD = false;
-            Settings.CombineConsideredCharges = true;
-            Settings.WriteResultsTwice = true;
-            Settings.ForceTargetDecoyMode = false;
-            //Console.WriteLine("\nReportBothBestHitsForTD CombineConsideredCharges WriteResultsTwice ForceTargetDecoyMode");
-            //Console.WriteLine($@"{Settings.ReportBothBestHitsForTD}       {Settings.CombineConsideredCharges}        {Settings.WriteResultsTwice}       {Settings.ForceTargetDecoyMode}");
-            mzID.Settings = Settings;
-            var searchEngine = new MSAmandaSearch(helper, _baseDir.DirPath, _outputParameters, Settings, token);
-            searchEngine.InitializeOutputMZ(mzID);
-            Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[MAX_LOADED_PROTEINS_AT_ONCE].Value;
-            Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
-            return searchEngine;
-        }
-    
-        public override bool Run(CancellationTokenSource tokenSource, IProgressStatus status)
-        {
-            _progressStatus = status;
-
-            _success = true;
-            try
-            {
-                using (var c = new CurrentCultureSetter(CultureInfo.InvariantCulture))
-                using (var d = new CurrentDirectorySetter(_baseDir.DirPath))
-                {
-                    foreach (var rawFileName in SpectrumFileNames)
-                    {
-                        tokenSource.Token.ThrowIfCancellationRequested();
-                        try
-                        {
-                            // CONSIDER: move this to base.Run()?
-                            string outputFilepath = GetSearchResultFilepath(rawFileName);
-                            if (File.Exists(outputFilepath))
-                            {
-                                // CONSIDER: read the file description to see what settings were used to generate the file;
-                                // if the same settings were used, we can re-use the file, else regenerate
-                                /*string lastLine = File.ReadLines(outputFilepath).Last();
-                                if (lastLine == @"</MzIdentML>")
-                                {
-                                    helper.WriteMessage($"Re-using existing mzIdentML file for {rawFileName.GetSampleOrFileName()}", true);
-                                    CurrentFile++;
-                                    _progressStatus = _progressStatus.NextSegment();
-                                    continue;
-                                }
-                                else*/
-                                FileEx.SafeDelete(outputFilepath);
-                            }
-
-                            SearchEngine = InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
-                            amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
-                            SearchEngine.SetInputParser(amandaInputParser);
-                            SearchEngine.PerformSearch(_outputParameters.DBFile);
-                            CurrentFile++;
-                            _progressStatus = _progressStatus.NextSegment();
-                        }
-                        finally
-                        {
-                            SearchEngine?.Dispose();
-                            amandaInputParser?.Dispose();
-                            amandaInputParser = null;
-                        }
-                    }
-                }
-            }
-            catch (AggregateException e)
-            {
-                if (e.InnerException is TaskCanceledException)
-                {
-                    SafeWriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled);
-                }
-                else
-                    Program.ReportException(e);
-                _success = false;
-            }
-            catch (OperationCanceledException)
-            {
-                SafeWriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled);
-                _success = false;
-            }
-            catch (Exception ex)
-            {
-                SafeWriteMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
-                _success = false;
-            }
-            finally
-            {
-                helper.Dispose();
-            }
-
-            if (tokenSource.IsCancellationRequested)
-                _success = false;
-            
-            return _success;
+            _enzyme = enzyme;
+            _maxMissedCleavages = maxMissedCleavages;
         }
 
         public override void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_)
         {
-            Settings.SelectedModifications.Clear();
-            foreach (var item in modifications)
+            _fixedMods.Clear();
+            _variableMods.Clear();
+            _maxVariableMods = maxVariableMods_;
+            foreach (var mod in modifications)
             {
-                string name = item.Name.Split(' ')[0];
-                var elemsFromUnimod = AvailableSettings.AllModifications.FindAll(m => m.Title == name);
-                if (elemsFromUnimod.Count> 0)
-                {
-                    foreach (char aa in item.AminoAcids)
-                    {
-                        var elem = elemsFromUnimod.Find(m => m.AA == aa);
-                        if (elem != null)
-                        {
-                            Modification modClone = new Modification(elem);
-                            modClone.Fixed = !item.IsVariable && item.LabelAtoms == LabelAtoms.None;
-                            if (item.Terminus == ModTerminus.C)
-                                modClone.CTerminal = true;
-                            else if (item.Terminus == ModTerminus.N)
-                                modClone.NTerminal = true;
-                            Settings.SelectedModifications.Add(modClone);
-                        }
-                        else
-                        {
-                            Settings.SelectedModifications.Add(GenerateNewModification(item, aa));
-                        }
-                    }
-                }
+                if (mod.IsVariable || mod.LabelAtoms != LabelAtoms.None)
+                    _variableMods.Add(mod);
                 else
-                {
-                    Settings.SelectedModifications.AddRange(GenerateNewModificationsForEveryAA(item));
-                }
+                    _fixedMods.Add(mod);
             }
-
         }
 
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
@@ -388,30 +177,380 @@ namespace pwiz.Skyline.Model.DdaSearch
             return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid.gz");
         }
 
+        // The standalone MSAmanda command-line tool only reads mzML (unlike the old in-process
+        // integration, which used the vendor readers). Anything else must be converted to mzML first.
+        private static readonly string[] SupportedExtensions = { @".mzml" };
+
         public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
             requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
+            if (!SupportedExtensions.Contains(e => e == searchFilepath.GetExtension().ToLowerInvariant()))
+                return true;
             return false;
         }
 
-        private List<Modification> GenerateNewModificationsForEveryAA(StaticMod mod)
+        public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
         {
-            List<Modification> mods = new List<Modification>();
-            if (mod.AAs != null)
-                foreach (var a in mod.AminoAcids)
-                    mods.Add(GenerateNewModification(mod, a));
-            else
-                mods.Add(GenerateNewModification(mod, ' '));
-            return mods;
+            _cancelToken = cancelToken;
+            _progressStatus = status;
+            _success = true;
+            _intermediateFiles = new List<string>();
+            CurrentFile = 0;
+
+            try
+            {
+                foreach (var rawFileName in SpectrumFileNames)
+                {
+                    _cancelToken.Token.ThrowIfCancellationRequested();
+
+                    string outputMzidGz = GetSearchResultFilepath(rawFileName);
+                    FileEx.SafeDelete(outputMzidGz);
+
+                    string spectrumPath = rawFileName.GetFilePath();
+
+                    // The standalone MS Amanda derives a scan number from each spectrum's mzML native id
+                    // and silently skips any spectrum it cannot parse one from ("Cannot parse scan number").
+                    // DIA-Umpire pseudo-spectra use "merged=N" native ids (pwiz DiaUmpire.cpp), which MS Amanda
+                    // cannot parse, so it reads 0 spectra, writes an empty result, and the downstream BlibBuild
+                    // fails with "No spectra were found for the new library". Normalize such ids to
+                    // "scan=<1-based index>" first. (The retired in-process MS Amanda read spectra by index and
+                    // never needed this, so this is a net8-only path and cannot affect net472.)
+                    if (SpectrumFileNeedsScanRewrite(spectrumPath))
+                        RewriteSpectrumIdsToScanNumbers(spectrumPath);
+
+                    string outputMzid = Path.ChangeExtension(spectrumPath, @".mzid");
+                    // MSAmanda requires the -e settings file to have a .xml extension ("Only .xml files
+                    // are accepted!"), so a Path.GetTempFileName() .tmp file is rejected. Use a temp path
+                    // that ends in .xml (GetRandomFileName does not create a file, so nothing leaks).
+                    string settingsFile = KeepIntermediateFiles
+                        ? Path.ChangeExtension(spectrumPath, @".msamanda.settings.xml")
+                        : Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), @".xml"));
+                    _intermediateFiles.Add(settingsFile);
+                    _intermediateFiles.Add(outputMzid);
+                    // MSAmanda also emits an echoed settings file and an SDRF alongside its output.
+                    _intermediateFiles.Add(outputMzid + @"_settings.xml");
+                    _intermediateFiles.Add(Path.ChangeExtension(spectrumPath, @".sdrf.tsv"));
+
+                    File.WriteAllText(settingsFile, BuildSettingsXml());
+
+                    var pr = new ProcessRunner();
+                    var psi = new ProcessStartInfo(MSAmandaBinary,
+                        $@"{MSAmandaArgs} -s ""{PathEx.GetNonUnicodePath(spectrumPath)}"" " +
+                        $@"-d ""{PathEx.GetNonUnicodePath(FastaFileNames[0])}"" " +
+                        $@"-e ""{PathEx.GetNonUnicodePath(settingsFile)}"" " +
+                        $@"-f 2 " +
+                        $@"-o ""{PathEx.GetNonUnicodePath(outputMzid)}""")
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        RedirectStandardInput = false,
+                        // MSAmanda resolves the EnzymesFile/ModificationsFile named in its settings.xml
+                        // (enzymes.xml, modifications.xml) relative to its working directory, so run it
+                        // from its own install dir where those bundled files live. All -s/-d/-e/-o paths
+                        // passed above are absolute, so they are unaffected by the working directory.
+                        WorkingDirectory = Path.GetDirectoryName(MSAmandaBinary)
+                    };
+
+                    // ReSharper disable once LocalizableElement
+                    _progressStatus = _progressStatus.ChangeMessage($"Running MS Amanda:\r\n\"{psi.FileName}\" {psi.Arguments}");
+                    if (UpdateProgressResponse.cancel == UpdateProgress(_progressStatus))
+                        return false;
+
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
+
+                    if (_cancelToken.IsCancellationRequested)
+                        break;
+
+                    // The standalone MSAmanda writes the mzIdentML already gzip-compressed, appending .gz
+                    // to the -o name (spectrum.mzid -> spectrum.mzid.gz), which is exactly the .mzid.gz
+                    // artifact downstream (BiblioSpec) consumers expect. If a build instead emits a plain
+                    // .mzid, gzip it here as a fallback.
+                    if (File.Exists(outputMzidGz))
+                    {
+                        // MSAmanda already produced the gzipped mzIdentML.
+                    }
+                    else if (File.Exists(outputMzid))
+                        GzipFile(outputMzid, outputMzidGz);
+                    else
+                        throw new IOException(string.Format(
+                            DdaSearchResources.DdaSearch_Search_failed__0,
+                            $@"MSAmanda did not produce expected output {outputMzidGz}"));
+
+                    CurrentFile++;
+                    _progressStatus = _progressStatus.NextSegment();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _progressStatus = _progressStatus.ChangeMessage(DdaSearchResources.DdaSearch_Search_is_canceled);
+                _success = false;
+            }
+            catch (Exception ex)
+            {
+                _progressStatus = _progressStatus.ChangeErrorException(ex)
+                    .ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
+                _success = false;
+            }
+            finally
+            {
+                DeleteIntermediateFiles();
+            }
+
+            if (IsCanceled && !_progressStatus.IsCanceled)
+            {
+                _progressStatus = _progressStatus.Cancel().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled);
+                _success = false;
+            }
+
+            if (_success)
+                _progressStatus = _progressStatus.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
+            UpdateProgress(_progressStatus);
+
+            return _success;
         }
 
-        private Modification GenerateNewModification(StaticMod mod, char a)
+        // Captures the opening <spectrum ...> tag's id attribute as three groups:
+        // (1) everything up to and including id=", (2) the id value, (3) the closing ".
+        private static readonly Regex SPECTRUM_ID_REGEX =
+            new Regex("(<spectrum\\b[^>]*?\\bid=\")([^\"]*)(\")", RegexOptions.Compiled);
+
+        // MS Amanda parses a scan number by looking for "scan=" in the native id (e.g. the Thermo
+        // "controllerType=0 controllerNumber=1 scan=5" or a bare "scan=5"), or a purely numeric id.
+        private static bool NativeIdHasScanNumber(string nativeId)
         {
-            return new Modification(mod.ShortName ?? mod.Name, mod.Name, mod.MonoisotopicMass ?? 0.0,
-                mod.AverageMass ?? 0.0, a, !mod.IsVariable, mod.Losses?.Select(l => l.MonoisotopicMass).ToArray() ?? new double[0],
-                mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.N,
-                mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.C,
-                mod.UnimodId ?? 0, false);
+            if (string.IsNullOrEmpty(nativeId))
+                return false;
+            if (nativeId.IndexOf(@"scan=", StringComparison.Ordinal) >= 0)
+                return true;
+            return nativeId.All(char.IsDigit);
         }
-  }
+
+        /// <summary>
+        /// Peek the first &lt;spectrum&gt; native id and report whether MS Amanda would be unable to
+        /// parse a scan number from it (so the file must be rewritten before searching). Streams the
+        /// file, so it is safe on large (32-bit process) inputs.
+        /// </summary>
+        private static bool SpectrumFileNeedsScanRewrite(string mzmlPath)
+        {
+            using (var reader = new StreamReader(mzmlPath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var m = SPECTRUM_ID_REGEX.Match(line);
+                    if (!m.Success)
+                        continue;
+                    return !NativeIdHasScanNumber(m.Groups[2].Value);
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Rewrite every spectrum's native id in <paramref name="mzmlPath"/> to "scan=&lt;1-based index&gt;"
+        /// so MS Amanda can ingest it, writing the result back in place. The index byte-offset table is
+        /// dropped (the ids change length), producing a valid non-indexed mzML that pwiz-sharp (BlibBuild)
+        /// and MS Amanda both read. Streams line-by-line to stay memory-safe on large files.
+        /// </summary>
+        private static void RewriteSpectrumIdsToScanNumbers(string mzmlPath)
+        {
+            string tempPath = mzmlPath + @".scannum.tmp";
+            int scanNumber = 0;
+            using (var reader = new StreamReader(mzmlPath))
+            using (var writer = new StreamWriter(tempPath, false, new UTF8Encoding(false)) { NewLine = "\n" })
+            {
+                writer.WriteLine(@"<?xml version=""1.0"" encoding=""utf-8""?>");
+                bool started = false;
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (!started)
+                    {
+                        // Skip the xml declaration and the <indexedmzML> wrapper; start at <mzML ...>.
+                        int mzmlIdx = line.IndexOf(@"<mzML ", StringComparison.Ordinal);
+                        if (mzmlIdx < 0)
+                            continue;
+                        started = true;
+                        if (mzmlIdx > 0)
+                            line = line.Substring(mzmlIdx);
+                    }
+
+                    line = SPECTRUM_ID_REGEX.Replace(line, m =>
+                    {
+                        scanNumber++;
+                        return m.Groups[1].Value + @"scan=" +
+                               scanNumber.ToString(CultureInfo.InvariantCulture) + m.Groups[3].Value;
+                    });
+
+                    // Stop at </mzML>, dropping the trailing <indexList>/<fileChecksum> and the
+                    // </indexedmzML> close: the rewritten file is deliberately non-indexed.
+                    int endIdx = line.IndexOf(@"</mzML>", StringComparison.Ordinal);
+                    if (endIdx >= 0)
+                    {
+                        writer.WriteLine(line.Substring(0, endIdx + @"</mzML>".Length));
+                        break;
+                    }
+                    writer.WriteLine(line);
+                }
+            }
+
+            FileEx.SafeDelete(mzmlPath);
+            File.Move(tempPath, mzmlPath);
+        }
+
+        private void DeleteIntermediateFiles()
+        {
+            if (_intermediateFiles == null || KeepIntermediateFiles)
+                return;
+            foreach (var path in _intermediateFiles)
+                FileEx.SafeDelete(path, true);
+        }
+
+        private static void GzipFile(string inputPath, string outputPath)
+        {
+            using (var inStream = File.OpenRead(inputPath))
+            using (var outStream = File.Create(outputPath))
+            using (var gz = new GZipStream(outStream, CompressionLevel.Optimal))
+                inStream.CopyTo(gz);
+        }
+
+        private string BuildSettingsXml()
+        {
+            var xml = new StringBuilder();
+            xml.AppendLine(@"<?xml version=""1.0"" encoding=""utf-8""?>");
+            xml.AppendLine(@"<Settings xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">");
+            xml.AppendLine(@"  <SearchSettings>");
+            xml.Append(BuildEnzymeXml());
+            xml.Append(Invariant($@"    <MissedCleavages>{_maxMissedCleavages}</MissedCleavages>{Environment.NewLine}"));
+            xml.AppendLine(@"    <Modifications>");
+            foreach (var mod in _fixedMods)
+                foreach (var line in ModificationLines(mod, isFixed: true))
+                    xml.AppendLine(line);
+            foreach (var mod in _variableMods)
+                foreach (var line in ModificationLines(mod, isFixed: false))
+                    xml.AppendLine(line);
+            xml.AppendLine(@"    </Modifications>");
+            xml.Append(Invariant($@"    <Instrument>{SecurityElementEscape(_fragmentIons)}</Instrument>{Environment.NewLine}"));
+            xml.Append(Invariant($@"    <MS1Tol Unit=""{TolUnit(_precursorTol)}"">{_precursorTol.Value.ToString(CultureInfo.InvariantCulture)}</MS1Tol>{Environment.NewLine}"));
+            xml.Append(Invariant($@"    <MS2Tol Unit=""{TolUnit(_fragmentTol)}"">{_fragmentTol.Value.ToString(CultureInfo.InvariantCulture)}</MS2Tol>{Environment.NewLine}"));
+            xml.Append(Invariant($@"    <MaxRank>{AdditionalSettings[MAX_RANK].Value}</MaxRank>{Environment.NewLine}"));
+            xml.AppendLine(@"    <GenerateDecoy>true</GenerateDecoy>");
+            xml.AppendLine(@"    <PerformDeisotoping>true</PerformDeisotoping>");
+            xml.Append(Invariant($@"    <MaxNoDynModifs>{AdditionalSettings[MAX_NO_DYN_MODIFS].Value}</MaxNoDynModifs>{Environment.NewLine}"));
+            xml.AppendLine(@"    <MinimumPepLength>6</MinimumPepLength>");
+            xml.AppendLine(@"    <MaximumPepLength>30</MaximumPepLength>");
+            xml.AppendLine(@"  </SearchSettings>");
+            xml.AppendLine(@"  <BasicSettings>");
+            xml.AppendLine(@"    <Monoisotopic>true</Monoisotopic>");
+            xml.Append(Invariant($@"    <ConsideredCharges>{SecurityElementEscape((string) AdditionalSettings[CONSIDERED_CHARGES].Value)}</ConsideredCharges>{Environment.NewLine}"));
+            xml.AppendLine(@"    <CombineConsideredCharges>true</CombineConsideredCharges>");
+            xml.Append(Invariant($@"    <LoadedProteinsAtOnce>{AdditionalSettings[MAX_LOADED_PROTEINS_AT_ONCE].Value}</LoadedProteinsAtOnce>{Environment.NewLine}"));
+            xml.Append(Invariant($@"    <LoadedSpectraAtOnce>{AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value}</LoadedSpectraAtOnce>{Environment.NewLine}"));
+            xml.AppendLine(@"    <DataFolder>DEFAULT</DataFolder>");
+            xml.AppendLine(@"    <EnzymesFile>enzymes.xml</EnzymesFile>");
+            xml.AppendLine(@"    <ModificationsFile>modifications.xml</ModificationsFile>");
+            xml.AppendLine(@"  </BasicSettings>");
+            xml.AppendLine(@"  <PercolatorSettings>");
+            xml.AppendLine(@"    <GeneratePInFile>false</GeneratePInFile>");
+            xml.AppendLine(@"    <RunPercolator>true</RunPercolator>");
+            xml.AppendLine(@"  </PercolatorSettings>");
+            xml.AppendLine(@"</Settings>");
+            return xml.ToString();
+        }
+
+        private string BuildEnzymeXml()
+        {
+            if (_enzyme == null)
+                return @"    <Enzyme Name=""Trypsin"" Specificity=""FULL"" />" + Environment.NewLine;
+
+            string spec = _enzyme.IsSemiCleaving ? @"SEMI" : @"FULL";
+            string cleavage = _enzyme.IsNTerm ? _enzyme.CleavageN : _enzyme.CleavageC;
+            string restrict = _enzyme.IsNTerm ? _enzyme.RestrictN : _enzyme.RestrictC;
+            string offset = _enzyme.IsNTerm ? @"before" : @"after";
+
+            var sb = new StringBuilder();
+            sb.Append(Invariant($@"    <Enzyme Name=""{SecurityElementEscape(_enzyme.Name)}"" Specificity=""{spec}"">{Environment.NewLine}"));
+            sb.Append(Invariant($@"      <Cleavage CleavageSites=""{SecurityElementEscape(cleavage ?? string.Empty)}"" "));
+            if (_enzyme.IsNTerm)
+                sb.Append(Invariant($@"PostfixInhibitors=""{SecurityElementEscape(restrict ?? string.Empty)}"" "));
+            else
+                sb.Append(Invariant($@"PrefixInhibitors=""{SecurityElementEscape(restrict ?? string.Empty)}"" "));
+            sb.Append(Invariant($@"Offset=""{offset}"" />{Environment.NewLine}"));
+            sb.AppendLine(@"    </Enzyme>");
+            return sb.ToString();
+        }
+
+        // MSAmanda takes either Unimod-named mods (e.g. "Oxidation(M)") or
+        // DeltaMass-attributed mods. Prefer the Unimod name when Skyline has one,
+        // otherwise fall back to the monoisotopic delta.
+        private IEnumerable<string> ModificationLines(StaticMod mod, bool isFixed)
+        {
+            string name = mod.Name ?? mod.ShortName ?? @"Mod";
+            string bareName = name.Split(' ')[0];
+            // StaticMod.AAs holds the raw comma-separated residues (e.g. "K, R");
+            // AminoAcids is the derived IEnumerable<char>. MSAmanda's params file
+            // wants a bare residue array.
+            char[] aas = mod.AAs?.Replace(@" ", "").Replace(@",", "").ToCharArray() ?? new char[0];
+            string ntermAttr = mod.Terminus == ModTerminus.N ? @" Nterm=""true"" MaxOccurrences=""1""" : string.Empty;
+            string ctermAttr = mod.Terminus == ModTerminus.C ? @" Cterm=""true"" MaxOccurrences=""1""" : string.Empty;
+            string fixedAttr = isFixed ? @" Fix=""true""" : string.Empty;
+
+            if (aas.Length == 0)
+            {
+                yield return Invariant(
+                    $@"      <Modification{fixedAttr}{ntermAttr}{ctermAttr}{DeltaMassAttr(mod)}>{SecurityElementEscape(bareName)}</Modification>");
+                yield break;
+            }
+            foreach (var aa in aas)
+            {
+                string body = Invariant($@"{SecurityElementEscape(bareName)}({aa})");
+                yield return Invariant(
+                    $@"      <Modification{fixedAttr}{ntermAttr}{ctermAttr}{DeltaMassAttr(mod)}>{body}</Modification>");
+            }
+        }
+
+        private static string DeltaMassAttr(StaticMod mod)
+        {
+            // Only emit a DeltaMass override when Skyline has a mono mass and the
+            // mod isn't from the Unimod dictionary MSAmanda's modifications.xml
+            // already knows about. Cheap heuristic: if UnimodId is set, trust the name.
+            if (mod.UnimodId.HasValue && mod.UnimodId.Value > 0)
+                return string.Empty;
+            if (!mod.MonoisotopicMass.HasValue)
+                return string.Empty;
+            return Invariant($@" DeltaMass=""{mod.MonoisotopicMass.Value.ToString(CultureInfo.InvariantCulture)}""");
+        }
+
+        private static string TolUnit(MzTolerance tol)
+        {
+            return tol.Unit == MzTolerance.Units.ppm ? @"ppm" : @"Da";
+        }
+
+        private static string Invariant(FormattableString s) => s.ToString(CultureInfo.InvariantCulture);
+
+        private static string SecurityElementEscape(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return s ?? string.Empty;
+            return s.Replace(@"&", @"&amp;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;")
+                    .Replace("\"", @"&quot;").Replace(@"'", @"&apos;");
+        }
+
+        #region IProgressMonitor
+
+        public bool IsCanceled => _cancelToken != null && _cancelToken.IsCancellationRequested;
+
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        {
+            _progressStatus = status;
+            SearchProgressChanged?.Invoke(this, status);
+            return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+        }
+
+        public bool HasUI => false;
+
+        #endregion
+    }
 }

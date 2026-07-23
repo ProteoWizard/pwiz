@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net472;netstandard2.0;net8.0-windows</TargetFrameworks>
     <RootNamespace>ImageComparer.Core</RootNamespace>
     <AssemblyName>ImageComparer.Core</AssemblyName>
     <LangVersion>latest</LangVersion>
@@ -10,6 +10,12 @@
   <!-- System.Drawing.Common NuGet only needed for netstandard2.0 target -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Drawing.Common" Version="4.7.3" />
+  </ItemGroup>
+
+  <!-- net8: System.Drawing.Common (GDI+) is a Windows-only NuGet package; match the other net8
+       image tools (ImageComparer.Mcp / ImageConverter). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
   </ItemGroup>
 
   <!-- .NET Framework 4.7.2 uses System.Drawing from the framework -->

@@ -86,7 +86,8 @@ namespace pwiz.Skyline
 
         public static bool IsRemoteUrl(string pathOrUrl)
         {
-            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix) || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix);
+            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix)
+                   || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix);
         }
 
         public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
@@ -139,7 +140,7 @@ namespace pwiz.Skyline
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
             (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
-        public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-CHS...",
+        public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-Hans...",
             (c, p) => SetCulture(p.Value)) { InternalUse = true };
 
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>

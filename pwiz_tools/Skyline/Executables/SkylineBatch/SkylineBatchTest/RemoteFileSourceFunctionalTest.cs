@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.GUI;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using SkylineBatch;
 using SkylineBatch.Properties;
@@ -49,6 +50,15 @@ namespace SkylineBatchTest
             TestFilesZip = @"SkylineBatchTest\RemoteFileSourceFunctionalTest.zip";
 
             RunFunctionalTest();
+        }
+
+        protected override void InitProgram()
+        {
+            base.InitProgram();
+            // Answer the Panorama server-validation HTTP call offline so selecting a source doesn't
+            // block on a live panoramaweb.org login. Only the valid test account validates; cleared by
+            // the base CleanupHttpTestBehavior after the test.
+            HttpClientWithProgress.TestBehavior = new PanoramaValidationTestBehavior(VALID_USER_NAME, VALID_PASSWORD);
         }
 
         protected override void DoTest()
