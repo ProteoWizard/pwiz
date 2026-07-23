@@ -890,6 +890,26 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_send_keys"),
+     Description("Type into one control on a form -- for what only real key input does, above all raising " +
+        "Skyline's auto-completion popup when typing on the document tree (type a protein name, press {DOWN} " +
+        "to pick a match, then {ENTER} to add it). The keys go to that control's own window, so it does NOT " +
+        "need the focus and you never have to arrange focus first; the control is verified enabled before " +
+        "anything is sent. To PASTE, do not send keys -- use skyline_perform_action with action='paste', " +
+        "which takes the text and so needs neither the clipboard nor Ctrl+V. Discover control names with " +
+        "skyline_get_controls.")]
+    public static string SendKeys(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control to send to, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
+        [Description("Keys: literal characters; {ENTER} {DOWN} {UP} {TAB} {ESC} {BACKSPACE} {DEL} {LEFT} {RIGHT} {HOME} {END} {PGUP} {PGDN} for named keys; ~ for Enter. A literal brace is {{} or {}}. No modifiers (Ctrl/Alt/Shift) -- use the 'paste' action instead of Ctrl+V.")] string keys)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.SendKeys(formId, controlId, keys);
+            return DescribeAction(result, $"Sent keys to '{controlId}' on {formId}.");
+        });
+    }
+
     // Note: the handshake wording below describes the SHAPE of the response,
     // not the exact runtime strings. The runtime messages live in
     // JsonUiService.LLM_MSG_SCREEN_CAPTURE_* and may be localized in the

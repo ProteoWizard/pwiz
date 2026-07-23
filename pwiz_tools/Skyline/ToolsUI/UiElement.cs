@@ -97,6 +97,12 @@ namespace pwiz.Skyline.ToolsUI
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
     public interface IRenameNodeElement { void RenameNodeNow(string value); }
 
+    /// <summary>An element keystrokes can be sent to. Every control backed by a window is one: the keys go to
+    /// that window, so the control need not have the focus (see <see cref="KeyGesture"/>). This is how the
+    /// interactions that are keyboard-only get driven -- typing that raises an auto-complete popup, a grid's
+    /// real Ctrl+V paste handler, a tree's incremental search.</summary>
+    public interface IKeyboardElement { void SendKeysNow(string keys); }
+
     /// <summary>An element that offers a fixed list of choices whose visible text can be read (get_options) --
     /// a combo box, a list box, or a checked list box. Unlike get_value (which reports the current
     /// selection / checked items), this returns EVERY choice regardless of state, so a caller can see the
@@ -639,7 +645,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
     /// (see <see cref="UiActions.Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
     /// capability interface.</summary>
-    public abstract class ControlElement : UiComponent, IClickableElement
+    public abstract class ControlElement : UiComponent, IClickableElement, IKeyboardElement
     {
         protected ControlElement(Control control, CancellationToken cancellationToken) : base(cancellationToken)
         {
@@ -647,6 +653,14 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         public Control Control { get; }
+
+        // Keystrokes go to this control's own window, so it does not need the focus. UiAction has already
+        // gated the control (VerifyEnabled) and marshaled onto its UI thread, which is also where the key
+        // state must be set for a modifier to register -- see KeyGesture.
+        public virtual void SendKeysNow(string keys)
+        {
+            KeyGesture.Send(Control, keys);
+        }
 
         // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor). A
         // control hosted in a menu dropdown belongs to the form that owns the menu -- its own FindForm is the
@@ -1917,9 +1931,24 @@ namespace pwiz.Skyline.ToolsUI
         private readonly DataGridView _dataGridView;
         public GridElement(DataGridView dataGridView, CancellationToken cancellationToken) : base(dataGridView, cancellationToken) { _dataGridView = dataGridView; }
 
-        // Pasting into a grid is the same as set_grid_text: tab-separated text filled from the current cell.
-        // SetGridText owns the gating/marshaling, so this just delegates to it.
-        public void PasteNow(string text) => SetGridTextNow(text);
+        // Pasting into a grid is normally the same as set_grid_text: tab-separated text filled from the current
+        // cell. SetGridText owns the gating/marshaling, so that case just delegates to it.
+        //
+        // The Insert Proteins / Insert Peptides form is the exception, and the reason this is not simply
+        // SetGridTextNow: its paste is not a fill at all -- it RESOLVES what is pasted against the background
+        // proteome, which is the whole point of the form (each peptide gets its protein). That work hangs off
+        // the form's Ctrl+V handler, so filling the cells directly produces a grid with the sequences in place
+        // and the protein columns empty, and the peptides then insert as a bare list. Hand those grids to the
+        // form's own paste with the text instead: identical to a user's Ctrl+V, minus the clipboard.
+        public void PasteNow(string text)
+        {
+            if (Control.FindForm() is pwiz.Skyline.EditUI.PasteDlg pasteDlg &&
+                pasteDlg.TryPasteIntoGrid(_dataGridView, text))
+            {
+                return;
+            }
+            SetGridTextNow(text);
+        }
 
         public void SelectAllNow() => _dataGridView.SelectAll();
         public DataGridView DataGridView => _dataGridView;

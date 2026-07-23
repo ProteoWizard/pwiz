@@ -304,6 +304,11 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetValue", (e, value) => { e.SetValueNow(UiElement.ConvertValue(value)); return null; })
             .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
 
+        public static readonly UiAction SendKeys = SimpleAction<IKeyboardElement, string>(
+                @"SendKeys", (e, keys) => { e.SendKeysNow(keys); return null; })
+            .Describe(new LlmInstruction(@"Type into this control, whether or not it has the focus -- for what only real key input does, above all raising Skyline's auto-completion popup when typing on the document tree. To paste, use the 'paste' action (it takes the text, so it needs no clipboard); there is no modifier support here."),
+                new LlmInstruction(@"the keys: literal characters, {ENTER}/{DOWN}/{UP}/{TAB}/{ESC}/{BACKSPACE}/{DEL}/{LEFT}/{RIGHT}/{HOME}/{END}/{PGUP}/{PGDN} for named keys, and ~ for Enter"));
+
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
                 @"CheckItem", (e, item) => { e.SetItemCheckedNow(item, true); return null; })
             .Describe(new LlmInstruction(@"Check the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
@@ -376,8 +381,8 @@ namespace pwiz.Skyline.ToolsUI
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
-            GetActions, GetChildren, Click, GetValue, SetValue, GetOptions, CheckItem, UncheckItem, SelectItem,
-            UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
+            GetActions, GetChildren, Click, GetValue, SetValue, SendKeys, GetOptions, CheckItem, UncheckItem,
+            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
             Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
         };
 

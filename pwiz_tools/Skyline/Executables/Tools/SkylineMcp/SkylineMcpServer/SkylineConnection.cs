@@ -120,6 +120,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public SkylineTool.Rectangle GetGraphZoom(string formId) { return CallClient(c => c.GetGraphZoom(formId)); }
     public SkylineTool.Rectangle ZoomGraphTo(string formId, SkylineTool.Rectangle bounds) { return CallClient(c => c.ZoomGraphTo(formId, bounds)); }
     public ActionResult ClickGraph(string formId, SkylineTool.Rectangle bounds) { return CallClient(c => c.ClickGraph(formId, bounds)); }
+    public ActionResult SendKeys(string formId, string controlId, string keys) { return CallClient(c => c.SendKeys(formId, controlId, keys)); }
     public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
     public ImageBytesMetadata GetFormImageBytes(string formId) { return CallClient(c => c.GetFormImageBytes(formId)); }
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }

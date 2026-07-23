@@ -1417,6 +1417,7 @@
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
     <Compile Include="ToolsUI\GraphElement.cs" />
+    <Compile Include="ToolsUI\KeyGesture.cs" />
     <Compile Include="ToolsUI\DialogWatcher.cs" />
     <Compile Include="ToolsUI\UiElement.cs" />
     <Compile Include="ToolsUI\NativeFileDialog.cs" />

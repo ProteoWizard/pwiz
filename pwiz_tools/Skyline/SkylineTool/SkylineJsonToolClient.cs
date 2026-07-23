@@ -263,6 +263,11 @@ namespace SkylineTool
             return CallTyped<ActionResult>(nameof(ClickGraph), formId, bounds);
         }
 
+        public ActionResult SendKeys(string formId, string controlId, string keys)
+        {
+            return CallTyped<ActionResult>(nameof(SendKeys), formId, controlId, keys);
+        }
+
         public string GetFormImage(string formId, string filePath = null)
         {
             return Call(nameof(GetFormImage), formId, filePath);

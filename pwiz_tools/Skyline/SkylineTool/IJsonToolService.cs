@@ -551,6 +551,23 @@ namespace SkylineTool
         ActionResult ClickGraph(string formId, Rectangle bounds);
 
         /// <summary>
+        /// Types into one control on a form, whether or not it has the focus -- for what only real key input
+        /// does, above all raising Skyline's auto-completion popup when typing on the document tree. The keys go
+        /// to that control's own window, so the caller never has to arrange focus first, and the control is
+        /// verified enabled before anything is sent.
+        ///
+        /// <para>There is no modifier (Ctrl/Alt/Shift) support, by design: to paste, use the "paste" action,
+        /// which takes the text to paste and so needs neither the clipboard nor a keystroke.</para>
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control to send to, matched as <see cref="GetControls"/> reports it
+        /// (its visible label, or its Type for a caption-less control).</param>
+        /// <param name="keys">The keys: literal characters, <c>{ENTER}</c>/<c>{DOWN}</c>/<c>{UP}</c>/
+        /// <c>{TAB}</c>/<c>{ESC}</c>/<c>{BACKSPACE}</c>/<c>{DEL}</c>/<c>{LEFT}</c>/<c>{RIGHT}</c>/<c>{HOME}</c>/
+        /// <c>{END}</c>/<c>{PGUP}</c>/<c>{PGDN}</c> for named keys, and <c>~</c> for Enter.</param>
+        ActionResult SendKeys(string formId, string controlId, string keys);
+
+        /// <summary>
         /// Captures a screenshot of any open form as a PNG image. Returns the file path.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
