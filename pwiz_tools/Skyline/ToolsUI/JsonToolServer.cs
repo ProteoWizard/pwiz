@@ -1114,13 +1114,19 @@ namespace pwiz.Skyline.ToolsUI
             return InvokeOnForm<StandaloneForm>(formId, form => form.FindGraph().Click(bounds));
         }
 
-        // Finds the control the way set_value does (by the label/type GetControls reports), then sends the keys
-        // to it. InvokeNow gates the control -- a missing, blocked or disabled one throws -- before anything is
-        // sent, and runs the send on the form's UI thread, which is where a held modifier has to be set.
-        public ActionResult SendKeys(string formId, string controlId, string keys)
+        // Both find the control the way set_value does (by the label/type GetControls reports). InvokeNow gates
+        // it -- a missing, blocked or disabled control throws -- before anything is sent, and runs the gesture
+        // on the form's UI thread.
+        public ActionResult SendKeys(string formId, string controlId, string text)
         {
             return InvokeOnForm<StandaloneForm>(formId, form =>
-                UiActions.SendKeys.InvokeNow(form.FindElement(controlId, UiActions.SendKeys), keys));
+                UiActions.SendKeys.InvokeNow(form.FindElement(controlId, UiActions.SendKeys), text));
+        }
+
+        public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke)
+        {
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+                UiActions.SendKeyStroke.InvokeNow(form.FindElement(controlId, UiActions.SendKeyStroke), keyStroke));
         }
 
         public string GetFormImage(string formId, string filePath = null)

@@ -305,9 +305,14 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
 
         public static readonly UiAction SendKeys = SimpleAction<IKeyboardElement, string>(
-                @"SendKeys", (e, keys) => { e.SendKeysNow(keys); return null; })
-            .Describe(new LlmInstruction(@"Type into this control, whether or not it has the focus -- for what only real key input does, above all raising Skyline's auto-completion popup when typing on the document tree. To paste, use the 'paste' action (it takes the text, so it needs no clipboard); there is no modifier support here."),
-                new LlmInstruction(@"the keys: literal characters, {ENTER}/{DOWN}/{UP}/{TAB}/{ESC}/{BACKSPACE}/{DEL}/{LEFT}/{RIGHT}/{HOME}/{END}/{PGUP}/{PGDN} for named keys, and ~ for Enter"));
+                @"SendKeys", (e, text) => { e.SendKeysNow(text); return null; })
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus -- for what only real typing does, above all raising Skyline's auto-completion popup when typing on the document tree. To press a key rather than type, use 'send_key_stroke'; to paste, use 'paste' (it takes the text, so it needs no clipboard)."),
+                new LlmInstruction(@"the text to type, taken literally"));
+
+        public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
+                @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(keyStroke); return null; })
+            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus -- e.g. to accept or step through the auto-completion popup that typing raises. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
+                new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
                 @"CheckItem", (e, item) => { e.SetItemCheckedNow(item, true); return null; })
@@ -381,7 +386,7 @@ namespace pwiz.Skyline.ToolsUI
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
-            GetActions, GetChildren, Click, GetValue, SetValue, SendKeys, GetOptions, CheckItem, UncheckItem,
+            GetActions, GetChildren, Click, GetValue, SetValue, SendKeys, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
             SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
             Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
         };

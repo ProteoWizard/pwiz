@@ -891,22 +891,41 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_send_keys"),
-     Description("Type into one control on a form -- for what only real key input does, above all raising " +
-        "Skyline's auto-completion popup when typing on the document tree (type a protein name, press {DOWN} " +
-        "to pick a match, then {ENTER} to add it). The keys go to that control's own window, so it does NOT " +
-        "need the focus and you never have to arrange focus first; the control is verified enabled before " +
-        "anything is sent. To PASTE, do not send keys -- use skyline_perform_action with action='paste', " +
-        "which takes the text and so needs neither the clipboard nor Ctrl+V. Discover control names with " +
-        "skyline_get_controls.")]
+     Description("Type text into one control on a form -- for what only real typing does, above all raising " +
+        "Skyline's auto-completion popup when typing on the document tree. The characters go to that " +
+        "control's own window, so it does NOT need the focus and you never have to arrange focus first; the " +
+        "control is verified enabled first. The text is LITERAL -- no key names, nothing to escape. To press " +
+        "a key (Enter, Down, Ctrl+V) use skyline_send_key_stroke; to PASTE use skyline_perform_action with " +
+        "action='paste', which takes the text and so needs neither the clipboard nor Ctrl+V. Discover control " +
+        "names with skyline_get_controls.")]
     public static string SendKeys(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control to send to, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
-        [Description("Keys: literal characters; {ENTER} {DOWN} {UP} {TAB} {ESC} {BACKSPACE} {DEL} {LEFT} {RIGHT} {HOME} {END} {PGUP} {PGDN} for named keys; ~ for Enter. A literal brace is {{} or {}}. No modifiers (Ctrl/Alt/Shift) -- use the 'paste' action instead of Ctrl+V.")] string keys)
+        [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
+        [Description("The text to type, taken literally")] string text)
     {
         return Invoke(connection =>
         {
-            var result = connection.SendKeys(formId, controlId, keys);
-            return DescribeAction(result, $"Sent keys to '{controlId}' on {formId}.");
+            var result = connection.SendKeys(formId, controlId, text);
+            return DescribeAction(result, $"Typed into '{controlId}' on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_send_key_stroke"),
+     Description("Press one key on a control, whether or not it has the focus -- e.g. to accept or step " +
+        "through the auto-completion popup that skyline_send_keys raises (type a protein name, press 'Down' " +
+        "to pick a match, then 'Enter' to add it). The keystroke is atomic, so no key is ever left down. " +
+        "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
+        "than by a handler -- Backspace editing a text box, an arrow moving a plain list's selection -- will " +
+        "NOT take effect. Discover control names with skyline_get_controls.")]
+    public static string SendKeyStroke(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control to press the key on, as skyline_get_controls reports it")] string controlId,
+        [Description("The key with any modifiers, '+'-separated and in any order: e.g. 'Down', 'Enter', 'Ctrl+V', 'Ctrl+Shift+Home', 'Alt+F4'. Key names are A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space.")] string keyStroke)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.SendKeyStroke(formId, controlId, keyStroke);
+            return DescribeAction(result, $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
         });
     }
 

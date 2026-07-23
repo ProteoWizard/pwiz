@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util.Extensions;
@@ -26,116 +27,105 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// Sends keystrokes to ONE control, whether or not it has the focus.
+    /// Drives the keyboard on ONE control, whether or not it has the focus. Two separate things, because they
+    /// are two different intents and mixing them would mean inventing an escape syntax for text:
     ///
-    /// <para>The keys go straight to the control's window as real key messages, so the control processes them
-    /// exactly as it would if the user had typed with it focused -- which is the whole point: typing into the
-    /// document tree raises Skyline's auto-completion popup, and nothing short of real key input does that.
-    /// Nothing is routed through the focused control or the foreground window, so a caller never has to arrange
-    /// focus first, and driving a background Skyline cannot steal the user's keyboard.</para>
+    /// <para><see cref="SendText"/> TYPES -- it delivers each character to the control's own window as the
+    /// WM_CHAR the message pump would, which is what inserts text and what raises Skyline's auto-completion
+    /// popup. The text is literal throughout: no key names, no escaping, no reserved characters.</para>
     ///
-    /// <para>There is deliberately NO modifier (Ctrl/Alt/Shift) support. The only modified keystroke the
-    /// tutorials call for is Ctrl+V, and a keystroke is the wrong way to do it: it would paste whatever happens
-    /// to be on the user's clipboard. The connector pastes with the text it is given instead (the "paste"
-    /// action, <see cref="IClipboardElement"/>), which needs no clipboard and no keystroke. Holding a modifier
-    /// for a delivered message would also mean mutating the UI thread's key state, where a stuck Ctrl would
-    /// corrupt every later gesture on that thread -- cost with no demand behind it.</para>
+    /// <para><see cref="SendKeyStroke"/> PRESSES ONE KEY, named with its modifiers ("Ctrl+V", "Down"). It
+    /// raises the control's KeyDown with the composed <see cref="Keys"/> value, which is where a WinForms
+    /// handler reads the keystroke from (Skyline's own paste handlers test <c>e.KeyData</c> exactly this way).
+    /// Composing the value is what lets a modifier be expressed at all: a delivered key message carries only
+    /// the virtual key, and WinForms would fill the modifiers in from the GLOBAL keyboard -- so "Ctrl+V" sent
+    /// as a message arrives as a bare "V" unless the real keyboard state is doctored, which this deliberately
+    /// does not do.</para>
+    ///
+    /// <para>A keystroke is atomic -- there is no way to press a key and leave it down. Nothing here can strand
+    /// a key or a modifier in the down state.</para>
+    ///
+    /// <para>KNOWN LIMIT of the KeyDown route: it raises the event, it does not run the control's default
+    /// window procedure. A key whose effect comes from that default handling rather than from a handler --
+    /// Backspace editing a text box, an arrow moving a plain list's selection -- will not take effect through
+    /// <see cref="SendKeyStroke"/>. Handler-driven keys (Skyline's auto-completion popup, its grid paste) do.
+    /// </para>
     /// </summary>
     internal static class KeyGesture
     {
-        // A named key: the virtual key, and the character Windows' TranslateMessage would produce from it, or
-        // '\0' for a key that produces none. That second part is load-bearing. A control gets a keystroke as up
-        // to three messages -- WM_KEYDOWN, then (only for a key that maps to a character) WM_CHAR, then
-        // WM_KEYUP -- and an edit control acts on the WM_CHAR: send Backspace as WM_KEYDOWN/WM_KEYUP alone and
-        // the text box simply ignores it. Keys with no character (the arrows, Home/End, Delete) are handled
-        // from WM_KEYDOWN, and must NOT get a WM_CHAR.
-        private struct NamedKey
-        {
-            public NamedKey(Keys key, char character = '\0') { Key = key; Character = character; }
-            public Keys Key { get; }
-            public char Character { get; }
-        }
-
-        // Matched case-insensitively. Enter and Down are what the auto-completion steps need; the rest are the
-        // obvious neighbours a caller will reach for.
-        private static readonly Dictionary<string, NamedKey> NAMED_KEYS =
-            new Dictionary<string, NamedKey>(StringComparer.OrdinalIgnoreCase)
+        // Spellings a caller is likely to use for keys whose Keys name differs. Everything else is matched
+        // against the Keys enum itself, so "V", "Down", "F2", "Delete", "Space" all just work.
+        private static readonly Dictionary<string, Keys> KEY_ALIASES =
+            new Dictionary<string, Keys>(StringComparer.OrdinalIgnoreCase)
             {
-                { @"ENTER", new NamedKey(Keys.Return, '\r') }, { @"RETURN", new NamedKey(Keys.Return, '\r') },
-                { @"TAB", new NamedKey(Keys.Tab, '\t') },
-                { @"ESC", new NamedKey(Keys.Escape, (char) 27) }, { @"ESCAPE", new NamedKey(Keys.Escape, (char) 27) },
-                { @"BACKSPACE", new NamedKey(Keys.Back, '\b') }, { @"BS", new NamedKey(Keys.Back, '\b') },
-                { @"DEL", new NamedKey(Keys.Delete) }, { @"DELETE", new NamedKey(Keys.Delete) },
-                { @"UP", new NamedKey(Keys.Up) }, { @"DOWN", new NamedKey(Keys.Down) },
-                { @"LEFT", new NamedKey(Keys.Left) }, { @"RIGHT", new NamedKey(Keys.Right) },
-                { @"HOME", new NamedKey(Keys.Home) }, { @"END", new NamedKey(Keys.End) },
-                { @"PGUP", new NamedKey(Keys.PageUp) }, { @"PGDN", new NamedKey(Keys.PageDown) }
+                { @"CTRL", Keys.Control }, { @"CONTROL", Keys.Control },
+                { @"ALT", Keys.Alt }, { @"SHIFT", Keys.Shift },
+                { @"ENTER", Keys.Return }, { @"ESC", Keys.Escape },
+                { @"DEL", Keys.Delete }, { @"INS", Keys.Insert },
+                { @"BACKSPACE", Keys.Back }, { @"BS", Keys.Back },
+                { @"PGUP", Keys.PageUp }, { @"PGDN", Keys.PageDown }
             };
 
-        /// <summary>Sends <paramref name="keys"/> to <paramref name="control"/>. Ordinary characters are typed
-        /// literally, <c>{NAME}</c> is a named key (ENTER, TAB, ESC, BACKSPACE, DEL, UP, DOWN, LEFT, RIGHT,
-        /// HOME, END, PGUP, PGDN) and <c>~</c> is Enter. A character the syntax reserves is written inside
-        /// braces -- <c>{{}</c>, <c>{}}</c>, <c>{~}</c>. Must be called on the control's UI thread.</summary>
-        public static void Send(Control control, string keys)
+        private static readonly Keys[] MODIFIER_KEYS = { Keys.Control, Keys.Alt, Keys.Shift };
+
+        /// <summary>Types <paramref name="text"/> into <paramref name="control"/>, character by character. The
+        /// text is taken literally. Must be called on the control's UI thread.</summary>
+        public static void SendText(Control control, string text)
         {
-            if (string.IsNullOrEmpty(keys))
+            if (string.IsNullOrEmpty(text))
                 return;
             var handle = control.Handle;
-            for (int i = 0; i < keys.Length; i++)
+            foreach (char c in text)
+                User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
+        }
+
+        /// <summary>Presses one key on <paramref name="control"/>. <paramref name="keyStroke"/> names the key
+        /// with any modifiers, '+'-separated and in any order -- "Ctrl+V", "Down", "Enter", "Ctrl+Shift+Home",
+        /// "Alt+F4". Must be called on the control's UI thread.</summary>
+        public static void SendKeyStroke(Control control, string keyStroke)
+        {
+            ControlElement.RaiseProtectedHandler(control, @"OnKeyDown", new KeyEventArgs(Parse(keyStroke)));
+        }
+
+        /// <summary>The <see cref="Keys"/> value <paramref name="keyStroke"/> names -- the key OR-ed with its
+        /// modifiers. Throws an LLM-facing error naming the offending segment when it cannot be read.</summary>
+        public static Keys Parse(string keyStroke)
+        {
+            if (string.IsNullOrWhiteSpace(keyStroke))
+                throw new ArgumentException(new LlmInstruction(
+                    @"No key given. Name a key, with any modifiers, e.g. 'Down', 'Enter' or 'Ctrl+V'."));
+
+            var keyData = Keys.None;
+            bool hasKey = false;
+            foreach (var segment in keyStroke.Split('+').Select(s => s.Trim()).Where(s => s.Length > 0))
             {
-                if (keys[i] == '{')
+                if (!KEY_ALIASES.TryGetValue(segment, out var key) &&
+                    !Enum.TryParse(segment, true, out key))
                 {
-                    int close = keys.IndexOf('}', i + 1);
-                    if (close < 0)
-                        throw new ArgumentException(new LlmInstruction(@"Keys have a '{' with no matching '}'."));
-                    SendBraced(handle, keys.Substring(i + 1, close - i - 1));
-                    i = close;
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown key '{0}' in '{1}'. Use a key name (A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space) with optional Ctrl+, Shift+ and Alt+ modifiers.",
+                        segment, keyStroke));
                 }
-                else if (keys[i] == '~')
+                if (MODIFIER_KEYS.Contains(key))
                 {
-                    SendKey(handle, NAMED_KEYS[@"ENTER"]);
+                    keyData |= key;
+                }
+                else if (hasKey)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"'{0}' names more than one key. A key stroke is a single key with modifiers, e.g. 'Ctrl+V'.",
+                        keyStroke));
                 }
                 else
                 {
-                    SendCharacter(handle, keys[i]);
+                    keyData |= key;
+                    hasKey = true;
                 }
             }
-        }
-
-        // The contents of a {...} group: a named key, or a single character written literally so the characters
-        // the syntax reserves ({ } ~) can still be typed.
-        private static void SendBraced(IntPtr handle, string name)
-        {
-            if (NAMED_KEYS.TryGetValue(name, out var key))
-            {
-                SendKey(handle, key);
-                return;
-            }
-            if (name.Length == 1)
-            {
-                SendCharacter(handle, name[0]);
-                return;
-            }
-            throw new ArgumentException(LlmInstruction.Format(
-                @"Unknown key name '{{{0}}}'. Use a named key (ENTER, TAB, ESC, BACKSPACE, DEL, UP, DOWN, LEFT, RIGHT, HOME, END, PGUP, PGDN) or a single character.",
-                name));
-        }
-
-        // A typed character is a WM_CHAR -- the message that actually inserts text and drives auto-completion.
-        private static void SendCharacter(IntPtr handle, char c)
-        {
-            User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
-        }
-
-        // A named key, as the message pump delivers one: WM_KEYDOWN, the WM_CHAR that TranslateMessage would
-        // produce when the key maps to a character, then WM_KEYUP. Sending only the down/up pair is what makes
-        // a text box ignore Backspace -- it acts on the character, not the virtual key.
-        private static void SendKey(IntPtr handle, NamedKey namedKey)
-        {
-            User32.SendMessage(handle, User32.WinMessageType.WM_KEYDOWN, (IntPtr) (int) namedKey.Key, IntPtr.Zero);
-            if (namedKey.Character != '\0')
-                SendCharacter(handle, namedKey.Character);
-            User32.SendMessage(handle, User32.WinMessageType.WM_KEYUP, (IntPtr) (int) namedKey.Key, IntPtr.Zero);
+            if (!hasKey)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"'{0}' names only modifiers. Add the key they apply to, e.g. 'Ctrl+V'.", keyStroke));
+            return keyData;
         }
     }
 }

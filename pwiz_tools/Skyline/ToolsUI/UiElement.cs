@@ -97,11 +97,15 @@ namespace pwiz.Skyline.ToolsUI
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
     public interface IRenameNodeElement { void RenameNodeNow(string value); }
 
-    /// <summary>An element keystrokes can be sent to. Every control backed by a window is one: the keys go to
-    /// that window, so the control need not have the focus (see <see cref="KeyGesture"/>). This is how the
-    /// interactions that are keyboard-only get driven -- typing that raises an auto-complete popup, a grid's
-    /// real Ctrl+V paste handler, a tree's incremental search.</summary>
-    public interface IKeyboardElement { void SendKeysNow(string keys); }
+    /// <summary>An element the keyboard can be driven on, without it having the focus (see
+    /// <see cref="KeyGesture"/>). Every control is one. Typing and pressing a key are separate because they are
+    /// separate intents: <see cref="SendKeysNow"/> takes LITERAL text (so no character in it needs escaping),
+    /// while <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
+    public interface IKeyboardElement
+    {
+        void SendKeysNow(string text);
+        void SendKeyStrokeNow(string keyStroke);
+    }
 
     /// <summary>An element that offers a fixed list of choices whose visible text can be read (get_options) --
     /// a combo box, a list box, or a checked list box. Unlike get_value (which reports the current
@@ -654,12 +658,16 @@ namespace pwiz.Skyline.ToolsUI
 
         public Control Control { get; }
 
-        // Keystrokes go to this control's own window, so it does not need the focus. UiAction has already
-        // gated the control (VerifyEnabled) and marshaled onto its UI thread, which is also where the key
-        // state must be set for a modifier to register -- see KeyGesture.
-        public virtual void SendKeysNow(string keys)
+        // Keyboard input goes to this control itself, so it does not need the focus. UiAction has already gated
+        // the control (VerifyEnabled) and marshaled onto its UI thread. See KeyGesture for how the two differ.
+        public virtual void SendKeysNow(string text)
         {
-            KeyGesture.Send(Control, keys);
+            KeyGesture.SendText(Control, text);
+        }
+
+        public virtual void SendKeyStrokeNow(string keyStroke)
+        {
+            KeyGesture.SendKeyStroke(Control, keyStroke);
         }
 
         // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor). A
