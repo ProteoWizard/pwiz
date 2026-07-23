@@ -523,8 +523,16 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => ChangeReason(auditLogForm, "Reason", 3, "Reason 5"));
                 AuditLogUtil.WaitForAuditLogForm(auditLogForm);
                 RunUI(() => Assert.AreEqual("Reason 5", GetAuditLogEntryFromRow(auditLogForm, 3).Reason));
-                Assert.IsTrue(new FileInfo(logFilePath).Length > lengthBeforeLock,
-                    "audit log entry was not recorded while the log file was locked");
+
+                // The reason change must have made it into the log file that is being held open
+                string appended;
+                using (var stream = File.Open(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    stream.Seek(lengthBeforeLock, SeekOrigin.Begin);
+                    using (var reader = new StreamReader(stream))
+                        appended = reader.ReadToEnd();
+                }
+                StringAssert.Contains(appended, "Reason 5");
             }
         }
 
