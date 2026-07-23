@@ -938,7 +938,76 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following {0} file or replicate names in the peak boundaries file were not recognized and were ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names" +
+                        "_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following {0} peptide, file, and charge state combinations were not recognized and were ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_char" +
+                        "ge_state_combinations_were_not_recognized_and_were_ignored_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following {0} peptides in the peak boundaries file were not recognized and were ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_bo" +
+                        "undaries_file_were_not_recognized_and_were_ignored_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following file or replicate name in the peak boundaries file was not recognized and was ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_t" +
+                        "he_peak_boundaries_file_was_not_recognized_and_was_ignored_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following peptide, file, and charge state combination was not recognized and was ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_s" +
+                        "tate_combination_was_not_recognized_and_was_ignored_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following peptide in the peak boundaries file was not recognized and was ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundar" +
+                        "ies_file_was_not_recognized_and_was_ignored_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to line {0}: {1}.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__line__0____1_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__line__0____1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0} -&gt; {1}  Note: The file has already been imported. Ignoring....
         /// </summary>

@@ -616,5 +616,83 @@ namespace pwiz.Osprey.IO
             }
             return true;
         }
+
+        /// <summary>
+        /// Stream every record of a per-file sidecar to <paramref name="onRecord"/> as a
+        /// decoupled <see cref="FdrScoreRecord"/> (entry_id + SVM score + 5 q-values),
+        /// WITHOUT a parquet stub list. The bounded per-file first-pass consumers -- protein
+        /// FDR and compaction (issue #4355 struct-shrink S2) -- need the score + q-values
+        /// keyed by entry_id but must NOT rematerialize the full <see cref="FdrEntry"/> buffer
+        /// the resident projection replaced; they read one file's records at a time (O(one
+        /// file), not O(all files)) and key them into a per-file map. Same header validation
+        /// as <see cref="TryRead(string,IList{FdrEntry},Pass)"/> (magic / version / pass /
+        /// size); returns <c>false</c> (with the partial callback effects the caller must
+        /// discard) on any mismatch or IO failure. Streams one 60-byte record at a time from
+        /// the source (one record resident, not an O(file-size) whole-file buffer), matching
+        /// <see cref="PatchRunProteinQvalues"/>. Records are delivered in stored (file) order.
+        /// </summary>
+        public static bool ReadRecords(string path, Pass expectedPass, Action<FdrScoreRecord> onRecord)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (onRecord == null) throw new ArgumentNullException(nameof(onRecord));
+
+            try
+            {
+                using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    if (src.Length < HeaderLength)
+                        return false;
+
+                    var header = new byte[HeaderLength];
+                    if (!ReadFully(src, header, HeaderLength))
+                        return false;
+                    for (int i = 0; i < Magic.Length; i++)
+                    {
+                        if (header[i] != Magic[i])
+                            return false;
+                    }
+                    if (header[8] != FormatVersion)
+                        return false;
+                    if (header[9] != (byte)expectedPass)
+                        return false;
+                    ulong headerCount = BitConverter.ToUInt64(header, 16);
+                    if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                        return false;
+                    if (src.Length != expectedLen)
+                        return false;
+
+                    var record = new byte[RecordLength];
+                    for (int rec = 0; rec < (int)headerCount; rec++)
+                    {
+                        if (!ReadFully(src, record, RecordLength))
+                            return false;
+                        onRecord(DecodeRecord(record));
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Decode one 60-byte record into a <see cref="FdrScoreRecord"/>, reading the exact v3
+        /// field order <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the
+        /// writer so the read/write byte layout cannot drift.
+        /// </summary>
+        private static FdrScoreRecord DecodeRecord(byte[] rec)
+        {
+            return new FdrScoreRecord(
+                BitConverter.ToUInt32(rec, 0),    // [0..4]  entry_id
+                BitConverter.ToDouble(rec, 4),    // [4..12]  svm_score
+                BitConverter.ToDouble(rec, 12),   // [12..20] run_precursor_qvalue
+                BitConverter.ToDouble(rec, 20),   // [20..28] run_peptide_qvalue
+                BitConverter.ToDouble(rec, 28),   // [28..36] experiment_precursor_qvalue
+                BitConverter.ToDouble(rec, 36),   // [36..44] experiment_peptide_qvalue
+                BitConverter.ToDouble(rec, 44),   // [44..52] pep
+                BitConverter.ToDouble(rec, 52));  // [52..60] run_protein_qvalue
+        }
     }
 }

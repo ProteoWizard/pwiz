@@ -296,6 +296,44 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
+        /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
+        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// projection overload for the lean 1st-pass case, it builds the same parity-locked
+        /// <see cref="PercolatorConfig"/> and delegates to
+        /// <see cref="PercolatorFdr.RunStreamingFirstPass"/>, which streams every row's identity +
+        /// features from the caller-supplied row source instead of a resident
+        /// <see cref="FdrProjectionSet"/>. The caller (Tasks layer) wires
+        /// <paramref name="streamFileRows"/> to the per-file parquet scalar reader and
+        /// <paramref name="loadFileFeatures"/> to the per-file feature loader, keeping this project
+        /// free of an Osprey.IO dependency. Returns <c>true</c> on a diagnostic-only train abort.
+        /// </summary>
+        public static bool RunFirstPassStreaming(
+            IReadOnlyList<string> fileNames,
+            Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            OspreyConfig config,
+            OspreyFeatureInfo[] featureInfos,
+            Action<string> logInfo,
+            IFdrOutputSink sink,
+            PercolatorDiagnosticsConfig diagnostics = null,
+            string passLabel = @"First-pass",
+            Action<FeatureContributions> captureContributions = null,
+            Action<PercolatorResults> captureModel = null)
+        {
+            if (sink == null)
+                throw new ArgumentNullException(nameof(sink));
+            if (loadFileFeatures == null)
+                throw new InvalidOperationException(
+                    @"RunFirstPassStreaming always streams features per file; a per-file feature " +
+                    @"loader is required.");
+            var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
+            return PercolatorFdr.RunStreamingFirstPass(
+                fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
+                captureContributions, captureModel);
+        }
+
+        /// <summary>
         /// Build the first-pass <see cref="PercolatorConfig"/> shared by the legacy
         /// <see cref="FdrEntry"/> path and the projection path. Centralized (issue
         /// #4355 step (b) increment iii) so every SVM knob is IDENTICAL whether the
@@ -857,9 +895,11 @@ namespace pwiz.Osprey.FDR
             if (trainResults.DiagnosticAbort)
                 return true;
 
-            // Publish the trained 1st-pass model (OSPREY_PASS2_QVALUE=transfer-compete) so the
-            // 2nd pass can re-score reconciled features with this FROZEN model + target-decoy
-            // competition. No-op (null) on every default run, so scoring stays byte-identical.
+            // Publish the trained 1st-pass model (the frozen fold weights + biases +
+            // standardizer) for the OSPREY_PASS2_QVALUE=transfer / transfer-compete / protein-
+            // compact pass-2 steps, which re-score reconciled features with this FROZEN model
+            // (transfer-compete / protein-compact then run a fresh target-decoy competition). A
+            // no-op (null) on every default run, so this projection first pass stays byte-identical.
             captureModel?.Invoke(trainResults);
 
             // Release the subset-only working sets before the score pass so only the

@@ -66,65 +66,37 @@ namespace pwiz.Osprey.FDR
         {
             var result = ProteinFdr.RunFirstPassProteinFdr(
                 perFileEntries, fullLibrary, config);
-
-            if (logInfo != null)
-            {
-                logInfo(string.Format(
-                    "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
-                    result.DetectedPeptides.Count));
-
-                int nAtRunFdr = 0;
-                foreach (var qv in result.ProteinFdr.GroupQvalues.Values)
-                {
-                    if (qv <= config.RunFdr)
-                        nAtRunFdr++;
-                }
-                logInfo(string.Format(
-                    "First-pass protein FDR: {0} target groups at {1:P1} FDR",
-                    nAtRunFdr, config.RunFdr));
-            }
-
+            LogFirstPassSummary(result, config, logInfo);
             return result;
         }
 
         /// <summary>
-        /// Projection-buffer counterpart of
-        /// <see cref="RunFirstPass(IList{KeyValuePair{string, List{FdrEntry}}}, IList{LibraryEntry}, OspreyConfig, Action{string})"/>
-        /// (issue #4355 step (b) increment ii): run first-pass protein FDR over the
-        /// thin <see cref="FdrProjection"/> peak buffer, materializing modified
-        /// sequences from <paramref name="peptideById"/> for the library join. Same
-        /// summary logging; the computation is byte-identical (see
-        /// <see cref="ProteinFdr.RunFirstPassProteinFdr(IList{KeyValuePair{string, List{FdrProjection}}}, string[], FdrProjectionOutputs, IList{LibraryEntry}, OspreyConfig)"/>).
+        /// Emit the two first-pass protein-FDR summary lines (detected-peptide count +
+        /// target groups passing run FDR) shared by the resident <see cref="FdrEntry"/>
+        /// facade above and the projection path's streaming reducer
+        /// (<c>FirstJoinTask.RunFirstPassProteinFdrStreaming</c>, which assembles the same
+        /// <see cref="FirstPassProteinFdrResult"/> off the sidecar + parquet scalars rather
+        /// than the resident buffer). <paramref name="logInfo"/> may be null (silent runs).
         /// </summary>
-        public static FirstPassProteinFdrResult RunFirstPass(
-            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
-            string[] peptideById,
-            FdrProjectionOutputs outputs,
-            IList<LibraryEntry> fullLibrary,
-            OspreyConfig config,
-            Action<string> logInfo)
+        public static void LogFirstPassSummary(
+            FirstPassProteinFdrResult result, OspreyConfig config, Action<string> logInfo)
         {
-            var result = ProteinFdr.RunFirstPassProteinFdr(
-                perFileProjections, peptideById, outputs, fullLibrary, config);
+            if (logInfo == null)
+                return;
 
-            if (logInfo != null)
+            logInfo(string.Format(
+                "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
+                result.DetectedPeptides.Count));
+
+            int nAtRunFdr = 0;
+            foreach (var qv in result.ProteinFdr.GroupQvalues.Values)
             {
-                logInfo(string.Format(
-                    "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
-                    result.DetectedPeptides.Count));
-
-                int nAtRunFdr = 0;
-                foreach (var qv in result.ProteinFdr.GroupQvalues.Values)
-                {
-                    if (qv <= config.RunFdr)
-                        nAtRunFdr++;
-                }
-                logInfo(string.Format(
-                    "First-pass protein FDR: {0} target groups at {1:P1} FDR",
-                    nAtRunFdr, config.RunFdr));
+                if (qv <= config.RunFdr)
+                    nAtRunFdr++;
             }
-
-            return result;
+            logInfo(string.Format(
+                "First-pass protein FDR: {0} target groups at {1:P1} FDR",
+                nAtRunFdr, config.RunFdr));
         }
 
         /// <summary>

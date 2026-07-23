@@ -378,6 +378,7 @@ namespace pwiz.Osprey.Tasks
             // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
             // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
             bool needsResidentPool = NeedsResidentPool(ctx.Config);
+            GuardResidentPool(ctx.Config, needsResidentPool);
 
             FdrProjectionSet projections = null;
             int totalScored = 0;
@@ -419,8 +420,12 @@ namespace pwiz.Osprey.Tasks
                 // no FdrEntry is ever allocated. Peptide ids arrive in insertion order
                 // and are remapped to the global Ordinal rank by Build(), so the result
                 // is element-for-element identical to BuildFromEntries (pinned by
-                // TestFdrProjectionBuilderMatchesBuildFromEntries).
-                var builder = new FdrProjectionSet.Builder();
+                // TestFdrProjectionBuilderMatchesBuildFromEntries). Counts-only (issue #4355
+                // struct-shrink S3, Stage B): the projection carries per-file row counts only --
+                // no 32 B rows -- because the 1st-pass streaming score path re-reads every row's
+                // identity + features from parquet, so the resident FdrProjection[] buffer that
+                // grew O(files) is never allocated.
+                var builder = new FdrProjectionSet.Builder(countsOnly: true);
                 // Per-file progress: streaming 32 B projection rows from each parquet is
                 // the lean path, but reading 82 files still ran minutes silent. Console-only,
                 // never touches the streamed rows, so the projection is byte-identical.
@@ -612,19 +617,30 @@ namespace pwiz.Osprey.Tasks
             // needs the resident pool. FirstJoin consumes the projection set identically
             // whether Run or this path produced it.
             //
-            // --model-diagnostics is the one resume-only exception to Run's lean choice:
-            // Run streams the report off the first-pass Percolator score pass (the streaming
-            // Accumulator), but a resume SKIPS that score pass (sidecar q-values), so FirstJoin's
-            // resume path emits the report via the batch ModelDiagnosticsReport.Write, which reads
-            // the RESIDENT per-file entries. Force the fat pool here so that report is populated
-            // (matches pre-lean behavior); the compute Run path stays lean.
-            bool needsResidentPool = NeedsResidentPool(config) || config.ModelDiagnostics;
+            // --model-diagnostics forces the fat pool ONLY for a FULL resume, where FirstJoin
+            // ALSO skips the first-pass score pass (every 1st-pass sidecar already on disk) and
+            // emits the report via the batch ModelDiagnosticsReport.Write, which reads the
+            // RESIDENT per-file entries. On a Stage-1-4 (-LinkFrom) resume the 1st-pass sidecars
+            // are absent, so FirstPassFDR RE-RUNS and streams the report off its score pass
+            // (ModelDiagnosticsData.Accumulator) exactly like a compute run -- no resident pool
+            // needed. Probing the sidecars keeps the lean counts-only path for the common
+            // -LinkFrom A/B resume (whose forced fat pool OOM'd an 82-file mdiag run) while
+            // preserving the batch-write path's resident entries for the full-resume re-report,
+            // so the fat pool is never on the row-count scaling path. The full elimination (stream
+            // the batch report from the sidecar+parquet too) is a documented follow-up.
+            // See TODO-20260720_osprey_pass2_per_run_qvalue.
+            bool needsResidentPool = NeedsResidentPool(config) ||
+                                     (config.ModelDiagnostics && FirstPassSidecarsPresent(config));
+            GuardResidentPool(config, needsResidentPool);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
             if (config.InputFiles != null)
             {
-                var builder = needsResidentPool ? null : new FdrProjectionSet.Builder();
+                // Counts-only (issue #4355 struct-shrink S3, Stage B): the resume lean path builds
+                // only per-file row counts; the 1st-pass streaming score path re-reads identity +
+                // features from parquet, so no resident FdrProjection[] buffer is allocated.
+                var builder = needsResidentPool ? null : new FdrProjectionSet.Builder(countsOnly: true);
                 // Per-file progress so this all-files load is not a silent multi-minute
                 // stall on a large resume (the phase that looked hung on the 82-file run).
                 using (var loadProgress = new ProgressReporter(@"Loading scored entries", config.InputFiles.Count))
@@ -1178,8 +1194,11 @@ namespace pwiz.Osprey.Tasks
             // the merge needs the resident pool (an opt-in feature output) or is a
             // reconciled 2nd-pass bundle hydration (AllHaveReconSidecars -- FirstJoin
             // skips Percolator there and HydrateReconciliationOverlay reads the fat stubs).
+            // Counts-only (issue #4355 struct-shrink S3, Stage B): the merge-node lean path builds
+            // only per-file row counts; the 1st-pass streaming score path re-reads identity +
+            // features from parquet, so the resident FdrProjection[] buffer is never allocated.
             var builder = (!NeedsResidentPool(config) && !hasReconSidecars)
-                ? new FdrProjectionSet.Builder()
+                ? new FdrProjectionSet.Builder(countsOnly: true)
                 : null;
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
             {
@@ -1454,10 +1473,14 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
         /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
-        /// output reads every entry's in-memory features/scores (FDRBench pass 1,
-        /// OSPREY_PASS2_QVALUE=transfer), when the projection path is off
-        /// (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR), or on the reconciled-input
-        /// worker join. Shared by <see cref="Run"/> and <see cref="RehydrateFromOwnOutputs"/>
+        /// output reads every entry's in-memory features/scores (FDRBench pass 1),
+        /// when the projection path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR),
+        /// or on the reconciled-input worker join. OSPREY_PASS2_QVALUE=transfer no longer
+        /// forces the resident pool -- the per-run-only redesign maps each adjusted peak
+        /// through that file's own 1st-pass (score -> run q) sidecar table at pass 2, so
+        /// transfer takes the SAME lean projection first-pass path as the default (see
+        /// TODO-osprey_pass2_per_run_only_qvalue). Shared by <see cref="Run"/> and
+        /// <see cref="RehydrateFromOwnOutputs"/>
         /// so the compute and resume paths make the identical lean/fat choice -- otherwise a
         /// pure resume rebuilds the ~53 GB fat buffer #4400 dropped for straight-through.
         ///
@@ -1475,6 +1498,75 @@ namespace pwiz.Osprey.Tasks
                    !config.FdrMethod.UsesPercolatorFramework() ||
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
                    OspreyEnvironment.Pass2TransferQ;
+        }
+
+        /// <summary>
+        /// True when every input file already has its <c>.1st-pass.fdr_scores.bin</c> sidecar on
+        /// disk, so FirstJoin will REHYDRATE first-pass FDR (skip its score pass) rather than
+        /// recompute. Under <c>--model-diagnostics</c> that skip routes the report to the batch
+        /// <c>ModelDiagnosticsReport.Write</c>, which reads the RESIDENT per-file entries -- the
+        /// one case a resume still needs the fat pool. A Stage-1-4 (<c>-LinkFrom</c>) resume links
+        /// only the Stage-4 <c>.scores.parquet</c>, so the 1st-pass sidecars are ABSENT, FirstPassFDR
+        /// re-runs, and its score pass streams the report -- no resident pool needed. Absent sidecars
+        /// therefore mean "stay lean" (correct); present sidecars mean "keep fat" (conservative,
+        /// matching the batch-write path). Mirrors <see cref="FdrScoresSidecar.Pass1Path"/> as used by
+        /// <c>FirstJoinTask</c>'s rehydrate-output enumeration.
+        /// </summary>
+        private static bool FirstPassSidecarsPresent(OspreyConfig config)
+        {
+            if (config.InputFiles == null || config.InputFiles.Count == 0)
+                return false;
+            foreach (var inputFile in config.InputFiles)
+            {
+                if (!File.Exists(FdrScoresSidecar.Pass1Path(inputFile)))
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Fail fast when a run would build the RESIDENT first-pass pool -- an O(files) memory
+        /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstJoin.Rehydrate</c>
+        /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
+        /// operator explicitly accepted unbounded memory (<c>OSPREY_ALLOW_UNBOUNDED_MEMORY</c>, or
+        /// the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch which is itself an explicit resident
+        /// opt-in), throw with the trigger named so the failure is actionable rather than an opaque
+        /// OOM at scale. Triggers: the HPC reconciled-input merge, <c>--fdrbench-pass 1</c>, a
+        /// non-Percolator FdrMethod, and <c>--model-diagnostics</c> on a full resume. Streaming the
+        /// remaining resident paths is tracked in
+        /// <c>TODO-osprey_stage6_rescored_buffer_streaming.md</c>.
+        /// </summary>
+        private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
+        {
+            string error = ResidentPoolGuardError(config, needsResidentPool,
+                OspreyEnvironment.AllowUnboundedMemory, OspreyEnvironment.UseFdrProjection);
+            if (error != null)
+                throw new InvalidOperationException(error);
+        }
+
+        /// <summary>
+        /// Pure core of <see cref="GuardResidentPool"/> (env statics passed in so it is unit
+        /// testable): returns the actionable error message when the run would take the resident
+        /// first-pass pool without an explicit unbounded-memory opt-in, or <c>null</c> when the
+        /// pool is not needed or the operator opted in. <paramref name="useFdrProjection"/> == false
+        /// is the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch, itself an explicit resident opt-in.
+        /// </summary>
+        internal static string ResidentPoolGuardError(
+            OspreyConfig config, bool needsResidentPool, bool allowUnbounded, bool useFdrProjection)
+        {
+            if (!needsResidentPool || allowUnbounded || !useFdrProjection)
+                return null;
+            string trigger =
+                config.ExpectReconciledInput ? @"the reconciled-input merge (HPC --task SecondPassFDR)"
+                : !config.FdrMethod.UsesPercolatorFramework() ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
+                : (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ? @"--fdrbench-pass 1"
+                : config.ModelDiagnostics ? @"--model-diagnostics on a full resume"
+                : @"this configuration";
+            return string.Format(
+                @"{0} requires the RESIDENT first-pass pool, which holds every entry in memory and " +
+                @"grows O(files) -- it does not scale to large file counts and can exhaust memory. " +
+                @"Set OSPREY_ALLOW_UNBOUNDED_MEMORY=1 to accept unbounded memory and proceed " +
+                @"(intended for testing / small runs); otherwise this path is unavailable.", trigger);
         }
 
         /// <summary>
