@@ -2746,7 +2746,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // This runs during SetDocument, so the exception ends up in a message box shown by
                 // SkylineWindow.ModifyDocument. Name the process holding the lock while it is still known.
-                var described = DescribeFileLocks(x);
+                var described = FileLockingProcessFinder.ToFileLockingException(x, Path.GetDirectoryName(filePath));
                 if (ReferenceEquals(described, x))
                     throw;  // Nothing to add, so keep the original stack trace
                 throw described;
@@ -2766,51 +2766,6 @@ namespace pwiz.SkylineTestUtil
                 result.Append(string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType)));
 
             return result.ToString();
-        }
-
-        // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
-        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
-
-        /// <summary>
-        /// If this is a file locking issue, wrap the exception in one that reports the locking process,
-        /// which is otherwise impossible to determine once the test has ended. Returns the exception
-        /// unchanged if there is nothing to add.
-        /// <para>
-        /// This works from an exception message carrying an absolute path, where the shared
-        /// <see cref="FileLockingProcessFinder.ToFileLockingException"/> expects a bare file name to
-        /// locate beneath a given directory.
-        /// </para>
-        /// </summary>
-        private static Exception DescribeFileLocks(Exception x)
-        {
-            if (!(x is IOException ioException) || ioException.HResult != ERROR_SHARING_VIOLATION)
-                return x;
-
-            // Non-greedy so a message with more than one quoted span does not swallow everything between
-            var match = Regex.Match(ioException.Message, "'([^']+)'");
-            if (!match.Success)
-                return x;
-
-            try
-            {
-                string lockedPath = match.Groups[1].Value;
-                if (!File.Exists(lockedPath) && !Directory.Exists(lockedPath))
-                    return new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedPath), x);
-
-                int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
-                Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
-                var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedPath);
-                if (processesLockingFile.Count == 0)
-                    return x;   // Nothing to add beyond the original message; keep it
-                var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-                return new IOException(string.Format("file '{0}' locked by: {1}", lockedPath, names), x);
-            }
-            catch (Exception)
-            {
-                // The restart manager is not always available to say who holds the lock, and losing
-                // the original exception to that would be worse than not knowing
-                return x;
-            }
         }
 
         private void WaitForSkyline()
@@ -2846,8 +2801,9 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                // Save exception for reporting from main thread, naming the locking process if that is the issue
-                Program.AddTestException(DescribeFileLocks(x));
+                // Save exception for reporting from main thread, naming the locking process if that is the issue.
+                // The exception message carries a full path here, so no containing directory is needed.
+                Program.AddTestException(FileLockingProcessFinder.ToFileLockingException(x, null));
             }
 
             EndTest();
