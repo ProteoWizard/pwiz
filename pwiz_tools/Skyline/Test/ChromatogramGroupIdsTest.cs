@@ -16,13 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Legacy;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -70,6 +74,46 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, newChromGroupHeaderInfos[0].TextIdIndex);
             Assert.AreEqual(-1, newChromGroupHeaderInfos[1].TextIdIndex);
             Assert.AreEqual(1, newChromGroupHeaderInfos[2].TextIdIndex);
+        }
+
+        /// <summary>
+        /// Every operation in <see cref="FilterOperations.ListOperations"/> must have a proto-enum mapping
+        /// in <see cref="ChromatogramGroupId"/>, or persisting a spectrum filter that uses it to the .skyd
+        /// cache throws in <see cref="ChromatogramGroupIds.ToProtoMessage"/>. The shared registry, the
+        /// filter-string serializer, and this proto map are three independent registration points for a new
+        /// operator; this guards the one with no other automatic coverage (the omission is otherwise only
+        /// caught by a functional test that happens to persist such a filter).
+        /// </summary>
+        [TestMethod]
+        public void TestFilterOperationProtoRoundTrip()
+        {
+            var target = new Target("ELVIS");
+            var propertyPath = SpectrumClassColumn.ScanDescription.PropertyPath;
+            foreach (var op in FilterOperations.ListOperations())
+            {
+                if (Equals(op, FilterOperations.OP_HAS_ANY_VALUE))
+                {
+                    continue; // The "no filter" sentinel yields an empty clause, never a persisted predicate.
+                }
+
+                string operand = op.HasOperand() ? "1" : null;
+                var filter = new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(propertyPath, op, operand) }));
+                var ids = new ChromatogramGroupIds();
+                ids.AddId(new ChromatogramGroupId(target, filter));
+
+                ChromatogramGroupId roundTripped = null;
+                try
+                {
+                    roundTripped = ChromatogramGroupId.FromProto(ids.ToProtoMessage()).Single();
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail("operation {0} is not mapped for chromatogram cache persistence: {1}", op.OpName, ex.Message);
+                }
+
+                Assert.AreEqual(op, roundTripped.SpectrumClassFilter.Clauses.Single().FilterSpecs.Single().Operation,
+                    "operation {0} did not round-trip through the chromatogram cache proto", op.OpName);
+            }
         }
     }
 }

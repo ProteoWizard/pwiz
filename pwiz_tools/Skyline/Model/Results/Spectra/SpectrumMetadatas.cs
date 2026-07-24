@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private readonly ImmutableList<string> _analyzers;
         private readonly ImmutableList<Tuple<double, double>> _scanWindows;
         private readonly ImmutableList<ImmutableList<PrecursorWithLevel>> _spectrumPrecursors;
+        private readonly ImmutableList<ImmutableList<SpectrumMetadataTerm>> _otherParams;
         private readonly ImmutableList<double?> _compensationVoltages;
         private readonly ImmutableList<bool> _negativeCharges;
         private readonly ImmutableList<int> _msLevels;
@@ -64,6 +65,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _analyzers = collection.Select(m => m.Analyzer).ToFactor().MaybeConstant();
             _scanWindows = collection.Select(GetScanWindow).ToFactor().MaybeConstant();
             _spectrumPrecursors = collection.Select(GetPrecursors).ToFactor().MaybeConstant();
+            _otherParams = collection.Select(m => m.OtherParams).ToFactor().MaybeConstant();
             _compensationVoltages = collection.Select(m => m.CompensationVoltage).ToFactor().MaybeConstant();
             _negativeCharges = collection.Select(m => m.NegativeCharge).ToFactor().MaybeConstant();
             _msLevels = collection.Select(m => m.MsLevel).ToFactor().MaybeConstant();
@@ -100,6 +102,19 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
                 precursors.Add(new PrecursorWithLevel(protoPrecursor.MsLevel, spectrumPrecursor));
             }
+            var otherParamPool = new List<SpectrumMetadataTerm>();
+            foreach (var protoOtherParam in proto.OtherParams)
+            {
+                otherParamPool.Add(new SpectrumMetadataTerm(
+                    valueCache.CacheValue(protoOtherParam.Accession),
+                    valueCache.CacheValue(protoOtherParam.Name),
+                    // A value-less flag term is captured with an empty (non-null) value; preserve that
+                    // emptiness rather than folding it to null, so "Is Declared" still sees the term.
+                    valueCache.CacheValue(protoOtherParam.Value),
+                    valueCache.CacheValue(NullForEmpty(protoOtherParam.Unit)),
+                    valueCache.CacheValue(NullForEmpty(protoOtherParam.UnitAccession)),
+                    valueCache.CacheValue(NullForEmpty(protoOtherParam.Definition))));
+            }
             _scanIds = proto.Spectra.Select(spectrum=>new ScanId(spectrum)).ToImmutable();
             _scanDescriptions = ToFactor(proto.ScanDescriptions, proto.Spectra.Select(s => s.ScanDescriptionIndex));
             _analyzers = ToFactor(proto.Analyzers, proto.Spectra.Select(s => s.AnalyzerIndex));
@@ -121,6 +136,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 msLevels.Add(msLevel);
             }
             _spectrumPrecursors = spectrumPrecursorsList.ToFactor().MaybeConstant();
+            _otherParams = proto.Spectra
+                .Select(s => s.OtherParamIndex.Select(i => otherParamPool[i - 1]).ToImmutable())
+                .ToFactor().MaybeConstant();
             _msLevels = IntegerList.FromIntegers(msLevels);
             _constantNeutralLosses = proto.Spectra.Select(s => s.ConstantNeutralLoss).Nullables().MaybeConstant();
             _sourceOffsetVoltages = proto.Spectra.Select(s => s.SourceOffsetVoltage).ToFactor().MaybeConstant();
@@ -145,6 +163,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 var precursors = Enumerable.Range(1, _msLevels[index] - 1)
                     .Select(level => precursorsByLevelLookup[level]);
                 spectrumMetadata = spectrumMetadata.ChangePrecursors(precursors);
+                spectrumMetadata = spectrumMetadata.ChangeOtherParams(_otherParams[index]);
                 var scanWindow = _scanWindows[index];
                 if (scanWindow != null)
                 {
@@ -175,6 +194,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 TargetMz = p.Precursor.PrecursorMz,
                 DissociationMethod = p.Precursor.DissociationMethod ?? string.Empty
             }));
+            var otherParams = ToDistinctList(_otherParams.SelectMany(l => l));
+            proto.OtherParams.AddRange(otherParams.Select(t => new ResultFileMetaDataProto.Types.OtherParam
+            {
+                Accession = t.Accession ?? string.Empty,
+                Name = t.Name ?? string.Empty,
+                Value = t.Value ?? string.Empty,
+                Unit = t.Unit ?? string.Empty,
+                Definition = t.Definition ?? string.Empty,
+                UnitAccession = t.UnitAccession ?? string.Empty
+            }));
             var scanDescriptions = ToFactorWithNull(_scanDescriptions);
             proto.ScanDescriptions.AddRange(scanDescriptions.Levels.Skip(1));
             var scanWindows = ToFactorWithNull(_scanWindows);
@@ -197,6 +226,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     PresetScanConfiguration = _presetScanConfigurations[index],
                     AnalyzerIndex = analyzerFactor.LevelIndices[index],
                     PrecursorIndex = { _spectrumPrecursors[index].Select(p=>precursors.IndexOf(p) + 1) },
+                    OtherParamIndex = { _otherParams[index].Select(t=>otherParams.IndexOf(t) + 1) },
                     ScanDescriptionIndex = scanDescriptions.LevelIndices[index],
                     ScanWindowIndex = scanWindows.LevelIndices[index],
                     CompensationVoltage = _compensationVoltages[index],
@@ -236,6 +266,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private static Factor<T> ToFactorWithNull<T>(ImmutableList<T> list) where T : class
         {
             return Factor<T>.FromItemsWithLevels(list, ImmutableList.Singleton((T)null));
+        }
+
+        private static string NullForEmpty(string value)
+        {
+            return string.IsNullOrEmpty(value) ? null : value;
         }
 
         private DistinctList<T> ToDistinctList<T>(IEnumerable<T> items)

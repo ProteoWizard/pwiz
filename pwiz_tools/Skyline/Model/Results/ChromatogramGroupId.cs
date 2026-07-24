@@ -410,6 +410,14 @@ namespace pwiz.Skyline.Model.Results
                 {
                     ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpNotStartsWith,
                     FilterOperations.OP_NOT_STARTS_WITH
+                },
+                {
+                    ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsDeclared,
+                    FilterOperations.OP_IS_DECLARED
+                },
+                {
+                    ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsNotDeclared,
+                    FilterOperations.OP_IS_NOT_DECLARED
                 }
             };
 

@@ -1583,6 +1583,102 @@ namespace pwiz.ProteowizardWrapper
             CENTROIDED_MIN_MAX
         };
 
+        // Roots under which the PSI-MS controlled vocabulary groups the per-spectrum and per-scan
+        // cvParams. A term belongs in the spectrum-filter catalog when it (transitively) is_a one of
+        // these and is a leaf (not itself a parent - see below), is not obsolete, and is not already
+        // interpreted into one of Skyline's typed fields. Every such leaf term is something the filter
+        // can act on (numeric or string terms by value, flag terms by presence), so all are offered;
+        // only the ontology's grouping/category nodes are excluded.
+        private static readonly HashSet<CVID> SPECTRUM_LEVEL_CV_ROOTS = new HashSet<CVID>
+        {
+            CVID.MS_spectrum_property,   // MS:1003058
+            CVID.MS_spectrum_attribute,  // MS:1000499
+            CVID.MS_scan_attribute       // MS:1000503
+        };
+
+        private static readonly object _spectrumCvTermCatalogLock = new object();
+        private static IList<SpectrumMetadataTerm> _spectrumCvTermCatalog;
+
+        /// <summary>
+        /// The uninterpreted mzML CV terms that can appear on a spectrum or scan, enumerated from the
+        /// controlled vocabulary compiled into ProteoWizard, so the spectrum-filter editor can offer them
+        /// without first reading data. Excludes obsolete terms and the terms Skyline interprets into its
+        /// own typed fields. Vendor userParams are not in the vocabulary and so are not included here
+        /// (they are discovered from imported data instead). Values are the term's accession, name, and
+        /// definition; the per-term value and unit are left null (they only exist in data).
+        /// </summary>
+        public static IList<SpectrumMetadataTerm> GetSpectrumCvTermCatalog()
+        {
+            // Built once from the compiled-in vocabulary and cached. Lock so a race can't build it twice
+            // or publish a half-filled list; return a read-only view so the shared cache can't be mutated.
+            lock (_spectrumCvTermCatalogLock)
+            {
+                if (_spectrumCvTermCatalog != null)
+                {
+                    return _spectrumCvTermCatalog;
+                }
+
+                // A term that is a parent of some other term is a grouping/category node in the ontology
+                // ("spectrum property", "scan attribute", "spectrum aggregation type", ...), not a measurable
+                // per-spectrum value, so only leaf terms are offered.
+                var parentTerms = new HashSet<CVID>();
+                foreach (var cvid in CV.cvids())
+                {
+                    foreach (CVID parent in CV.cvTermInfo(cvid).parentsIsA)
+                    {
+                        parentTerms.Add(parent);
+                    }
+                }
+
+                var isSpectrumLevel = new Dictionary<CVID, bool>();
+                var catalog = new List<SpectrumMetadataTerm>();
+                foreach (var cvid in CV.cvids())
+                {
+                    if (INTERPRETED_CVIDS.Contains(cvid) || parentTerms.Contains(cvid))
+                    {
+                        continue;
+                    }
+                    var info = CV.cvTermInfo(cvid);
+                    if (info.isObsolete)
+                    {
+                        continue;
+                    }
+                    if (IsSpectrumLevelCvTerm(cvid, isSpectrumLevel))
+                    {
+                        catalog.Add(new SpectrumMetadataTerm(info.id, info.name, null, null,
+                            definition: CleanDefinition(info.def)));
+                    }
+                }
+                return _spectrumCvTermCatalog = catalog.AsReadOnly();
+            }
+        }
+
+        private static bool IsSpectrumLevelCvTerm(CVID cvid, Dictionary<CVID, bool> memo)
+        {
+            if (SPECTRUM_LEVEL_CV_ROOTS.Contains(cvid))
+            {
+                return true;
+            }
+            if (memo.TryGetValue(cvid, out var cached))
+            {
+                return cached;
+            }
+
+            // Record false before recursing so a cycle in the is_a graph cannot recurse forever.
+            memo[cvid] = false;
+            bool result = false;
+            foreach (CVID parent in CV.cvTermInfo(cvid).parentsIsA)
+            {
+                if (IsSpectrumLevelCvTerm(parent, memo))
+                {
+                    result = true;
+                    break;
+                }
+            }
+            memo[cvid] = result;
+            return result;
+        }
+
         /// <summary>
         /// Collects the spectrum's CV and user parameters that Skyline does not otherwise
         /// interpret, so the full-scan viewer can show them. Walks the spectrum, its scans,

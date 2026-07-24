@@ -70,6 +70,15 @@ namespace pwiz.Skyline.Model.Results.Spectra {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}).
+        /// </summary>
+        public static string CvParamColumn_GetLocalizedColumnName_Name_Accession {
+            get {
+                return ResourceManager.GetString("CvParamColumn_GetLocalizedColumnName_Name_Accession", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to MS1.
         /// </summary>
         public static string SpectrumClassColumn_Ms1Precursors_MS1 {
@@ -111,6 +120,15 @@ namespace pwiz.Skyline.Model.Results.Spectra {
         public static string SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_ {
             get {
                 return ResourceManager.GetString("SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; of spectrum property &apos;{1}&apos; is not a number..
+        /// </summary>
+        public static string SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number", resourceCulture);
             }
         }
 
@@ -167,6 +185,12 @@ namespace pwiz.Skyline.Model.Results.Spectra {
         public static string SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format {
             get {
                 return ResourceManager.GetString("SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format", resourceCulture);
+            }
+        }
+
+        public static string SpectrumClassFilter_ParseFilterString_Available_operators__0_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ParseFilterString_Available_operators__0_", resourceCulture);
             }
         }
     }

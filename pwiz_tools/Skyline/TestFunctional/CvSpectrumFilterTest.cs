@@ -1,0 +1,187 @@
+/*
+ * Original author: Brian Pratt <bspratt .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Globalization;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.SkylineTestUtil;
+
+namespace pwiz.SkylineTestFunctional
+{
+    /// <summary>
+    /// End-to-end test that a <see cref="SpectrumClassFilter"/> on an uninterpreted mzML CV/user
+    /// parameter (the "Phase 2" feature) actually restricts the spectra used for chromatogram
+    /// extraction. Reuses the Ms1SpectrumFilterTest data, whose spectra carry base peak intensity
+    /// (MS:1000505) and the Thermo filter string (MS:1000512) - terms Skyline does not interpret into
+    /// its own fields, so they exercise the dynamic-column path rather than a typed property.
+    /// </summary>
+    [TestClass]
+    public class CvSpectrumFilterTest : AbstractFunctionalTestEx
+    {
+        [TestMethod]
+        public void TestCvSpectrumFilter()
+        {
+            TestFilesZip = @"TestFunctional\Ms1SpectrumFilterTest.zip";
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Ms1SpectrumFilterTest.sky")));
+            Assert.AreEqual(1, SkylineWindow.Document.MoleculeTransitionGroupCount);
+            Assert.IsTrue(SkylineWindow.Document.MoleculeTransitions.All(t => t.IsMs1));
+
+            var precursorPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0);
+
+            // The Thermo filter string (MS:1000512) carries the FAIMS compensation voltage as text
+            // ("cv=-50.00" / "cv=-70.00"), so two "contains" filters on it partition the MS1 spectra the
+            // same way the interpreted CompensationVoltage does. A numeric filter on base peak intensity
+            // (MS:1000505, reported in scientific notation, e.g. "5.49898375e05") that admits every
+            // positive value matches them all - exercising the numeric path and the invariant value parse.
+            var filterCv50 = StringCvFilter(@"cv=-50");
+            var filterCv70 = StringCvFilter(@"cv=-70");
+            var filterBpiAll = NumericBpiFilter(FilterOperations.OP_IS_GREATER_THAN, @"0");
+
+            // "Is Declared"/"Is Not Declared" test only for a term's presence. The filter string term
+            // (MS:1000512) is present on every MS1 spectrum, so Is Declared on it matches them all; the
+            // zoom scan term (MS:1000497) is present on none of this data, so Is Not Declared on it also
+            // matches them all. Both therefore reproduce the unfiltered chromatogram, exercising the
+            // presence predicate through the real extraction pipeline (including term capture).
+            var filterDeclared = DeclaredCvFilter(@"MS:1000512", @"filter string", FilterOperations.OP_IS_DECLARED);
+            var filterNotDeclared = DeclaredCvFilter(@"MS:1000497", @"zoom scan", FilterOperations.OP_IS_NOT_DECLARED);
+
+            RunUI(() =>
+            {
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterCv50, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterCv70, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterBpiAll, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterDeclared, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterNotDeclared, true);
+            });
+            Assert.AreEqual(6, SkylineWindow.Document.MoleculeTransitionGroupCount);
+
+            ImportResultsFile(TestFilesDir.GetTestPath("Ms1SpectrumFilterTest.mzML"));
+
+            var document = SkylineWindow.Document;
+            var peptideDocNode = document.Molecules.First();
+            Assert.AreEqual(6, peptideDocNode.TransitionGroupCount);
+
+            int Points(SpectrumClassFilter filter)
+            {
+                var transitionGroup = peptideDocNode.TransitionGroups.First(tg => Equals(tg.SpectrumClassFilter, filter));
+                Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(0, peptideDocNode, transitionGroup,
+                    (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance, out var infoSet));
+                Assert.AreEqual(1, infoSet.Length);
+                return infoSet[0].GetRawTransitionInfo(0).RawTimes.Count;
+            }
+
+            int unfilteredPoints = Points(default);
+            int cv50Points = Points(filterCv50);
+            int cv70Points = Points(filterCv70);
+            Assert.AreNotEqual(0, cv50Points);
+            Assert.AreNotEqual(0, cv70Points);
+            // The two string CV filters partition the MS1 spectra: together they match exactly the
+            // unfiltered set. This only holds if the CV terms were captured during extraction (they are
+            // otherwise dropped) and the string predicate evaluated them.
+            Assert.AreEqual(unfilteredPoints, cv50Points + cv70Points);
+            // A numeric CV filter admitting every base peak intensity matches all spectra.
+            Assert.AreEqual(unfilteredPoints, Points(filterBpiAll));
+            // Presence filters resolved through extraction: Is Declared on the always-present filter string
+            // term, and Is Not Declared on the never-present zoom scan term, each match every MS1 spectrum,
+            // so both reproduce the unfiltered chromatogram.
+            Assert.AreEqual(unfilteredPoints, Points(filterDeclared));
+            Assert.AreEqual(unfilteredPoints, Points(filterNotDeclared));
+
+            VerifyEditorOffersCvColumns();
+        }
+
+        /// <summary>
+        /// The filter editor discovers the imported CV terms (persisted in the cache) and offers them as
+        /// filterable columns, and a filter created on one through the dialog is applied to the document.
+        /// </summary>
+        private void VerifyEditorOffersCvColumns()
+        {
+            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
+            var filterStringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
+
+            // The ontology catalog offers the standard spectrum CV terms with no import at all, and
+            // excludes terms Skyline already interprets into typed fields (e.g. total ion current).
+            var catalog = SpectrumClassColumn.GetCvColumnCatalog();
+            Assert.IsTrue(catalog.Any(c => Equals(c.PropertyPath, bpiColumn.PropertyPath)), @"catalog missing base peak intensity");
+            Assert.IsTrue(catalog.Any(c => Equals(c.PropertyPath, filterStringColumn.PropertyPath)), @"catalog missing filter string");
+            var ticColumn = SpectrumClassColumn.CvParam(@"MS:1000285", @"total ion current", false);
+            Assert.IsFalse(catalog.Any(c => Equals(c.PropertyPath, ticColumn.PropertyPath)),
+                @"catalog should exclude the interpreted total ion current term");
+            // Grouping/category terms (parents in the ontology) are not offered - only leaf terms.
+            var spectrumAttribute = SpectrumClassColumn.CvParam(@"MS:1000499", @"spectrum attribute", false);
+            Assert.IsFalse(catalog.Any(c => Equals(c.PropertyPath, spectrumAttribute.PropertyPath)),
+                @"catalog should exclude the grouping term spectrum attribute");
+
+            var discovered = SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document);
+            Assert.IsTrue(discovered.Any(c => Equals(c.PropertyPath, bpiColumn.PropertyPath)),
+                @"base peak intensity column not discovered");
+            Assert.IsTrue(discovered.Any(c => Equals(c.PropertyPath, filterStringColumn.PropertyPath)),
+                @"filter string column not discovered");
+
+            RunUI(() => SkylineWindow.SelectedPath =
+                SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0));
+            RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
+            {
+                dlg.CreateCopy = true;
+                var row = dlg.RowBindingList.AddNew();
+                Assert.IsNotNull(row);
+                // The discovered CV column is offered under its friendly name; select it by that caption.
+                row.Property = filterStringColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+                row.SetOperation(FilterOperations.OP_CONTAINS);
+                row.SetValue(@"cv=-70");
+                dlg.OkDialog();
+            });
+
+            var expected = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(filterStringColumn.PropertyPath, FilterOperations.OP_CONTAINS, @"cv=-70") }));
+            Assert.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => Equals(tg.SpectrumClassFilter, expected)),
+                @"the CV filter created through the editor was not applied to any transition group");
+        }
+
+        private static SpectrumClassFilter StringCvFilter(string containsText)
+        {
+            var column = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
+            return new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(column.PropertyPath, FilterOperations.OP_CONTAINS, containsText) }));
+        }
+
+        private static SpectrumClassFilter NumericBpiFilter(IFilterOperation op, string operand)
+        {
+            var column = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
+            return new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(column.PropertyPath, op, operand) }));
+        }
+
+        private static SpectrumClassFilter DeclaredCvFilter(string accession, string name, IFilterOperation op)
+        {
+            var column = SpectrumClassColumn.CvParam(accession, name, false);
+            return new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(column.PropertyPath, op, (string)null) }));
+        }
+    }
+}
