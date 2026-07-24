@@ -25,6 +25,7 @@ using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.CommonMsData;
@@ -1966,7 +1967,8 @@ namespace pwiz.Skyline.Model.Results
             using (ReadStream.ReaderWriterLock.GetReadLock())
             {
                 var cancellationToken = ReadStream.ReaderWriterLock.CancellationToken;
-                using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                // CachePath (.skyd) may live inside an in-place .sky.zip, so go through FilePath.
+                using (var stream = new FilePath(CachePath).OpenRandomAccessStream())
                 {
                     if (peaks != null)
                     {

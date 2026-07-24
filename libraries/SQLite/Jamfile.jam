@@ -49,4 +49,13 @@ rule sqlite3-usage-requirements ( properties * )
 lib sqlite3 : sqlite3.c : <conditional>@sqlite3-requirements <link>static : : <conditional>@sqlite3-usage-requirements <include>$(THIS_PATH) ;
 lib sqlite3pp : sqlite3pp.cpp sqlite3 : <include>$(THIS_PATH) <link>static : : <conditional>@sqlite3-usage-requirements <include>$(THIS_PATH) ;
 
+# Loadable SQLite extension DLL providing the read-only "slicevfs" offset VFS, which exposes a
+# slice of a file's bytes (given an offset and length) as a database, e.g. to open a database
+# stored uncompressed at a byte range inside a larger container file in place. It registers via the
+# extension api-routines table, so it does NOT link sqlite3. Built as a shared library; the
+# exported entry point is sqlite3_slicevfs_init. The Skyline build installs this next to
+# SQLite.Interop.dll (see the install-slicevfs rule in pwiz_tools/Skyline/Jamfile.jam) and
+# copies it into the output.
+lib slicevfs : slicevfs.c : <link>shared <include>$(THIS_PATH) : : <include>$(THIS_PATH) ;
+
 #exe sqlite : shell.c : <library>sqlite3 <link>static ;

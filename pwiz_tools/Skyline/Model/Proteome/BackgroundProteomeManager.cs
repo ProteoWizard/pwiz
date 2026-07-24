@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using pwiz.Common.SystemUtil;
@@ -117,11 +116,6 @@ namespace pwiz.Skyline.Model.Proteome
         private static BackgroundProteome GetBackgroundProteome(SrmDocument document)
         {
             return document.Settings.PeptideSettings.BackgroundProteome;
-        }
-
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            yield break;
         }
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)

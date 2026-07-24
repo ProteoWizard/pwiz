@@ -2230,7 +2230,16 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Storing {0}.
+        /// </summary>
+        public static string SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Storing__0_ {
+            get {
+                return ResourceManager.GetString("SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Storing__0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Results found in document with no replicates..
         /// </summary>

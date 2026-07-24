@@ -34,6 +34,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Crosslinking;
@@ -135,7 +136,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
-            if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
+            // spec.FilePath may be a .blib stored inside an in-place .sky.zip, so go through FilePath.
+            var filePath = new FilePath(spec.FilePath);
+            if (filePath.Exists() && filePath.GetLength() > 0)
             {
                 var library = new BiblioSpecLiteLibrary(spec);
                 if (library.Load(loader))
@@ -355,7 +358,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static bool IsRedundantLibrary(string filepath)
         {
-            using var conn = SqliteOperations.OpenConnection(filepath);
+            using var conn = SqliteSliceVfs.OpenConnection(filepath);
             using var cmd = new SQLiteCommand(@"SELECT name FROM sqlite_master WHERE name = 'RetentionTimes'", conn);
             return cmd.ExecuteScalar() == null;
         }
@@ -713,7 +716,7 @@ namespace pwiz.Skyline.Model.Lib
             object lockObject = new object();
             ParallelEx.For(0, threadCount, threadIndex =>
             {
-                using var connection = SqliteOperations.OpenConnection(FilePath);
+                using var connection = SqliteSliceVfs.OpenConnection(FilePath);
                 string sql = @"SELECT * FROM RefSpectra WHERE id % " + threadCount + @" = " + threadIndex;
                 foreach (var row in connection.Query<RefSpectraRow>(sql, buffered:false))
                 {
@@ -2135,7 +2138,7 @@ namespace pwiz.Skyline.Model.Lib
                 int threadCount = ParallelEx.GetThreadCount();
                 ParallelEx.For(0, threadCount, threadIndex =>
                 {
-                    using var conn = SqliteOperations.OpenConnection(_dbPath);
+                    using var conn = SqliteSliceVfs.OpenConnection(_dbPath);
                     ReadSubset(conn, threadCount, threadIndex);
                 }, maxThreads: threadCount);
                 status = _progressStatus;

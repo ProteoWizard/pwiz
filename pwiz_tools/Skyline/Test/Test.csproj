@@ -138,6 +138,10 @@
       <HintPath>..\..\..\libraries\SQLite\x64\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Design" />
+    <Reference Include="DotNetZip">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -176,6 +180,7 @@
     <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="CalibrationCurveOptionsTest.cs" />
+    <Compile Include="ChromatogramCacheFromZipTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
@@ -278,6 +283,7 @@
     <Compile Include="PublishDocAddSubfolderTest.cs" />
     <Compile Include="Quantification\CalibrationCurveFitterTest.cs" />
     <Compile Include="Quantification\WeightedRegressionTest.cs" />
+    <Compile Include="RandomAccessZipFileTest.cs" />
     <Compile Include="RandomTest.cs" />
     <Compile Include="Reporting\DocumentViewTransformerTest.cs" />
     <Compile Include="Reporting\DsvWriterTest.cs" />
@@ -378,6 +384,7 @@
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
     <EmbeddedResource Include="BookmarkEnumeratorTest2.sky" />
+    <None Include="ChromatogramCacheFromZipTest.zip" />
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />

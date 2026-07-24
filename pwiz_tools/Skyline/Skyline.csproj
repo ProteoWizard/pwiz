@@ -4208,6 +4208,10 @@
       <Link>SQLite.Interop.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\Shared\ProteowizardWrapper\obj\$(Platform)\slicevfs.dll">
+      <Link>slicevfs.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -5440,12 +5444,14 @@
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
+    <Compile Include="Util\DocumentStreams.cs" />
     <Compile Include="Util\ILongWaitForm.cs" />
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\PanoramaPublishUtil.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
+    <Compile Include="Util\PooledZipEntryStream.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
     <Compile Include="Util\UtilInstall.cs" />

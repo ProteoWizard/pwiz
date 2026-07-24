@@ -18,7 +18,6 @@
  */
 using System.Collections.Generic;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.IonMobility
 {
@@ -56,11 +55,6 @@ namespace pwiz.Skyline.Model.IonMobility
         protected override string IsNotLoadedExplained(SrmDocument document)
         {
             return IsNotLoadedDocumentExplained(document);
-        }
-
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            yield break;
         }
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)
