@@ -487,52 +487,6 @@ namespace TestPerf
             // Extract chromatograms page.
             WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>(@"Extract chromatograms page");
-
-            // === TEMP DIAGNOSTIC (revert): capture the chromatograms-page results-file match
-            // state to diagnose the CI-only "Some results files are still missing" failure.
-            // Dumps the doc-library recorded source names, the FOUND (Name => Path) set, and
-            // the MISSING SpectrumSourceFiles keys, then fails with all of it in the message. ===
-            IImportResultsControl diagControl = null;
-            var diagLibPaths = new List<string>();
-            RunUI(() =>
-            {
-                diagControl = importDlg.ImportResultsControl;
-                var libs = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
-                for (int i = 0; i < libs.Libraries.Count; i++)
-                {
-                    if (libs.Libraries[i] != null)
-                        diagLibPaths.AddRange(libs.Libraries[i].LibraryFiles.FilePaths);
-                }
-            });
-            var diagFound = diagControl.FoundResultsFiles.Select(f => f.Name + @" => " + f.Path).ToArray();
-            var diagMissing = diagControl.MissingResultsFiles.ToArray();
-            var diagCacheDir = Directory.Exists(CacheDir)
-                ? Directory.EnumerateFiles(CacheDir).Select(Path.GetFileName).OrderBy(s => s).ToArray()
-                : new[] { @"(CacheDir missing)" };
-            var diagDocDir = Directory.Exists(DocDir)
-                ? Directory.EnumerateFiles(DocDir).Select(Path.GetFileName).OrderBy(s => s).ToArray()
-                : new[] { @"(DocDir missing)" };
-            var diagText = string.Join(Environment.NewLine, new[]
-                {
-                    @"### DIANN RESULTS FILE MATCH ###",
-                    @"ResultsControl=" + diagControl.GetType().Name,
-                    @"ResultsFilesMissing=" + diagControl.ResultsFilesMissing,
-                    @"DOCLIB SOURCES (" + diagLibPaths.Count + @"):"
-                }
-                .Concat(diagLibPaths)
-                .Concat(new[] { @"FOUND (" + diagFound.Length + @"):" })
-                .Concat(diagFound)
-                .Concat(new[] { @"MISSING (" + diagMissing.Length + @"):" })
-                .Concat(diagMissing)
-                .Concat(new[] { @"CACHEDIR " + CacheDir + @" (" + diagCacheDir.Length + @"):" })
-                .Concat(diagCacheDir)
-                .Concat(new[] { @"DOCDIR " + DocDir + @" (" + diagDocDir.Length + @"):" })
-                .Concat(diagDocDir));
-            File.WriteAllText(@"DiannSearchPerf_ResultsFileMatch.txt", diagText);
-            Console.WriteLine(diagText);
-            if (diagControl.ResultsFilesMissing)
-                AssertEx.Fail(diagText);
-
             // With >1 file the rename/prefix dialog pops up; accept defaults.
             if (MZML_FILES.Length > 1)
             {
