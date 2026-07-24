@@ -48,6 +48,7 @@ namespace pwiz.CommonFileDialogs
             this.navToolStrip = new System.Windows.Forms.ToolStrip();
             this.backButton = new System.Windows.Forms.ToolStripButton();
             this.upOneLevelButton = new System.Windows.Forms.ToolStripButton();
+            this.refreshButton = new System.Windows.Forms.ToolStripButton();
             this.viewsDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
             this.tilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -167,6 +168,7 @@ namespace pwiz.CommonFileDialogs
             this.navToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.backButton,
             this.upOneLevelButton,
+            this.refreshButton,
             this.viewsDropDownButton});
             this.navToolStrip.Name = "navToolStrip";
             this.navToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
@@ -184,9 +186,16 @@ namespace pwiz.CommonFileDialogs
             resources.ApplyResources(this.upOneLevelButton, "upOneLevelButton");
             this.upOneLevelButton.Name = "upOneLevelButton";
             this.upOneLevelButton.Click += new System.EventHandler(this.upOneLevelButton_Click);
-            // 
+            //
+            // refreshButton
+            //
+            this.refreshButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.refreshButton, "refreshButton");
+            this.refreshButton.Name = "refreshButton";
+            this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
+            //
             // viewsDropDownButton
-            // 
+            //
             this.viewsDropDownButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.viewsDropDownButton.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tilesToolStripMenuItem,
@@ -362,6 +371,7 @@ namespace pwiz.CommonFileDialogs
         private System.Windows.Forms.ToolStrip navToolStrip;
         private System.Windows.Forms.ToolStripButton backButton;
         private System.Windows.Forms.ToolStripButton upOneLevelButton;
+        private System.Windows.Forms.ToolStripButton refreshButton;
         private System.Windows.Forms.ToolStripDropDownButton viewsDropDownButton;
         private System.Windows.Forms.ToolStripMenuItem tilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem listToolStripMenuItem;

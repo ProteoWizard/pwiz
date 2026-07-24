@@ -43,8 +43,7 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.CommonMsData.RemoteApi.Ardia;
-using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Tools;
@@ -86,7 +85,7 @@ namespace pwiz.Skyline
 
         public static bool IsRemoteUrl(string pathOrUrl)
         {
-            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix) || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix);
+            return MsDataFileUri.IsRemoteUrl(pathOrUrl);
         }
 
         public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
@@ -534,7 +533,21 @@ namespace pwiz.Skyline
 
         private void ParseImportFile(NameValuePair pair)
         {
-            ReplicateFile.Add(MsDataFileUri.Parse(pair.ValueFullPath));
+            ReplicateFile.Add(ParseImportFileValue(pair.ValueFullPath));
+        }
+
+        /// <summary>
+        /// Parses an --import-file value. A friendly waters_connect path of the form
+        /// "waters_connect:&lt;account alias&gt;/Path/To/Injection" is carried as a path-form URL
+        /// (the alias followed by the path parts) and resolved against the server at import time.
+        /// The serialized query-string form ("waters_connect:path=...&amp;server=...&amp;id=...") is
+        /// parsed normally, as are all other (local and remote) data source paths.
+        /// </summary>
+        private static MsDataFileUri ParseImportFileValue(string value)
+        {
+            if (WatersConnectUrl.IsFriendlyUrl(value))
+                return WatersConnectUrl.ParseFriendly(value);
+            return MsDataFileUri.Parse(value);
         }
 
         private bool ParseImportNamingPattern(NameValuePair pair)
