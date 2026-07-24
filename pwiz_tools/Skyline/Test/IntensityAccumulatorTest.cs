@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -37,6 +39,49 @@ namespace pwiz.SkylineTest
             TestBasePeakKeepsMostIntense();
             TestNotTracking();
             TestNullIonMobilityIgnored();
+            TestPrecursorObservedIonMobilityAggregate();
+        }
+
+        // The per-ion value combines the per-transition observed IMs: MS1 isotope channels
+        // weighted by predicted abundance, falling back to the offset-corrected fragment
+        // channels (area-weighted) for MS2-only data.
+        private static void TestPrecursorObservedIonMobilityAggregate()
+        {
+            // MS1 isotopes, abundance-weighted: 0.7*1.00 + 0.3*1.20 = 1.06
+            var ms1 = new[]
+            {
+                new PrecursorResult.ObservedIonMobilityChannel(true, 1.00, null, 0.7, 0),
+                new PrecursorResult.ObservedIonMobilityChannel(true, 1.20, null, 0.3, 0),
+            };
+            Assert.AreEqual(0.7 * 1.00 + 0.3 * 1.20, PrecursorResult.AggregateObservedIonMobility(ms1).Value, EPSILON);
+
+            // MS2-only fallback: each fragment corrected by removing its high-energy offset
+            // (-0.05 here, so 2.05 -> 2.10), then area-weighted: (100*2.10 + 50*2.20)/150.
+            var ms2 = new[]
+            {
+                new PrecursorResult.ObservedIonMobilityChannel(false, 2.05, null, 100, -0.05),
+                new PrecursorResult.ObservedIonMobilityChannel(false, 2.15, null, 50, -0.05),
+            };
+            Assert.AreEqual((100 * 2.10 + 50 * 2.20) / 150, PrecursorResult.AggregateObservedIonMobility(ms2).Value, EPSILON);
+
+            // MS1 is preferred over MS2 when both are present (fragments ignored).
+            var both = new[]
+            {
+                new PrecursorResult.ObservedIonMobilityChannel(true, 1.00, null, 1.0, 0),
+                new PrecursorResult.ObservedIonMobilityChannel(false, 9.99, null, 100, 0),
+            };
+            Assert.AreEqual(1.00, PrecursorResult.AggregateObservedIonMobility(both).Value, EPSILON);
+
+            // MS1 channels present but without an observed value fall through to the fragments.
+            var ms1NoValue = new[]
+            {
+                new PrecursorResult.ObservedIonMobilityChannel(true, null, null, 0.7, 0),
+                new PrecursorResult.ObservedIonMobilityChannel(false, 2.00, null, 100, 0),
+            };
+            Assert.AreEqual(2.00, PrecursorResult.AggregateObservedIonMobility(ms1NoValue).Value, EPSILON);
+
+            // No usable channels -> null.
+            Assert.IsNull(PrecursorResult.AggregateObservedIonMobility(Array.Empty<PrecursorResult.ObservedIonMobilityChannel>()));
         }
 
         // Summed extractor: ObservedIonMobility is the intensity-weighted mean of the
