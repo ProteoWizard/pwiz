@@ -238,25 +238,13 @@ namespace pwiz.Common.SystemUtil
             try
             {
                 string lockedName = match.Groups[1].Value;
-                var isDirectory = Directory.Exists(lockedName);
-                string lockedFilePath;
-                if (Path.IsPathRooted(lockedName) && (File.Exists(lockedName) || isDirectory))
+                string lockedFilePath = ResolveLockedPath(lockedName, dirPath);
+                if (lockedFilePath == null)
                 {
-                    // The message already carried a full path (e.g. from FileStream)
-                    lockedFilePath = lockedName;
-                }
-                else
-                {
-                    // The message carried a bare name (e.g. from a failed directory delete); locate it under dirPath
-                    string[] lockedFilePaths = isDirectory ?
-                        Array.Empty<string>() : // It's a locked directory, not a locked file
-                        Directory.GetFiles(dirPath, lockedName, SearchOption.AllDirectories);
-                    if (lockedFilePaths.Length == 0 && !isDirectory)
-                    {
-                        return new IOException(
-                            string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__, lockedName, dirPath), x);
-                    }
-                    lockedFilePath = isDirectory ? lockedName : lockedFilePaths[0];
+                    // It was locked at the time of the failure, but is gone now
+                    var searchedDir = dirPath ?? Path.GetDirectoryName(lockedName);
+                    return new IOException(
+                        string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__, lockedName, searchedDir), x);
                 }
 
                 var processesLockingFile = GetProcessesUsingFile(lockedFilePath);
@@ -276,6 +264,29 @@ namespace pwiz.Common.SystemUtil
                 // original exception to that would be worse than not knowing
                 return x;
             }
+        }
+
+        /// <summary>
+        /// Resolves the path quoted in a sharing violation message to something that exists, or null
+        /// if it does not. The message may carry a full path, or a bare name to locate beneath
+        /// <paramref name="dirPath"/>.
+        /// </summary>
+        private static string ResolveLockedPath(string lockedName, string dirPath)
+        {
+            if (Path.IsPathRooted(lockedName))
+                return File.Exists(lockedName) || Directory.Exists(lockedName) ? lockedName : null;
+
+            if (dirPath == null)
+                return null;
+
+            // Look directly beneath dirPath first, so that a locked directory is recognized as one
+            // instead of being sought among the files
+            var candidate = Path.Combine(dirPath, lockedName);
+            if (File.Exists(candidate) || Directory.Exists(candidate))
+                return candidate;
+
+            var lockedFilePaths = Directory.GetFiles(dirPath, lockedName, SearchOption.AllDirectories);
+            return lockedFilePaths.Length > 0 ? lockedFilePaths[0] : null;
         }
     }
 }
