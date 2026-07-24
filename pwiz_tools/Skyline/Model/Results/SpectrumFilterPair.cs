@@ -154,23 +154,7 @@ namespace pwiz.Skyline.Model.Results
         public ExtractedSpectrum FilterQ1SpectrumList(MsDataSpectrum[] spectra, bool isSimSpectra = false)
         {
             var filters = isSimSpectra ? SimProductFilters : Ms1ProductFilters;
-            // The idotp guard runs only for genuine MS1 isotope channels (not SIM,
-            // not TIC/BPC). SIM filters share m/z ordering with Ms1ProductFilters
-            // but aren't an isotope envelope per se, so we don't pass the
-            // expected proportions in that case.
-            var expectedProportions = (!isSimSpectra && Q1 != 0) ? _expectedIsotopeProportions : null;
-            return FilterSpectrumList(spectra, filters, HighAccQ1, false, expectedProportions);
-        }
-
-        // MS1 isotope channel proportions matching Ms1ProductFilters in order.
-        // Set by SpectrumFilter when the precursor has an isotope distribution;
-        // null when there's no isotope envelope (e.g., MS2 product ions, all-ions
-        // extraction, or precursors configured without isotope peaks).
-        private IList<float> _expectedIsotopeProportions;
-
-        public void SetExpectedIsotopeProportions(IEnumerable<float> proportions)
-        {
-            _expectedIsotopeProportions = proportions?.ToArray();
+            return FilterSpectrumList(spectra, filters, HighAccQ1, false);
         }
 
         public ExtractedSpectrum FilterQ3SpectrumList(MsDataSpectrum[] spectra, bool useIonMobilityHighEnergyOffset)
@@ -204,8 +188,7 @@ namespace pwiz.Skyline.Model.Results
                                                             (Ms2ProductFilters.Any() &&
                                                              spectrum.Metadata.ScanWindowLowerLimit < Ms2ProductFilters.Last().TargetMz &&
                                                              spectrum.Metadata.ScanWindowUpperLimit > Ms2ProductFilters.First().TargetMz));
-            // MS2 fragments are not an isotope envelope - guard does not apply here.
-            return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset, null);
+            return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
 
         /// <summary>
@@ -220,8 +203,7 @@ namespace pwiz.Skyline.Model.Results
         /// trying to measure ions per injection, basically).
         /// </summary>
         private ExtractedSpectrum FilterSpectrumList(MsDataSpectrum[] spectra,
-            SpectrumProductFilter[] productFilters, bool highAcc, bool useIonMobilityHighEnergyOffset,
-            IList<float> expectedIsotopeProportions)
+            SpectrumProductFilter[] productFilters, bool highAcc, bool useIonMobilityHighEnergyOffset)
         {
 
             if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
@@ -244,10 +226,11 @@ namespace pwiz.Skyline.Model.Results
             double[] meanErrors = highAcc ? new double[targetCount] : null;
             // Track the observed IM whenever we have a finite IM window that isn't
             // FAIMS (CV is discrete and would not yield a meaningful centroid).
-            // For summed extraction we accumulate (IM -> summed intensity) histograms
-            // per target and resolve to a single observed IM via COG-bin-index at
-            // end-of-call (see IntensityAccumulator.CogIonMobility). For base-peak
-            // extraction we just carry the IM at the strongest peak per target.
+            // For summed extraction we accumulate an intensity-weighted running mean
+            // of IM per target (the "center of gravity" of the mobilogram); for
+            // base-peak extraction we carry the IM at the strongest peak per target.
+            // Each channel records its own observed IM faithfully here - any
+            // cross-isotope abundance weighting happens later, at the group level.
             // Only track true ion mobility units (drift time, 1/K0). FAIMS (compensation_V) and
             // Waters SONAR (waters_sonar - m/z filtering on IMS hardware, not ion mobility) carry
             // a populated IM window but no meaningful per-scan ion mobility to centroid, and have
@@ -256,20 +239,14 @@ namespace pwiz.Skyline.Model.Results
             bool trackIonMobility = MinIonMobilityValue.HasValue &&
                 RawTimeIntensities.IsTrackedObservedIonMobilityUnit(IonMobilityInfo.IonMobility.Units);
             float[] observedIonMobilities = trackIonMobility ? new float[targetCount] : null;
-            Dictionary<double, double>[] perTargetIonMobilityIntensityBins = null;
+            double[] meanIonMobilities = null;
             double[] basePeakIonMobilities = null;
             if (trackIonMobility)
             {
                 if (Extractor == ChromExtractor.summed)
-                {
-                    perTargetIonMobilityIntensityBins = new Dictionary<double, double>[targetCount];
-                    for (int i = 0; i < targetCount; i++)
-                        perTargetIonMobilityIntensityBins[i] = new Dictionary<double, double>();
-                }
+                    meanIonMobilities = new double[targetCount];
                 else
-                {
                     basePeakIonMobilities = new double[targetCount];
-                }
             }
             bool[] hasScanWindowCoverage = null; // Lazily initialized when narrow scan windows are detected
 
@@ -397,13 +374,14 @@ namespace pwiz.Skyline.Model.Results
                     // TODO:(bspratt) for full frame diaPASEF MS2, try not sorting - make IM the initial binary search range (and deal with mz that rolls over)
 
                     // Add the intensity values of all peaks that pass the filter.
-                    // The IM histogram (for summed) is mutated in place across spectra at
-                    // this RT; the base-peak IM (for base_peak) is loaded/saved per spectrum.
-                    var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz, trackIonMobility,
-                        perTargetIonMobilityIntensityBins?[targetIndex])
+                    // The running IM mean (for summed) and base-peak IM (for base_peak)
+                    // are loaded from / saved back to the per-target arrays each spectrum,
+                    // so they accumulate across spectra at this retention time.
+                    var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz, trackIonMobility)
                     {
                         TotalIntensity = extractedIntensities[targetIndex], // Start with the value from the previous spectrum, if any
                         MeanMassError = highAcc ? meanErrors[targetIndex] : 0,
+                        MeanObservedIonMobility = meanIonMobilities != null ? meanIonMobilities[targetIndex] : 0,
                         BasePeakIonMobility = basePeakIonMobilities != null ? basePeakIonMobilities[targetIndex] : 0
                     };
 
@@ -436,10 +414,10 @@ namespace pwiz.Skyline.Model.Results
                     extractedIntensities[targetIndex] = (float) accumulator.TotalIntensity;
                     if (meanErrors != null)
                         meanErrors[targetIndex] = accumulator.MeanMassError;
+                    if (meanIonMobilities != null)
+                        meanIonMobilities[targetIndex] = accumulator.MeanObservedIonMobility;
                     if (basePeakIonMobilities != null)
                         basePeakIonMobilities[targetIndex] = accumulator.BasePeakIonMobility;
-                    // perTargetIonMobilityIntensityBins[targetIndex] is mutated in place
-                    // by the accumulator and resolved to a COG-bin-index IM after the loop.
                 }
 
             }
@@ -454,32 +432,15 @@ namespace pwiz.Skyline.Model.Results
             }
             if (observedIonMobilities != null)
             {
-                if (perTargetIonMobilityIntensityBins != null)
-                {
-                    // For MS1 isotope-channel groups, run the cross-isotope idotp guard.
-                    // It returns a single observed IM that's assigned to every channel
-                    // (they share the same physical IM). On null, fall through to
-                    // per-channel COG so we still produce *some* observed IM.
-                    double? guardedIonMobility = expectedIsotopeProportions != null
-                        ? IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(
-                            perTargetIonMobilityIntensityBins, expectedIsotopeProportions)
-                        : null;
-                    if (guardedIonMobility.HasValue)
-                    {
-                        var im = (float)guardedIonMobility.Value;
-                        for (int i = 0; i < targetCount; i++)
-                            observedIonMobilities[i] = im;
-                    }
-                    else
-                    {
-                        for (int i = 0; i < targetCount; i++)
-                            observedIonMobilities[i] = (float)IntensityAccumulator.CogIonMobility(perTargetIonMobilityIntensityBins[i]);
-                    }
-                }
-                else if (basePeakIonMobilities != null)
+                // Each channel reports its own faithfully-measured observed IM: the
+                // intensity-weighted mean (center of gravity) for summed extraction,
+                // or the strongest-peak IM for base-peak extraction. Cross-isotope
+                // abundance weighting is applied later, at the group level.
+                var perTargetIonMobilities = meanIonMobilities ?? basePeakIonMobilities;
+                if (perTargetIonMobilities != null)
                 {
                     for (int i = 0; i < targetCount; i++)
-                        observedIonMobilities[i] = (float)basePeakIonMobilities[i];
+                        observedIonMobilities[i] = (float)perTargetIonMobilities[i];
                 }
             }
 
