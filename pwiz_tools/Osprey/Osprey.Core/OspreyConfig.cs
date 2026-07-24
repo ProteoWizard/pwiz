@@ -187,6 +187,30 @@ namespace pwiz.Osprey.Core
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
 
+        /// <summary>
+        /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
+        /// end of the run: one row per target protein group with its member accessions
+        /// (how the proteins were grouped), the unique (representative) and shared
+        /// peptides supporting it, the group q-value, and whether it passes protein FDR.
+        /// ON by default -- it is the user-facing answer to "which proteins did you
+        /// detect, and on what evidence"; the former <c>cs_stage7_protein_fdr.tsv</c> is a
+        /// counts-only cross-impl diagnostic, not this. Disable with
+        /// <c>--no-protein-report</c>. Additive (a new file), so byte-parity gates that
+        /// compare the blib + Stage-7 dump are unaffected.
+        /// </summary>
+        public bool WriteProteinReport { get; set; } = true;
+
+        /// <summary>
+        /// Write the summary report (<c>&lt;output&gt;.stats.tsv</c>): one row per replicate
+        /// with its precursors, peptides, and protein groups passing FDR, plus a final
+        /// experiment-level row. Modeled on DIA-NN's per-run <c>stats.tsv</c>, with the
+        /// per-replicate protein count computed by an INDEPENDENT run-level protein FDR
+        /// (its own parsimony + picked-protein FDR on that replicate) so it is a true
+        /// per-run number, not a slice of the experiment set. ON by default; disable with
+        /// <c>--no-summary-report</c>. Additive, so byte-parity gates are unaffected.
+        /// </summary>
+        public bool WriteSummaryReport { get; set; } = true;
+
         /// <summary>Write PIN files for external tools.</summary>
         public bool WritePin { get; set; }
 
@@ -423,7 +447,38 @@ namespace pwiz.Osprey.Core
     {
         Percolator,
         Mokapot,
-        Simple
+        Simple,
+        /// <summary>Gradient-boosted decision trees (non-linear alternative to the linear
+        /// Percolator SVM); implemented by Osprey.ML GradientBoostedTrees. Selected by
+        /// <c>--fdr-method gbdt</c> (the legacy alias <c>fasttree</c> still parses).</summary>
+        Gbdt
+    }
+
+    public static class FdrMethodExtensions
+    {
+        /// <summary>
+        /// True for the methods driven by the shared semi-supervised target-decoy
+        /// framework: <see cref="FdrMethod.Percolator"/> (linear SVM) and
+        /// <see cref="FdrMethod.Gbdt"/> (gradient-boosted trees). The two differ ONLY
+        /// in the classifier -- identical best-per-precursor dedup, peptide-grouped CV
+        /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
+        /// identical projection / streaming plumbing around all of it.
+        ///
+        /// Use this ANYWHERE the question is "is this the Percolator pipeline?" rather
+        /// than a raw <c>== FdrMethod.Percolator</c>. Those gates are scattered across the
+        /// Tasks layer -- the join's projection gate, the 2nd-pass projection gate,
+        /// <c>NeedsResidentPool</c>, the Stage 5 log header -- and each one that compares
+        /// against Percolator alone silently routes Gbdt down the resident
+        /// <c>FdrEntry</c> path instead of the streaming projection. That fails quietly:
+        /// same q-values, but the whole-run pool goes resident, which is exactly what
+        /// OOM'd the 82-file join.
+        ///
+        /// Mokapot / Simple are NOT part of this framework and must stay excluded.
+        /// </summary>
+        public static bool UsesPercolatorFramework(this FdrMethod method)
+        {
+            return method == FdrMethod.Percolator || method == FdrMethod.Gbdt;
+        }
     }
 
     /// <summary>

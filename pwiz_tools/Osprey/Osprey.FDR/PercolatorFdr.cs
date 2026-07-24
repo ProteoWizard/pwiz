@@ -112,6 +112,33 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public PercolatorDiagnosticsConfig Diagnostics { get; set; }
 
+        /// <summary>
+        /// Train gradient-boosted decision trees (<c>--fdr-method gbdt</c>) instead
+        /// of the linear SVM. Everything else about the run is unchanged: the same
+        /// best-per-precursor dedup, the same peptide-grouped CV folds, the same
+        /// semi-supervised positive-set iteration, and the same target-decoy
+        /// competition / q-value / PEP math. Only the per-fold classifier and the
+        /// full-population scoring function differ, so the two methods are directly
+        /// comparable at matched entrapment FDP. See <see cref="GbtParams"/>.
+        /// </summary>
+        public bool UseGradientBoostedTrees { get; set; }
+
+        /// <summary>
+        /// Hyper-parameters for the <see cref="UseGradientBoostedTrees"/> classifier.
+        /// Ignored on the default (SVM) path. Never null -- defaults to the validated
+        /// conservative setting from <see cref="GbtParams"/>.
+        /// </summary>
+        public GbtParams GbtParams { get; set; }
+
+        /// <summary>
+        /// Worker threads for the gradient-boosted-trees full-population score pass
+        /// (from <c>--threads</c>). Used ONLY there: the linear score pass stays serial
+        /// because its feature-contribution accumulator is a running float sum whose
+        /// order is byte-parity-locked, whereas a tree score is a pure per-row function
+        /// that accumulates nothing. Defaults to the machine's processor count.
+        /// </summary>
+        public int NThreads { get; set; }
+
         public PercolatorConfig()
         {
             TrainFdr = 0.01;
@@ -122,6 +149,43 @@ namespace pwiz.Osprey.FDR
             CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             MaxTrainSize = 300000;
             TrainOnly = false;
+            UseGradientBoostedTrees = false;
+            GbtParams = new GbtParams();
+            NThreads = Environment.ProcessorCount;
+        }
+
+        /// <summary>
+        /// A copy of this config with <see cref="TrainOnly"/> set: what the streaming
+        /// paths hand to <see cref="PercolatorFdr.RunPercolator"/> for the
+        /// train-the-fold-models pass over the subsampled training set. Copies every
+        /// knob that selects HOW a model is trained -- including the classifier choice
+        /// and its hyper-parameters -- so the training pass cannot silently diverge from
+        /// the scoring pass that consumes its output. (Both streaming paths previously
+        /// hand-copied this field list, which meant a new training knob had to be added
+        /// in two places or one path would quietly train the wrong model.)
+        ///
+        /// <see cref="CollectFeatureHistograms"/> is deliberately NOT carried: the
+        /// histograms are accumulated by the score pass over the full population, not
+        /// over the training subset.
+        /// </summary>
+        public PercolatorConfig CloneForTrainOnly()
+        {
+            return new PercolatorConfig
+            {
+                TrainFdr = TrainFdr,
+                TestFdr = TestFdr,
+                MaxIterations = MaxIterations,
+                NFolds = NFolds,
+                Seed = Seed,
+                CValues = CValues,
+                MaxTrainSize = MaxTrainSize,
+                FeatureInfos = FeatureInfos,
+                UseGradientBoostedTrees = UseGradientBoostedTrees,
+                GbtParams = GbtParams,
+                NThreads = NThreads,
+                TrainOnly = true,
+                Diagnostics = Diagnostics
+            };
         }
     }
 
@@ -211,11 +275,27 @@ namespace pwiz.Osprey.FDR
         /// <summary>Per-entry results.</summary>
         public List<PercolatorResult> Entries { get; set; }
 
-        /// <summary>Feature weights from best model per fold.</summary>
+        /// <summary>Feature weights from best model per fold. Empty on the
+        /// gradient-boosted-trees path, which has no linear weights -- see
+        /// <see cref="FoldGbtModels"/>.</summary>
         public List<double[]> FoldWeights { get; set; }
 
-        /// <summary>Bias terms from best model per fold.</summary>
+        /// <summary>Bias terms from best model per fold. Empty on the
+        /// gradient-boosted-trees path.</summary>
         public List<double> FoldBiases { get; set; }
+
+        /// <summary>
+        /// Best gradient-boosted-trees model per fold when the run was configured with
+        /// <see cref="PercolatorConfig.UseGradientBoostedTrees"/>; <c>null</c> on the
+        /// default SVM path. The two are mutually exclusive: whichever is populated
+        /// selects how the score passes turn a standardized feature row into a score.
+        ///
+        /// The linear path averages the fold WEIGHTS and scores once; trees cannot be
+        /// averaged that way, so the tree path averages the fold SCORES instead. For a
+        /// linear model those are the same operation (a dot product is linear in the
+        /// weights), which is why the SVM path keeps its cheaper weight-average form.
+        /// </summary>
+        public List<GradientBoostedTrees> FoldGbtModels { get; set; }
 
         /// <summary>
         /// The Skyline-style per-feature percent-contribution decomposition of the
@@ -440,6 +520,11 @@ namespace pwiz.Osprey.FDR
             var iterationsPerFold = new List<int>();
 
             var foldModels = new LinearSvmClassifier[config.NFolds];
+            // Populated instead of foldModels when config.UseGradientBoostedTrees
+            // (--fdr-method gbdt). Exactly one of the two is non-null.
+            var foldGbtModels = config.UseGradientBoostedTrees
+                ? new GradientBoostedTrees[config.NFolds]
+                : null;
             var foldIterations = new int[config.NFolds];
             var foldElapsed = new double[config.NFolds];
             // Selected SVM cost C per fold (chosen by inner CV over config.CValues,
@@ -489,13 +574,29 @@ namespace pwiz.Osprey.FDR
             {
                 var swFold = Stopwatch.StartNew();
                 int iters;
-                double foldC;
-                foldModels[fold] = TrainFold(
-                    subFeatures, subLabels, subEntryIds, subPeptides,
-                    foldTrainIndices[fold], initialScores, config, trainFdr,
-                    svmScratchPool, fold, trainProgress, out iters, out foldC);
+                // Non-null exactly when config.UseGradientBoostedTrees; testing the array
+                // rather than the flag is the same condition by construction and keeps the
+                // element write provably non-null.
+                if (foldGbtModels != null)
+                {
+                    foldGbtModels[fold] = TrainFoldGbt(
+                        subFeatures, subLabels, subEntryIds, subPeptides,
+                        foldTrainIndices[fold], initialScores, config, trainFdr,
+                        fold, trainProgress, out iters);
+                    // No C to sweep: the trees are regularized by depth / gamma /
+                    // lambda / min-child-weight, all fixed by GbtParams.
+                    foldBestC[fold] = double.NaN;
+                }
+                else
+                {
+                    double foldC;
+                    foldModels[fold] = TrainFold(
+                        subFeatures, subLabels, subEntryIds, subPeptides,
+                        foldTrainIndices[fold], initialScores, config, trainFdr,
+                        svmScratchPool, fold, trainProgress, out iters, out foldC);
+                    foldBestC[fold] = foldC;
+                }
                 foldIterations[fold] = iters;
-                foldBestC[fold] = foldC;
                 swFold.Stop();
                 foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
             });
@@ -509,16 +610,30 @@ namespace pwiz.Osprey.FDR
             OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
 
-            // Selected SVM regularization C per fold, on the default console (issue
-            // #4364): C controls the SVM margin, so the trained coefficients above are
-            // only interpretable with it. C is chosen per fold by inner cross-validation
-            // from a log-scale sweep grid; report the grid and each fold's pick.
-            OspreyOutput.Out.WriteLine("  SVM regularization C (swept over {0}, chosen by cross-validation per fold):",
-                FormatCGrid(config.CValues));
-            for (int fold = 0; fold < config.NFolds; fold++)
+            if (config.UseGradientBoostedTrees)
             {
-                OspreyOutput.Out.WriteLine("    fold {0}/{1}: C = {2}",
-                    fold + 1, config.NFolds, FormatC(foldBestC[fold]));
+                // The tree counterpart of the C report below: the knobs that actually
+                // bound this model's capacity, so the fold scores above have context.
+                var gp = config.GbtParams;
+                OspreyOutput.Out.WriteLine(
+                    "  Gradient-boosted trees: {0} trees, max depth {1}, learning rate {2}, " +
+                    "subsample {3}, colsample {4}, lambda {5}, alpha {6}, gamma {7}, min child weight {8}",
+                    gp.NTrees, gp.MaxDepth, gp.LearningRate, gp.Subsample, gp.ColSample,
+                    gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight);
+            }
+            else
+            {
+                // Selected SVM regularization C per fold, on the default console (issue
+                // #4364): C controls the SVM margin, so the trained coefficients above are
+                // only interpretable with it. C is chosen per fold by inner cross-validation
+                // from a log-scale sweep grid; report the grid and each fold's pick.
+                OspreyOutput.Out.WriteLine("  SVM regularization C (swept over {0}, chosen by cross-validation per fold):",
+                    FormatCGrid(config.CValues));
+                for (int fold = 0; fold < config.NFolds; fold++)
+                {
+                    OspreyOutput.Out.WriteLine("    fold {0}/{1}: C = {2}",
+                        fold + 1, config.NFolds, FormatC(foldBestC[fold]));
+                }
             }
 
             // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
@@ -526,7 +641,12 @@ namespace pwiz.Osprey.FDR
             // weights, bias, and iteration count right after SVM training
             // converges and before Granholm calibration. Mirrors rust side in
             // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
-            if (config.Diagnostics != null && config.Diagnostics.DumpSvmWeights)
+            // Skipped on the gradient-boosted-trees path: the dump's whole content is
+            // per-fold linear weights + bias, which a tree ensemble does not have. It is
+            // a cross-impl parity dump for the SVM (which gbdt has no Rust
+            // counterpart for), so there is nothing to emit rather than something to port.
+            if (config.Diagnostics != null && config.Diagnostics.DumpSvmWeights &&
+                !config.UseGradientBoostedTrees)
             {
                 WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureInfos);
                 if (config.Diagnostics.SvmWeightsOnly)
@@ -547,8 +667,11 @@ namespace pwiz.Osprey.FDR
                 var trainIterations = new List<int>(config.NFolds);
                 for (int fold = 0; fold < config.NFolds; fold++)
                 {
-                    trainFoldWeights.Add(foldModels[fold].Weights);
-                    trainFoldBiases.Add(foldModels[fold].Bias);
+                    if (foldGbtModels == null)
+                    {
+                        trainFoldWeights.Add(foldModels[fold].Weights);
+                        trainFoldBiases.Add(foldModels[fold].Bias);
+                    }
                     trainIterations.Add(foldIterations[fold]);
                 }
                 return new PercolatorResults
@@ -556,6 +679,9 @@ namespace pwiz.Osprey.FDR
                     Entries = new List<PercolatorResult>(),
                     FoldWeights = trainFoldWeights,
                     FoldBiases = trainFoldBiases,
+                    FoldGbtModels = foldGbtModels != null
+                        ? new List<GradientBoostedTrees>(foldGbtModels)
+                        : null,
                     Standardizer = standardizer,
                     IterationsPerFold = trainIterations
                 };
@@ -581,7 +707,7 @@ namespace pwiz.Osprey.FDR
                     for (int i = 0; i < testSubIndices.Count; i++)
                         testGlobalIndices[i] = trainSubset[testSubIndices[i]];
                     var testFeatures = ExtractRows(stdFeatures, testGlobalIndices);
-                    var testScores = foldModels[fold].DecisionFunction(testFeatures);
+                    var testScores = ScoreWithFoldModel(foldModels, foldGbtModels, fold, testFeatures);
                     for (int i = 0; i < testGlobalIndices.Length; i++)
                         finalScores[testGlobalIndices[i]] = testScores[i];
                 }
@@ -600,7 +726,7 @@ namespace pwiz.Osprey.FDR
                     var avgScores = new double[nonSubsetIndices.Count];
                     for (int fold = 0; fold < config.NFolds; fold++)
                     {
-                        var modelScores = foldModels[fold].DecisionFunction(nonSubFeatures);
+                        var modelScores = ScoreWithFoldModel(foldModels, foldGbtModels, fold, nonSubFeatures);
                         for (int i = 0; i < avgScores.Length; i++)
                             avgScores[i] += modelScores[i];
                     }
@@ -620,7 +746,7 @@ namespace pwiz.Osprey.FDR
                             testIndices.Add(i);
                     }
                     var testFeatures = ExtractRows(stdFeatures, testIndices.ToArray());
-                    var testScores = foldModels[fold].DecisionFunction(testFeatures);
+                    var testScores = ScoreWithFoldModel(foldModels, foldGbtModels, fold, testFeatures);
                     for (int i = 0; i < testIndices.Count; i++)
                         finalScores[testIndices[i]] = testScores[i];
                 }
@@ -628,8 +754,11 @@ namespace pwiz.Osprey.FDR
 
             for (int fold = 0; fold < config.NFolds; fold++)
             {
-                foldWeights.Add(foldModels[fold].Weights);
-                foldBiases.Add(foldModels[fold].Bias);
+                if (foldGbtModels == null)
+                {
+                    foldWeights.Add(foldModels[fold].Weights);
+                    foldBiases.Add(foldModels[fold].Bias);
+                }
                 iterationsPerFold.Add(foldIterations[fold]);
             }
 
@@ -710,11 +839,22 @@ namespace pwiz.Osprey.FDR
             // production streaming path (ScorePopulationAndComputeFdr) actually
             // scores with -- not the per-entry CV ensemble that produced
             // finalScores on this test / small-input standalone path.
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
-            for (int i = 0; i < n; i++)
-                contribAcc.Add(stdFeatures, i, labels[i]);   // labels[i] == IsDecoy
-            var contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
-            EmitFeatureContributions(contributions);
+            // Null on the gradient-boosted-trees path: the report decomposes a score
+            // into per-feature weight x mean-difference terms, which only exists for a
+            // linear model. A tree ensemble's analogue is split-gain importance -- a
+            // different quantity that would need its own report rather than a
+            // reinterpretation of this one. Callers already tolerate null (the Simple
+            // and transfer 2nd-pass paths return it), so the --model-diagnostics Model
+            // panel renders "n/a" exactly as it does for transfer-compete.
+            FeatureContributions contributions = null;
+            if (!config.UseGradientBoostedTrees)
+            {
+                var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
+                for (int i = 0; i < n; i++)
+                    contribAcc.Add(stdFeatures, i, labels[i]);   // labels[i] == IsDecoy
+                contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
+                EmitFeatureContributions(contributions);
+            }
 
             // 9. Build results
             var results = new List<PercolatorResult>(n);
@@ -736,6 +876,9 @@ namespace pwiz.Osprey.FDR
                 Entries = results,
                 FoldWeights = foldWeights,
                 FoldBiases = foldBiases,
+                FoldGbtModels = foldGbtModels != null
+                    ? new List<GradientBoostedTrees>(foldGbtModels)
+                    : null,
                 Standardizer = standardizer,
                 IterationsPerFold = iterationsPerFold,
                 FeatureContributions = contributions
@@ -771,36 +914,49 @@ namespace pwiz.Osprey.FDR
                     Entries = new List<PercolatorResult>(),
                     FoldWeights = trainResults.FoldWeights,
                     FoldBiases = trainResults.FoldBiases,
+                    FoldGbtModels = trainResults.FoldGbtModels,
                     Standardizer = trainResults.Standardizer,
                     IterationsPerFold = trainResults.IterationsPerFold
                 };
             }
 
-            int nModels = trainResults.FoldWeights.Count;
+            // Trees or linear weights -- whichever this run trained. Null gbtModels
+            // selects the linear path below, exactly as on the projection score pass.
+            var gbtModels = ResolveGbtModels(trainResults);
+            int nModels = gbtModels != null ? gbtModels.Count : trainResults.FoldWeights.Count;
             if (nModels == 0)
                 throw new InvalidOperationException(
                     @"ScorePopulationAndComputeFdr: trainResults contains no fold models");
             // Feature width comes from the trained model, not from entries[0]:
             // on the streaming path (issue #4355 Phase 4) the stubs carry no
-            // resident Features vector to measure.
-            int nFeatures = trainResults.FoldWeights[0].Length;
+            // resident Features vector to measure. A tree ensemble exposes no weight
+            // vector to measure either, so read the width off the standardizer that
+            // was fit on the same training matrix.
+            int nFeatures = gbtModels != null
+                ? trainResults.Standardizer.NumFeatures
+                : trainResults.FoldWeights[0].Length;
 
             // Average fold weights + biases. Matches Rust streaming:
             //   avg_weights[j] = mean_f(fold_weights[f][j])
             //   avg_bias       = mean_f(fold_biases[f])
-            var avgWeights = new double[nFeatures];
+            // Trees are averaged per-score at scoring time instead (see AverageGbtScore).
+            double[] avgWeights = null;
             double avgBias = 0.0;
-            for (int f = 0; f < nModels; f++)
+            if (gbtModels == null)
             {
-                double[] foldW = trainResults.FoldWeights[f];
+                avgWeights = new double[nFeatures];
+                for (int f = 0; f < nModels; f++)
+                {
+                    double[] foldW = trainResults.FoldWeights[f];
+                    for (int j = 0; j < nFeatures; j++)
+                        avgWeights[j] += foldW[j];
+                    avgBias += trainResults.FoldBiases[f];
+                }
+                double nModelsD = nModels;
                 for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += trainResults.FoldBiases[f];
+                    avgWeights[j] /= nModelsD;
+                avgBias /= nModelsD;
             }
-            double nModelsD = nModels;
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nModelsD;
-            avgBias /= nModelsD;
 
             // Apply standardizer + averaged SVM model to every entry.
             // Serial (not parallel) so float accumulation order stays
@@ -832,12 +988,10 @@ namespace pwiz.Osprey.FDR
 
                     Array.Copy(entry.Features, 0, featureBuf, 0, nFeatures);
                     standardizer.TransformSlice(featureBuf);
-                    double score = avgBias;
-                    for (int j = 0; j < nFeatures; j++)
-                        score += avgWeights[j] * featureBuf[j];
-                    finalScores[i] = score;
+                    finalScores[i] = ScoreStandardizedRow(gbtModels, avgWeights, avgBias, featureBuf);
 
-                    contribAcc.Add(featureBuf, entry.IsDecoy);
+                    if (gbtModels == null)
+                        contribAcc.Add(featureBuf, entry.IsDecoy);
                 }
             }
             else
@@ -868,18 +1022,22 @@ namespace pwiz.Osprey.FDR
                             rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures);
                         Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
                         standardizer.TransformSlice(featureBuf);
-                        double score = avgBias;
-                        for (int j = 0; j < nFeatures; j++)
-                            score += avgWeights[j] * featureBuf[j];
-                        finalScores[i] = score;
+                        finalScores[i] = ScoreStandardizedRow(gbtModels, avgWeights, avgBias, featureBuf);
 
-                        contribAcc.Add(featureBuf, entry.IsDecoy);
+                        if (gbtModels == null)
+                            contribAcc.Add(featureBuf, entry.IsDecoy);
                     }
                 }
             }
 
-            var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
-            EmitFeatureContributions(contributions);
+            // Null on the tree path: the report is a decomposition of linear weights.
+            // See the matching comment in RunPercolator.
+            FeatureContributions contributions = null;
+            if (gbtModels == null)
+            {
+                contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
+                EmitFeatureContributions(contributions);
+            }
 
             // Competition + PEP + per-run / experiment q-values over the flat score
             // arrays. Extracted verbatim into ComputeStreamingCompetitionQvalues
@@ -914,6 +1072,7 @@ namespace pwiz.Osprey.FDR
                 Entries = results,
                 FoldWeights = trainResults.FoldWeights,
                 FoldBiases = trainResults.FoldBiases,
+                FoldGbtModels = trainResults.FoldGbtModels,
                 Standardizer = standardizer,
                 IterationsPerFold = trainResults.IterationsPerFold,
                 FeatureContributions = contributions
@@ -1182,26 +1341,34 @@ namespace pwiz.Osprey.FDR
                     @"the projection carries no resident feature vectors.");
 
             int n = labels.Length;
-            int nModels = trainResults.FoldWeights.Count;
+            var gbtModels = ResolveGbtModels(trainResults);
+            int nModels = gbtModels != null ? gbtModels.Count : trainResults.FoldWeights.Count;
             if (nModels == 0)
                 throw new InvalidOperationException(
                     @"ScoreProjectionAndComputeFdrInPlace: trainResults contains no fold models");
-            int nFeatures = trainResults.FoldWeights[0].Length;
+            int nFeatures = gbtModels != null
+                ? trainResults.Standardizer.NumFeatures
+                : trainResults.FoldWeights[0].Length;
 
-            // Average fold weights + biases (identical to ScorePopulationAndComputeFdr).
-            var avgWeights = new double[nFeatures];
+            // Average fold weights + biases (identical to ScorePopulationAndComputeFdr);
+            // the tree path averages per-score at scoring time instead.
+            double[] avgWeights = null;
             double avgBias = 0.0;
-            for (int f = 0; f < nModels; f++)
+            if (gbtModels == null)
             {
-                double[] foldW = trainResults.FoldWeights[f];
+                avgWeights = new double[nFeatures];
+                for (int f = 0; f < nModels; f++)
+                {
+                    double[] foldW = trainResults.FoldWeights[f];
+                    for (int j = 0; j < nFeatures; j++)
+                        avgWeights[j] += foldW[j];
+                    avgBias += trainResults.FoldBiases[f];
+                }
+                double nModelsD = nModels;
                 for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += trainResults.FoldBiases[f];
+                    avgWeights[j] /= nModelsD;
+                avgBias /= nModelsD;
             }
-            double nModelsD = nModels;
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nModelsD;
-            avgBias /= nModelsD;
 
             var standardizer = trainResults.Standardizer;
             var finalScores = new double[n];
@@ -1229,27 +1396,47 @@ namespace pwiz.Osprey.FDR
                 {
                     IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
                     var projRows = kvp.Value;
-                    for (int r = 0; r < projRows.Count; r++)
+                    if (gbtModels != null)
                     {
-                        var proj = projRows[r];
-                        double[] featRow = ResolveFeatureRow(
-                            rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
-                        Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
-                        standardizer.TransformSlice(featureBuf);
-                        double score = avgBias;
-                        for (int j = 0; j < nFeatures; j++)
-                            score += avgWeights[j] * featureBuf[j];
-                        finalScores[gi] = score;
+                        // Tree path: parallel over contiguous row chunks. A tree score is a
+                        // pure function of its own row written to its own slot, and this path
+                        // accumulates nothing across rows (contributions are linear-only), so
+                        // this is bit-identical to scoring the file serially -- there is no
+                        // float accumulation whose order could drift. Worth doing: a tree row
+                        // costs ~NFolds x NTrees x depth node traversals against the linear
+                        // path's NFeatures multiply-adds, so serial scoring dominates the run.
+                        ScoreProjectionRowsGbt(rows, projRows, gbtModels, standardizer,
+                            nFeatures, finalScores, gi, config.NThreads);
+                        gi += projRows.Count;
+                    }
+                    else
+                    {
+                        // Linear path: UNCHANGED and serial. contribAcc.Add is a running
+                        // float sum, so its row order is byte-parity-locked to Rust.
+                        for (int r = 0; r < projRows.Count; r++)
+                        {
+                            var proj = projRows[r];
+                            double[] featRow = ResolveFeatureRow(
+                                rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
+                            Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+                            standardizer.TransformSlice(featureBuf);
+                            finalScores[gi] = ScoreStandardizedRow(null, avgWeights, avgBias, featureBuf);
 
-                        contribAcc.Add(featureBuf, proj.IsDecoy);
-                        gi++;
+                            contribAcc.Add(featureBuf, proj.IsDecoy);
+                            gi++;
+                        }
                     }
                     scoreProgress.Report(gi);
                 }
             }
 
-            var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
-            EmitFeatureContributions(contributions);
+            // Null on the tree path (no linear weights to decompose); see RunPercolator.
+            FeatureContributions contributions = null;
+            if (gbtModels == null)
+            {
+                contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
+                EmitFeatureContributions(contributions);
+            }
             // Surface the trained model's contributions to the caller (the projection-path
             // --model-diagnostics report reads them). No-op (null) on every path that does not
             // request them; a pure hand-off, so scoring stays byte-identical.
@@ -2150,6 +2337,330 @@ namespace pwiz.Osprey.FDR
             }
         }
 
+        /// <summary>
+        /// Gradient-boosted-trees counterpart of <see cref="TrainFold"/>
+        /// (<c>--fdr-method gbdt</c>): the SAME semi-supervised loop -- select the
+        /// targets that reach <paramref name="trainFdr"/> under the current score, train
+        /// on those positives against all decoys, re-score, keep the iteration that
+        /// passes the most targets, stop after two without improvement -- with the linear
+        /// SVM swapped for a tree ensemble.
+        ///
+        /// Two things drop out relative to the SVM, both because trees have no cost
+        /// parameter: the inner <see cref="GridSearchC"/> sweep (capacity is fixed by
+        /// <see cref="PercolatorConfig.GbtParams"/> instead) and the scratch pool (which
+        /// exists to recycle the SVM's per-iteration <see cref="Matrix"/> buffers).
+        /// Everything the fold selection depends on -- <see cref="SelectPositiveTrainingSet"/>,
+        /// <see cref="CountPassing(double[],bool[],uint[],double)"/>, and the caller's
+        /// peptide-grouped fold assignment --
+        /// is the identical shared code, so the two methods differ only in the classifier.
+        /// </summary>
+        // Inner validation fraction for tree iteration selection: 1 of these folds is held
+        // out of tree fitting and used ONLY to pick the best iteration. 5 -> 20% held out.
+        private static GradientBoostedTrees TrainFoldGbt(
+            Matrix stdFeatures,
+            bool[] labels,
+            uint[] entryIds,
+            string[] peptides,
+            int[] trainIndices,
+            double[] initialScores,
+            PercolatorConfig config,
+            double trainFdr,
+            int foldIndex,
+            TrainProgressReporter progress,
+            out int bestIteration)
+        {
+            var currentScores = (double[])initialScores.Clone();
+            GradientBoostedTrees bestModel = null;
+            bestIteration = 0;
+            // -1, where TrainFold uses 0: the SVM seeds bestModel with a degenerate
+            // zero-weight model that is a valid scorer if no iteration ever passes a
+            // target, but there is no equivalent empty tree ensemble (Train rejects an
+            // empty training set). Starting below zero guarantees the first trained
+            // model is installed, so a fold that passes nothing still returns a real
+            // model rather than null.
+            int bestPassing = -1;
+            int consecutiveNoImprove = 0;
+
+            var trainLabels = new bool[trainIndices.Length];
+            var trainEntryIds = new uint[trainIndices.Length];
+            var trainPeptides = new string[trainIndices.Length];
+            int nTrainTargets = 0;
+            for (int i = 0; i < trainIndices.Length; i++)
+            {
+                trainLabels[i] = labels[trainIndices[i]];
+                trainEntryIds[i] = entryIds[trainIndices[i]];
+                trainPeptides[i] = peptides[trainIndices[i]];
+                if (!trainLabels[i])
+                    nTrainTargets++;
+            }
+
+            // Inner held-out split for HONEST iteration selection. The tree ensemble grows
+            // in capacity every iteration, so counting passing targets on the rows it was
+            // fit on is an in-sample metric that rises monotonically -- argmax then always
+            // picks the last (most overfit) iteration and never early-stops. Instead, hold
+            // out one inner fold, fit the trees on the rest, and pick the iteration that
+            // passes the most targets on the HELD-OUT rows. The linear SVM's TrainFold does
+            // not need this (a high-bias model has a negligible in/out-of-sample gap), so
+            // its parity-locked loop is untouched. The split reuses the same peptide-grouped
+            // fold assignment as the outer CV, so target-decoy pairs and a peptide's charge
+            // states stay on one side -- no leakage between fit and validation.
+            // Inner-fold count is env-tunable (OSPREY_GBT_INNER_FOLDS, default 5 -> 20% val).
+            // A value <= 1 skips the split and selects the iteration IN-SAMPLE (fit = val =
+            // all training rows) -- the pre-held-out behavior -- so held-out selection can be
+            // turned off for a regularization sweep or an A/B without a code revert.
+            int innerFolds = OspreyEnvironment.GbtInnerFolds;
+            int[] innerFold = innerFolds > 1
+                ? CreateStratifiedFoldsByPeptide(
+                    trainLabels, trainPeptides, trainEntryIds, innerFolds)
+                : null;
+            var fitLocal = new List<int>(trainIndices.Length);
+            var valLocal = new List<int>(innerFolds > 1
+                ? trainIndices.Length / innerFolds + 1
+                : trainIndices.Length);
+            if (innerFold != null)
+            {
+                for (int i = 0; i < trainIndices.Length; i++)
+                {
+                    if (innerFold[i] == 0) valLocal.Add(i); else fitLocal.Add(i);
+                }
+            }
+            // No split (innerFolds <= 1), or degenerate tiny folds (no validation or no fit
+            // rows), fall back to using all training rows for both -- in-sample selection --
+            // rather than failing. Also reached on pathologically small inputs the tests use.
+            bool haveVal = innerFold != null && valLocal.Count > 0 && fitLocal.Count > 0;
+            if (!haveVal)
+            {
+                fitLocal.Clear();
+                for (int i = 0; i < trainIndices.Length; i++) fitLocal.Add(i);
+                valLocal = fitLocal;
+            }
+
+            var fitLabels = new bool[fitLocal.Count];
+            var fitEntryIds = new uint[fitLocal.Count];
+            for (int i = 0; i < fitLocal.Count; i++)
+            {
+                fitLabels[i] = trainLabels[fitLocal[i]];
+                fitEntryIds[i] = trainEntryIds[fitLocal[i]];
+            }
+            var valLabels = new bool[valLocal.Count];
+            var valEntryIds = new uint[valLocal.Count];
+            int nValTargets = 0;
+            for (int i = 0; i < valLocal.Count; i++)
+            {
+                valLabels[i] = trainLabels[valLocal[i]];
+                valEntryIds[i] = trainEntryIds[valLocal[i]];
+                if (!valLabels[i]) nValTargets++;
+            }
+
+            var rowBuf = new double[stdFeatures.Cols];
+            for (int iteration = 0; iteration < config.MaxIterations; iteration++)
+            {
+                // i. Select positive training set under the CURRENT score -- from the FIT
+                //    rows only, so the validation rows never influence what the trees fit.
+                var fitCurrentScores = new double[fitLocal.Count];
+                for (int i = 0; i < fitLocal.Count; i++)
+                    fitCurrentScores[i] = currentScores[trainIndices[fitLocal[i]]];
+
+                var selectedFitTargets = SelectPositiveTrainingSet(
+                    fitCurrentScores, fitLabels, fitEntryIds, trainFdr, MIN_POSITIVE);
+
+                if (selectedFitTargets.Length == 0)
+                    break;
+
+                // Training set: selected confident FIT targets + all FIT decoys. Train
+                // reads the same isDecoy convention the SVM does (decoy = negative).
+                var gbtLocal = new List<int>(selectedFitTargets);  // local indices into fitLocal
+                for (int i = 0; i < fitLocal.Count; i++)
+                {
+                    if (fitLabels[i])
+                        gbtLocal.Add(i);
+                }
+
+                var gbtRows = new double[gbtLocal.Count][];
+                var gbtLabels = new bool[gbtLocal.Count];
+                for (int i = 0; i < gbtLocal.Count; i++)
+                {
+                    gbtRows[i] = ExtractRow(stdFeatures, trainIndices[fitLocal[gbtLocal[i]]]);
+                    gbtLabels[i] = fitLabels[gbtLocal[i]];
+                }
+
+                // ii. Train. No grid search: capacity is bounded by depth / gamma /
+                //     lambda / min-child-weight, all fixed up front.
+                var model = GradientBoostedTrees.Train(gbtRows, gbtLabels, config.GbtParams);
+
+                // iii. Re-score the FIT rows (drives the next iteration's positive
+                //      selection) and the VALIDATION rows (drives model selection).
+                for (int i = 0; i < fitLocal.Count; i++)
+                {
+                    CopyRow(stdFeatures, trainIndices[fitLocal[i]], rowBuf);
+                    currentScores[trainIndices[fitLocal[i]]] = model.ScoreSingle(rowBuf);
+                }
+                var valScores = new double[valLocal.Count];
+                for (int i = 0; i < valLocal.Count; i++)
+                {
+                    CopyRow(stdFeatures, trainIndices[valLocal[i]], rowBuf);
+                    valScores[i] = model.ScoreSingle(rowBuf);
+                }
+
+                // iv. Keep the iteration that passes the most targets on the HELD-OUT rows.
+                int nPassing = CountPassing(valScores, valLabels, valEntryIds, trainFdr);
+                progress.ReportIteration(foldIndex, iteration, nPassing, nValTargets);
+
+                if (nPassing > bestPassing)
+                {
+                    bestModel = model;
+                    bestPassing = nPassing;
+                    bestIteration = iteration + 1;
+                    consecutiveNoImprove = 0;
+                }
+                else
+                {
+                    consecutiveNoImprove++;
+                }
+
+                if (consecutiveNoImprove >= 2)
+                    break;
+            }
+
+            if (bestModel == null)
+            {
+                // Only reachable when the very first SelectPositiveTrainingSet found no
+                // targets even after relaxing to 50% FDR -- i.e. the fold has essentially
+                // no target population. Fail loudly: a constant-scoring fallback would
+                // silently produce meaningless q-values that still look like a result.
+                throw new InvalidOperationException(string.Format(
+                    @"TrainFoldGbt: fold {0} selected no positive training targets at any " +
+                    @"FDR threshold ({1} training entries, {2} targets); cannot train a model.",
+                    foldIndex, trainIndices.Length, nTrainTargets));
+            }
+
+            bestIteration = Math.Max(bestIteration, 1);
+            return bestModel;
+        }
+
+        /// <summary>
+        /// Score <paramref name="rows"/> with fold <paramref name="fold"/>'s model,
+        /// whichever classifier this run trained. Exactly one of
+        /// <paramref name="svmModels"/> / <paramref name="gbtModels"/> is non-null.
+        /// </summary>
+        private static double[] ScoreWithFoldModel(
+            LinearSvmClassifier[] svmModels, GradientBoostedTrees[] gbtModels,
+            int fold, Matrix rows)
+        {
+            if (gbtModels == null)
+                return svmModels[fold].DecisionFunction(rows);
+
+            var model = gbtModels[fold];
+            var scores = new double[rows.Rows];
+            var rowBuf = new double[rows.Cols];
+            for (int i = 0; i < rows.Rows; i++)
+            {
+                CopyRow(rows, i, rowBuf);
+                scores[i] = model.ScoreSingle(rowBuf);
+            }
+            return scores;
+        }
+
+        /// <summary>
+        /// The single place a standardized feature row becomes a score on the
+        /// full-population passes, for both classifiers: the averaged tree margin when
+        /// <paramref name="gbtModels"/> is non-null, otherwise the averaged-weights dot
+        /// product. Keeping both here is what lets the resident
+        /// (<see cref="ScorePopulationAndComputeFdr"/>) and projection
+        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) score passes stay a
+        /// single shared implementation across the two methods. Internal rather than
+        /// private so <see cref="FrozenModelScorer"/> -- the 2nd-pass transfer paths'
+        /// view of a trained model -- applies it identically.
+        /// </summary>
+        internal static double ScoreStandardizedRow(
+            IReadOnlyList<GradientBoostedTrees> gbtModels,
+            double[] avgWeights, double avgBias, double[] stdRow)
+        {
+            if (gbtModels != null)
+                return AverageGbtScore(gbtModels, stdRow);
+
+            double score = avgBias;
+            for (int j = 0; j < avgWeights.Length; j++)
+                score += avgWeights[j] * stdRow[j];
+            return score;
+        }
+
+        /// <summary>Average raw margin over the per-fold tree ensembles -- the tree
+        /// analogue of the SVM path's averaged-weights dot product. See
+        /// <see cref="PercolatorResults.FoldGbtModels"/> for why trees average scores
+        /// rather than models.</summary>
+        private static double AverageGbtScore(
+            IReadOnlyList<GradientBoostedTrees> models, double[] stdRow)
+        {
+            double sum = 0.0;
+            for (int f = 0; f < models.Count; f++)
+                sum += models[f].ScoreSingle(stdRow);
+            return sum / models.Count;
+        }
+
+        /// <summary>The trained tree ensembles, or <c>null</c> when this run trained the
+        /// linear SVM. Normalizes the empty-list case to null so every score path can
+        /// select the classifier on a single null check.</summary>
+        private static List<GradientBoostedTrees> ResolveGbtModels(PercolatorResults trainResults)
+        {
+            var models = trainResults.FoldGbtModels;
+            return models != null && models.Count > 0 ? models : null;
+        }
+
+        /// <summary>
+        /// Score one file's projection rows with the tree ensembles, in parallel over
+        /// contiguous chunks (one standardization buffer per chunk, disjoint writes into
+        /// <paramref name="finalScores"/>). Bit-identical to the serial loop: each row's
+        /// score depends only on that row, and the tree path has no cross-row
+        /// accumulation to order. Chunked rather than per-row so the work per
+        /// <see cref="OspreyParallel"/> interlocked hand-out is a whole slice, not one row.
+        /// </summary>
+        private static void ScoreProjectionRowsGbt(
+            IReadOnlyList<double[]> rows,
+            List<FdrProjection> projRows,
+            IReadOnlyList<GradientBoostedTrees> gbtModels,
+            FeatureStandardizer standardizer,
+            int nFeatures,
+            double[] finalScores,
+            int baseIndex,
+            int nThreads)
+        {
+            int count = projRows.Count;
+            if (count == 0)
+                return;
+            int threads = Math.Max(1, Math.Min(nThreads, count));
+            int chunk = (count + threads - 1) / threads;
+            OspreyParallel.For(0, threads, threads, c =>
+            {
+                var featureBuf = new double[nFeatures];   // per-chunk: never shared
+                int lo = c * chunk;
+                int hi = Math.Min(lo + chunk, count);
+                for (int r = lo; r < hi; r++)
+                {
+                    var proj = projRows[r];
+                    double[] featRow = ResolveFeatureRow(
+                        rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
+                    Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+                    standardizer.TransformSlice(featureBuf);
+                    finalScores[baseIndex + r] = AverageGbtScore(gbtModels, featureBuf);
+                }
+            });
+        }
+
+        private static double[] ExtractRow(Matrix matrix, int row)
+        {
+            var dest = new double[matrix.Cols];
+            CopyRow(matrix, row, dest);
+            return dest;
+        }
+
+        private static void CopyRow(Matrix matrix, int row, double[] dest)
+        {
+            int cols = matrix.Cols;
+            for (int j = 0; j < cols; j++)
+                dest[j] = matrix[row, j];
+        }
+
         // ============================================================
         // Target-decoy competition and q-value computation
         // ============================================================
@@ -2297,6 +2808,256 @@ namespace pwiz.Osprey.FDR
                 winnerScores[i] = winners[i].Item2;
                 winnerIsDecoy[i] = winners[i].Item3;
                 winnerBaseIds[i] = winners[i].Item4;
+            }
+        }
+
+        /// <summary>
+        /// OSPREY_PASS2_QVALUE=transfer-compete (full-population form): given the FULL
+        /// 1st-pass population as flat SCALAR arrays -- scores, is_decoy labels, entry_ids,
+        /// file names, all index-aligned, with the reconciled minority's scores already
+        /// overwritten by the caller -- run the global target-decoy competition and compute
+        /// per-run + experiment PRECURSOR q-values and PEP over that full population. Same
+        /// competition/PEP/q math as <see cref="ScorePopulationAndComputeFdr"/>, but takes
+        /// pre-computed scores (no features, no model application), so the 2nd pass can
+        /// recompete over the persisted full-population scalars from
+        /// <c>.1st-pass.fdr_scores.bin</c> -- with only the ~0.4% reconciled scores swapped in
+        /// -- without ever holding features resident. Outputs are index-aligned to the inputs.
+        /// Precursor-level only (the entrapment-FDR path); peptide-level q is not computed here.
+        /// </summary>
+        public static void ComputeFullPopulationPrecursorFdr(
+            double[] scores, bool[] labels, uint[] entryIds, string[] fileNames,
+            out double[] runPrecursorQ, out double[] experimentPrecursorQ, out double[] pep)
+        {
+            int n = scores.Length;
+
+            // Global target-decoy competition (group by base_id, winner per pair) + PEP on winners.
+            CompeteAll(scores, labels, entryIds,
+                out int[] winnerIndices, out double[] winnerScores, out bool[] winnerIsDecoy);
+            var pepEstimator = PepEstimator.FitDefault(winnerScores, winnerIsDecoy);
+            pep = new double[n];
+            for (int i = 0; i < n; i++) pep[i] = 1.0;
+            foreach (int idx in winnerIndices)
+                pep[idx] = pepEstimator.PosteriorError(scores[idx]);
+
+            // Per-run and experiment-wide precursor q over the full population.
+            runPrecursorQ = ComputePerRunPrecursorQvalues(scores, labels, entryIds, fileNames);
+            var uniqueFiles = new HashSet<string>(fileNames);
+            experimentPrecursorQ = uniqueFiles.Count <= 1
+                ? (double[])runPrecursorQ.Clone()
+                : ComputeExperimentPrecursorQvalues(scores, labels, entryIds);
+
+            // Best-of-runs monotonicity (issue #4390): floor each entry's experiment q up to
+            // its own best (min-over-runs) run q -- an experiment q is never more confident
+            // than the precursor's best single run. Keyed by full entry_id (target and decoy
+            // are distinct entries), matching ClampExperimentQToBestRunFlat's precursor clamp.
+            var bestRunQ = new Dictionary<uint, double>();
+            for (int i = 0; i < n; i++)
+                if (!bestRunQ.TryGetValue(entryIds[i], out double q) || runPrecursorQ[i] < q)
+                    bestRunQ[entryIds[i]] = runPrecursorQ[i];
+            for (int i = 0; i < n; i++)
+                if (experimentPrecursorQ[i] < bestRunQ[entryIds[i]])
+                    experimentPrecursorQ[i] = bestRunQ[entryIds[i]];
+        }
+
+        /// <summary>
+        /// Bounded-memory streaming form of <see cref="ComputeFullPopulationPrecursorFdr"/> for
+        /// OSPREY_PASS2_QVALUE=transfer-compete. Streams one file's 1st-pass population at a time
+        /// (run-level competition + conservative q per file) while accumulating only the
+        /// per-base_id best target/decoy observation for the experiment-level competition.
+        /// Resident footprint is therefore O(distinct precursors + largest single file +
+        /// survivors) -- flat in file count -- where the resident overload is O(total
+        /// observations). Emits run/experiment precursor q and PEP identical to the resident
+        /// method for the reported survivors (verified byte-for-byte on the 3-file Stellar
+        /// entrapment set). File reading is injected so this assembly needs no IO dependency.
+        /// </summary>
+        /// <param name="fileKeys">Stable per-file keys to stream, in any order.</param>
+        /// <param name="readFileScalars">Reads one file's full population as (entryIds, scores);
+        ///   invoked once per file, arrays released before the next file is read.</param>
+        /// <param name="survivorScoreOverride">Frozen-model score to substitute for a reconciled
+        ///   survivor observation, keyed (fileKey, entryId). Observations absent here keep their
+        ///   stored 1st-pass score.</param>
+        /// <param name="survivors">Every reported survivor (fileKey, entryId) to emit q/PEP for.</param>
+        /// <param name="survivorRunQ">Out: run-level precursor q per reported (fileKey, entryId).</param>
+        /// <param name="survivorExpQ">Out: experiment-level precursor q per reported (fileKey, entryId).</param>
+        /// <param name="survivorPep">Out: PEP per reported (fileKey, entryId).</param>
+        /// <param name="stratumBaseIds">Null for the full-population competition; non-null restricts
+        ///   the competition to these base_ids (protein-compact).</param>
+        public static void ComputeFullPopulationPrecursorFdrStreaming(
+            IReadOnlyList<string> fileKeys,
+            Func<string, (uint[] entryIds, double[] scores)> readFileScalars,
+            IReadOnlyDictionary<(string, uint), double> survivorScoreOverride,
+            IReadOnlyCollection<(string, uint)> survivors,
+            out Dictionary<(string, uint), double> survivorRunQ,
+            out Dictionary<(string, uint), double> survivorExpQ,
+            out Dictionary<(string, uint), double> survivorPep,
+            HashSet<uint> stratumBaseIds = null)
+        {
+            // stratumBaseIds == null -> full-population competition (transfer-compete).
+            // non-null -> STRATIFIED competition (protein-compact): only observations whose
+            // base_id is in the stratum participate in the run/experiment competitions, so
+            // off-stratum decoys leave the null (reduced multiple testing). The per-base_id
+            // maps hold only stratum members, so peak memory stays flat in file count -- it
+            // only shrinks relative to the full-population path.
+            var survivorSet = new HashSet<(string, uint)>(survivors);
+            var survivorEntryIds = new HashSet<uint>();
+            foreach (var s in survivorSet) survivorEntryIds.Add(s.Item2);
+
+            survivorRunQ = new Dictionary<(string, uint), double>(survivorSet.Count);
+            survivorExpQ = new Dictionary<(string, uint), double>(survivorSet.Count);
+            survivorPep = new Dictionary<(string, uint), double>(survivorSet.Count);
+
+            // Experiment-level per-base_id best target/decoy observation (score + locator),
+            // accumulated across every file. Bounded by the number of distinct precursors.
+            var bestTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+
+            // Best (min) run q per SURVIVOR entry_id across the files it won in -- the
+            // best-of-runs monotonicity floor for the experiment q (only survivors are emitted).
+            var minRunQ = new Dictionary<uint, double>(survivorEntryIds.Count);
+
+            for (int fileIdx = 0; fileIdx < fileKeys.Count; fileIdx++)
+            {
+                string fileKey = fileKeys[fileIdx];
+                var (entryIds, scores) = readFileScalars(fileKey);
+                int m = entryIds.Length;
+                var labels = new bool[m];
+                for (int i = 0; i < m; i++)
+                {
+                    uint eid = entryIds[i];
+                    labels[i] = (eid & ~BASE_ID_MASK) != 0u; // decoy high bit set
+                    if (survivorScoreOverride.TryGetValue((fileKey, eid), out double ov))
+                        scores[i] = ov; // swap in the reconciled survivor's frozen-model score
+                }
+
+                // Run-level: compete within this file (only stratum members when
+                // stratified), conservative q on the winners.
+                int[] allIdx;
+                if (stratumBaseIds == null)
+                {
+                    allIdx = new int[m];
+                    for (int i = 0; i < m; i++) allIdx[i] = i;
+                }
+                else
+                {
+                    var idxList = new List<int>(m);
+                    for (int i = 0; i < m; i++)
+                        if (stratumBaseIds.Contains(entryIds[i] & BASE_ID_MASK)) idxList.Add(i);
+                    allIdx = idxList.ToArray();
+                }
+                CompeteFromIndices(scores, labels, entryIds, allIdx,
+                    out int[] wi, out double[] ws, out bool[] wd);
+                var q = new double[wi.Length];
+                ComputeConservativeQvalues(ws, wd, q);
+                for (int rank = 0; rank < wi.Length; rank++)
+                {
+                    uint eid = entryIds[wi[rank]];
+                    if (!survivorEntryIds.Contains(eid)) continue;
+                    double qv = q[rank];
+                    var key = (fileKey, eid);
+                    if (survivorSet.Contains(key)) survivorRunQ[key] = qv;
+                    if (!minRunQ.TryGetValue(eid, out double cur) || qv < cur) minRunQ[eid] = qv;
+                }
+
+                // Experiment-level: fold every observation into the per-base_id bests
+                // (stratum members only when stratified -> the experiment competition
+                // below runs over exactly the stratum's base_ids).
+                for (int i = 0; i < m; i++)
+                {
+                    uint eid = entryIds[i];
+                    uint bid = eid & BASE_ID_MASK;
+                    if (stratumBaseIds != null && !stratumBaseIds.Contains(bid)) continue;
+                    double s = scores[i];
+                    if (labels[i])
+                    {
+                        if (!bestDecoy.TryGetValue(bid, out var cur) || s > cur.score)
+                            bestDecoy[bid] = (s, fileIdx, eid);
+                    }
+                    else
+                    {
+                        if (!bestTarget.TryGetValue(bid, out var cur) || s > cur.score)
+                            bestTarget[bid] = (s, fileIdx, eid);
+                    }
+                }
+                // entryIds/scores/labels/allIdx released here before the next file is read.
+            }
+
+            // Experiment competition: one winner per base_id, conservative q, PEP fit over
+            // exactly the winner set the resident method fits.
+            var baseIds = new HashSet<uint>(bestTarget.Keys);
+            baseIds.UnionWith(bestDecoy.Keys);
+            int w = baseIds.Count;
+            var expScore = new double[w];
+            var expIsDecoy = new bool[w];
+            var expBaseId = new uint[w];
+            var winnerLoc = new Dictionary<uint, (int fileIdx, uint entryId, double score)>(w);
+            int wi2 = 0;
+            foreach (uint bid in baseIds)
+            {
+                bool hasT = bestTarget.TryGetValue(bid, out var t);
+                bool hasD = bestDecoy.TryGetValue(bid, out var d);
+                // CompeteFromIndices: target wins strictly (tScore > dScore); ties go to the decoy.
+                bool decoyWins = hasT && hasD ? !(t.score > d.score) : !hasT;
+                var win = decoyWins ? d : t;
+                expScore[wi2] = win.score; expIsDecoy[wi2] = decoyWins; expBaseId[wi2] = bid;
+                winnerLoc[bid] = (win.fileIdx, win.entryId, win.score);
+                wi2++;
+            }
+
+            // Sort winners by score desc, base_id asc (unique base_id => total order).
+            var perm = new int[w];
+            for (int i = 0; i < w; i++) perm[i] = i;
+            Array.Sort(perm, (a, b) => // Array.Sort OK: unique baseId tie-break makes comparator total
+            {
+                int cmp = expScore[b].CompareTo(expScore[a]);
+                return cmp != 0 ? cmp : expBaseId[a].CompareTo(expBaseId[b]);
+            });
+            var sortedScore = new double[w];
+            var sortedDecoy = new bool[w];
+            var sortedBaseId = new uint[w];
+            for (int i = 0; i < w; i++)
+            {
+                sortedScore[i] = expScore[perm[i]];
+                sortedDecoy[i] = expIsDecoy[perm[i]];
+                sortedBaseId[i] = expBaseId[perm[i]];
+            }
+            var qExp = new double[w];
+            ComputeConservativeQvalues(sortedScore, sortedDecoy, qExp);
+            var baseIdExpQ = new Dictionary<uint, double>(w);
+            for (int i = 0; i < w; i++) baseIdExpQ[sortedBaseId[i]] = qExp[i];
+
+            var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
+
+            bool multiFile = fileKeys.Count > 1;
+            foreach (var key in survivorSet)
+            {
+                string fileKey = key.Item1;
+                uint eid = key.Item2;
+                uint bid = eid & BASE_ID_MASK;
+
+                if (!survivorRunQ.ContainsKey(key)) survivorRunQ[key] = 1.0;
+
+                if (multiFile)
+                {
+                    // Experiment q = base_id winner q, floored up to this precursor's best run q.
+                    // An entry_id that won no within-file competition has best run q = 1.0 (every
+                    // observation stayed at the q=1.0 default), matching the resident bestRunQ.
+                    double eq = baseIdExpQ.TryGetValue(bid, out double bq) ? bq : 1.0;
+                    double floorQ = minRunQ.TryGetValue(eid, out double mrq) ? mrq : 1.0;
+                    if (eq < floorQ) eq = floorQ;
+                    survivorExpQ[key] = eq;
+                }
+                else
+                {
+                    // Single file: experiment q == run q (resident short-circuit).
+                    survivorExpQ[key] = survivorRunQ[key];
+                }
+
+                // PEP is real only on the single experiment-winner observation of each base_id.
+                double pep = 1.0;
+                if (winnerLoc.TryGetValue(bid, out var loc) &&
+                    loc.entryId == eid && fileKeys[loc.fileIdx] == fileKey)
+                    pep = pepEstimator.PosteriorError(loc.score);
+                survivorPep[key] = pep;
             }
         }
 
@@ -3024,6 +3785,71 @@ namespace pwiz.Osprey.FDR
                 }
             }
             progress?.Dispose();
+
+            return qvalues;
+        }
+
+        /// <summary>
+        /// STRATIFIED target-decoy competition q-values (OSPREY_PASS2_QVALUE=protein-compact):
+        /// compete + compute q over ONLY the observations whose <c>base_id</c>
+        /// (<c>entry_id &amp; 0x7FFFFFFF</c>) is in <paramref name="stratumBaseIds"/> --
+        /// the peptides of proteins detected in the 1st pass, admitted as target+decoy
+        /// PAIRS. Off-stratum observations get q = 1.0 (not reported).
+        ///
+        /// The sensitivity comes from reduced multiple testing: removing off-stratum
+        /// (mostly-false) peptides removes their decoys from the null, so the decoy count
+        /// above a given score drops and q falls for the stratum's marginal targets
+        /// (independent filtering; Bourgon 2010). It stays honest because (a) the stratum
+        /// is defined by protein membership, ~independent of a peptide's own decoy score
+        /// under the null since a protein is detected via its OTHER peptides, and (b) the
+        /// stratum keeps its paired decoys, including the ones that win -- so the null is a
+        /// fair sample, not a target-winner-selected one (the failure mode of the old
+        /// two-pass compaction). Uses the same conservative competition + q the
+        /// full-population path uses; only the participating index set is constrained.
+        /// </summary>
+        internal static double[] ComputeStratifiedCompetitionQvalues(
+            double[] scores, bool[] labels, uint[] entryIds, HashSet<uint> stratumBaseIds)
+        {
+            int n = scores.Length;
+            var qvalues = new double[n];
+            for (int i = 0; i < n; i++)
+                qvalues[i] = 1.0;
+            if (stratumBaseIds == null || stratumBaseIds.Count == 0)
+                return qvalues;
+
+            // Indices whose base_id is in the stratum -- target and decoy alike, so the
+            // pair-symmetric null is preserved.
+            var stratIdx = new List<int>();
+            for (int i = 0; i < n; i++)
+            {
+                if (stratumBaseIds.Contains(entryIds[i] & BASE_ID_MASK))
+                    stratIdx.Add(i);
+            }
+            if (stratIdx.Count == 0)
+                return qvalues;
+
+            var sScores = new double[stratIdx.Count];
+            var sLabels = new bool[stratIdx.Count];
+            var sEntryIds = new uint[stratIdx.Count];
+            var allIndices = new int[stratIdx.Count];
+            for (int i = 0; i < stratIdx.Count; i++)
+            {
+                sScores[i] = scores[stratIdx[i]];
+                sLabels[i] = labels[stratIdx[i]];
+                sEntryIds[i] = entryIds[stratIdx[i]];
+                allIndices[i] = i;
+            }
+
+            int[] wi;
+            double[] ws;
+            bool[] wd;
+            CompeteFromIndices(sScores, sLabels, sEntryIds, allIndices, out wi, out ws, out wd);
+
+            var q = new double[wi.Length];
+            ComputeConservativeQvalues(ws, wd, q);
+
+            for (int rank = 0; rank < wi.Length; rank++)
+                qvalues[stratIdx[wi[rank]]] = q[rank];
 
             return qvalues;
         }

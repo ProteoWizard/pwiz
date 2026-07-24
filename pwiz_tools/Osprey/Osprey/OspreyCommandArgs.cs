@@ -118,12 +118,16 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
             () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p.Value, @"--protein-fdr"));
         public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(@"fdr-method",
-            new[] { @"percolator", @"simple" }, (c, p) =>
+            new[] { @"percolator", @"gbdt", @"simple" }, (c, p) =>
             {
                 switch (p.Value.ToLowerInvariant())
                 {
                     case @"percolator":
                         c._config.FdrMethod = FdrMethod.Percolator;
+                        break;
+                    case @"gbdt":
+                    case @"fasttree": // deprecated alias for gbdt (gradient-boosted decision trees)
+                        c._config.FdrMethod = FdrMethod.Gbdt;
                         break;
                     case @"simple":
                         c._config.FdrMethod = FdrMethod.Simple;

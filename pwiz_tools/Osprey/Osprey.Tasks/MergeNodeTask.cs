@@ -270,6 +270,16 @@ namespace pwiz.Osprey.Tasks
                 if (ctx.Diagnostics?.Stage7ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
+
+            // Default user-facing reports (protein groups + per-replicate/experiment
+            // summary), modeled on DIA-NN. Additive files next to the output blib, so the
+            // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
+            // protein counts re-run protein FDR per run, so this is the one place with the
+            // full per-file pool + library in hand.
+            if (config.WriteProteinReport || config.WriteSummaryReport)
+            {
+                OspreyReportWriter.WriteReports(result, perFileEntries, fullLibrary, config, ctx.LogInfo);
+            }
         }
 
         /// <summary>
@@ -508,9 +518,10 @@ namespace pwiz.Osprey.Tasks
 
         // Shared peak boundaries per (peptide, file): all charge states of the
         // same peptide in a run share the boundaries from the charge with lowest
-        // run_qvalue. Mirrors Rust pipeline.rs:6020-6063. Key: (modseq, fileName);
-        // value: { apexRt, startRt, endRt, run_q } from the min-run-qvalue entry.
-        private static Dictionary<(string, string), double[]> BuildSharedBoundaries(
+        // run_qvalue. Mirrors Rust pipeline.rs build_shared_boundaries_from_plan.
+        // Key: (modseq, fileName); value: { apexRt, startRt, endRt, run_q, charge }
+        // from the min-run-qvalue entry (charge breaks run_qvalue ties).
+        internal static Dictionary<(string, string), double[]> BuildSharedBoundaries(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             HashSet<(string, byte)> passingPrecursors)
         {
@@ -525,9 +536,18 @@ namespace pwiz.Osprey.Tasks
                     var sk = (e.ModifiedSequence, boundsFile);
                     double rq = e.EffectiveRunQvalue(FdrLevel.Both);
                     double[] existingB;
-                    if (!sharedBounds.TryGetValue(sk, out existingB) || rq < existingB[3])
+                    // On a run_qvalue TIE (e.g. two charge states both gap-filled at
+                    // q=1.0), break deterministically by LOWEST CHARGE so the winner
+                    // does not depend on the per-file entry iteration order. Rust
+                    // build_shared_boundaries_from_plan applies the identical
+                    // (lower run_qvalue, then lower charge) rule, so both impls keep
+                    // the same charge's window and the blib RetentionTimes start/end
+                    // stay byte-identical cross-impl.
+                    if (!sharedBounds.TryGetValue(sk, out existingB)
+                        || rq < existingB[3]
+                        || (rq == existingB[3] && e.Charge < existingB[4]))
                     {
-                        sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq };
+                        sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, e.Charge };
                     }
                 }
             }
