@@ -875,8 +875,18 @@ namespace TestPerf
             // search outputs persist for reuse across runs. Avoid Path.GetTempPath() — see
             // TestRunner's `~&TMP^` redirect; DIA-NN can't write there anyway.
             Directory.CreateDirectory(DocDir);
-            // Wipe the previous .sky/.skyl/.sky.view but KEEP the library + parquet caches.
-            foreach (var stale in Directory.EnumerateFiles(DocDir, @"DiannSearchPerf.*"))
+            // Wipe the previous .sky/.skyl/.sky.view AND the stale DIA-NN cross-run outputs
+            // (diann-output* = the report, the output library, and its Skyline-converted
+            // speclib). Those files carry per-run source-file attribution, so a stale set
+            // left in this persistent dir by an earlier run over a different file set (e.g.
+            // the full 6-file ProteoBench dataset, whose runs are named after the original
+            // .raw acquisitions) would leak the wrong .raw source names into the freshly
+            // built document library, leaving the chromatograms page unable to find any
+            // results file. KEEP diann-predicted.predicted.speclib (the expensive,
+            // deterministic predicted library reused via ReuseCachedLibrary) and the
+            // per-file .quant cache (in CacheDir) so repeat runs stay fast.
+            foreach (var stale in Directory.EnumerateFiles(DocDir, @"DiannSearchPerf.*")
+                         .Concat(Directory.EnumerateFiles(DocDir, @"diann-output*")))
                 File.Delete(stale);
             RunUI(() => SkylineWindow.SaveDocument(Path.Combine(DocDir, documentFile)));
         }
