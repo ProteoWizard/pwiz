@@ -222,6 +222,11 @@ public sealed class ReaderList : IReader
             list.Add(new MSnReaderAdapter());
             list.Add(new BtdxReaderAdapter());
             list.Add(new MgfReaderAdapter());
+            // Parquet-backed mzPeak goes at the end of the built-in chain so
+            // it doesn't perturb the existing identify-order for the XML/HDF5
+            // formats. Its extension-first Identify makes the position
+            // immaterial for typed inputs.
+            list.Add(new MzPeakReaderAdapter());
             foreach (var r in AdditionalReaders)
                 list.Add(r);
             return list;

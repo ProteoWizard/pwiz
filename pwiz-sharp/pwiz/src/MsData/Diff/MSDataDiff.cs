@@ -40,6 +40,51 @@ public static class MSDataDiff
     }
 
     /// <summary>
+    /// Full-metadata diff for a write→read round-trip through an mzML-complete binary format
+    /// (mzMLb, mzPeak). Compares the whole document at <paramref name="precision"/> tolerance
+    /// (to absorb the format's float32 intensity narrowing) while tolerating the artifacts a
+    /// writer legitimately adds on output that aren't part of the source document:
+    /// <list type="bullet">
+    /// <item>the output file added as a trailing <c>sourceFile</c> self-reference,</item>
+    /// <item>a conversion <c>dataProcessing</c> entry the writer stamps in,</item>
+    /// <item>mzMLb's per-array <c>MS_external_*</c> dataset/offset/length cvParams.</item>
+    /// </list>
+    /// Genuine metadata losses (entries present in <paramref name="original"/> but missing from
+    /// <paramref name="roundtripped"/>) are still reported.
+    /// </summary>
+    public static string DescribeRoundTrip(MSData original, MSData roundtripped, double precision)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        ArgumentNullException.ThrowIfNull(roundtripped);
+
+        // Drop writer-added sourceFiles / dataProcessings (present in the round-tripped doc but
+        // not the source — keyed by decoded id). Real losses surface as a-only and are untouched.
+        var origSourceFileIds = original.FileDescription.SourceFiles
+            .Select(s => DecodeXmlId(s.Id)).ToHashSet(StringComparer.Ordinal);
+        roundtripped.FileDescription.SourceFiles
+            .RemoveAll(s => !origSourceFileIds.Contains(DecodeXmlId(s.Id)));
+
+        // De-duplicate dataProcessings by id first: MSDataFile.FillInCommonMetadata stamps a
+        // conversion entry on every read, so a round-tripped doc carries it twice (once embedded
+        // from the source, once re-added on read-back) under the same id. Then drop any remaining
+        // writer-added entries not present in the source.
+        DedupeById(roundtripped.DataProcessings, d => d.Id);
+        var origDataProcessingIds = original.DataProcessings
+            .Select(d => DecodeXmlId(d.Id)).ToHashSet(StringComparer.Ordinal);
+        roundtripped.DataProcessings
+            .RemoveAll(d => !origDataProcessingIds.Contains(DecodeXmlId(d.Id)));
+
+        var dc = new DiffConfig { Precision = precision, IgnoreVersions = true };
+        return Describe(original, roundtripped, dc);
+    }
+
+    private static void DedupeById<T>(List<T> items, Func<T, string> keyOf)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        items.RemoveAll(item => !seen.Add(DecodeXmlId(keyOf(item))));
+    }
+
+    /// <summary>
     /// Tolerance mode for the <c>msLevel</c> comparison in <see cref="DescribeSpectraDataOnly"/>.
     /// Captures the well-known lossy defaults each peak-list format applies on read.
     /// </summary>
@@ -412,8 +457,8 @@ public static class MSDataDiff
 
     private static void DiffArrayMetadata(BinaryDataArray a, BinaryDataArray b, Context ctx)
     {
-        var aCvParams = a.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
-        var bCvParams = b.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
+        var aCvParams = a.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid) && !IsExternalBinaryRefCv(p.Cvid)).ToList();
+        var bCvParams = b.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid) && !IsExternalBinaryRefCv(p.Cvid)).ToList();
         DiffCvParamLists(aCvParams, bCvParams, ctx);
         DiffUserParamLists(a.UserParams, b.UserParams, ctx);
     }
@@ -520,8 +565,8 @@ public static class MSDataDiff
     {
         // Filter out purely-serialization cvParams (32-bit / 64-bit precision, compression type)
         // before diffing — they describe how the array was encoded, not its content.
-        var aCvParams = a.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
-        var bCvParams = b.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
+        var aCvParams = a.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid) && !IsExternalBinaryRefCv(p.Cvid)).ToList();
+        var bCvParams = b.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid) && !IsExternalBinaryRefCv(p.Cvid)).ToList();
         DiffCvParamLists(aCvParams, bCvParams, ctx);
         // UserParams and ParamGroup refs still matter; compare them raw.
         DiffUserParamLists(a.UserParams, b.UserParams, ctx);
@@ -539,6 +584,16 @@ public static class MSDataDiff
                 return; // one per array is enough
             }
         }
+    }
+
+    // mzMLb stores binary arrays out-of-line in HDF5 and points to them with these per-array
+    // cvParams (dataset name + offset + length). They're an internal mzMLb mechanism, not source
+    // metadata, so a round-trip diff against a non-mzMLb source must ignore them.
+    private static bool IsExternalBinaryRefCv(CVID cvid)
+    {
+        return cvid is CVID.MS_external_HDF5_dataset
+                    or CVID.MS_external_offset
+                    or CVID.MS_external_array_length;
     }
 
     private static bool IsBinaryEncodingCv(CVID cvid)
@@ -578,8 +633,8 @@ public static class MSDataDiff
     private static void DiffIntegerArray(IntegerDataArray a, IntegerDataArray b, Context ctx)
     {
         // Same encoding-CV filtering as BinaryDataArray — int32/int64 choice is serialization.
-        var aCvParams = a.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
-        var bCvParams = b.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid)).ToList();
+        var aCvParams = a.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid) && !IsExternalBinaryRefCv(p.Cvid)).ToList();
+        var bCvParams = b.CVParams.Where(p => !IsBinaryEncodingCv(p.Cvid) && !IsExternalBinaryRefCv(p.Cvid)).ToList();
         DiffCvParamLists(aCvParams, bCvParams, ctx);
         DiffUserParamLists(a.UserParams, b.UserParams, ctx);
 

@@ -70,6 +70,10 @@ internal static class ArgParser
                 case "--mzMLb":
                     config.WriteConfig.Format = WriteFormat.MzMLb;
                     break;
+                case "--mzpeak":
+                case "--mzPeak":
+                    config.WriteConfig.Format = WriteFormat.MzPeak;
+                    break;
                 case "--mgf":
                 case "--MGF":
                     config.WriteConfig.Format = WriteFormat.Mgf;
@@ -442,7 +446,9 @@ internal static class ArgParser
         "  --mzML                   mzML 1.1 (default)",
         "  --mgf                    Mascot Generic Format",
         "  --mzXML                  mzXML 3.2",
-        "  --mz5, --mzMLb, --text (unimplemented)",
+        "  --mzMLb                  mzMLb (HDF5)",
+        "  --mzpeak                 mzPeak (Parquet archive)",
+        "  --mz5, --text (unimplemented)",
         "  --ms1, --bms1, --cms1, --ms2, --bms2, --cms2",
         "",
         "Filters:",
