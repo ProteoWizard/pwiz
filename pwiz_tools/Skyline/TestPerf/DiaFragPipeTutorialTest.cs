@@ -93,7 +93,7 @@ namespace TestPerf
         {
             // File > Open opens the native Open dialog, so the menu click does not complete -- take the dialog
             // straight from the action's ActionResult.FormId.
-            var openDlg = ResolveModal(McpConnector.ClickMainMenuItem(
+            var openDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "openMenuItem")));
             McpConnector.SetFormValue(openDlg, "FileName",
                 GetTestPath(Path.Combine("backup", "skyline_files", "fragpipe.sky")));

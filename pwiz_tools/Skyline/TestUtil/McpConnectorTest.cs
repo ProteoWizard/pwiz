@@ -99,7 +99,51 @@ namespace pwiz.SkylineTestUtil
         /// caller knows it triggered a file dialog rather than a folder dialog.
         /// </summary>
         protected string WaitForNativeFileDialog() =>
-            ResolveWhenOpen(form => form.IsNative);
+            WaitForNativeFileDialogReady(ResolveWhenOpen(form => form.IsNative));
+
+        /// <summary>
+        /// Resolves the native file dialog a connector action just opened -- straight from its
+        /// <see cref="ActionResult"/>, for a verb whose own gesture blocks in the dialog and so names it (a menu
+        /// click that shows Open/Save As) -- and waits until it is ready to be typed into. The
+        /// <see cref="ResolveModal"/> counterpart for a file dialog, and the one to use for it: ResolveModal alone
+        /// returns the instant the window is reported, which is too early (see
+        /// <see cref="WaitForNativeFileDialogReady"/>).
+        /// </summary>
+        protected string ResolveNativeFileDialog(ActionResult actionResult) =>
+            WaitForNativeFileDialogReady(ResolveModal(actionResult));
+
+        /// <summary>
+        /// Waits until the native file dialog with the given id has finished opening -- i.e. the shell has created
+        /// and shown its file-name field -- and returns that id.
+        ///
+        /// <para>A native dialog becomes discoverable (its window exists, GetOpenForms reports it, and it
+        /// classifies as a file dialog) a moment BEFORE the shell has finished showing and populating it. Setting
+        /// the file name in that window fails with "The file dialog is still opening", because
+        /// <see cref="NativeFileDialog.FileNameTextBox"/> deliberately does NOT block polling for the field -- it
+        /// throws a retryable instruction so the wait lives with the DRIVER rather than inside the primitive that
+        /// every caller shares. This is that wait, for the driver that is a test.</para>
+        ///
+        /// <para>Readiness is the file-name box appearing in GetControls under its
+        /// <see cref="NativeFileDialog.FILE_NAME_FIELD"/> label -- the same field EnterPath needs, and listed only
+        /// once it is visible, so this waits for exactly the condition that would otherwise throw.</para>
+        /// </summary>
+        protected string WaitForNativeFileDialogReady(string formId)
+        {
+            WaitForCondition(() =>
+            {
+                try
+                {
+                    return McpConnector.GetControls(formId)
+                        ?.Any(control => Equals(control.Path.Text, NativeFileDialog.FILE_NAME_FIELD)) ?? false;
+                }
+                catch (InvalidOperationException)
+                {
+                    // The dialog can be momentarily unreadable while the shell is still bringing it up.
+                    return false;
+                }
+            }, @"The native file dialog did not finish opening.");
+            return formId;
+        }
 
         /// <summary>
         /// Waits for the native Browse-For-Folder dialog (enumerated by GetOpenForms with IsNative=true) and

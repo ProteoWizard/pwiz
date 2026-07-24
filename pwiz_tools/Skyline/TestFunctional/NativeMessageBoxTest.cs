@@ -81,6 +81,9 @@ namespace pwiz.SkylineTestFunctional
             fileDialogId = actionResult.FormId;
             Assert.IsNotNull(fileDialogId);
             Assert.AreEqual(modalNestingCount, GetModalNestingCount(fileDialogId));
+            // The id is reported as soon as the window exists, which is before the shell has shown the file-name
+            // field; typing into it in that window throws "The file dialog is still opening".
+            WaitForNativeFileDialogReady(fileDialogId);
             AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
             actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
