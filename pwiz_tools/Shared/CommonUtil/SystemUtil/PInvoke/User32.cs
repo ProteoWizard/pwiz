@@ -209,12 +209,34 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         private static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
+        // ONE delegate for the life of the process. A lambda here would allocate a new delegate on every call and
+        // the marshaller builds a native thunk for each, which is measurable churn for calls this hot (the
+        // connector enumerates windows on every GetOpenForms). A static method cannot capture the list to fill,
+        // so the list travels through the enumeration's lParam -- which Windows hands back to the callback
+        // untouched -- as a GCHandle, unwrapped below. Keeping no state here also makes these thread-safe:
+        // concurrent enumerations each carry their own list and cannot collide.
+        private static readonly EnumWindowsProc COLLECT_WINDOW_HANDLES = CollectWindowHandle;
+
+        private static bool CollectWindowHandle(IntPtr hwnd, IntPtr lParam)
+        {
+            ((List<IntPtr>) GCHandle.FromIntPtr(lParam).Target).Add(hwnd);
+            return true;    // true keeps the enumeration going
+        }
+
         /// <summary>The handles of all top-level windows, in z-order (top to bottom) -- callers use LINQ over these
         /// rather than an enumeration callback.</summary>
         public static IEnumerable<IntPtr> EnumWindows()
         {
             var handles = new List<IntPtr>();
-            EnumWindows((hwnd, lparam) => { handles.Add(hwnd); return true; }, IntPtr.Zero);
+            var listHandle = GCHandle.Alloc(handles);
+            try
+            {
+                EnumWindows(COLLECT_WINDOW_HANDLES, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                listHandle.Free();
+            }
             return handles;
         }
 
@@ -222,7 +244,15 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static IEnumerable<IntPtr> EnumChildWindows(IntPtr parent)
         {
             var handles = new List<IntPtr>();
-            EnumChildWindows(parent, (hwnd, lparam) => { handles.Add(hwnd); return true; }, IntPtr.Zero);
+            var listHandle = GCHandle.Alloc(handles);
+            try
+            {
+                EnumChildWindows(parent, COLLECT_WINDOW_HANDLES, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                listHandle.Free();
+            }
             return handles;
         }
 
@@ -230,7 +260,15 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static IEnumerable<IntPtr> EnumThreadWindows(uint threadId)
         {
             var handles = new List<IntPtr>();
-            EnumThreadWindows((int) threadId, (hwnd, lp) => { handles.Add(hwnd); return true; }, IntPtr.Zero);
+            var listHandle = GCHandle.Alloc(handles);
+            try
+            {
+                EnumThreadWindows((int) threadId, COLLECT_WINDOW_HANDLES, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                listHandle.Free();
+            }
             return handles;
         }
 
