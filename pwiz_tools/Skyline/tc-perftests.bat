@@ -157,6 +157,8 @@ if defined TEAMCITY_VERSION set TC_DECORATION=teamcitytestdecoration=on
 
 REM # Escape hatch: run a single custom TestRunner (still perftests=on) instead of
 REM # the two standard suites. e.g. SKYLINE_TEST_ARGS=test=TestSciexPrmCeOptimization.
+REM TEMP diagnostic scoping (REVERT): run only the DIA-NN tutorial to capture its missing-files state.
+set SKYLINE_TEST_ARGS=test=TestDiannSearchTutorial
 if defined SKYLINE_TEST_ARGS goto custom_run
 
 set TESTS_FAILED=0
