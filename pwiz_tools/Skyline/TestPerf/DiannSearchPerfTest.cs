@@ -501,6 +501,12 @@ namespace TestPerf
             });
             var diagFound = diagControl.FoundResultsFiles.Select(f => f.Name + @" => " + f.Path).ToArray();
             var diagMissing = diagControl.MissingResultsFiles.ToArray();
+            var diagCacheDir = Directory.Exists(CacheDir)
+                ? Directory.EnumerateFiles(CacheDir).Select(Path.GetFileName).OrderBy(s => s).ToArray()
+                : new[] { @"(CacheDir missing)" };
+            var diagDocDir = Directory.Exists(DocDir)
+                ? Directory.EnumerateFiles(DocDir).Select(Path.GetFileName).OrderBy(s => s).ToArray()
+                : new[] { @"(DocDir missing)" };
             var diagText = string.Join(Environment.NewLine, new[]
                 {
                     @"### DIANN RESULTS FILE MATCH ###",
@@ -512,7 +518,11 @@ namespace TestPerf
                 .Concat(new[] { @"FOUND (" + diagFound.Length + @"):" })
                 .Concat(diagFound)
                 .Concat(new[] { @"MISSING (" + diagMissing.Length + @"):" })
-                .Concat(diagMissing));
+                .Concat(diagMissing)
+                .Concat(new[] { @"CACHEDIR " + CacheDir + @" (" + diagCacheDir.Length + @"):" })
+                .Concat(diagCacheDir)
+                .Concat(new[] { @"DOCDIR " + DocDir + @" (" + diagDocDir.Length + @"):" })
+                .Concat(diagDocDir));
             File.WriteAllText(@"DiannSearchPerf_ResultsFileMatch.txt", diagText);
             Console.WriteLine(diagText);
             if (diagControl.ResultsFilesMissing)
