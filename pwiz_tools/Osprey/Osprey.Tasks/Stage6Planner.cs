@@ -217,12 +217,22 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config)
         {
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            foreach (var kvp in perFileEntries)
+            // Per-file progress: the LOESS calibration refit runs per file and only logged its
+            // completion count, so it went silent for ~0.5s/file (41s at 82 files, O(files) toward
+            // minutes at 500). Report through the standard throttled reporter so it never goes silent.
+            using (var refitProgress = new ProgressReporter(
+                string.Format(@"Reconciliation calibration refit across {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count))
             {
-                var refined = CalibrationRefit.Refit(consensus, kvp.Value,
-                    config.Reconciliation.ConsensusFdr);
-                if (refined != null)
-                    refinedCalibrations[kvp.Key] = refined;
+                int refitDone = 0;
+                foreach (var kvp in perFileEntries)
+                {
+                    var refined = CalibrationRefit.Refit(consensus, kvp.Value,
+                        config.Reconciliation.ConsensusFdr);
+                    if (refined != null)
+                        refinedCalibrations[kvp.Key] = refined;
+                    refitProgress.Report(++refitDone);
+                }
             }
             _ctx.LogInfo(string.Format(
                 @"Reconciliation calibration refit: {0}/{1} files produced refined calibrations",

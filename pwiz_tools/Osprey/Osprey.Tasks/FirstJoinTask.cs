@@ -264,12 +264,13 @@ namespace pwiz.Osprey.Tasks
             // bound memory -- so when it is requested, take the resident (legacy) path so that
             // report still emits. Off the default output path, so byte-identity is unaffected
             // (the regression gate never sets it).
-            // OSPREY_PASS2_QVALUE=transfer also needs the resident first-pass pool: it
-            // captures the frozen 1st-pass model and builds the FULL pre-compaction
-            // score->q table (BuildFullPopulationScoreQTable, below), both of which read
-            // every entry's in-memory Stage-4 features -- exactly what the projection path
-            // streams and drops. The regression gate never sets the env var, so byte-identity
-            // on the default percolator path is unaffected.
+            // OSPREY_PASS2_QVALUE=transfer takes the SAME lean projection first-pass path as the
+            // default: it no longer forces the resident pool. The per-run-only redesign (see
+            // TODO-osprey_pass2_per_run_only_qvalue) drops the FULL pre-compaction score->q table
+            // (the aggregating structure that needed every entry's features resident, and the
+            // 82-file OOM) and instead maps each ADJUSTED peak through that file's OWN 1st-pass
+            // (score -> run q) sidecar table at pass 2. The frozen model it still needs is captured
+            // on the projection path via the RunFirstPassProjection captureModel hook.
             // --model-diagnostics is NOT here: it now STREAMS its pass-1 report off the
             // projection path via a ModelDiagnosticsData.Accumulator fed by the score-pass sink
             // (RunFirstPassProjection below), folding each pre-compaction row into the reduced
@@ -278,8 +279,7 @@ namespace pwiz.Osprey.Tasks
             // streamed report is byte-identical to the resident build, and it stays off the
             // default output path.
             bool needsResidentFirstPassPool =
-                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                OspreyEnvironment.Pass2TransferQ;
+                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
                 !needsResidentFirstPassPool)
             {
@@ -316,25 +316,6 @@ namespace pwiz.Osprey.Tasks
                     string.Format(@"(post-GC, resident pool, files={0})", perFileEntries.Count));
 
                 LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
-
-                // OSPREY_PASS2_QVALUE=transfer: build the score->q lookup table NOW, from
-                // the FULL pre-compaction 1st-pass population -- every entry (passing,
-                // failing, target, decoy) still carries its in-memory Stage-4 features and
-                // its unbiased 1st-pass q-values here. The frozen model was published as a
-                // byproduct during RunFdr above. Publishing the full-population table lets
-                // the merge-node 2nd-pass transfer map reconciled-feature scores through a
-                // table that RETAINS the high-q failing/decoy region -- the region compaction
-                // strips out, and whose absence would collapse the transfer's q. Off by
-                // default (byproduct never published on the percolator path).
-                if (OspreyEnvironment.Pass2TransferQ &&
-                    ctx.TryGet<FirstPassPercolatorModel>(out var frozenForTable) &&
-                    frozenForTable?.Results != null)
-                {
-                    var scoreQTable = Pass2FdrSidecar.BuildFullPopulationScoreQTable(
-                        perFileEntries, frozenForTable.Results, loadFileFeatures, ctx);
-                    if (scoreQTable != null)
-                        ctx.Publish(scoreQTable);
-                }
 
                 // First-pass protein FDR: runs on the full pre-compaction
                 // peptide pool so target and decoy proteins compete on a
@@ -1606,6 +1587,23 @@ namespace pwiz.Osprey.Tasks
             if (mdiagAccumulator != null)
                 captureContributions = c => mdiagContributions = c;
 
+            // OSPREY_PASS2_QVALUE=transfer: publish the frozen first-pass model (fold weights +
+            // biases + standardizer) so the merge-node 2nd-pass step can re-score reconciled
+            // features with it instead of retraining. The projection first pass (this method) is
+            // now the SAME lean path the default percolator mode takes -- transfer no longer forces
+            // the resident first-pass pool -- so the model must be captured HERE rather than on the
+            // resident RunPercolatorFdr overload. Null (a pure no-op in the engine) on the default
+            // path, so scoring stays byte-identical. See TODO-osprey_pass2_per_run_only_qvalue.
+            Action<PercolatorResults> captureModel = null;
+            if (OspreyEnvironment.Pass2TransferQ)
+            {
+                captureModel = results =>
+                {
+                    if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
+                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                };
+            }
+
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
                 mdiagAccumulator);
             var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
@@ -1626,14 +1624,14 @@ namespace pwiz.Osprey.Tasks
                 aborted = PercolatorEngine.RunFirstPassStreaming(
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                     config, featureInfos, ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", captureContributions);
+                    @"First-pass", captureContributions, captureModel);
             }
             else
             {
                 aborted = PercolatorEngine.RunPercolatorFdr(
                     projections, config, featureInfos,
                     ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", loadFileFeatures, captureContributions);
+                    @"First-pass", loadFileFeatures, captureContributions, captureModel);
             }
             swFdr.Stop();
             if (aborted)

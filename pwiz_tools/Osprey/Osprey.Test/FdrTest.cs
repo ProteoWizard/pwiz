@@ -708,7 +708,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions})"/>
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// overload must produce byte-identical Score + q-values to the FdrEntry-buffer
         /// <see cref="PercolatorEngine"/> RunPercolatorFdr overload (the one that takes the
         /// per-file <see cref="FdrEntry"/> lists) -- the flag-off byte-identity ORACLE -- on the same input, at the

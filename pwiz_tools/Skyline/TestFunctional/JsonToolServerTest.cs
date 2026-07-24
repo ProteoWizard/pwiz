@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
@@ -42,6 +43,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -75,8 +77,7 @@ namespace pwiz.SkylineTestFunctional
             OpenDocument(DOCUMENT_NAME);
 
             string testGuid = @"test-" + Guid.NewGuid();
-            var toolService = new ToolService(testGuid, SkylineWindow);
-            var server = new JsonToolServer(toolService, testGuid);
+            var server = new JsonToolServer(testGuid);
 
             // Read-only tools
             TestDispatch(server);
@@ -112,6 +113,56 @@ namespace pwiz.SkylineTestFunctional
             server.RunCommand(CommandArgs.ARG_NEW, CommandArgs.ARG_DISCARD_CHANGES);
             TestUiMode(server);
             TestUndoRedo(server);
+            TestBlockedAndDisabledUIControls(server);
+            TestClientReadsBoolResult(server);
+        }
+
+        /// <summary>
+        /// get_value on a check box is the only verb whose result crosses the wire as a JSON bool, and the
+        /// client has to unwrap that kind as well as a string, a number and an object. Every other test drives
+        /// the server in process (Program.MainJsonToolServer), which hands back the raw object and so never
+        /// exercises the client's unwrapping at all -- this one goes through a real pipe client, the way an
+        /// external tool does.
+        /// </summary>
+        private void TestClientReadsBoolResult(JsonToolServer server)
+        {
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
+            string settingsId = server.GetOpenForms()
+                .First(f => f.Type == nameof(PeptideSettingsUI)).Id;
+
+            // Matched on the control Name, which the designer assigns in code, so this does not depend on
+            // the UI language.
+            var raggedEnds = server.GetControls(settingsId).First(c => c.Name == @"cbRaggedEnds").Path;
+
+            // A listening server of its own: the shared one is driven through HandleRequest and never started,
+            // and starting it here would leave a live pipe thread behind for whatever runs next.
+            using (var pipeServer = new JsonToolServer(@"test-client-" + Guid.NewGuid()))
+            {
+                pipeServer.Start();
+                using (var client = SkylineJsonToolClient.Connect(pipeServer.PipeName))
+                {
+                    // Both states, so neither JsonValueKind.True nor False falls through to GetString().
+                    foreach (bool expected in new[] { true, false })
+                    {
+                        server.PerformAction(raggedEnds, @"set_value", expected);
+                        object value = client.PerformAction(raggedEnds, @"get_value", null);
+                        AssertEx.AreEqual(expected, bool.Parse((string) value),
+                            @"The client did not read back the check box's checked state.");
+                    }
+
+                    // An omitted optional argument reaches the server as a trailing JSON null, which Dispatch
+                    // converts to null -- the same value it would have filled in from the parameter's default.
+                    // The client sends every parameter rather than varying the argument count, so this is the
+                    // path every optional argument takes.
+                    var locations = client.GetLocations(@"group");
+                    Assert.IsNotNull(locations, @"GetLocations with an omitted rootLocator returned nothing.");
+                    AssertEx.AreEqual(server.GetLocations(@"group").Length, locations.Length,
+                        @"GetLocations through the client did not match the same call in process.");
+                }
+            }
+
+            OkDialog(peptideSettings, () => peptideSettings.DialogResult = DialogResult.Cancel);
         }
 
         /// <summary>
@@ -1865,7 +1916,7 @@ namespace pwiz.SkylineTestFunctional
                 CommandArgs.ARG_OPEN + newPath,
                 CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100",
                 CommandArgs.ARG_OUT + combinedPath);
-            AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath, combinedResult);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
 
@@ -1943,6 +1994,83 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             return header + "\n" +
                    "TestSmallMol,Ala,,light,,,225,44,1,1,3\n" +
                    "TestSmallMol,Arg,,light,,,310,217,1,1,19\n";
+        }
+
+        private void TestBlockedAndDisabledUIControls(JsonToolServer server)
+        {
+            var forms = server.GetOpenForms();
+            var treeFormId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
+            var treeForm = FormUtil.OpenForms.OfType<SequenceTreeForm>().First();
+            // The Targets tree has no caption, so it is addressed through a path by its Type.
+            var treeId = new UiElementPath(
+                new UiElementPath(null, treeFormId, null, @"Form"), null, null, @"SequenceTree");
+
+            // 1. Disable the form and verify that interacting with it throws
+            RunUI(() => treeForm.Enabled = false);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.ClickFormButton(treeFormId, @"ok"));
+            }
+            finally
+            {
+                RunUI(() => treeForm.Enabled = true);
+            }
+
+            // 2. Disable a specific control and verify that interacting with it throws.
+            var tree = treeForm.SequenceTree;
+            RunUI(() => tree.Enabled = false);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"select_item", @"Peptides"));
+            }
+            finally
+            {
+                RunUI(() => tree.Enabled = true);
+            }
+
+            // 3. Disable a menu item and verify that invoking it throws
+            // Found by Name, which the designer assigns in code, rather than by Text, which ApplyResources
+            // localizes -- matching on English text fails every non-English run.
+            var fileMenu = SkylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>()
+                .First(i => Equals(i.Name, @"fileToolStripMenuItem"));
+            var saveItem = fileMenu.DropDownItems.OfType<ToolStripMenuItem>()
+                .First(i => Equals(i.Name, @"saveMenuItem"));
+            bool originalEnabled = false;
+            RunUI(() => {
+                originalEnabled = saveItem.Enabled;
+                saveItem.Enabled = false;
+            });
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.ClickMainMenuItem("File > Save"));
+            }
+            finally
+            {
+                RunUI(() => saveItem.Enabled = originalEnabled);
+            }
+
+            // 4. While a modal dialog is open, every other window is blocked at the Win32 level (the
+            // managed Control.Enabled of those forms stays true), so verbs targeting them must throw --
+            // a user could not reach them either until the dialog is handled.
+            var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.ClickMainMenuItem(@"File > Save"));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
+            }
+            finally
+            {
+                OkDialog(transitionSettings, () => transitionSettings.DialogResult = DialogResult.Cancel);
+            }
         }
     }
 }

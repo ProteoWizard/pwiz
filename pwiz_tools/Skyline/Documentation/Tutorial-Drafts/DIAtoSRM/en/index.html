@@ -1,0 +1,581 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../../Tutorials/shared/SkylineStyles.css">
+    <script src="../../../Tutorials/shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Using DIA Data to Create SRM Methods</h1>
+    <p>
+        Selecting peptides and fragments to monitor by targeted triple quadrupole (SRM) assays can be challenging, proving time and cost
+        intensive. Previous work from the MacCoss lab has shown data independent acquisition (DIA) data to be a better predictor of peptide
+        performance in targeted triple quadrupole assays. DIA methods sample the proteome in a more comprehensive manner, and the type of
+        information we can obtain from these experiments &ndash; fragment ion intensity, retention time, and run-to-run reproducibility &ndash;
+        is helpful for target selection.
+    </p>
+    <p>
+        In this tutorial you will work through a workflow developed to assess and select suitable peptides for SRM analysis based on DIA
+        results. Specifically, you will cover the following concepts:
+    </p>
+    <ul>
+        <li>
+            <b>Getting started with DIA gas-phase fractionated libraries in Skyline.</b> You will import a gas-phase fractionated (GPF) DIA
+            chromatogram library, configure the extraction settings, and import the individual run files.
+        </li>
+        <li>
+            <b>Refining and filtering for high-quality peptide detections in DIA.</b> Because you want to select peptides that are reliably
+            detected, you will do some initial filtering to ensure all peptides are viable candidates, leaving a subset of peptides with
+            reproducible measurements.
+        </li>
+        <li>
+            <b>Peptide filtering for protein targets.</b> You will then use peptide intensity rankings to help select potential SRM candidate
+            peptides for a specific list of proteins.
+        </li>
+        <li>
+            <b>Scheduling an SRM method based on DIA iRTs.</b> Once you have narrowed down the list of candidate peptides, you will schedule an
+            SRM method using the iRT standards included in the DIA runs.
+        </li>
+    </ul>
+    <p>
+        Note: the steps for searching gas-phase fractionated samples with EncyclopeDIA are documented in the Pino et al., 2020 MCP paper. The
+        three gas-phase fractionated samples are searched and saved as separate chromatogram libraries, then combined into a single library using
+        the &ldquo;Combine multiple libraries&rdquo; function found in EncyclopeDIA 2.13.30 and later.
+    </p>
+
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP files:
+    </p>
+    <p>
+        <a href="https://skyline.ms/webinars/Webinar22.zip">https://skyline.ms/webinars/Webinar22.zip</a><br />
+        <a href="https://skyline.ms/webinars/Webinar22_dia_libA.zip">https://skyline.ms/webinars/Webinar22_dia_libA.zip</a><br />
+        <a href="https://skyline.ms/webinars/Webinar22_dia_libB.zip">https://skyline.ms/webinars/Webinar22_dia_libB.zip</a><br />
+        <a href="https://skyline.ms/webinars/Webinar22_dia_libC.zip">https://skyline.ms/webinars/Webinar22_dia_libC.zip</a>
+    </p>
+    <p>
+        Note that the DIA library files are very large (about 3 GB each), because they contain the gas-phase fractionated DIA runs used to build
+        the chromatogram library. Extract the files to a folder on your computer, like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\Webinar22
+    </p>
+    <p>
+        If you have been using Skyline prior to starting this tutorial, it is a good idea to revert Skyline to its default settings. To do so:
+    </p>
+    <ul>
+        <li>Start Skyline.</li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this:</li>
+    </ul>
+    <p>
+        <img src="../../../Tutorials/shared/en/skyline-blank-document.png" />
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>.</li>
+        <li>Click <b>No</b> on the form asking whether you want to save the current settings.</li>
+    </ul>
+    <p>
+        The settings in your current instance of Skyline have now been reset to the default.
+    </p>
+    <p>
+        Since this tutorial covers a proteomics topic, ensure that the user interface is set to the &ldquo;Proteomics interface&rdquo;. Click the
+        user interface button in the upper right-hand corner of the Skyline toolbar and select <b>Proteomics interface</b> which looks like this:
+    </p>
+    <p>
+        <img src="../../../Tutorials/shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in proteomics mode, which is displayed by the protein icon in the upper right-hand corner of Skyline.
+    </p>
+
+    <h1>Step 1. Getting Started with GPF DIA Libraries in Skyline</h1>
+    <p>
+        The goal of this section is to import the GPF DIA search and peak boundary data. You will give Skyline the results and background for the
+        experiment, including parameters for what peptides and transitions to extract. This could additionally be adjusted to suit other DIA
+        search outputs that provide information about peptide retention time and scoring.
+    </p>
+
+    <h2>Setting up the import of data</h2>
+    <p>
+        Return to the <b>Start Page</b> using <b>File &gt; Start Page</b> and click <b>Import DIA Peptide Search</b>.
+    </p>
+    <p>
+        <img src="s-01.png" />
+    </p>
+    <p>
+        You will be prompted to save the file prior to import. Save to <b>DIA_to_SRM_Tutorial.sky</b>.
+    </p>
+    <ul>
+        <li>In the new window select <b>Use existing</b>.</li>
+        <li>Click <b>Browse</b> and locate the <b>CSF_GPFLib_QRcombined.elib</b> in the folder of this tutorial.</li>
+    </ul>
+    <p>
+        <img src="s-02.png" />
+    </p>
+    <p>
+        Click <b>Next</b>.
+    </p>
+
+    <h2>1.2. Extract Chromatograms</h2>
+    <p>
+        Since there are multiple injections per replicate from the gas-phase fractionation, you will skip adding the results files at this time.
+        Click <b>Next</b> to continue. A pop-up window will ask if you are sure you want to continue; click <b>Yes</b>.
+    </p>
+    <p>
+        <img src="s-03.png" />
+    </p>
+
+    <h2>1.3. Add Modifications</h2>
+    <p>
+        For this tutorial no modifications were included in the peptide search step, so just click <b>Next</b> to continue.
+    </p>
+    <p>
+        <img src="s-04.png" />
+    </p>
+
+    <h2>1.4. Configure Transition Settings</h2>
+    <p>
+        For this dataset you will extract the product ions using the following options:
+    </p>
+    <ul>
+        <li>Precursor charges: <b>2, 3</b></li>
+        <li>Ion charges: <b>1, 2</b></li>
+        <li>Ion types: <b>y, b</b></li>
+        <li>Product ions from: <b>ion 3</b></li>
+        <li>Product ions to: <b>last ion</b></li>
+        <li>Min m/z: <b>50</b></li>
+        <li>Max m/z: <b>2000</b></li>
+        <li>Ion match tolerance: <b>0.005 m/z</b></li>
+        <li>Pick: <b>8</b> product ions; <b>3</b> min product ions</li>
+    </ul>
+    <p>
+        <img src="s-05.png" />
+    </p>
+    <p>
+        Click <b>Next</b>.
+    </p>
+    <p>
+        Some of these options may be slightly different than what you would use for a regular DIA analysis; for example, limiting to the 3rd ion
+        &ndash; this is a common heuristic used in targeted triple quadrupole assays, the end goal here.
+    </p>
+
+    <h2>1.5. Configure Full-Scan Settings</h2>
+    <p>
+        You will just be extracting the MS/MS from the results. Select the following options:
+    </p>
+    <ul>
+        <li>MS1 filtering: <b>None</b></li>
+        <li>Acquisition method: <b>DIA</b></li>
+        <li>Product mass analyzer: <b>Centroided</b></li>
+        <li>Isolation scheme: <b>Results only</b></li>
+        <li>Mass Accuracy: <b>10</b> ppm</li>
+        <li>Retention time filtering: <b>Use only scans within [ 5 ] minutes of MS/MS IDs</b></li>
+    </ul>
+    <p>
+        <img src="s-06.png" />
+    </p>
+    <p>
+        Click <b>Next</b>.
+    </p>
+
+    <h2>1.6. Import FASTA (required)</h2>
+    <p>
+        For this dataset select enzyme <b>Trypsin [KR | P]</b> and set <b>Max missed cleavages</b> to <b>0</b>. Click <b>Browse</b> and navigate
+        to the <b>uniprot_human_25apr2019.fasta</b> file.
+    </p>
+    <p>
+        <img src="s-07.png" />
+    </p>
+    <p>
+        Click <b>Finish</b>. A pop-up will show the progress of the FASTA processing.
+    </p>
+
+    <h2>1.7. Associate Proteins</h2>
+    <p>
+        A new pop-up will appear for associating proteins. Use the following options:
+    </p>
+    <ul>
+        <li>Select <b>Create protein groups</b></li>
+        <li>Shared peptides are: <b>Removed (peptides must be unique to a single protein group)</b></li>
+        <li>Min peptides per protein group: <b>1</b></li>
+    </ul>
+    <p>
+        You will notice that the numbers in the Protein association results table at the bottom will change with the selection of different
+        options for how to treat proteins and peptides. &ldquo;Mapped&rdquo; = have peptides detected in the library, &ldquo;Unmapped&rdquo; =
+        in the FASTA but no peptides mapping to them, &ldquo;Targets&rdquo; = after protein grouping and passing the above criteria, &ldquo;Shared
+        peptides&rdquo; = in more than one protein entry in the FASTA.
+    </p>
+    <p>
+        <img src="s-08.png" />
+    </p>
+    <p>
+        Click <b>OK</b>.
+    </p>
+    <p>
+        The Targets view of your Skyline document should now be populated with the proteins, peptides, precursors, and fragments detected in your
+        library, in this case from EncyclopeDIA results. Some targets are additionally filtered out based on the selected parameters &ndash; e.g.
+        0 missed cleavages.
+    </p>
+    <p>
+        <img src="s-09.png" />
+    </p>
+
+    <h2>1.8. Adding PRTC peptides</h2>
+    <p>
+        For scheduling the SRM assays you will need an indexed retention time standard, such as PRTC. PRTC was included in the samples in this DIA
+        experiment, so now you need to add them to the document since they were not included in the peptide search/library. Do this prior to
+        importing results and extracting chromatograms to ensure they are extracted. There are a couple of ways to do this, but to save time you
+        can copy and paste them from an existing document. If they are added based on sequence or a FASTA, it requires manual annotation for the
+        heavy labeled residues.
+    </p>
+    <ul>
+        <li>Select the first protein in the Targets view (Home).</li>
+        <li>Go to <b>File &gt; Import &gt; Document</b>.</li>
+        <li>Find the file <b>PRTC.sky</b> and click <b>Open</b>.</li>
+    </ul>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <p>
+        Save the document.
+    </p>
+
+    <h2>1.9. Importing gas-phase fractionated DIA results into Skyline</h2>
+    <p>
+        Now that the environment is all set up, you are ready to import and extract the chromatograms for all of the peptides populated from the
+        library. Since the gas-phase fractionation uses 6 separate injections, you will import the results as multi-injection replicates.
+    </p>
+    <ul>
+        <li>Navigate to <b>File &gt; Import &gt; Results</b>.</li>
+        <li>In the pop-up asking if you want to add decoy peptides, click <b>No</b>.</li>
+        <li>Select <b>Add multi-injection replicates in directories</b>.</li>
+        <li>Navigate to the <b>mzmls</b> subfolder and select it.</li>
+    </ul>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <ul>
+        <li>Click <b>OK</b>.</li>
+        <li>In the form that appears, choose <b>Do not remove</b> and click <b>OK</b>.</li>
+    </ul>
+    <p>
+        Import may take a couple of minutes. Save the document.
+    </p>
+    <p>
+        You now have all the DIA results matching your document settings. Next, you will go through those results to filter for just reproducible
+        peptides.
+    </p>
+
+    <h1>Step 2. Refining and Filtering for High-Quality Peptide Detections in DIA</h1>
+    <p>
+        The power of this method is that you can be confident the peptides for these target proteins will be measured in your own samples because
+        you have already observed them in your own DIA experiment. Additionally, you can inform your selection of peptides based on the prior
+        knowledge gained through the DIA measurements. Specifically, you have fragment ion intensity and reproducibility information &ndash; as
+        measured by percent coefficient of variation (%CV) calculated for 3 replicate injections. This information helps you select peptides for
+        each protein that will most likely have good performance in an SRM assay.
+    </p>
+    <p>
+        For the peptide refinement you will start with some global refinements. This leaves a list of peptides that serve as a set of known
+        reproducible peptides that you can revisit for many different proteins as needed in the future. This filtering could also be done for
+        specific proteins, as demonstrated in Step 3. Filter first by peptide %CV, then by peptide intensity rank (the filtering can be done in
+        the opposite order as well). The %CV filter removes bad detections and catches poor chromatography or reproducibility; the peptide
+        intensity filter then picks the best of the best for each protein, and fragment intensity rank for each peptide. The filtering parameters
+        can be relaxed, or specific peptides of biological interest can be kept/added back. An important caveat is that this method can only be
+        used for proteins detected in the DIA experiment.
+    </p>
+
+    <h2>2.1. Peptide coefficient of variation (%CV)</h2>
+    <p>
+        Skyline automatically calculates the %CV for every peptide if there are replicates. This information can be found in optional columns in
+        the Document Grid. First, get a feel for the general %CV distribution in this document.
+    </p>
+    <p>
+        Navigate to <b>View &gt; Peak Areas &gt; CV Histogram</b>.
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <p>
+        The default view will have the red dashed line at 20% CV. You can adjust it to show 30% by clicking <b>Properties</b> and adjusting the
+        <b>CV cutoff</b> to 30.
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+
+    <h2>2.2. Target refinement</h2>
+    <p>
+        As a general cutoff, impose the following rules for the peptides you would want to include in your database of possible peptides suitable
+        for targeted assays: there must be 2 peptides per protein, and peptides must be below 30% CV across the three replicates.
+    </p>
+    <p>
+        Navigate to <b>Refine &gt; Advanced</b>. A new pop-up window will appear with multiple refinement options. In the <b>Document</b> tab
+        select the following option:
+    </p>
+    <ul>
+        <li>Min peptides per protein: <b>2</b></li>
+    </ul>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        In the <b>Consistency</b> tab select the following options:
+    </p>
+    <ul>
+        <li>CV cutoff: <b>30%</b></li>
+        <li>Transition type: <b>Products</b></li>
+        <li>Normalize to: <b>None</b></li>
+        <li>Summed transitions: <b>all</b></li>
+    </ul>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        Click <b>OK</b>. Use <b>File &gt; Save As</b> to save the filtered document, e.g. <b>DIA_to_SRM_Tutorial-filtered.sky</b>.
+    </p>
+    <p>
+        You have now filtered out the peptides and proteins that are less reproducible. Specifically, you can see in the bottom right-hand corner
+        of the Skyline document that there are 967 proteins that have 2+ peptides with at least 3 transitions and a %CV &lt; 30% (7,122 peptides).
+    </p>
+
+    <h1>Step 3. Peptide Filtering for Protein Targets</h1>
+    <p>
+        For this example, suppose you are interested in a subset of 67 proteins in CSF that have previously been described as differentially
+        abundant in a study of interest. Now you can focus just on selecting peptides from those proteins.
+    </p>
+
+    <h2>3.1. Protein filtering</h2>
+    <p>
+        For this step you will only keep proteins in the document if they are present in your list.
+    </p>
+    <ul>
+        <li>Open the <b>target_proteins.txt</b> file that contains a list of protein names.</li>
+        <li>Select all and copy: <b>Ctrl-A</b> then <b>Ctrl-C</b>.</li>
+        <li>Switch back to the Skyline document, then navigate to <b>Refine &gt; Accept Proteins</b>.</li>
+        <li>In the new pop-up window paste (<b>Ctrl-V</b>) the copied list, and select <b>Names</b>.</li>
+    </ul>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        Click <b>OK</b>. A new pop-up will appear listing the proteins in the list that are not in the document. Click <b>OK</b> to continue.
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <p>
+        You now have a document that only contains peptides matching the proteins from your list. Additionally, these are only peptides with good
+        reproducibility as enforced by the %CV filtering. Depending on the number of target proteins or the aim of the project, additional
+        filtering for peptides and transitions can be done at this point. In this case you will simply limit the peptide targets to two per
+        protein, and limit the transitions to 5 per peptide. This cuts out some manual assessment for the sake of the tutorial, but additional
+        manual assessment and literature searching is highly encouraged for a smaller assay.
+    </p>
+
+    <h2>3.2. Peptide ranked intensity filtering</h2>
+    <p>
+        Navigate to <b>Refine &gt; Advanced</b>. In the <b>Results</b> tab set the following options:
+    </p>
+    <ul>
+        <li>Max peptide peak rank: <b>2</b></li>
+        <li>Max transition peak rank: <b>5</b></li>
+    </ul>
+    <p>
+        In other cases you might want to make other choices like <b>Max precursor peak only</b> or <b>Remove nodes missing results</b>, but here
+        they will not change the document.
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        Click <b>OK</b>. Navigate to <b>Edit &gt; Expand All &gt; Proteins</b>.
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        Save the file as <b>SRM_targets.sky</b>.
+    </p>
+    <p>
+        You should now have a document with 60 proteins with 2 peptides, and 13 PRTC peptides. You will use this as your list for the SRM assay.
+        The reason to keep 5 transitions for each peptide is to ensure there is some room to adjust the list after an initial round of SRM assay
+        testing.
+    </p>
+
+    <h1>Step 4. Scheduling an SRM Method Based on DIA iRTs</h1>
+    <p>
+        There are two strategies to make use of the retention time measured in the DIA experiments. One easy way is to use it as a library to
+        confirm peaks are correctly picked in an unscheduled SRM assay. Another way is to directly schedule an SRM run using an iRT standard
+        included in the DIA runs. This requires a couple of runs of just the iRT sample on the HPLC and instrument you wish to run your SRM assay
+        on. In this case it is an Easy nLC and a Thermo Altis triple quadrupole. For more information about iRT, follow the &ldquo;iRT Retention
+        Time Prediction&rdquo; tutorial or webinar #7 of the same name on the Skyline website. In this example you will build a calculator from the
+        DIA results, then use it for scheduling with a shorter gradient SRM method.
+    </p>
+    <p>
+        Navigate to <b>View &gt; Retention Times &gt; Regression &gt; Score To Run</b>.
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+
+    <h2>4.1. Build an iRT calculator</h2>
+    <ul>
+        <li>Go to <b>Settings &gt; Peptide Settings &ndash; Prediction</b>.</li>
+        <li>Click on the icon of a calculator and select <b>Add</b>.</li>
+    </ul>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        Give your iRT calculator a name (e.g. <b>CSF_targets</b>) and then click <b>Create</b>. In the pop-up window, <b>Create iRT
+        Database</b>, give the iRT calculator file a name. Save the calculator to this tutorial folder and name it the same as before:
+        <b>CSF_targets</b>. Click <b>Save</b> when you are done.
+    </p>
+    <p>
+        In the <b>Edit iRT Calculator</b> window, from iRT standards, select <b>Pierce (iRT-C18)</b> from the dropdown:
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <p>
+        You have just set your iRT values. Recall that iRT values are unitless; they relate to the order of elution, and here range from -27.60 to
+        100.
+    </p>
+
+    <h2>4.2. Add the peptides to the iRT calculator</h2>
+    <ul>
+        <li>Click <b>Add</b> in the bottom right-hand corner of the <b>Edit iRT Calculator</b> window.</li>
+        <li>In the dropdown menu select <b>Add Results</b>.</li>
+        <li>In the <b>Add iRT Peptides</b> pop-up window, click <b>OK</b>.</li>
+        <li>Click <b>OK</b> at the top of the <b>Edit iRT Calculator</b> window.</li>
+    </ul>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <p>
+        In the <b>Peptide Settings &ndash; Prediction</b> tab, the <b>Retention time predictor</b> option <b>CSF_targets</b> should be selected.
+        Click the dropdown and select <b>&lt;Edit current&gt;</b>. Adjust <b>Time window</b> to 5 min, and click <b>OK</b>. Click <b>OK</b> again.
+    </p>
+    <p>
+        If an <b>Add Standard Peptides</b> window appears, click <b>No</b>. (This appears to be a bug that will be fixed in the future.)
+    </p>
+    <p>
+        Right-click on the regression plot, select <b>Calculator &gt; CSF_targets</b>. Your regression should now be updated.
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <p>
+        Note that one peptide, GSGVGEQDGGLIGAEEK, could not be calibrated because its m/z 801.9 falls into a gas-phase fraction 800&ndash;900 with
+        no iRT peptides in it. (This is also a bug that will be fixed in the future.) For now, right-click on the graph and choose <b>Remove
+        Outliers</b>. If you look at the chromatograms, you can see a light yellow section on either side of the now-predicted retention time for
+        each peptide.
+    </p>
+
+    <h2>4.3. Scheduling for the LC and mass spec used for the SRM assay</h2>
+    <p>
+        For this step you acquire and import unscheduled, iRT-standards-only data files on your new gradient, HPLC, and column set up.
+    </p>
+    <ul>
+        <li>Remove the DIA results by navigating to <b>Edit &gt; Manage Results</b>. In the dialog box click <b>Remove All</b> and click
+            <b>OK</b>.</li>
+    </ul>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        Go to <b>Settings &gt; Transition Settings</b>. In the <b>Prediction</b> tab use the following settings:
+    </p>
+    <ul>
+        <li>Precursor mass: <b>Monoisotopic</b></li>
+        <li>Product ion mass: <b>Monoisotopic</b></li>
+        <li>Collision energy: <b>Thermo TSQ Quantiva</b></li>
+    </ul>
+    <p>
+        In the <b>Full-Scan</b> tab use the following settings:
+    </p>
+    <ul>
+        <li>Acquisition method: <b>None</b></li>
+    </ul>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <p>
+        Click <b>OK</b>.
+    </p>
+    <ul>
+        <li>Go to <b>File &gt; Import &gt; Results</b>, select <b>Add single-injection replicates in files</b>, and click <b>OK</b>. If a dialog
+            box pops up, select <b>Yes</b>.</li>
+        <li>Select the 5 <b>PRTCQC</b> files in the folder for this tutorial and click <b>Open</b>.</li>
+        <li>In the pop-up asking about a common prefix, delete the text <b>PRTCQC_0</b> and click <b>OK</b>.</li>
+    </ul>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <p>
+        Once the files are imported, the regression graph should adjust to the new data. Only the iRT standards have been measured, but now
+        Skyline can predict the retention time for all of the other peptides based on their stored iRT scores, which you can see indicated by the
+        purple points on the x-axis of the graph.
+    </p>
+
+    <h2>4.4. Exporting scheduled transition lists for a scheduled SRM method</h2>
+    <p>
+        Navigate to <b>View &gt; Retention Times &gt; Scheduling</b>.
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        You always want to choose an appropriate number of concurrent transitions for your instrument and your chromatography. The goal is to
+        balance the points-across-the-peak considering the peak width and your instrument's dwell time. You can examine the effect of window width
+        on the number of concurrent transitions in Skyline.
+    </p>
+    <ul>
+        <li>Adjust the scheduling window widths by right-clicking in the <b>Retention Times &ndash; Scheduling</b> window and selecting
+            <b>Properties</b>.</li>
+        <li>Enter the desired retention time window widths (min): <b>2, 3</b>. The 5-minute window you specified earlier will be added
+            automatically.</li>
+        <li>Click <b>OK</b>.</li>
+    </ul>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <p>
+        Go to <b>File &gt; Export &gt; Transition List</b>.
+    </p>
+    <ul>
+        <li>Instrument type: <b>Thermo Altis</b></li>
+        <li>Method type: <b>Scheduled</b></li>
+        <li>Select <b>Multiple methods</b>, then experiment with the <b>Max concurrent transitions</b>. The number of methods generated will
+            change depending on how many transitions you allow.</li>
+    </ul>
+    <p>
+        <img src="s-30.png" />
+    </p>
+    <p>
+        Once you have selected your number of concurrent transitions, click <b>OK</b>. In the <b>Scheduling</b> dialog box that pops up, select
+        <b>Use retention time average</b>, and click <b>OK</b>. Name your transition list and click <b>Save</b>. Note: if there are multiple
+        methods being written, then Skyline will automatically append numbers to the end of the file name, starting with 0001.
+    </p>
+    <p>
+        Use <b>File &gt; Open Containing Folder</b> to navigate to where you just saved the transition lists.
+    </p>
+    <p>
+        <img src="s-31.png" />
+    </p>
+    <p>
+        There are multiple transition lists &ndash; one for each sample injection. Notice that even though there are multiple methods, each method
+        contains the iRT standard fragments. Your new transition lists are now ready for use in creating a new instrument method in Xcalibur.
+    </p>
+    <p>
+        Congratulations! You have a scheduled transition list for a new assay.
+    </p>
+</body>
+
+</html>

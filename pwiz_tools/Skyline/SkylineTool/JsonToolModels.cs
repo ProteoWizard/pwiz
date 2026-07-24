@@ -300,10 +300,94 @@ namespace SkylineTool
     public class FormInfo
     {
         public string Type { get; set; }
+        /// <summary>
+        /// What KIND of that type this window is, when several very different windows share one type. Every native
+        /// dialog is a "Dialog", so its SubType says which one -- "OpenFileDialog", "SaveFileDialog",
+        /// "FolderBrowserDialog", "MessageBox" -- and that is how a file dialog is told apart from the message box
+        /// it raises, which carries the file dialog's own caption. Null when the type says it all.
+        ///
+        /// <para>It is deliberately NOT part of <see cref="Id"/>: an id has to be stable from the moment the window
+        /// is reported, and what a window IS can be learned a moment later than that it exists.</para>
+        /// </summary>
+        public string SubType { get; set; }
         public string Title { get; set; }
         public bool HasGraph { get; set; }
         public string DockState { get; set; }
         public string Id { get; set; }
+        /// <summary>
+        /// What the window SAYS -- a message box's body, an alert's text -- truncated. It is what tells a caller
+        /// whether a form is IN THE WAY and why, without having to capture an image of it.
+        /// </summary>
+        public string DetailedMessage { get; set; }
+        /// <summary>
+        /// True for native operating-system windows (e.g. the common Open/Save file dialog), which are driven
+        /// through Win32 rather than as WinForms forms.
+        /// </summary>
+        public bool IsNative { get; set; }
+        /// <summary>
+        /// For an interactive modal dialog the connector tracks, the <see cref="IJsonToolService.ModalNestingCount"/>
+        /// value that existed just before the dialog was shown -- how many connector-raised modals were already
+        /// nested when it appeared, and the level the count returns to once the dialog is accepted/cancelled and any
+        /// resumed work it triggered has finished. The topmost open modal is the one with the highest value. Null
+        /// for a form that is not a tracked interactive modal (or whose nesting level is unknown).
+        /// </summary>
+        public int? ModalNestingCount { get; set; }
+    }
+
+    /// <summary>
+    /// The outcome of a UI action verb (ClickMainMenuItem, ClickFormButton, SetFormValue, DismissWith...).
+    /// </summary>
+    public class ActionResult
+    {
+        /// <summary>
+        /// True only when the connector is SURE the action has finished: for a gesture (a click, a value set)
+        /// that the connector's modal-nesting count settled back to where it started with no new dialog left
+        /// open; for Accept/Cancel that the connector knew which action originally opened the dialog and that
+        /// action has since finished. False means the action is not known to have completed -- typically because
+        /// it opened (or left open) a modal dialog, which <see cref="Message"/> describes.
+        /// </summary>
+        public bool Completed { get; set; }
+        /// <summary>
+        /// When <see cref="Completed"/> is false, a human-readable note on why -- e.g. the text of the modal
+        /// dialog the action raised and left open, which the caller should now drive. Null when there is nothing
+        /// to report.
+        /// </summary>
+        public string Message { get; set; }
+        /// <summary>
+        /// When the action opened (or left open) a modal dialog, the id of that dialog -- the same id
+        /// <see cref="FormInfo.Id"/> uses -- so the caller can drive it (get_controls / set_value / accept /
+        /// click) without a separate get_open_forms round-trip. Null when no dialog was left open.
+        /// </summary>
+        public string FormId { get; set; }
+    }
+
+    /// <summary>
+    /// Information about one interactive control on a form, returned by GetControls. Lets a caller
+    /// discover what is on a form -- and how to address it -- without reading the source: <see cref="Path"/>
+    /// is the locator to pass back (to PerformAction), and <see cref="Enabled"/> reports whether it can be
+    /// acted on. Hidden controls are not listed (a control on an unselected tab is omitted until the tab is
+    /// selected). <see cref="Name"/> is the internal control name -- informational only, the connector does
+    /// not match on it. <see cref="Value"/> is the control's current value (null, a bool, a double, or a
+    /// string) the same as the "get_value" action would return; "get_actions" lists the actions it supports.
+    /// </summary>
+    public class ControlInfo
+    {
+        public UiElementPath Path { get; set; }
+        public string Name { get; set; }
+        public bool Enabled { get; set; }
+        public object Value { get; set; }
+    }
+
+    /// <summary>
+    /// One action a control supports, returned by the "get_actions" action so a caller knows not just the
+    /// action's wire <see cref="Name"/> but what it does (<see cref="Description"/>) and what to pass for it
+    /// (<see cref="ValueDescription"/> -- null when the action takes no value).
+    /// </summary>
+    public class ActionInfo
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string ValueDescription { get; set; }
     }
 
     /// <summary>
@@ -323,5 +407,111 @@ namespace SkylineTool
     {
         public int Index { get; set; }
         public string Description { get; set; }
+    }
+
+    /// <summary>
+    /// A path that refers to a UI element -- a control, a menu/list item, or a tree node -- relative to its
+    /// <see cref="Parent"/>. Within the parent's children an element is matched by any combination of:
+    /// <see cref="Text"/> (its visible text), <see cref="Type"/> (its kind, e.g. "TreeView" for a
+    /// caption-less control, or "ContextMenu" for a control's right-click menu), and <see cref="Index"/> (its
+    /// position among the siblings of that exact Type, so it is stable as other kinds of control come and go).
+    /// An Index is only meaningful together with a Type. Whichever properties are set must all match, else it
+    /// is an element-not-found error. The chain bottoms out at a form: a path with a null <see cref="Parent"/>
+    /// names the form, its <see cref="Text"/> set to the form id from GetOpenForms (and <see cref="Type"/>
+    /// "Form").
+    /// </summary>
+    public class UiElementPath
+    {
+        public UiElementPath(UiElementPath parent, string text, int? index, string type)
+        {
+            Parent = parent;
+            Text = text;
+            Index = index;
+            Type = type;
+        }
+
+        public UiElementPath ChangeParent(UiElementPath parent)
+        {
+            return new UiElementPath(parent, Text, Index, Type);
+        }
+
+        public UiElementPath ChangeText(string text)
+        {
+            return new UiElementPath(Parent, text, Index, Type);
+        }
+
+        public UiElementPath GetRoot()
+        {
+            var path = this;
+            while (path.Parent != null)
+            {
+                path = path.Parent;
+            }
+            return path;
+        }
+        
+        private UiElementPath()
+        {
+        }
+
+        public UiElementPath Parent { get; private set; }
+        public string Text { get; private set; }
+        public int? Index { get; private set; }
+        public string Type { get; private set; }
+
+        protected bool Equals(UiElementPath other)
+        {
+            return Equals(Parent, other.Parent) && Text == other.Text && Index == other.Index && Type == other.Type;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return Equals((UiElementPath)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (Parent != null ? Parent.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Text != null ? Text.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ Index.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Type != null ? Type.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            string result;
+            if (Type != null && Index.HasValue)
+            {
+                result = Type + "[" + Index + "]";
+            }
+            else
+            {
+                result = Text ?? Index.ToString();
+            }
+            if (Parent == null)
+            {
+                return result;
+            }
+            return Parent + ">" + result;
+        }
     }
 }

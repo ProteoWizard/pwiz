@@ -257,28 +257,4 @@ namespace pwiz.Osprey.Tasks
     {
         public PercolatorResults Results { get; set; }
     }
-
-    /// <summary>
-    /// The FULL 1st-pass-population score-&gt;q lookup table (each entry's raw
-    /// averaged-model score paired with its unbiased 1st-pass effective q),
-    /// captured at first-pass FDR time BEFORE compaction -- so it retains the
-    /// high-q failing/decoy region that the compacted reported pool no longer
-    /// holds. <see cref="ScoresDesc"/> is sorted by score descending; the parallel
-    /// <see cref="QDesc"/> is q as a monotone NON-INCREASING function of score --
-    /// i.e. q is non-decreasing as you walk <see cref="ScoresDesc"/> from high to
-    /// low score (a higher score is a better ID, so a lower q). Published only under
-    /// OSPREY_PASS2_QVALUE=transfer; the merge-node 2nd-pass transfer maps each
-    /// frozen-model reconciled score to a q via THIS table instead of one rebuilt
-    /// from the decoy-depleted compacted entries. Absent (never published) on the
-    /// default percolator path.
-    /// </summary>
-    internal sealed class FirstPassScoreQTable
-    {
-        /// <summary>Raw averaged-model scores, sorted descending.</summary>
-        public double[] ScoresDesc { get; set; }
-        /// <summary>Effective q parallel to <see cref="ScoresDesc"/>; q is a monotone
-        /// non-increasing function of score, so this array is non-decreasing as
-        /// <see cref="ScoresDesc"/> descends (higher score -&gt; lower q).</summary>
-        public double[] QDesc { get; set; }
-    }
 }
