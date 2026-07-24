@@ -11,6 +11,7 @@ using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Mgf;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util;
+using System.Runtime.CompilerServices;
 
 namespace Pwiz.TestHarness;
 
@@ -127,6 +128,18 @@ public sealed class FixtureRunContext
         if (_result.TotalTests != _runs)
             throw new InvalidOperationException(
                 $"{_fixtureName}: harness ran {_result.TotalTests} reads but {_runs} were expected (one per Run() call) — predicate may have failed to match");
+
+        // Finalizer regression probe: after all config runs, verify that opening the fixture and
+        // dropping it WITHOUT Dispose still releases the file handle on GC (i.e. the reader's
+        // backing data has a finalizer). Runs here -- not inline per config -- because a genuinely
+        // missing finalizer leaks a handle that locks the fixture, which would otherwise cascade
+        // into the disposed-path probe of the remaining config runs.
+        var finalizerResult = VendorReaderTestHarness.ProbeFinalizers(_reader, _root, _predicate);
+        if (finalizerResult.FailedTests > 0)
+            throw new InvalidOperationException(
+                $"{_fixtureName}: reader finalizer did not release the file for " +
+                $"{finalizerResult.FailedTests} of {finalizerResult.TotalTests} fixture(s):\n" +
+                string.Join('\n', finalizerResult.FailureMessages));
     }
 }
 
@@ -188,6 +201,41 @@ public static class VendorReaderTestHarness
             }
         }
 
+        return result;
+    }
+
+    /// <summary>
+    /// Runs the undisposed-open finalizer probe (<see cref="AssertFinalizerReleasesFile"/>) once for
+    /// every fixture under <paramref name="rootPath"/> matching <paramref name="predicate"/>, and
+    /// aggregates any failures. <see cref="FixtureRunContext.Check"/> calls this AFTER all config
+    /// runs: a genuinely-missing finalizer leaves the fixture locked, so running it inline with the
+    /// per-config reads would cascade into the disposed-path <see cref="AssertFilesUnlocked"/> probe.
+    /// </summary>
+    public static TestResult ProbeFinalizers(IReader reader, string rootPath, TestPathPredicate predicate)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(rootPath);
+        ArgumentNullException.ThrowIfNull(predicate);
+
+        var result = new TestResult();
+        if (!Directory.Exists(rootPath)) return result;
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(rootPath))
+        {
+            if (!predicate.Matches(entry)) continue;
+            result.TotalTests++;
+            try
+            {
+                AssertFinalizerReleasesFile(reader, entry, new ReaderTestConfig());
+            }
+            catch (Exception e)
+            {
+                result.FailedTests++;
+                result.FailureMessages.Add(
+                    $"{Path.GetFileName(entry.TrimEnd('/', '\\'))}: {e.GetType().Name}: {e.Message}\n"
+                    + Indent(e.StackTrace ?? "(no stack trace)", 2));
+            }
+        }
         return result;
     }
 
@@ -516,7 +564,9 @@ public static class VendorReaderTestHarness
     /// IOException; that's the regression we want to catch (vendor SpectrumList missed a
     /// Dispose, MSData/Run didn't propagate, Converter didn't `using`, etc.).
     /// </summary>
-    private static void AssertFilesUnlocked(string rawPath, bool knownLeakySdk = false)
+    private static void AssertFilesUnlocked(string rawPath, bool knownLeakySdk = false,
+        string probeDescription = "after Dispose",
+        string lockHint = "Likely a missing Dispose somewhere in the SpectrumList -> backing-data chain.")
     {
         if (!File.Exists(rawPath) && !Directory.Exists(rawPath)) return;
 
@@ -564,13 +614,13 @@ public static class VendorReaderTestHarness
             if (knownLeakySdk)
             {
                 Console.Error.WriteLine(
-                    $"warning: cannot rename {rawPath} after dispose (vendor SDK retains handles " +
-                    $"on .NET 8 — see VendorReaderTestHarness.IsKnownLeakySdkPath): {lastError.Message}");
+                    $"warning: cannot rename {rawPath} {probeDescription} (vendor SDK retains handles " +
+                    $"on .NET 8 - see VendorReaderTestHarness.IsKnownLeakySdkPath): {lastError.Message}");
                 return;
             }
             throw new InvalidOperationException(
-                $"Cannot rename {rawPath} after dispose: there are unreleased file locks. " +
-                $"Likely a missing Dispose somewhere in the SpectrumList → backing-data chain. " +
+                $"Cannot rename {rawPath} {probeDescription}: there are unreleased file locks. " +
+                $"{lockHint} " +
                 $"Underlying error: {lastError.Message}", lastError);
         }
 
@@ -584,6 +634,71 @@ public static class VendorReaderTestHarness
                 $"Renamed {rawPath} -> {renamed} succeeded but couldn't move it back; " +
                 $"underlying error: {ex.Message}", ex);
         }
+    }
+
+    // Run the undisposed-open finalizer probe only once per fixture path (finalizer behavior is
+    // config-independent, and the probe re-opens the file, which isn't free). Guarded for the
+    // rare parallel case.
+    private static readonly HashSet<string> _finalizerProbedPaths = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Regression guard for the vendor readers' finalizers: open <paramref name="rawPath"/> through
+    /// the reader WITHOUT disposing it, drop the reference, force GC + finalizers, then assert the
+    /// raw source can be renamed. A reader that owns a native handle / SQLite connection must release
+    /// it from a finalizer so a caller who forgets Dispose (or whose Dispose is GC-deferred) doesn't
+    /// leave the file locked -- exactly the leak that broke Skyline's Bruker <c>.d</c> cleanup on CI
+    /// while the disposed-path <see cref="AssertFilesUnlocked"/> probe passed. Runs once per fixture
+    /// and honours the same <see cref="IsKnownLeakySdkPath"/> soft-fail list (vendor SDKs that retain
+    /// handles until process/ALC exit -- e.g. wiff2 -- can't satisfy this either).
+    /// </summary>
+    private static void AssertFinalizerReleasesFile(IReader reader, string rawPath, ReaderTestConfig config)
+    {
+        lock (_finalizerProbedPaths)
+        {
+            if (!_finalizerProbedPaths.Add(rawPath.TrimEnd('/', '\\')))
+                return; // already probed this fixture in this process
+        }
+
+        if (!OpenWithoutDispose(reader, rawPath, config))
+            return; // vendor SDK not built into this configuration; no handle was opened to probe
+
+        // AssertFilesUnlocked forces GC.Collect() + GC.WaitForPendingFinalizers() before the rename,
+        // which is the pass that has to run the reader's finalizer to release the handle.
+        AssertFilesUnlocked(rawPath, IsKnownLeakySdkPath(rawPath, config),
+            "after finalizer (source opened without Dispose)",
+            "The reader owns a native handle / SQLite connection but its finalizer did not release it " +
+            "on GC -- add or fix the finalizer on the SpectrumList/ChromatogramList backing data.");
+    }
+
+    /// <summary>
+    /// Opens <paramref name="rawPath"/> and touches its lists to force the vendor file handle open,
+    /// then returns WITHOUT disposing the <see cref="MSData"/> -- so the only thing that can release
+    /// the handle afterward is the reader's finalizer on the next GC. NoInlining so the MSData local
+    /// is unreachable (collectable) once this returns. Returns false when the vendor SDK isn't
+    /// compiled into this build (nothing was opened to probe).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool OpenWithoutDispose(IReader reader, string rawPath, ReaderTestConfig config)
+    {
+        var msd = new MSData();
+        var readerConfig = new ReaderConfig { RunIndex = config.RunIndex ?? 0 };
+        try
+        {
+            reader.Read(rawPath, msd, readerConfig);
+        }
+        catch (VendorSupportNotEnabledException)
+        {
+            return false;
+        }
+
+        // Force lazy handle acquisition so there is actually an open handle to leak.
+        if (msd.Run.SpectrumList is { Count: > 0 } sl)
+            _ = sl.GetSpectrum(0, true);
+        if (msd.Run.ChromatogramList is { Count: > 0 } cl)
+            _ = cl.GetChromatogram(0, true);
+
+        // Intentionally NOT disposing msd: the finalizer is what we're testing.
+        return true;
     }
 
     /// <summary>
