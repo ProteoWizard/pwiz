@@ -330,6 +330,7 @@
     <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
     <Compile Include="NativeFileDialogTest.cs" />
+    <Compile Include="NativeOpenFileDialogLeakTest.cs" />
     <Compile Include="McpConnectorDisconnectTest.cs" />
     <Compile Include="McpConnectorBackgroundDialogTest.cs" />
     <Compile Include="McpConnectorFormThreadingTest.cs" />
