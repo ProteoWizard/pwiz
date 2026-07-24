@@ -126,12 +126,17 @@ namespace TestPerf
         // runs → fast repeat runs. Only valid after the zip is unzipped (inside DoTest and later).
         private string CacheDir => Path.Combine(TestFilesDirs[0].PersistentFilesDir, ZIP_NAME);
 
-        // Stable Skyline doc directory — also receives DIA-NN intermediates (predicted
-        // library, MBR output parquet). Kept out of the tutorial extraction dir so that dir
-        // holds only the shipped inputs + the `.quant` cache. Stable across runs for reuse.
-        private static readonly string DocDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            @"SkylinePerfTests", @"DiannPerfDoc-stable");
+        // Skyline doc directory that also receives DIA-NN intermediates (the seeded predicted
+        // library, the MBR output report + output library, its Skyline-converted speclib, and
+        // the .sky/.blib). Uses the normal per-test results location (fresh every run) rather
+        // than a stable dir: DIA-NN's output library is reused by the --use-quant flow and
+        // never rebuilt, so a persistent dir that was ever populated by a different file set
+        // (e.g. the full ProteoBench dataset, whose runs are named after the original .raw
+        // acquisitions) would pin the wrong per-run source-file attribution into every future
+        // build's document library, leaving the chromatograms page unable to find the results
+        // files. The reusable cache that keeps repeat runs fast -- the per-file .quant and the
+        // predicted spectral library -- lives in the persistent CacheDir, not here.
+        private string DocDir => TestContext.GetTestResultsPath(@"DiannPerfDoc");
 
         // Full paths to the mzML the wizard searches.
         private string[] DiaSearchPaths => MZML_FILES.Select(f => Path.Combine(CacheDir, f)).ToArray();
