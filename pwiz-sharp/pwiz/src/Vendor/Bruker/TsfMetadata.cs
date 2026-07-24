@@ -193,6 +193,22 @@ public sealed class TsfMetadata : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net (see <see cref="TdfMetadata"/>): release the <c>analysis.tsf</c>
+    /// SQLite handle on GC if <see cref="Dispose()"/> was missed, so the test cleanup's
+    /// <c>GC.WaitForPendingFinalizers()</c> pass can delete the imported <c>.d</c> directory.
+    /// </summary>
+    ~TsfMetadata()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
         _conn.Dispose();

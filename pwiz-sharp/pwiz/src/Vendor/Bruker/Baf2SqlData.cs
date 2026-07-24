@@ -392,6 +392,20 @@ internal sealed class Baf2SqlData : IBrukerData
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    // baf2sql_array_open_storage returns a raw native handle; without a finalizer a Baf2SqlData
+    // dropped without Dispose() would leak the analysis.baf handle until process exit (see
+    // TimsBinaryData).
+    ~Baf2SqlData()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
         _db?.Dispose();

@@ -358,6 +358,25 @@ public sealed class TdfMetadata : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net: the <c>SQLiteConnection</c> keeps <c>analysis.tdf</c> open. A
+    /// <see cref="TdfMetadata"/> dropped without <see cref="Dispose()"/> must still release it
+    /// promptly so the Skyline test cleanup's <c>GC.WaitForPendingFinalizers()</c> pass can delete
+    /// the imported <c>.d</c> directory (relying on the connection's own finalizer needs an extra
+    /// GC cycle the cleanup doesn't do). <c>SQLiteConnection.Dispose()</c> is idempotent and safe
+    /// to call from a finalizer.
+    /// </summary>
+    ~TdfMetadata()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
         _conn.Dispose();

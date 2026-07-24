@@ -144,6 +144,22 @@ public sealed class TsfBinaryData : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net: <c>tsf_open</c> returns a raw native handle; without this a
+    /// <see cref="TsfBinaryData"/> dropped without <see cref="Dispose()"/> would leak the
+    /// <c>analysis.tsf</c> handle until process exit (see <see cref="TimsBinaryData"/>).
+    /// </summary>
+    ~TsfBinaryData()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
         if (_handle != 0) { NativeMethods.tsf_close(_handle); _handle = 0; }

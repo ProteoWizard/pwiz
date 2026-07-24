@@ -170,6 +170,26 @@ public sealed class TimsBinaryData : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net: <c>tims_open</c> returns a raw native handle (not a SafeHandle), so a
+    /// <see cref="TimsBinaryData"/> dropped without <see cref="Dispose()"/> would keep
+    /// <c>analysis.tdf</c> / <c>analysis.tdf_bin</c> open until the process exits. Without a
+    /// finalizer, <c>GC.WaitForPendingFinalizers()</c> -- which the Skyline test cleanup runs
+    /// before deleting the imported <c>.d</c> directory -- could not reclaim the handle, so the
+    /// delete failed with "analysis.tdf is being used by another process". Releasing the native
+    /// handle here recovers a missed/deferred <see cref="Dispose()"/> on the next GC.
+    /// </summary>
+    ~TimsBinaryData()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
         if (_handle != 0) { NativeMethods.tims_close(_handle); _handle = 0; }
