@@ -37,7 +37,7 @@ public sealed class ChromatogramList_Mobilion : ChromatogramListBase
     /// <inheritdoc/>
     /// <remarks>Disposes the underlying <see cref="MobilionData"/> as a safety net for
     /// callers that take a <see cref="ChromatogramList_Mobilion"/> reference but never
-    /// touch the SpectrumList. <see cref="MobilionData.Dispose"/> is idempotent.</remarks>
+    /// touch the SpectrumList. <see cref="MobilionData.Dispose()"/> is idempotent.</remarks>
     protected override void DisposeCore() => _data.Dispose();
 
     /// <inheritdoc/>

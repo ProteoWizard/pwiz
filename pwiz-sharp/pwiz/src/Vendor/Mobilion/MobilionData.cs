@@ -41,7 +41,7 @@ public static class MobilionAttr
 /// <remarks>
 /// HDF5 isn't thread-safe — cpp guards with a process-wide mutex
 /// (Reader_Mobilion_Detail.cpp:55). We hold the same lock for the lifetime of an
-/// <see cref="MobilionData"/> instance: <see cref="Open"/> acquires, <see cref="Dispose"/>
+/// <see cref="MobilionData"/> instance: <see cref="Open"/> acquires, <see cref="Dispose()"/>
 /// releases. Concurrent <c>MobilionData</c> instances therefore serialize through the
 /// lock, matching cpp behavior.
 /// </remarks>
@@ -166,6 +166,27 @@ public sealed class MobilionData : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net: <c>mbi_file_open</c> returns a raw native handle, so a
+    /// <see cref="MobilionData"/> dropped without <see cref="Dispose()"/> would keep the <c>.mbi</c>
+    /// locked until process exit (no SafeHandle, so GC.WaitForPendingFinalizers can't reclaim it).
+    /// Free the native handle here too. NOTE: the <c>Hdf5Lock</c> is a thread-affine Monitor owned
+    /// by the thread that called <see cref="Open"/>; releasing it is only valid on the Dispose path,
+    /// so the finalizer frees the file handle (the resource that locks the .mbi) but leaves the
+    /// process-internal HDF5 lock -- a leaked-lock is a lesser, caller-forgot-Dispose problem and is
+    /// reentrant on the owning thread.
+    /// </summary>
+    ~MobilionData()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
         if (_handle != IntPtr.Zero)
@@ -177,7 +198,10 @@ public sealed class MobilionData : IDisposable
         if (_holdsLock)
         {
             _holdsLock = false;
-            Monitor.Exit(Hdf5Lock);
+            // Monitor.Exit is only valid on the thread that entered the lock (the Open() caller);
+            // from the finalizer thread it would throw SynchronizationLockException.
+            if (disposing)
+                Monitor.Exit(Hdf5Lock);
         }
     }
 
@@ -205,7 +229,7 @@ public sealed class MobilionData : IDisposable
 }
 
 /// <summary>Managed wrapper around an <c>MBISDK::Frame</c> shared pointer. Disposes
-/// the native handle on <see cref="Dispose"/>; methods throw on use after dispose.</summary>
+/// the native handle on <see cref="Dispose()"/>; methods throw on use after dispose.</summary>
 public sealed class MobilionFrame : IDisposable
 {
     private IntPtr _handle;

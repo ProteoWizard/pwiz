@@ -29,7 +29,7 @@ public sealed class ThermoRawFile : IDisposable
     public string Filename { get; }
 
     /// <summary>The active SDK <see cref="IRawDataPlus"/> handle for the MS controller.
-    /// Throws <see cref="ObjectDisposedException"/> after <see cref="Dispose"/>.</summary>
+    /// Throws <see cref="ObjectDisposedException"/> after <see cref="Dispose()"/>.</summary>
     public IRawDataPlus Raw =>
         _raw ?? throw new ObjectDisposedException(nameof(ThermoRawFile));
 
@@ -434,6 +434,23 @@ public sealed class ThermoRawFile : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net: a <see cref="ThermoRawFile"/> dropped without <see cref="Dispose()"/>
+    /// would keep the <c>.raw</c> locked until a "natural" GC finalized the SDK objects -- so a
+    /// caller who forgets Dispose (or whose Dispose is deferred) leaves the file locked past the
+    /// test cleanup's <c>GC.WaitForPendingFinalizers()</c> pass. Release the SDK objects here too.
+    /// </summary>
+    ~ThermoRawFile()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
 
@@ -459,9 +476,14 @@ public sealed class ThermoRawFile : IDisposable
         // Step 3: force the GC + finalizer cycle. The Thermo SDK on .NET 8 closes its
         // native file handle in the IRawDataPlus / IRawFileThreadManager finalizer; without
         // GC.Collect the .raw stays locked until the next "natural" GC pass, which can be
-        // arbitrarily delayed.
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
+        // arbitrarily delayed. Skip this when running FROM the finalizer thread (disposing ==
+        // false): GC.WaitForPendingFinalizers() would deadlock (we're on that thread). Disposing
+        // the SDK objects above + dropping the refs still lets their finalizer run on the next GC.
+        if (disposing)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
     }
 }

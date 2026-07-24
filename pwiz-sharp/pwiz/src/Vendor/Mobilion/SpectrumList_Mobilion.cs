@@ -99,7 +99,7 @@ public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectr
     /// <inheritdoc/>
     /// <remarks>Disposes the underlying <see cref="MobilionData"/> so the .mbi file's
     /// HDF5 handle is released — the harness's post-dispose rename probe checks for
-    /// this. <see cref="MobilionData.Dispose"/> is idempotent, so the parallel call
+    /// this. <see cref="MobilionData.Dispose()"/> is idempotent, so the parallel call
     /// from <see cref="ChromatogramList_Mobilion"/> is safe.</remarks>
     protected override void DisposeCore() => _data.Dispose();
 

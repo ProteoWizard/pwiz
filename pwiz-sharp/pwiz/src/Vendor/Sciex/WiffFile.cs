@@ -188,16 +188,33 @@ internal sealed class WiffFile : AbstractWiffFile
 
     public override void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net: <see cref="AnalystWiffDataProvider"/> keeps the <c>.wiff</c> locked
+    /// until <c>Close()</c>. A <see cref="WiffFile"/> dropped without <see cref="Dispose()"/> would
+    /// leave the file locked past the test cleanup's <c>GC.WaitForPendingFinalizers()</c> pass, so
+    /// close the provider (and samples/experiments) here too. NOTE: SIM/SRM-bearing samples still
+    /// leave native readers active past Close on .NET 8 (see <c>IsKnownLeakySdkPath</c> soft-fail);
+    /// non-SIM/SRM samples -- the common case -- release on Close().
+    /// </summary>
+    ~WiffFile()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (_disposed) return;
         _disposed = true;
         // Cascade disposal in inverse acquisition order. cpp .NET-Framework builds
         // synchronously release the underlying .wiff handle when each of these
         // returns; under .NET 8 the experiment + sample disposes still leave
         // native readers active for SIM/SRM-bearing samples (the SDK enqueues
-        // their finalizers and the file handle survives past return). Forcing a
-        // finalizer pass here does not help - this instance is still reachable, so
-        // its SDK objects are not yet collectable; the handle is instead released on
-        // demand at the next file open (see ReaderList.ReadHead retry).
+        // their finalizers and the file handle survives past return; those paths are
+        // soft-failed in the harness). Non-SIM/SRM samples release on _provider.Close().
         foreach (var exp in _experiments)
         {
             try { exp.Dispose(); } catch { /* best-effort */ }
