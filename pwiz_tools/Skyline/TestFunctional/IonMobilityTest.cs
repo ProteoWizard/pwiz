@@ -24,11 +24,14 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using DataboundPrecursor = pwiz.Skyline.Model.Databinding.Entities.Precursor;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -963,6 +966,33 @@ namespace pwiz.SkylineTestFunctional
             // ObservedCcs depends on the source file's IM-to-CCS conversion, which is
             // a vendor-proprietary black box. Open formats (mzML, mz5) don't expose it,
             // so we don't assert presence of ObservedCcs here.
+
+            // Precursor-level aggregate: PrecursorResult.ObservedIonMobility combines the
+            // MS1 isotope channels into the single per-ion value shown in reports. Verify
+            // it is populated and finite/positive wherever the channels carry an observed IM.
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(doc, DataSchemaLocalizer.INVARIANT);
+            int withPrecursorObservedIm = 0;
+            foreach (var moleculeGroup in doc.MoleculeGroups)
+            {
+                foreach (var molecule in moleculeGroup.Molecules)
+                {
+                    foreach (var nodeGroup in molecule.TransitionGroups)
+                    {
+                        var identityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide, nodeGroup.TransitionGroup);
+                        var precursor = new DataboundPrecursor(dataSchema, identityPath);
+                        foreach (var precursorResult in precursor.Results.Values)
+                        {
+                            var aggregate = precursorResult.ObservedIonMobility;
+                            if (!aggregate.HasValue)
+                                continue;
+                            withPrecursorObservedIm++;
+                            AssertEx.IsTrue(!double.IsNaN(aggregate.Value) && aggregate.Value > 0,
+                                string.Format(@"Precursor observed ion mobility should be finite and positive, got {0}", aggregate.Value));
+                        }
+                    }
+                }
+            }
+            AssertEx.IsTrue(withPrecursorObservedIm > 0, @"Expected at least one precursor with an aggregated observed ion mobility");
         }
     }
 }
