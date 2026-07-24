@@ -114,6 +114,14 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
+            // Cancels a 50,000-row grid paste at a NONDETERMINISTIC point (the assertion is only that fewer than
+            // all the properties landed), so how much work -- and allocation -- happens before the cancel takes
+            // effect varies with machine speed and timing. That makes its heap delta spiky rather than leaking:
+            // measured -324 KB (freed) on one run and +8-10 KB on another, and it flagged on only 3 of 6 nightly
+            // machines, the signature of a spiky distribution sitting near the threshold rather than a real leak
+            // (a real one flags on every machine, as the native-file-dialog tests do). Extra iterations give the
+            // trailing deltas room to settle. NOT muted: unlike those tests it shows no native dialog at all.
+            {"TestMcpConnectorBackgroundDialog", new ExpandedLeakCheck()},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
@@ -132,15 +140,14 @@ namespace TestRunner
         // SaveFileDialog loop reproduces it; a bare MessageBox does not), so tests that show the file dialog are
         // muted from the HEAP check -- and ONLY under a Terminal Services session, so the console keeps full
         // heap-leak detection. Managed-memory and handle leak checks stay active for these tests regardless.
-        // PROVISIONAL list (pending broader nightly fleet confirmation, esp. TestMcpConnectorBackgroundDialog, whose
-        // dialog is a managed BackgroundThreadLongWaitDlg rather than a native file dialog).
+        // Every test listed here shows the native common file dialog; a test that merely reports a spiky heap
+        // distribution belongs in LeakCheckIterationsOverrideByTestName instead, not here.
         public static string[] MutedHeapMemoryLeakTestNames =>
             SystemInformation.TerminalServerSession
                 ? new[]
                 {
                     "TestNativeMessageBox",
                     "TestNativeFileDialog",
-                    "TestMcpConnectorBackgroundDialog",
                     "TestPrmMcpConnector",
                 }
                 : new string[0];
