@@ -88,30 +88,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         // Observed ion mobility / CCS of the ion. IM (and the CCS derived from it) is a
         // property of the precursor ion, so it is surfaced once here rather than per
-        // isotope: the value is the MS1 isotope transitions' per-channel observed values
-        // combined as a mean weighted by predicted isotope abundance. Predicted (not
-        // observed) abundance is used as the weight so an interference-inflated minor
-        // channel cannot inflate its own influence. (MS2-only acquisitions, where the
-        // value would come from the fragment transitions, are not yet handled.)
+        // isotope or per fragment. Observed IM prefers the MS1 isotope transitions
+        // (combined as a mean weighted by predicted isotope abundance, so an
+        // interference-inflated minor channel cannot inflate its own influence) and falls
+        // back to the fragment transitions for MS2-only acquisitions (each fragment
+        // corrected back to the precursor by removing its high-energy IM offset). Observed
+        // CCS is MS1-only, matching IonMobilityFinder: a fragment's stored CCS was computed
+        // from its offset IM and cannot be corrected back to the precursor here.
         [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
         public double? ObservedIonMobility
         {
-            get { return GetMs1IsotopeWeightedMean(chromInfo => chromInfo.ObservedIonMobility); }
+            get { return GetMs1WeightedMean(chromInfo => chromInfo.ObservedIonMobility) ?? GetMs2ObservedIonMobility(); }
         }
         [Format(Formats.CCS, NullValue = TextUtil.EXCEL_NA)]
         public double? ObservedCcs
         {
-            get { return GetMs1IsotopeWeightedMean(chromInfo => chromInfo.ObservedCcs); }
+            get { return GetMs1WeightedMean(chromInfo => chromInfo.ObservedCcs); }
         }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? IonMobilityErrorPercent
         {
-            get { return PercentError(ObservedIonMobility, GetMs1Target()?.IonMobility?.Mobility); }
+            get { return PercentError(ObservedIonMobility, GetTargetIonMobilityFilter()?.IonMobility?.Mobility); }
         }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? CcsErrorPercent
         {
-            get { return PercentError(ObservedCcs, GetMs1Target()?.CollisionalCrossSectionSqA); }
+            get { return PercentError(ObservedCcs, GetTargetIonMobilityFilter()?.CollisionalCrossSectionSqA); }
         }
 
         private static double? PercentError(double? observed, double? target)
@@ -123,7 +125,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         // Predicted-abundance-weighted mean of a per-transition observed value over the
         // MS1 isotope transitions that carry a value.
-        private double? GetMs1IsotopeWeightedMean(Func<TransitionChromInfo, double?> getValue)
+        private double? GetMs1WeightedMean(Func<TransitionChromInfo, double?> getValue)
         {
             double weightedSum = 0, totalWeight = 0;
             var resultFile = GetResultFile();
@@ -144,15 +146,38 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
         }
 
-        // Target ion mobility / CCS for the error denominators, taken from an MS1 isotope
-        // transition (all share the precursor's IM filter; MS1 carries no high-energy offset).
-        private IonMobilityFilter GetMs1Target()
+        // Fallback for MS2-only acquisitions: intensity-weighted mean of the fragment
+        // transitions' observed IM, each corrected back to the precursor by removing its
+        // high-energy offset (fragments fly at the precursor mobility plus that offset).
+        private double? GetMs2ObservedIonMobility()
+        {
+            double weightedSum = 0, totalWeight = 0;
+            var resultFile = GetResultFile();
+            foreach (var nodeTran in Precursor.DocNode.Transitions)
+            {
+                if (nodeTran.IsMs1)
+                    continue;
+                var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
+                if (chromInfo == null || chromInfo.IsEmpty)
+                    continue;
+                var observed = chromInfo.ObservedIonMobility;
+                double weight = chromInfo.Area;
+                if (!observed.HasValue || weight <= 0)
+                    continue;
+                double offset = chromInfo.IonMobility?.HighEnergyIonMobilityOffset ?? 0;
+                weightedSum += (observed.Value - offset) * weight;
+                totalWeight += weight;
+            }
+            return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
+        }
+
+        // Target ion mobility / CCS for the error denominators, from any transition that
+        // carries the precursor's IM filter (its base IM, offset aside, is the same for all).
+        private IonMobilityFilter GetTargetIonMobilityFilter()
         {
             var resultFile = GetResultFile();
             foreach (var nodeTran in Precursor.DocNode.Transitions)
             {
-                if (!nodeTran.IsMs1)
-                    continue;
                 var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
                 if (chromInfo?.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility))
                     return chromInfo.IonMobility;
