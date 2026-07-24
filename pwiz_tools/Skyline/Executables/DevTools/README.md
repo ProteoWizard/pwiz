@@ -29,3 +29,6 @@ to end users and are not included in the Skyline installer.
 ### Performance Testing
 - **ImportPerf** - benchmarks parallel chromatogram extraction throughput
 - **PeakComparison** - compares peak picking across tools (OpenSwath, PeakView, Spectronaut)
+
+### Diagnostics
+- **HeapProbe** - measures native Win32 heap growth from showing/dismissing a Windows dialog (no Skyline code), to tell OS shell-cache growth apart from a real leak
