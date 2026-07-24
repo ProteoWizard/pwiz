@@ -3705,10 +3705,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #region Test support
 
+        // These drive the ZedGraph control through the very handlers the operating
+        // system invokes for a real mouse message (SimulateMouseDown/Move/Up), so a
+        // simulated gesture is indistinguishable from a user's -- the same path the
+        // IJsonToolService.ClickGraph verb uses.
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            graphControl.SimulateMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public bool IsOverHighlightPoint(double x, double y, PaneKey? paneKey)
@@ -3720,7 +3724,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl_MouseDownEvent(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
+            graphControl.SimulateMouseDown(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+        }
+
+        public void TestMouseUp(double x, double y, PaneKey? paneKey)
+        {
+            var mouse = TransformCoordinates(x, y, paneKey);
+            graphControl.SimulateMouseUp(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)

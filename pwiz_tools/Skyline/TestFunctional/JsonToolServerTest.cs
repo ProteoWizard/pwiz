@@ -98,6 +98,7 @@ namespace pwiz.SkylineTestFunctional
             TestScreenCapturePermissionDlg(server);
             TestFormImage(server);
             TestGraphDataAndImage(server);
+            TestGraphInteraction(server);
             TestTutorialFetch(server);
             TestTutorialFetchErrors(server);
 
@@ -1511,6 +1512,70 @@ namespace pwiz.SkylineTestFunctional
             string nonGraphId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.GetGraphData(nonGraphId, badGraphPath));
+        }
+
+        /// <summary>
+        /// Exercises the graph geometry verbs -- GetGraphZoom, ZoomGraphTo, and ClickGraph --
+        /// against a populated summary graph. GetGraphZoom must report the pane's data
+        /// bounds; ZoomGraphTo must narrow the view and the getter must read back exactly
+        /// what the setter reports applying; ClickGraph must drive a full mouse gesture
+        /// (down, up, then the click the OS raises) through the real ZedGraph handlers and
+        /// complete. The same faithful gesture path is what a user click takes.
+        /// </summary>
+        private void TestGraphInteraction(JsonToolServer server)
+        {
+            RunUI(() => SkylineWindow.ShowPeakAreaReplicateComparison());
+            WaitForGraphs();
+            try
+            {
+                string graphId = server.GetOpenForms()
+                    .First(f => f.Type.Contains(@"GraphSummary")).Id;
+
+                // GetGraphZoom: a populated graph has a real, non-degenerate data range.
+                var zoom = server.GetGraphZoom(graphId);
+                Assert.IsNotNull(zoom);
+                Assert.IsTrue(zoom.Left < zoom.Right, $@"Expected Left < Right, got {zoom.Left}..{zoom.Right}");
+                Assert.IsTrue(zoom.Bottom < zoom.Top, $@"Expected Bottom < Top, got {zoom.Bottom}..{zoom.Top}");
+
+                // ZoomGraphTo an inner rectangle: the applied X range narrows, and
+                // GetGraphZoom reads back exactly what ZoomGraphTo reports applying.
+                double xInset = (zoom.Right - zoom.Left) / 4;
+                double yInset = (zoom.Top - zoom.Bottom) / 4;
+                var request = new SkylineTool.Rectangle
+                {
+                    Left = zoom.Left + xInset,
+                    Right = zoom.Right - xInset,
+                    Top = zoom.Top - yInset,
+                    Bottom = zoom.Bottom + yInset
+                };
+                var applied = server.ZoomGraphTo(graphId, request);
+                Assert.IsNotNull(applied);
+                Assert.IsTrue(applied.Right - applied.Left < zoom.Right - zoom.Left,
+                    @"ZoomGraphTo should have narrowed the X range.");
+                var readBack = server.GetGraphZoom(graphId);
+                Assert.AreEqual(applied.Left, readBack.Left, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Left");
+                Assert.AreEqual(applied.Right, readBack.Right, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Right");
+                Assert.AreEqual(applied.Top, readBack.Top, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Top");
+                Assert.AreEqual(applied.Bottom, readBack.Bottom, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Bottom");
+
+                // ClickGraph: a single click (down == up) at the center of the viewport drives
+                // the full down/up/click gesture through the real ZedGraph handlers.
+                double xMid = (readBack.Left + readBack.Right) / 2;
+                double yMid = (readBack.Top + readBack.Bottom) / 2;
+                var clickResult = server.ClickGraph(graphId,
+                    new SkylineTool.Rectangle { Left = xMid, Top = yMid, Right = xMid, Bottom = yMid });
+                Assert.IsNotNull(clickResult);
+                Assert.IsTrue(clickResult.Completed, @"ClickGraph should complete: " + clickResult.Message);
+
+                // Error: the geometry verbs reject a non-graph / missing form like the others.
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.GetGraphZoom(@"NonexistentGraph:NoTitle"));
+            }
+            finally
+            {
+                RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
+                WaitForGraphs();
+            }
         }
 
         private const string TUTORIAL_NAME = @"MethodEdit";

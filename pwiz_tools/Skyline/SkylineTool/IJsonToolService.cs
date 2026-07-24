@@ -495,16 +495,16 @@ namespace SkylineTool
         /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
-        string GetGraphData(string graphId, string filePath = null);
+        string GetGraphData(string formId, string filePath = null);
 
         /// <summary>
         /// Exports a graph as a PNG image. Returns the file path.
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="filePath">Output file path, or null for auto-generated temp path.</param>
-        string GetGraphImage(string graphId, string filePath = null);
+        string GetGraphImage(string formId, string filePath = null);
 
         /// <summary>
         /// Renders a graph as a PNG and returns the bytes inline together with a
@@ -512,8 +512,79 @@ namespace SkylineTool
         /// the inline payload is too large. The file is NOT written by this call.
         /// Companion to <see cref="GetGraphImage"/> (file-based).
         /// </summary>
-        /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        ImageBytesMetadata GetGraphImageBytes(string graphId);
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ImageBytesMetadata GetGraphImageBytes(string formId);
+
+        /// <summary>
+        /// Returns the region of DATA coordinates the graph is currently zoomed to --
+        /// the X and Y axis ranges of the first (or only) pane -- as a
+        /// <see cref="Rectangle"/>. The returned edges can be handed straight back to
+        /// <see cref="ZoomGraphTo"/>, and they tell a caller what coordinate ranges are
+        /// valid to pass to <see cref="ClickGraph"/> (whose <see cref="Rectangle.Bottom"/>
+        /// edge is the X-axis line -- coordinates below it fall below the axis).
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
+        Rectangle GetGraphZoom(string formId);
+
+        /// <summary>
+        /// Zooms the graph's first (or only) pane so its axes span the DATA coordinates in
+        /// <paramref name="bounds"/> (<see cref="Rectangle.Left"/>/<see cref="Rectangle.Right"/>
+        /// set the X range, <see cref="Rectangle.Top"/>/<see cref="Rectangle.Bottom"/> the Y
+        /// range). Returns the zoom actually applied, which may differ from the request when
+        /// the graph clamps it to the available data range.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="bounds">The DATA-coordinate region to zoom to.</param>
+        Rectangle ZoomGraphTo(string formId, Rectangle bounds);
+
+        /// <summary>
+        /// Clicks or drags on the graph in DATA coordinates, reproducing a real mouse
+        /// gesture: the mouse goes down at the <see cref="Rectangle.Left"/>/<see cref="Rectangle.Top"/>
+        /// corner of <paramref name="bounds"/> and is released at the
+        /// <see cref="Rectangle.Right"/>/<see cref="Rectangle.Bottom"/> corner. A zero-size
+        /// rectangle is a single click (e.g. to select a data point); a rectangle whose Y
+        /// values fall below the X-axis drags a chromatogram peak boundary, exactly as the
+        /// same gesture would if performed by hand. Operates on the first (or only) pane.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="bounds">The DATA-coordinate gesture: down at Left/Top, up at Right/Bottom.</param>
+        ActionResult ClickGraph(string formId, Rectangle bounds);
+
+        /// <summary>
+        /// Types text into one control on a form, whether or not it has the focus. Named for what it does: it
+        /// delivers the CHARACTERS to that control's own window, it does not simulate key presses -- so the
+        /// caller never has to arrange focus first, and the control is verified enabled first.
+        ///
+        /// <para>The text is literal -- no key names and nothing to escape. To press a key, use
+        /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
+        /// needs neither the clipboard nor a keystroke.</para>
+        ///
+        /// <para>NOT for the Targets tree: <c>SequenceTree.OnKeyPress</c> forwards each character on with
+        /// <c>SendKeys.Send</c>, which posts to the FOCUSED window -- so the characters land in whatever
+        /// application is in front, arrive out of order, and leave the tree stuck editing a label.</para>
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it
+        /// (its visible label, or its Type for a caption-less control).</param>
+        /// <param name="text">The text to type, taken literally.</param>
+        ActionResult SendText(string formId, string controlId, string text);
+
+        /// <summary>
+        /// Presses one key on a control, whether or not it has the focus -- e.g. to accept or step through the
+        /// auto-completion popup <see cref="SendKeys"/> raises. The keystroke is atomic (there is no way to
+        /// leave a key down), and the control is verified enabled first.
+        ///
+        /// <para>This raises the control's KeyDown with the named key and modifiers, which is where a WinForms
+        /// handler reads a keystroke from. A key handled by the control's DEFAULT behavior rather than by a
+        /// handler -- Backspace editing a text box, an arrow moving a plain list's selection -- will NOT take
+        /// effect through this.</para>
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control to press the key on, matched as <see cref="GetControls"/>
+        /// reports it.</param>
+        /// <param name="keyStroke">The key with any modifiers, '+'-separated and in any order, e.g.
+        /// <c>"Down"</c>, <c>"Enter"</c>, <c>"Ctrl+V"</c>, <c>"Ctrl+Shift+Home"</c>.</param>
+        ActionResult SendKeyStroke(string formId, string controlId, string keyStroke);
 
         /// <summary>
         /// Captures a screenshot of any open form as a PNG image. Returns the file path.

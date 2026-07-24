@@ -307,8 +307,11 @@ namespace pwiz.SkylineTestFunctional
             string[][] items = null;
             RunUI(() =>
             {
-                pane.HandleMouseMoveEvent(pane.GraphSummary.GraphControl, mouseEventArgs);
-                pane.HandleMouseClick(pane.GraphSummary.GraphControl, mouseEventArgs);
+                // Drive the real ZedGraph handlers, as a user click does, rather than
+                // calling the pane's handlers directly (same path as ClickGraph).
+                var graphControl = pane.GraphSummary.GraphControl;
+                graphControl.SimulateMouseMove(mouseEventArgs);
+                graphControl.SimulateMouseClick(mouseEventArgs);
             });
 
             var form = WaitForOpenForm<FindResultsForm>();
