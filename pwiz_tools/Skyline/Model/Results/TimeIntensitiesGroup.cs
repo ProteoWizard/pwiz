@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Google.Protobuf;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.ProtoBuf;
@@ -49,6 +50,11 @@ namespace pwiz.Skyline.Model.Results
         public bool HasMassErrors
         {
             get { return TransitionTimeIntensities.Any(timeIntensities => null != timeIntensities.MassErrors); }
+        }
+
+        public bool HasObservedIonMobilities
+        {
+            get { return TransitionTimeIntensities.Any(timeIntensities => null != timeIntensities.ObservedIonMobilities); }
         }
 
         public bool HasAnyPoints
@@ -184,7 +190,20 @@ namespace pwiz.Skyline.Model.Results
                 {
                     continue;
                 }
-                WriteMassErrors(stream, timeIntensities.MassErrors);
+                WriteScaledShortErrors(stream, timeIntensities.MassErrors);
+            }
+            // Per-time-point observed IM values (absolute, raw IM units), written as floats
+            // after the mass-error section. Presence is gated by
+            // ChromGroupHeaderInfo.HasObservedIonMobilities (and, per transition, by the
+            // MissingObservedIonMobility flag - see ReadFromStream); a reader unaware of this
+            // section cannot simply skip it, it must honor those flags.
+            foreach (var timeIntensities in TransitionTimeIntensities)
+            {
+                if (timeIntensities.ObservedIonMobilities == null)
+                {
+                    continue;
+                }
+                PrimitiveArrays.Write(stream, timeIntensities.ObservedIonMobilities.ToArray());
             }
             var scanIdsByChromSource = ScanIdsByChromSource();
             foreach (var chromSource in PERSISTED_CHROM_SOURCES)
@@ -198,12 +217,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private static void WriteMassErrors(Stream stream, IList<float> values)
+        private static void WriteScaledShortErrors(Stream stream, IList<float> values)
         {
             PrimitiveArrays.Write(stream, values.Select(value => ChromPeak.To10x(value)).ToArray());
         }
 
-        private static float[] ReadMassErrors(Stream stream, int count)
+        private static float[] ReadScaledShortErrors(Stream stream, int count)
         {
             return PrimitiveArrays.Read<short>(stream, count).Select(value => value / 10f).ToArray();
         }
@@ -226,7 +245,23 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (int i = 0; i < numTrans; i++)
                 {
-                    transitionMassErrors[i] = ReadMassErrors(stream, numPoints);
+                    // Symmetric with WriteToStream, which skips transitions whose array is null.
+                    // The per-transition MissingMassErrors flag records exactly those skips, so a
+                    // mixed group (group flag set, but missing on some transitions - e.g. from a
+                    // cache merge) round-trips without desyncing the stream.
+                    if (chromTransitions[i].MissingMassErrors)
+                        continue;
+                    transitionMassErrors[i] = ReadScaledShortErrors(stream, numPoints);
+                }
+            }
+            IList<float>[] transitionObservedIonMobilities = new IList<float>[numTrans];
+            if (chromGroupHeaderInfo.HasObservedIonMobilities)
+            {
+                for (int i = 0; i < numTrans; i++)
+                {
+                    if (chromTransitions[i].MissingObservedIonMobility)
+                        continue;
+                    transitionObservedIonMobilities[i] = PrimitiveArrays.Read<float>(stream, numPoints);
                 }
             }
             if (chromGroupHeaderInfo.HasFragmentScanIds)
@@ -248,7 +283,7 @@ namespace pwiz.Skyline.Model.Results
                 int[] transitionScanIds;
                 scanIds.TryGetValue(chromSource, out transitionScanIds);
 
-                var timeIntensities = new TimeIntensities(sharedTimes, transitionIntensities[i], transitionMassErrors[i], transitionScanIds);
+                var timeIntensities = new TimeIntensities(sharedTimes, transitionIntensities[i], transitionMassErrors[i], transitionScanIds, transitionObservedIonMobilities[i]);
                 listOfTimeIntensities.Add(timeIntensities);
             }
             return new InterpolatedTimeIntensities(listOfTimeIntensities, chromTransitions.Select(chromTransition=>chromTransition.Source));
@@ -276,10 +311,11 @@ namespace pwiz.Skyline.Model.Results
 
     public class RawTimeIntensities : TimeIntensitiesGroup
     {
-        public RawTimeIntensities(IEnumerable<TimeIntensities> transitionTimeIntensities, InterpolationParams interpolationParams)
+        public RawTimeIntensities(IEnumerable<TimeIntensities> transitionTimeIntensities, InterpolationParams interpolationParams, int observedIonMobilityScale)
             : base(transitionTimeIntensities)
         {
             InterpolationParams = interpolationParams;
+            ObservedIonMobilityScale = observedIonMobilityScale;
         }
 
         public TimeIntervals TimeIntervals { get; private set; }
@@ -290,6 +326,67 @@ namespace pwiz.Skyline.Model.Results
         }
         public InterpolationParams InterpolationParams { get; private set; }
         public bool InferZeroes { get { return InterpolationParams != null && InterpolationParams.InferZeroes; } }
+
+        /// <summary>
+        /// Multiplier used to encode per-time-point ObservedIonMobilities as scaled integers in the
+        /// protobuf wire format. Picked once per group from the source IM units (see
+        /// <see cref="GetObservedIonMobilityScale"/>). Zero when no IM data is being carried.
+        /// </summary>
+        public int ObservedIonMobilityScale { get; private set; }
+
+        /// <summary>
+        /// Maps an IM unit to the scaling factor used when encoding observed IM values as
+        /// integers in the cache. Scales are chosen so that 1/scale is well below instrument
+        /// resolution for the unit: 0.0001 for 1/K0 (instrument ~0.001-0.01), 0.01 ms for drift
+        /// time (instrument ~0.01-0.1 ms). Only inverse_K0 and drift_time_msec are tracked for
+        /// observed IM; reaching this helper with any other unit indicates a gating failure
+        /// upstream (FAIMS, SONAR, and no-IM data must be filtered out before encoding).
+        /// </summary>
+        public static int GetObservedIonMobilityScale(eIonMobilityUnits units)
+        {
+            switch (units)
+            {
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                    return 10000;
+                case eIonMobilityUnits.drift_time_msec:
+                    return 100;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units,
+                        @"Observed ion mobility is only tracked for 1/K0 and drift-time units.");
+            }
+        }
+
+        /// <summary>
+        /// Gate-friendly variant of <see cref="GetObservedIonMobilityScale"/>. Returns the
+        /// scale for tracked units and zero for everything else (FAIMS, SONAR, none, unknown).
+        /// Use this when sourcing the scale from a file whose IM units may or may not be
+        /// among the tracked set.
+        /// </summary>
+        public static int GetObservedIonMobilityScaleOrZero(eIonMobilityUnits units)
+        {
+            switch (units)
+            {
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                case eIonMobilityUnits.drift_time_msec:
+                    return GetObservedIonMobilityScale(units);
+                default:
+                    return 0;
+            }
+        }
+
+        /// <summary>
+        /// True for the ion mobility units we track an observed value for (drift time, 1/K0) -
+        /// equivalently, those with a non-zero storage scale. False for FAIMS (compensation_V),
+        /// Waters SONAR (waters_sonar, which uses IMS hardware to filter precursor m/z and is
+        /// not ion mobility), and none/unknown. Gating extraction on this (rather than only
+        /// excluding FAIMS) keeps the extraction gate and the cache scale from disagreeing, so
+        /// a tracked-but-unscalable unit can't slip through. Units come from the data file, so
+        /// this holds even when no IM&lt;-&gt;CCS converter is available (e.g. mzML).
+        /// </summary>
+        public static bool IsTrackedObservedIonMobilityUnit(eIonMobilityUnits units)
+        {
+            return GetObservedIonMobilityScaleOrZero(units) != 0;
+        }
         public InterpolatedTimeIntensities Interpolate(IEnumerable<ChromSource> chromSources)
         {
             var interpolatedTimes = GetInterpolatedTimes();
@@ -329,9 +426,15 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromatogram.MassErrors100X.AddRange(timeIntensities.MassErrors.Select(error=>(int) Math.Round(error * 100)));
                 }
+                if (null != timeIntensities.ObservedIonMobilities)
+                {
+                    chromatogram.ObservedIonMobilitiesScaled.AddRange(
+                        timeIntensities.ObservedIonMobilities.Select(im => (int)Math.Round(im * ObservedIonMobilityScale)));
+                }
                 chromatogram.ScanIdListIndex = scanIdLists.Add(timeIntensities.ScanIds);
                 chromatogramGroupData.Chromatograms.Add(chromatogram);
             }
+            chromatogramGroupData.ObservedIonMobilityScale = ObservedIonMobilityScale;
             if (InterpolationParams != null)
             {
                 chromatogramGroupData.InterpolatedStartTime = InterpolationParams.StartTime;
@@ -370,6 +473,7 @@ namespace pwiz.Skyline.Model.Results
             var timeLists = chromatogramGroupData.TimeLists.Select(timeList => ImmutableList.ValueOf(timeList.Times)).ToArray();
             var scanIdLists = chromatogramGroupData.ScanIdLists
                 .Select(scanIdList => ImmutableList.ValueOf(scanIdList.ScanIds)).ToArray();
+            int observedIonMobilityScale = chromatogramGroupData.ObservedIonMobilityScale;
             foreach (var chromatogram in chromatogramGroupData.Chromatograms)
             {
                 IEnumerable<float> massErrors = null;
@@ -381,10 +485,18 @@ namespace pwiz.Skyline.Model.Results
                 {
                     massErrors = chromatogram.MassErrorsDeprecated;
                 }
+                IEnumerable<float> observedIonMobilities = null;
+                // A zero scale means observed IM was never meaningfully encoded (dividing by it
+                // would yield NaN/Infinity); treat it as "no observed IM" rather than corrupt data.
+                if (chromatogram.ObservedIonMobilitiesScaled.Count > 0 && observedIonMobilityScale != 0)
+                {
+                    observedIonMobilities = chromatogram.ObservedIonMobilitiesScaled.Select(v => v / (float)observedIonMobilityScale);
+                }
                 var timeIntensities = new TimeIntensities(timeLists[chromatogram.TimeListIndex - 1],
                     chromatogram.Intensities,
                     massErrors,
-                    chromatogram.ScanIdListIndex == 0 ? null : scanIdLists[chromatogram.ScanIdListIndex - 1]);
+                    chromatogram.ScanIdListIndex == 0 ? null : scanIdLists[chromatogram.ScanIdListIndex - 1],
+                    observedIonMobilities);
                 timeIntensitiesList.Add(timeIntensities);
             }
             InterpolationParams interpolationParams;
@@ -397,7 +509,7 @@ namespace pwiz.Skyline.Model.Results
                 interpolationParams = new InterpolationParams(chromatogramGroupData.InterpolatedStartTime, chromatogramGroupData.InterpolatedEndTime, chromatogramGroupData.InterpolatedNumPoints, chromatogramGroupData.InterpolatedDelta)
                     .ChangeInferZeroes(chromatogramGroupData.InferZeroes);
             }
-            var rawTimeIntensities = new RawTimeIntensities(timeIntensitiesList, interpolationParams);
+            var rawTimeIntensities = new RawTimeIntensities(timeIntensitiesList, interpolationParams, observedIonMobilityScale);
             if (chromatogramGroupData.TimeIntervals != null)
             {
                 var startTimes = chromatogramGroupData.TimeIntervals.StartTimes;
@@ -447,7 +559,7 @@ namespace pwiz.Skyline.Model.Results
             }
             return new RawTimeIntensities(
                 TransitionTimeIntensities.Select(timeIntensities=>timeIntensities.Truncate(newStartTime, newEndTime)),
-                interpolationParams);
+                interpolationParams, ObservedIonMobilityScale);
         }
 
         public override TimeIntensitiesGroup RetainTransitionIndexes(ISet<int> transitionIndexes)
@@ -457,7 +569,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return EMPTY;
             }
-            return new RawTimeIntensities(newIndexes.Select(i => TransitionTimeIntensities[i]), InterpolationParams);
+            return new RawTimeIntensities(newIndexes.Select(i => TransitionTimeIntensities[i]), InterpolationParams, ObservedIonMobilityScale);
         }
 
         public override int NumInterpolatedPoints

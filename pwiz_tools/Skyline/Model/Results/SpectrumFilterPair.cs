@@ -224,6 +224,30 @@ namespace pwiz.Skyline.Model.Results
             float[] extractedIntensities = new float[targetCount];
             float[] massErrors = highAcc ? new float[targetCount] : null;
             double[] meanErrors = highAcc ? new double[targetCount] : null;
+            // Track the observed IM whenever we have a finite IM window that isn't
+            // FAIMS (CV is discrete and would not yield a meaningful centroid).
+            // For summed extraction we accumulate an intensity-weighted running mean
+            // of IM per target (the "center of gravity" of the mobilogram); for
+            // base-peak extraction we carry the IM at the strongest peak per target.
+            // Each channel records its own observed IM faithfully here - any
+            // cross-isotope abundance weighting happens later, at the group level.
+            // Only track true ion mobility units (drift time, 1/K0). FAIMS (compensation_V) and
+            // Waters SONAR (waters_sonar - m/z filtering on IMS hardware, not ion mobility) carry
+            // a populated IM window but no meaningful per-scan ion mobility to centroid, and have
+            // no storage scale - so excluding them here keeps the per-peak observed IM (computed
+            // in-memory) from surfacing a meaningless value in the Document Grid.
+            bool trackIonMobility = MinIonMobilityValue.HasValue &&
+                RawTimeIntensities.IsTrackedObservedIonMobilityUnit(IonMobilityInfo.IonMobility.Units);
+            float[] observedIonMobilities = trackIonMobility ? new float[targetCount] : null;
+            double[] meanIonMobilities = null;
+            double[] basePeakIonMobilities = null;
+            if (trackIonMobility)
+            {
+                if (Extractor == ChromExtractor.summed)
+                    meanIonMobilities = new double[targetCount];
+                else
+                    basePeakIonMobilities = new double[targetCount];
+            }
             bool[] hasScanWindowCoverage = null; // Lazily initialized when narrow scan windows are detected
 
             int spectrumCount = 0;
@@ -349,11 +373,16 @@ namespace pwiz.Skyline.Model.Results
                     
                     // TODO:(bspratt) for full frame diaPASEF MS2, try not sorting - make IM the initial binary search range (and deal with mz that rolls over)
 
-                    // Add the intensity values of all peaks that pass the filter
-                    var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz)
+                    // Add the intensity values of all peaks that pass the filter.
+                    // The running IM mean (for summed) and base-peak IM (for base_peak)
+                    // are loaded from / saved back to the per-target arrays each spectrum,
+                    // so they accumulate across spectra at this retention time.
+                    var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz, trackIonMobility)
                     {
                         TotalIntensity = extractedIntensities[targetIndex], // Start with the value from the previous spectrum, if any
-                        MeanMassError = highAcc ? meanErrors[targetIndex] : 0
+                        MeanMassError = highAcc ? meanErrors[targetIndex] : 0,
+                        MeanObservedIonMobility = meanIonMobilities != null ? meanIonMobilities[targetIndex] : 0,
+                        BasePeakIonMobility = basePeakIonMobilities != null ? basePeakIonMobilities[targetIndex] : 0
                     };
 
                     var isMs2DiaPasefWithoutPrecursorIM = spectrum.WindowGroup > 0 && !MinIonMobilityValue.HasValue;
@@ -380,13 +409,17 @@ namespace pwiz.Skyline.Model.Results
                                 continue;
                             }
                         }
-                        accumulator.AddPoint(mzArray[iNext], intensityArray[iNext]);
+                        accumulator.AddPoint(mzArray[iNext], intensityArray[iNext], im);
                     }
                     extractedIntensities[targetIndex] = (float) accumulator.TotalIntensity;
                     if (meanErrors != null)
                         meanErrors[targetIndex] = accumulator.MeanMassError;
+                    if (meanIonMobilities != null)
+                        meanIonMobilities[targetIndex] = accumulator.MeanObservedIonMobility;
+                    if (basePeakIonMobilities != null)
+                        basePeakIonMobilities[targetIndex] = accumulator.BasePeakIonMobility;
                 }
-                
+
             }
             if (spectrumCount == 0)
             {
@@ -396,6 +429,19 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (int i = 0; i < targetCount; i++)
                     massErrors[i] = (float)SequenceMassCalc.GetPpm(productFilters[i].TargetMz, meanErrors[i]);
+            }
+            if (observedIonMobilities != null)
+            {
+                // Each channel reports its own faithfully-measured observed IM: the
+                // intensity-weighted mean (center of gravity) for summed extraction,
+                // or the strongest-peak IM for base-peak extraction. Cross-isotope
+                // abundance weighting is applied later, at the group level.
+                var perTargetIonMobilities = meanIonMobilities ?? basePeakIonMobilities;
+                if (perTargetIonMobilities != null)
+                {
+                    for (int i = 0; i < targetCount; i++)
+                        observedIonMobilities[i] = (float)perTargetIonMobilities[i];
+                }
             }
 
             // If we summed across spectra of different retention times, scale per
@@ -415,7 +461,8 @@ namespace pwiz.Skyline.Model.Results
                 Id,
                 productFilters,
                 extractedIntensities,
-                massErrors);
+                massErrors,
+                observedIonMobilities);
             // Only set coverage if some targets were not covered (i.e. not all true)
             if (hasScanWindowCoverage != null && hasScanWindowCoverage.Any(c => !c))
                 result.HasScanWindowCoverage = hasScanWindowCoverage;

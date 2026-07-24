@@ -84,6 +84,9 @@ namespace pwiz.Skyline.Controls.Graphs
         // Cached master-pane client rect for the duration of a splitter drag — avoids
         // a CreateGraphics + CalcClientRect call on every MouseMove. Cleared on MouseUp.
         private RectangleF? _dragMasterClientRect;
+        // Cached minimum mobilogram pane width (px) needed to fit its X-axis title;
+        // depends only on font/title, not data, so computed once. See GetMinMobilogramPaneWidth.
+        private float? _minMobilogramPaneWidth;
         private bool IsStickPlotVisible => _stickSpectrumPane != null;
         private bool IsMobilogramPaneVisible => _mobilogramPane != null;
         private double _maxMz;
@@ -348,6 +351,50 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// Minimum width (px) the mobilogram pane needs so its centered X-axis ("Intensity")
+        /// title isn't clipped: the measured title text plus the same left margin and Y-axis
+        /// reserve the chart is inset by (see <see cref="AlignMobilogramChartToHeatmap"/>).
+        /// Cached — depends on the font and title, not the data.
+        /// </summary>
+        private float GetMinMobilogramPaneWidth()
+        {
+            if (_minMobilogramPaneWidth.HasValue)
+                return _minMobilogramPaneWidth.Value;
+            if (_mobilogramPane == null)
+                return 0;
+            using (var g = graphControl.CreateGraphics())
+            {
+                float scale = _mobilogramPane.CalcScaleFactor();
+                // ZedGraph centers the X-axis title under the chart and may append a magnitude
+                // suffix (e.g. " (10^5)"); allow for it so the title never overflows the chart.
+                string sample = _mobilogramPane.XAxis.Title.Text + @" (10^00)";
+                float titleW = _mobilogramPane.XAxis.Title.FontSpec.MeasureString(g, sample, scale).Width;
+                _minMobilogramPaneWidth = titleW + _mobilogramPane.Margin.Left +
+                                          _mobilogramPane.YAxis.MinSpace + _mobilogramPane.Margin.Right;
+            }
+            return _minMobilogramPaneWidth.Value;
+        }
+
+        /// <summary>
+        /// The heatmap (right) column's share of the width, capped so the mobilogram (left)
+        /// keeps at least <see cref="GetMinMobilogramPaneWidth"/> for its X-axis title — the
+        /// "dynamic" floor that keeps the title from being clipped at narrow widths. All
+        /// layout paths read this (not <see cref="ColumnFraction"/> directly) so the floored
+        /// width and the re-pin check agree, avoiding a repaint loop. Never shrinks the
+        /// heatmap below <see cref="MIN_COL_FRACTION"/> (graceful in very narrow windows).
+        /// </summary>
+        private float EffectiveColumnFraction(float totalWidth)
+        {
+            float frac = ColumnFraction;
+            if (totalWidth > 0 && _mobilogramPane != null)
+            {
+                float maxRightFrac = 1f - GetMinMobilogramPaneWidth() / totalWidth;
+                frac = Math.Min(frac, Math.Max(MIN_COL_FRACTION, maxRightFrac));
+            }
+            return frac;
+        }
+
+        /// <summary>
         /// After MasterPane.DoLayout, override the per-pane Rects so the right column
         /// (stick + heatmap) occupies <see cref="ColumnFraction"/> of the total width
         /// and the left column (spacer + mobilogram) occupies the remainder. Likewise,
@@ -370,7 +417,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (totalW <= 0 || totalH <= 0)
                 return;
 
-            float rightFrac = ColumnFraction;
+            float rightFrac = EffectiveColumnFraction(totalW);
             float topFrac = RowFraction;
             float rightW = totalW * rightFrac;
             float leftW = totalW - rightW;
@@ -455,7 +502,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var mpRect = GetMasterPaneClientRect();
             if (mpRect.Width <= 0 || mpRect.Height <= 0)
                 return;
-            float rightFrac = ColumnFraction;
+            float rightFrac = EffectiveColumnFraction(mpRect.Width);
             float rightW = mpRect.Width * rightFrac;
             float leftW = mpRect.Width - rightW;
             _mobilogramPane.Rect = new RectangleF(mpRect.X, mpRect.Y, leftW, mpRect.Height);
@@ -476,7 +523,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var mpRect = GetMasterPaneClientRect(paintGraphics);
             if (mpRect.Width > 0 && mpRect.Height > 0)
             {
-                float expectedHeatmapW = mpRect.Width * ColumnFraction;
+                float expectedHeatmapW = mpRect.Width * EffectiveColumnFraction(mpRect.Width);
                 if (IsStickPlotVisible)
                 {
                     float expectedTopH = mpRect.Height * RowFraction;
@@ -1515,6 +1562,34 @@ namespace pwiz.Skyline.Controls.Graphs
                     };
                     GraphPane.GraphObjList.Add(centerLine);
                 }
+
+                // For IM data (not SONAR, where the Y-axis is precursor m/z), if the
+                // current target's peak in this replicate has an observed IM, draw a
+                // dotted line at that value. Paired with the dashed target-IM line
+                // above so the visible gap between them IS the IM error. The value
+                // matches what Document Grid shows on TransitionResult.ObservedIonMobility
+                // for the same peak - stable as the user scrubs scans inside the peak.
+                if (!isWatersSonarData)
+                {
+                    var observedIm = TryGetCurrentTargetChromInfo()?.ObservedIonMobility;
+                    if (observedIm.HasValue && observedIm.Value > 0)
+                    {
+                        var observedLine = new LineObj(
+                            Color.FromArgb(180, Color.DarkViolet),
+                            0.0, observedIm.Value, 1.0, observedIm.Value)
+                        {
+                            Location = { CoordinateFrame = CoordType.XChartFractionYScale },
+                            ZOrder = ZOrder.C_BehindChartBorder,
+                            IsClippedToChartRect = true,
+                            Line =
+                            {
+                                Style = System.Drawing.Drawing2D.DashStyle.Dot,
+                                Width = 1.5f
+                            }
+                        };
+                        GraphPane.GraphObjList.Add(observedLine);
+                    }
+                }
             }
 
             if (!Settings.Default.FilterIonMobilityFullScan)
@@ -1556,6 +1631,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         if(imAndCss.HasCollisionalCrossSection)
                             spectrumProperties.CCS = imAndCss.CollisionalCrossSectionSqA.Value.ToString(Formats.CCS);
                     }
+                    // Per-peak observed IM, observed CCS, and peak RT for the current
+                    // target in the active replicate - mirrors the dotted observed-line
+                    // tooltip and Document Grid's ObservedIonMobility/ObservedCcs columns.
+                    PopulateObservedAndPeakRtProperties(spectrumProperties, transition);
                 }
                 if (hasIonMobilityDimension)
                 {
@@ -3042,7 +3121,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            PopulateMobilogramPane(transitionCurves, filterMin, filterMax, filterPeak);
+            // Per-peak observed IM for the current target, matching what Document
+            // Grid shows. Only meaningful for IM data (not SONAR), and only when
+            // there's a real filter band.
+            double observedPeak = double.NaN;
+            if (!_msDataFileScanHelper.IsWatersSonarData && !double.IsNaN(filterMin))
+            {
+                var observedIm = TryGetCurrentTargetChromInfo()?.ObservedIonMobility;
+                if (observedIm.HasValue && observedIm.Value > 0)
+                    observedPeak = observedIm.Value;
+            }
+            PopulateMobilogramPane(transitionCurves, filterMin, filterMax, filterPeak, observedPeak);
         }
 
         private readonly struct MobilogramCurveSpec
@@ -3059,7 +3148,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void PopulateMobilogramPane(List<MobilogramCurveSpec> transitionCurves,
-            double filterMin, double filterMax, double filterPeak)
+            double filterMin, double filterMax, double filterPeak, double observedPeak)
         {
             if (_mobilogramPane == null)
                 return;
@@ -3155,6 +3244,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 peakLine.Line.Width = 1.5f;
                 peakLine.Line.Style = System.Drawing.Drawing2D.DashStyle.Dash;
                 _mobilogramPane.GraphObjList.Add(peakLine);
+            }
+
+            // Per-spectrum observed IM as a dotted horizontal line, paired with the
+            // dashed target line above so the gap between them visualizes the IM error.
+            // Dotted (not solid) keeps it distinct from the band's solid outline.
+            if (!double.IsNaN(observedPeak))
+            {
+                var observedLine = new LineObj(Color.FromArgb(180, Color.DarkViolet),
+                    0.0, observedPeak, 1.0, observedPeak)
+                {
+                    Location = { CoordinateFrame = CoordType.XChartFractionYScale },
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.A_InFront,
+                };
+                observedLine.Line.Width = 1.5f;
+                observedLine.Line.Style = System.Drawing.Drawing2D.DashStyle.Dot;
+                _mobilogramPane.GraphObjList.Add(observedLine);
             }
 
             using (var g = graphControl.CreateGraphics())
@@ -3363,7 +3469,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     prevPxY = curPxY;
                 }
             }
-            if (bestCurve == null) return null;
+            if (bestCurve == null)
+            {
+                // Same priority pattern as the heatmap tooltip: data points first, lines second.
+                return GetIonMobilityLineTooltipTable(pt, _mobilogramPane);
+            }
 
             var endpointX = bestCurve.Points[bestEndpointIdx].X;
             var endpointY = bestCurve.Points[bestEndpointIdx].Y;
@@ -3419,7 +3529,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var nearest = FindNearestHeatMapPoint(candidates, x, y, searchRadiusX, searchRadiusY);
             if (nearest == null)
-                return null;
+            {
+                // No data point under the cursor - fall through to the IM line check.
+                // Lower priority than data points so the user can hover unobstructed
+                // along whatever stretch of the line isn't covered by points.
+                return GetIonMobilityLineTooltipTable(pt, GraphPane);
+            }
 
             var rt = _cursorTip.RenderTools;
             string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
@@ -3428,6 +3543,230 @@ namespace pwiz.Skyline.Controls.Graphs
             table.AddDetailRow(yAxisLabel, nearest.Point.Y.ToString(GetHeatmapYAxisFormat()), rt);
             table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Intensity, nearest.Point.Z.ToString(@"F0"), rt);
             return table;
+        }
+
+        // Tooltip for the target / observed ion-mobility lines drawn in the IM band.
+        // Returns null when the cursor isn't near either line, or when this is SONAR
+        // data (where the Y-axis is precursor m/z, not IM, and the lines aren't drawn).
+        private TableDesc GetIonMobilityLineTooltipTable(PointF pt, GraphPane pane)
+        {
+            if (_msDataFileScanHelper == null || _msDataFileScanHelper.IsWatersSonarData)
+                return null;
+            var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
+            if (imFilter == null || !imFilter.HasIonMobilityValue)
+                return null;
+
+            const float maxDistPx = 10f;
+            float cursorYpx = pt.Y;
+            double targetIm = imFilter.IonMobility.Mobility.Value;
+            float targetYpx = pane.YAxis.Scale.Transform(targetIm);
+
+            // Per-peak chromInfo carries observed IM and peak RT. Null when no peak
+            // is picked / no IM tracked - in that case only the target line tooltip
+            // is available.
+            var currentChromInfo = TryGetCurrentTargetChromInfo();
+            double? observedIm = currentChromInfo?.ObservedIonMobility;
+            if (observedIm.HasValue && observedIm.Value <= 0)
+                observedIm = null;
+
+            // Pick whichever line the cursor is closer to, if either is within reach.
+            bool nearTarget = Math.Abs(cursorYpx - targetYpx) <= maxDistPx;
+            bool nearObserved = false;
+            float observedYpx = 0;
+            if (observedIm.HasValue)
+            {
+                observedYpx = pane.YAxis.Scale.Transform(observedIm.Value);
+                nearObserved = Math.Abs(cursorYpx - observedYpx) <= maxDistPx;
+            }
+            if (!nearTarget && !nearObserved)
+                return null;
+            bool useTarget = nearTarget && (!nearObserved ||
+                Math.Abs(cursorYpx - targetYpx) <= Math.Abs(cursorYpx - observedYpx));
+
+            var rt = _cursorTip.RenderTools;
+            var table = new TableDesc();
+            // Label the ion-mobility row with the same axis-style label the heatmap Y-axis uses
+            // (e.g. "Drift Time (ms)", "1/K0 (Vs/cm^2)") rather than the bare units string, so the
+            // tooltip matches the rest of the Full Scan view.
+            string imAxisLabel = IonMobilityFilter.IonMobilityUnitsL10NString(_msDataFileScanHelper.IonMobilityUnits);
+            if (useTarget)
+            {
+                // "Ion Mobility Filter" header, then labeled rows for IM, CCS, and
+                // (when available) the isolation window for this scan.
+                table.AddHeaderRow(GraphsResources.GraphFullScan_ToolTip_IonMobilityFilterHeader, rt);
+                table.AddDetailRow(imAxisLabel, targetIm.ToString(Formats.IonMobility), rt);
+                if (imFilter.CollisionalCrossSectionSqA.HasValue && imFilter.CollisionalCrossSectionSqA.Value != 0)
+                {
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
+                        imFilter.CollisionalCrossSectionSqA.Value.ToString(Formats.CCS), rt);
+                }
+                var isolationWindow = TryGetIsolationWindowString();
+                if (!string.IsNullOrEmpty(isolationWindow))
+                {
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_IsolationWindow,
+                        isolationWindow, rt);
+                }
+            }
+            else
+            {
+                // Three-row layout:
+                //   Observed at Peak (RT=15.3)              [bold, larger, full-width header]
+                //   1/K0 (Vs/cm^2)   0.949 (-0.21% error)
+                //   CCS              331.8 (-0.18% error)
+                // AddHeaderRow renders as a single full-width cell that doesn't
+                // participate in the per-column width calculation, so the long
+                // header text doesn't push the data rows' value column to the right.
+                string headerText = string.Format(
+                    GraphsResources.GraphFullScan_ToolTip_ObservedAtPeakHeaderFormat,
+                    currentChromInfo.RetentionTime.ToString(Formats.RETENTION_TIME));
+                table.AddHeaderRow(headerText, rt);
+
+                table.AddDetailRow(imAxisLabel,
+                    ObservedValueFormatter.FormatWithPercentError(observedIm.Value, targetIm, Formats.IonMobility), rt);
+
+                // CCS row when the active reader supports IM->CCS conversion and we have the
+                // precursor's charge. The % error is observed CCS vs the CCS we were told to
+                // filter on (library/explicit - ground truth, and the same value shown in the
+                // CCS row above and used by the Document Grid's CcsErrorPercent), not a
+                // converter re-derivation of the target IM. A zero target (we were given only
+                // IM, no CCS) renders the value without an error.
+                int? charge = TryGetCurrentPrecursorCharge();
+                var sp = _msDataFileScanHelper.ScanProvider;
+                if (charge.HasValue && sp != null && sp.ProvidesCollisionalCrossSectionConverter)
+                {
+                    double mz = _msDataFileScanHelper.CurrentTransition.PrecursorMz.Value;
+                    var observedCcs = sp.CCSFromIonMobility(observedIm.Value, mz, charge.Value);
+                    if (observedCcs.HasValue && observedCcs.Value > 0)
+                    {
+                        double targetCcsForError = imFilter.CollisionalCrossSectionSqA.GetValueOrDefault();
+                        table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
+                            ObservedValueFormatter.FormatWithPercentError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
+                    }
+                }
+
+                // Mobility-peak shape metrics from the on-screen mobilogram histogram: area under
+                // the curve, apex height, and FWHM. Single-peak assumption; omitted when the
+                // histogram has too few points to characterize a peak.
+                var peakMetrics = MobilogramPeakMetrics.Compute(
+                    _heatMapData?.PlotY2D?.Select(p => new KeyValuePair<double, double>(p.Key, p.Value)));
+                if (peakMetrics.HasValue)
+                {
+                    var pm = peakMetrics.Value;
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakArea,
+                        pm.Area.ToString(@"F0"), rt);
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakHeight,
+                        pm.Height.ToString(@"F0"), rt);
+                    if (pm.FullWidthHalfMax.HasValue)
+                        table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakFwhm,
+                            TextUtil.SpaceSeparate(pm.FullWidthHalfMax.Value.ToString(Formats.IonMobility),
+                                IonMobilityValue.GetUnitsString(_msDataFileScanHelper.IonMobilityUnits)), rt);
+                }
+            }
+            return table;
+        }
+
+        private int? TryGetCurrentPrecursorCharge()
+        {
+            var transition = _msDataFileScanHelper?.CurrentTransition;
+            if (transition?.Id == null || _documentContainer?.DocumentUI == null)
+                return null;
+            var nodePath = DocNodePath.GetNodePath(transition.Id, _documentContainer.DocumentUI);
+            return nodePath?.Precursor?.PrecursorCharge;
+        }
+
+        // Populates the per-peak observed IM/CCS and peak RT on the properties pane.
+        // Each value renders with its percent error inline (e.g., "1.534 (-0.2% error)")
+        // so the pane mirrors the observed-line tooltip and Document Grid columns.
+        private void PopulateObservedAndPeakRtProperties(FullScanProperties props, TransitionFullScanInfo transition)
+        {
+            var chromInfo = TryGetCurrentTargetChromInfo();
+            if (chromInfo == null)
+                return;
+            // Only show a peak RT when a peak was actually picked - an empty chrom info has RT 0,
+            // which would render a misleading "0" in the properties pane.
+            if (!chromInfo.IsEmpty)
+                props.PeakRetentionTime = chromInfo.RetentionTime.ToString(Formats.RETENTION_TIME);
+
+            var imFilter = transition.IonMobilityInfo;
+            double? targetIm = imFilter?.IonMobility?.Mobility;
+            if (chromInfo.ObservedIonMobility.HasValue && chromInfo.ObservedIonMobility.Value > 0)
+            {
+                var observedIm = chromInfo.ObservedIonMobility.Value;
+                string unitsLabel = IonMobilityValue.GetUnitsString(_msDataFileScanHelper.IonMobilityUnits);
+                string valueText = ObservedValueFormatter.FormatWithPercentError(observedIm,
+                    targetIm.GetValueOrDefault(), Formats.IonMobility);
+                props.ObservedIonMobility = TextUtil.SpaceSeparate(valueText, unitsLabel);
+
+                // Observed CCS is the per-peak value already stored on the chrom info (the same
+                // value the Document Grid shows - computed at cache build when the source had an
+                // IM->CCS converter, null otherwise), so no need to re-run the vendor conversion
+                // here. The % error is against the CCS we filtered on (library/explicit - ground
+                // truth).
+                if (chromInfo.ObservedCcs.HasValue && chromInfo.ObservedCcs.Value > 0)
+                {
+                    double targetCcsForError = chromInfo.IonMobility?.CollisionalCrossSectionSqA ?? 0;
+                    props.ObservedCCS = ObservedValueFormatter.FormatWithPercentError(chromInfo.ObservedCcs.Value, targetCcsForError, Formats.CCS);
+                }
+            }
+        }
+
+        // Isolation window formatted as "low:high (-windowLower:+windowUpper)" -
+        // matches the format used by FullScanProperties for the properties pane.
+        // Returns null when the spectrum doesn't carry isolation-window metadata.
+        private string TryGetIsolationWindowString()
+        {
+            var spectra = _msDataFileScanHelper?.MsDataSpectra;
+            if (spectra == null || spectra.Length == 0)
+                return null;
+            var precursor = spectra[0].Precursors.FirstOrDefault();
+            if (precursor.IsolationMz == null || precursor.IsolationWindowLower == null || precursor.IsolationWindowUpper == null)
+                return null;
+            return string.Format(@"{0}:{1} (-{2}:+{3})",
+                (precursor.IsolationMz - precursor.IsolationWindowLower).Value.RawValue.ToString(Formats.Mz),
+                (precursor.IsolationMz + precursor.IsolationWindowUpper).Value.RawValue.ToString(Formats.Mz),
+                precursor.IsolationWindowLower.Value.ToString(Formats.Mz),
+                precursor.IsolationWindowUpper.Value.ToString(Formats.Mz));
+        }
+
+        // TransitionChromInfo for the current target in the active replicate.
+        // Returns null when the transition is unknown, the replicate isn't loaded,
+        // or no chromInfo is found for the current file. Callers read out specific
+        // fields (e.g., ObservedIonMobility, RetentionTime).
+        private TransitionChromInfo TryGetCurrentTargetChromInfo()
+        {
+            var transition = _msDataFileScanHelper?.CurrentTransition;
+            var doc = _documentContainer?.DocumentUI;
+            var dataFilePath = _msDataFileScanHelper?.ScanProvider?.DataFilePath;
+            if (transition?.Id == null || doc == null || dataFilePath == null)
+                return null;
+            var measuredResults = doc.Settings.MeasuredResults;
+            if (measuredResults == null)
+                return null;
+            int replicateIdx = -1;
+            ChromatogramSet chromSet = null;
+            for (int i = 0; i < measuredResults.Chromatograms.Count; i++)
+            {
+                if (measuredResults.Chromatograms[i].ContainsFile(dataFilePath))
+                {
+                    chromSet = measuredResults.Chromatograms[i];
+                    replicateIdx = i;
+                    break;
+                }
+            }
+            if (chromSet == null)
+                return null;
+            var fileId = chromSet.FindFile(dataFilePath);
+            var nodePath = DocNodePath.GetNodePath(transition.Id, doc);
+            var transitionNode = nodePath?.Transition;
+            if (transitionNode?.Results == null || replicateIdx >= transitionNode.Results.Count)
+                return null;
+            var chromInfoList = transitionNode.Results[replicateIdx];
+            foreach (var chromInfo in chromInfoList)
+            {
+                if (chromInfo != null && ReferenceEquals(chromInfo.FileId, fileId))
+                    return chromInfo;
+            }
+            return null;
         }
 
         private TableDesc GetSpectrumTooltipTable(PointF pt, MSGraphPane spectrumPane = null)
@@ -3677,6 +4016,31 @@ namespace pwiz.Skyline.Controls.Graphs
             return table;
         }
 
+        /// <summary>
+        /// Stages the observed ion-mobility line tooltip (Measured IM / IM error %, plus Measured
+        /// CCS / CCS error % when the source supports IM-&gt;CCS conversion) as a visible, non-auto-
+        /// hiding tip for tutorial screenshots - the same content a user sees hovering the dotted
+        /// observed line on the heatmap. Returns false when there is no observed IM to show.
+        /// </summary>
+        public bool ShowObservedIonMobilityTooltipForScreenshot()
+        {
+            var pane = GraphPane;
+            var imFilter = _msDataFileScanHelper?.CurrentTransition?.IonMobilityInfo;
+            var observedIm = TryGetCurrentTargetChromInfo()?.ObservedIonMobility;
+            if (pane == null || imFilter == null || !imFilter.HasIonMobilityValue ||
+                !observedIm.HasValue || observedIm.Value <= 0)
+                return false;
+            // Anchor on the dotted observed-IM line: y is the IM value transformed to pixels,
+            // x a representative point across the chart.
+            var anchor = new PointF(pane.Chart.Rect.Left + pane.Chart.Rect.Width / 2f,
+                pane.YAxis.Scale.Transform(observedIm.Value));
+            var table = GetIonMobilityLineTooltipTable(anchor, pane);
+            if (table == null)
+                return false;
+            _cursorTip.ShowAt(new Point((int)anchor.X, (int)anchor.Y), table, true);
+            return true;
+        }
+
         // Heatmap/mobilogram Y-axis is ion mobility in the normal case, but precursor m/z for Waters SONAR data.
         private string GetHeatmapYAxisFormat() =>
             _msDataFileScanHelper.IsWatersSonarData ? Formats.Mz : Formats.IonMobility;
@@ -3886,5 +4250,30 @@ namespace pwiz.Skyline.Controls.Graphs
         public double RetentionTime { get; private set; }
         public Identity TransitionId { get; private set; }
         public int? OptStep { get; }
+    }
+
+    /// <summary>
+    /// Formats an observed value alongside its percent error vs a target (e.g. observed
+    /// ion mobility or CCS vs the library/explicit value), as shown in the Full Scan
+    /// observed-IM line tooltip and the properties pane. Extracted from
+    /// <see cref="GraphFullScan"/> so the formatting is unit-testable without the UI.
+    /// </summary>
+    public static class ObservedValueFormatter
+    {
+        /// <summary>
+        /// Returns "{value} ({pct}% error)" when <paramref name="target"/> is non-zero, or just
+        /// "{value}" when there is no target to compare against. The percent error uses
+        /// <see cref="Formats.PercentError"/> (2 decimals) so a small but real difference stays
+        /// visible rather than rounding to "0".
+        /// </summary>
+        public static string FormatWithPercentError(double value, double target, string valueFormat)
+        {
+            string valueText = value.ToString(valueFormat);
+            if (target == 0)
+                return valueText;
+            double pct = 100.0 * (value - target) / target;
+            return string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                valueText, pct.ToString(Formats.PercentError));
+        }
     }
 }

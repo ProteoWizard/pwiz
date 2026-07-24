@@ -86,6 +86,124 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalBackgroundFragment { get { return ChromInfo.BackgroundAreaFragment; } }
 
+        // Observed ion mobility / CCS of the ion. IM (and the CCS derived from it) is a
+        // property of the precursor ion, so it is surfaced once here rather than per
+        // isotope or per fragment. Observed IM prefers the MS1 isotope transitions
+        // (combined as a mean weighted by predicted isotope abundance, so an
+        // interference-inflated minor channel cannot inflate its own influence) and falls
+        // back to the fragment transitions for MS2-only acquisitions (each fragment
+        // corrected back to the precursor by removing its high-energy IM offset). Observed
+        // CCS is MS1-only, matching IonMobilityFinder: a fragment's stored CCS was computed
+        // from its offset IM and cannot be corrected back to the precursor here.
+        [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
+        public double? ObservedIonMobility
+        {
+            get { return AggregateObservedIonMobility(EnumerateObservedChannels()); }
+        }
+        [Format(Formats.CCS, NullValue = TextUtil.EXCEL_NA)]
+        public double? ObservedCcs
+        {
+            get { return WeightedMean(EnumerateObservedChannels().Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))); }
+        }
+        [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityErrorPercent
+        {
+            get { return PercentError(ObservedIonMobility, GetTargetIonMobilityFilter()?.IonMobility?.Mobility); }
+        }
+        [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
+        public double? CcsErrorPercent
+        {
+            get { return PercentError(ObservedCcs, GetTargetIonMobilityFilter()?.CollisionalCrossSectionSqA); }
+        }
+
+        private static double? PercentError(double? observed, double? target)
+        {
+            if (!observed.HasValue || !target.HasValue || target.Value == 0)
+                return null;
+            return 100.0 * (observed.Value - target.Value) / target.Value;
+        }
+
+        // One observed-IM contribution: an MS1 isotope channel (weighted by predicted
+        // abundance) or an MS2 fragment channel (weighted by area, carrying the fragment's
+        // high-energy IM offset from the precursor).
+        public readonly struct ObservedIonMobilityChannel
+        {
+            public ObservedIonMobilityChannel(bool isMs1, double? observedIonMobility, double? observedCcs, double weight, double highEnergyOffset)
+            {
+                IsMs1 = isMs1;
+                ObservedIonMobility = observedIonMobility;
+                ObservedCcs = observedCcs;
+                Weight = weight;
+                HighEnergyOffset = highEnergyOffset;
+            }
+            public bool IsMs1 { get; }
+            public double? ObservedIonMobility { get; }
+            public double? ObservedCcs { get; }
+            public double Weight { get; }
+            public double HighEnergyOffset { get; }
+        }
+
+        private IEnumerable<ObservedIonMobilityChannel> EnumerateObservedChannels()
+        {
+            var resultFile = GetResultFile();
+            foreach (var nodeTran in Precursor.DocNode.Transitions)
+            {
+                var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
+                if (chromInfo == null || chromInfo.IsEmpty)
+                    continue;
+                if (nodeTran.IsMs1)
+                {
+                    if (nodeTran.HasDistInfo)
+                        yield return new ObservedIonMobilityChannel(true, chromInfo.ObservedIonMobility,
+                            chromInfo.ObservedCcs, nodeTran.IsotopeDistInfo.Proportion, 0);
+                }
+                else
+                {
+                    double offset = chromInfo.IonMobility?.HighEnergyIonMobilityOffset ?? 0;
+                    yield return new ObservedIonMobilityChannel(false, chromInfo.ObservedIonMobility,
+                        chromInfo.ObservedCcs, chromInfo.Area, offset);
+                }
+            }
+        }
+
+        // The single per-ion observed IM: predicted-abundance-weighted mean over the MS1
+        // isotope channels, falling back to the intensity-weighted mean of the offset-
+        // corrected fragment channels when there are no MS1 channels (MS2-only data).
+        public static double? AggregateObservedIonMobility(IEnumerable<ObservedIonMobilityChannel> channels)
+        {
+            var list = channels as IList<ObservedIonMobilityChannel> ?? channels.ToList();
+            return WeightedMean(list.Where(c => c.IsMs1).Select(c => (c.ObservedIonMobility, c.Weight)))
+                   ?? WeightedMean(list.Where(c => !c.IsMs1)
+                       .Select(c => (c.ObservedIonMobility.HasValue ? c.ObservedIonMobility - c.HighEnergyOffset : (double?) null, c.Weight)));
+        }
+
+        private static double? WeightedMean(IEnumerable<(double? value, double weight)> items)
+        {
+            double weightedSum = 0, totalWeight = 0;
+            foreach (var (value, weight) in items)
+            {
+                if (!value.HasValue || weight <= 0)
+                    continue;
+                weightedSum += value.Value * weight;
+                totalWeight += weight;
+            }
+            return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
+        }
+
+        // Target ion mobility / CCS for the error denominators, from any transition that
+        // carries the precursor's IM filter (its base IM, offset aside, is the same for all).
+        private IonMobilityFilter GetTargetIonMobilityFilter()
+        {
+            var resultFile = GetResultFile();
+            foreach (var nodeTran in Precursor.DocNode.Transitions)
+            {
+                var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
+                if (chromInfo?.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility))
+                    return chromInfo.IonMobility;
+            }
+            return null;
+        }
+
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalAreaRatio
         {

@@ -282,6 +282,8 @@ namespace pwiz.Skyline.Model.Results
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
 
+        public override IIonMobilityFunctionsProvider IonMobilityFunctionsProvider => _filter.IonMobilityFunctionsProvider;
+
         private void ExtractionComplete()
         {
             if (_collectors != null)
@@ -1830,7 +1832,8 @@ namespace pwiz.Skyline.Model.Results
                 ChromCollector chromCollector;
                 if (!collector.ProductIntensityMap.TryGetValue(productFilter, out chromCollector))
                 {
-                    chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null);
+                    chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null,
+                        spectrum.ObservedIonMobilities != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
                     // (No-op when this collector owns its own times — see ChromCollector.FillZeroes.)
@@ -1853,7 +1856,8 @@ namespace pwiz.Skyline.Model.Results
                 chromCollector.AddPoint(chromIndex,
                     intensity,
                     spectrum.MassErrors != null ? spectrum.MassErrors[j] : (float?)null,
-                    _blockWriter);
+                    _blockWriter,
+                    spectrum.ObservedIonMobilities != null ? spectrum.ObservedIonMobilities[j] : (float?)null);
             }
 
             // Add data for chromatogram graph.

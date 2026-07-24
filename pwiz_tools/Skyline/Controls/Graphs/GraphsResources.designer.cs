@@ -1447,6 +1447,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_Ccs {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_Ccs", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Intensity.
         /// </summary>
         public static string GraphFullScan_ToolTip_Intensity {
@@ -1454,7 +1463,52 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("GraphFullScan_ToolTip_Intensity", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Filter.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_IonMobilityFilterHeader {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_IonMobilityFilterHeader", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Isolation Window.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_IsolationWindow {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_IsolationWindow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Mobility peak area.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_MobiloPeakArea {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_MobiloPeakArea", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Mobility peak FWHM.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_MobiloPeakFwhm {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_MobiloPeakFwhm", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Mobility peak height.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_MobiloPeakHeight {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_MobiloPeakHeight", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
@@ -1463,7 +1517,25 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("GraphFullScan_ToolTip_mz", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Observed at Peak (RT={0}).
+        /// </summary>
+        public static string GraphFullScan_ToolTip_ObservedAtPeakHeaderFormat {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_ObservedAtPeakHeaderFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} (error {1}%).
+        /// </summary>
+        public static string GraphFullScan_ToolTip_ObservedValueWithErrorFormat {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_ObservedValueWithErrorFormat", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Summed Intensity.
         /// </summary>
@@ -1472,7 +1544,8 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("GraphFullScan_ToolTip_Summed_Intensity", resourceCulture);
             }
         }
-        
+
+
         /// <summary>
         ///   Looks up a localized string similar to Transition.
         /// </summary>
