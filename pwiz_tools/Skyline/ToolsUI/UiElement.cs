@@ -2155,6 +2155,45 @@ namespace pwiz.Skyline.ToolsUI
         public static string NormalizeNewlines(string value) =>
             value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
 
+        // The graph rectangle a zoom_graph_to / click_graph value carries, in the graph's DATA coordinates. An
+        // in-process caller (a typed verb) passes the SkylineTool.Rectangle itself; over the wire it is the
+        // four-element JSON array [left, top, right, bottom] (a JArray, or that text through a string-valued
+        // parameter), the same shape set_current_cell_address uses for [column, row]. The order is the one the
+        // gesture reads: down at Left/Top, up at Right/Bottom.
+        public static SkylineTool.Rectangle ToRectangle(object value)
+        {
+            if (value is SkylineTool.Rectangle rectangle)
+                return rectangle;
+
+            var edges = new List<double>();
+            if (value is string text)
+            {
+                foreach (var part in text.Trim().Trim('[', ']').Split(','))
+                {
+                    if (!double.TryParse(part.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var edge))
+                    {
+                        edges.Clear();
+                        break;
+                    }
+                    edges.Add(edge);
+                }
+            }
+            else if (value is System.Collections.IEnumerable sequence)
+            {
+                foreach (var item in sequence)
+                    edges.Add(Convert.ToDouble(item, CultureInfo.InvariantCulture));
+            }
+            if (edges.Count == 4)
+            {
+                return new SkylineTool.Rectangle
+                {
+                    Left = edges[0], Top = edges[1], Right = edges[2], Bottom = edges[3]
+                };
+            }
+            throw new ArgumentException(new LlmInstruction(
+                @"This action needs a four-element [left, top, right, bottom] array of graph data coordinates. The gesture goes down at left/top and up at right/bottom, so equal corners are a single click."));
+        }
+
         // The [column, row] a set_current_cell_address value carries: a two-element integer array. An
         // in-process caller passes new[] { column, row }; over the wire it is the JSON array [column, row]
         // (a JArray, or the string "[column, row]" when sent through a string-valued parameter).

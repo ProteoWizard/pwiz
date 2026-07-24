@@ -350,6 +350,23 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddressNow(cell[0], cell[1]); return null; })
             .Describe(new LlmInstruction(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu)."), new LlmInstruction(@"a [column, row] array, e.g. [0, 1]"));
 
+        // The graph's own actions, on GraphElement the way the grid actions are on GridElement -- so a graph
+        // takes part in the same machinery as every other control: get_actions lists them, perform_action drives
+        // them, and a form with a single graph resolves them without the caller naming the control.
+        public static readonly UiFunction<SkylineTool.Rectangle> GetGraphZoom = SimpleFunction<GraphElement, SkylineTool.Rectangle>(
+                @"GetGraphZoom", e => e.GetZoom())
+            .Describe(new LlmInstruction(@"Get the region of DATA coordinates this graph is zoomed to, as [left, top, right, bottom] -- the coordinates zoom_graph_to and click_graph take. The bottom edge is the x-axis line, so a click below it falls below the axis."));
+
+        public static readonly UiAction ZoomGraphTo = SimpleAction<GraphElement, object>(
+                @"ZoomGraphTo", (e, bounds) => e.ZoomTo(UiValue.ToRectangle(bounds)))
+            .Describe(new LlmInstruction(@"Zoom this graph to a region of DATA coordinates. Returns the zoom actually applied, which the graph may clamp to the data range."),
+                new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates"));
+
+        public static readonly UiAction ClickGraph = SimpleAction<GraphElement, object>(
+                @"ClickGraph", (e, bounds) => { e.Click(UiValue.ToRectangle(bounds)); return null; })
+            .Describe(new LlmInstruction(@"Click or drag on this graph in DATA coordinates, reproducing a real mouse gesture: down at the left/top corner, up at the right/bottom one. Equal corners are a single click -- e.g. to select a data point. A rectangle whose y values fall below the x-axis drags a chromatogram peak boundary."),
+                new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates; make the two corners equal for a single click"));
+
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
                 @"Expand", (e, path) => { e.ExpandNow(path); return null; })
             .Describe(new LlmInstruction(@"Expand a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
@@ -387,7 +404,8 @@ namespace pwiz.Skyline.ToolsUI
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
-            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
+            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress,
+            GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
             Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
         };
 

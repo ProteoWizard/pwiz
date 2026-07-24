@@ -1099,19 +1099,27 @@ namespace pwiz.Skyline.ToolsUI
             return CallOnForm<StandaloneForm, ImageBytesMetadata>(formId, form => form.FindGraph().GetImageBytes());
         }
 
+        // The geometry verbs go through the graph's UiActions, so what each one MEANS lives in one place and is
+        // the same reached through a named verb or through perform_action. They resolve the graph with FindGraph
+        // rather than the action machinery's "the form's single element that supports this": a graph on a
+        // background dock tab reports its controls not-visible and so is absent from the control walk, and these
+        // verbs have always worked on a graph whichever tab it is on.
         public SkylineTool.Rectangle GetGraphZoom(string formId)
         {
-            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form => form.FindGraph().GetZoom());
+            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form =>
+                UiActions.GetGraphZoom.CallNow(form.FindGraph()));
         }
 
         public SkylineTool.Rectangle ZoomGraphTo(string formId, SkylineTool.Rectangle bounds)
         {
-            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form => form.FindGraph().ZoomTo(bounds));
+            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form =>
+                (SkylineTool.Rectangle) UiActions.ZoomGraphTo.InvokeNow(form.FindGraph(), bounds));
         }
 
         public ActionResult ClickGraph(string formId, SkylineTool.Rectangle bounds)
         {
-            return InvokeOnForm<StandaloneForm>(formId, form => form.FindGraph().Click(bounds));
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+                UiActions.ClickGraph.InvokeNow(form.FindGraph(), bounds));
         }
 
         // Both find the control the way set_value does (by the label/type GetControls reports). InvokeNow gates
