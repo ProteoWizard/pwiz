@@ -601,8 +601,12 @@ namespace TestRunner
                 {
                     var msg = receiver.ReceiveFrameString();
 
-                    // first check for a quit message 
-                    if (msg == "TestRunnerQuit")
+                    // the server has no test to hand out yet, but the run is not over - ask again
+                    if (msg == WORKER_WAIT_MESSAGE)
+                        return;
+
+                    // first check for a quit message
+                    if (msg == WORKER_QUIT_MESSAGE)
                     {
                         cts.Cancel();
                         return;
@@ -893,6 +897,24 @@ namespace TestRunner
         private const string PASS_0_LANGUAGE = "fr";
 
         /// <summary>
+        /// Told to a worker when the run is over and it should shut down.
+        /// </summary>
+        private const string WORKER_QUIT_MESSAGE = "TestRunnerQuit";
+
+        /// <summary>
+        /// Told to a worker when there is no test to give it yet but the run is not over, so that it
+        /// keeps asking instead of retiring. Needed because a worker only ever holds one test at a time
+        /// and queues its next one when that finishes, which leaves the queue briefly empty whenever the
+        /// workers between them hold every remaining test.
+        /// </summary>
+        private const string WORKER_WAIT_MESSAGE = "TestRunnerWait";
+
+        /// <summary>
+        /// How long to wait for an unresponsive worker to actually stop before releasing its test.
+        /// </summary>
+        private const int WORKER_KILL_TIMEOUT_MILLISECONDS = 30 * 1000;
+
+        /// <summary>
         /// One unit of queued work: everything still to be run for a single test/language pair.
         /// <para>
         /// There is exactly one of these per test/language pair, and it is either sitting in the queue
@@ -906,17 +928,63 @@ namespace TestRunner
         private class QueuedTestInfo
         {
             private readonly bool[] _passEnabled;
-            private readonly int _pass2LoopCount; // 0 means loop forever
+            private readonly int _repeatingPass;  // The pass that runs more than once, or -1 if none does
+            private readonly int _repeatCount;    // How many times it runs, 0 meaning forever
 
-            public QueuedTestInfo(TestInfo testInfo, string language, bool[] passEnabled, int loop, ICollection<string> languages)
+            public QueuedTestInfo(TestInfo testInfo, string language, bool[] passEnabled, int loop,
+                ICollection<string> languages, string pass1Language)
             {
                 TestInfo = testInfo;
                 Language = language;
-                // Pass 0 only ever runs in French, all other passes run in the requested languages
                 _passEnabled = passEnabled.Select((enabled, pass) =>
-                    enabled && (pass > 0 ? languages.Contains(language) : Equals(language, PASS_0_LANGUAGE))).ToArray();
-                _pass2LoopCount = loop; // Only pass 2 loops
+                    enabled && PassRunsInLanguage(pass, language, languages, pass1Language)).ToArray();
+
+                // Pass 2 is the pass that loops. With pass 2 disabled it is pass 1 that repeats, and only
+                // when looping indefinitely, which is how the sequential runner treats the leak pass.
+                if (IsEnabled(2))
+                {
+                    _repeatingPass = 2;
+                    _repeatCount = loop;
+                }
+                else if (IsEnabled(1) && loop <= 0)
+                {
+                    _repeatingPass = 1;
+                    _repeatCount = 0; // Forever
+                }
+                else
+                {
+                    _repeatingPass = -1;
+                    _repeatCount = 1;
+                }
+
                 Pass = Array.FindIndex(_passEnabled, enabled => enabled);
+            }
+
+            private bool IsEnabled(int pass)
+            {
+                return pass < _passEnabled.Length && _passEnabled[pass];
+            }
+
+            /// <summary>
+            /// Which languages a given pass gets queued for.
+            /// </summary>
+            private static bool PassRunsInLanguage(int pass, string language, ICollection<string> languages, string pass1Language)
+            {
+                switch (pass)
+                {
+                    case 0:
+                        // Pass 0 only ever runs in French, whether or not French was requested
+                        return Equals(language, PASS_0_LANGUAGE);
+                    case 1:
+                        // Pass 1 assigns the culture itself, cycling through all of them on every
+                        // iteration, so it neither needs nor honors a language of its own. Queue it once
+                        // per test, like the sequential runner does. Queueing it per language would run
+                        // the identical cycle over again for each one, and those runs would collide over
+                        // the tools directory, whose name follows the culture pass 1 switched to.
+                        return Equals(language, pass1Language);
+                    default:
+                        return languages.Contains(language);
+                }
             }
 
             public TestInfo TestInfo { get; }
@@ -939,8 +1007,7 @@ namespace TestRunner
                 if (!HasWork)
                     return false;
 
-                // Pass 2 is the only one that loops, either a fixed number of times or forever
-                if (Pass == 2 && (_pass2LoopCount == 0 || LoopCount + 1 < Math.Max(1, _pass2LoopCount)))
+                if (Pass == _repeatingPass && (_repeatCount == 0 || LoopCount + 1 < Math.Max(1, _repeatCount)))
                 {
                     ++LoopCount;
                     return true;
@@ -971,6 +1038,7 @@ namespace TestRunner
             var timer = new Stopwatch();
             int testsFailed = 0;
             int testsResultsReturned = 0;
+            int testsInFlight = 0; // Tests checked out by a worker; guarded by the testQueue lock
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
             int dockerWorkerCount = workerCount - 1;
             var dockerTimeoutSecondsOverride = Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_DOCKER_TIMEOUT_SEC");
@@ -1002,16 +1070,19 @@ namespace TestRunner
             // still has to run. Queueing those individually instead would let a fast worker start the
             // next iteration of a pair while another worker is still running the previous one, and the
             // two would collide over per-test state like the tools directory (issue 4447).
-            var queuedLanguages = languages.ToList();
+            // Distinct because language prefixes get canonicalized, so e.g. "en,en-US" would otherwise
+            // queue the same pair twice and let two workers run it at once
+            var queuedLanguages = languages.Distinct().ToList();
             if (passEnabled[0] && !queuedLanguages.Contains(PASS_0_LANGUAGE))
                 queuedLanguages.Add(PASS_0_LANGUAGE); // Pass 0 runs in French even if French was not requested
+            var pass1Language = languages.FirstOrDefault(); // Pass 1 gets queued just once per test
 
             foreach (var testInfo in testList)
             {
                 var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
                 foreach (var language in queuedLanguages)
                 {
-                    var queuedTestInfo = new QueuedTestInfo(testInfo, language, passEnabled, loop, languages);
+                    var queuedTestInfo = new QueuedTestInfo(testInfo, language, passEnabled, loop, languages, pass1Language);
                     if (queuedTestInfo.HasWork) // e.g. French only gets queued for pass 0 if it was not requested
                         queue.Enqueue(queuedTestInfo);
                 }
@@ -1192,16 +1263,30 @@ namespace TestRunner
                                     return;
 
                                 QueuedTestInfo testInfo = null;
-                                if (isBigWorker)
-                                    nonParallelTestQueue.TryDequeue(out testInfo);
-                                if (testInfo == null)
-                                    testQueue.TryDequeue(out testInfo);
+                                bool runIsOver;
+                                lock (testQueue) // Check out a test and count it as in flight as one step
+                                {
+                                    if (isBigWorker)
+                                        nonParallelTestQueue.TryDequeue(out testInfo);
+                                    if (testInfo == null)
+                                        testQueue.TryDequeue(out testInfo);
+                                    if (testInfo != null)
+                                        ++testsInFlight;
+                                    runIsOver = testInfo == null && testsInFlight == 0;
+                                }
 
                                 if (testInfo == null)
                                 {
-                                    // not done until all workers are done (in order to wait for possibled requeued tests)
-                                    //done = true;
-                                    workerSender.TrySendFrame("TestRunnerQuit");
+                                    if (!runIsOver)
+                                    {
+                                        // Some other worker still holds a test and will queue its next
+                                        // one when it finishes. Retiring this worker over a momentarily
+                                        // empty queue would shrink the pool for the rest of the run.
+                                        Thread.Sleep(500); // Enough that idle workers are not trading messages flat out
+                                        workerSender.TrySendFrame(TimeSpan.FromSeconds(5), WORKER_WAIT_MESSAGE);
+                                        continue;
+                                    }
+                                    workerSender.TrySendFrame(WORKER_QUIT_MESSAGE);
                                     workerInfo.IsAlive = false;
                                     return;
                                 }
@@ -1240,6 +1325,12 @@ namespace TestRunner
                                         Console.Error.WriteLine($"No result for test {workerInfo.CurrentTest}; requeuing...");
                                         (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                     }
+
+                                    // Only stop counting this test as in flight once it is either queued
+                                    // again or finished for good. Releasing it any earlier would leave a
+                                    // moment where it is in neither place, and a worker arriving then
+                                    // would conclude the run was over.
+                                    lock (testQueue) --testsInFlight;
                                 }
                             }
                         }
@@ -1257,6 +1348,38 @@ namespace TestRunner
                         }
                     }, TaskCreationOptions.LongRunning));
 
+                    // Make sure a worker really is stopped, so that a test it might still be running can
+                    // safely be given to someone else
+                    void StopWorker()
+                    {
+                        try
+                        {
+                            if (isBigWorker)
+                            {
+                                if (HostWorkerPid > 0)
+                                {
+                                    var hostWorkerProcess = Process.GetProcessById(HostWorkerPid);
+                                    hostWorkerProcess.Kill();
+                                    hostWorkerProcess.WaitForExit(WORKER_KILL_TIMEOUT_MILLISECONDS);
+                                }
+                            }
+                            else
+                            {
+                                var psi = new ProcessStartInfo(@"docker", $@"kill {workerName}")
+                                {
+                                    CreateNoWindow = true,
+                                    UseShellExecute = false
+                                };
+                                Process.Start(psi)?.WaitForExit(WORKER_KILL_TIMEOUT_MILLISECONDS);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            // Most likely it already exited on its own, which is the outcome we wanted
+                            Console.WriteLine($"Could not stop worker {workerName}: {e.Message}");
+                        }
+                    }
+
                     // start heartbeat for worker
                     void ListenForWorkerHeartbeat()
                     {
@@ -1268,11 +1391,24 @@ namespace TestRunner
                             {
                                 if (!workerHeartbeat.TryReceive(ref msg, TimeSpan.FromSeconds(5)))
                                 {
-                                    workerInfo.IsAlive = false;
-
-                                    if (testQueue.IsEmpty || cts.IsCancellationRequested)
+                                    bool nothingOutstanding;
+                                    lock (testQueue)
+                                        nothingOutstanding = testQueue.IsEmpty && nonParallelTestQueue.IsEmpty && testsInFlight == 0;
+                                    if (nothingOutstanding || cts.IsCancellationRequested)
+                                    {
+                                        workerInfo.IsAlive = false; // Workers stop answering as they shut down at the end of a run
                                         return;
+                                    }
+
                                     Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
+
+                                    // Stop it before marking it dead, because marking it dead is what
+                                    // releases its test back to the queue. A worker that missed a
+                                    // heartbeat is not necessarily finished with that test - it may just
+                                    // be starved - and handing the test to someone else while it is still
+                                    // running it puts two workers on the same test.
+                                    StopWorker();
+                                    workerInfo.IsAlive = false;
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
