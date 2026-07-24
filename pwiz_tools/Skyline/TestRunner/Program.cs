@@ -887,23 +887,67 @@ namespace TestRunner
             throw new Exception($"Worker {workerName} did not connect.");
         }
 
+        /// <summary>
+        /// Pass 0 checks an interesting collection of edge cases, and always does so in French.
+        /// </summary>
+        private const string PASS_0_LANGUAGE = "fr";
+
+        /// <summary>
+        /// One unit of queued work: everything still to be run for a single test/language pair.
+        /// <para>
+        /// There is exactly one of these per test/language pair, and it is either sitting in the queue
+        /// or checked out by exactly one worker - never both, and never duplicated. That is what keeps
+        /// two workers from running the same test in the same language at the same time, which would
+        /// have them sharing per-test state such as the tools directory (issue 4447). Rather than
+        /// pre-queueing every pass and loop iteration as its own entry, this walks its own schedule:
+        /// the worker returns a result, the entry advances one step, and only then is it queued again.
+        /// </para>
+        /// </summary>
         private class QueuedTestInfo
         {
-            public QueuedTestInfo(TestInfo testInfo, string language, int loopCount, int pass)
+            private readonly bool[] _passEnabled;
+            private readonly int _pass2LoopCount; // 0 means loop forever
+
+            public QueuedTestInfo(TestInfo testInfo, string language, bool[] passEnabled, int loop, ICollection<string> languages)
             {
                 TestInfo = testInfo;
                 Language = language;
-                LoopCount = loopCount;
-                Pass = pass;
+                // Pass 0 only ever runs in French, all other passes run in the requested languages
+                _passEnabled = passEnabled.Select((enabled, pass) =>
+                    enabled && (pass > 0 ? languages.Contains(language) : Equals(language, PASS_0_LANGUAGE))).ToArray();
+                _pass2LoopCount = loop; // Only pass 2 loops
+                Pass = Array.FindIndex(_passEnabled, enabled => enabled);
             }
+
             public TestInfo TestInfo { get; }
             public string Language { get; }
             public int LoopCount { get; private set; }
-            public int Pass { get; }
 
-            public void IncrementLoopCount()
+            /// <summary>
+            /// The pass to run next, or -1 when this test/language pair has nothing left to run.
+            /// </summary>
+            public int Pass { get; private set; }
+
+            public bool HasWork => Pass >= 0;
+
+            /// <summary>
+            /// Step to the next pass or loop iteration. Returns false when the schedule is exhausted,
+            /// meaning this entry should not be queued again.
+            /// </summary>
+            public bool TryAdvance()
             {
-                ++LoopCount;
+                if (!HasWork)
+                    return false;
+
+                // Pass 2 is the only one that loops, either a fixed number of times or forever
+                if (Pass == 2 && (_pass2LoopCount == 0 || LoopCount + 1 < Math.Max(1, _pass2LoopCount)))
+                {
+                    ++LoopCount;
+                    return true;
+                }
+
+                Pass = Array.FindIndex(_passEnabled, Pass + 1, enabled => enabled);
+                return HasWork;
             }
         }
 
@@ -954,22 +998,22 @@ namespace TestRunner
                 testLog.WriteLine(testOutput);
             };
 
-            for (int pass=0; pass < passEnabled.Length; ++pass)
-            {
-                if (!passEnabled[pass])
-                    continue;
+            // Queue one entry per test/language pair, each carrying every pass and loop iteration it
+            // still has to run. Queueing those individually instead would let a fast worker start the
+            // next iteration of a pair while another worker is still running the previous one, and the
+            // two would collide over per-test state like the tools directory (issue 4447).
+            var queuedLanguages = languages.ToList();
+            if (passEnabled[0] && !queuedLanguages.Contains(PASS_0_LANGUAGE))
+                queuedLanguages.Add(PASS_0_LANGUAGE); // Pass 0 runs in French even if French was not requested
 
-                // add tests to the queue (at least once, multiple times if loop > 1 and pass2)
-                int loopCount = pass == 2 ? Math.Max(1, loop) : 1;
-                var passLanguages = pass > 0 ? languages : new[] { "fr" };
-                for (int i = 0; i < loopCount; ++i)
+            foreach (var testInfo in testList)
+            {
+                var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
+                foreach (var language in queuedLanguages)
                 {
-                    foreach (var testInfo in testList)
-                    {
-                        var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
-                        foreach (var language in passLanguages)
-                            queue.Enqueue(new QueuedTestInfo(testInfo, language, i, pass));
-                    }
+                    var queuedTestInfo = new QueuedTestInfo(testInfo, language, passEnabled, loop, languages);
+                    if (queuedTestInfo.HasWork) // e.g. French only gets queued for pass 0 if it was not requested
+                        queue.Enqueue(queuedTestInfo);
                 }
             }
 
@@ -1180,11 +1224,11 @@ namespace TestRunner
                                     if (!testPassed)
                                         Interlocked.Increment(ref testsFailed);
                                     string testOutput = Encoding.UTF8.GetString(result, 1, result.Length - 1);
-                                    LogTestOutput(testOutput, log, testInfo.Pass + testInfo.LoopCount);
+                                    LogTestOutput(testOutput, log, testInfo.Pass + testInfo.LoopCount); // Report before advancing
                                     Interlocked.Increment(ref testsResultsReturned);
-                                    if (testInfo.Pass == 2)
-                                        testInfo.IncrementLoopCount();
-                                    if (loop == 0)
+                                    // Only now that this pair's result is in can it go back in the queue,
+                                    // which is what keeps another worker from running it concurrently
+                                    if (testInfo.TryAdvance())
                                         (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                 }
                                 finally

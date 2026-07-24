@@ -500,7 +500,11 @@ namespace pwiz.SkylineTestUtil
 
         }
 
-        public bool IsParallelClient => TestContext.Properties.Contains("ParallelClientId");
+        /// <summary>
+        /// True when this test is being run by a parallel test client. This used to look for a
+        /// "ParallelClientId" property, which nothing ever sets, so it always returned false.
+        /// </summary>
+        public bool IsParallelClient => TestContext.Properties.Contains(RunTests.PARALLEL_TEST_PROPERTY);
 
         private void CleanupFiles()
         {

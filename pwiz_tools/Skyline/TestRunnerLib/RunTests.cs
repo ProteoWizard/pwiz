@@ -153,6 +153,13 @@ namespace TestRunnerLib
         public bool IsParallelClient { get; private set; }
         public string ParallelClientId { get; private set; }
 
+        /// <summary>
+        /// TestContext property whose mere presence marks this process as a parallel test client.
+        /// Shared so that the tests reading it cannot drift from the name written here - they silently
+        /// always read false when they do.
+        /// </summary>
+        public const string PARALLEL_TEST_PROPERTY = "ParallelTest";
+
         // dotMemory snapshot configuration - set DotMemoryWarmupRuns > 0 to enable
         // When running under dotMemory profiler, snapshots will be taken:
         //   1. After DotMemoryWarmupRuns iterations (always)
@@ -237,7 +244,7 @@ namespace TestRunnerLib
 
             if (isParallelClient)
             {
-                TestContext.Properties["ParallelTest"] = string.Empty; // Just the presence of the key is the flag
+                TestContext.Properties[PARALLEL_TEST_PROPERTY] = string.Empty; // Just the presence of the key is the flag
             }
 
             // Set Skyline state for unit testing.
