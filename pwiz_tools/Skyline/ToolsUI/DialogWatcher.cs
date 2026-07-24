@@ -344,22 +344,27 @@ namespace pwiz.Skyline.ToolsUI
             return null;
         }
 
-        /// <summary>Throws when an action did not complete because a dialog got in the way, NAMING that dialog.
+        /// <summary>Throws when an action did not complete because a dialog got in the way.
         ///
-        /// <para>The dialog's own message is whatever it shows, and that can be empty: a managed form's
-        /// DetailedMessage falls back to its caption, so a form with neither yields nothing, and a window caught
-        /// mid-teardown reads back blank. Throwing that alone produced an InvalidOperationException with NO message
-        /// -- which is exactly what an intermittent nightly failure leaves behind, and there is then no way to tell
-        /// which dialog was responsible. The FormId always identifies the window (it is "TypeName:Title"), so lead
-        /// with it and append the message only when there is one.</para></summary>
+        /// <para>The dialog's own message is what the caller wants: for a native box that is its BODY text, which
+        /// is what explains the stop -- so it is thrown as-is, and NOT prefixed with anything derived from the
+        /// caption (AlertWatchTest pins that distinction).</para>
+        ///
+        /// <para>But that message CAN be empty: a managed form's DetailedMessage falls back to its caption, so a
+        /// form with neither yields nothing, and a window caught mid-teardown reads back blank. Throwing that alone
+        /// produced an InvalidOperationException with NO message -- which is what an intermittent nightly failure
+        /// left behind, with no way to tell which dialog was responsible. Only in that case, fall back to the
+        /// FormId ("TypeName:Title"), which always identifies the window.</para></summary>
         public static void EnsureCompleted(ActionResult actionResult)
         {
             if (!actionResult.Completed)
             {
+                if (!string.IsNullOrEmpty(actionResult.Message))
+                    throw new InvalidOperationException(actionResult.Message);
+
                 throw new InvalidOperationException(LlmInstruction.Format(
-                    @"The operation did not complete because this dialog is open: {0}{1}",
-                    string.IsNullOrEmpty(actionResult.FormId) ? @"(unidentified window)" : actionResult.FormId,
-                    string.IsNullOrEmpty(actionResult.Message) ? string.Empty : @" -- " + actionResult.Message));
+                    @"The operation did not complete because this dialog is open: {0}",
+                    string.IsNullOrEmpty(actionResult.FormId) ? @"(unidentified window)" : actionResult.FormId));
             }
         }
     }
