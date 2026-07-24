@@ -98,12 +98,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
         public double? ObservedIonMobility
         {
-            get { return GetMs1WeightedMean(chromInfo => chromInfo.ObservedIonMobility) ?? GetMs2ObservedIonMobility(); }
+            get { return AggregateObservedIonMobility(EnumerateObservedChannels()); }
         }
         [Format(Formats.CCS, NullValue = TextUtil.EXCEL_NA)]
         public double? ObservedCcs
         {
-            get { return GetMs1WeightedMean(chromInfo => chromInfo.ObservedCcs); }
+            get { return WeightedMean(EnumerateObservedChannels().Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))); }
         }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? IonMobilityErrorPercent
@@ -123,49 +123,68 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return 100.0 * (observed.Value - target.Value) / target.Value;
         }
 
-        // Predicted-abundance-weighted mean of a per-transition observed value over the
-        // MS1 isotope transitions that carry a value.
-        private double? GetMs1WeightedMean(Func<TransitionChromInfo, double?> getValue)
+        // One observed-IM contribution: an MS1 isotope channel (weighted by predicted
+        // abundance) or an MS2 fragment channel (weighted by area, carrying the fragment's
+        // high-energy IM offset from the precursor).
+        public readonly struct ObservedIonMobilityChannel
         {
-            double weightedSum = 0, totalWeight = 0;
-            var resultFile = GetResultFile();
-            foreach (var nodeTran in Precursor.DocNode.Transitions)
+            public ObservedIonMobilityChannel(bool isMs1, double? observedIonMobility, double? observedCcs, double weight, double highEnergyOffset)
             {
-                if (!nodeTran.IsMs1 || !nodeTran.HasDistInfo)
-                    continue;
-                double weight = nodeTran.IsotopeDistInfo.Proportion;
-                if (weight <= 0)
-                    continue;
-                var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
-                var value = chromInfo == null ? (double?) null : getValue(chromInfo);
-                if (!value.HasValue)
-                    continue;
-                weightedSum += value.Value * weight;
-                totalWeight += weight;
+                IsMs1 = isMs1;
+                ObservedIonMobility = observedIonMobility;
+                ObservedCcs = observedCcs;
+                Weight = weight;
+                HighEnergyOffset = highEnergyOffset;
             }
-            return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
+            public bool IsMs1 { get; }
+            public double? ObservedIonMobility { get; }
+            public double? ObservedCcs { get; }
+            public double Weight { get; }
+            public double HighEnergyOffset { get; }
         }
 
-        // Fallback for MS2-only acquisitions: intensity-weighted mean of the fragment
-        // transitions' observed IM, each corrected back to the precursor by removing its
-        // high-energy offset (fragments fly at the precursor mobility plus that offset).
-        private double? GetMs2ObservedIonMobility()
+        private IEnumerable<ObservedIonMobilityChannel> EnumerateObservedChannels()
         {
-            double weightedSum = 0, totalWeight = 0;
             var resultFile = GetResultFile();
             foreach (var nodeTran in Precursor.DocNode.Transitions)
             {
-                if (nodeTran.IsMs1)
-                    continue;
                 var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
                 if (chromInfo == null || chromInfo.IsEmpty)
                     continue;
-                var observed = chromInfo.ObservedIonMobility;
-                double weight = chromInfo.Area;
-                if (!observed.HasValue || weight <= 0)
+                if (nodeTran.IsMs1)
+                {
+                    if (nodeTran.HasDistInfo)
+                        yield return new ObservedIonMobilityChannel(true, chromInfo.ObservedIonMobility,
+                            chromInfo.ObservedCcs, nodeTran.IsotopeDistInfo.Proportion, 0);
+                }
+                else
+                {
+                    double offset = chromInfo.IonMobility?.HighEnergyIonMobilityOffset ?? 0;
+                    yield return new ObservedIonMobilityChannel(false, chromInfo.ObservedIonMobility,
+                        chromInfo.ObservedCcs, chromInfo.Area, offset);
+                }
+            }
+        }
+
+        // The single per-ion observed IM: predicted-abundance-weighted mean over the MS1
+        // isotope channels, falling back to the intensity-weighted mean of the offset-
+        // corrected fragment channels when there are no MS1 channels (MS2-only data).
+        public static double? AggregateObservedIonMobility(IEnumerable<ObservedIonMobilityChannel> channels)
+        {
+            var list = channels as IList<ObservedIonMobilityChannel> ?? channels.ToList();
+            return WeightedMean(list.Where(c => c.IsMs1).Select(c => (c.ObservedIonMobility, c.Weight)))
+                   ?? WeightedMean(list.Where(c => !c.IsMs1)
+                       .Select(c => (c.ObservedIonMobility.HasValue ? c.ObservedIonMobility - c.HighEnergyOffset : (double?) null, c.Weight)));
+        }
+
+        private static double? WeightedMean(IEnumerable<(double? value, double weight)> items)
+        {
+            double weightedSum = 0, totalWeight = 0;
+            foreach (var (value, weight) in items)
+            {
+                if (!value.HasValue || weight <= 0)
                     continue;
-                double offset = chromInfo.IonMobility?.HighEnergyIonMobilityOffset ?? 0;
-                weightedSum += (observed.Value - offset) * weight;
+                weightedSum += value.Value * weight;
                 totalWeight += weight;
             }
             return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
