@@ -20,10 +20,8 @@
 
 using System;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Controls.Lists;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -31,22 +29,18 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Drives the ONE dialog Skyline shows on a thread of its own: the BackgroundThreadLongWaitDlg that
-    /// LongOperationRunner puts up for a big paste into a grid. It is the inverse of every other connector
-    /// scenario -- the work runs on the MAIN UI thread, which is therefore not pumping, while the dialog runs
-    /// its own message loop on its own thread. So the connector cannot reach it through the main window: it has
-    /// to enumerate the window off any thread and then marshal to THAT dialog's thread.
+    /// <see cref="LongOperationRunner"/> puts up for a long operation started on the UI thread. It is the inverse of
+    /// every other connector scenario -- the work runs on the MAIN UI thread, which is therefore not pumping, while
+    /// the dialog runs its own message loop on its own thread. So the connector cannot reach it through the main
+    /// window: it has to enumerate the window off any thread and then marshal to THAT dialog's thread.
     ///
-    /// <para>Cancelling is the whole point. The dialog is the only way to stop the paste, so a connector that
-    /// cannot drive it cannot stop a paste it started -- and the main window will not be free again until the
-    /// paste finishes.</para>
+    /// <para>Cancelling is the whole point. The dialog is the only way to stop the operation, so a connector that
+    /// cannot drive it cannot stop work it started -- and the main window will not be free again until that work
+    /// finishes.</para>
     /// </summary>
     [TestClass]
     public class McpConnectorBackgroundDialogTest : McpConnectorTest
     {
-        // Enough rows that the paste is still running when the connector gets to the dialog. The paste converts
-        // and validates every cell, so this takes seconds, not milliseconds.
-        private const int PROPERTY_COUNT = 50000;
-
         [TestMethod]
         public void TestMcpConnectorBackgroundDialog()
         {
@@ -57,49 +51,55 @@ namespace pwiz.SkylineTestFunctional
         {
             StartToolService();
 
-            var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
-            var listDesigner = ShowDialog<ListDesigner>(documentSettingsDlg.AddList);
-            RunUI(() => listDesigner.ListName = @"BigList");
+            // Signalled by the operation itself once it has SEEN the cancel, so the test can prove the work stopped
+            // because it was cancelled -- not merely that the dialog closed.
+            using (var workCancelled = new ManualResetEvent(false))
+            {
+                var runner = new LongOperationRunner
+                {
+                    ParentControl = SkylineWindow,
+                    JobTitle = @"Background dialog test operation"
+                };
 
-            var propertiesText = new StringBuilder();
-            for (int i = 0; i < PROPERTY_COUNT; i++)
-                propertiesText.Append(@"Property").Append(i).Append('\t').AppendLine(@"Text");
+                // Start it WITHOUT waiting: LongOperationRunner runs the work on the CALLING thread and puts only the
+                // dialog on a thread of its own, so this occupies the MAIN UI thread -- a blocking call here would
+                // leave no one to drive that dialog. The test thread goes on to drive it through the connector.
+                //
+                // The work is a plain wait rather than a real workload on purpose. What this test covers is the
+                // THREADING -- a dialog pumping on its own thread while the thread that started the work is wedged --
+                // and any actual work here would only add churn (an earlier version pasted 50,000 rows through a grid,
+                // which created ~100,000 short-lived editing-control windows per run and made the test both slow and a
+                // nightly heap-leak reporter, without testing anything more).
+                SkylineWindow.BeginInvoke((Action) (() => runner.Run(broker =>
+                {
+                    while (!broker.IsCanceled)
+                        Thread.Sleep(20);
+                    workCancelled.Set();
+                })));
 
-            // The paste is anchored at the current cell (it sets each cell through the grid's editing control, the
-            // way a user typing does, so a value entered in the new row commits and the grid grows).
-            var grid = listDesigner.ListPropertiesGrid;
-            RunUI(() => grid.CurrentCell = grid.Rows[0].Cells[0]);
+                // The dialog is a window like any other to the connector -- found by enumerating the top-level windows,
+                // which needs no thread at all, NOT by asking the main window (which is busy running the operation).
+                string dialogId = WaitForMcpConnectorForm(@"BackgroundThreadLongWaitDlg");
 
-            // Start it WITHOUT waiting: the paste occupies the MAIN UI thread (LongOperationRunner runs the work on
-            // the calling thread and puts only the dialog on a thread of its own), so a blocking call here would
-            // leave no one to drive that dialog. The test thread goes on to drive it through the connector.
-            listDesigner.BeginInvoke((Action) (() =>
-                DataGridViewPasteHandler.PasteText(grid, propertiesText.ToString())));
+                // Read it: this must land on the DIALOG's thread. The main window's thread is inside the operation and
+                // would never run the read.
+                var controls = McpConnector.GetControls(dialogId);
+                Assert.IsTrue(controls.Any(control => Equals(control.Path.Type, @"Button")),
+                    @"The background dialog's Cancel button was not read back.");
 
-            // The dialog is a window like any other to the connector -- found by enumerating the top-level windows,
-            // which needs no thread at all, NOT by asking the main window (which is busy pasting).
-            string dialogId = WaitForMcpConnectorForm(@"BackgroundThreadLongWaitDlg");
+                // Cancel it, which is the only way to stop the operation.
+                AssertComplete(McpConnector.DismissWithCancelButton(dialogId));
 
-            // Read it: this must land on the DIALOG's thread. The main window's thread is inside the paste and would
-            // never run the read.
-            var controls = McpConnector.GetControls(dialogId);
-            Assert.IsTrue(controls.Any(control => Equals(control.Path.Type, @"Button")),
-                @"The background dialog's Cancel button was not read back.");
+                // The operation SAW the cancel -- it did not just run to completion and look cancelled. Waited for off
+                // the test thread: the main thread is still inside the operation until it observes the cancel.
+                Assert.IsTrue(workCancelled.WaitOne(30 * 1000),
+                    @"The background operation was not cancelled.");
 
-            // Cancel it, which is the only way to stop the paste.
-            AssertComplete(McpConnector.DismissWithCancelButton(dialogId));
-
-            // The dialog is gone, which means the paste it was reporting on stopped -- and the main window's thread is
-            // free again, which is what lets these reads run at all. It stopped EARLY: the grid never got all the
-            // properties (nor did the paste run to the end and merely look cancelled).
-            WaitForConditionUI(() => !McpConnector.GetOpenForms()
-                .Any(form => Equals(form.Type, @"BackgroundThreadLongWaitDlg")));
-            RunUI(() => Assert.IsTrue(grid.RowCount < PROPERTY_COUNT,
-                string.Format(@"The paste was not cancelled: all {0} properties landed in the grid.", PROPERTY_COUNT)));
-
-            // The List Designer has no cancel button of its own (FormEx.CancelDialog would throw); just close it.
-            OkDialog(listDesigner, listDesigner.Close);
-            OkDialog(documentSettingsDlg, documentSettingsDlg.CancelDialog);
+                // The dialog is gone, which means the operation it was reporting on stopped -- and the main window's
+                // thread is free again, which is what lets this read run at all.
+                WaitForConditionUI(() => !McpConnector.GetOpenForms()
+                    .Any(form => Equals(form.Type, @"BackgroundThreadLongWaitDlg")));
+            }
         }
     }
 }
