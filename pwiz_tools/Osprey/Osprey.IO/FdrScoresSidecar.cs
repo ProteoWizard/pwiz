@@ -160,6 +160,41 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Read every record's (entry_id, raw SVM score) from a scores sidecar into flat
+        /// arrays, in file (write) order. entry_id is unique per file (one FdrEntry per
+        /// precursor per file), so callers can key by (file, entry_id). Used by
+        /// OSPREY_PASS2_QVALUE=transfer-compete to recompete over the FULL 1st-pass population
+        /// from the persisted scalars without re-reading features -- only the entry_id [0..4]
+        /// and score [4..12] fields are read; the trailing q-values are skipped.
+        /// </summary>
+        public static void ReadScalars(string path, out uint[] entryIds, out double[] scores)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                long len = fs.Length;
+                if (len < HeaderLength)
+                    throw new IOException(string.Format(
+                        "FdrScoresSidecar too short ({0} bytes): {1}", len, path));
+                int n = (int)((len - HeaderLength) / RecordLength);
+                entryIds = new uint[n];
+                scores = new double[n];
+                var header = new byte[HeaderLength];
+                if (!ReadFully(fs, header, HeaderLength))
+                    throw new IOException("FdrScoresSidecar header truncated: " + path);
+                var rec = new byte[RecordLength];
+                for (int i = 0; i < n; i++)
+                {
+                    if (!ReadFully(fs, rec, RecordLength))
+                        throw new IOException(string.Format(
+                            "FdrScoresSidecar truncated at record {0}: {1}", i, path));
+                    entryIds[i] = BitConverter.ToUInt32(rec, 0);
+                    scores[i] = BitConverter.ToDouble(rec, 4);
+                }
+            }
+        }
+
+        /// <summary>
         /// Write per-file FDR scores to <paramref name="path"/>. Stages
         /// through a sibling <c>.tmp</c> file in the same directory and
         /// renames into place; this avoids leaving a partially-written
