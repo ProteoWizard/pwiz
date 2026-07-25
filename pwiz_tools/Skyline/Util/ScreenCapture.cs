@@ -252,16 +252,16 @@ namespace pwiz.Skyline.Util
             var foreignRects = new List<Rectangle>();
             var scalingFactor = GetScalingFactor();
 
-            User32.EnumWindows((hWnd, lParam) =>
+            foreach (var hWnd in User32.EnumWindows()) // z-order, top to bottom
             {
                 if (!User32.IsWindowVisible(hWnd))
-                    return true; // continue enumeration
+                    continue;
 
                 User32.GetWindowThreadProcessId(hWnd, out uint windowPid);
 
-                // Check if we've reached our target window in z-order
+                // Stop once we reach our target window in z-order -- nothing below it can obscure the target.
                 if (windowPid == currentPid && hWnd == targetHandle)
-                    return false; // stop enumeration
+                    break;
 
                 var rect = new User32.RECT();
                 User32.GetWindowRect(hWnd, ref rect);
@@ -270,15 +270,13 @@ namespace pwiz.Skyline.Util
                 var intersection = Rectangle.Intersect(screenRect, windowRect);
 
                 if (intersection.IsEmpty)
-                    return true; // no overlap, skip
+                    continue; // no overlap, skip
 
                 if (windowPid == currentPid)
-                    return true; // skip Skyline-owned windows above target
+                    continue; // skip Skyline-owned windows above target
 
                 foreignRects.Add(intersection);
-
-                return true; // continue enumeration
-            }, IntPtr.Zero);
+            }
 
             return foreignRects;
         }
@@ -318,14 +316,15 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static PermissionResult EnsurePermission()
         {
-            // Capture MainWindow once. The pipe thread can reach this line
-            // before MainWindow is set (early startup) or after it has been
-            // cleared (shutdown), in which case we cannot show a prompt at all.
-            var mainWindow = Program.MainWindow;
-            if (mainWindow == null)
+            // The prompt needs a UI window to own and marshal it. Normally that is the main window,
+            // but while the StartPage is showing the main window does not exist yet, so fall back to
+            // it. The pipe thread can reach this line before either window exists (early startup) or
+            // after the main window has been cleared (shutdown), in which case we cannot prompt.
+            var ownerWindow = (Form)Program.MainWindow ?? Program.StartWindow;
+            if (ownerWindow == null)
                 return PermissionResult.unavailable;
 
-            Assume.IsTrue(mainWindow.InvokeRequired);
+            Assume.IsTrue(ownerWindow.InvokeRequired);
 
             if (Settings.Default.AllowMcpScreenCapture || _sessionPermissionGranted)
                 return PermissionResult.granted;
@@ -338,11 +337,11 @@ namespace pwiz.Skyline.Util
             if (Interlocked.CompareExchange(ref _promptPending, 1, 0) != 0)
                 return PermissionResult.pending;
 
-            // SafeBeginInvoke returns false if MainWindow has lost its handle
+            // SafeBeginInvoke returns false if the owner window has lost its handle
             // (e.g. Skyline is shutting down). Clear the gate and report
             // unavailable rather than pending so the LLM is not told to wait
             // on a dialog that will never open.
-            if (!CommonActionUtil.SafeBeginInvoke(mainWindow, ShowPermissionDialog))
+            if (!CommonActionUtil.SafeBeginInvoke(ownerWindow, ShowPermissionDialog))
             {
                 Interlocked.Exchange(ref _promptPending, 0);
                 return PermissionResult.unavailable;
@@ -356,7 +355,8 @@ namespace pwiz.Skyline.Util
             {
                 using (var dlg = new ScreenCapturePermissionDlg())
                 {
-                    if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
+                    var owner = (Form)Program.MainWindow ?? Program.StartWindow;
+                    if (dlg.ShowDialog(owner) == DialogResult.OK)
                     {
                         _sessionPermissionGranted = true;
                         if (dlg.DoNotAskAgain)

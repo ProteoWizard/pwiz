@@ -226,6 +226,9 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Accessibility">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
@@ -1093,6 +1096,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\StandaloneWindow.cs" />
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
@@ -1412,6 +1416,15 @@
     <Compile Include="ToolsUI\JsonToolServer.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
+    <Compile Include="ToolsUI\DialogWatcher.cs" />
+    <Compile Include="ToolsUI\UiElement.cs" />
+    <Compile Include="ToolsUI\NativeFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeControl.cs" />
+    <Compile Include="ToolsUI\UiActions.cs" />
+    <Compile Include="ToolsUI\NativeDialog.cs" />
+    <Compile Include="ToolsUI\NativeFolderBrowserDialog.cs" />
+    <Compile Include="ToolsUI\NativeOpenFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeSaveFileDialog.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
@@ -5427,6 +5440,7 @@
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
+    <Compile Include="Util\ILongWaitForm.cs" />
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
