@@ -81,10 +81,11 @@ namespace pwiz.SkylineTestFunctional
             var listDesigner = ShowDialog<ListDesigner>(documentSettingsDlg.AddList);
             RunUI(() => listDesigner.ListName = @"BigList");
 
+            // No JobTitle: it would become the dialog's caption, i.e. an unlocalized user-visible string, and the
+            // connector finds the dialog by type rather than by caption. Leaving it null keeps the default.
             var runner = new LongOperationRunner
             {
-                ParentControl = listDesigner,
-                JobTitle = @"Background dialog test operation"
+                ParentControl = listDesigner
             };
 
             try
