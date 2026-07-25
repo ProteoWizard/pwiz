@@ -131,20 +131,32 @@ namespace pwiz.Skyline.Util
 
         protected class BackgroundThreadLongWaitDlg : LongWaitDlg
         {
-            private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
-
             public BackgroundThreadLongWaitDlg()
             {
                 ShowInTaskbar = true;
             }
 
+            /// <summary>
+            /// Deliberately shows no taskbar progress, unlike every other <see cref="LongWaitDlg"/>.
+            ///
+            /// <para>This dialog runs its own message loop on a thread of its own, and that thread exits when the
+            /// dialog closes. Owning a <see cref="TaskbarProgress"/> here (which is what this used to do) therefore
+            /// creates the ITaskbarList3 COM object on a short-lived STA thread, and tearing that apartment down
+            /// leaks roughly 400 bytes of native heap every time -- measured as dead-linear over hundreds of
+            /// iterations, and NOT fixed by releasing the object first, because it is the apartment rather than the
+            /// reference that is at fault.</para>
+            ///
+            /// <para>The base implementation cannot be used instead: it drives the MAIN window's taskbar progress,
+            /// which would mean touching Program.MainWindow from this thread, and the main thread is blocked inside
+            /// the operation this dialog is reporting on -- that is the whole reason the dialog is on its own thread
+            /// -- so marshaling to it would deadlock.</para>
+            ///
+            /// <para>That leaves not showing it. This dialog only appears for the rare long operation started on the
+            /// UI thread, and a progress overlay on its taskbar button is cosmetic; the dialog itself still shows the
+            /// progress bar.</para>
+            /// </summary>
             protected override void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)
             {
-                _taskbarProgress.SetState(Handle, state);
-                if (percentComplete.HasValue)
-                {
-                    _taskbarProgress.SetValue(Handle, percentComplete.Value, 100);
-                }
             }
         }
     }
