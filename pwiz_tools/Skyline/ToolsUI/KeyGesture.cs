@@ -1,5 +1,5 @@
 /*
- * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
  *
