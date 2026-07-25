@@ -24,7 +24,6 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Test
 {
@@ -37,6 +36,19 @@ namespace pwiz.Osprey.Test
     /// coelution_score). Stage 6 reconciliation depends on this round-trip
     /// for cross-impl byte parity of the .scores.parquet cwt_candidates
     /// column.
+    ///
+    /// Scope: this class stays pure byte-array assertions, no parquet and no
+    /// disk. The codec's wiring INTO the cwt_candidates parquet column - per-row
+    /// list boundaries, ParquetIndex alignment, the null/empty blob
+    /// normalization, multi-row-group framing - is covered by
+    /// IOTest.TestCwtCandidatesRoundTripThroughParquet, which lives beside the
+    /// rest of the ParquetScoreCache coverage.
+    ///
+    /// Not covered anywhere at unit level: that the scoring loop actually
+    /// populates FdrEntry.CwtCandidates. PerFileScoringTask is not unit-testable
+    /// today, so that path is gated only by the committed regression golden - if
+    /// candidates stopped being written, Stage 6 planning would shift and the
+    /// golden would diverge.
     /// </summary>
     [TestClass]
     public class CwtCandidateCodecTest
@@ -170,109 +182,6 @@ namespace pwiz.Osprey.Test
             var decoded = CwtCandidateCodec.Decode(bytes);
             Assert.AreEqual(2, decoded.Count);
             Assert.AreEqual(7.0, decoded[1].ApexRt);
-        }
-
-        /// <summary>
-        /// Round-trip CWT candidates through the real parquet writer and
-        /// reader: write scored entries carrying known candidate lists,
-        /// then read them back with
-        /// <see cref="ParquetScoreCache.LoadCwtCandidatesFromParquet"/> and
-        /// assert every field survives bit-exactly and each row keeps its
-        /// own list. This gates the codec's wiring into the cwt_candidates
-        /// parquet column (the encode/decode pair plus the per-row list
-        /// boundaries) with no dependency on external run output, so it
-        /// runs everywhere the rest of the suite does.
-        /// </summary>
-        [TestMethod]
-        public void TestCwtCandidatesRoundTripThroughParquet()
-        {
-            string dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(),
-                @"osprey_cwt_parquet_" + System.Guid.NewGuid().ToString(@"N"));
-            System.IO.Directory.CreateDirectory(dir);
-            try
-            {
-                // Ids out of order so the write's canonical (entry_id, charge,
-                // scan_number) sort runs, and a deliberate mix of list lengths
-                // (two, zero, one) so a per-row boundary mismap surfaces as a
-                // count mismatch rather than a silent pass.
-                var entries = new List<FdrEntry>
-                {
-                    MakeEntry(3,
-                        NewCandidate(31.5, 31.0, 32.0, 1.5e6, 42.5, 8.25),
-                        // Boundary value that locks the byte-exact path through
-                        // BitConverter (the ryu/R formatter ambiguity from the
-                        // Stage 5 percolator dump).
-                        NewCandidate(0.097751617431640625, 0.5, 1.5, 1.0, 1.0, -1.5)),
-                    MakeEntry(1),
-                    MakeEntry(2, NewCandidate(20.25, 20.0, 20.5, 7.5e5, 13.0, 3.125)),
-                };
-
-                string path = System.IO.Path.Combine(dir, @"cwt.scores.parquet");
-                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML");
-
-                // Rows come back in the canonical entry_id order the write
-                // imposed: 1 (none), 2 (one), 3 (two).
-                var loaded = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
-                Assert.IsNotNull(loaded);
-                Assert.AreEqual(entries.Count, loaded.Count, @"row count");
-                Assert.AreEqual(0, loaded[0].Count, @"entry 1 candidate count");
-                Assert.AreEqual(1, loaded[1].Count, @"entry 2 candidate count");
-                Assert.AreEqual(2, loaded[2].Count, @"entry 3 candidate count");
-
-                AssertCandidateBitEqual(entries[2].CwtCandidates[0], loaded[1][0], @"entry2[0]");
-                AssertCandidateBitEqual(entries[0].CwtCandidates[0], loaded[2][0], @"entry3[0]");
-                AssertCandidateBitEqual(entries[0].CwtCandidates[1], loaded[2][1], @"entry3[1]");
-            }
-            finally
-            {
-                // Best-effort: a teardown throw (parquet handle still open on
-                // Windows) would replace the real assertion failure with an
-                // IOException. Matches the cleanup in IOTest.
-                try { System.IO.Directory.Delete(dir, true); }
-                catch (System.IO.IOException) { }
-            }
-        }
-
-        private static CwtCandidate NewCandidate(double apexRt, double startRt, double endRt,
-            double area, double snr, double coelutionScore)
-        {
-            return new CwtCandidate
-            {
-                ApexRt = apexRt,
-                StartRt = startRt,
-                EndRt = endRt,
-                Area = area,
-                Snr = snr,
-                CoelutionScore = coelutionScore,
-            };
-        }
-
-        private static FdrEntry MakeEntry(uint entryId, params CwtCandidate[] candidates)
-        {
-            return new FdrEntry
-            {
-                EntryId = entryId,
-                Charge = 2,
-                ScanNumber = entryId * 10,
-                ApexRt = entryId + 0.5,
-                StartRt = entryId + 0.1,
-                EndRt = entryId + 0.9,
-                ModifiedSequence = @"PEPTIDE" + entryId,
-                Features = new double[ParquetScoreCache.NUM_PIN_FEATURES],
-                CwtCandidates = new List<CwtCandidate>(candidates),
-            };
-        }
-
-        private static void AssertCandidateBitEqual(CwtCandidate expected, CwtCandidate actual,
-            string label)
-        {
-            AssertBitEqual(expected.ApexRt, actual.ApexRt, label + @" ApexRt");
-            AssertBitEqual(expected.StartRt, actual.StartRt, label + @" StartRt");
-            AssertBitEqual(expected.EndRt, actual.EndRt, label + @" EndRt");
-            AssertBitEqual(expected.Area, actual.Area, label + @" Area");
-            AssertBitEqual(expected.Snr, actual.Snr, label + @" Snr");
-            AssertBitEqual(expected.CoelutionScore, actual.CoelutionScore,
-                label + @" CoelutionScore");
         }
 
         private static void AssertBitEqual(double expected, double actual, string label)
