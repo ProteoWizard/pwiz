@@ -1495,8 +1495,9 @@ namespace pwiz.Osprey.Tasks
         {
             return config.ExpectReconciledInput ||
                    !OspreyEnvironment.UseFdrProjection ||
-                   config.FdrMethod != FdrMethod.Percolator ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+                   !config.FdrMethod.UsesPercolatorFramework() ||
+                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
+                   OspreyEnvironment.Pass2TransferQ;
         }
 
         /// <summary>
@@ -1557,7 +1558,7 @@ namespace pwiz.Osprey.Tasks
                 return null;
             string trigger =
                 config.ExpectReconciledInput ? @"the reconciled-input merge (HPC --task SecondPassFDR)"
-                : config.FdrMethod != FdrMethod.Percolator ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
+                : !config.FdrMethod.UsesPercolatorFramework() ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
                 : (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ? @"--fdrbench-pass 1"
                 : config.ModelDiagnostics ? @"--model-diagnostics on a full resume"
                 : @"this configuration";
@@ -1717,6 +1718,13 @@ namespace pwiz.Osprey.Tasks
 
             var context = new ScoringContext(config, fileName);
 
+            // Per-candidate rank-term capture (OSPREY_PICK_DUMP_CANDIDATES): attach a
+            // thread-safe collector the scorer appends to under the per-window Parallel.For.
+            // Flushed once below, after scoring, to a per-file TSV. Null (zero overhead) when
+            // the flag is unset.
+            if (OspreyEnvironment.PickDumpCandidates)
+                context.PickDump = new PickCandidateDump();
+
             // Load the per-file spectra as a STREAMING index over the .spectra.bin cache,
             // never materializing the full ~6 GB MS2 List<Spectrum>: Stages 1-4 (calibration
             // + scoring) stream each isolation window on demand. Segment 1/4 (read): the
@@ -1853,6 +1861,18 @@ namespace pwiz.Osprey.Tasks
             var scoredEntries = ScoreAndDeduplicate(
                 fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Per-candidate rank-term dump (OSPREY_PICK_DUMP_CANDIDATES): the parallel per-window
+            // scoring above accumulated one row per CWT candidate into context.PickDump; write it
+            // out now, once, next to the other per-file artifacts. No-op when the flag is unset.
+            if (context.PickDump != null)
+            {
+                string pickPath = Path.Combine(
+                    ArtifactPaths.ResolveOutputDir(inputFile),
+                    fileName + @".pick_candidates.tsv");
+                context.PickDump.Flush(pickPath);
+                ctx.LogInfo(string.Format(@"Wrote per-candidate pick dump to {0}", pickPath));
+            }
 
             // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
             // work targets. Here scoredEntries still hold every heavy per-entry array

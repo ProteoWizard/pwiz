@@ -71,7 +71,7 @@ namespace TestPerf
             // multi-injection import of Step 1.9 wants, one subfolder per replicate -- so nothing has to be copied
             // into place at run time, and the files the webinar ships but the tutorial never reads (the PRTC .raw
             // runs -- PRTC.sky has no results) are left out.
-            TestFilesZip = @"https://proteome.gs.washington.edu/~nicksh/test/Webinar22_DIAtoSRM.zip";
+            TestFilesZip = @"https://skyline.ms/tutorials/Webinar22_DIAtoSRM.zip";
 
             // The gas-phase fractionated runs are huge (~36 GB of .mzML); extract them once to a shared persistent
             // location and reuse them in place across runs rather than re-extracting every run. (The .elib is
@@ -312,7 +312,7 @@ namespace TestPerf
         {
             // Import Document opens the native Open dialog (a dialog), so it does not complete; resolve it from the
             // menu action's ActionResult, then accept it to import.
-            var importDlg = ResolveModal(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
+            var importDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem")));
             McpConnector.SetFormValue(importDlg, "FileName", GetTestPath("PRTC.sky"));
             McpConnector.DismissWithAcceptButton(importDlg);
@@ -427,7 +427,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
+            var saveDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
             McpConnector.DismissWithAcceptButton(saveDlg);
@@ -493,7 +493,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
+            var saveDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("SRM_targets.sky"));
             McpConnector.DismissWithAcceptButton(saveDlg);

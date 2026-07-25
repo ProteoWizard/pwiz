@@ -26,12 +26,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml.Serialization;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -73,6 +75,26 @@ namespace pwiz.SkylineTestFunctional
         private const string COL_TOTAL_AREA = @"TotalArea";
 
         protected override void DoTest()
+        {
+            // Everything is inside the try so that ANY failure gets the window dump, not just the one call that
+            // has been failing: the stray dialog could just as easily get in the way of a different verb.
+            try
+            {
+                DoTestWork();
+            }
+            catch (Exception)
+            {
+                // Written to the log and the original rethrown UNCHANGED, rather than wrapped. Wrapping would
+                // replace the type (so an assertion failure, a timeout and a hang report would all surface as
+                // InvalidOperationException) and would fold hwnds and a thread dump into the message, which
+                // RunTests uses together with the stack as the key it groups failures by -- making every
+                // occurrence unique. Logging the dump and rethrowing is what HangDetection already does.
+                Console.Out.WriteLine(DescribeWhatIsOnScreen());
+                throw;
+            }
+        }
+
+        private void DoTestWork()
         {
             OpenDocument(DOCUMENT_NAME);
 
@@ -116,6 +138,141 @@ namespace pwiz.SkylineTestFunctional
             TestUndoRedo(server);
             TestBlockedAndDisabledUIControls(server);
             TestClientReadsBoolResult(server);
+        }
+
+        // How long to leave a dialog alone before looking at it a second time. This test fails intermittently in
+        // nightly with "The operation did not complete because this dialog is open: Dialog:" -- the connector found
+        // a native window (class "#32770") whose caption was still EMPTY, which is why the id degenerates to
+        // "Dialog:" and says nothing about which dialog it was. The leading theory is that the window had been
+        // created but not yet populated, so waiting and looking again should show its text.
+        private const int DIALOG_SETTLE_MILLIS = 3000;
+
+        /// <summary>
+        /// Everything that might identify a dialog which got in the way: the windows that are open now, the same
+        /// list again after the window has had time to finish initializing, and the managed call stacks.
+        /// </summary>
+        private static string DescribeWhatIsOnScreen()
+        {
+            var sb = new StringBuilder();
+            // EVERY step is guarded on its own. This runs while the test is already failing, so anything that
+            // throws out of here would destroy the very failure it exists to explain -- and there is a real way
+            // for that to happen: HangDetection's watchdog interrupts the test thread, and the interrupt is
+            // delivered at the next blocking call, which is the sleep below.
+            Collect(sb, @"windows open at the moment of failure", () => AppendTopLevelWindows(sb));
+
+            // A dialog caught part way through initializing has no text yet, so look again once it has settled.
+            Collect(sb, string.Format(@"the same windows {0} ms later", DIALOG_SETTLE_MILLIS), () =>
+            {
+                Thread.Sleep(DIALOG_SETTLE_MILLIS);
+                AppendTopLevelWindows(sb);
+            });
+
+            // Shows whether a UI thread is parked in a modal loop (a message box, Form.ShowDialog, a shell common
+            // dialog) and what put it there -- which names the dialog even when its own window says nothing.
+            Collect(sb, @"managed call stacks", () => sb.AppendLine(GetCallStacks()));
+            return sb.ToString();
+        }
+
+        private static void Collect(StringBuilder sb, string heading, Action collect)
+        {
+            sb.AppendLine();
+            sb.AppendLine(string.Format(@"===== {0} =====", heading));
+            try
+            {
+                collect();
+            }
+            catch (Exception e)
+            {
+                sb.AppendLine(@"Could not collect this section: " + e);
+            }
+        }
+
+        // Reading the call stacks attaches ClrMD to this very process, which can block on locating the DAC or on
+        // walking a live runtime. Left unbounded it could turn a reported failure into a wedged test run, which
+        // costs a whole nightly pass -- so it gets its own background thread and a deadline, and the thread is a
+        // background one so a wedged attach cannot hold the process open.
+        private const int CALL_STACK_TIMEOUT_MILLIS = 30 * 1000;
+
+        private static string GetCallStacks()
+        {
+            string stacks = null;
+            var reader = new Thread(() =>
+            {
+                try
+                {
+                    stacks = TextUtil.LineSeparate(
+                        HangDetection.GetAllThreadsCallstacks(Process.GetCurrentProcess().Id));
+                }
+                catch (Exception e)
+                {
+                    stacks = @"Could not read the call stacks: " + e;
+                }
+            }) { IsBackground = true };
+            reader.Start();
+            return reader.Join(CALL_STACK_TIMEOUT_MILLIS)
+                ? stacks
+                : string.Format(@"Gave up reading the call stacks after {0} ms.", CALL_STACK_TIMEOUT_MILLIS);
+        }
+
+        private static void AppendTopLevelWindows(StringBuilder sb)
+        {
+            var processId = (uint) Process.GetCurrentProcess().Id;
+            int hidden = 0;
+            foreach (var hwnd in User32.EnumWindows())
+            {
+                uint windowProcessId;
+                var threadId = User32.GetWindowThreadProcessId(hwnd, out windowProcessId);
+                if (windowProcessId != processId)
+                    continue;
+
+                var className = User32.GetClassName(hwnd);
+                // WinForms leaves dozens of invisible tooltip, drop-down and message-only windows lying around, and
+                // listing them buries the one window that matters. The window being chased is known to have been
+                // visible -- DialogWatcher only reports a modal it found through IsModalDialogWindow, which
+                // requires IsWindowVisible -- so dropping the invisible ones cannot hide it. An invisible "#32770"
+                // is kept anyway, as cheap insurance against a dialog seen part way through being shown.
+                if (!User32.IsWindowVisible(hwnd) && !Equals(className, @"#32770"))
+                {
+                    hidden++;
+                    continue;
+                }
+
+                // GetWindowTextNoBlock rather than GetWindowText: the owning thread may be sitting in a modal loop,
+                // and a WM_GETTEXT send would park these diagnostics behind it.
+                var caption = User32.GetWindowTextNoBlock(hwnd);
+                var owner = User32.GetOwner(hwnd);
+                var ownerState = owner == IntPtr.Zero
+                    ? string.Empty
+                    : User32.IsWindowEnabled(owner)
+                        ? @" (owner enabled)"
+                        : @" (owner DISABLED, so this window is modal)";
+                var managed = Control.FromHandle(hwnd);
+                sb.AppendLine(string.Format(
+                    @"hwnd=0x{0:X} class={1} visible={2} enabled={3} thread={4} type={5} owner=0x{6:X}{7} caption='{8}'",
+                    hwnd.ToInt64(), className, User32.IsWindowVisible(hwnd), User32.IsWindowEnabled(hwnd),
+                    threadId, managed == null ? @"(native)" : managed.GetType().Name,
+                    owner.ToInt64(), ownerState, caption));
+
+                // For a native dialog the text a user would read lives in its CHILD windows, not its caption --
+                // which is exactly what the nightly failure is missing. Not restricted to "#32770":
+                // StandaloneWindow.NewStandaloneWindow wraps ANY non-managed top-level window as a NativeDialog,
+                // so the window reported as "Dialog:" need not carry the classic dialog class, and restricting
+                // this would leave the culprit as a single line with an empty caption -- no better than the
+                // failure itself. Anything unmanaged, or anything holding its owner disabled (the signature of a
+                // modal), gets its children dumped.
+                bool worthOpening = managed == null || (owner != IntPtr.Zero && !User32.IsWindowEnabled(owner));
+                if (!worthOpening)
+                    continue;
+                foreach (var child in User32.EnumChildWindows(hwnd))
+                {
+                    var childText = User32.GetWindowTextNoBlock(child);
+                    if (string.IsNullOrEmpty(childText))
+                        continue;
+                    sb.AppendLine(string.Format(@"    child id={0} class={1} text='{2}'",
+                        User32.GetDlgCtrlID(child), User32.GetClassName(child), childText));
+                }
+            }
+            sb.AppendLine(string.Format(@"({0} invisible non-dialog windows omitted)", hidden));
         }
 
         /// <summary>
