@@ -225,7 +225,11 @@ namespace pwiz.Osprey.Test
             }
             finally
             {
-                System.IO.Directory.Delete(dir, true);
+                // Best-effort: a teardown throw (parquet handle still open on
+                // Windows) would replace the real assertion failure with an
+                // IOException. Matches the cleanup in IOTest.
+                try { System.IO.Directory.Delete(dir, true); }
+                catch (System.IO.IOException) { }
             }
         }
 
