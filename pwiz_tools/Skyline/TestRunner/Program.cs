@@ -114,6 +114,24 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
+            // Every one of these shows the native common file dialog. In a Terminal Services (RDP)
+            // session -- the state nightly agents sit in -- Windows grows the process heap on each
+            // show, filling its shell caches. That growth SATURATES rather than leaking: a bare
+            // SaveFileDialog loop with no Skyline code in it starts near 16 KB/dialog and decays to
+            // ~2-4 KB by the 250th, with individual stretches giving memory back. Measured on these
+            // tests, the trailing deltas do settle -- they just need more runs than the default 24
+            // to get there, which is what these extra iterations buy: TestPrmMcpConnector sits right
+            // at the 20 KB threshold at 24 iterations (26.6 KB one run, 13.8 KB the next) and falls
+            // to -20.5 KB by 48. Muting the heap check instead would give up heap-leak detection for
+            // these tests entirely.
+            // x4 rather than the default x2 because the nightly machines are further up the curve
+            // than the box this was measured on: on 2026-07-23/24 they reported 26-71 KB for these
+            // tests where this machine reported 13-27 KB. Extra iterations are only CONSUMED when a
+            // test has not yet settled (the loop exits as soon as the trailing deltas pass), so a
+            // generous ceiling costs nothing on a machine that converges early.
+            {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
+            {"TestNativeMessageBox", new ExpandedLeakCheck(LeakCheckIterations * 4)},
+            {"TestPrmMcpConnector", new ExpandedLeakCheck(LeakCheckIterations * 4)},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
