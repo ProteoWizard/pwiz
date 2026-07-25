@@ -26,12 +26,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml.Serialization;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -74,6 +76,21 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Everything is inside the try so that ANY failure gets the window dump, not just the one call that
+            // has been failing: the stray dialog could just as easily get in the way of a different verb.
+            try
+            {
+                DoTestWork();
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(
+                    e.Message + Environment.NewLine + Environment.NewLine + DescribeWhatIsOnScreen(), e);
+            }
+        }
+
+        private void DoTestWork()
+        {
             OpenDocument(DOCUMENT_NAME);
 
             string testGuid = @"test-" + Guid.NewGuid();
@@ -115,6 +132,97 @@ namespace pwiz.SkylineTestFunctional
             TestUndoRedo(server);
             TestBlockedAndDisabledUIControls(server);
             TestClientReadsBoolResult(server);
+        }
+
+        // How long to leave a dialog alone before looking at it a second time. This test fails intermittently in
+        // nightly with "The operation did not complete because this dialog is open: Dialog:" -- the connector found
+        // a native window (class "#32770") whose caption was still EMPTY, which is why the id degenerates to
+        // "Dialog:" and says nothing about which dialog it was. The leading theory is that the window had been
+        // created but not yet populated, so waiting and looking again should show its text.
+        private const int DIALOG_SETTLE_MILLIS = 3000;
+
+        /// <summary>
+        /// Everything that might identify a dialog which got in the way: the windows that are open now, the same
+        /// list again after the window has had time to finish initializing, and the managed call stacks.
+        /// </summary>
+        private static string DescribeWhatIsOnScreen()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(@"===== windows open at the moment of failure =====");
+            AppendTopLevelWindows(sb);
+
+            sb.AppendLine();
+            sb.AppendLine(string.Format(@"===== the same windows {0} ms later =====", DIALOG_SETTLE_MILLIS));
+            Thread.Sleep(DIALOG_SETTLE_MILLIS);
+            AppendTopLevelWindows(sb);
+
+            // Shows whether a UI thread is parked in a modal loop (a message box, Form.ShowDialog, a shell common
+            // dialog) and what put it there -- which names the dialog even when its own window says nothing.
+            sb.AppendLine();
+            sb.AppendLine(@"===== managed call stacks =====");
+            try
+            {
+                foreach (var line in HangDetection.GetAllThreadsCallstacks(Process.GetCurrentProcess().Id))
+                    sb.AppendLine(line);
+            }
+            catch (Exception e)
+            {
+                sb.AppendLine(@"Could not read the call stacks: " + e);
+            }
+            return sb.ToString();
+        }
+
+        private static void AppendTopLevelWindows(StringBuilder sb)
+        {
+            var processId = (uint) Process.GetCurrentProcess().Id;
+            int hidden = 0;
+            foreach (var hwnd in User32.EnumWindows())
+            {
+                uint windowProcessId;
+                var threadId = User32.GetWindowThreadProcessId(hwnd, out windowProcessId);
+                if (windowProcessId != processId)
+                    continue;
+
+                var className = User32.GetClassName(hwnd);
+                // WinForms leaves dozens of invisible tooltip, drop-down and message-only windows lying around, and
+                // listing them buries the one window that matters. An invisible "#32770" is kept regardless: a
+                // dialog caught mid-initialization may not be visible yet, which is the case being chased here.
+                if (!User32.IsWindowVisible(hwnd) && !Equals(className, @"#32770"))
+                {
+                    hidden++;
+                    continue;
+                }
+
+                // GetWindowTextNoBlock rather than GetWindowText: the owning thread may be sitting in a modal loop,
+                // and a WM_GETTEXT send would park these diagnostics behind it.
+                var caption = User32.GetWindowTextNoBlock(hwnd);
+                var owner = User32.GetOwner(hwnd);
+                var ownerState = owner == IntPtr.Zero
+                    ? string.Empty
+                    : User32.IsWindowEnabled(owner)
+                        ? @" (owner enabled)"
+                        : @" (owner DISABLED, so this window is modal)";
+                var managed = Control.FromHandle(hwnd);
+                sb.AppendLine(string.Format(
+                    @"hwnd=0x{0:X} class={1} visible={2} enabled={3} thread={4} type={5} owner=0x{6:X}{7} caption='{8}'",
+                    hwnd.ToInt64(), className, User32.IsWindowVisible(hwnd), User32.IsWindowEnabled(hwnd),
+                    threadId, managed == null ? @"(native)" : managed.GetType().Name,
+                    owner.ToInt64(), ownerState, caption));
+
+                // For a native dialog the text a user would read lives in its CHILD windows, not its caption --
+                // which is exactly what the nightly failure is missing.
+                if (!Equals(className, @"#32770"))
+                    continue;
+                foreach (var child in User32.EnumChildWindows(hwnd))
+                {
+                    var childText = User32.GetWindowTextNoBlock(child);
+                    if (string.IsNullOrEmpty(childText))
+                        continue;
+                    sb.AppendLine(string.Format(@"    child id={0} class={1} text='{2}'",
+                        User32.GetDlgCtrlID(child), User32.GetClassName(child), childText));
+                }
+            }
+            sb.AppendLine(string.Format(@"({0} invisible non-dialog windows omitted)", hidden));
         }
 
         /// <summary>
