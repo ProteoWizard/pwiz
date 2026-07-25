@@ -51,6 +51,22 @@ the numbers are directly comparable to the `heap` column in a nightly log.
 - **Dead linear** (bytes/iter stays roughly constant, no plateau) — it is not free, and
   `bytes/iter x windows-per-run` should account for that test's nightly heap number.
 
+## It also dumps the loaded modules — which tests a competing explanation
+
+"Terminal Services session" is the leading explanation for the agent split, but it is not the only
+one that fits a persistent, time-independent, per-machine effect. A **global window hook**
+(`WH_CBT` and friends — installed by accessibility tools, screen-capture utilities, input-method
+editors, endpoint-security products) injects its DLL into every process that creates windows, and
+that DLL then runs on every window create/destroy. That would produce the same signature and calls
+for a completely different remedy: remove or exclude the offending software rather than change how
+nightly logs in.
+
+So the probe prints the loaded-module list, plus any modules **injected while the churn ran** (such
+a DLL usually arrives on the first window creation). Diff the list between a leaking agent and a
+clean one; anything present only on the leaking side is a suspect.
+
+On nicksh's machine: 56 modules at baseline, **none injected during the run**.
+
 ## Reference: a machine that does NOT report the leak
 
 nicksh's machine, 2026-07-25, `TerminalServerSession=False`, `SESSIONNAME=RDP-Tcp#0`,

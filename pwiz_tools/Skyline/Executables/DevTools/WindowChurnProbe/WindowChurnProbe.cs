@@ -51,6 +51,7 @@
 // of windows a test creates should account for that test's nightly heap number.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -156,6 +157,29 @@ namespace WindowChurnProbe
             }
         }
 
+        /// <summary>
+        /// The DLLs currently loaded into this process. Worth capturing because a global hook
+        /// (WH_CBT and friends) injects its DLL into every process that creates windows -- an
+        /// accessibility tool, screen-capture utility, input-method or endpoint-security product --
+        /// and that DLL then runs on every window create/destroy. A module present on an agent that
+        /// leaks and absent on one that does not is a prime suspect, and is an entirely different
+        /// remedy from "it is a Terminal Services session". Sampled after the churn loop as well as
+        /// before it, because such a DLL is typically injected on the first window creation.
+        /// </summary>
+        private static SortedSet<string> LoadedModules()
+        {
+            var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var me = Process.GetCurrentProcess())
+            {
+                foreach (ProcessModule m in me.Modules)
+                {
+                    try { names.Add(m.ModuleName); }
+                    catch (Exception) { /* a module can vanish mid-enumeration */ }
+                }
+            }
+            return names;
+        }
+
         [STAThread]
         private static int Main(string[] args)
         {
@@ -178,8 +202,10 @@ namespace WindowChurnProbe
             for (int i = 0; i < 100; i++) { Application.DoEvents(); Thread.Sleep(2); }
             GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
 
+            var modulesBefore = LoadedModules();
             long baseline = CommittedBytes();
-            Console.WriteLine(@"mode={0} iterations={1} baseline={2:N0} bytes", mode, n, baseline);
+            Console.WriteLine(@"mode={0} iterations={1} baseline={2:N0} bytes modules={3}",
+                mode, n, baseline, modulesBefore.Count);
             Console.WriteLine(@"{0,10} {1,16} {2,14} {3,12}", @"iter", @"committed", @"delta", @"bytes/iter");
 
             var sw = Stopwatch.StartNew();
@@ -197,6 +223,16 @@ namespace WindowChurnProbe
             }
             sw.Stop();
             Console.WriteLine(@"elapsed {0:F1} s", sw.Elapsed.TotalSeconds);
+
+            // Modules injected while the churn ran -- the signature of a global window hook.
+            var modulesAfter = LoadedModules();
+            modulesAfter.ExceptWith(modulesBefore);
+            Console.WriteLine(@"modules injected during the run: {0}",
+                modulesAfter.Count == 0 ? @"(none)" : string.Join(@", ", modulesAfter));
+            Console.WriteLine();
+            Console.WriteLine(@"--- all loaded modules (diff this against a machine that behaves differently) ---");
+            foreach (var name in LoadedModules())
+                Console.WriteLine(name);
             return 0;
         }
     }
