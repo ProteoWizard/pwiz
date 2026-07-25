@@ -292,16 +292,12 @@ function Compare-DirFingerprint {
     return $changed
 }
 
-# Invalidate the Stage 5 join + blib so a re-run resumes (rehydrate paths fire)
-# rather than recomputing from spectra. Mirrors the proven repro from
+# Invoke-ResumeInvalidation (invalidate the Stage 5 join + blib so a re-run
+# resumes rather than recomputing from spectra) now lives in
+# Regression\RegressionData.ps1, dot-sourced above, so the ai-side
+# cumulative-coverage harness shares one definition instead of keeping a copy
+# that can drift. Mirrors the proven repro from
 # TODO-20260605_ospreysharp_resume_reconciled_rt.
-function Invoke-ResumeInvalidation {
-    param([string]$WorkDir)
-    Get-ChildItem -Path $WorkDir -File | Where-Object {
-        $_.Name -like '*.FirstPassFDR.osprey.task' -or
-        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
-    } | Remove-Item -Force
-}
 
 # --- mode 3: HPC 4-task worker chain ------------------------------------------
 # Low-level runner for a single --task phase: CWD = its own scratch dir so the
