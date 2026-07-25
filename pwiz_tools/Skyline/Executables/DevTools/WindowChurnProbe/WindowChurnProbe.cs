@@ -76,7 +76,7 @@ namespace WindowChurnProbe
         private struct PROCESS_HEAP_ENTRY
         {
             public IntPtr lpData;
-            public int cbData;
+            public uint cbData;         // as Win32 and TestRunnerLib RunTests.cs declare it
             public byte cbOverhead;
             public byte iRegionIndex;
             public short wFlags;
@@ -118,8 +118,10 @@ namespace WindowChurnProbe
             switch (mode)
             {
                 case "child":
-                    // What a DataGridView does for every cell it edits: create an editing control,
-                    // force its handle, then destroy it.
+                    // Roughly what a DataGridView does for every cell it edits: create an editing
+                    // control, force its handle, then destroy it. NOT an exact analogue -- a real
+                    // editing control is also shown, focused and pumped, so a flat result here is
+                    // weaker evidence than a dead-linear one.
                     using (var box = new TextBox())
                     {
                         _host.Controls.Add(box);

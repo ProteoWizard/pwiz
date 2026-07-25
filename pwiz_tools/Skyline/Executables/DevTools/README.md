@@ -29,3 +29,9 @@ to end users and are not included in the Skyline installer.
 ### Performance Testing
 - **ImportPerf** - benchmarks parallel chromatogram extraction throughput
 - **PeakComparison** - compares peak picking across tools (OpenSwath, PeakView, Spectronaut)
+
+### Diagnostics
+- **WindowChurnProbe** - measures whether creating and destroying Win32 windows leaks native
+  heap on a given machine, and dumps loaded and injected modules. Standalone `.cs` with no
+  project, compiled by hand (see its README); used to explain why only some nightly agents
+  report heap leaks

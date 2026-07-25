@@ -12,19 +12,27 @@ On 2026-07-24, four tests were reported leaking heap by nightly, and every other
 
 | test | heap KB/run (BRENDANX-UW7) | windows created per run |
 |---|---:|---|
-| `TestNativeMessageBox` | 171.6 | 3 native Save dialogs + 2 message boxes |
-| `TestMcpConnectorBackgroundDialog` | 126.5 | ~100,000 grid editing controls (before it was rewritten) |
+| `TestNativeMessageBox` | 171.6 | 2 native Save dialogs + 2 message boxes |
+| `TestMcpConnectorBackgroundDialog` | 126.5 | thousands of grid editing controls (before it was rewritten) |
 | `TestPrmMcpConnector` | 52.5 | 1 native file dialog |
-| `TestNativeFileDialog` | 41.8 | 1 native file dialog |
-| *ambient for an ordinary functional test* | *16–20* | |
+| `TestNativeFileDialog` | 41.8 | 3 native file dialogs |
 
 But on the same commit (`a09eea912`), **RITACH-DSK and KAIPOT-PC1 reported zero leaks**, and the
-two worst tests were flat there (−1.0 and −3.1 KB). Same code, opposite result, so the difference
-is environmental. The leading explanation is that window create/destroy leaks native heap in a
-**Terminal Services (remoted display) session**, and that the leaking tests are simply the ones
-that create an unusual number of windows.
+two worst tests were flat there (-1.0 and -3.1 KB). Same code, opposite result, so the difference
+is environmental. Over the preceding 60 days those two agents reported **zero** leaked tests across
+61 and 54 full nightly runs, while eleven other agents each reported 4 to 16 - including tests with
+nothing to do with the connector.
 
-This probe tests that claim directly.
+## What this probe can and cannot tell you
+
+It answers one narrow question: **is window create/destroy free on this machine?**
+
+It does **not** by itself establish that the four tests leak *because* of how many windows they
+create. The per-test numbers above do not scale cleanly with window count - `TestNativeMessageBox`
+creates a few hundred windows and leaks more than the old background-dialog test did with
+thousands - so different window kinds plainly cost very different amounts, and a simple
+"leak is proportional to windows" model is not supported. Treat window churn as one candidate
+mechanism to test, not as an established cause.
 
 ## Build and run
 
@@ -32,7 +40,7 @@ This probe tests that claim directly.
 csc.exe /platform:x64 /target:exe /out:WindowChurnProbe.exe ^
         /r:System.Windows.Forms.dll /r:System.Drawing.dll WindowChurnProbe.cs
 
-WindowChurnProbe.exe child  20000    REM child windows, as a grid editing control is
+WindowChurnProbe.exe child  20000    REM child windows, roughly as a grid editing control is
 WindowChurnProbe.exe form    2000    REM top-level forms
 WindowChurnProbe.exe dialog   300    REM modal dialogs
 WindowChurnProbe.exe idle   20000    REM control: no windows at all
@@ -42,20 +50,23 @@ It prints `TerminalServerSession`, `SESSIONNAME` and `MonitorCount` first, so th
 which kind of session produced it.
 
 Committed heap is measured exactly the way TestRunner measures it (`GetProcessHeaps` + `HeapWalk`,
-summing BUSY blocks — see `TestRunnerLib/RunTests.cs`, `MemoryManagement.GetProcessHeapSizes`), so
+summing BUSY blocks - see `TestRunnerLib/RunTests.cs`, `MemoryManagement.GetProcessHeapSizes`), so
 the numbers are directly comparable to the `heap` column in a nightly log.
 
 ## Reading the result
 
-- **Plateaus** (bytes/iter decays toward zero, delta stops rising) — window churn is free here.
-- **Dead linear** (bytes/iter stays roughly constant, no plateau) — it is not free, and
-  `bytes/iter x windows-per-run` should account for that test's nightly heap number.
+- **Plateaus** (bytes/iter decays toward zero, delta stops rising) - window churn is free here.
+- **Dead linear** (bytes/iter stays roughly constant, no plateau) - it is not free.
 
-## It also dumps the loaded modules — which tests a competing explanation
+Note that `child` mode is a weaker analogue than the other modes: the control it creates is never
+shown, focused or pumped, whereas a real DataGridView editing control is all three. A dead-linear
+`child` result is therefore strong evidence; a flat one is only suggestive.
+
+## It also dumps the loaded modules, which tests a competing explanation
 
 "Terminal Services session" is the leading explanation for the agent split, but it is not the only
 one that fits a persistent, time-independent, per-machine effect. A **global window hook**
-(`WH_CBT` and friends — installed by accessibility tools, screen-capture utilities, input-method
+(`WH_CBT` and friends - installed by accessibility tools, screen-capture utilities, input-method
 editors, endpoint-security products) injects its DLL into every process that creates windows, and
 that DLL then runs on every window create/destroy. That would produce the same signature and calls
 for a completely different remedy: remove or exclude the offending software rather than change how
@@ -65,22 +76,23 @@ So the probe prints the loaded-module list, plus any modules **injected while th
 a DLL usually arrives on the first window creation). Diff the list between a leaking agent and a
 clean one; anything present only on the leaking side is a suspect.
 
-On nicksh's machine: 56 modules at baseline, **none injected during the run**.
-
 ## Reference: a machine that does NOT report the leak
 
 nicksh's machine, 2026-07-25, `TerminalServerSession=False`, `SESSIONNAME=RDP-Tcp#0`,
-`MonitorCount=2` (note the mismatch — `TerminalServerSession` is not a reliable way to detect a
+`MonitorCount=2` (note the mismatch - `TerminalServerSession` is not a reliable way to detect a
 remoted session):
 
 | mode | iterations | final delta | shape |
 |---|---:|---:|---|
 | `idle` | 20,000 | 864 B | flat |
-| `child` | 20,000 | 591 KB | plateaus — 477 KB by iter 1,000, then oscillates 525–635 KB; bytes/iter 477 → 29.6 |
-| `form` | 2,000 | 44.7 KB | plateaus — constant from iter 1,800 |
-| `dialog` | 300 | 19.9 KB | plateaus — constant from iter 285 |
+| `child` | 20,000 | 591 KB | plateaus - 477 KB by iter 1,000, then oscillates 525-635 KB; bytes/iter 477 to 29.6 |
+| `form` | 2,000 | 44.7 KB | plateaus - constant from iter 1,800 |
+| `dialog` | 300 | 19.9 KB | plateaus - constant from iter 285 |
+
+Modules: 56 at baseline, none injected during the run.
 
 Nothing here grows without bound. **What is still needed is the same table from a machine that DOES
-report the leak** (BRENDANX-UW7, SKYLINE-DEV6, BOSS-PC, …). If `child` is dead-linear there at a
-few hundred bytes per iteration, the mechanism is confirmed and the fix for any affected test is to
-reduce how many windows it creates.
+report the leak** (BRENDANX-UW7, SKYLINE-DEV6, BOSS-PC, and so on). If `child` is dead-linear there
+at a few hundred bytes per iteration, the mechanism is confirmed and the fix for any affected test
+is to reduce how many windows it creates. If it is flat there too, window churn is not the
+mechanism and the module diff is the next place to look.
