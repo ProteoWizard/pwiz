@@ -366,6 +366,141 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
+        #region GradientBoostedTrees Tests
+
+        // Small, fast params: the defaults (200 trees) are overkill for these tiny
+        // fixtures and slow the suite. Determinism/behavior is independent of tree count.
+        private static GbtParams FastGbt()
+        {
+            return new GbtParams { NTrees = 40, MaxDepth = 4, Seed = 42 };
+        }
+
+        /// <summary>
+        /// The GBDT must actually LEARN: on data whose label is decided by one feature,
+        /// a clear target vector must score above a clear decoy vector. This is the direct
+        /// class-level analogue of the FDR-path capacity test -- it fails if Train produces
+        /// a model that does not separate at all (e.g. all-leaf-zero, wrong label sign).
+        /// </summary>
+        [TestMethod]
+        public void TestGbtLearnsSeparableFunction()
+        {
+            var x = new double[40][];
+            var isDecoy = new bool[40];
+            for (int i = 0; i < 20; i++)      // targets: feature 0 high
+            {
+                x[i] = new[] { 5.0 + i * 0.1, 1.0 };
+                isDecoy[i] = false;
+            }
+            for (int i = 20; i < 40; i++)     // decoys: feature 0 low
+            {
+                x[i] = new[] { 0.5 + (i - 20) * 0.05, 1.0 };
+                isDecoy[i] = true;
+            }
+
+            var model = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+
+            double targetScore = model.ScoreSingle(new[] { 6.0, 1.0 });
+            double decoyScore = model.ScoreSingle(new[] { 0.5, 1.0 });
+            Assert.IsTrue(targetScore > decoyScore, string.Format(
+                "clear target ({0}) must score above clear decoy ({1})", targetScore, decoyScore));
+            Assert.IsFalse(double.IsNaN(targetScore) || double.IsInfinity(targetScore),
+                "score must be a finite log-odds margin");
+        }
+
+        /// <summary>
+        /// Same input + seed -> bit-identical model. This is the class-level guarantee
+        /// behind the FDR-path determinism test; it depends on the XorShift64 PRNG (not
+        /// System.Random, whose seeded stream is a framework detail across net472/net8.0).
+        /// </summary>
+        [TestMethod]
+        public void TestGbtModelReproducible()
+        {
+            var x = new double[30][];
+            var isDecoy = new bool[30];
+            for (int i = 0; i < 30; i++)
+            {
+                x[i] = new[] { (i % 7) * 0.5, (i % 3) * 1.3, i * 0.1 };
+                isDecoy[i] = i % 2 == 0;
+            }
+
+            var a = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+            var b = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+
+            foreach (var probe in new[]
+                     { new[] { 1.0, 0.0, 0.5 }, new[] { 3.0, 2.6, 2.9 }, new[] { 0.0, 0.0, 0.0 } })
+            {
+                Assert.AreEqual(a.ScoreSingle(probe), b.ScoreSingle(probe),
+                    "same input + seed must produce bit-identical scores");
+            }
+        }
+
+        /// <summary>Empty training set is a caller bug, not a silent no-op: Train throws
+        /// rather than returning a model that scores everything the same.</summary>
+        [TestMethod]
+        public void TestGbtEmptyTrainingThrows()
+        {
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(new double[0][], new bool[0], FastGbt()));
+        }
+
+        /// <summary>
+        /// Degenerate inputs must not crash and must produce finite scores -- the paths the
+        /// code guards but that the FDR-level tests never hit: a constant feature (one
+        /// trivial quantile cut), and NaN / Infinity feature values (coerced in binning).
+        /// A production scorer sees these on real data (all-zero columns, missing values).
+        /// </summary>
+        [TestMethod]
+        public void TestGbtHandlesDegenerateInputs()
+        {
+            // Constant feature 1 (no split possible on it); feature 0 still separates.
+            var x = new double[20][];
+            var isDecoy = new bool[20];
+            for (int i = 0; i < 20; i++)
+            {
+                x[i] = new[] { i < 10 ? 3.0 + i : 0.1 * i, 7.0 };   // feature 1 constant
+                isDecoy[i] = i >= 10;
+            }
+            var constModel = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+            double s = constModel.ScoreSingle(new[] { 5.0, 7.0 });
+            Assert.IsFalse(double.IsNaN(s) || double.IsInfinity(s), "constant-feature score must be finite");
+
+            // NaN / Infinity in the feature matrix: binning coerces them; no crash.
+            var xn = new double[20][];
+            var dn = new bool[20];
+            for (int i = 0; i < 20; i++)
+            {
+                double f0 = i < 10 ? 5.0 : 0.5;
+                xn[i] = new[] { f0, i == 0 ? double.NaN : (i == 1 ? double.PositiveInfinity : i * 0.3) };
+                dn[i] = i >= 10;
+            }
+            var nanModel = GradientBoostedTrees.Train(xn, dn, FastGbt());
+            double sn = nanModel.ScoreSingle(new[] { 5.0, double.NaN });
+            Assert.IsFalse(double.IsNaN(sn) || double.IsInfinity(sn),
+                "NaN feature at score time must still yield a finite margin");
+        }
+
+        /// <summary>
+        /// A single-class training set (all targets, no decoys) must train without
+        /// crashing -- the base score handles the degenerate prior. Reachable when a fold's
+        /// decoy side is empty; a crash here would take down the whole FDR run.
+        /// </summary>
+        [TestMethod]
+        public void TestGbtSingleClassNoCrash()
+        {
+            var x = new double[15][];
+            var isDecoy = new bool[15];
+            for (int i = 0; i < 15; i++)
+            {
+                x[i] = new[] { i * 0.2, 1.0 };
+                isDecoy[i] = false;   // all targets
+            }
+            var model = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+            double s = model.ScoreSingle(new[] { 1.0, 1.0 });
+            Assert.IsFalse(double.IsNaN(s) || double.IsInfinity(s));
+        }
+
+        #endregion
+
         #region FeatureStandardizer Tests
 
         [TestMethod]
