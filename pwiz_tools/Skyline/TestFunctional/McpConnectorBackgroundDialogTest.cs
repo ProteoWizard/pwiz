@@ -72,9 +72,15 @@ namespace pwiz.SkylineTestFunctional
                 // nightly heap-leak reporter, without testing anything more).
                 SkylineWindow.BeginInvoke((Action) (() => runner.Run(broker =>
                 {
-                    while (!broker.IsCanceled)
+                    // Bounded, so that a cancel which never arrives FAILS the test instead of hanging it: the
+                    // main thread is wedged in here, so a loop with no exit of its own would leave nothing able
+                    // to end the run. The assert below is what reports it -- reaching the bound leaves
+                    // workCancelled unset.
+                    var giveUpAt = DateTime.UtcNow.AddMinutes(2);
+                    while (!broker.IsCanceled && DateTime.UtcNow < giveUpAt)
                         Thread.Sleep(20);
-                    workCancelled.Set();
+                    if (broker.IsCanceled)
+                        workCancelled.Set();
                 })));
 
                 // The dialog is a window like any other to the connector -- found by enumerating the top-level windows,
