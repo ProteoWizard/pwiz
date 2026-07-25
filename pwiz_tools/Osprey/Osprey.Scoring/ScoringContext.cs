@@ -87,6 +87,14 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         public RTCalibration FallbackRtMap { get; set; }
 
+        /// <summary>
+        /// Per-file collector for the OSPREY_PICK_DUMP_CANDIDATES per-candidate rank-term dump.
+        /// Non-null only when the dump flag is set; the orchestrator creates it before scoring
+        /// and flushes it to <c>&lt;work-dir&gt;\&lt;inputStem&gt;.pick_candidates.tsv</c> once the
+        /// per-window parallel region completes. Null (and zero overhead) on a normal run.
+        /// </summary>
+        public PickCandidateDump PickDump { get; set; }
+
         public ScoringContext(OspreyConfig config, string fileName)
         {
             Config = config;

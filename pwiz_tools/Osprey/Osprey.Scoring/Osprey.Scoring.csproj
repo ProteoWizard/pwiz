@@ -7,6 +7,10 @@
 
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+    <!-- Pick-model JSON (OSPREY_PICK_LDA_MODEL) parse in PickLdaModel. Newtonsoft is the
+         tree's JSON library (Osprey.Chromatography / Osprey.IO); declared explicitly here so
+         the reference does not rely on transitive package flow and resolves on net472 + net8.0. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -149,6 +149,112 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
 
+        /// <summary>
+        /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
+        /// row per CWT candidate peak of every precursor (targets AND decoys) scored in the
+        /// first-pass main search to a per-input-file TSV
+        /// (<c>&lt;work-dir&gt;\&lt;inputStem&gt;.pick_candidates.tsv</c>). The row carries the
+        /// exact raw rank terms the picker computes (coelution, ln_intensity, rt_penalty,
+        /// median_polish) plus the candidate bounds and whether it was the chosen peak, so a
+        /// downstream trainer can learn a linear pick model (see <see cref="PickLdaModelPath"/>)
+        /// on precisely those values. Default OFF: no per-candidate median polish is computed and
+        /// no file is written, so the hot loop is byte-identical and pays nothing when unset.
+        /// </summary>
+        public static readonly bool PickDumpCandidates = IsSetAndNotZero(@"OSPREY_PICK_DUMP_CANDIDATES");
+
+        /// <summary>
+        /// OSPREY_PICK_LDA_MODEL: path to a JSON file with a frozen linear pick model. When set
+        /// and the file exists, the CWT candidate rank score is REPLACED by
+        ///   rank = w0*z(coelution) + w1*z(ln_intensity) + w2*z(rt_penalty) + w3*z(median_polish)
+        /// where z(x_i) = (x_i - mean[i]) / scale[i], using the same four raw terms the dump
+        /// (<see cref="PickDumpCandidates"/>) captures. The argmax selection and IEEE-754
+        /// total-order tie-break are unchanged. Overrides the resolution-keyed default model.
+        /// Loaded and cached once by <c>PickLdaModel</c>. JSON schema:
+        ///   { "features": ["coelution","ln_intensity","rt_penalty","median_polish"],
+        ///     "weights": [w0,w1,w2,w3], "means": [m0,m1,m2,m3], "scales": [s0,s1,s2,s3] }
+        /// </summary>
+        public static readonly string PickLdaModelPath = Environment.GetEnvironmentVariable(@"OSPREY_PICK_LDA_MODEL");
+
+        /// <summary>
+        /// OSPREY_PICK_LDA: opt in to the learned resolution-keyed linear peak-pick model
+        /// (Stellar for unit, Astral for HRAM) instead of the default pure product-form pick
+        /// (coelution * rt_penalty * ln_intensity, no median-polish factor). The DEFAULT is the
+        /// legacy product pick -- the standard / Rust-parity pick that matches the committed
+        /// regression golden -- so the model is off unless requested, and flipping the model on
+        /// by default is a coordinated golden re-baseline. Precedence in the picker:
+        ///   1. OSPREY_PICK_LDA_MODEL set -> that model (test override);
+        ///   2. else OSPREY_PICK_LDA set -> the hardcoded resolution-keyed model;
+        ///   3. else (default) -> the legacy product pick. Default OFF.
+        /// </summary>
+        public static readonly bool PickLda = IsSetAndNotZero(@"OSPREY_PICK_LDA");
+
+        /// <summary>
+        /// Semi-supervised training iterations for <c>--fdr-method gbdt</c>
+        /// (OSPREY_GBT_MAX_ITERATIONS); 0/unset uses <see cref="GBT_MAX_ITERATIONS_DEFAULT"/>.
+        /// Tree-only: the linear SVM keeps its own fixed 10 and is untouched by this.
+        ///
+        /// Exists because the two classifiers converge at very different rates. On Stellar
+        /// the SVM plateaus by iteration 4 and early-stops, while the trees were still
+        /// improving monotonically (0.7 -> 1.2% of training targets at 1% FDR) when they
+        /// hit the shared cap of 10 -- i.e. the cap was binding on the trees, so their
+        /// reported discrimination may understate the model rather than measure it. Raising
+        /// it costs nothing when it is not binding: the existing
+        /// stop-after-2-non-improving-iterations rule still ends training on convergence.
+        /// </summary>
+        public static readonly int GbtMaxIterations = ResolveGbtMaxIterations();
+
+        /// <summary>Default for <see cref="GbtMaxIterations"/>. Well above the SVM's 10 so
+        /// convergence (not the cap) ends tree training, while still bounding a pathological
+        /// run: each iteration retrains the full ensemble on the &lt;= MaxTrainSize subsample.</summary>
+        public const int GBT_MAX_ITERATIONS_DEFAULT = 30;
+
+        private static int ResolveGbtMaxIterations()
+        {
+            int v = ParseIntOrZero(@"OSPREY_GBT_MAX_ITERATIONS");
+            return v > 0 ? v : GBT_MAX_ITERATIONS_DEFAULT;
+        }
+
+        /// <summary>Optional overrides for the gradient-boosted-trees hyper-parameters
+        /// (<c>--fdr-method gbdt</c>), so a regularization / capacity sweep runs from
+        /// env vars without a recompile per setting. Each is null when its var is unset,
+        /// leaving the validated <c>GbtParams</c> default in place; applied in
+        /// <c>BuildProjectionPercolatorConfig</c>. Tree-only -- the linear SVM ignores them.
+        ///   OSPREY_GBT_GAMMA            min split gain to keep a split   (default 0, off)
+        ///   OSPREY_GBT_LAMBDA           L2 leaf-weight penalty           (default 1)
+        ///   OSPREY_GBT_ALPHA            L1 leaf-weight penalty           (default 0, off)
+        ///   OSPREY_GBT_MAX_DEPTH        tree depth                       (default 6)
+        ///   OSPREY_GBT_N_TREES          boosting rounds per model        (default 200)
+        ///   OSPREY_GBT_MIN_CHILD_WEIGHT min summed child hessian         (default 1)
+        ///   OSPREY_GBT_LEARNING_RATE    shrinkage                        (default 0.1)
+        ///   OSPREY_GBT_SUBSAMPLE        row subsample per tree           (default 0.8)
+        ///   OSPREY_GBT_COLSAMPLE        feature subsample per tree       (default 0.8)
+        /// The chosen values are echoed to the run log (the "Gradient-boosted trees: ..."
+        /// line) so each sweep point records exactly what it ran with.</summary>
+        public static readonly double? GbtGamma = ParseDoubleOrNull(@"OSPREY_GBT_GAMMA");
+        public static readonly double? GbtRegLambda = ParseDoubleOrNull(@"OSPREY_GBT_LAMBDA");
+        public static readonly double? GbtRegAlpha = ParseDoubleOrNull(@"OSPREY_GBT_ALPHA");
+        public static readonly int? GbtMaxDepth = ParseIntOrNull(@"OSPREY_GBT_MAX_DEPTH");
+        public static readonly int? GbtNTrees = ParseIntOrNull(@"OSPREY_GBT_N_TREES");
+        public static readonly double? GbtMinChildWeight = ParseDoubleOrNull(@"OSPREY_GBT_MIN_CHILD_WEIGHT");
+        public static readonly double? GbtLearningRate = ParseDoubleOrNull(@"OSPREY_GBT_LEARNING_RATE");
+        public static readonly double? GbtSubsample = ParseDoubleOrNull(@"OSPREY_GBT_SUBSAMPLE");
+        public static readonly double? GbtColSample = ParseDoubleOrNull(@"OSPREY_GBT_COLSAMPLE");
+
+        /// <summary>Optional override for <c>PercolatorConfig.MaxTrainSize</c> -- the
+        /// Percolator-3.0 peptide-grouped training-subsample cap (default 300000). Set via
+        /// OSPREY_MAX_TRAIN_SIZE. Raising it feeds the classifier more real rows (the cap is
+        /// binding when the deduped population exceeds it) at the cost of memory + training
+        /// time. Null when unset -- keeps the 300k default.</summary>
+        public static readonly int? MaxTrainSizeOverride = ParseIntOrNull(@"OSPREY_MAX_TRAIN_SIZE");
+
+        /// <summary>Inner-fold count for the GBDT's held-out iteration selection
+        /// (OSPREY_GBT_INNER_FOLDS, default 5 -> hold out 20% of each training fold to pick
+        /// the boosting iteration honestly). A value &lt;= 1 turns held-out selection OFF and
+        /// reverts to IN-SAMPLE selection (fit = validate = all training rows) -- the
+        /// pre-held-out, validated behavior. Exposed so a regularization sweep or an
+        /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
+        public static readonly int GbtInnerFolds = ParseIntOrNull(@"OSPREY_GBT_INNER_FOLDS") ?? 5;
+
         /// <summary>The default <see cref="Pass2QValue"/> mode: retrain the 2nd-pass
         /// Percolator SVM and recompute a target/decoy null on the reconciled + compacted
         /// reported pool. Current (PR #4395) behavior; preserves Rust parity.</summary>
@@ -158,6 +264,25 @@ namespace pwiz.Osprey.Core
         /// or re-estimate a null; score each reconciled peak with the frozen 1st-pass model
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
         public const string PASS2_QVALUE_TRANSFER = @"transfer";
+
+        /// <summary>The <see cref="Pass2QValue"/> transfer-with-competition mode: score the
+        /// reconciled targets+decoys with the FROZEN 1st-pass model (no retrain), then
+        /// recompute q + PEP by a fresh target-decoy competition over that full reconciled
+        /// population (a non-depleted null) -- i.e. the frozen weights feed the standard
+        /// competition q/PEP math instead of a co-monotone score->q table lookup.</summary>
+        public const string PASS2_QVALUE_TRANSFER_COMPETE = @"transfer-compete";
+
+        /// <summary>The <see cref="Pass2QValue"/> protein-anchored constrained mode: like
+        /// <see cref="PASS2_QVALUE_TRANSFER_COMPETE"/> (frozen 1st-pass model, no retrain),
+        /// but the target-decoy competition is CONSTRAINED to the peptides of proteins
+        /// detected in the 1st pass -- included as target+decoy PAIRS so the stratum's null
+        /// stays fair. Removing off-stratum decoys from the null lowers q for stratum
+        /// members (reduced multiple testing / independent filtering; Bourgon 2010), which
+        /// recovers marginal peptides of already-detected proteins. Honest because the
+        /// protein-membership filter is ~independent of a peptide's own decoy score (a
+        /// protein is detected via its OTHER peptides) and the stratum keeps its paired
+        /// decoys. The frozen model avoids the two-pass retrain's over-separation.</summary>
+        public const string PASS2_QVALUE_PROTEIN_COMPACT = @"protein-compact";
 
         /// <summary>
         /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
@@ -197,6 +322,25 @@ namespace pwiz.Osprey.Core
         public static readonly bool Pass2TransferQ =
             string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
 
+        /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model +
+        /// target-decoy competition path (OSPREY_PASS2_QVALUE=transfer-compete).</summary>
+        public static readonly bool Pass2TransferCompete =
+            string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER_COMPETE, StringComparison.Ordinal);
+
+        /// <summary>True when <see cref="Pass2QValue"/> selects the protein-anchored
+        /// constrained competition (OSPREY_PASS2_QVALUE=protein-compact).</summary>
+        public static readonly bool Pass2ProteinCompact =
+            string.Equals(Pass2QValue, PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
+
+        /// <summary>Diagnostic A/B toggle (OSPREY_PROTEIN_COMPACT_RETRAIN): when set with
+        /// OSPREY_PASS2_QVALUE=protein-compact, SKIP the frozen 1st-pass model + stratum
+        /// competition and instead RETRAIN the 2nd-pass Percolator over the same
+        /// stratum-expanded compacted pool. Isolates the frozen-vs-retrain FDR-calibration
+        /// difference (same reported set, only the 2nd-pass scoring changes) for the
+        /// FDRBench/entrapment oracle. Off (frozen) by default.</summary>
+        public static readonly bool Pass2ProteinCompactRetrain =
+            IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
+
         /// <summary>
         /// OSPREY_ALLOW_UNBOUNDED_MEMORY: opt in to the RESIDENT first-pass pool paths, which
         /// hold every entry resident and grow O(files) so they do not scale to large file
@@ -218,6 +362,10 @@ namespace pwiz.Osprey.Core
             string v = raw.Trim().ToLowerInvariant();
             if (v == PASS2_QVALUE_TRANSFER)
                 return PASS2_QVALUE_TRANSFER;
+            if (v == PASS2_QVALUE_TRANSFER_COMPETE)
+                return PASS2_QVALUE_TRANSFER_COMPETE;
+            if (v == PASS2_QVALUE_PROTEIN_COMPACT)
+                return PASS2_QVALUE_PROTEIN_COMPACT;
             // Fall back to the parity-preserving default on any unrecognized token; the
             // consuming site (Pass2FdrSidecar) warns so a typo is visible in the log.
             return PASS2_QVALUE_PERCOLATOR;
@@ -228,7 +376,8 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrWhiteSpace(raw))
                 return false;
             string v = raw.Trim().ToLowerInvariant();
-            return v != PASS2_QVALUE_PERCOLATOR && v != PASS2_QVALUE_TRANSFER;
+            return v != PASS2_QVALUE_PERCOLATOR && v != PASS2_QVALUE_TRANSFER &&
+                   v != PASS2_QVALUE_TRANSFER_COMPETE && v != PASS2_QVALUE_PROTEIN_COMPACT;
         }
 
         private static int ParseIntOrZero(string name)
@@ -238,6 +387,28 @@ namespace pwiz.Osprey.Core
                 return 0;
             int.TryParse(v, out int result);
             return result;
+        }
+
+        /// <summary>Env int override, or null when unset/unparseable -- lets a consumer keep
+        /// its own default rather than collapsing an unset var to 0 (as ParseIntOrZero does).</summary>
+        private static int? ParseIntOrNull(string name)
+        {
+            string v = Environment.GetEnvironmentVariable(name);
+            if (string.IsNullOrEmpty(v))
+                return null;
+            return int.TryParse(v, out int result) ? result : null;
+        }
+
+        /// <summary>Env double override (invariant culture, so "0.5" parses regardless of
+        /// locale), or null when unset/unparseable.</summary>
+        private static double? ParseDoubleOrNull(string name)
+        {
+            string v = Environment.GetEnvironmentVariable(name);
+            if (string.IsNullOrEmpty(v))
+                return null;
+            return double.TryParse(v, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out double result)
+                ? result : null;
         }
 
         private static bool IsSet(string name)
