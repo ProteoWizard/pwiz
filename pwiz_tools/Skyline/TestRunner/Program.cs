@@ -132,6 +132,14 @@ namespace TestRunner
             {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestNativeMessageBox", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestPrmMcpConnector", new ExpandedLeakCheck(LeakCheckIterations * 4)},
+            // Shows no native dialog at all. It cancels a 50,000-row grid paste at a
+            // NONDETERMINISTIC point (the assertion is only that fewer than all the properties
+            // landed), so how much work -- and allocation -- happens before the cancel takes effect
+            // varies with machine speed and timing, which makes its heap delta spiky rather than
+            // leaking. It is listed here for the same reason as the tests above (it was still
+            // running at 20+ iterations on the nightly machines, i.e. not settling inside the
+            // default 24), but at the normal x2 since its spikiness is not the dialog cache.
+            {"TestMcpConnectorBackgroundDialog", new ExpandedLeakCheck()},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
