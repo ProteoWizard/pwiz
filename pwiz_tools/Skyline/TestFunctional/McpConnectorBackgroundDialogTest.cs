@@ -47,65 +47,69 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        // Set by the operation itself once it has SEEN the cancel, so the test can prove the work stopped BECAUSE it
+        // was cancelled -- not merely that the dialog closed. A plain volatile field rather than a wait handle: on a
+        // failing run the work is still going when the test gives up, and a handle disposed here would then be set
+        // by it.
+        private volatile bool _workSawCancel;
+
+        // How long the work holds the main UI thread if the cancel never arrives. Comfortably longer than the
+        // connector needs, and comfortably SHORTER than the wait for it below, so that on a failing run the main
+        // thread is free again before the test gives up and teardown is clean.
+        private const int WORK_GIVE_UP_SECONDS = 60;
+
         protected override void DoTest()
         {
             StartToolService();
 
-            // Signalled by the operation itself once it has SEEN the cancel, so the test can prove the work stopped
-            // because it was cancelled -- not merely that the dialog closed.
-            using (var workCancelled = new ManualResetEvent(false))
+            _workSawCancel = false;
+            var runner = new LongOperationRunner
             {
-                var runner = new LongOperationRunner
-                {
-                    ParentControl = SkylineWindow,
-                    JobTitle = @"Background dialog test operation"
-                };
+                ParentControl = SkylineWindow,
+                JobTitle = @"Background dialog test operation"
+            };
 
-                // Start it WITHOUT waiting: LongOperationRunner runs the work on the CALLING thread and puts only the
-                // dialog on a thread of its own, so this occupies the MAIN UI thread -- a blocking call here would
-                // leave no one to drive that dialog. The test thread goes on to drive it through the connector.
-                //
-                // The work is a plain wait rather than a real workload on purpose. What this test covers is the
-                // THREADING -- a dialog pumping on its own thread while the thread that started the work is wedged --
-                // and any actual work here would only add churn (an earlier version pasted 50,000 rows through a grid,
-                // which created ~100,000 short-lived editing-control windows per run and made the test both slow and a
-                // nightly heap-leak reporter, without testing anything more).
-                SkylineWindow.BeginInvoke((Action) (() => runner.Run(broker =>
-                {
-                    // Bounded, so that a cancel which never arrives FAILS the test instead of hanging it: the
-                    // main thread is wedged in here, so a loop with no exit of its own would leave nothing able
-                    // to end the run. The assert below is what reports it -- reaching the bound leaves
-                    // workCancelled unset.
-                    var giveUpAt = DateTime.UtcNow.AddMinutes(2);
-                    while (!broker.IsCanceled && DateTime.UtcNow < giveUpAt)
-                        Thread.Sleep(20);
-                    if (broker.IsCanceled)
-                        workCancelled.Set();
-                })));
+            // Start it WITHOUT waiting: LongOperationRunner runs the work on the CALLING thread and puts only the
+            // dialog on a thread of its own, so this occupies the MAIN UI thread -- a blocking call here would
+            // leave no one to drive that dialog. The test thread goes on to drive it through the connector.
+            //
+            // The work is a plain wait rather than a real workload on purpose. What this test covers is the
+            // THREADING -- a dialog pumping on its own thread while the thread that started the work is wedged --
+            // and any actual work here would only add churn (an earlier version pasted 50,000 rows through a grid,
+            // which created ~100,000 short-lived editing-control windows per run and made the test both slow and a
+            // nightly heap-leak reporter, without testing anything more).
+            SkylineWindow.BeginInvoke((Action) (() => runner.Run(broker =>
+            {
+                // Bounded, so that a cancel which never arrives FAILS the test instead of hanging it: the main
+                // thread is wedged in here, so a loop with no exit of its own would leave nothing able to end the
+                // run. Reaching the bound leaves _workSawCancel false, which the wait below reports.
+                var giveUpAt = DateTime.UtcNow.AddSeconds(WORK_GIVE_UP_SECONDS);
+                while (!broker.IsCanceled && DateTime.UtcNow < giveUpAt)
+                    Thread.Sleep(20);
+                _workSawCancel = broker.IsCanceled;
+            })));
 
-                // The dialog is a window like any other to the connector -- found by enumerating the top-level windows,
-                // which needs no thread at all, NOT by asking the main window (which is busy running the operation).
-                string dialogId = WaitForMcpConnectorForm(@"BackgroundThreadLongWaitDlg");
+            // The dialog is a window like any other to the connector -- found by enumerating the top-level windows,
+            // which needs no thread at all, NOT by asking the main window (which is busy running the operation).
+            string dialogId = WaitForMcpConnectorForm(@"BackgroundThreadLongWaitDlg");
 
-                // Read it: this must land on the DIALOG's thread. The main window's thread is inside the operation and
-                // would never run the read.
-                var controls = McpConnector.GetControls(dialogId);
-                Assert.IsTrue(controls.Any(control => Equals(control.Path.Type, @"Button")),
-                    @"The background dialog's Cancel button was not read back.");
+            // Read it: this must land on the DIALOG's thread. The main window's thread is inside the operation and
+            // would never run the read.
+            var controls = McpConnector.GetControls(dialogId);
+            Assert.IsTrue(controls.Any(control => Equals(control.Path.Type, @"Button")),
+                @"The background dialog's Cancel button was not read back.");
 
-                // Cancel it, which is the only way to stop the operation.
-                AssertComplete(McpConnector.DismissWithCancelButton(dialogId));
+            // Cancel it, which is the only way to stop the operation.
+            AssertComplete(McpConnector.DismissWithCancelButton(dialogId));
 
-                // The operation SAW the cancel -- it did not just run to completion and look cancelled. Waited for off
-                // the test thread: the main thread is still inside the operation until it observes the cancel.
-                Assert.IsTrue(workCancelled.WaitOne(30 * 1000),
-                    @"The background operation was not cancelled.");
+            // The operation SAW the cancel -- it did not just run to completion and look cancelled. Waited for on the
+            // TEST thread: the main thread is still inside the operation until it observes the cancel.
+            WaitForCondition(() => _workSawCancel, @"The background operation was not cancelled.");
 
-                // The dialog is gone, which means the operation it was reporting on stopped -- and the main window's
-                // thread is free again, which is what lets this read run at all.
-                WaitForConditionUI(() => !McpConnector.GetOpenForms()
-                    .Any(form => Equals(form.Type, @"BackgroundThreadLongWaitDlg")));
-            }
+            // The dialog is gone, which means the operation it was reporting on stopped -- and the main window's
+            // thread is free again, which is what lets this read run at all.
+            WaitForConditionUI(() => !McpConnector.GetOpenForms()
+                .Any(form => Equals(form.Type, @"BackgroundThreadLongWaitDlg")));
         }
     }
 }
