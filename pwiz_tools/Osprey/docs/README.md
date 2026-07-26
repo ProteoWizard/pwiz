@@ -12,6 +12,10 @@ is a one-to-one deep dive on a Rust source doc and **ends with a "Divergences fr
 the Rust documentation" section**; those are consolidated in
 [DIVERGENCES.md](DIVERGENCES.md).
 
+> **Just want to run it?** Jump to the [command-line reference](20-command-line.md)
+> — every flag with defaults, plus copy-paste examples for unit (Stellar) and HRAM
+> (Astral) datasets.
+
 ## Ordered index
 
 | # | Doc | What it covers |
@@ -35,6 +39,7 @@ the Rust documentation" section**; those are consolidated in
 | 17 | [vectorization](17-vectorization.md) | Performance-critical vectorization — the SIMD / BLAS-equivalent paths for XCorr and matrix operations. |
 | 18 | [peptide-trace](18-peptide-trace.md) | The per-peptide diagnostic dump facility (C# `OSPREY_DUMP_*` / `OSPREY_DIAG_*` in place of the Rust `OSPREY_TRACE_PEPTIDE`). |
 | 19 | [testing](19-testing.md) | The C# test suite and the standing gates: `regression.ps1` (straight-through correctness at 1e-9) and the cross-impl drift bridge against Rust. |
+| 20 | [command-line](20-command-line.md) | Full CLI option reference (every flag, default, and value list) with copy-paste unit (Stellar) and HRAM (Astral) examples and the four-task HPC split. |
 
 ## Supplementary
 
