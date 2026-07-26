@@ -147,8 +147,10 @@ mkdir "%TC_TEST_RESULTS%"
 REM # DIAGNOSTIC (temporary): scope the run to the drifting DiaUmpire test and dump the
 REM # MSAmanda Percolator input (.pin) + mzIdentML output so the CI-agent artifacts can be
 REM # diffed against a local run to localize per-machine result drift. Revert after capture.
+REM # Dump OUTSIDE TestResults so the (cleanup=all) test teardown can't wipe it.
 set SKYLINE_TEST_ARGS=test=TestDiaTtofDiaUmpireTutorial
-set SKYLINE_MSAMANDA_DUMP_DIR=%TC_TEST_RESULTS%\msamanda_dump
+set SKYLINE_MSAMANDA_DUMP_DIR=%SCRIPT_DIR%\msamanda_dump
+if exist "%SKYLINE_MSAMANDA_DUMP_DIR%" rmdir /s /q "%SKYLINE_MSAMANDA_DUMP_DIR%"
 
 pushd "%STAGE_DIR%"
 
@@ -185,9 +187,11 @@ set RUNNER_ARGS=loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=o
 echo ##teamcity[progressMessage 'TestRunner ^(custom SKYLINE_TEST_ARGS^)']
 call :run_tests %RUNNER_MODE% %RUNNER_ARGS%
 popd
-REM # DIAGNOSTIC (temporary): publish the MSAmanda pin/mzid dump even when the test fails
-REM # (the DiaUmpire count assert is expected to fail with the per-machine drift).
-if exist "%SKYLINE_MSAMANDA_DUMP_DIR%" echo ##teamcity[publishArtifacts '%SKYLINE_MSAMANDA_DUMP_DIR% => msamanda_dump.zip']
+REM # DIAGNOSTIC (temporary): collect the MSAmanda pin/mzid the test left on disk (robust to
+REM # the wrapper env var not reaching the test process) and publish it even when the test
+REM # fails (the DiaUmpire count assert is expected to fail with the per-machine drift).
+pwsh -NoProfile -File "%SCRIPT_DIR%\capture-msamanda-dump.ps1" -DumpDir "%SKYLINE_MSAMANDA_DUMP_DIR%"
+echo ##teamcity[publishArtifacts '%SKYLINE_MSAMANDA_DUMP_DIR% => msamanda_dump.zip']
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
 
 :tests_done
