@@ -98,10 +98,6 @@ namespace pwiz.Skyline.ToolsUI
         /// the caller, who must drive it. A transient one is ridden through -- waiting for it is the right thing to
         /// do, because it will finish on its own.</para></summary>
         public abstract bool IsTransient { get; }
-        /// <summary>Whether the form/dialog is still on screen (a managed form: not disposed, handle created and
-        /// visible; a native dialog: its window is visible). Must be read on the owning UI thread for a managed
-        /// form. Its negation is "dismissed".</summary>
-        public abstract bool IsOpen { get; }
         /// <summary>Whether this is a progress form actively reporting work in flight (an
         /// <see cref="ILongWaitForm"/> mid-operation). It is what tells the message-loop watchdog that a wait is
         /// getting somewhere -- work IS advancing -- rather than stuck; false for a native dialog.</summary>
@@ -140,7 +136,7 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.GetOptions.CallNow(FindElement(controlId, UiActions.GetOptions)));
         }
 
-        /// <summary>Every top-level window of this process that is a managed Form (visible) or a native modal dialog,
+        /// <summary>Every top-level window of this process that is an open managed Form or a native modal dialog,
         /// each wrapped as the connector window abstraction that drives it. Enumerated purely from Win32 + a
         /// Control.FromHandle lookup, so it is safe on any thread. Top-level only -- a form docked inside the main
         /// window is a child window and does not appear here (JsonUiService.GetOpenFormElements adds those).</summary>
@@ -150,13 +146,20 @@ namespace pwiz.Skyline.ToolsUI
             foreach (var hwnd in User32.EnumWindows())
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                if (windowProcessId != processId || !User32.IsWindowVisible(hwnd))
+                if (windowProcessId != processId)
                     continue;
-                if (Control.FromHandle(hwnd) is Form)
+                if (Control.FromHandle(hwnd) is Form form)
                 {
-                    yield return NewStandaloneWindow(hwnd, cancellationToken);
+                    // A managed form is showing when WINFORMS says it is, not when Windows has got round to setting
+                    // WS_VISIBLE. Form.SetVisibleCore puts the form in Application.OpenForms and flips Form.Visible
+                    // up front, then builds the child controls and runs OnLoad, and only THEN calls ShowWindow -- so
+                    // throughout that gap IsWindowVisible would drop a dialog every other reading (Application.
+                    // OpenForms, and so the tests' FindOpenForm) already reports as up. Form.Visible is a state-bit
+                    // read, so it is safe from this thread like the rest of the walk.
+                    if (form.Visible)
+                        yield return StandaloneForm.Create(form, hwnd, cancellationToken);
                 }
-                else
+                else if (User32.IsWindowVisible(hwnd))
                 {
                     // A non-managed top-level window is only a window the connector can drive when it is a native
                     // DIALOG. The process has other unmanaged top-level windows (message-only and helper windows,

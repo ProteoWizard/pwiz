@@ -86,8 +86,6 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>A native dialog never closes itself -- it stands there until it is dismissed. (Windows has no
         /// native equivalent of a LongWaitDlg here: every "#32770" the connector meets is a stop.)</summary>
         public override bool IsTransient => false;
-        /// <summary>Whether the dialog window is still visible.</summary>
-        public override bool IsOpen => User32.IsWindowVisible(Hwnd);
         /// <summary>A native dialog is never a progress form reporting work in flight.</summary>
         public override bool IsProgressing => false;
         /// <summary>The dialog's message body (its Static-control text) else its caption.</summary>
