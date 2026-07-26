@@ -12,6 +12,43 @@ fresh run against these at 1e-9. A diff here means output moved -- which is
 sometimes a bug and sometimes the point of the change. Re-bless deliberately, and
 say why in the PR.
 
+## Datasets
+
+| Golden folder | Decoys | Entrapment | Resolution | Role |
+|---|---|---|---|---|
+| `stellar` | generated (reverse) | no | unit | the fast local pre-commit gate |
+| `stellar-libdecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the path we recommend; the only one that can measure true FDP |
+| `astral` | generated (reverse) | no | hram | larger, HRAM, MS1 features live |
+
+`stellar` and `astral` cover the **generated**-decoy construction; `stellar-libdecoy`
+covers the **library**-supplied one. Before this split, every parity and determinism
+signal we had was collected on generated decoys only -- the construction we do not
+recommend.
+
+## diagnostics.tsv -- and why a golden alone is not enough
+
+Datasets whose spec sets `ModelDiagnostics` also carry `diagnostics.tsv`: a flat
+metric projection pulled out of the run's `--model-diagnostics` HTML (null-alignment
+tilt, plateau pi0, the paired decoy-win coin, and -- where entrapment exists -- the
+true FDP at a reported 1% q).
+
+It is compared at 1e-9 like everything else here, but it exists for a second reason.
+The blib golden proves the SEARCH did not change; it cannot prove the FDR CALIBRATION
+is still correct, because a change can leave the ranking intact and only wreck the
+reported q-values. That is precisely what the b<->y decoy swap did -- ~12x the claimed
+error rate, with a perfectly self-consistent golden.
+
+So `Regression/DiagnosticsGolden.ps1` also carries **sanity bounds that `-CreateGolden`
+does NOT regenerate** (FDP ceiling, coin within a tolerance of a fair 0.5, a tilt
+ceiling). A rebaseline records whatever the run produced; the bounds are the only thing
+that fails when a bad change is blessed into the baseline. `-CreateGolden` refuses to
+capture a golden from a run that violates them.
+
+**Reading the FDP numbers**: they are quoted at the LAST q-grid point with q <= 0.01,
+which is both correct FDR semantics and the convention every recorded measurement in the
+gendecoy investigation used. Quote **Pass 1**, not Pass 2 -- the pass-2 Percolator
+retrain is known to inflate FDR.
+
 ## 2026-07: Stellar lost ~10% of its IDs on purpose
 
 The intensity log-conditioning change (pwiz#4412, maccoss/osprey#53) re-blessed
