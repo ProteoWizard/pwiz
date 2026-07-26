@@ -262,7 +262,7 @@ namespace pwiz.Osprey.Scoring
                 string reversedSeq = gen.ReverseSequence(target.Sequence, out mapping);
 
                 if (reversedSeq != target.Sequence && !targetSequences.Contains(reversedSeq) &&
-                    IsCandidateAcceptable(target, reversedSeq, mapping, config))
+                    IsCandidateAcceptable(target.Sequence, reversedSeq))
                 {
                     var decoy = BuildDecoyFromSequence(target, reversedSeq, mapping, omitFragments);
                     if (decoy != null)
@@ -272,15 +272,13 @@ namespace pwiz.Osprey.Scoring
                     }
                 }
 
-                // Fallback: cycling with lengths 1..min(len, 10). Also the retry path when the
-                // similarity gates reject the reversal, mirroring the reshuffle-on-reject loop
-                // in EncyclopeDIA's getSmartDecoy and SpectraST's shuffle acceptance loop.
+                // Fallback: cycling with lengths 1..min(len, 10)
                 int maxRetries = Math.Min(target.Sequence.Length, 10);
                 for (int cycleLength = 1; cycleLength <= maxRetries; cycleLength++)
                 {
                     string cycledSeq = gen.CycleSequence(target.Sequence, cycleLength, out mapping);
                     if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq) &&
-                        IsCandidateAcceptable(target, cycledSeq, mapping, config))
+                        IsCandidateAcceptable(target.Sequence, cycledSeq))
                     {
                         var decoy = BuildDecoyFromSequence(target, cycledSeq, mapping, omitFragments);
                         if (decoy != null)
@@ -326,14 +324,24 @@ namespace pwiz.Osprey.Scoring
 
         /// <summary>
         /// Maximum fraction of a candidate decoy's theoretical b/y ions that may fall within
-        /// the fragment tolerance of its target's. EncyclopeDIA's threshold
+        /// <see cref="LADDER_MATCH_TOLERANCE"/> of its target's. EncyclopeDIA's threshold
         /// (<c>PeptideUtils.getSmartDecoy</c> rejects above 0.4 and reshuffles).
         /// </summary>
         private const double MAX_FRAGMENT_OVERLAP = 0.4;
 
         /// <summary>
-        /// Reject a candidate decoy sequence whose ion ladder is too close to its target's,
-        /// so the cycling fallback supplies another candidate instead.
+        /// Fixed m/z window for counting ladder coincidences, in daltons.
+        /// Deliberately NOT the run's fragment tolerance: the decoy set must be a pure
+        /// function of the library, and keying it to the search tolerance would make the
+        /// same library produce different decoys under <c>unit</c> vs <c>hram</c>. A fixed
+        /// window also lets Rust apply the identical rule without plumbing config into
+        /// DecoyGenerator, which is required for cross-impl parity.
+        /// </summary>
+        private const double LADDER_MATCH_TOLERANCE = 0.02;
+
+        /// <summary>
+        /// Reject a candidate decoy sequence whose theoretical b/y ladder is too close to its
+        /// target's, so the cycling fallback supplies another candidate instead.
         ///
         /// Osprey previously accepted the first sequence that merely differed from its target
         /// and collided with no target sequence. Every other implementation surveyed
@@ -342,80 +350,53 @@ namespace pwiz.Osprey.Scoring
         /// target's cannot lose the target/decoy competition on fragment evidence, so it is
         /// not an honest null.
         ///
-        /// Measured effect at library scale is nil -- it excludes ~1e-4 of peptides (52 of
-        /// 494,495 on Stellar, 339 of 3,173,677 on Astral) and moves entrapment FDP by less
-        /// than noise. It is kept for robustness at SMALL library scale, where palindromes and
-        /// low-complexity runs are a far larger fraction and a near-identical decoy would be
-        /// both real and baffling. OpenSWATH's sequence-identity measure was tested and
-        /// rejected as a weaker proxy (different sequences can still share most fragment
-        /// masses); SpectraST's spectrum-similarity check needs a library-wide m/z index and
-        /// cannot be computed on the lean library path.
+        /// Measured effect at library scale is nil -- it excludes on the order of 1e-4 of
+        /// peptides and moves entrapment FDP by less than noise. It is kept for robustness at
+        /// SMALL library scale, where palindromes and low-complexity runs are a far larger
+        /// fraction and a near-identical decoy would be both real and baffling.
         ///
-        /// Computed from sequences + modifications only, never from loaded fragment lists, so
-        /// the lean (<c>omitFragments</c>) library path yields the identical decoy set to a
-        /// full load. Gating on loaded fragments would diverge the two paths silently.
+        /// Computed from the stripped sequences only -- no modifications, no loaded fragment
+        /// lists. Modifications shift both ladders alike, so they cannot change whether the
+        /// two coincide; excluding them keeps the lean (<c>omitFragments</c>) library path
+        /// bit-identical to a full load and keeps the C#/Rust rule trivially the same.
         /// </summary>
-        private static bool IsCandidateAcceptable(
-            LibraryEntry target, string candidateSeq, int[] positionMapping, OspreyConfig config)
+        private static bool IsCandidateAcceptable(string targetSeq, string candidateSeq)
         {
-            return FragmentOverlap(target, candidateSeq, positionMapping, config)
-                   <= MAX_FRAGMENT_OVERLAP;
-        }
-
-        /// <summary>
-        /// Fraction of the candidate's theoretical singly-charged b/y ions that fall within the
-        /// fragment tolerance of ANY of the target's. EncyclopeDIA's <c>getSmartDecoy</c>
-        /// measure, which rejects above 0.4 and reshuffles.
-        /// </summary>
-        private static double FragmentOverlap(
-            LibraryEntry target, string candidateSeq, int[] positionMapping, OspreyConfig config)
-        {
-            double[] targetLadder = TheoreticalLadder(target.Sequence, target.Modifications);
-            var decoyMods = RemapModificationsStatic(target.Modifications, positionMapping);
-            double[] decoyLadder = TheoreticalLadder(candidateSeq, decoyMods);
+            double[] targetLadder = TheoreticalLadder(targetSeq);
+            double[] decoyLadder = TheoreticalLadder(candidateSeq);
             if (decoyLadder.Length == 0)
-                return 0.0;
+                return true;
 
             Array.Sort(targetLadder); // Array.Sort OK: sorting a private double[] purely to binary-search it; equal doubles are indistinguishable so tie order cannot reach any output
             int matches = 0;
             foreach (double mz in decoyLadder)
             {
-                if (MatchesWithinTolerance(targetLadder, mz, config))
+                if (MatchesWithinTolerance(targetLadder, mz))
                     matches++;
             }
-            return (double)matches / decoyLadder.Length;
+            return (double)matches / decoyLadder.Length <= MAX_FRAGMENT_OVERLAP;
         }
 
         /// <summary>
-        /// Singly-charged b and y ion m/z for every cleavage site of a sequence, using the
-        /// same residue masses and terminal adjustments as <see cref="CalculateFragmentMz"/>.
-        /// Ions containing an unknown residue are skipped rather than aborting the ladder.
+        /// Singly-charged b and y ion m/z for every cleavage site of a stripped sequence,
+        /// using the same residue masses and terminal adjustments as
+        /// <see cref="CalculateFragmentMz"/>. Ions spanning an unknown residue are skipped
+        /// rather than aborting the ladder.
         /// </summary>
-        private static double[] TheoreticalLadder(
-            string sequence, IReadOnlyList<Modification> modifications)
+        private static double[] TheoreticalLadder(string sequence)
         {
             if (sequence == null || sequence.Length < 2)
                 return Array.Empty<double>();
             int len = sequence.Length;
 
-            var modMass = new double[len];
-            if (modifications != null)
-            {
-                foreach (var m in modifications)
-                {
-                    if (m.Position >= 0 && m.Position < len)
-                        modMass[m.Position] += m.MassDelta;
-                }
-            }
-
-            // Prefix sums of residue (+ modification) masses; NaN marks an unknown residue so
-            // any ion spanning it is dropped.
+            // Prefix sums of residue masses; NaN marks an unknown residue so any ion
+            // spanning it is dropped.
             var prefix = new double[len + 1];
             for (int i = 0; i < len; i++)
             {
                 double aa;
                 prefix[i + 1] = STANDARD_AA_MASSES.TryGetValue(sequence[i], out aa)
-                    ? prefix[i] + aa + modMass[i]
+                    ? prefix[i] + aa
                     : double.NaN;
                 if (double.IsNaN(prefix[i]))
                     prefix[i + 1] = double.NaN;
@@ -437,25 +418,19 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// True when <paramref name="mz"/> is within the configured fragment tolerance of any
-        /// entry of the sorted <paramref name="sortedLadder"/>. Binary search keeps the gate
-        /// O(n log n) over a library rather than O(n^2).
+        /// True when <paramref name="mz"/> is within <see cref="LADDER_MATCH_TOLERANCE"/> of
+        /// any entry of the sorted <paramref name="sortedLadder"/>. Binary search keeps the
+        /// gate O(n log n) over a library rather than O(n^2).
         /// </summary>
-        private static bool MatchesWithinTolerance(
-            double[] sortedLadder, double mz, OspreyConfig config)
+        private static bool MatchesWithinTolerance(double[] sortedLadder, double mz)
         {
-            var tol = config != null ? config.FragmentTolerance : null;
-            double window = tol == null
-                ? 0.02
-                : (tol.Unit == ToleranceUnit.Ppm ? mz * tol.Tolerance * 1e-6 : tol.Tolerance);
-
             int idx = Array.BinarySearch(sortedLadder, mz);
             if (idx >= 0)
                 return true;
             idx = ~idx;
-            if (idx < sortedLadder.Length && sortedLadder[idx] - mz <= window)
+            if (idx < sortedLadder.Length && sortedLadder[idx] - mz <= LADDER_MATCH_TOLERANCE)
                 return true;
-            if (idx > 0 && mz - sortedLadder[idx - 1] <= window)
+            if (idx > 0 && mz - sortedLadder[idx - 1] <= LADDER_MATCH_TOLERANCE)
                 return true;
             return false;
         }
@@ -726,17 +701,18 @@ namespace pwiz.Osprey.Scoring
                 {
                     // The decoy fragment keeps the target's ion type and ordinal (a target y7
                     // yields a decoy y7); only the m/z is recomputed below for the permuted
-                    // sequence. The copied relative intensity therefore stays on the
-                    // same-numbered ion.
+                    // sequence, so the copied relative intensity stays on the same-numbered ion.
                     //
                     // This replaced a b<->y swap (target b_k -> decoy y_{n-k}) that carried the
-                    // intensity along with the relabel. Because y ions are systematically more
-                    // intense than b ions, that inverted the decoy spectrum's intensity
-                    // structure relative to any real peptide, and the decoy lost the
-                    // target/decoy competition ~4 times out of 5 -- entrapment-measured FDP was
-                    // 10.9% at a claimed 1% q on Stellar and 7.6% on Astral, against 1.5% /
-                    // 2.0% once the swap was removed. Skyline, OpenSWATH, DIA-NN, EncyclopeDIA
-                    // and SpectraST all map intensity to the same ion; none swaps.
+                    // intensity along with the relabel. The residue-coverage reasoning behind
+                    // that mapping was sound, but intensity is dominated by ion TYPE, not by
+                    // which residues an ion spans: y ions are systematically more intense than
+                    // b ions, so the swap inverted the decoy spectrum's intensity structure
+                    // relative to any real peptide. Entrapment-measured FDP at a claimed 1% q
+                    // was 10.9% on Stellar and 7.6% on Astral, against 1.5% / 2.0% after.
+                    //
+                    // Skyline, OpenSWATH, DIA-NN, EncyclopeDIA and SpectraST all map the
+                    // intensity to the same ion; none of them swaps.
                     newIonType = annotation.IonType;
                     newOrdinal = annotation.Ordinal;
                 }
