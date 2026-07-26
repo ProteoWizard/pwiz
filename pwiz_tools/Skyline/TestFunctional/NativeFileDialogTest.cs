@@ -144,8 +144,9 @@ namespace pwiz.SkylineTestFunctional
                     using var dlg = new System.Windows.Forms.OpenFileDialog();
                     dlg.Multiselect = true;
                     dlg.InitialDirectory = Path.GetTempPath();
-                    if (dlg.ShowDialog(SkylineWindow) == System.Windows.Forms.DialogResult.OK)
-                        selectedFiles = dlg.FileNames;
+                    AssertEx.AreEqual(System.Windows.Forms.DialogResult.OK, dlg.ShowDialog(SkylineWindow),
+                        @"The multiselect Open dialog was not accepted.");
+                    selectedFiles = dlg.FileNames;
                 },
                 // Navigate to the folder (confirmed through GetControls) and select the files by name.
                 fileDialog => SelectFilesInOpenDialog(fileDialog, selectDir, fileNames));
@@ -182,12 +183,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => string.IsNullOrEmpty(dlg.GetFormValue(@"File name")),
                 @"The Open dialog did not clear the file-name box after navigating.");
 
-            // The box is empty and settled, so the names hold: type them and open in one go.
+            // The box is empty and settled, so the names hold: type them and open in one go. Nothing waits for the
+            // dialog to go away here -- the RunLongNativeDlg this runs inside already does.
             dlg.EnterPath(quotedNames);
             dlg.Accept();
-            if (!TryWaitForCondition(() => !dlg.IsOpen))
-                Assert.Fail(@"The Open dialog did not open the selected files (file-name box holds [" +
-                            dlg.GetFormValue(@"File name") + @"], showing folder [" + dlg.GetFormValue(@"Address") + @"]).");
         }
 
         // Whether the Open dialog is showing the given folder -- read from its "Address" control with get_value, the
