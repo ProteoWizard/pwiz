@@ -184,16 +184,13 @@ $datasets = [ordered]@{
         DecoysInLibrary  = $true
         ModelDiagnostics = $true
     }
-    # Astral's MaxAbsTilt is a RATCHET, not a target. Its decoy null is badly
-    # tilted TODAY (measured 1.408, with a real paired-win coin of 0.397 -- decoys
-    # lose 60% of head-to-head pairs against their own targets). That is the b<->y
-    # decoy-swap signature, which the swap-removal work fixes: the same cell
-    # measured 0.254 with the swap dropped. The bound is set just above the
-    # current value so this harness change does not turn the gate red on
-    # pre-existing behavior, and it MUST be tightened to ~0.5 as part of the swap
-    # removal -- otherwise the ratchet never closes and the bound protects nothing.
+    # Astral carries no entrapment, so its tier-2 bound is the null-alignment tilt.
+    # 0.5 is an honest ceiling against the b<->y swap removed (this branch measures
+    # ~0.25); the pre-fix code measured 1.408 with a real paired-win coin of 0.397,
+    # i.e. decoys losing 60% of head-to-head pairs against their own targets. This
+    # bound would have failed the old construction, which is the point.
     Astral  = @{ Folder = 'astral';  Resolution = 'hram'; ModelDiagnostics = $true
-                 MaxAbsTilt = 1.5 }
+                 MaxAbsTilt = 0.5 }
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
 
