@@ -144,6 +144,12 @@ set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 mkdir "%TC_TEST_RESULTS%"
 
+REM # DIAGNOSTIC (temporary): scope the run to the drifting DiaUmpire test and dump the
+REM # MSAmanda Percolator input (.pin) + mzIdentML output so the CI-agent artifacts can be
+REM # diffed against a local run to localize per-machine result drift. Revert after capture.
+set SKYLINE_TEST_ARGS=test=TestDiaTtofDiaUmpireTutorial
+set SKYLINE_MSAMANDA_DUMP_DIR=%TC_TEST_RESULTS%\msamanda_dump
+
 pushd "%STAGE_DIR%"
 
 REM # Full-suite run mode: host-sequential by default, Docker workers with --parallel.
@@ -179,6 +185,9 @@ set RUNNER_ARGS=loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=o
 echo ##teamcity[progressMessage 'TestRunner ^(custom SKYLINE_TEST_ARGS^)']
 call :run_tests %RUNNER_MODE% %RUNNER_ARGS%
 popd
+REM # DIAGNOSTIC (temporary): publish the MSAmanda pin/mzid dump even when the test fails
+REM # (the DiaUmpire count assert is expected to fail with the per-machine drift).
+if exist "%SKYLINE_MSAMANDA_DUMP_DIR%" echo ##teamcity[publishArtifacts '%SKYLINE_MSAMANDA_DUMP_DIR% => msamanda_dump.zip']
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
 
 :tests_done
