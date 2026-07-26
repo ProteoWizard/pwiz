@@ -782,6 +782,11 @@ namespace TestRunnerLib
                 abandonedFilesList.Remove(unicodeSubDir);
             }
 
+            // The native OpenFileDialog can leave these files in the temp folder
+            var shellExtensionTmpFiles = new[] { @"OptaneIconOverlay.ico" };
+            abandonedFilesList.RemoveAll(entry => shellExtensionTmpFiles.Any(name =>
+                string.Equals(Path.GetFileName(entry), name, StringComparison.OrdinalIgnoreCase)));
+
             return abandonedFilesList;
         }
 
