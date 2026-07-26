@@ -784,7 +784,9 @@ namespace pwiz.Skyline.ToolsUI
                 var dockState = form.DockState;
                 if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                     continue;
-                result.Add(StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken));
+                var window = StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken);
+                if (window != null)
+                    result.Add(window);
             }
             return result;
         }
