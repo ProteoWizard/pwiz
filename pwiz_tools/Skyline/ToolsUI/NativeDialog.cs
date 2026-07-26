@@ -86,17 +86,10 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>A native dialog never closes itself -- it stands there until it is dismissed. (Windows has no
         /// native equivalent of a LongWaitDlg here: every "#32770" the connector meets is a stop.)</summary>
         public override bool IsTransient => false;
-        /// <summary>Whether the dialog window is still visible.</summary>
-        public override bool IsOpen => User32.IsWindowVisible(Hwnd);
         /// <summary>A native dialog is never a progress form reporting work in flight.</summary>
         public override bool IsProgressing => false;
         /// <summary>The dialog's message body (its Static-control text) else its caption.</summary>
         public override string DetailedMessage => NativeBodyText(Hwnd) ?? User32.GetWindowTextNoBlock(Hwnd);
-
-        /// <summary>Wraps a raw modal window handle (one with no managed Form) as a generic native dialog, for the
-        /// modal-watch's Win32-only queries. NOT classified as a file dialog -- see <see cref="Create"/>.</summary>
-        public static NativeDialog MakeNativeDialog(IntPtr handle, CancellationToken cancellationToken) =>
-            new NativeDialog(handle, cancellationToken);
 
         // The message body of a native dialog box (a Win32 #32770, e.g. a system message box), read from its child
         // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has

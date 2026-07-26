@@ -1613,6 +1613,17 @@ namespace TestRunner
                         testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                         (loopCount <= 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
                         (repeat <= 1) ? "" : ", repeated " + repeat + " times each per language");
+                    // Record the session environment once per run. Nightly reports heap leaks on the
+                    // native-dialog / connector tests on most machines but NOT on all of them (RITACH-DSK and
+                    // KAIPOT-PC1 were clean on the same commit), and the leading explanation is that Win32
+                    // window create/destroy leaks native heap in a Terminal Services (remoted display) session.
+                    // Logging this makes that correlation checkable from the nightly logs alone -- and tells us
+                    // whether TerminalServerSession is even a trustworthy way to detect the condition, since it
+                    // has been observed reading False in a session whose SESSIONNAME is "RDP-Tcp#0".
+                    runTests.Log("# Session: TerminalServerSession={0}, SESSIONNAME={1}, MonitorCount={2}\r\n",
+                        SystemInformation.TerminalServerSession,
+                        Environment.GetEnvironmentVariable("SESSIONNAME") ?? "(unset)",
+                        SystemInformation.MonitorCount);
                 }
 
                 // Get list of languages
