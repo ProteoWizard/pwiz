@@ -191,7 +191,9 @@ REM # DIAGNOSTIC (temporary): collect the MSAmanda pin/mzid the test left on dis
 REM # the wrapper env var not reaching the test process) and publish it even when the test
 REM # fails (the DiaUmpire count assert is expected to fail with the per-machine drift).
 pwsh -NoProfile -File "%SCRIPT_DIR%\capture-msamanda-dump.ps1" -DumpDir "%SKYLINE_MSAMANDA_DUMP_DIR%"
-echo ##teamcity[publishArtifacts '%SKYLINE_MSAMANDA_DUMP_DIR% => msamanda_dump.zip']
+REM # Publish the dump DIRECTORY (no '=>' target: the '>' is a cmd redirection operator and
+REM # silently redirected the service message to a file in the earlier attempts).
+echo ##teamcity[publishArtifacts '%SKYLINE_MSAMANDA_DUMP_DIR%']
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
 
 :tests_done
