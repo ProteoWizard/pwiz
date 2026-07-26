@@ -182,6 +182,22 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
+    /// Base_ids of the protein-compact stratum (OSPREY_PASS2_QVALUE=protein-compact):
+    /// every library precursor whose peptide maps to a protein detected in the 1st pass
+    /// by &gt;=2 DISTINCT peptides (the honest anchor -- single-hit proteins break the
+    /// independent-filtering assumption; the entrapment prototype showed &gt;=2 restores
+    /// FDP control at full gain). Built in FirstJoin (which has the full library + the
+    /// 1st-pass detected-peptide set) and consumed by the pass-2 stratified competition.
+    /// Bounded by the library (not the observation count) -> flat in file count. Only
+    /// published when the mode is set.
+    /// </summary>
+    internal sealed class ProteinCompactStratum
+    {
+        public HashSet<uint> BaseIds { get; }
+        public ProteinCompactStratum(HashSet<uint> baseIds) { BaseIds = baseIds; }
+    }
+
+    /// <summary>
     /// The pipeline's working per-file FDR entry buffer. UNLIKE every other
     /// byproduct here, this is a deliberately MUTABLE shared buffer: the same
     /// inner <see cref="Value"/> list reference is created once by PerFileScoring,
@@ -256,29 +272,5 @@ namespace pwiz.Osprey.Tasks
     internal sealed class FirstPassPercolatorModel
     {
         public PercolatorResults Results { get; set; }
-    }
-
-    /// <summary>
-    /// The FULL 1st-pass-population score-&gt;q lookup table (each entry's raw
-    /// averaged-model score paired with its unbiased 1st-pass effective q),
-    /// captured at first-pass FDR time BEFORE compaction -- so it retains the
-    /// high-q failing/decoy region that the compacted reported pool no longer
-    /// holds. <see cref="ScoresDesc"/> is sorted by score descending; the parallel
-    /// <see cref="QDesc"/> is q as a monotone NON-INCREASING function of score --
-    /// i.e. q is non-decreasing as you walk <see cref="ScoresDesc"/> from high to
-    /// low score (a higher score is a better ID, so a lower q). Published only under
-    /// OSPREY_PASS2_QVALUE=transfer; the merge-node 2nd-pass transfer maps each
-    /// frozen-model reconciled score to a q via THIS table instead of one rebuilt
-    /// from the decoy-depleted compacted entries. Absent (never published) on the
-    /// default percolator path.
-    /// </summary>
-    internal sealed class FirstPassScoreQTable
-    {
-        /// <summary>Raw averaged-model scores, sorted descending.</summary>
-        public double[] ScoresDesc { get; set; }
-        /// <summary>Effective q parallel to <see cref="ScoresDesc"/>; q is a monotone
-        /// non-increasing function of score, so this array is non-decreasing as
-        /// <see cref="ScoresDesc"/> descends (higher score -&gt; lower q).</summary>
-        public double[] QDesc { get; set; }
     }
 }
