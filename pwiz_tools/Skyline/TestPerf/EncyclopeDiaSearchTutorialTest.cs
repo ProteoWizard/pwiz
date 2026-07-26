@@ -80,12 +80,26 @@ namespace TestPerf
                 // below the q<=0.01 FDR cutoff. Coherent ~5% proportional drop, structure intact.
                 FinalTargetCounts = new[] { 362, 684, 684, 4786 },
 #endif
-                MassErrorStats = new[]
+#if NET472
+                MassErrorStats = new[]   // native msconvert DIA demultiplexer
                 {
                     new[] {-0.2, 2.5 },
                     new[] {-0.2, 2.5 },
                     new[] {-0.2, 2.5 },
                 },
+#else
+                // net8's C#-ported NNLS demultiplexer (commit 3d87903992) shifts the per-file
+                // mass-error means for the wide-window panes; the {-0.2} above was recorded on
+                // native msconvert (2025-08) and only the FinalTargetCounts were re-baselined
+                // for net8. These values are deterministic (bit-stable across runs + unchanged
+                // with hardware intrinsics disabled), not machine-dependent.
+                MassErrorStats = new[]
+                {
+                    new[] {-0.3, 2.5 },
+                    new[] {-0.3, 2.5 },
+                    new[] {-0.2, 2.5 },
+                },
+#endif
                 ChromatogramClickPoint = new PointF(32.175f, 3.184607E+07f)  // MS1 chromatogram peak
             };
 
