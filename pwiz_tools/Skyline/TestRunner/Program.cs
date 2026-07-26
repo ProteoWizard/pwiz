@@ -114,32 +114,15 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
-            // Every one of these shows the native common file dialog, and the growth they report is
-            // Windows', not Skyline's. Diffing the process heap's block-size histogram across a
-            // pass-1 run names it: the blocks that accumulate hold Explorer's cached DirectUI view
-            // markup ("<duixml>", "ViewHost", "ProperTreeModule", "DetailsContainer") plus the
-            // navigated path's own strings, one set per dialog shown. That is the shell view of the
-            // modern Explorer-hosted IFileDialog, cached per instance on a UI thread that lives for
-            // the whole process, so nothing gives it back until CoUninitialize at exit.
-            // The growth SATURATES rather than leaking without bound: on a long-lived thread the
-            // marginal cost decays to ~2 KB by the 40th dialog. (Legacy comdlg32 really is
-            // dead-linear at ~29 KB/dialog, but Skyline never takes that path -- AutoUpgradeEnabled
-            // is never set false, and ShowHelp/ShowReadOnly are never set at all.)
-            // It is the dialog and not the connector: TestSetItemMcpConnector drives the same
-            // connector with the same polling but opens no native dialog, and it converges and
-            // passes while sharing none of the block sizes above.
-            // So these tests do settle -- they just need more runs than the default 24 to get
-            // there. TestPrmMcpConnector sits right at the 20 KB threshold at 24 iterations
-            // (26.6 KB one run, 13.8 KB the next) and falls to -20.5 KB by 48. x4 rather than the
-            // default x2 because the nightly machines are further up the curve than the box this
-            // was measured on: on 2026-07-23/24 they reported 26-71 KB where this machine reported
-            // 13-27 KB. Extra iterations are only CONSUMED when a test has not settled (the loop
-            // exits as soon as the trailing deltas pass), so a generous ceiling costs nothing on a
-            // machine that converges early.
-            // Tradeoff to know about: because the per-run delta is a wide distribution straddling
-            // the threshold, a longer ceiling also gives a genuinely leaking test more chances to
-            // exit on a lucky trailing window. That is the price of keeping the heap check ON here;
-            // muting these tests would give up the detection entirely.
+            // These show the native common file dialog, and what grows is Windows' shell cache, not
+            // Skyline: a heap block-size diff finds Explorer's cached DirectUI view for the modern
+            // IFileDialog, one set per dialog, held on a UI thread that lives for the whole process.
+            // It saturates (~2 KB/dialog by the 40th), so these tests do settle -- they just need
+            // more than the default 24 runs. x4 because the nightly machines sit further up the
+            // curve than the box this was measured on; the extra iterations are only consumed when a
+            // test has not settled, so they cost nothing where it converges early. Muting instead
+            // would give up heap-leak detection here entirely.
+            // See ai/todos/active/TODO-20260723_native_dialog_leak_iterations.md for the evidence.
             {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestNativeMessageBox", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestPrmMcpConnector", new ExpandedLeakCheck(LeakCheckIterations * 4)},
