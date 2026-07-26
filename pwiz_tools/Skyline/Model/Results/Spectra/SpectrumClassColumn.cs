@@ -235,10 +235,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return Array.Empty<SpectrumClassColumn>();
             }
 
-            var spectra = measuredResults.Chromatograms.SelectMany(chromatogramSet => chromatogramSet.MSDataFilePaths)
-                .Distinct()
-                .Select(path => measuredResults.GetResultFileMetaData(path))
-                .Where(metadata => metadata != null)
+            var spectra = measuredResults.GetResultFileMetadatas().Values
                 .SelectMany(metadata => metadata.SpectrumMetadatas);
             return DiscoverCvColumns(spectra);
         }
