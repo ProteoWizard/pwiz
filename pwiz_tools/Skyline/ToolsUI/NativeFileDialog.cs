@@ -60,7 +60,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (child is NativeLabel)
                     continue;
                 yield return child is NativeTextBox textBox && textBox.Hwnd == fileNameEdit
-                    ? new NativeTextBox(fileNameEdit, CancellationToken, @"File name")
+                    ? new NativeTextBox(fileNameEdit, CancellationToken, FILE_NAME_FIELD)
                     : child;
             }
             var addressBar = FindDescendant(ADDRESS_BAR_CLASS, ADDRESS_BAR_ID);
@@ -92,6 +92,11 @@ namespace pwiz.Skyline.ToolsUI
             throw new InvalidOperationException(LlmInstruction.Format(
                 @"Tried to set file path to '{0}' but it says '{1}'", path, actual));
         }
+
+        /// <summary>The label the file-name box is presented under, so a caller can read/set it by name (see
+        /// <see cref="EnumerateChildren"/>). Ours, not the shell's, so it is the same in every UI language -- which
+        /// is also what lets a driver wait for the field to exist by looking for this name in GetControls.</summary>
+        public const string FILE_NAME_FIELD = @"File name";
 
         /// <summary>The control id of this dialog's file-name Edit -- 1148 for the Open dialog's classic combo,
         /// 1001 for the Save dialog's DirectUI-hosted field.</summary>

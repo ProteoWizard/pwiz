@@ -48,6 +48,7 @@ namespace pwiz.Skyline.SettingsUI
             this.labelEnrichments = new System.Windows.Forms.Label();
             this.labelPrecursorIsotopeFilterPercent = new System.Windows.Forms.Label();
             this.textPrecursorIsotopeFilter = new System.Windows.Forms.TextBox();
+            this.cbIncludeMinusOnePrecursor = new System.Windows.Forms.CheckBox();
             this.labelPrecursorIsotopeFilter = new System.Windows.Forms.Label();
             this.label23 = new System.Windows.Forms.Label();
             this.comboPrecursorIsotopes = new System.Windows.Forms.ComboBox();
@@ -181,6 +182,7 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBoxMS1.Controls.Add(this.labelPrecursorRes);
             this.groupBoxMS1.Controls.Add(this.comboPrecursorAnalyzerType);
             this.groupBoxMS1.Controls.Add(this.label32);
+            this.groupBoxMS1.Controls.Add(this.cbIncludeMinusOnePrecursor);
             resources.ApplyResources(this.groupBoxMS1, "groupBoxMS1");
             this.groupBoxMS1.Name = "groupBoxMS1";
             this.groupBoxMS1.TabStop = false;
@@ -212,6 +214,12 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.textPrecursorIsotopeFilter, "textPrecursorIsotopeFilter");
             this.textPrecursorIsotopeFilter.Name = "textPrecursorIsotopeFilter";
+            // 
+            // cbIncludeMinusOnePrecursor
+            // 
+            resources.ApplyResources(this.cbIncludeMinusOnePrecursor, "cbIncludeMinusOnePrecursor");
+            this.cbIncludeMinusOnePrecursor.Name = "cbIncludeMinusOnePrecursor";
+            this.cbIncludeMinusOnePrecursor.UseVisualStyleBackColor = true;
             // 
             // labelPrecursorIsotopeFilter
             // 
@@ -433,6 +441,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label labelEnrichments;
         private System.Windows.Forms.Label labelPrecursorIsotopeFilterPercent;
         private System.Windows.Forms.TextBox textPrecursorIsotopeFilter;
+        private System.Windows.Forms.CheckBox cbIncludeMinusOnePrecursor;
         private System.Windows.Forms.Label labelPrecursorIsotopeFilter;
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.ComboBox comboPrecursorIsotopes;
