@@ -461,9 +461,11 @@ namespace pwiz.Skyline.Model.Tools
             var testName = Program.TestName.Length > 10 // Arbitrary cutoff, but too little is likely to lead to ambiguous names
                 ? string.Concat(Program.TestName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + Program.TestName.Length
                 : Program.TestName;
-            // N.B. this is only unique per test and culture, not per parallel test client. That is safe
-            // because the parallel work queue never lets two clients run the same test/language pair at
-            // the same time - see QueuedTestInfo in TestRunner (issue 4447).
+            // N.B. this is only unique per test and culture, not per parallel test client. The parallel
+            // work queue keeps two clients off the same test/language pair at once (see QueuedTestInfo in
+            // TestRunner, issue 4447), which covers pass 2. It does not cover pass 1, which sets the
+            // culture itself rather than using the language it was queued for, so a pass 1 client can
+            // reach a culture another client is running pass 2 in.
             return $@"{testName}_{Thread.CurrentThread.CurrentCulture.Name}";
         }
 

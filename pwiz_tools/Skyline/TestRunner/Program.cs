@@ -941,21 +941,8 @@ namespace TestRunner
 
                 // Pass 2 is the pass that loops. With pass 2 disabled it is pass 1 that repeats, and only
                 // when looping indefinitely, which is how the sequential runner treats the leak pass.
-                if (IsEnabled(2))
-                {
-                    _repeatingPass = 2;
-                    _repeatCount = loop;
-                }
-                else if (IsEnabled(1) && loop <= 0)
-                {
-                    _repeatingPass = 1;
-                    _repeatCount = 0; // Forever
-                }
-                else
-                {
-                    _repeatingPass = -1;
-                    _repeatCount = 1;
-                }
+                _repeatingPass = IsEnabled(2) ? 2 : IsEnabled(1) && loop <= 0 ? 1 : -1;
+                _repeatCount = _repeatingPass == 2 && loop != 0 ? Math.Max(1, loop) : int.MaxValue; // loop 0 runs forever
 
                 Pass = Array.FindIndex(_passEnabled, enabled => enabled);
             }
@@ -1005,9 +992,9 @@ namespace TestRunner
             public bool TryAdvance()
             {
                 if (!HasWork)
-                    return false;
+                    return false; // Guards against restarting an exhausted schedule from the beginning
 
-                if (Pass == _repeatingPass && (_repeatCount == 0 || LoopCount + 1 < Math.Max(1, _repeatCount)))
+                if (Pass == _repeatingPass && LoopCount + 1 < _repeatCount)
                 {
                     ++LoopCount;
                     return true;
@@ -1039,6 +1026,12 @@ namespace TestRunner
             int testsFailed = 0;
             int testsResultsReturned = 0;
             int testsInFlight = 0; // Tests checked out by a worker; guarded by the testQueue lock
+
+            // Tests that cannot run in parallel are kept apart, to be handed only to the host worker
+            ConcurrentQueue<QueuedTestInfo> QueueFor(QueuedTestInfo queuedTestInfo)
+            {
+                return queuedTestInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
+            }
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
             int dockerWorkerCount = workerCount - 1;
             var dockerTimeoutSecondsOverride = Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_DOCKER_TIMEOUT_SEC");
@@ -1066,25 +1059,20 @@ namespace TestRunner
                 testLog.WriteLine(testOutput);
             };
 
-            // Queue one entry per test/language pair, each carrying every pass and loop iteration it
-            // still has to run. Queueing those individually instead would let a fast worker start the
-            // next iteration of a pair while another worker is still running the previous one, and the
-            // two would collide over per-test state like the tools directory (issue 4447).
-            // Distinct because language prefixes get canonicalized, so e.g. "en,en-US" would otherwise
-            // queue the same pair twice and let two workers run it at once
-            var queuedLanguages = languages.Distinct().ToList();
+            // One entry per test/language pair, each carrying everything it still has to run - see
+            // QueuedTestInfo for why they are not queued per pass and iteration
+            var queuedLanguages = languages.ToList();
             if (passEnabled[0] && !queuedLanguages.Contains(PASS_0_LANGUAGE))
                 queuedLanguages.Add(PASS_0_LANGUAGE); // Pass 0 runs in French even if French was not requested
             var pass1Language = languages.FirstOrDefault(); // Pass 1 gets queued just once per test
 
             foreach (var testInfo in testList)
             {
-                var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
                 foreach (var language in queuedLanguages)
                 {
                     var queuedTestInfo = new QueuedTestInfo(testInfo, language, passEnabled, loop, languages, pass1Language);
                     if (queuedTestInfo.HasWork) // e.g. French only gets queued for pass 0 if it was not requested
-                        queue.Enqueue(queuedTestInfo);
+                        QueueFor(queuedTestInfo).Enqueue(queuedTestInfo);
                 }
             }
 
@@ -1309,12 +1297,12 @@ namespace TestRunner
                                     if (!testPassed)
                                         Interlocked.Increment(ref testsFailed);
                                     string testOutput = Encoding.UTF8.GetString(result, 1, result.Length - 1);
-                                    LogTestOutput(testOutput, log, testInfo.Pass + testInfo.LoopCount); // Report before advancing
+                                    LogTestOutput(testOutput, log, testInfo.Pass + testInfo.LoopCount);
                                     Interlocked.Increment(ref testsResultsReturned);
                                     // Only now that this pair's result is in can it go back in the queue,
                                     // which is what keeps another worker from running it concurrently
                                     if (testInfo.TryAdvance())
-                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
+                                        QueueFor(testInfo).Enqueue(testInfo);
                                 }
                                 finally
                                 {
@@ -1323,7 +1311,7 @@ namespace TestRunner
                                         //if (testInfo.TestMethod.Name == "TestSwathIsolationLists")
                                         //    testRequeue = false;
                                         Console.Error.WriteLine($"No result for test {workerInfo.CurrentTest}; requeuing...");
-                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
+                                        QueueFor(testInfo).Enqueue(testInfo);
                                     }
 
                                     // Only stop counting this test as in flight once it is either queued
@@ -1365,12 +1353,7 @@ namespace TestRunner
                             }
                             else
                             {
-                                var psi = new ProcessStartInfo(@"docker", $@"kill {workerName}")
-                                {
-                                    CreateNoWindow = true,
-                                    UseShellExecute = false
-                                };
-                                Process.Start(psi)?.WaitForExit(WORKER_KILL_TIMEOUT_MILLISECONDS);
+                                RunTests.KillParallelWorkers(0, workerName); // Just this container
                             }
                         }
                         catch (Exception e)
@@ -1512,7 +1495,8 @@ namespace TestRunner
             string value = args.ArgAsString("language");
             if (value == "all")
                 return allLanguages;
-            return value.Split(',').Select(GetCanonicalLanguage).ToArray();
+            // Distinct because prefixes canonicalize, so e.g. "en,en-US" both name the same language
+            return value.Split(',').Select(GetCanonicalLanguage).Distinct().ToArray();
         }
 
         private static string GetCanonicalLanguage(string rawLanguage)
@@ -1796,7 +1780,7 @@ namespace TestRunner
                         }
                     }
 
-                    runTests.Language = new CultureInfo("fr");
+                    runTests.Language = new CultureInfo(PASS_0_LANGUAGE);
                     runTests.Skyline.Set("NoVendorReaders", true);
                     runTests.AccessInternet = false;
                     runTests.RunPerfTests = false;

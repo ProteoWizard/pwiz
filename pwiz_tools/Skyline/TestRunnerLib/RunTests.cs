@@ -1446,8 +1446,10 @@ namespace TestRunnerLib
                 Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
             }
 
-            Console.WriteLine(@"Sending docker kill command to all workers.");
-            Console.WriteLine(@$"docker kill {workerNames}");
+            if (string.IsNullOrEmpty(workerNames))
+                return; // Only the host worker was asked for
+
+            Console.WriteLine(@$"Sending docker kill command to: {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
