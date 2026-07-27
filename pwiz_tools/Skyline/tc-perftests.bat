@@ -120,11 +120,6 @@ if %EXIT% NEQ 0 (
     set ERROR_TEXT=
 )
 
-REM # A concurrent build sharing this agent checkout can leave a stale generated
-REM # Net8Version.g.cs in Skyline's obj, producing CS0579 'Duplicate AssemblyVersionAttribute'.
-REM # Nuke Skyline's obj so the version-stamping target regenerates it cleanly.
-if exist "%SCRIPT_DIR%\obj" rmdir /s /q "%SCRIPT_DIR%\obj"
-
 for %%P in (%BUILD_TARGET%) do call :restore_one "%%~P"
 if %EXIT% NEQ 0 goto error
 
@@ -148,14 +143,6 @@ set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 mkdir "%TC_TEST_RESULTS%"
-
-REM # DIAGNOSTIC (temporary): scope the run to the drifting DiaUmpire test and dump the
-REM # MSAmanda Percolator input (.pin) + mzIdentML output so the CI-agent artifacts can be
-REM # diffed against a local run to localize per-machine result drift. Revert after capture.
-REM # Dump OUTSIDE TestResults so the (cleanup=all) test teardown can't wipe it.
-set SKYLINE_TEST_ARGS=test=TestDiaTtofDiaUmpireTutorial
-set SKYLINE_MSAMANDA_DUMP_DIR=%SCRIPT_DIR%\msamanda_dump
-if exist "%SKYLINE_MSAMANDA_DUMP_DIR%" rmdir /s /q "%SKYLINE_MSAMANDA_DUMP_DIR%"
 
 pushd "%STAGE_DIR%"
 
@@ -192,13 +179,6 @@ set RUNNER_ARGS=loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=o
 echo ##teamcity[progressMessage 'TestRunner ^(custom SKYLINE_TEST_ARGS^)']
 call :run_tests %RUNNER_MODE% %RUNNER_ARGS%
 popd
-REM # DIAGNOSTIC (temporary): collect the MSAmanda pin/mzid the test left on disk (robust to
-REM # the wrapper env var not reaching the test process) and publish it even when the test
-REM # fails (the DiaUmpire count assert is expected to fail with the per-machine drift).
-pwsh -NoProfile -File "%SCRIPT_DIR%\capture-msamanda-dump.ps1" -DumpDir "%SKYLINE_MSAMANDA_DUMP_DIR%"
-REM # Publish the dump DIRECTORY (no '=>' target: the '>' is a cmd redirection operator and
-REM # silently redirected the service message to a file in the earlier attempts).
-echo ##teamcity[publishArtifacts '%SKYLINE_MSAMANDA_DUMP_DIR%']
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
 
 :tests_done

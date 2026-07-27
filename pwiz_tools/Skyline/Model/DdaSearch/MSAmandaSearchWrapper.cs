@@ -278,12 +278,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                             DdaSearchResources.DdaSearch_Search_failed__0,
                             $@"MSAmanda did not produce expected output {outputMzidGz}"));
 
-                    // DIAGNOSTIC (env-gated, no-op unless SKYLINE_MSAMANDA_DUMP_DIR is set):
-                    // copy the Percolator input (<base>_pin.tsv, gzipped) and the search output
-                    // (.mzid.gz) so a CI run and a local run can be compared file-for-file to
-                    // localize per-machine DiaUmpire result drift (MSAmanda search vs Percolator FDR).
-                    DumpSearchArtifacts(spectrumPath, outputMzidGz);
-
                     CurrentFile++;
                     _progressStatus = _progressStatus.NextSegment();
                 }
@@ -412,31 +406,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 return;
             foreach (var path in _intermediateFiles)
                 FileEx.SafeDelete(path, true);
-        }
-
-        // DIAGNOSTIC (temporary): dump the per-file Percolator input (.pin) and mzIdentML output
-        // to SKYLINE_MSAMANDA_DUMP_DIR when that env var is set, so a CI-agent run and a local run
-        // can be diffed to localize per-machine result drift. No-op (and never throws) otherwise.
-        private static void DumpSearchArtifacts(string spectrumPath, string outputMzidGz)
-        {
-            var dumpDir = Environment.GetEnvironmentVariable(@"SKYLINE_MSAMANDA_DUMP_DIR");
-            if (string.IsNullOrEmpty(dumpDir))
-                return;
-            try
-            {
-                Directory.CreateDirectory(dumpDir);
-                // MSAmanda writes the Percolator input next to the spectrum as <base>_pin.tsv.
-                string baseName = Path.GetFileNameWithoutExtension(spectrumPath);
-                string pin = Path.Combine(Path.GetDirectoryName(spectrumPath) ?? string.Empty, baseName + @"_pin.tsv");
-                if (File.Exists(pin))
-                    GzipFile(pin, Path.Combine(dumpDir, baseName + @"_pin.tsv.gz"));
-                if (File.Exists(outputMzidGz))
-                    File.Copy(outputMzidGz, Path.Combine(dumpDir, baseName + @".mzid.gz"), true);
-            }
-            catch
-            {
-                // Diagnostic only; never let a dump failure affect the search.
-            }
         }
 
         private static void GzipFile(string inputPath, string outputPath)
