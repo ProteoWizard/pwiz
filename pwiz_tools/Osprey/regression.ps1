@@ -231,21 +231,6 @@ $datasets = [ordered]@{
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
 
-# Two datasets writing the same golden folder would have the second silently
-# overwrite the first under -CreateGolden, and compare against the wrong baseline
-# otherwise. GoldenFolder defaults to Folder, so this is one forgotten key away and
-# is exactly the collision StellarLibDecoy would have hit. Checked over the WHOLE
-# table, not just $selected, so -Dataset Stellar cannot hide a bad table.
-$goldenNames = @($datasets.Keys | ForEach-Object {
-    $d = $datasets[$_]
-    if ($d.GoldenFolder) { $d.GoldenFolder } else { $d.Folder }
-})
-$dupGolden = @($goldenNames | Group-Object | Where-Object { $_.Count -gt 1 })
-if ($dupGolden.Count -gt 0) {
-    throw ("Dataset table is invalid: golden folder(s) used by more than one dataset: {0}. " +
-           "Give each dataset its own GoldenFolder." -f (($dupGolden | ForEach-Object { $_.Name }) -join ', '))
-}
-
 # --- TeamCity service-message helpers (mirror build.ps1) ----------------------
 function Format-TcMessage([string]$s) {
     if ($null -eq $s) { return '' }
@@ -258,6 +243,26 @@ function Write-Progress-Tc([string]$msg) {
 function Write-Problem-Tc([string]$msg) {
     if ($TeamCity) { Write-Host ("##teamcity[buildProblem description='{0}']" -f (Format-TcMessage $msg)) }
     Write-Host "ERROR: $msg" -ForegroundColor Red
+}
+
+# --- Dataset table self-check -------------------------------------------------
+# Two datasets writing the same golden folder would have the second silently
+# overwrite the first under -CreateGolden, and compare against the wrong baseline
+# otherwise. GoldenFolder defaults to Folder, so this is one forgotten key away and
+# is exactly the collision StellarLibDecoy would have hit. Checked over the WHOLE
+# table, not just $selected, so -Dataset Stellar cannot hide a bad table. Placed
+# after the service-message helpers so a bad table reports as a buildProblem like
+# every other failure rather than as a bare stack trace.
+$goldenNames = @($datasets.Keys | ForEach-Object {
+    $d = $datasets[$_]
+    if ($d.GoldenFolder) { $d.GoldenFolder } else { $d.Folder }
+})
+$dupGolden = @($goldenNames | Group-Object | Where-Object { $_.Count -gt 1 })
+if ($dupGolden.Count -gt 0) {
+    Write-Problem-Tc ("Dataset table is invalid: golden folder(s) used by more than " +
+        "one dataset: {0}. Give each dataset its own GoldenFolder." -f
+        (($dupGolden | ForEach-Object { $_.Name }) -join ', '))
+    exit 1
 }
 
 # --- Reclaim disk: prune orphaned TestResults run dirs ------------------------
