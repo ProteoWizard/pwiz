@@ -952,7 +952,6 @@ namespace pwiz.Skyline.ToolsUI
         // A LongWaitDlg is the one form that closes ITSELF -- when the work it reports on finishes. Every other form
         // stands there until it is dismissed.
         public override bool IsTransient => Form is LongWaitDlg;
-        public override bool IsOpen => !Form.IsDisposed && Form.IsHandleCreated && Form.Visible;
         public override bool IsProgressing => Form is ILongWaitForm { IsBusy: true };
         public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
 
