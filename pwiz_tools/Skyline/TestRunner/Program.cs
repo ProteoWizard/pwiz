@@ -1049,7 +1049,12 @@ namespace TestRunner
             var timer = new Stopwatch();
             int testsFailed = 0;
             int testsResultsReturned = 0;
-            int testsInFlight = 0; // Tests checked out by a worker; guarded by the testQueue lock
+            // Tests checked out by a worker, counted apart because only the host worker can take the
+            // non-parallel ones: everybody else is finished once the parallel work is, and should not be
+            // kept idling through a tail of non-parallel tests it could never be given. Both are guarded
+            // by the testQueue lock.
+            int parallelTestsInFlight = 0;
+            int nonParallelTestsInFlight = 0;
 
             // Tests that cannot run in parallel are kept apart, to be handed only to the host worker
             ConcurrentQueue<QueuedTestInfo> QueueFor(QueuedTestInfo queuedTestInfo)
@@ -1279,11 +1284,21 @@ namespace TestRunner
                                 {
                                     if (isBigWorker)
                                         nonParallelTestQueue.TryDequeue(out testInfo);
+                                    bool gotNonParallelTest = testInfo != null;
                                     if (testInfo == null)
                                         testQueue.TryDequeue(out testInfo);
+
                                     if (testInfo != null)
-                                        ++testsInFlight;
-                                    runIsOver = testInfo == null && testsInFlight == 0;
+                                    {
+                                        if (gotNonParallelTest)
+                                            ++nonParallelTestsInFlight;
+                                        else
+                                            ++parallelTestsInFlight;
+                                    }
+
+                                    // Nothing left that this worker in particular could ever be given
+                                    runIsOver = testInfo == null && parallelTestsInFlight == 0 &&
+                                                (!isBigWorker || nonParallelTestsInFlight == 0);
                                 }
 
                                 if (testInfo == null)
@@ -1341,7 +1356,13 @@ namespace TestRunner
                                     // again or finished for good. Releasing it any earlier would leave a
                                     // moment where it is in neither place, and a worker arriving then
                                     // would conclude the run was over.
-                                    lock (testQueue) --testsInFlight;
+                                    lock (testQueue)
+                                    {
+                                        if (testInfo.TestInfo.DoNotRunInParallel)
+                                            --nonParallelTestsInFlight;
+                                        else
+                                            --parallelTestsInFlight;
+                                    }
                                 }
                             }
                         }
@@ -1418,6 +1439,17 @@ namespace TestRunner
             Console.WriteLine($"Parallel testing finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
             if (coverageSnapshots.Any())
                 GenerateCoverageReport(commandLineArgs, coverageSnapshots);
+
+            // Every worker has finished, so anything still queued is work nobody ever ran - most likely
+            // because the only worker that could have run it went away. Report that rather than passing:
+            // a run that quietly skipped tests must not look like a run that passed them.
+            int testsNeverRun = testQueue.Count + nonParallelTestQueue.Count;
+            if (testsNeverRun > 0)
+            {
+                Console.Error.WriteLine($"!!! {testsNeverRun} queued test(s) were never run. Failing the run.");
+                return false;
+            }
+
             return testsFailed == 0;
         }
 

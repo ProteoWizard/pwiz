@@ -458,15 +458,13 @@ namespace pwiz.Skyline.Model.Tools
         // shortening to acronym and original length (e.g. "Foo7WithBar" => "F7WB10", "Foo7WithoutBar" => "F7WB13"))
         private static string LimitDirectoryNameLength()
         {
-            var testName = Program.TestName.Length > 10 // Arbitrary cutoff, but too little is likely to lead to ambiguous names
-                ? string.Concat(Program.TestName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + Program.TestName.Length
-                : Program.TestName;
             // N.B. this is only unique per test and culture, not per parallel test client. The parallel
-            // work queue hands a test/language pair to one client at a time, which keeps two clients out
-            // of this directory for everything except pass 1: that pass cycles the culture itself rather
-            // than using the language it was queued under, so it can reach a culture another client is
-            // running pass 2 in. See QueuedTestInfo in TestRunner (issue 4447).
-            return $@"{testName}_{Thread.CurrentThread.CurrentCulture.Name}";
+            // work queue hands a test/language pair to one client at a time, and the test runner locks
+            // this directory by the same name, which together keep two clients out of it for everything
+            // except pass 1: that pass cycles the culture itself rather than using the language it was
+            // queued under, so it can reach a culture another client is running pass 2 in. See
+            // QueuedTestInfo in TestRunner (issue 4447).
+            return PathEx.GetTestDirectoryName(Program.TestName, Thread.CurrentThread.CurrentCulture.Name);
         }
 
         /// <summary>

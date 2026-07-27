@@ -309,9 +309,13 @@ namespace pwiz.Common.SystemUtil
                 // redirected output being fully read, which ProcessStreamReader owns on its own threads.
                 proc.WaitForExit(KILL_WAIT_MILLISECONDS);
             }
-            catch (InvalidOperationException)
+            catch (Exception)
             {
-                // The process exited on its own between the HasExited check and the Kill
+                // Killing is best effort. The process may have exited on its own between the HasExited
+                // check and the Kill (InvalidOperationException), or Windows may refuse to terminate one
+                // that is already on its way out (Win32Exception). Letting either escape would be worse
+                // than not killing: this runs first in a finally, so it would skip the temp file cleanup
+                // after it and bury whatever exception was already on its way out of the try.
             }
         }
 

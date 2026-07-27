@@ -172,9 +172,11 @@ namespace TestRunnerLib
         /// (issue 4447).
         /// </para>
         /// <para>
-        /// The key only has to agree between clients, so it is built here rather than asking Skyline for
-        /// the directory name, and the wait happens out here rather than inside the test, where it would
-        /// count against the test's own time.
+        /// Keyed by the same name the directory itself gets. Keying it by the test's own name instead
+        /// would look right but be wrong: long names are shortened to their capitals and digits, so
+        /// e.g. TestDdaTutorial and TestDiaTutorial share a directory while looking distinct here.
+        /// The wait happens out here rather than inside the test, where it would count against the
+        /// test's own time.
         /// </para>
         /// </summary>
         private IDisposable LockToolsDirectory(TestInfo test)
@@ -185,7 +187,7 @@ namespace TestRunnerLib
             var installDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
             var lockDirectory = Path.Combine(installDirectory, @"ToolsDirectoryLocks");
             Directory.CreateDirectory(lockDirectory);
-            var lockPath = Path.Combine(lockDirectory, $@"{test.TestMethod.Name}_{Language.Name}.lock");
+            var lockPath = Path.Combine(lockDirectory, PathEx.GetTestDirectoryName(test.TestMethod.Name, Language.Name) + @".lock");
 
             var waited = Stopwatch.StartNew();
             do
