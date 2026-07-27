@@ -1032,6 +1032,13 @@ namespace TestRunner
         private class ParallelWorkerInfo
         {
             public bool IsAlive { get; set; } = true;
+
+            /// <summary>
+            /// Set once the worker has been told to shut down, so that it going quiet afterwards is
+            /// understood as it doing what it was asked rather than as it having died.
+            /// </summary>
+            public bool Retired { get; set; }
+
             public string CurrentTest { get; set; }
         }
 
@@ -1313,6 +1320,7 @@ namespace TestRunner
                                         continue;
                                     }
                                     workerSender.TrySendFrame(WORKER_QUIT_MESSAGE);
+                                    workerInfo.Retired = true;
                                     workerInfo.IsAlive = false;
                                     return;
                                 }
@@ -1344,10 +1352,12 @@ namespace TestRunner
                                 }
                                 finally
                                 {
-                                    if (/*testRequeue && testInfo.TestMethod.Name == "TestSwathIsolationLists" ||*/ !gotResult && !cts.IsCancellationRequested)
+                                    if (!gotResult)
                                     {
-                                        //if (testInfo.TestMethod.Name == "TestSwathIsolationLists")
-                                        //    testRequeue = false;
+                                        // Put it back even when the run is being cancelled and nobody
+                                        // will pick it up again. A test that got no result did not run,
+                                        // and leaving it in the queue is what lets the end of the run
+                                        // notice that and say so instead of reporting success.
                                         Console.Error.WriteLine($"No result for test {workerInfo.CurrentTest}; requeuing...");
                                         QueueFor(testInfo).Enqueue(testInfo);
                                     }
@@ -1393,7 +1403,10 @@ namespace TestRunner
                                 {
                                     workerInfo.IsAlive = false;
 
-                                    if (testQueue.IsEmpty || cts.IsCancellationRequested)
+                                    // Judge this on whether the worker was told to stop, not on whether
+                                    // the queue happens to be empty: with one entry per test/language
+                                    // pair it usually is, which would mean never noticing a worker died
+                                    if (workerInfo.Retired || cts.IsCancellationRequested)
                                         return;
                                     Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
                                     if (commandLineArgs.ArgAsBool("coverage"))
@@ -1446,7 +1459,8 @@ namespace TestRunner
             int testsNeverRun = testQueue.Count + nonParallelTestQueue.Count;
             if (testsNeverRun > 0)
             {
-                Console.Error.WriteLine($"!!! {testsNeverRun} queued test(s) were never run. Failing the run.");
+                // N.B. not prefixed "!!!", which Report() reads as the start of a test failure block
+                Console.Error.WriteLine($"# {testsNeverRun} queued test(s) were never run. Failing the run.");
                 return false;
             }
 

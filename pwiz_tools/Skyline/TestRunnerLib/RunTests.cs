@@ -204,7 +204,9 @@ namespace TestRunnerLib
 
             // Continuing unlocked risks the collision this is meant to avoid, but it beats stalling the
             // whole run behind one wedged client, so say so loudly and carry on
-            Log("!!! Gave up after {0} minutes waiting for {1}; continuing without it.\r\n",
+            // N.B. not "!!!", which Report() reads as the start of a test failure block and would then
+            // swallow the rest of the log into one bogus failure
+            Log("# Gave up after {0} minutes waiting for {1}; continuing without it.\r\n",
                 TOOLS_DIRECTORY_LOCK_TIMEOUT.TotalMinutes, lockPath);
             return null;
         }
