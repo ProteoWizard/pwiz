@@ -114,7 +114,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("search_enzyme2_number", "0"));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", 0, 0, 1));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", 1, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 0, 0));
+            // spectrum_batch_size controls how many spectra Comet loads+searches at a time; 0 means
+            // all-at-once, which for large inputs (e.g. DIA-Umpire pseudo-spectra, ~150k+ spectra) runs
+            // ~2.5-4x slower than batching due to memory/cache pressure. Use crux's default batch of
+            // 20000 instead. This is purely a performance knob -- results are identical either way.
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 20000, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("text_file_extension", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("theoretical_fragment_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", "1", new []{ "0", "1" }));
