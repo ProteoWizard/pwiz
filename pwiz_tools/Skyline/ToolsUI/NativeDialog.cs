@@ -23,7 +23,6 @@ using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -334,13 +333,15 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private static IEnumerable<IntPtr> FindDialogHandles()
         {
-            var processId = (uint) Process.GetCurrentProcess().Id;
+            var processId = Kernel32.GetCurrentProcessId();
             return User32.EnumWindows().Where(hwnd =>
             {
-                if (!User32.IsWindowVisible(hwnd) || User32.GetClassName(hwnd) != DIALOG_CLASS_NAME)
-                    return false;
+                // Cheapest tests first: GetClassName allocates, and most of the desktop's windows
+                // belong to other processes.
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                return windowProcessId == processId;
+                if (windowProcessId != processId || !User32.IsWindowVisible(hwnd))
+                    return false;
+                return User32.GetClassName(hwnd) == DIALOG_CLASS_NAME;
             });
         }
 

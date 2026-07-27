@@ -767,6 +767,7 @@ namespace TestRunnerLib
         private List<string> CleanUpTestDir(string tmpTestDir, bool final)
         {
             CleanupMSAmandaTmpFiles();  // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
+            CleanupShellExtensionTmpFiles(tmpTestDir);
             var abandonedFilesList = new List<string>();
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
@@ -783,6 +784,26 @@ namespace TestRunnerLib
             }
 
             return abandonedFilesList;
+        }
+
+        /// <summary>
+        /// The native OpenFileDialog can leave these files in the temp folder. Delete them rather than
+        /// exempt them from the check below, so that a file we cannot delete fails the test saying so.
+        /// </summary>
+        private static void CleanupShellExtensionTmpFiles(string tmpTestDir)
+        {
+            if (string.IsNullOrEmpty(tmpTestDir))
+            {
+                return;
+            }
+            foreach (var fileName in new[] { @"OptaneIconOverlay.ico" })
+            {
+                var filePath = Path.Combine(tmpTestDir, fileName);
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
         }
 
         private void CleanupAbandonedFiles(string dir, bool recreateDirAfterClean, List<string> abandonedFilesList)
