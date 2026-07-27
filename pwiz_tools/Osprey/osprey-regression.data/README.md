@@ -60,7 +60,7 @@ retrain is known to inflate FDR.
 
 ## 2026-07-26: both gendecoy goldens lost a fifth to a third of their IDs on purpose
 
-Removing the decoy b<->y intensity swap (pwiz#TBD, maccoss/osprey#58) re-blessed the two
+Removing the decoy b<->y intensity swap (pwiz#4480, maccoss/osprey#58) re-blessed the two
 generated-decoy goldens. Both dropped, and by a lot:
 
 | Dataset | RefSpectra (IDs) | Proteins |
