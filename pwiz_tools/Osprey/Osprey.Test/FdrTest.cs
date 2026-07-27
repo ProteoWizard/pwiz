@@ -1582,7 +1582,7 @@ namespace pwiz.Osprey.Test
                 1 | 0x80000000, 2 | 0x80000000, 3 | 0x80000000
             };
 
-            var folds = PercolatorFdr.CreateStratifiedFoldsByPeptide(
+            var folds = PercolatorSampling.CreateStratifiedFoldsByPeptide(
                 labels, peptides, entryIds, 3);
 
             // All charge states of PEPTIDEK (targets) should be in same fold
@@ -1616,7 +1616,7 @@ namespace pwiz.Osprey.Test
                 peptides.Add("DECOY" + i);
             }
 
-            var selected = PercolatorFdr.SubsampleByPeptideGroup(
+            var selected = PercolatorSampling.SubsampleByPeptideGroup(
                 labels.ToArray(), entryIds.ToArray(), peptides.ToArray(), 10, 42);
 
             var selectedSet = new HashSet<int>(selected);
@@ -1666,7 +1666,7 @@ namespace pwiz.Osprey.Test
             var labels = new[] { false, false, false, true, true };
             var peptides = new[] { "PEPK", "PEPK", "OTHER", "PEPK", "OTHER" };
 
-            var best = PercolatorFdr.BestPrecursorPerPeptide(indices, scores, labels, peptides);
+            var best = PercolatorSampling.BestPrecursorPerPeptide(indices, scores, labels, peptides);
 
             // Should have one entry per unique peptide string
             Assert.AreEqual(2, best.Length);

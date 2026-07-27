@@ -543,8 +543,8 @@ namespace pwiz.Osprey.FDR
         /// compute PEP and per-run / experiment q-values on that flat
         /// score array.</item>
         /// </list>
-        /// The selection uses <see cref="PercolatorFdr.SelectBestPerPrecursor"/>
-        /// and <see cref="PercolatorFdr.SubsampleByPeptideGroup"/> to build the
+        /// The selection uses <see cref="PercolatorSampling.SelectBestPerPrecursor"/>
+        /// and <see cref="PercolatorSampling.SubsampleByPeptideGroup"/> to build the
         /// best-per-precursor training subsample -- the same helpers (and the same
         /// 300K cap) Rust's streaming path uses, so the subsets match given
         /// identical input.
@@ -602,11 +602,11 @@ namespace pwiz.Osprey.FDR
 
             // 1. Best-per-precursor dedup, then 2. peptide-grouped subsample when
             //    the dedup count still exceeds MaxTrainSize. Both steps are owned
-            //    by PercolatorFdr.BuildTrainingSubset so every caller (this projection
+            //    by PercolatorSampling.BuildTrainingSubset so every caller (this projection
             //    streaming path and the FdrEntry path) selects identical subsets for
             //    identical input.
             int[] bestIdx;
-            int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
+            int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, percEntries, maxTrain, percConfig.Seed,
                 out bestIdx, bestScores);
             int dedupTargets = 0, dedupDecoys = 0;
@@ -738,7 +738,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="PercolatorFdr.ScoreProjectionAndComputeFdrInPlace"/>, reusing the
         /// same flat identity arrays.</item>
         /// </list>
-        /// Every parity-locked primitive (<see cref="PercolatorFdr.BuildTrainingSubset"/>,
+        /// Every parity-locked primitive (<see cref="PercolatorSampling.BuildTrainingSubset"/>,
         /// <see cref="PercolatorFdr.RunPercolator"/> on the subset, and the shared
         /// competition/q-value math) is called UNCHANGED, so the trained model and the
         /// resulting q-values are byte-identical to the <see cref="PercolatorEntry"/>
@@ -818,7 +818,7 @@ namespace pwiz.Osprey.FDR
             // silent span on an 82-file join; announce it so the console is not blank.
             logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
             int[] bestIdx;
-            int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
+            int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
                 percConfig.Seed, out bestIdx, bestScores);
 

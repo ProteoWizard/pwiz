@@ -416,7 +416,7 @@ namespace pwiz.Osprey.FDR
             //     together). Both selection steps live in BuildTrainingSubset so
             //     this direct path and the streaming path cannot drift.
             int[] bestPerPrecursor;
-            int[] trainSubset = BuildTrainingSubset(
+            int[] trainSubset = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, entries, config.MaxTrainSize, config.Seed,
                 out bestPerPrecursor);
 
@@ -468,7 +468,7 @@ namespace pwiz.Osprey.FDR
             }
 
             // 4. Assign folds on the (possibly subsampled) set
-            int[] foldAssignments = CreateStratifiedFoldsByPeptide(
+            int[] foldAssignments = PercolatorSampling.CreateStratifiedFoldsByPeptide(
                 subLabels, subPeptides, subEntryIds, config.NFolds);
 
             // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE;
@@ -1576,7 +1576,7 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// One best-per-precursor winner captured while streaming identity in flat (file,row)
         /// order (issue #4355 struct-shrink S3, Stage B): enough to reproduce
-        /// <see cref="SelectBestPerPrecursor"/>'s output AND build the training-subset
+        /// <see cref="PercolatorSampling.SelectBestPerPrecursor"/>'s output AND build the training-subset
         /// <see cref="PercolatorEntry"/> without a resident projection. <see cref="G"/> is the
         /// row's global (file,row) ordinal -- sorting the captured winners by it ascending
         /// reproduces <c>SelectBestPerPrecursor</c>'s <c>Array.Sort(globalIndex)</c> exactly.
@@ -1622,10 +1622,10 @@ namespace pwiz.Osprey.FDR
         ///
         /// Byte-identical to the resident projection path on the same rows in the same (file,row)
         /// order (verified by <c>FdrTest.TestStreamingFirstPassMatchesProjection</c>): the
-        /// training-subset selection reproduces <see cref="SelectBestPerPrecursor"/> +
-        /// <see cref="BuildTrainingSubset"/> (strict-<c>&gt;</c> first-seen dedup ranked on
+        /// training-subset selection reproduces <see cref="PercolatorSampling.SelectBestPerPrecursor"/> +
+        /// <see cref="PercolatorSampling.BuildTrainingSubset"/> (strict-<c>&gt;</c> first-seen dedup ranked on
         /// CoelutionSum, ascending-global-ordinal order, identical
-        /// <see cref="SubsampleByPeptideGroup"/>), the SVM training runs the SAME
+        /// <see cref="PercolatorSampling.SubsampleByPeptideGroup"/>), the SVM training runs the SAME
         /// <see cref="RunPercolator"/> on the SAME subset, and the score + q-value math reuses the
         /// SAME primitives (<see cref="StreamingFirstPassQ"/>, <see cref="ComputePerFileRunQvalues"/>,
         /// <see cref="UpdateExperimentQClampFloor"/>). This is 1st-pass-only: the 2nd pass keeps its
@@ -1753,7 +1753,7 @@ namespace pwiz.Osprey.FDR
                     dedupEntryIds[i] = dedup[i].EntryId;
                     dedupPeptides[i] = dedup[i].Peptide;
                 }
-                localSelected = SubsampleByPeptideGroup(
+                localSelected = PercolatorSampling.SubsampleByPeptideGroup(
                     dedupLabels, dedupEntryIds, dedupPeptides, maxTrain, percConfig.Seed);
             }
 
@@ -2270,7 +2270,7 @@ namespace pwiz.Osprey.FDR
                 var svmPeptides = new string[svmIndices.Count];
                 for (int i = 0; i < svmIndices.Count; i++)
                     svmPeptides[i] = peptides[trainIndices[svmIndices[i]]];
-                var svmFoldAssignments = CreateStratifiedFoldsByPeptide(
+                var svmFoldAssignments = PercolatorSampling.CreateStratifiedFoldsByPeptide(
                     svmLabels, svmPeptides, svmEntryIds, config.NFolds);
 
                 double bestC1 = GridSearchC(
@@ -2411,7 +2411,7 @@ namespace pwiz.Osprey.FDR
             // turned off for a regularization sweep or an A/B without a code revert.
             int innerFolds = OspreyEnvironment.GbtInnerFolds;
             int[] innerFold = innerFolds > 1
-                ? CreateStratifiedFoldsByPeptide(
+                ? PercolatorSampling.CreateStratifiedFoldsByPeptide(
                     trainLabels, trainPeptides, trainEntryIds, innerFolds)
                 : null;
             var fitLocal = new List<int>(trainIndices.Length);
@@ -3677,7 +3677,7 @@ namespace pwiz.Osprey.FDR
         /// -- no per-file slice copy (issue #4355 Part B). Byte-identical to the per-file group body
         /// of <see cref="ComputePerRunPeptideQvalues"/>: best-per-peptide over the file, competition,
         /// then the peptide's q propagated to every row of that peptide (others stay 1.0).
-        /// <see cref="BestPrecursorPerPeptide"/> returns global indices, which
+        /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> returns global indices, which
         /// <see cref="CompeteFromIndices"/> then competes directly (both take an index subset).
         /// Returns a local array indexed 0..count-1.
         /// </summary>
@@ -3689,7 +3689,7 @@ namespace pwiz.Osprey.FDR
             for (int i = 0; i < count; i++)
                 qvalues[i] = 1.0;
 
-            var bestPerPeptide = BestPrecursorPerPeptide(indices, scores, labels, peptides);
+            var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(indices, scores, labels, peptides);
 
             int[] wi;
             double[] ws;
@@ -3881,7 +3881,7 @@ namespace pwiz.Osprey.FDR
             foreach (var group in fileGroups.Values)
             {
                 progress?.Report(++fileDone);
-                var bestPerPeptide = BestPrecursorPerPeptide(
+                var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(
                     group.ToArray(), scores, labels, peptides);
 
                 var peptScores = new double[bestPerPeptide.Length];
@@ -3994,7 +3994,7 @@ namespace pwiz.Osprey.FDR
             for (int i = 0; i < n; i++)
                 allIndices[i] = i;
 
-            var bestPerPeptide = BestPrecursorPerPeptide(allIndices, scores, labels, peptides);
+            var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(allIndices, scores, labels, peptides);
 
             var peptScores = new double[bestPerPeptide.Length];
             var peptLabels = new bool[bestPerPeptide.Length];
@@ -4115,7 +4115,7 @@ namespace pwiz.Osprey.FDR
 
             /// <summary>
             /// Experiment-peptide <c>peptide -&gt; q</c>: materialize the best-per-peptide set
-            /// sorted by ordinal (matching <see cref="BestPrecursorPerPeptide"/>'s sort), compete
+            /// sorted by ordinal (matching <see cref="PercolatorSampling.BestPrecursorPerPeptide"/>'s sort), compete
             /// by base_id, conservative-q, keyed by the winner's peptide -- byte-identical to
             /// <see cref="ComputeExperimentPeptideQMap"/>.
             /// </summary>
@@ -4204,276 +4204,6 @@ namespace pwiz.Osprey.FDR
         private static ProgressReporter QProgress(string activity, long reportTotal, long workSize)
         {
             return workSize > 2_000_000 ? new ProgressReporter(activity, reportTotal) : null;
-        }
-
-        // ============================================================
-        // Best precursor per peptide
-        // ============================================================
-
-        /// <summary>
-        /// Find the best-scoring precursor per peptide from a set of indices.
-        /// Returns global indices sorted for deterministic order.
-        /// </summary>
-        public static int[] BestPrecursorPerPeptide(
-            int[] indices, double[] scores, bool[] labels, string[] peptides)
-        {
-            var best = new Dictionary<string, KeyValuePair<int, double>>();
-
-            foreach (int idx in indices)
-            {
-                string pept = peptides[idx];
-                KeyValuePair<int, double> existing;
-                if (best.TryGetValue(pept, out existing))
-                {
-                    if (scores[idx] > existing.Value)
-                        best[pept] = new KeyValuePair<int, double>(idx, scores[idx]);
-                }
-                else
-                {
-                    best[pept] = new KeyValuePair<int, double>(idx, scores[idx]);
-                }
-            }
-
-            var result = new List<int>(best.Count);
-            foreach (var kvp in best)
-                result.Add(kvp.Value.Key);
-            result.Sort(); // Array.Sort OK: best-per-peptide entry indices are distinct ints, so no ties; single primitive array anyway
-            return result.ToArray();
-        }
-
-        // ============================================================
-        // Fold assignment
-        // ============================================================
-
-        /// <summary>
-        /// Create stratified fold assignments grouped by target peptide, keeping pairs together.
-        /// </summary>
-        public static int[] CreateStratifiedFoldsByPeptide(
-            bool[] labels, string[] peptides, uint[] entryIds, int nFolds)
-        {
-            // 1. Build base_id -> target peptide mapping
-            var baseIdToTargetPeptide = new Dictionary<uint, string>();
-            for (int i = 0; i < labels.Length; i++)
-            {
-                uint baseId = entryIds[i] & BASE_ID_MASK;
-                if (!labels[i])
-                {
-                    if (!baseIdToTargetPeptide.ContainsKey(baseId))
-                        baseIdToTargetPeptide[baseId] = peptides[i];
-                }
-            }
-
-            // 2. Map each entry to its group key
-            var groupKeys = new string[labels.Length];
-            for (int i = 0; i < labels.Length; i++)
-            {
-                uint baseId = entryIds[i] & BASE_ID_MASK;
-                string key;
-                if (!baseIdToTargetPeptide.TryGetValue(baseId, out key))
-                    key = peptides[i];
-                groupKeys[i] = key;
-            }
-
-            // 3. Group all entries by target peptide
-            var peptideGroups = new Dictionary<string, List<int>>();
-            for (int i = 0; i < groupKeys.Length; i++)
-            {
-                List<int> list;
-                if (!peptideGroups.TryGetValue(groupKeys[i], out list))
-                {
-                    list = new List<int>();
-                    peptideGroups[groupKeys[i]] = list;
-                }
-                list.Add(i);
-            }
-
-            // 4. Sort for deterministic assignment, round-robin assign folds
-            var sortedKeys = new List<string>(peptideGroups.Keys);
-            sortedKeys.Sort(StringComparer.Ordinal); // Array.Sort OK: keys are distinct peptide-group dictionary keys, so the comparator never ties
-
-            var foldAssignments = new int[labels.Length];
-            for (int i = 0; i < sortedKeys.Count; i++)
-            {
-                int fold = i % nFolds;
-                foreach (int idx in peptideGroups[sortedKeys[i]])
-                    foldAssignments[idx] = fold;
-            }
-
-            return foldAssignments;
-        }
-
-        // ============================================================
-        // Subsampling
-        // ============================================================
-
-        /// <summary>
-        /// Build the SVM training subset for one Percolator pass: best-per-precursor
-        /// dedup, then -- only when the deduped count still exceeds
-        /// <paramref name="maxTrainSize"/> -- a peptide-grouped subsample. Returns
-        /// indices into the original <paramref name="entries"/> list;
-        /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
-        /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
-        /// the direct (<see cref="RunPercolator"/>) and streaming
-        /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
-        /// for identical input instead of hand-mirroring the dedup + index map-back.
-        /// </summary>
-        internal static int[] BuildTrainingSubset(
-            bool[] labels, uint[] entryIds, string[] peptides,
-            IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
-            out int[] bestPerPrecursor, double[] bestScores = null)
-        {
-            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries, bestScores);
-            if (maxTrainSize <= 0 || bestPerPrecursor.Length <= maxTrainSize)
-                return bestPerPrecursor;
-
-            // Project the deduped rows into local arrays, subsample by peptide
-            // group, then map the local selection back to entries indices.
-            int m = bestPerPrecursor.Length;
-            var dedupLabels = new bool[m];
-            var dedupEntryIds = new uint[m];
-            var dedupPeptides = new string[m];
-            for (int i = 0; i < m; i++)
-            {
-                int gi = bestPerPrecursor[i];
-                dedupLabels[i] = labels[gi];
-                dedupEntryIds[i] = entryIds[gi];
-                dedupPeptides[i] = peptides[gi];
-            }
-
-            int[] localSelected = SubsampleByPeptideGroup(
-                dedupLabels, dedupEntryIds, dedupPeptides, maxTrainSize, seed);
-            var trainSubset = new int[localSelected.Length];
-            for (int i = 0; i < localSelected.Length; i++)
-                trainSubset[i] = bestPerPrecursor[localSelected[i]];
-            return trainSubset;
-        }
-
-        /// <summary>
-        /// Pick the best-scoring observation per (base_id, isDecoy) tuple across all
-        /// entries. Used to deduplicate multi-file observations of the same precursor
-        /// before SVM training, so the SVM doesn't see the same peptide N times.
-        ///
-        /// Score for ranking is taken from PercolatorEntry.Features[0], which is
-        /// coelution_sum (matches Rust's selection criterion in pipeline.rs).
-        ///
-        /// When <paramref name="bestScores"/> is supplied (issue #4355 Phase 4
-        /// streaming path, where the stubs carry no resident feature vector) the
-        /// per-entry ranking value is read from that array instead of
-        /// <c>Features[0]</c>. The two are byte-identical on the first pass
-        /// (<c>bestScores[i]</c> is the entry's <c>CoelutionSum</c>, which
-        /// <c>CoelutionScorer</c> assigns from <c>features[0]</c>), so the selected
-        /// subset is unchanged; only the value's source moves off the O(N) vector.
-        /// </summary>
-        public static int[] SelectBestPerPrecursor(
-            bool[] labels, uint[] entryIds, IList<PercolatorEntry> entries,
-            double[] bestScores = null)
-        {
-            int n = labels.Length;
-            // Map base_id to best target index, separately for targets and decoys
-            var bestTarget = new Dictionary<uint, int>();
-            var bestDecoy = new Dictionary<uint, int>();
-
-            for (int i = 0; i < n; i++)
-            {
-                uint baseId = entryIds[i] & BASE_ID_MASK;
-                double score = bestScores != null ? bestScores[i] : entries[i].Features[0];
-
-                Dictionary<uint, int> map = labels[i] ? bestDecoy : bestTarget;
-                int existing;
-                if (map.TryGetValue(baseId, out existing))
-                {
-                    double existingScore = bestScores != null
-                        ? bestScores[existing] : entries[existing].Features[0];
-                    if (score > existingScore)
-                        map[baseId] = i;
-                }
-                else
-                {
-                    map[baseId] = i;
-                }
-            }
-
-            var result = new int[bestTarget.Count + bestDecoy.Count];
-            int idx = 0;
-            foreach (int i in bestTarget.Values)
-                result[idx++] = i;
-            foreach (int i in bestDecoy.Values)
-                result[idx++] = i;
-            Array.Sort(result); // Array.Sort OK: result holds unique entry indices (one per base_id from bestTarget/bestDecoy), so no ties
-            return result;
-        }
-
-        /// <summary>
-        /// Subsample entries by peptide group, keeping target-decoy pairs and charge states together.
-        /// </summary>
-        internal static int[] SubsampleByPeptideGroup(
-            bool[] labels, uint[] entryIds, string[] peptides,
-            int maxEntries, ulong seed)
-        {
-            int n = labels.Length;
-            if (n <= maxEntries)
-            {
-                var all = new int[n];
-                for (int i = 0; i < n; i++)
-                    all[i] = i;
-                return all;
-            }
-
-            // Build peptide groups (group by target peptide via base_id)
-            var baseIdToTargetPeptide = new Dictionary<uint, string>();
-            for (int i = 0; i < n; i++)
-            {
-                uint baseId = entryIds[i] & BASE_ID_MASK;
-                if (!labels[i])
-                {
-                    if (!baseIdToTargetPeptide.ContainsKey(baseId))
-                        baseIdToTargetPeptide[baseId] = peptides[i];
-                }
-            }
-
-            var peptideGroups = new Dictionary<string, List<int>>();
-            for (int i = 0; i < n; i++)
-            {
-                uint baseId = entryIds[i] & BASE_ID_MASK;
-                string key;
-                if (!baseIdToTargetPeptide.TryGetValue(baseId, out key))
-                    key = peptides[i];
-                List<int> list;
-                if (!peptideGroups.TryGetValue(key, out list))
-                {
-                    list = new List<int>();
-                    peptideGroups[key] = list;
-                }
-                list.Add(i);
-            }
-
-            // Sort deterministically and shuffle with Fisher-Yates
-            var groups = new List<KeyValuePair<string, List<int>>>(peptideGroups);
-            groups.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal)); // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the comparator never ties (the following Fisher-Yates shuffle then randomizes deterministically)
-
-            ulong rngState = seed;
-            for (int i = groups.Count - 1; i >= 1; i--)
-            {
-                rngState ^= rngState << 13;
-                rngState ^= rngState >> 7;
-                rngState ^= rngState << 17;
-                int j = (int)(rngState % (ulong)(i + 1));
-                var tmp = groups[i];
-                groups[i] = groups[j];
-                groups[j] = tmp;
-            }
-
-            // Select groups until we reach maxEntries
-            var selected = new List<int>(maxEntries);
-            foreach (var group in groups)
-            {
-                if (selected.Count + group.Value.Count > maxEntries && selected.Count > 0)
-                    break;
-                selected.AddRange(group.Value);
-            }
-
-            selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
-            return selected.ToArray();
         }
 
         /// <summary>
