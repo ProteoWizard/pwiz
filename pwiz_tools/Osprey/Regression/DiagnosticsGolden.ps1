@@ -54,6 +54,15 @@
 
 $ErrorActionPreference = 'Stop'
 
+# The TSV layer (Write-Tsv / Read-Tsv / Format-CellValue) is BlibGolden's, reused
+# rather than reimplemented: a second copy drifted on both of the things a golden
+# comparator must not get wrong -- it wrote through Set-Content -Encoding UTF8
+# (a BOM under Windows PowerShell 5.1) and parsed with the CURRENT culture, so a
+# de-DE agent read the invariant "1.5" it had just written as 15. Dot-sourced here
+# rather than relying on regression.ps1 to have done it first, so this file works
+# standalone and cannot depend on load order.
+. (Join-Path $PSScriptRoot 'BlibGolden.ps1')
+
 # Reported-q threshold the spot checks are quoted at.
 $script:DiagQThreshold = 0.01
 
@@ -175,10 +184,7 @@ function Save-DiagnosticsGolden {
 
     New-Item -ItemType Directory -Path $GoldenDir -Force | Out-Null
     $proj = Get-DiagnosticsMetrics -HtmlPath $HtmlPath
-    $lines = [System.Collections.Generic.List[string]]::new()
-    $lines.Add($proj.Header -join "`t")
-    foreach ($r in $proj.Rows) { $lines.Add($r -join "`t") }
-    Set-Content -Path (Join-Path $GoldenDir 'diagnostics.tsv') -Value $lines -Encoding UTF8
+    Write-Tsv -Path (Join-Path $GoldenDir 'diagnostics.tsv') -Header $proj.Header -Rows $proj.Rows
 }
 
 function Compare-DiagnosticsGolden {
@@ -200,11 +206,9 @@ function Compare-DiagnosticsGolden {
 
     $golden = @{}
     $goldenOrder = [System.Collections.Generic.List[string]]::new()
-    foreach ($line in (Get-Content $goldenPath | Select-Object -Skip 1)) {
-        if ([string]::IsNullOrWhiteSpace($line)) { continue }
-        $parts = $line -split "`t", 2
-        $golden[$parts[0]] = $parts[1]
-        $goldenOrder.Add($parts[0])
+    foreach ($row in (Read-Tsv -Path $goldenPath).Rows) {
+        $golden[$row[0]] = $row[1]
+        $goldenOrder.Add($row[0])
     }
 
     $fresh = @{}
@@ -214,7 +218,16 @@ function Compare-DiagnosticsGolden {
         if (-not $fresh.ContainsKey($name)) { $issues.Add("diagnostics: metric missing from run: $name"); continue }
         $g = $golden[$name]; $f = $fresh[$name]
         $gd = 0.0; $fd = 0.0
-        $bothNumeric = [double]::TryParse($g, [ref]$gd) -and [double]::TryParse($f, [ref]$fd)
+        # Invariant, matching how Format-CellValue WROTE these. The current-culture
+        # overload reads its own invariant output wrong on a comma-decimal agent, and
+        # it fails GREEN, which is the direction that matters here: under de-DE the
+        # '.' is a group separator, so a tilt moving 0.236 -> 2.36 parses as 236 on
+        # both sides and reports diff=0. A 10x calibration regression - exactly the
+        # failure class this tier exists to catch - would pass silently.
+        $inv = [System.Globalization.CultureInfo]::InvariantCulture
+        $style = [System.Globalization.NumberStyles]::Float
+        $bothNumeric = [double]::TryParse($g, $style, $inv, [ref]$gd) -and
+                       [double]::TryParse($f, $style, $inv, [ref]$fd)
         if ($bothNumeric) {
             $diff = [math]::Abs($gd - $fd)
             if ($diff -gt $Tolerance) {
@@ -259,22 +272,55 @@ function Test-DiagnosticsSanity {
     $issues = [System.Collections.Generic.List[string]]::new()
     $d = Get-DiagnosticsPayload -HtmlPath $HtmlPath
 
-    $tilt = [double]$d.densityRatio.flatnessSlope
-    if ([math]::Abs($tilt) -gt $MaxAbsTilt) {
-        $issues.Add(("SANITY: null-alignment tilt {0:N3} exceeds +/-{1:N2}; the decoy null no longer tracks the target-false null" -f $tilt, $MaxAbsTilt))
+    # Every bound below FAILS CLOSED. PowerShell coerces a missing property to 0.0
+    # ([double]$null -eq 0.0) and there is no StrictMode here, so a renamed or renested
+    # JSON field would otherwise sail through every comparison and this tier -- the one
+    # that -CreateGolden cannot regenerate -- would report PASS forever having evaluated
+    # nothing. NaN is the same trap and is a DOCUMENTED value of this payload
+    # (ModelDiagnosticsHtml serializes it as the string "NaN"): every comparison against
+    # NaN is false, so NaN passes a ceiling silently. Require a real finite number.
+    function Test-Finite([string]$name, $raw, [ref]$outValue) {
+        $v = 0.0
+        if ($null -eq $raw -or -not [double]::TryParse([string]$raw, [ref]$v) -or
+            [double]::IsNaN($v) -or [double]::IsInfinity($v)) {
+            $issues.Add(("SANITY: metric '{0}' is missing or non-finite ('{1}') -- the bound could not be evaluated, so it is treated as a failure rather than a pass" -f $name, $raw))
+            return $false
+        }
+        $outValue.Value = $v
+        return $true
     }
 
-    if ($d.winFraction.hasEntrapment) {
-        $coin = [double]$d.winFraction.nullBandEnt
-        if ([math]::Abs($coin - 0.5) -gt $CoinTolerance) {
-            $issues.Add(("SANITY: entrapment paired-win fraction {0:N4} is more than {1:N2} from a fair 0.5; decoys are not exchangeable with false targets" -f $coin, $CoinTolerance))
+    $tilt = 0.0
+    if (Test-Finite 'densityRatio.flatnessSlope' $d.densityRatio.flatnessSlope ([ref]$tilt)) {
+        if ([math]::Abs($tilt) -gt $MaxAbsTilt) {
+            $issues.Add(("SANITY: null-alignment tilt {0:N3} exceeds +/-{1:N2}; the decoy null no longer tracks the target-false null" -f $tilt, $MaxAbsTilt))
         }
     }
 
-    $fdp = Get-FdpAtThreshold -Payload $d -Pass 1 -Scope 'experiment'
-    if ($null -ne $fdp) {
-        if ($fdp.Combined -gt $MaxPass1Fdp) {
-            $issues.Add(("SANITY: Pass-1 true FDP {0:P2} at a reported q of {1:P2} exceeds the {2:P2} ceiling; reported q-values are anti-conservative" -f $fdp.Combined, $fdp.Q, $MaxPass1Fdp))
+    if ($d.winFraction.hasEntrapment) {
+        $coin = 0.0
+        if (Test-Finite 'winFraction.nullBandEnt' $d.winFraction.nullBandEnt ([ref]$coin)) {
+            if ([math]::Abs($coin - 0.5) -gt $CoinTolerance) {
+                $issues.Add(("SANITY: entrapment paired-win fraction {0:N4} is more than {1:N2} from a fair 0.5; decoys are not exchangeable with false targets" -f $coin, $CoinTolerance))
+            }
+        }
+    }
+
+    # An entrapment pool with no usable FDP curve is a failure, not a skip: "nothing
+    # reached a reported 1% q" is exactly the catastrophic-calibration case this bound
+    # exists to catch, and silently skipping it would report PASS at the worst moment.
+    # Datasets without entrapment have no curve by construction and are exempt.
+    if ($d.hasEntrapment) {
+        $fdp = Get-FdpAtThreshold -Payload $d -Pass 1 -Scope 'experiment'
+        if ($null -eq $fdp) {
+            $issues.Add(("SANITY: dataset has entrapment but no Pass-1 experiment FDP point at q <= {0:P2}; the calibration curve is missing or never reaches the threshold" -f $script:DiagQThreshold))
+        } else {
+            $combined = 0.0
+            if (Test-Finite 'pass1.experiment.combinedFdp' $fdp.Combined ([ref]$combined)) {
+                if ($combined -gt $MaxPass1Fdp) {
+                    $issues.Add(("SANITY: Pass-1 true FDP {0:P2} at a reported q of {1:P2} exceeds the {2:P2} ceiling; reported q-values are anti-conservative" -f $combined, $fdp.Q, $MaxPass1Fdp))
+                }
+            }
         }
     }
 

@@ -42,8 +42,21 @@
     mismatch.
 
 .PARAMETER Dataset
-    Stellar, Astral, or All (default). Stellar is unit-resolution + fast; Astral
-    is hram + larger.
+    One dataset name or All (default). Four exist, and they cover deliberately
+    different failure classes:
+
+      Stellar               unit-resolution, generated decoys, no entrapment.
+                            The fast local pre-commit loop.
+      StellarLibDecoy       the same mzML with a library that SUPPLIES its own
+                            decoys plus entrapment peptides. The path we
+                            recommend, and the only one that never calls
+                            DecoyGenerator.
+      StellarGenDecoyEntrap the same entrapment library with the decoy rows
+                            stripped, so Osprey GENERATES decoys while the
+                            entrapment peptides remain. The only dataset that can
+                            measure a decoy-construction regression against a
+                            true-FDP oracle.
+      Astral                hram, generated decoys, larger and slower.
 
 .PARAMETER CreateGolden
     Capture/refresh the committed golden from this run instead of comparing
@@ -100,7 +113,8 @@
     .\regression.ps1 -TeamCity -Dataset All
 #>
 param(
-    [ValidateSet('Stellar', 'StellarLibDecoy', 'Astral', 'All')] [string]$Dataset = 'All',
+    [ValidateSet('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral', 'All')]
+    [string]$Dataset = 'All',
     [switch]$CreateGolden,
     [switch]$SkipResume,
     [switch]$SkipHpcChain,
@@ -169,8 +183,10 @@ $dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/
 #                    measure 0.86-1.47%, generated decoys ~2.03% even with the
 #                    b<->y swap removed.
 #   MaxAbsTilt       Tier-2 ceiling on |null-alignment tilt| (default 1.0), same
-#                    do-not-regenerate rule. Also per-dataset, and Astral's is
-#                    currently a RATCHET rather than a target -- see below.
+#                    do-not-regenerate rule. Also per-dataset.
+#   CoinTolerance    Tier-2 tolerance on |entrapment paired-win fraction - 0.5|
+#                    (default 0.05), same do-not-regenerate rule. Only bites on a
+#                    dataset that carries entrapment.
 $datasets = [ordered]@{
     Stellar = @{ Folder = 'stellar'; Resolution = 'unit' }
     StellarLibDecoy = @{
@@ -184,8 +200,29 @@ $datasets = [ordered]@{
         DecoysInLibrary  = $true
         ModelDiagnostics = $true
     }
+    # The dataset that actually guards DecoyGenerator. Same entrapment library as
+    # StellarLibDecoy with the decoy rows stripped, so Osprey GENERATES the decoys
+    # while the entrapment peptides remain -- generated decoys measured against a
+    # true-FDP oracle. Neither of the other entrapment-free gendecoy datasets nor the
+    # library-decoy dataset can catch a decoy-construction regression: the former have
+    # nothing to measure FDP against, the latter never calls DecoyGenerator at all.
+    #
+    # 2.0% ceiling: generated decoys measure ~1.5% on unit-resolution Stellar with the
+    # b<->y swap removed, against 0.86% for library decoys. The pre-fix construction
+    # measured 11.81% here and would have blown through this by 6x.
+    StellarGenDecoyEntrap = @{
+        Folder           = 'stellar'
+        LibraryFolder    = 'stellar-libdecoy'
+        GoldenFolder     = 'stellar-gendecoy-entrap'
+        NestedZip        = 'libdecoy-entrapment.zip'
+        Library          = 'carafe_spectral_library.tsv'
+        StripDecoys      = $true
+        Resolution       = 'unit'
+        ModelDiagnostics = $true
+        MaxPass1Fdp      = 0.02
+    }
     # Astral carries no entrapment, so its tier-2 bound is the null-alignment tilt.
-    # 0.5 is an honest ceiling against the b<->y swap removed (this branch measures
+    # 0.5 is an honest ceiling with the b<->y swap removed (this branch measures
     # ~0.25); the pre-fix code measured 1.408 with a real paired-win coin of 0.397,
     # i.e. decoys losing 60% of head-to-head pairs against their own targets. This
     # bound would have failed the old construction, which is the point.
@@ -193,6 +230,21 @@ $datasets = [ordered]@{
                  MaxAbsTilt = 0.5 }
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
+
+# Two datasets writing the same golden folder would have the second silently
+# overwrite the first under -CreateGolden, and compare against the wrong baseline
+# otherwise. GoldenFolder defaults to Folder, so this is one forgotten key away and
+# is exactly the collision StellarLibDecoy would have hit. Checked over the WHOLE
+# table, not just $selected, so -Dataset Stellar cannot hide a bad table.
+$goldenNames = @($datasets.Keys | ForEach-Object {
+    $d = $datasets[$_]
+    if ($d.GoldenFolder) { $d.GoldenFolder } else { $d.Folder }
+})
+$dupGolden = @($goldenNames | Group-Object | Where-Object { $_.Count -gt 1 })
+if ($dupGolden.Count -gt 0) {
+    throw ("Dataset table is invalid: golden folder(s) used by more than one dataset: {0}. " +
+           "Give each dataset its own GoldenFolder." -f (($dupGolden | ForEach-Object { $_.Name }) -join ', '))
+}
 
 # --- TeamCity service-message helpers (mirror build.ps1) ----------------------
 function Format-TcMessage([string]$s) {
@@ -283,6 +335,21 @@ New-Item -ItemType Directory -Path $runRoot -Force | Out-Null
 # Dataset-specific CLI flags, shared by the straight-through, resume, and HPC
 # legs so every leg of a dataset runs the SAME search. Absent keys add nothing,
 # which is why the gendecoy datasets keep their exact historical command line.
+# Tier-2 sanity bounds for one dataset, as a splattable hashtable. One place, because
+# the bounds are read twice (the -CreateGolden refusal and the mode-1b check) and two
+# copies of the fallback chain is two chances for a bound to be enforced on one path
+# and not the other -- which is precisely the failure tier 2 exists to prevent.
+# A key is emitted only when the dataset overrides it, so Test-DiagnosticsSanity's own
+# parameter defaults stay the single source of the default values.
+function Get-SanityBounds {
+    param([hashtable]$Spec)
+    $bounds = @{}
+    if ($null -ne $Spec.MaxPass1Fdp)  { $bounds['MaxPass1Fdp']  = $Spec.MaxPass1Fdp }
+    if ($null -ne $Spec.MaxAbsTilt)   { $bounds['MaxAbsTilt']   = $Spec.MaxAbsTilt }
+    if ($null -ne $Spec.CoinTolerance) { $bounds['CoinTolerance'] = $Spec.CoinTolerance }
+    return $bounds
+}
+
 function Get-DatasetCliArgs {
     param([hashtable]$Spec, [string]$Manifest)
     $extra = @()
@@ -292,9 +359,12 @@ function Get-DatasetCliArgs {
     # --model-diagnostics is verified output-neutral (it routes the 2nd pass down
     # the resident path instead of the FDR projection, and the two agree
     # byte-for-byte), so it can ride on the golden-compared run rather than
-    # needing a second invocation. --fdrbench-pass both is required for the
-    # Pass 1 FDP views; without it only Pass 2 is populated.
-    if ($Spec.ModelDiagnostics) { $extra += @('--model-diagnostics', '--fdrbench-pass', 'both') }
+    # needing a second invocation. It populates the Pass 1 AND Pass 2 FDP views on
+    # its own: --fdrbench-pass selects which pass an FDRBench INPUT FILE is written
+    # for and does nothing at all without --fdrbench (OspreyCommandArgs warns, and
+    # FdrBenchInputWriter returns early on an empty output path), so passing it here
+    # only produced a warning on every invocation.
+    if ($Spec.ModelDiagnostics) { $extra += '--model-diagnostics' }
     return $extra
 }
 
@@ -366,6 +436,51 @@ function Resolve-DatasetInputs {
         $libs = @(Get-ChildItem -Path $libDir -Filter '*.tsv' -File | ForEach-Object { $_.FullName })
         if ($libs.Count -ne 1) { throw "Expected exactly one .tsv library in $libDir, found $($libs.Count)" }
         $library = $libs[0]
+    }
+
+    # StripDecoys: derive a decoy-free copy of the library so Osprey GENERATES the
+    # decoys while the entrapment peptides survive. That combination is what lets the
+    # true-FDP bound guard DecoyGenerator: the library-decoy dataset carries entrapment
+    # but never calls DecoyGenerator, and the plain gendecoy datasets call it but have
+    # no entrapment to measure against, so neither can catch a decoy-construction
+    # regression on its own.
+    #
+    # Derived into gitignored scratch, NOT into the read-only data dir (which the
+    # run-level assertion watches). Cached across runs and rebuilt when the source
+    # library is newer.
+    #
+    # Rows are dropped on the decoy_ PREFIX of ProteinID. The Decoy column is 0 on
+    # every row of these Carafe libraries, so filtering on it is a silent no-op that
+    # yields a byte-identical "stripped" file.
+    if ($Spec.StripDecoys) {
+        $derivedDir = Join-Path $scriptRoot 'TestResults\_derived'
+        New-Item -ItemType Directory -Path $derivedDir -Force | Out-Null
+        $stripped = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.nodecoy.tsv')
+        $srcInfo = Get-Item $library
+        if ((-not (Test-Path $stripped)) -or ((Get-Item $stripped).LastWriteTimeUtc -lt $srcInfo.LastWriteTimeUtc)) {
+            Write-Host "  deriving decoy-free library (one time, ~1 min)..."
+            $kept = 0; $dropped = 0
+            $reader = [IO.StreamReader]::new($library)
+            $writer = [IO.StreamWriter]::new($stripped, $false, [Text.UTF8Encoding]::new($false))
+            try {
+                $header = $reader.ReadLine()
+                if ($null -eq $header) { throw "Empty library: $library" }
+                $writer.WriteLine($header)
+                $protCol = [array]::IndexOf(($header -split "`t"), 'ProteinID')
+                if ($protCol -lt 0) { throw "No ProteinID column in $library" }
+                while ($null -ne ($line = $reader.ReadLine())) {
+                    $fields = $line -split "`t"
+                    if ($fields.Length -gt $protCol -and $fields[$protCol].StartsWith('decoy_', [StringComparison]::Ordinal)) {
+                        $dropped++
+                    } else {
+                        $writer.WriteLine($line); $kept++
+                    }
+                }
+            } finally { $writer.Dispose(); $reader.Dispose() }
+            if ($dropped -eq 0) { throw "StripDecoys removed nothing from $library -- the decoy_ convention changed" }
+            Write-Host ("  derived {0}: kept {1:N0} rows, dropped {2:N0} decoy rows" -f (Split-Path -Leaf $stripped), $kept, $dropped)
+        }
+        $library = $stripped
     }
 
     $manifest = $null
@@ -641,23 +756,26 @@ foreach ($name in $selected) {
     $diagHtml = Join-Path $straightDir 'output.model-diagnostics.html'
 
     if ($CreateGolden) {
-        Write-Progress-Tc "${name}: capturing golden"
-        Save-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump
+        # Tier 2 runs BEFORE anything is written, and a failure writes NOTHING.
+        # Order matters: capturing first and then reporting "refusing to bless" would
+        # leave a full set of updated golden files on disk, which is indistinguishable
+        # from a legitimate rebaseline in git status -- so the poisoned baseline gets
+        # committed anyway and tier 2 protects nothing. Tier 2 is never captured; it
+        # is a fixed bound whose whole purpose is that a rebaseline cannot move it.
         if ($cfg.ModelDiagnostics) {
-            Save-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir
-            # Tier 2 is NOT captured -- it is a fixed bound, and the whole point is
-            # that a rebaseline cannot move it. Run it here so a golden is never
-            # captured from a run that is already out of calibration.
-            $sane = Test-DiagnosticsSanity -HtmlPath $diagHtml -MaxPass1Fdp $(if ($null -ne $cfg.MaxPass1Fdp) { $cfg.MaxPass1Fdp } else { 0.02 }) `
-            -MaxAbsTilt $(if ($null -ne $cfg.MaxAbsTilt) { $cfg.MaxAbsTilt } else { 1.0 })
+            $bounds = Get-SanityBounds $cfg
+            $sane = Test-DiagnosticsSanity -HtmlPath $diagHtml @bounds
             if (-not $sane.Pass) {
                 $overallFail = $true
-                Write-Problem-Tc "${name}: REFUSING to bless this golden -- diagnostics sanity failed"
+                Write-Problem-Tc "${name}: REFUSED to capture golden -- diagnostics sanity failed (nothing written)"
                 $sane.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-                $summaryLines.Add("$name golden CAPTURED but diagnostics sanity FAILED")
+                $summaryLines.Add("$name golden REFUSED (sanity failed; no files written)")
                 continue
             }
         }
+        Write-Progress-Tc "${name}: capturing golden"
+        Save-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump
+        if ($cfg.ModelDiagnostics) { Save-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir }
         $summaryLines.Add("$name golden CAPTURED -> $goldenDir")
         continue
     }
@@ -690,8 +808,8 @@ foreach ($name in $selected) {
             $md.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode1b (diagnostics vs golden): FAIL ($($md.Issues.Count) issues)")
         }
-        $ms = Test-DiagnosticsSanity -HtmlPath $diagHtml -MaxPass1Fdp $(if ($null -ne $cfg.MaxPass1Fdp) { $cfg.MaxPass1Fdp } else { 0.02 }) `
-            -MaxAbsTilt $(if ($null -ne $cfg.MaxAbsTilt) { $cfg.MaxAbsTilt } else { 1.0 })
+        $bounds = Get-SanityBounds $cfg
+        $ms = Test-DiagnosticsSanity -HtmlPath $diagHtml @bounds
         if ($ms.Pass) {
             $summaryLines.Add("$name mode1b (FDR sanity bounds): PASS")
         } else {
@@ -741,8 +859,19 @@ foreach ($name in $selected) {
         $coldBlib = Join-Path $straightDir 'output_cold.blib'
         Copy-Item $straightBlib $coldBlib -Force
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
+        # A --model-diagnostics resume needs the RESIDENT first-pass pool and fails
+        # fast without this opt-in: the invalidation deletes the Stage 5 join + blib
+        # but leaves every <stem>.1st-pass.fdr_scores.bin in place, so
+        # PerFileScoringTask's needsResidentPool is true and GuardResidentPool throws.
+        # Same opt-in the HPC chain above takes, and equally safe here -- these are
+        # 3-file datasets, not the file counts the guard exists to protect.
+        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
+        try {
+            $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+                -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
+        } finally {
+            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
+        }
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
         $m2 = Compare-BlibFull -BlibExpected $coldBlib -BlibActual $resumeBlib -Tolerance $Tolerance
@@ -760,6 +889,22 @@ foreach ($name in $selected) {
     # at ~one dataset (the next dataset / the perf-gate step gets the space back).
     Remove-Scratch (Join-Path $runRoot $name)
 }
+}
+catch {
+    # A throw from any leg (a nonzero Osprey exit, a missing input, a comparator
+    # blowing up) used to escape straight past the summary and the buildProblem
+    # line, so a red CI gate surfaced as a bare stack trace with no statement of
+    # WHAT failed. Record it as a failure like any other and fall through to the
+    # normal reporting below. Deliberately not per-dataset: a throw is usually the
+    # environment or the binary, and running the remaining datasets against a
+    # broken build would only bury the real message.
+    $overallFail = $true
+    $failMsg = $_.Exception.Message
+    Write-Problem-Tc "Osprey regression aborted: $failMsg"
+    $summaryLines.Add("ABORTED: $failMsg")
+    # The stack trace is diagnosis, not the verdict, so it goes to the log under
+    # the verdict rather than replacing it.
+    Write-Host ($_.ScriptStackTrace) -ForegroundColor DarkGray
 }
 finally {
     # Safety net for a dataset that threw before its own cleanup -- drop the whole

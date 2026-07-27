@@ -17,13 +17,22 @@ say why in the PR.
 | Golden folder | Decoys | Entrapment | Resolution | Role |
 |---|---|---|---|---|
 | `stellar` | generated (reverse) | no | unit | the fast local pre-commit gate |
-| `stellar-libdecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the path we recommend; the only one that can measure true FDP |
+| `stellar-libdecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the path we recommend; measures true FDP without ever calling `DecoyGenerator` |
+| `stellar-gendecoy-entrap` | generated (reverse) | yes, r=1.0 | unit | the same entrapment library with its decoy rows stripped: the only dataset that measures **generated** decoys against a true-FDP oracle |
 | `astral` | generated (reverse) | no | hram | larger, HRAM, MS1 features live |
 
-`stellar` and `astral` cover the **generated**-decoy construction; `stellar-libdecoy`
-covers the **library**-supplied one. Before this split, every parity and determinism
-signal we had was collected on generated decoys only -- the construction we do not
-recommend.
+`stellar`, `stellar-gendecoy-entrap` and `astral` cover the **generated**-decoy
+construction; `stellar-libdecoy` covers the **library**-supplied one. Before this split,
+every parity and determinism signal we had was collected on generated decoys only -- the
+construction we do not recommend.
+
+`stellar-gendecoy-entrap` exists because of a gap the other three could not close. The
+FDP ceiling is the guard against a `DecoyGenerator` regression, but the only dataset that
+HAD entrapment to measure FDP against was `stellar-libdecoy`, which bypasses
+`DecoyGenerator` entirely; the two that call it had no entrapment. So the guard could not
+see the failure class it was built for. Its library is derived at run time by stripping
+rows whose `ProteinID` carries the `decoy_` prefix -- not the `Decoy` column, which is 0
+on every row of a Carafe entrapment library. Never "fix" that column.
 
 ## diagnostics.tsv -- and why a golden alone is not enough
 
@@ -48,6 +57,39 @@ capture a golden from a run that violates them.
 which is both correct FDR semantics and the convention every recorded measurement in the
 gendecoy investigation used. Quote **Pass 1**, not Pass 2 -- the pass-2 Percolator
 retrain is known to inflate FDR.
+
+## 2026-07-26: both gendecoy goldens lost a fifth to a third of their IDs on purpose
+
+Removing the decoy b<->y intensity swap (pwiz#TBD, maccoss/osprey#58) re-blessed the two
+generated-decoy goldens. Both dropped, and by a lot:
+
+| Dataset | RefSpectra (IDs) | Proteins |
+|---------|------------------|----------|
+| Stellar | 51,444 -> **35,222 (-31.5%)** | 7,042 -> **5,664 (-19.6%)** |
+| Astral  | 165,500 -> **126,474 (-23.6%)** | 14,201 -> **11,219 (-21.0%)** |
+
+**These drops are correct. Do not restore the old counts.**
+
+The old construction mapped a target b_k to a decoy y_{n-k} and carried the copied
+intensity along with the relabel. Fragment intensity is dominated by ion TYPE, not by
+which residues an ion spans -- y ions are systematically more intense than b ions -- so
+the swap inverted the decoy spectrum's intensity structure relative to any real peptide.
+The decoys were therefore easy to beat, the target-decoy null was not a null, and the
+reported q-values were far too optimistic. Entrapment-measured true FDP at a claimed 1% q:
+
+| Dataset | with the swap | without |
+|---|---|---|
+| Stellar (unit) | 10.9% | 1.5% |
+| Astral (hram)  | 7.6%  | 2.0% (library-decoy reference: 1.9%) |
+
+So roughly a tenth of the old Stellar "1% FDR" set was false at best. Fewer IDs at a
+nominal threshold is not a regression when the threshold was previously being missed by
+an order of magnitude. Skyline, OpenSWATH, DIA-NN, EncyclopeDIA and SpectraST all map the
+intensity to the same ion; none of them swaps.
+
+`stellar-libdecoy` is byte-identical across this change, proven by content hash, because
+`--decoys-in-library` never calls `DecoyGenerator`. That is the control: the goldens that
+moved are exactly the ones that generate decoys.
 
 ## 2026-07: Stellar lost ~10% of its IDs on purpose
 
