@@ -171,7 +171,7 @@ namespace pwiz.Osprey.FDR
                     subEntryIds[i] = entryIds[trainSubset[i]];
                     subPeptides[i] = peptides[trainSubset[i]];
                 }
-                subFeatures = ExtractRows(stdFeatures, trainSubset);
+                subFeatures = MatrixRows.ExtractRows(stdFeatures, trainSubset);
             }
             else
             {
@@ -421,7 +421,7 @@ namespace pwiz.Osprey.FDR
                     var testGlobalIndices = new int[testSubIndices.Count];
                     for (int i = 0; i < testSubIndices.Count; i++)
                         testGlobalIndices[i] = trainSubset[testSubIndices[i]];
-                    var testFeatures = ExtractRows(stdFeatures, testGlobalIndices);
+                    var testFeatures = MatrixRows.ExtractRows(stdFeatures, testGlobalIndices);
                     var testScores = ScoreWithFoldModel(foldModels, foldGbtModels, fold, testFeatures);
                     for (int i = 0; i < testGlobalIndices.Length; i++)
                         finalScores[testGlobalIndices[i]] = testScores[i];
@@ -436,7 +436,7 @@ namespace pwiz.Osprey.FDR
                 }
                 if (nonSubsetIndices.Count > 0)
                 {
-                    var nonSubFeatures = ExtractRows(stdFeatures, nonSubsetIndices.ToArray());
+                    var nonSubFeatures = MatrixRows.ExtractRows(stdFeatures, nonSubsetIndices.ToArray());
                     double nModels = config.NFolds;
                     var avgScores = new double[nonSubsetIndices.Count];
                     for (int fold = 0; fold < config.NFolds; fold++)
@@ -460,7 +460,7 @@ namespace pwiz.Osprey.FDR
                         if (foldAssignments[i] == fold)
                             testIndices.Add(i);
                     }
-                    var testFeatures = ExtractRows(stdFeatures, testIndices.ToArray());
+                    var testFeatures = MatrixRows.ExtractRows(stdFeatures, testIndices.ToArray());
                     var testScores = ScoreWithFoldModel(foldModels, foldGbtModels, fold, testFeatures);
                     for (int i = 0; i < testIndices.Count; i++)
                         finalScores[testIndices[i]] = testScores[i];
@@ -1966,11 +1966,11 @@ namespace pwiz.Osprey.FDR
                 if (foldScratch != null)
                 {
                     foldScratch.EnsureExtractCapacity(svmGlobalIndices.Length, nFeatures);
-                    svmFeatures = ExtractRowsInto(stdFeatures, svmGlobalIndices, foldScratch.TrainData);
+                    svmFeatures = MatrixRows.ExtractRowsInto(stdFeatures, svmGlobalIndices, foldScratch.TrainData);
                 }
                 else
                 {
-                    svmFeatures = ExtractRows(stdFeatures, svmGlobalIndices);
+                    svmFeatures = MatrixRows.ExtractRows(stdFeatures, svmGlobalIndices);
                 }
                 var svmLabels = new bool[svmIndices.Count];
                 var svmEntryIds = new uint[svmIndices.Count];
@@ -2004,11 +2004,11 @@ namespace pwiz.Osprey.FDR
                 if (foldScratch != null)
                 {
                     foldScratch.EnsureExtractCapacity(trainIndices.Length, nFeatures);
-                    trainFeatures = ExtractRowsInto(stdFeatures, trainIndices, foldScratch.TestData);
+                    trainFeatures = MatrixRows.ExtractRowsInto(stdFeatures, trainIndices, foldScratch.TestData);
                 }
                 else
                 {
-                    trainFeatures = ExtractRows(stdFeatures, trainIndices);
+                    trainFeatures = MatrixRows.ExtractRows(stdFeatures, trainIndices);
                 }
                 var newTrainScores = model.DecisionFunction(trainFeatures);
 
@@ -2195,7 +2195,7 @@ namespace pwiz.Osprey.FDR
                 var gbtLabels = new bool[gbtLocal.Count];
                 for (int i = 0; i < gbtLocal.Count; i++)
                 {
-                    gbtRows[i] = ExtractRow(stdFeatures, trainIndices[fitLocal[gbtLocal[i]]]);
+                    gbtRows[i] = MatrixRows.ExtractRow(stdFeatures, trainIndices[fitLocal[gbtLocal[i]]]);
                     gbtLabels[i] = fitLabels[gbtLocal[i]];
                 }
 
@@ -2207,13 +2207,13 @@ namespace pwiz.Osprey.FDR
                 //      selection) and the VALIDATION rows (drives model selection).
                 for (int i = 0; i < fitLocal.Count; i++)
                 {
-                    CopyRow(stdFeatures, trainIndices[fitLocal[i]], rowBuf);
+                    MatrixRows.CopyRow(stdFeatures, trainIndices[fitLocal[i]], rowBuf);
                     currentScores[trainIndices[fitLocal[i]]] = model.ScoreSingle(rowBuf);
                 }
                 var valScores = new double[valLocal.Count];
                 for (int i = 0; i < valLocal.Count; i++)
                 {
-                    CopyRow(stdFeatures, trainIndices[valLocal[i]], rowBuf);
+                    MatrixRows.CopyRow(stdFeatures, trainIndices[valLocal[i]], rowBuf);
                     valScores[i] = model.ScoreSingle(rowBuf);
                 }
 
@@ -2270,7 +2270,7 @@ namespace pwiz.Osprey.FDR
             var rowBuf = new double[rows.Cols];
             for (int i = 0; i < rows.Rows; i++)
             {
-                CopyRow(rows, i, rowBuf);
+                MatrixRows.CopyRow(rows, i, rowBuf);
                 scores[i] = model.ScoreSingle(rowBuf);
             }
             return scores;
@@ -2360,20 +2360,6 @@ namespace pwiz.Osprey.FDR
                     finalScores[baseIndex + r] = AverageGbtScore(gbtModels, featureBuf);
                 }
             });
-        }
-
-        private static double[] ExtractRow(Matrix matrix, int row)
-        {
-            var dest = new double[matrix.Cols];
-            CopyRow(matrix, row, dest);
-            return dest;
-        }
-
-        private static void CopyRow(Matrix matrix, int row, double[] dest)
-        {
-            int cols = matrix.Cols;
-            for (int j = 0; j < cols; j++)
-                dest[j] = matrix[row, j];
         }
 
         // ============================================================
@@ -3210,13 +3196,13 @@ namespace pwiz.Osprey.FDR
                     Matrix trainFeatures, testFeatures;
                     if (localScratch != null)
                     {
-                        trainFeatures = ExtractRowsInto(features, trainIdx.ToArray(), localScratch.TrainData);
-                        testFeatures = ExtractRowsInto(features, testIdx.ToArray(), localScratch.TestData);
+                        trainFeatures = MatrixRows.ExtractRowsInto(features, trainIdx.ToArray(), localScratch.TrainData);
+                        testFeatures = MatrixRows.ExtractRowsInto(features, testIdx.ToArray(), localScratch.TestData);
                     }
                     else
                     {
-                        trainFeatures = ExtractRows(features, trainIdx.ToArray());
-                        testFeatures = ExtractRows(features, testIdx.ToArray());
+                        trainFeatures = MatrixRows.ExtractRows(features, trainIdx.ToArray());
+                        testFeatures = MatrixRows.ExtractRows(features, testIdx.ToArray());
                     }
                     var trainLabels = new bool[trainIdx.Count];
                     for (int i = 0; i < trainIdx.Count; i++)
@@ -3943,57 +3929,5 @@ namespace pwiz.Osprey.FDR
             return "{" + string.Join(", ", parts) + "}";
         }
 
-        // ============================================================
-        // Utility
-        // ============================================================
-
-        private static Matrix ExtractRows(Matrix matrix, int[] rowIndices)
-        {
-            int nCols = matrix.Cols;
-            int nRows = rowIndices.Length;
-            var data = new double[nRows * nCols];
-            // Direct array access avoids property accessor overhead and the
-            // bounds-check on every cell. This loop is the hottest path in
-            // Percolator: called ~540 times per file with 200K x 21 matrices.
-            double[] src = matrix.Data;
-            for (int i = 0; i < nRows; i++)
-            {
-                int srcOffset = rowIndices[i] * nCols;
-                int dstOffset = i * nCols;
-                Array.Copy(src, srcOffset, data, dstOffset, nCols);
-            }
-            return Matrix.WrapNoClone(data, nRows, nCols);
-        }
-
-        /// <summary>
-        /// Variant of <see cref="ExtractRows"/> that writes into a
-        /// caller-supplied <paramref name="destData"/> buffer (must be
-        /// at least <c>rowIndices.Length * matrix.Cols</c> long) and
-        /// wraps the prefix as a Matrix. Avoids the ~8 MB LOH allocation
-        /// per call on HRAM Astral. The trailing unused suffix of
-        /// <paramref name="destData"/> is left untouched (Matrix.Rows
-        /// hides it).
-        /// </summary>
-        private static Matrix ExtractRowsInto(Matrix matrix, int[] rowIndices, double[] destData)
-        {
-            int nCols = matrix.Cols;
-            int nRows = rowIndices.Length;
-            int need = nRows * nCols;
-            if (destData.Length < need)
-                throw new ArgumentException(
-                    string.Format("destData length {0} < required {1}", destData.Length, need));
-            double[] src = matrix.Data;
-            for (int i = 0; i < nRows; i++)
-            {
-                int srcOffset = rowIndices[i] * nCols;
-                int dstOffset = i * nCols;
-                Array.Copy(src, srcOffset, destData, dstOffset, nCols);
-            }
-            // Pool-friendly wrap: Matrix.WrapPrefixNoClone accepts a
-            // backing array >= rows*cols. The trailing suffix of
-            // destData (from prior larger calls) is left untouched and
-            // never read.
-            return Matrix.WrapPrefixNoClone(destData, nRows, nCols);
-        }
     }
 }
