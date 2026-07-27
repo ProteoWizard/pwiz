@@ -66,7 +66,7 @@ generated-decoy goldens. Both dropped, and by a lot:
 | Dataset | RefSpectra (IDs) | Proteins |
 |---------|------------------|----------|
 | Stellar | 51,444 -> **35,222 (-31.5%)** | 7,042 -> **5,664 (-19.6%)** |
-| Astral  | 165,500 -> **126,474 (-23.6%)** | 14,201 -> **11,219 (-21.0%)** |
+| Astral  | 165,500 -> **126,680 (-23.5%)** | 14,201 -> **11,220 (-21.0%)** |
 
 **These drops are correct. Do not restore the old counts.**
 
@@ -90,6 +90,12 @@ intensity to the same ion; none of them swaps.
 `stellar-libdecoy` is byte-identical across this change, proven by content hash, because
 `--decoys-in-library` never calls `DecoyGenerator`. That is the control: the goldens that
 moved are exactly the ones that generate decoys.
+
+Astral was then re-recorded a second time for the theoretical-ladder fix (y ions from
+suffix sums). It is the only dataset affected, because its library carries 60
+selenocysteine (U) peptides and Stellar's carries none; three of them stop getting a
+degraded cycled decoy. That recovered 206 IDs (126,474 -> 126,680), which is the
+expected direction - a better decoy null is a slightly less pessimistic one.
 
 ## 2026-07: Stellar lost ~10% of its IDs on purpose
 
