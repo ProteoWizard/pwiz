@@ -3,7 +3,6 @@ using pwiz.Skyline.Util;
 using SkylineTool;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.ToolsUI
         /// window is a child window and does not appear here (JsonUiService.GetOpenFormElements adds those).</summary>
         public static IEnumerable<StandaloneWindow> GetTopLevelWindows(CancellationToken cancellationToken)
         {
-            var processId = (uint)Process.GetCurrentProcess().Id;
+            var processId = Kernel32.GetCurrentProcessId();
             foreach (var hwnd in User32.EnumWindows())
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
@@ -208,7 +207,7 @@ namespace pwiz.Skyline.ToolsUI
         /// so it is safe off the UI thread (the connector's cheap "did a new modal appear" check).</summary>
         private static IList<IntPtr> EnumModalWindowHandles()
         {
-            var processId = (uint)Process.GetCurrentProcess().Id;
+            var processId = Kernel32.GetCurrentProcessId();
             return User32.EnumWindows().Where(hwnd =>
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
