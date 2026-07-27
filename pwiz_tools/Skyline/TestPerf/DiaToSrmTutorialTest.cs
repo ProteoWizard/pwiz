@@ -29,8 +29,10 @@ using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -213,13 +215,15 @@ namespace TestPerf
             AssertComplete(McpConnector.ClickFormButton(wizard, WizardNextButton));
 
             // 1.4 Configure Transition Settings. Text fields (charges/types/m-z/tolerance/counts) are
-            // language-neutral and addressed by their localized labels; the two ion-range combo boxes are set
-            // by their (currently English) item text -- see the localization note at the bottom of this file.
+            // language-neutral and addressed by their localized labels; the two ion-range combo boxes hold the
+            // fragment finders' localized Label, so they are set from the finder rather than an English literal.
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblPrecursorCharges"), "2, 3"));
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonCharges"), "1, 2"));
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonTypes"), "y, b"));
-            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label1"), "ion 3"));     // product ions from
-            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label2"), "last ion"));  // product ions to
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label1"),
+                TransitionFilter.StartFragmentFinder.ION_3.Label));                                                               // product ions from
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label2"),
+                TransitionFilter.EndFragmentFinder.LAST_ION.Label));                                                              // product ions to
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label3"), "50"));        // min m/z
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label6"), "2000"));      // max m/z
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblTolerance"), 0.005.ToString(CultureInfo.CurrentCulture)));
@@ -237,7 +241,8 @@ namespace TestPerf
             // fields are relabeled at runtime / have split unit labels, so they are not cleanly addressable by
             // caption yet (a remaining item to wire up, possibly needing a connector tweak).
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<FullScanSettingsControl>("label22"), "Centroided"));        // product mass analyzer
-            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<FullScanSettingsControl>("labelIsolationScheme"), "Results only"));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<FullScanSettingsControl>("labelIsolationScheme"),
+                PropertiesResources.IsolationSchemeList_GetDefaults_Results_only));
             PauseForMcpScreenShot(wizard, "Configure Full-Scan Settings"); // s-06
             AssertComplete(McpConnector.ClickFormButton(wizard, WizardNextButton));
         }
@@ -500,11 +505,11 @@ namespace TestPerf
         }
 
         // NOTE on localization of combo boxes: the connector's ComboBox.SetValue matches an item by its exact
-        // visible text (FindStringExact). Where a localized resource string for the item is available it is used
-        // (e.g. the shared-peptides option via EnumNames), but the ion-range, product-mass-analyzer and
-        // isolation-scheme values above are still English literals and would not match in ja/zh-CHS. The text
-        // fields, labels, menu paths and Next/Finish buttons are already localized. Making those last combo
-        // values language-neutral is the remaining multi-language gap for these steps (resolve by reading each
-        // item's localized text, or by teaching the connector to select a combo item by index).
+        // visible text (FindStringExact), so every combo value here comes from the same source the combo is
+        // populated from -- the fragment finders' Label, the isolation scheme's resource string, EnumNames for
+        // the shared-peptides option. An English literal only works while the resource happens to be
+        // untranslated, which is what made TestDiaToSrmTutorial pass in English and fail in Japanese.
+        // The product mass analyzer is the exception: TransitionFullScan.MASS_ANALYZERS are const strings with
+        // no resource behind them, so "Centroided" is the item text in every language.
     }
 }
