@@ -896,7 +896,24 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"[COUNT] Library targets loaded: {0}", nLibraryTargets));
 
             List<LibraryEntry> decoys;
-            if (config.ExpectReconciledInput)
+            // ORDER MATTERS. A library that supplies its own decoys is handled FIRST,
+            // before the SecondPassFDR skip, because that arm is not only about decoys:
+            // TryPairSuppliedDecoys is the sole caller of DecoyPairingManifest.ApplyToLibrary,
+            // which rewrites ProteinIds from the manifest's clean accessions. Testing
+            // ExpectReconciledInput first made this arm unreachable in the merge node - the one
+            // phase that writes the blib - so a distributed run with --decoy-pairing-manifest
+            // emitted the library's per-peptide "sp|P12345_pep00001|GENE" accessions instead of
+            // the clean ones, and computed protein parsimony and picked-protein FDR on them.
+            // Straight-through and resume never hit it, which is why only the HPC chain diverged.
+            // Rust gates on library_supplies_decoys alone and was always correct here, so this
+            // restores cross-impl parity rather than changing behavior away from it.
+            if (librarySuppliesDecoys)
+            {
+                decoys = new List<LibraryEntry>();
+                if (!TryPairSuppliedDecoys(library, config, nLibraryTargets, ctx))
+                    return false;
+            }
+            else if (config.ExpectReconciledInput)
             {
                 // --task SecondPassFDR: decoy LibraryEntries are unused
                 // downstream. The reconciled parquet already carries
@@ -911,9 +928,11 @@ namespace pwiz.Osprey.Tasks
                 // Stage 7 cs run before this fix:
                 //   BuildDecoyFromSequence  total=45665 ms (89% wall)
                 //   GenerateDecoys.<>b__0   total=46792 ms
+                // The ~45s saved is DecoyGenerator work, done only by the generated-decoy
+                // arm below, so ordering the supplied-decoy arm ahead of this costs nothing.
                 decoys = new List<LibraryEntry>();
             }
-            else if (!librarySuppliesDecoys)
+            else
             {
                 // GenerateAllWithCollisionDetection interns the freshly-minted
                 // decoy strings ("DECOY_"+accession / modified sequence) through
@@ -922,12 +941,6 @@ namespace pwiz.Osprey.Tasks
                 decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
                     library, config, ctx.LogInfo, omitFragments, out List<LibraryEntry> validTargets);
                 library = validTargets;
-            }
-            else
-            {
-                decoys = new List<LibraryEntry>();
-                if (!TryPairSuppliedDecoys(library, config, nLibraryTargets, ctx))
-                    return false;
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
@@ -1495,8 +1508,9 @@ namespace pwiz.Osprey.Tasks
         {
             return config.ExpectReconciledInput ||
                    !OspreyEnvironment.UseFdrProjection ||
-                   config.FdrMethod != FdrMethod.Percolator ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+                   !config.FdrMethod.UsesPercolatorFramework() ||
+                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
+                   OspreyEnvironment.Pass2TransferQ;
         }
 
         /// <summary>
@@ -1557,7 +1571,7 @@ namespace pwiz.Osprey.Tasks
                 return null;
             string trigger =
                 config.ExpectReconciledInput ? @"the reconciled-input merge (HPC --task SecondPassFDR)"
-                : config.FdrMethod != FdrMethod.Percolator ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
+                : !config.FdrMethod.UsesPercolatorFramework() ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
                 : (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ? @"--fdrbench-pass 1"
                 : config.ModelDiagnostics ? @"--model-diagnostics on a full resume"
                 : @"this configuration";
@@ -1717,6 +1731,13 @@ namespace pwiz.Osprey.Tasks
 
             var context = new ScoringContext(config, fileName);
 
+            // Per-candidate rank-term capture (OSPREY_PICK_DUMP_CANDIDATES): attach a
+            // thread-safe collector the scorer appends to under the per-window Parallel.For.
+            // Flushed once below, after scoring, to a per-file TSV. Null (zero overhead) when
+            // the flag is unset.
+            if (OspreyEnvironment.PickDumpCandidates)
+                context.PickDump = new PickCandidateDump();
+
             // Load the per-file spectra as a STREAMING index over the .spectra.bin cache,
             // never materializing the full ~6 GB MS2 List<Spectrum>: Stages 1-4 (calibration
             // + scoring) stream each isolation window on demand. Segment 1/4 (read): the
@@ -1853,6 +1874,18 @@ namespace pwiz.Osprey.Tasks
             var scoredEntries = ScoreAndDeduplicate(
                 fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Per-candidate rank-term dump (OSPREY_PICK_DUMP_CANDIDATES): the parallel per-window
+            // scoring above accumulated one row per CWT candidate into context.PickDump; write it
+            // out now, once, next to the other per-file artifacts. No-op when the flag is unset.
+            if (context.PickDump != null)
+            {
+                string pickPath = Path.Combine(
+                    ArtifactPaths.ResolveOutputDir(inputFile),
+                    fileName + @".pick_candidates.tsv");
+                context.PickDump.Flush(pickPath);
+                ctx.LogInfo(string.Format(@"Wrote per-candidate pick dump to {0}", pickPath));
+            }
 
             // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
             // work targets. Here scoredEntries still hold every heavy per-entry array

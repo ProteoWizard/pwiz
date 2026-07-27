@@ -114,6 +114,18 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
+            // These show the native common file dialog, and what grows is Windows' shell cache, not
+            // Skyline: a heap block-size diff finds Explorer's cached DirectUI view for the modern
+            // IFileDialog, one set per dialog, held on a UI thread that lives for the whole process.
+            // It saturates (~2 KB/dialog by the 40th), so these tests do settle -- they just need
+            // more than the default 24 runs. x4 because the nightly machines sit further up the
+            // curve than the box this was measured on; the extra iterations are only consumed when a
+            // test has not settled, so they cost nothing where it converges early. Muting instead
+            // would give up heap-leak detection here entirely.
+            // See ai/todos/active/TODO-20260723_native_dialog_leak_iterations.md for the evidence.
+            {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
+            {"TestNativeMessageBox", new ExpandedLeakCheck(LeakCheckIterations * 4)},
+            {"TestPrmMcpConnector", new ExpandedLeakCheck(LeakCheckIterations * 4)},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
@@ -1767,6 +1779,17 @@ namespace TestRunner
                         testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                         (loopCount <= 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
                         (repeat <= 1) ? "" : ", repeated " + repeat + " times each per language");
+                    // Record the session environment once per run. Nightly reports heap leaks on the
+                    // native-dialog / connector tests on most machines but NOT on all of them (RITACH-DSK and
+                    // KAIPOT-PC1 were clean on the same commit), and the leading explanation is that Win32
+                    // window create/destroy leaks native heap in a Terminal Services (remoted display) session.
+                    // Logging this makes that correlation checkable from the nightly logs alone -- and tells us
+                    // whether TerminalServerSession is even a trustworthy way to detect the condition, since it
+                    // has been observed reading False in a session whose SESSIONNAME is "RDP-Tcp#0".
+                    runTests.Log("# Session: TerminalServerSession={0}, SESSIONNAME={1}, MonitorCount={2}\r\n",
+                        SystemInformation.TerminalServerSession,
+                        Environment.GetEnvironmentVariable("SESSIONNAME") ?? "(unset)",
+                        SystemInformation.MonitorCount);
                 }
 
                 // Get list of languages
