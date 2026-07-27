@@ -279,9 +279,15 @@ function Test-DiagnosticsSanity {
     # nothing. NaN is the same trap and is a DOCUMENTED value of this payload
     # (ModelDiagnosticsHtml serializes it as the string "NaN"): every comparison against
     # NaN is false, so NaN passes a ceiling silently. Require a real finite number.
+    # Invariant, for the same reason the tier-1 comparer is: a PowerShell [string]
+    # cast renders a double invariantly ('0.244'), but the current-culture TryParse
+    # then reads that on a de-DE agent as 244, so EVERY bound here would blow its
+    # ceiling and the sanity tier would fail every healthy run. Measured, not feared.
     function Test-Finite([string]$name, $raw, [ref]$outValue) {
         $v = 0.0
-        if ($null -eq $raw -or -not [double]::TryParse([string]$raw, [ref]$v) -or
+        $inv = [System.Globalization.CultureInfo]::InvariantCulture
+        $style = [System.Globalization.NumberStyles]::Float
+        if ($null -eq $raw -or -not [double]::TryParse([string]$raw, $style, $inv, [ref]$v) -or
             [double]::IsNaN($v) -or [double]::IsInfinity($v)) {
             $issues.Add(("SANITY: metric '{0}' is missing or non-finite ('{1}') -- the bound could not be evaluated, so it is treated as a failure rather than a pass" -f $name, $raw))
             return $false
