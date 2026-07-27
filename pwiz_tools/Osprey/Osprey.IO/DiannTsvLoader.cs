@@ -101,6 +101,10 @@ namespace pwiz.Osprey.IO
                 if (data.Fragments.Count < _minFragments)
                     continue;
 
+                // Checked here, after the min-fragment filter, so a row that is not going
+                // into the library at all cannot fail the run.
+                LibraryValidation.ValidatePeptideLength(data.Sequence);
+
                 var modifications = BuildInternedModifications(
                     ParseModifications(data.ModifiedSequence), interner);
 

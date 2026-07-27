@@ -127,7 +127,9 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 |---|---|---|---|---|---|
 | STALE | Shuffle decoy method not implemented | `Shuffle` selectable alongside Reverse/FromLibrary | Enum has `Shuffle` but generator always reverse+cycles regardless of config (only logs it) | `OspreyConfig.cs:403`; `DecoyGenerator.cs:182,210-236` | minor |
 | INTENT | Batch generation always Trypsin | 4-enzyme table w/ enzyme-aware terminal preservation | `DetectEnzyme` exists but batch path always Trypsin/C-term-preserving; correct for tryptic libs | `DecoyGenerator.cs:100,208,306-317` | info |
-| INTENT | Non-b/y fragments preserved verbatim | Ion-swap covers only b↔y | Swaps b↔y + recomputes m/z; copies A/C/X/Z/etc through unchanged (no-op for b/y libs) | `DecoyGenerator.cs:480-490` | info |
+| INTENT | Non-b/y fragments preserved verbatim | Recalculation covers only b/y | Keeps ion type + ordinal and recomputes m/z (the b↔y swap was removed on BOTH sides, pwiz#TBD / maccoss/osprey#58); copies A/C/X/Z/etc through unchanged (no-op for b/y libs) | `DecoyGenerator.RecalculateFragments` | info |
+| INTENT | Overlap gate rejects a candidate too similar to its target | Same rule, same constants | EncyclopeDIA's 0.4 ratio over the full b/y ladder in a fixed 0.02 Da window, then cycling fallback; ported to both sides together so the decoy SET stays identical | `DecoyGenerator.IsCandidateAcceptable`; Rust `DecoyGenerator::is_candidate_acceptable` | info |
+| INTENT | 6-residue minimum peptide length enforced at load | Same rule, all format loaders | Hard error naming the peptide, so the overlap gate's structural 1/(n-1) floor stays under 0.4 | `LibraryValidation.ValidatePeptideLength`; Rust `library::validate_peptide_length` | info |
 | INTENT | Native managed pairing/marking | Pairing in Rust `osprey_core`/`osprey_io` crates | Pure managed C# (`LibraryDecoyMarker`/`Pairing`/`Manifest`), deterministic sort, 80% gate matches | `LibraryDecoyMarker.cs:88`; `LibraryDecoyPairing.cs:120`; `DecoyPairingManifest.cs:264` | info |
 
 ### [04-calibration.md](04-calibration.md) — matches-with-notes
