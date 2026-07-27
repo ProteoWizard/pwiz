@@ -915,6 +915,11 @@ namespace TestRunner
         private const string PASS_0_AND_1_LANGUAGE = "fr-FR";
 
         /// <summary>
+        /// The loop count that means "keep going until stopped".
+        /// </summary>
+        private const int LOOP_FOREVER = 0;
+
+        /// <summary>
         /// Told to a worker when the run is over and it should shut down.
         /// </summary>
         private const string WORKER_QUIT_MESSAGE = "TestRunnerQuit";
@@ -926,11 +931,6 @@ namespace TestRunner
         /// workers between them hold every remaining test.
         /// </summary>
         private const string WORKER_WAIT_MESSAGE = "TestRunnerWait";
-
-        /// <summary>
-        /// How long to wait for an unresponsive worker to actually stop before releasing its test.
-        /// </summary>
-        private const int WORKER_KILL_TIMEOUT_MILLISECONDS = 30 * 1000;
 
         /// <summary>
         /// One unit of queued work: everything still to be run for a single test/language pair.
@@ -959,15 +959,33 @@ namespace TestRunner
 
                 // Pass 2 is the pass that loops. With pass 2 disabled it is pass 1 that repeats, and only
                 // when looping indefinitely, which is how the sequential runner treats the leak pass.
-                _repeatingPass = IsEnabled(2) ? 2 : IsEnabled(1) && loop <= 0 ? 1 : -1;
-                _repeatCount = _repeatingPass == 2 && loop != 0 ? Math.Max(1, loop) : int.MaxValue; // loop 0 runs forever
+                // N.B. decided from the pass flags for the run, not from this entry's language-filtered
+                // copy of them: an entry queued only for passes 0 and 1 would otherwise decide that pass
+                // 1 was the looping pass, purely because pass 2 does not run in its language, and would
+                // then repeat pass 1 forever and never let the run finish.
+                bool loopsForever = loop == LOOP_FOREVER;
+                if (IsPassEnabled(passEnabled, 2))
+                {
+                    _repeatingPass = 2;
+                    _repeatCount = loopsForever ? int.MaxValue : Math.Max(1, loop);
+                }
+                else if (IsPassEnabled(passEnabled, 1) && loopsForever)
+                {
+                    _repeatingPass = 1;
+                    _repeatCount = int.MaxValue;
+                }
+                else
+                {
+                    _repeatingPass = -1;
+                    _repeatCount = int.MaxValue;
+                }
 
                 Pass = Array.FindIndex(_passEnabled, enabled => enabled);
             }
 
-            private bool IsEnabled(int pass)
+            private static bool IsPassEnabled(bool[] passEnabled, int pass)
             {
-                return pass < _passEnabled.Length && _passEnabled[pass];
+                return pass < passEnabled.Length && passEnabled[pass];
             }
 
             /// <summary>
@@ -1341,33 +1359,6 @@ namespace TestRunner
                         }
                     }, TaskCreationOptions.LongRunning));
 
-                    // Make sure a worker really is stopped, so that a test it might still be running can
-                    // safely be given to someone else
-                    void StopWorker()
-                    {
-                        try
-                        {
-                            if (isBigWorker)
-                            {
-                                if (HostWorkerPid > 0)
-                                {
-                                    var hostWorkerProcess = Process.GetProcessById(HostWorkerPid);
-                                    hostWorkerProcess.Kill();
-                                    hostWorkerProcess.WaitForExit(WORKER_KILL_TIMEOUT_MILLISECONDS);
-                                }
-                            }
-                            else
-                            {
-                                RunTests.KillParallelWorkers(0, workerName); // Just this container
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            // Most likely it already exited on its own, which is the outcome we wanted
-                            Console.WriteLine($"Could not stop worker {workerName}: {e.Message}");
-                        }
-                    }
-
                     // start heartbeat for worker
                     void ListenForWorkerHeartbeat()
                     {
@@ -1379,24 +1370,11 @@ namespace TestRunner
                             {
                                 if (!workerHeartbeat.TryReceive(ref msg, TimeSpan.FromSeconds(5)))
                                 {
-                                    bool nothingOutstanding;
-                                    lock (testQueue)
-                                        nothingOutstanding = testQueue.IsEmpty && nonParallelTestQueue.IsEmpty && testsInFlight == 0;
-                                    if (nothingOutstanding || cts.IsCancellationRequested)
-                                    {
-                                        workerInfo.IsAlive = false; // Workers stop answering as they shut down at the end of a run
-                                        return;
-                                    }
-
-                                    Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
-
-                                    // Stop it before marking it dead, because marking it dead is what
-                                    // releases its test back to the queue. A worker that missed a
-                                    // heartbeat is not necessarily finished with that test - it may just
-                                    // be starved - and handing the test to someone else while it is still
-                                    // running it puts two workers on the same test.
-                                    StopWorker();
                                     workerInfo.IsAlive = false;
+
+                                    if (testQueue.IsEmpty || cts.IsCancellationRequested)
+                                        return;
+                                    Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");

@@ -183,9 +183,10 @@ namespace pwiz.Common.SystemUtil
                     {
                         if (progress.IsCanceled)
                         {
-                            KillAndWaitForExit(proc);
+                            // Report the cancel before returning through the finally, which kills the
+                            // process and cleans up after it. Killing here as well would mean waiting
+                            // out the kill twice over, and not saying anything until it was done.
                             progress.UpdateProgress(status = status.Cancel());
-                            CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
                             return;
                         }
 
