@@ -134,7 +134,7 @@ namespace pwiz.Osprey.FDR
         /// entry whose parquet row cannot be resolved). In normal operation the
         /// 21-feature vector is computed during coelution scoring in
         /// <c>CoelutionScorer</c> and stored on the entry. Internal so the
-        /// streaming score pass (<see cref="PercolatorFdr.ResolveFeatureRow"/>) can
+        /// streaming score pass (<see cref="PercolatorScorer.ResolveFeatureRow"/>) can
         /// reuse the exact same fallback vector for byte-identical results.
         /// </summary>
         internal static double[] BuildBasicFeatures(double coelutionSum, int numFeatures)

@@ -81,7 +81,7 @@ namespace pwiz.Osprey.FDR
         /// computation, and per-file FDR logging. Used by the streaming
         /// path in <c>AnalysisPipeline.RunPercolatorStreaming</c>, where
         /// the caller pre-dedups + subsamples the entries for training,
-        /// then invokes <see cref="PercolatorFdr.ScorePopulationAndComputeFdr"/>
+        /// then invokes <see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>
         /// on the full per-file FdrEntry population. Mirrors Rust's
         /// <c>PercolatorConfig::train_only</c>.
         /// </summary>

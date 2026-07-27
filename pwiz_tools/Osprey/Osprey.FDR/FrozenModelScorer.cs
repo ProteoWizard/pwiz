@@ -41,7 +41,7 @@ namespace pwiz.Osprey.FDR
     /// written to fix, reintroduced silently under a different flag.
     ///
     /// Scoring routes through the same shared row-scoring code the full-population
-    /// passes use (<see cref="PercolatorFdr.ScoreStandardizedRow"/>), so the linear and
+    /// passes use (<see cref="PercolatorScorer.ScoreStandardizedRow"/>), so the linear and
     /// tree models are applied identically no matter which pass applies them.
     ///
     /// NOT thread-safe: <see cref="Score"/> reuses one standardization buffer to avoid a
@@ -135,7 +135,7 @@ namespace pwiz.Osprey.FDR
         {
             System.Array.Copy(rawFeatures, 0, _scratch, 0, rawFeatures.Length);
             _standardizer.TransformSlice(_scratch);
-            return PercolatorFdr.ScoreStandardizedRow(_gbtModels, _avgWeights, _avgBias, _scratch);
+            return PercolatorScorer.ScoreStandardizedRow(_gbtModels, _avgWeights, _avgBias, _scratch);
         }
     }
 }

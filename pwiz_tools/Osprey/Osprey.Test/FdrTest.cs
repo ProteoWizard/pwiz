@@ -664,7 +664,7 @@ namespace pwiz.Osprey.Test
         /// uses) build their result lists in separate loops; the write-back's
         /// correctness rests on BOTH returning results index-aligned to the flat
         /// PercolatorEntry input. This drives the REAL streaming assembler
-        /// (<see cref="PercolatorFdr.ScorePopulationAndComputeFdr"/>, the loop the
+        /// (<see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>, the loop the
         /// design cites for the streaming path) end-to-end on a small paired
         /// target/decoy fixture, then applies the index zip and the removed psm_id
         /// map to those real streaming-produced results and asserts identical Score
@@ -702,7 +702,7 @@ namespace pwiz.Osprey.Test
             var config = new PercolatorConfig { MaxIterations = 3, FeatureInfos = featureInfos };
             PercolatorResults trainResults = PercolatorFdr.RunPercolator(built, config);
             PercolatorResults streamingResults =
-                PercolatorFdr.ScorePopulationAndComputeFdr(built, trainResults, config);
+                PercolatorScorer.ScorePopulationAndComputeFdr(built, trainResults, config);
 
             // The streaming assembler must return one result per entry, in order.
             Assert.AreEqual(built.Count, streamingResults.Entries.Count);
@@ -1130,7 +1130,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Issue #4355 struct-shrink S3, Stage B (the FLAT-memory win): the 1st-pass-only
         /// streaming Percolator that holds NO resident row buffer
-        /// (<see cref="PercolatorFdr.RunStreamingFirstPass"/>) must produce byte-identical
+        /// (<see cref="PercolatorScorer.RunStreamingFirstPass"/>) must produce byte-identical
         /// Score + five q-values + identity (entry_id / charge / peptide / is_decoy) to the
         /// resident projection streaming path
         /// (<see cref="PercolatorEngine.RunStreamingIntoProjection"/>) -- the byte-identity
@@ -1197,7 +1197,7 @@ namespace pwiz.Osprey.Test
                         onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence);
                 };
             var sinkStr = new CapturingSink();
-            bool abortStr = PercolatorFdr.RunStreamingFirstPass(
+            bool abortStr = PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, f => featuresStr[f], percConfig, s => { }, "First-pass",
                 sinkStr);
             Assert.IsFalse(abortStr);

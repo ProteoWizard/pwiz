@@ -301,7 +301,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// projection overload for the lean 1st-pass case, it builds the same parity-locked
         /// <see cref="PercolatorConfig"/> and delegates to
-        /// <see cref="PercolatorFdr.RunStreamingFirstPass"/>, which streams every row's identity +
+        /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>, which streams every row's identity +
         /// features from the caller-supplied row source instead of a resident
         /// <see cref="FdrProjectionSet"/>. The caller (Tasks layer) wires
         /// <paramref name="streamFileRows"/> to the per-file parquet scalar reader and
@@ -328,7 +328,7 @@ namespace pwiz.Osprey.FDR
                     @"RunFirstPassStreaming always streams features per file; a per-file feature " +
                     @"loader is required.");
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
-            return PercolatorFdr.RunStreamingFirstPass(
+            return PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
                 captureContributions, captureModel);
         }
@@ -576,7 +576,7 @@ namespace pwiz.Osprey.FDR
                 logInfo(string.Format(
                     "{0}: applying FROZEN 1st-pass model to all {1} entries (no retrain) + " +
                     "target-decoy competition for q/PEP.", passLabel, n));
-                return PercolatorFdr.ScorePopulationAndComputeFdr(
+                return PercolatorScorer.ScorePopulationAndComputeFdr(
                     percEntries, frozenModel, percConfig, loadFileFeatures);
             }
 
@@ -643,14 +643,14 @@ namespace pwiz.Osprey.FDR
             // held-out CV scoring inside RunPercolator.
             if (loadFileFeatures != null)
             {
-                var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+                var subsetByFile = PercolatorScorer.GroupIndicesByFileName(subsetEntries);
                 foreach (var kvp in subsetByFile)
                 {
                     IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
                     foreach (int k in kvp.Value)
                     {
                         var entry = subsetEntries[k];
-                        entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                        entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
                             rows, entry.ParquetIndex, entry.CoelutionSum,
                             percConfig.FeatureInfos.Length).Clone();
                     }
@@ -669,7 +669,7 @@ namespace pwiz.Osprey.FDR
             // 4. Apply averaged model to ALL entries and compute q-values. The
             //    score pass reloads features one file at a time via loadFileFeatures
             //    (issue #4355 Phase 4), keeping only the scalar scores resident.
-            return PercolatorFdr.ScorePopulationAndComputeFdr(
+            return PercolatorScorer.ScorePopulationAndComputeFdr(
                 percEntries, trainResults, percConfig, loadFileFeatures);
         }
 
@@ -735,7 +735,7 @@ namespace pwiz.Osprey.FDR
         /// objects are built ONLY for the &lt;= MaxTrainSize subset;</item>
         /// <item>the score + competition pass runs over the projection rows and writes
         /// the Score + five q-values straight back onto them via
-        /// <see cref="PercolatorFdr.ScoreProjectionAndComputeFdrInPlace"/>, reusing the
+        /// <see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/>, reusing the
         /// same flat identity arrays.</item>
         /// </list>
         /// Every parity-locked primitive (<see cref="PercolatorSampling.BuildTrainingSubset"/>,
@@ -866,7 +866,7 @@ namespace pwiz.Osprey.FDR
                 });
             }
 
-            var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+            var subsetByFile = PercolatorScorer.GroupIndicesByFileName(subsetEntries);
             // Per-file progress: loading the training-subset feature vectors from every file
             // ran ~5 min silent before cross-validation. Console-only, never touches the
             // loaded features, so training is byte-identical.
@@ -882,7 +882,7 @@ namespace pwiz.Osprey.FDR
                     foreach (int k in kvp.Value)
                     {
                         var entry = subsetEntries[k];
-                        entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                        entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
                             rows, entry.ParquetIndex, entry.CoelutionSum,
                             percConfig.FeatureInfos.Length).Clone();
                     }
@@ -915,7 +915,7 @@ namespace pwiz.Osprey.FDR
             //    straight onto the projection rows and streaming the q-value outputs
             //    to the sink (no PercolatorResult list). Reuses the flat identity
             //    arrays already built above.
-            PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
+            PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
                 loadFileFeatures, sink, captureContributions);
             return false;
