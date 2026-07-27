@@ -904,9 +904,15 @@ namespace TestRunner
         }
 
         /// <summary>
-        /// Pass 0 checks an interesting collection of edge cases, and always does so in French.
+        /// The language pass 0 runs in, French exercising an interesting set of edge cases. Pass 1 is
+        /// queued under it as well, needing some language to be queued under and setting its own anyway.
+        /// <para>
+        /// This is the same canonical form <see cref="GetCanonicalLanguage"/> produces, so that it lands
+        /// on the same queue entry, and in the same tools directory, as a requested French rather than
+        /// creating a second set of both.
+        /// </para>
         /// </summary>
-        private const string PASS_0_LANGUAGE = "fr";
+        private const string PASS_0_AND_1_LANGUAGE = "fr-FR";
 
         /// <summary>
         /// Told to a worker when the run is over and it should shut down.
@@ -944,12 +950,12 @@ namespace TestRunner
             private readonly int _repeatCount;    // How many times it runs, 0 meaning forever
 
             public QueuedTestInfo(TestInfo testInfo, string language, bool[] passEnabled, int loop,
-                ICollection<string> languages, string pass1Language)
+                ICollection<string> languages)
             {
                 TestInfo = testInfo;
                 Language = language;
                 _passEnabled = passEnabled.Select((enabled, pass) =>
-                    enabled && PassRunsInLanguage(pass, language, languages, pass1Language)).ToArray();
+                    enabled && PassRunsInLanguage(pass, language, languages)).ToArray();
 
                 // Pass 2 is the pass that loops. With pass 2 disabled it is pass 1 that repeats, and only
                 // when looping indefinitely, which is how the sequential runner treats the leak pass.
@@ -965,25 +971,13 @@ namespace TestRunner
             }
 
             /// <summary>
-            /// Which languages a given pass gets queued for.
+            /// Which languages a given pass gets queued for. Passes 0 and 1 set their own language, so
+            /// they are queued once per test under French, whether or not it was requested. Only pass 2
+            /// runs in the languages that were asked for.
             /// </summary>
-            private static bool PassRunsInLanguage(int pass, string language, ICollection<string> languages, string pass1Language)
+            private static bool PassRunsInLanguage(int pass, string language, ICollection<string> languages)
             {
-                switch (pass)
-                {
-                    case 0:
-                        // Pass 0 only ever runs in French, whether or not French was requested
-                        return Equals(language, PASS_0_LANGUAGE);
-                    case 1:
-                        // Pass 1 assigns the culture itself, cycling through all of them on every
-                        // iteration, so it neither needs nor honors a language of its own. Queue it once
-                        // per test, like the sequential runner does. Queueing it per language would run
-                        // the identical cycle over again for each one, and those runs would collide over
-                        // the tools directory, whose name follows the culture pass 1 switched to.
-                        return Equals(language, pass1Language);
-                    default:
-                        return languages.Contains(language);
-                }
+                return pass < 2 ? Equals(language, PASS_0_AND_1_LANGUAGE) : languages.Contains(language);
             }
 
             public TestInfo TestInfo { get; }
@@ -1074,16 +1068,15 @@ namespace TestRunner
             // One entry per test/language pair, each carrying everything it still has to run - see
             // QueuedTestInfo for why they are not queued per pass and iteration
             var queuedLanguages = languages.ToList();
-            if (passEnabled[0] && !queuedLanguages.Contains(PASS_0_LANGUAGE))
-                queuedLanguages.Add(PASS_0_LANGUAGE); // Pass 0 runs in French even if French was not requested
-            var pass1Language = languages.FirstOrDefault(); // Pass 1 gets queued just once per test
+            if ((passEnabled[0] || passEnabled[1]) && !queuedLanguages.Contains(PASS_0_AND_1_LANGUAGE))
+                queuedLanguages.Add(PASS_0_AND_1_LANGUAGE); // Those passes run in French whether or not it was requested
 
             foreach (var testInfo in testList)
             {
                 foreach (var language in queuedLanguages)
                 {
-                    var queuedTestInfo = new QueuedTestInfo(testInfo, language, passEnabled, loop, languages, pass1Language);
-                    if (queuedTestInfo.HasWork) // e.g. French only gets queued for pass 0 if it was not requested
+                    var queuedTestInfo = new QueuedTestInfo(testInfo, language, passEnabled, loop, languages);
+                    if (queuedTestInfo.HasWork)
                         QueueFor(queuedTestInfo).Enqueue(queuedTestInfo);
                 }
             }
@@ -1803,7 +1796,7 @@ namespace TestRunner
                         }
                     }
 
-                    runTests.Language = new CultureInfo(PASS_0_LANGUAGE);
+                    runTests.Language = new CultureInfo(PASS_0_AND_1_LANGUAGE);
                     runTests.Skyline.Set("NoVendorReaders", true);
                     runTests.AccessInternet = false;
                     runTests.RunPerfTests = false;

@@ -23,10 +23,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -464,8 +466,66 @@ namespace pwiz.SkylineTestUtil
                     DesiredCleanupLevel = DesiredCleanupLevel.all;
             }
             FileStreamManager.Default.StartTrackingHistory();
+            LockToolsDirectory();
             STOPWATCH.Restart();
             Initialize();
+        }
+
+        private FileStream _toolsDirectoryLock;
+
+        /// <summary>
+        /// How long to wait for another parallel test client to finish with this test's tools directory.
+        /// Generous, because the client holding it is running a whole test of its own.
+        /// </summary>
+        private static readonly TimeSpan TOOLS_DIRECTORY_LOCK_TIMEOUT = TimeSpan.FromMinutes(15);
+
+        /// <summary>
+        /// Claim this test's tools directory for the duration of the test.
+        /// <para>
+        /// Parallel test clients share the build directory through a Docker volume mount, and the tools
+        /// directory is named from the test and the culture, so two clients can end up wanting the same
+        /// one. The work queue keeps them off the same test/language pair, but that is not quite the same
+        /// thing: pass 1 cycles the culture itself rather than using the language it was queued under, so
+        /// it can reach a culture another client is running pass 2 in. Windows honors share modes across
+        /// the mount, so an exclusive handle beside the directory is enough to keep them apart, and the
+        /// handle dies with the process if a client is killed (issue 4447).
+        /// </para>
+        /// </summary>
+        private void LockToolsDirectory()
+        {
+            if (!IsParallelClient)
+                return; // Nothing else is sharing this build directory
+
+            var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
+            // Beside the tools directory rather than inside it, because tests delete the directory itself
+            var lockDirectory = Path.Combine(Path.GetDirectoryName(toolsDirectory) ?? string.Empty, @"ToolsDirectoryLocks");
+            Directory.CreateDirectory(lockDirectory);
+            var lockPath = Path.Combine(lockDirectory, Path.GetFileName(toolsDirectory) + @".lock");
+
+            var waited = Stopwatch.StartNew();
+            do
+            {
+                try
+                {
+                    _toolsDirectoryLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                    return;
+                }
+                catch (IOException)
+                {
+                    Thread.Sleep(500); // Held by another client running a test that needs the same directory
+                }
+            } while (waited.Elapsed < TOOLS_DIRECTORY_LOCK_TIMEOUT);
+
+            // Continuing unlocked risks the collision this is meant to avoid, but it beats stalling the
+            // whole run behind one stuck client, so say so loudly and carry on
+            Console.WriteLine(@"# Gave up after {0} minutes waiting for {1}; continuing without it.",
+                TOOLS_DIRECTORY_LOCK_TIMEOUT.TotalMinutes, lockPath);
+        }
+
+        private void ReleaseToolsDirectory()
+        {
+            _toolsDirectoryLock?.Dispose();
+            _toolsDirectoryLock = null;
         }
 
         /// <summary>
@@ -498,6 +558,9 @@ namespace pwiz.SkylineTestUtil
             Program.UnitTest = Program.FunctionalTest = false;
             Program.TestName = null;
 
+            // Last, so that everything this test might have left running in the tools directory - a
+            // search engine being shut down, say - is done with before another client is let in
+            ReleaseToolsDirectory();
         }
 
         /// <summary>

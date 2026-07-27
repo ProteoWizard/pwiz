@@ -183,10 +183,7 @@ namespace pwiz.Common.SystemUtil
                     {
                         if (progress.IsCanceled)
                         {
-                            if (!proc.HasExited)
-                            {
-                                proc.Kill();
-                            }
+                            KillAndWaitForExit(proc);
                             progress.UpdateProgress(status = status.Cancel());
                             CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
                             return;
@@ -277,10 +274,43 @@ namespace pwiz.Common.SystemUtil
             }
             finally
             {
-                if (!proc.HasExited)
-                    try { proc.Kill(); } catch (InvalidOperationException) { }
+                KillAndWaitForExit(proc);
 
                 CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+            }
+        }
+
+        /// <summary>
+        /// How long to wait for a killed process to actually finish exiting.
+        /// </summary>
+        private const int KILL_WAIT_MILLISECONDS = 30 * 1000;
+
+        /// <summary>
+        /// Terminate a process and wait for it to really be gone.
+        /// <para>
+        /// Process.Kill() is asynchronous - it only asks Windows to terminate the process. Until the
+        /// process object is actually torn down, Windows keeps its executable and every DLL it loaded
+        /// mapped as images, and a mapped image cannot be deleted (it can be renamed, but deleting it
+        /// fails with UnauthorizedAccessException). So a caller that cancels a process and then cleans
+        /// up or reinstalls the directory it ran from races that teardown: the delete silently leaves
+        /// the locked files behind, and the reinstall then fails overwriting them. Waiting here closes
+        /// that window - the wait is normally a fraction of a second.
+        /// </para>
+        /// </summary>
+        private static void KillAndWaitForExit(Process proc)
+        {
+            try
+            {
+                if (proc.HasExited)
+                    return;
+                proc.Kill();
+                // Deliberately the timeout overload: the parameterless WaitForExit() also blocks on
+                // redirected output being fully read, which ProcessStreamReader owns on its own threads.
+                proc.WaitForExit(KILL_WAIT_MILLISECONDS);
+            }
+            catch (InvalidOperationException)
+            {
+                // The process exited on its own between the HasExited check and the Kill
             }
         }
 

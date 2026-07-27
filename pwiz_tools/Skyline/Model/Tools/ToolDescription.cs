@@ -462,10 +462,10 @@ namespace pwiz.Skyline.Model.Tools
                 ? string.Concat(Program.TestName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + Program.TestName.Length
                 : Program.TestName;
             // N.B. this is only unique per test and culture, not per parallel test client. The parallel
-            // work queue keeps two clients off the same test/language pair at once (see QueuedTestInfo in
-            // TestRunner, issue 4447), which covers pass 2. It does not cover pass 1, which sets the
-            // culture itself rather than using the language it was queued for, so a pass 1 client can
-            // reach a culture another client is running pass 2 in.
+            // work queue hands a test/language pair to one client at a time, which keeps two clients out
+            // of this directory for everything except pass 1: that pass cycles the culture itself rather
+            // than using the language it was queued under, so it can reach a culture another client is
+            // running pass 2 in. See QueuedTestInfo in TestRunner (issue 4447).
             return $@"{testName}_{Thread.CurrentThread.CurrentCulture.Name}";
         }
 
