@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -360,8 +360,17 @@ namespace pwiz.Osprey.Scoring
         /// two coincide; excluding them keeps the lean (<c>omitFragments</c>) library path
         /// bit-identical to a full load and keeps the C#/Rust rule trivially the same.
         /// </summary>
-        private static bool IsCandidateAcceptable(string targetSeq, string candidateSeq)
+        internal static bool IsCandidateAcceptable(string targetSeq, string candidateSeq)
         {
+            // Deliberately the FULL ladder, matching EncyclopeDIA's rule exactly: the 0.4
+            // threshold is their published number, and it is only their number if measured
+            // over their statistic. Two rungs are invariant under any C-terminus-preserving
+            // permutation (y1, and b_{n-1} whose prefix multiset never changes), so they
+            // always match and impose a 1/(n-1) floor on the ratio. That floor is tolerable
+            // BECAUSE LibraryValidation.ValidatePeptideLength enforces a 6-residue minimum
+            // at load: the worst case is 1/5 = 0.2 against a 0.4 budget. Without that
+            // guarantee a length-3 peptide would floor at 0.5 and every candidate would be
+            // rejected, silently dropping the peptide from the search.
             double[] targetLadder = TheoreticalLadder(targetSeq);
             double[] decoyLadder = TheoreticalLadder(candidateSeq);
             if (decoyLadder.Length == 0)
@@ -383,14 +392,19 @@ namespace pwiz.Osprey.Scoring
         /// <see cref="CalculateFragmentMz"/>. Ions spanning an unknown residue are skipped
         /// rather than aborting the ladder.
         /// </summary>
-        private static double[] TheoreticalLadder(string sequence)
+        internal static double[] TheoreticalLadder(string sequence)
         {
             if (sequence == null || sequence.Length < 2)
                 return Array.Empty<double>();
             int len = sequence.Length;
 
-            // Prefix sums of residue masses; NaN marks an unknown residue so any ion
-            // spanning it is dropped.
+            // Prefix sums for b ions and SUFFIX sums for y ions; NaN marks an unknown
+            // residue so only ions actually spanning it are dropped. Deriving y from
+            // (total - prefix) instead would poison EVERY y ion the moment any residue is
+            // unknown, because total itself is then NaN -- and a leading unknown residue
+            // would empty the ladder outright, which the caller reads as "accept".
+            // Selenocysteine (U) and the ambiguity codes B/Z/X/J/O are all absent from
+            // STANDARD_AA_MASSES and do occur in UniProt-derived libraries.
             var prefix = new double[len + 1];
             for (int i = 0; i < len; i++)
             {
@@ -401,8 +415,17 @@ namespace pwiz.Osprey.Scoring
                 if (double.IsNaN(prefix[i]))
                     prefix[i + 1] = double.NaN;
             }
+            var suffix = new double[len + 1];
+            for (int i = len - 1; i >= 0; i--)
+            {
+                double aa;
+                suffix[len - i] = STANDARD_AA_MASSES.TryGetValue(sequence[i], out aa)
+                    ? suffix[len - i - 1] + aa
+                    : double.NaN;
+                if (double.IsNaN(suffix[len - i - 1]))
+                    suffix[len - i] = double.NaN;
+            }
 
-            double total = prefix[len];
             var ladder = new List<double>((len - 1) * 2);
             for (int ordinal = 1; ordinal < len; ordinal++)
             {
@@ -410,7 +433,7 @@ namespace pwiz.Osprey.Scoring
                 if (!double.IsNaN(bMass))
                     ladder.Add(bMass + PROTON_MASS);
                 // y{ordinal} spans the last `ordinal` residues.
-                double yMass = total - prefix[len - ordinal];
+                double yMass = suffix[ordinal];
                 if (!double.IsNaN(yMass))
                     ladder.Add(yMass + H2O_MASS + PROTON_MASS);
             }
@@ -738,8 +761,9 @@ namespace pwiz.Osprey.Scoring
 
                 if (mz.HasValue)
                 {
-                    // Swap b<->y ion type and ordinal; charge and neutral loss
-                    // (code + custom mass) carry over from the target fragment.
+                    // Ion type and ordinal are carried through unchanged; charge and
+                    // neutral loss (code + custom mass) carry over from the target
+                    // fragment. Only the m/z is recomputed for the permuted sequence.
                     var newAnnotation = annotation;
                     newAnnotation.IonType = newIonType;
                     newAnnotation.Ordinal = (byte)newOrdinal;
