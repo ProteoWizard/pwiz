@@ -120,6 +120,11 @@ if %EXIT% NEQ 0 (
     set ERROR_TEXT=
 )
 
+REM # A concurrent build sharing this agent checkout can leave a stale generated
+REM # Net8Version.g.cs in Skyline's obj, producing CS0579 'Duplicate AssemblyVersionAttribute'.
+REM # Nuke Skyline's obj so the version-stamping target regenerates it cleanly.
+if exist "%SCRIPT_DIR%\obj" rmdir /s /q "%SCRIPT_DIR%\obj"
+
 for %%P in (%BUILD_TARGET%) do call :restore_one "%%~P"
 if %EXIT% NEQ 0 goto error
 
