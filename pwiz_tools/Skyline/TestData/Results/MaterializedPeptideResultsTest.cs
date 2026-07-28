@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestData.Results
     /// those values.
     /// </summary>
     [TestClass]
-    public class PeptideResultsMaterializerTest : AbstractUnitTest
+    public class MaterializedPeptideResultsTest : AbstractUnitTest
     {
         // This document has neither a spectral library nor an isotope distribution, and no
         // optimization function, so it does NOT cover the dot products or the optimization
@@ -68,11 +68,7 @@ namespace pwiz.SkylineTestData.Results
                 int groupsChecked = 0;
                 foreach (var nodePep in docResults.Peptides)
                 {
-                    var materialized = new PeptideResultsMaterializer
-                    {
-                        Settings = docResults.Settings,
-                        PeptideDocNode = nodePep
-                    }.Materialize();
+                    var materialized = MaterializedPeptideResults.Materialize(docResults.Settings, nodePep);
 
                     foreach (var nodeGroup in nodePep.TransitionGroups)
                     {

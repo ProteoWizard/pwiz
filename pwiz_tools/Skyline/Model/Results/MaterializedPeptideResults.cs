@@ -262,6 +262,19 @@ namespace pwiz.Skyline.Model.Results
             _transitions = transitions;
         }
 
+        /// <summary>
+        /// Everything for one peptide across every replicate. This is what callers are
+        /// normally after; <see cref="PeptideResultsMaterializer"/> only exists to make one.
+        /// </summary>
+        public static MaterializedPeptideResults Materialize(SrmSettings settings, PeptideDocNode peptideDocNode)
+        {
+            return new PeptideResultsMaterializer
+            {
+                Settings = settings,
+                PeptideDocNode = peptideDocNode
+            }.Materialize();
+        }
+
         public SrmSettings Settings { get; }
         public PeptideDocNode PeptideDocNode { get; }
 

@@ -2313,7 +2313,7 @@
     <Compile Include="Model\Results\MsDataFileScanIds.cs" />
     <Compile Include="Model\Results\Demultiplexer.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
-    <Compile Include="Model\Results\PeptideResultsMaterializer.cs" />
+    <Compile Include="Model\Results\MaterializedPeptideResults.cs" />
     <Compile Include="Model\Results\Exception.cs" />
     <Compile Include="Model\Results\ExtractedSpectrum.cs" />
     <Compile Include="Model\Results\IRetentionTimePredictor.cs" />
