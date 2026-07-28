@@ -145,7 +145,7 @@ namespace pwiz.Osprey.FDR
         /// indices into the original <paramref name="entries"/> list;
         /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
         /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
-        /// the direct (<see cref="PercolatorFdr.RunPercolator"/>) and streaming
+        /// the direct (<see cref="PercolatorTrainer.RunPercolator"/>) and streaming
         /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
         /// for identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>

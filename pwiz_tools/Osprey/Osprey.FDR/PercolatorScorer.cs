@@ -47,7 +47,7 @@ namespace pwiz.Osprey.FDR
     {
         /// <summary>
         /// Streaming-path continuation: given the <paramref name="trainResults"/>
-        /// returned by <see cref="PercolatorFdr.RunPercolator"/> with <c>TrainOnly = true</c>
+        /// returned by <see cref="PercolatorTrainer.RunPercolator"/> with <c>TrainOnly = true</c>
         /// on a pre-dedup + subsampled training set, apply the averaged fold
         /// model + standardizer to score ALL entries in the population, fit
         /// PEP on the global target-decoy competition winners, and compute
@@ -191,7 +191,7 @@ namespace pwiz.Osprey.FDR
             }
 
             // Null on the tree path: the report is a decomposition of linear weights.
-            // See the matching comment in PercolatorFdr.RunPercolator.
+            // See the matching comment in PercolatorTrainer.RunPercolator.
             FeatureContributions contributions = null;
             if (gbtModels == null)
             {
@@ -371,7 +371,7 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            // Null on the tree path (no linear weights to decompose); see PercolatorFdr.RunPercolator.
+            // Null on the tree path (no linear weights to decompose); see PercolatorTrainer.RunPercolator.
             FeatureContributions contributions = null;
             if (gbtModels == null)
             {
@@ -566,7 +566,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="PercolatorSampling.BuildTrainingSubset"/> (strict-<c>&gt;</c> first-seen dedup ranked on
         /// CoelutionSum, ascending-global-ordinal order, identical
         /// <see cref="PercolatorSampling.SubsampleByPeptideGroup"/>), the SVM training runs the SAME
-        /// <see cref="PercolatorFdr.RunPercolator"/> on the SAME subset, and the score + q-value math reuses the
+        /// <see cref="PercolatorTrainer.RunPercolator"/> on the SAME subset, and the score + q-value math reuses the
         /// SAME primitives (<see cref="PercolatorFdr.StreamingFirstPassQ"/>, <see cref="PercolatorFdr.ComputePerFileRunQvalues"/>,
         /// <see cref="PercolatorFdr.UpdateExperimentQClampFloor"/>). This is 1st-pass-only: the 2nd pass keeps its
         /// O(survivors) resident projection (Stage 7/8 needs it) via the unchanged
@@ -750,7 +750,7 @@ namespace pwiz.Osprey.FDR
                 TrainOnly = true,
                 Diagnostics = percConfig.Diagnostics
             };
-            PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
                 return true;
 

@@ -75,7 +75,7 @@ namespace pwiz.Osprey.FDR
         public bool CollectFeatureHistograms { get; set; }
 
         /// <summary>
-        /// If true, <see cref="PercolatorFdr.RunPercolator"/> trains the fold
+        /// If true, <see cref="PercolatorTrainer.RunPercolator"/> trains the fold
         /// models + standardizer and returns early -- skips CV/averaged
         /// scoring of the input entries, PEP estimation, q-value
         /// computation, and per-file FDR logging. Used by the streaming
@@ -90,7 +90,7 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Stage 5 diagnostic-dump gates, or <c>null</c> (the common case) when
         /// diagnostics are off. Carried in by the Tasks-layer caller so
-        /// <see cref="PercolatorFdr.RunPercolator"/> stays a pure function of its
+        /// <see cref="PercolatorTrainer.RunPercolator"/> stays a pure function of its
         /// inputs -- it reads no env vars and never exits the process. See
         /// <see cref="PercolatorDiagnosticsConfig"/>.
         /// </summary>
@@ -140,7 +140,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// A copy of this config with <see cref="TrainOnly"/> set: what the streaming
-        /// paths hand to <see cref="PercolatorFdr.RunPercolator"/> for the
+        /// paths hand to <see cref="PercolatorTrainer.RunPercolator"/> for the
         /// train-the-fold-models pass over the subsampled training set. Copies every
         /// knob that selects HOW a model is trained -- including the classifier choice
         /// and its hyper-parameters -- so the training pass cannot silently diverge from

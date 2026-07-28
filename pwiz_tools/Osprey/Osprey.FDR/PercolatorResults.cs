@@ -104,7 +104,7 @@ namespace pwiz.Osprey.FDR
         public List<int> IterationsPerFold { get; set; }
 
         /// <summary>
-        /// Set when <see cref="PercolatorFdr.RunPercolator"/> wrote a
+        /// Set when <see cref="PercolatorTrainer.RunPercolator"/> wrote a
         /// diagnostic-only (<c>*Only</c>) dump and stopped early instead of
         /// completing FDR. The Tasks-layer caller inspects this and performs the
         /// process early-exit; the engine itself never exits. The other fields are

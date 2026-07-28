@@ -658,7 +658,7 @@ namespace pwiz.Osprey.FDR
             }
 
             var trainConfig = percConfig.CloneForTrainOnly();
-            PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
 
             // A diagnostic-only (*Only) dump can fire during the train-only pass
             // (standardizer / subsample / SVM-weights dumps all run there);
@@ -739,7 +739,7 @@ namespace pwiz.Osprey.FDR
         /// same flat identity arrays.</item>
         /// </list>
         /// Every parity-locked primitive (<see cref="PercolatorSampling.BuildTrainingSubset"/>,
-        /// <see cref="PercolatorFdr.RunPercolator"/> on the subset, and the shared
+        /// <see cref="PercolatorTrainer.RunPercolator"/> on the subset, and the shared
         /// competition/q-value math) is called UNCHANGED, so the trained model and the
         /// resulting q-values are byte-identical to the <see cref="PercolatorEntry"/>
         /// streaming path on the same input order. Returns <c>true</c> on a
@@ -890,7 +890,7 @@ namespace pwiz.Osprey.FDR
             }
 
             var trainConfig = percConfig.CloneForTrainOnly();
-            PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
 
             if (trainResults.DiagnosticAbort)
                 return true;

@@ -321,7 +321,7 @@ namespace pwiz.Osprey.Test
             }
 
             var config = new PercolatorConfig { MaxIterations = 3 };
-            var results = PercolatorFdr.RunPercolator(entries, config);
+            var results = PercolatorTrainer.RunPercolator(entries, config);
 
             // Should have results for all entries
             Assert.AreEqual(40, results.Entries.Count);
@@ -357,7 +357,7 @@ namespace pwiz.Osprey.Test
         public void TestPercolatorEmpty()
         {
             var config = new PercolatorConfig();
-            var results = PercolatorFdr.RunPercolator(new List<PercolatorEntry>(), config);
+            var results = PercolatorTrainer.RunPercolator(new List<PercolatorEntry>(), config);
             Assert.AreEqual(0, results.Entries.Count);
         }
 
@@ -385,7 +385,7 @@ namespace pwiz.Osprey.Test
             }
 
             var config = new PercolatorConfig { MaxIterations = 3, UseGradientBoostedTrees = true };
-            var results = PercolatorFdr.RunPercolator(entries, config);
+            var results = PercolatorTrainer.RunPercolator(entries, config);
 
             Assert.AreEqual(40, results.Entries.Count);
             Assert.AreEqual(3, results.FoldGbtModels.Count, "expected one tree ensemble per fold");
@@ -420,9 +420,9 @@ namespace pwiz.Osprey.Test
         {
             var entries = MakeNonMonotoneEntries();
 
-            var linear = PercolatorFdr.RunPercolator(
+            var linear = PercolatorTrainer.RunPercolator(
                 entries, new PercolatorConfig { MaxIterations = 5 });
-            var trees = PercolatorFdr.RunPercolator(
+            var trees = PercolatorTrainer.RunPercolator(
                 entries, new PercolatorConfig { MaxIterations = 5, UseGradientBoostedTrees = true });
 
             int linearPassing = CountPassingTargets(entries, linear);
@@ -448,7 +448,7 @@ namespace pwiz.Osprey.Test
             var entries = MakeNonMonotoneEntries();
             var trainConfig = new PercolatorConfig { MaxIterations = 3, TrainOnly = true };
 
-            var linearModel = PercolatorFdr.RunPercolator(entries, trainConfig);
+            var linearModel = PercolatorTrainer.RunPercolator(entries, trainConfig);
             var linearScorer = FrozenModelScorer.TryCreate(linearModel);
             Assert.IsNotNull(linearScorer, "frozen linear model must be scorable");
             Assert.IsFalse(linearScorer.IsGradientBoostedTrees);
@@ -456,7 +456,7 @@ namespace pwiz.Osprey.Test
 
             var treeConfig = new PercolatorConfig
                 { MaxIterations = 3, TrainOnly = true, UseGradientBoostedTrees = true };
-            var treeModel = PercolatorFdr.RunPercolator(entries, treeConfig);
+            var treeModel = PercolatorTrainer.RunPercolator(entries, treeConfig);
             var treeScorer = FrozenModelScorer.TryCreate(treeModel);
             Assert.IsNotNull(treeScorer,
                 "frozen tree model must be scorable -- a null here silently drops " +
@@ -502,8 +502,8 @@ namespace pwiz.Osprey.Test
             var entries = MakeNonMonotoneEntries();
             var config = new PercolatorConfig { MaxIterations = 4, UseGradientBoostedTrees = true };
 
-            var first = PercolatorFdr.RunPercolator(entries, config);
-            var second = PercolatorFdr.RunPercolator(entries, config);
+            var first = PercolatorTrainer.RunPercolator(entries, config);
+            var second = PercolatorTrainer.RunPercolator(entries, config);
 
             Assert.AreEqual(first.Entries.Count, second.Entries.Count);
             for (int i = 0; i < first.Entries.Count; i++)
@@ -538,7 +538,7 @@ namespace pwiz.Osprey.Test
         public void TestGbdtScoringIsThreadSafeAndChunkInvariant()
         {
             var entries = MakeNonMonotoneEntries();
-            var results = PercolatorFdr.RunPercolator(
+            var results = PercolatorTrainer.RunPercolator(
                 entries, new PercolatorConfig { MaxIterations = 3, UseGradientBoostedTrees = true });
             var model = results.FoldGbtModels[0];
 
@@ -700,7 +700,7 @@ namespace pwiz.Osprey.Test
             // Train a model, then score the whole population through the streaming
             // assembler (this is the path the direct branch does NOT take).
             var config = new PercolatorConfig { MaxIterations = 3, FeatureInfos = featureInfos };
-            PercolatorResults trainResults = PercolatorFdr.RunPercolator(built, config);
+            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(built, config);
             PercolatorResults streamingResults =
                 PercolatorScorer.ScorePopulationAndComputeFdr(built, trainResults, config);
 
@@ -1426,14 +1426,14 @@ namespace pwiz.Osprey.Test
                 var defaultCapture = new StringWriter();
                 OspreyOutput.Out = defaultCapture;
                 OspreyOutput.Verbose = false;
-                PercolatorFdr.RunPercolator(entries, config);
+                PercolatorTrainer.RunPercolator(entries, config);
                 defaultReport = defaultCapture.ToString();
 
                 // Verbose console: the table is emitted.
                 var capture = new StringWriter();
                 OspreyOutput.Out = capture;
                 OspreyOutput.Verbose = true;
-                results = PercolatorFdr.RunPercolator(entries, config);
+                results = PercolatorTrainer.RunPercolator(entries, config);
                 report = capture.ToString();
             }
             finally
