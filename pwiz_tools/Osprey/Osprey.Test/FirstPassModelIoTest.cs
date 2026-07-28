@@ -156,5 +156,46 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_missing_" + Guid.NewGuid().ToString(@"N") + @".json");
             Assert.IsNull(FirstPassModelIO.Load(missing), @"missing sidecar should load as null");
         }
+
+        [TestMethod]
+        public void TestFirstPassModelLoadRejectsCorruptOrInconsistent()
+        {
+            // Load's contract is null (fail-fast) on anything unreadable: it must never
+            // throw and crash the merge node, and never accept a shape-inconsistent model
+            // that the frozen scorer would then crash on or silently mis-score with.
+            AssertLoadsNull(@"{ not valid json", @"malformed JSON");
+            AssertLoadsNull(@"{}", @"empty object (all fields null)");
+            AssertLoadsNull(
+                @"{ ""SchemaVersion"": 2, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", @"future schema version");
+            AssertLoadsNull(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 3, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", @"NumFeatures != Means.Length");
+            AssertLoadsNull(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", @"Means/Stds length mismatch");
+            AssertLoadsNull(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5, 0.5]], ""FoldBiases"": [0.0] }", @"fold width != feature count");
+            AssertLoadsNull(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0, 0.0] }", @"bias/fold count mismatch");
+        }
+
+        private static void AssertLoadsNull(string json, string what)
+        {
+            string path = Path.Combine(Path.GetTempPath(),
+                @"osprey_model_bad_" + Guid.NewGuid().ToString(@"N") + @".json");
+            try
+            {
+                File.WriteAllText(path, json);
+                Assert.IsNull(FirstPassModelIO.Load(path), what + @" should load as null");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
     }
 }

@@ -640,6 +640,13 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
+        # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
+        # phase2 -> phase3 -> phase4 relay as the other Stage-5 sidecars: $ph2 is
+        # deleted below (before the merge node), so the merge node can only reach it
+        # via a phase-3 hop. Present only for the SVM/percolator framework; absent for
+        # the GBDT golden, so guard with Test-Path.
+        $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
+        if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
         $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -679,11 +686,11 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
         # Ship the persisted 1st-pass model so the merge node can run the frozen 2nd-pass
-        # modes (transfer / transfer-compete) without re-training. It is written by the
-        # FirstPassFDR join node (phase 2), not the per-file rescore (phase 3). Absent for
-        # the default percolator golden (which retrains), so guard with Test-Path.
-        # (protein-compact additionally needs the protein stratum, not yet persisted.)
-        $modelSide = Join-Path $ph2 "$s.1st-pass.model.json"
+        # modes (transfer / transfer-compete) without re-training. Written by the
+        # FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
+        # deleted by now). Present for the SVM/percolator framework, so guard with
+        # Test-Path. (protein-compact additionally needs the protein stratum, not yet persisted.)
+        $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
         $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
         if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }

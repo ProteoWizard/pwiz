@@ -99,9 +99,13 @@ namespace pwiz.Osprey.Tasks
             // publish so the frozen dispatch below finds it instead of fail-fasting. No-op
             // when the model is already present, the mode is the default retrain, or the
             // sidecar is absent (the existing fail-fast then applies).
+            // protein-compact is intentionally NOT here: it also needs the
+            // ProteinCompactStratum, which is not yet persisted to the merge node
+            // (follow-up). Reloading only the model would log a misleading "reloaded"
+            // success and still fail-fast on the missing stratum. transfer /
+            // transfer-compete need the model alone.
             bool wantsFrozenModel = OspreyEnvironment.Pass2TransferQ ||
-                                    OspreyEnvironment.Pass2TransferCompete ||
-                                    (OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2ProteinCompactRetrain);
+                                    OspreyEnvironment.Pass2TransferCompete;
             if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
                 var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
