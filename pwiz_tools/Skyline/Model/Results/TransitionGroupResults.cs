@@ -46,6 +46,19 @@ namespace pwiz.Skyline.Model.Results
         public ImmutableList<UserSet> UserSets { get; private set; }
 
         /// <summary>
+        /// Scores which come from the peak scoring model and so cannot be derived from the
+        /// .skyd file. Held as one value per position rather than in <see cref="CustomPeak"/>
+        /// because a scored document has one for nearly every position.
+        /// <para>
+        /// NaN means there is no value, which keeps these four bytes per position instead of
+        /// the eight a nullable float would take, and lets a document with no scoring model
+        /// collapse to a constant list.
+        /// </para>
+        /// </summary>
+        public ImmutableList<float> QValues { get; private set; }
+        public ImmutableList<float> ZScores { get; private set; }
+
+        /// <summary>
         /// The positions which have something that cannot be derived from the .skyd file.
         /// Sparse: most positions have no entry.
         /// </summary>
@@ -53,7 +66,19 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionGroupResults ChangeCandidatePeakIndexes(ImmutableList<int> value)
         {
-            return ChangeProp(ImClone(this), im => im.CandidatePeakIndexes = value);
+            // Very often every position picked the same candidate peak, in which case
+            // MaybeConstant collapses the whole list to a single value.
+            return ChangeProp(ImClone(this), im => im.CandidatePeakIndexes = value.MaybeConstant());
+        }
+
+        public TransitionGroupResults ChangeQValues(IEnumerable<float> value)
+        {
+            return ChangeProp(ImClone(this), im => im.QValues = ImmutableList.ValueOf(value).MaybeConstant());
+        }
+
+        public TransitionGroupResults ChangeZScores(IEnumerable<float> value)
+        {
+            return ChangeProp(ImClone(this), im => im.ZScores = ImmutableList.ValueOf(value).MaybeConstant());
         }
 
         public TransitionGroupResults ChangeUserSets(IEnumerable<UserSet> value)
@@ -75,8 +100,34 @@ namespace pwiz.Skyline.Model.Results
         {
             return UserSets == null ? UserSet.FALSE : UserSets[position];
         }
+
+        public float? GetQValue(int position)
+        {
+            return GetScore(QValues, position);
+        }
+
+        public float? GetZScore(int position)
+        {
+            return GetScore(ZScores, position);
+        }
+
+        private static float? GetScore(ImmutableList<float> scores, int position)
+        {
+            if (scores == null)
+            {
+                return null;
+            }
+
+            var score = scores[position];
+            return float.IsNaN(score) ? (float?) null : score;
+        }
     }
 
+    /// <summary>
+    /// Note that this deliberately holds no retention times. The apex of an individual
+    /// transition matters much less than the apex of the transition group, so code which
+    /// wants it reads it back from the .skyd file instead.
+    /// </summary>
     public class TransitionResults : Immutable
     {
         public TransitionResults(ChromFileIds chromFileIds, IEnumerable<float> areas)
