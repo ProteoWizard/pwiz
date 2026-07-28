@@ -149,6 +149,14 @@ namespace pwiz.Osprey.FDR
         /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
         /// for identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>
+        /// <returns>
+        /// Never null. Both return paths hand back a materialized array - the
+        /// best-per-precursor set when it already fits <paramref name="maxTrainSize"/>,
+        /// otherwise the peptide-group subsample of it. Callers must not test the result
+        /// for null: doing so reads as a real alternative path and hides dead code, which
+        /// is exactly what it did in <see cref="PercolatorTrainer.RunPercolator"/> until
+        /// issue #4468.
+        /// </returns>
         internal static int[] BuildTrainingSubset(
             bool[] labels, uint[] entryIds, string[] peptides,
             IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,

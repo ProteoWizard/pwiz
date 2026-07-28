@@ -150,31 +150,25 @@ namespace pwiz.Osprey.FDR
             OspreyOutput.Out.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
                 subN, subTargets, subDecoys, bestPerPrecursor.Length);
 
-            // Build subset-local arrays
-            bool[] subLabels;
-            uint[] subEntryIds;
-            string[] subPeptides;
-            Matrix subFeatures;
-            if (trainSubset != null)
+            // Build subset-local arrays.
+            //
+            // trainSubset is never null: both of BuildTrainingSubset's return paths hand
+            // back a materialized array. The former "no subsampling" branch here (clone the
+            // full arrays, use stdFeatures directly) was therefore unreachable and has been
+            // removed, along with the two other trainSubset null tests below (issue #4468).
+            // Worth being explicit about the evidence: unreachable code is invisible to the
+            // regression, so the golden proves nothing about this removal - it rests on
+            // BuildTrainingSubset's return paths, not on a green gate.
+            var subLabels = new bool[subN];
+            var subEntryIds = new uint[subN];
+            var subPeptides = new string[subN];
+            for (int i = 0; i < subN; i++)
             {
-                subLabels = new bool[subN];
-                subEntryIds = new uint[subN];
-                subPeptides = new string[subN];
-                for (int i = 0; i < subN; i++)
-                {
-                    subLabels[i] = labels[trainSubset[i]];
-                    subEntryIds[i] = entryIds[trainSubset[i]];
-                    subPeptides[i] = peptides[trainSubset[i]];
-                }
-                subFeatures = MatrixRows.ExtractRows(stdFeatures, trainSubset);
+                subLabels[i] = labels[trainSubset[i]];
+                subEntryIds[i] = entryIds[trainSubset[i]];
+                subPeptides[i] = peptides[trainSubset[i]];
             }
-            else
-            {
-                subLabels = (bool[])labels.Clone();
-                subEntryIds = (uint[])entryIds.Clone();
-                subPeptides = (string[])peptides.Clone();
-                subFeatures = stdFeatures;
-            }
+            var subFeatures = MatrixRows.ExtractRows(stdFeatures, trainSubset);
 
             // 4. Assign folds on the (possibly subsampled) set
             int[] foldAssignments = PercolatorSampling.CreateStratifiedFoldsByPeptide(
@@ -294,8 +288,7 @@ namespace pwiz.Osprey.FDR
                 };
             }
 
-            // Score ALL entries with trained models
-            if (trainSubset != null)
+            // Score ALL entries with trained models (trainSubset is never null, see above).
             {
                 var inSubset = new HashSet<int>();
                 foreach (int idx in trainSubset)
@@ -341,23 +334,6 @@ namespace pwiz.Osprey.FDR
                         finalScores[nonSubsetIndices[i]] = avgScores[i] / nModels;
                 }
             }
-            else
-            {
-                // No subsampling: score test fold directly
-                for (int fold = 0; fold < config.NFolds; fold++)
-                {
-                    var testIndices = new List<int>();
-                    for (int i = 0; i < n; i++)
-                    {
-                        if (foldAssignments[i] == fold)
-                            testIndices.Add(i);
-                    }
-                    var testFeatures = MatrixRows.ExtractRows(stdFeatures, testIndices.ToArray());
-                    var testScores = PercolatorScorer.ScoreWithFoldModel(foldModels, foldGbtModels, fold, testFeatures);
-                    for (int i = 0; i < testIndices.Count; i++)
-                        finalScores[testIndices[i]] = testScores[i];
-                }
-            }
 
             for (int fold = 0; fold < config.NFolds; fold++)
             {
@@ -369,22 +345,16 @@ namespace pwiz.Osprey.FDR
                 iterationsPerFold.Add(foldIterations[fold]);
             }
 
-            // 6b. Calibrate scores between folds
-            if (trainSubset != null)
-            {
-                var globalFoldAssignments = new int[n];
-                for (int i = 0; i < n; i++)
-                    globalFoldAssignments[i] = int.MaxValue;
-                for (int si = 0; si < trainSubset.Length; si++)
-                    globalFoldAssignments[trainSubset[si]] = foldAssignments[si];
-                CalibrateScoresBetweenFolds(finalScores, globalFoldAssignments,
-                    labels, entryIds, config.NFolds, trainFdr);
-            }
-            else
-            {
-                CalibrateScoresBetweenFolds(finalScores, foldAssignments,
-                    labels, entryIds, config.NFolds, trainFdr);
-            }
+            // 6b. Calibrate scores between folds. foldAssignments is indexed subset-locally,
+            // so it always needs remapping to global indices (trainSubset is never null, see
+            // above); the former unmapped branch was unreachable.
+            var globalFoldAssignments = new int[n];
+            for (int i = 0; i < n; i++)
+                globalFoldAssignments[i] = int.MaxValue;
+            for (int si = 0; si < trainSubset.Length; si++)
+                globalFoldAssignments[trainSubset[si]] = foldAssignments[si];
+            CalibrateScoresBetweenFolds(finalScores, globalFoldAssignments,
+                labels, entryIds, config.NFolds, trainFdr);
 
             // 7. Compute PEP on competition winners
             int[] winnerIndices;
