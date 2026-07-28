@@ -236,115 +236,12 @@ namespace pwiz.Osprey.FDR
                 ? new GradientBoostedTrees[config.NFolds]
                 : null;
             var foldIterations = new int[config.NFolds];
-            var foldElapsed = new double[config.NFolds];
-            // Selected SVM cost C per fold (chosen by inner CV over config.CValues,
-            // the log-scale sweep grid). Reported on the default console after
-            // training so the coefficients above have context (issue #4364).
-            var foldBestC = new double[config.NFolds];
 
-            // Pre-compute training indices for each fold (cheap, single-threaded).
-            var foldTrainIndices = new int[config.NFolds][];
-            for (int fold = 0; fold < config.NFolds; fold++)
-            {
-                var list = new List<int>(subN - subN / config.NFolds);
-                for (int i = 0; i < subN; i++)
-                {
-                    if (foldAssignments[i] != fold)
-                        list.Add(i);
-                }
-                foldTrainIndices[fold] = list.ToArray();
-            }
-
-            // One scratch pool for the whole outer-fold Parallel.For and
-            // every nested GridSearchC.Parallel.For below. Initial size
-            // = the subsampled training set; grid_search inner SVMs may
-            // need a different (typically smaller) capacity, handled by
-            // SvmTrainScratch.EnsureCapacity on rent. Pool grows
-            // organically to the parallel-worker high-water mark and
-            // arrays stay in gen-2 LOH for the rest of the run.
-            var svmScratchPool = new SvmTrainScratchPool(subN, nFeatures);
-
-            // Train all folds in parallel. Each fold reads from the shared
-            // subFeatures matrix (read-only) and produces an independent model.
-            // Mirrors Rust's into_par_iter(). Use OspreyParallel.For (explicit
-            // dedicated threads) rather than TPL Parallel.For: the TPL
-            // TaskReplicator was throttling effective parallelism to ~2.5x
-            // on HRAM Astral (vs Rust rayon's ~9x) even with the same
-            // per-call cost. Explicit threads remove the ThreadPool
-            // scheduling variable.
-            // Section sub-header (default human log): the actual (possibly subsampled)
-            // training-set size the per-iteration percent lines below are computed against.
-            // subN / subTargets are the post-subsample counts computed above.
-            OspreyOutput.Out.WriteLine("  {0}-fold cross-validation on {1} training entries ({2} targets)",
-                config.NFolds, subN, subTargets);
-
-            var swTrain = Stopwatch.StartNew();
-            var trainProgress = new TrainProgressReporter(config.NFolds, config.MaxIterations, trainFdr);
-            OspreyParallel.For(0, config.NFolds, config.NFolds, fold =>
-            {
-                var swFold = Stopwatch.StartNew();
-                int iters;
-                // Non-null exactly when config.UseGradientBoostedTrees; testing the array
-                // rather than the flag is the same condition by construction and keeps the
-                // element write provably non-null.
-                if (foldGbtModels != null)
-                {
-                    foldGbtModels[fold] = TrainFoldGbt(
-                        subFeatures, subLabels, subEntryIds, subPeptides,
-                        foldTrainIndices[fold], initialScores, config, trainFdr,
-                        fold, trainProgress, out iters);
-                    // No C to sweep: the trees are regularized by depth / gamma /
-                    // lambda / min-child-weight, all fixed by GbtParams.
-                    foldBestC[fold] = double.NaN;
-                }
-                else
-                {
-                    double foldC;
-                    foldModels[fold] = TrainFold(
-                        subFeatures, subLabels, subEntryIds, subPeptides,
-                        foldTrainIndices[fold], initialScores, config, trainFdr,
-                        svmScratchPool, fold, trainProgress, out iters, out foldC);
-                    foldBestC[fold] = foldC;
-                }
-                foldIterations[fold] = iters;
-                swFold.Stop();
-                foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
-            });
-            swTrain.Stop();
-
-            for (int fold = 0; fold < config.NFolds; fold++)
-            {
-                OspreyOutput.Out.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
-                    fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]);
-            }
-            OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
-                swTrain.Elapsed.TotalSeconds);
-
-            if (config.UseGradientBoostedTrees)
-            {
-                // The tree counterpart of the C report below: the knobs that actually
-                // bound this model's capacity, so the fold scores above have context.
-                var gp = config.GbtParams;
-                OspreyOutput.Out.WriteLine(
-                    "  Gradient-boosted trees: {0} trees, max depth {1}, learning rate {2}, " +
-                    "subsample {3}, colsample {4}, lambda {5}, alpha {6}, gamma {7}, min child weight {8}",
-                    gp.NTrees, gp.MaxDepth, gp.LearningRate, gp.Subsample, gp.ColSample,
-                    gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight);
-            }
-            else
-            {
-                // Selected SVM regularization C per fold, on the default console (issue
-                // #4364): C controls the SVM margin, so the trained coefficients above are
-                // only interpretable with it. C is chosen per fold by inner cross-validation
-                // from a log-scale sweep grid; report the grid and each fold's pick.
-                OspreyOutput.Out.WriteLine("  SVM regularization C (swept over {0}, chosen by cross-validation per fold):",
-                    FormatCGrid(config.CValues));
-                for (int fold = 0; fold < config.NFolds; fold++)
-                {
-                    OspreyOutput.Out.WriteLine("    fold {0}/{1}: C = {2}",
-                        fold + 1, config.NFolds, FormatC(foldBestC[fold]));
-                }
-            }
+            // Fold models are trained into the caller-allocated arrays (exactly one
+            // of foldModels / foldGbtModels is populated, per config).
+            TrainFoldModels(config, subFeatures, subLabels, subEntryIds, subPeptides,
+                foldAssignments, initialScores, subN, subTargets, nFeatures, trainFdr,
+                foldModels, foldGbtModels, foldIterations);
 
             // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
             // a *Only request returns the abort sentinel. Captures per-fold
@@ -594,6 +491,146 @@ namespace pwiz.Osprey.FDR
                 FeatureContributions = contributions
             };
         }
+
+        /// <summary>
+        /// Cross-validated per-fold model training: precompute each fold's training
+        /// indices, train the folds in parallel, and report per-fold timing plus the
+        /// chosen regularization. Exactly one of <paramref name="foldModels"/> and
+        /// <paramref name="foldGbtModels"/> is non-null, per
+        /// <see cref="PercolatorConfig.UseGradientBoostedTrees"/>; both are allocated by
+        /// the caller and filled here, which is also how the parallel loop writes them.
+        ///
+        /// Extracted from <see cref="RunPercolator"/> as pure code motion - the scratch
+        /// pool, the fold-index precompute and the console reporting were already one
+        /// contiguous phase, and nothing they compute escapes except through the three
+        /// output arrays.
+        /// </summary>
+        private static void TrainFoldModels(
+            PercolatorConfig config,
+            Matrix subFeatures,
+            bool[] subLabels,
+            uint[] subEntryIds,
+            string[] subPeptides,
+            int[] foldAssignments,
+            double[] initialScores,
+            int subN,
+            int subTargets,
+            int nFeatures,
+            double trainFdr,
+            LinearSvmClassifier[] foldModels,
+            GradientBoostedTrees[] foldGbtModels,
+            int[] foldIterations)
+        {
+            var foldElapsed = new double[config.NFolds];
+            // Selected SVM cost C per fold (chosen by inner CV over config.CValues,
+            // the log-scale sweep grid). Reported on the default console after
+            // training so the coefficients above have context (issue #4364).
+            var foldBestC = new double[config.NFolds];
+            // Pre-compute training indices for each fold (cheap, single-threaded).
+            var foldTrainIndices = new int[config.NFolds][];
+            for (int fold = 0; fold < config.NFolds; fold++)
+            {
+                var list = new List<int>(subN - subN / config.NFolds);
+                for (int i = 0; i < subN; i++)
+                {
+                    if (foldAssignments[i] != fold)
+                        list.Add(i);
+                }
+                foldTrainIndices[fold] = list.ToArray();
+            }
+
+            // One scratch pool for the whole outer-fold Parallel.For and
+            // every nested GridSearchC.Parallel.For below. Initial size
+            // = the subsampled training set; grid_search inner SVMs may
+            // need a different (typically smaller) capacity, handled by
+            // SvmTrainScratch.EnsureCapacity on rent. Pool grows
+            // organically to the parallel-worker high-water mark and
+            // arrays stay in gen-2 LOH for the rest of the run.
+            var svmScratchPool = new SvmTrainScratchPool(subN, nFeatures);
+
+            // Train all folds in parallel. Each fold reads from the shared
+            // subFeatures matrix (read-only) and produces an independent model.
+            // Mirrors Rust's into_par_iter(). Use OspreyParallel.For (explicit
+            // dedicated threads) rather than TPL Parallel.For: the TPL
+            // TaskReplicator was throttling effective parallelism to ~2.5x
+            // on HRAM Astral (vs Rust rayon's ~9x) even with the same
+            // per-call cost. Explicit threads remove the ThreadPool
+            // scheduling variable.
+            // Section sub-header (default human log): the actual (possibly subsampled)
+            // training-set size the per-iteration percent lines below are computed against.
+            // subN / subTargets are the post-subsample counts computed above.
+            OspreyOutput.Out.WriteLine("  {0}-fold cross-validation on {1} training entries ({2} targets)",
+                config.NFolds, subN, subTargets);
+
+            var swTrain = Stopwatch.StartNew();
+            var trainProgress = new TrainProgressReporter(config.NFolds, config.MaxIterations, trainFdr);
+            OspreyParallel.For(0, config.NFolds, config.NFolds, fold =>
+            {
+                var swFold = Stopwatch.StartNew();
+                int iters;
+                // Non-null exactly when config.UseGradientBoostedTrees; testing the array
+                // rather than the flag is the same condition by construction and keeps the
+                // element write provably non-null.
+                if (foldGbtModels != null)
+                {
+                    foldGbtModels[fold] = TrainFoldGbt(
+                        subFeatures, subLabels, subEntryIds, subPeptides,
+                        foldTrainIndices[fold], initialScores, config, trainFdr,
+                        fold, trainProgress, out iters);
+                    // No C to sweep: the trees are regularized by depth / gamma /
+                    // lambda / min-child-weight, all fixed by GbtParams.
+                    foldBestC[fold] = double.NaN;
+                }
+                else
+                {
+                    double foldC;
+                    foldModels[fold] = TrainFold(
+                        subFeatures, subLabels, subEntryIds, subPeptides,
+                        foldTrainIndices[fold], initialScores, config, trainFdr,
+                        svmScratchPool, fold, trainProgress, out iters, out foldC);
+                    foldBestC[fold] = foldC;
+                }
+                foldIterations[fold] = iters;
+                swFold.Stop();
+                foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
+            });
+            swTrain.Stop();
+
+            for (int fold = 0; fold < config.NFolds; fold++)
+            {
+                OspreyOutput.Out.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
+                    fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]);
+            }
+            OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
+                swTrain.Elapsed.TotalSeconds);
+
+            if (config.UseGradientBoostedTrees)
+            {
+                // The tree counterpart of the C report below: the knobs that actually
+                // bound this model's capacity, so the fold scores above have context.
+                var gp = config.GbtParams;
+                OspreyOutput.Out.WriteLine(
+                    "  Gradient-boosted trees: {0} trees, max depth {1}, learning rate {2}, " +
+                    "subsample {3}, colsample {4}, lambda {5}, alpha {6}, gamma {7}, min child weight {8}",
+                    gp.NTrees, gp.MaxDepth, gp.LearningRate, gp.Subsample, gp.ColSample,
+                    gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight);
+            }
+            else
+            {
+                // Selected SVM regularization C per fold, on the default console (issue
+                // #4364): C controls the SVM margin, so the trained coefficients above are
+                // only interpretable with it. C is chosen per fold by inner cross-validation
+                // from a log-scale sweep grid; report the grid and each fold's pick.
+                OspreyOutput.Out.WriteLine("  SVM regularization C (swept over {0}, chosen by cross-validation per fold):",
+                    FormatCGrid(config.CValues));
+                for (int fold = 0; fold < config.NFolds; fold++)
+                {
+                    OspreyOutput.Out.WriteLine("    fold {0}/{1}: C = {2}",
+                        fold + 1, config.NFolds, FormatC(foldBestC[fold]));
+                }
+            }
+        }
+
 
         // ============================================================
         // SVM fold training
