@@ -61,7 +61,7 @@ namespace pwiz.Osprey.FDR
         /// typed result. Same competition rule (strict &gt;, ties to decoy), two
         /// shapes tuned to performance vs. ergonomics.
         /// </summary>
-        public static void CompeteFromIndices(
+        internal static void CompeteFromIndices(
             double[] scores,
             bool[] labels,
             uint[] entryIds,

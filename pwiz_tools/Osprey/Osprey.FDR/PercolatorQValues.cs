@@ -48,7 +48,7 @@ namespace pwiz.Osprey.FDR
     /// <see cref="PercolatorScorer"/>) and which observation won its base id
     /// (<see cref="TargetDecoyCompetition"/>) are someone else's job.
     /// </summary>
-    public static class QValueCalculator
+    public static class PercolatorQValues
     {
 
 

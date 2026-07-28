@@ -28,7 +28,7 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// The streaming (bounded-memory) FDR paths, 
+    /// The streaming (bounded-memory) FDR paths, extracted from
     /// the original <c>PercolatorFdr</c> god class (issue #4468): the shared competition + PEP + per-run /
     /// experiment q-value block that both flat score passes feed, the streaming
     /// full-population precursor FDR, and the <see cref="StreamingFirstPassQ"/>
@@ -75,10 +75,10 @@ namespace pwiz.Osprey.FDR
             int n = finalScores.Length;
 
             // PEP via global target-decoy competition. The bounded winner->PEP map
-            // (base_id-ascending KDE order -- see QValueCalculator.ComputePepWinnerMap) is expanded to the
+            // (base_id-ascending KDE order -- see PercolatorQValues.ComputePepWinnerMap) is expanded to the
             // full per-row peps array here; the projection score pass reads the map directly
             // so the O(n) array is never materialized (issue #4355 Part B).
-            var pepByWinnerIdx = QValueCalculator.ComputePepWinnerMap(finalScores, labels, entryIds);
+            var pepByWinnerIdx = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
             peps = new double[n];
             for (int i = 0; i < n; i++)
                 peps[i] = 1.0;
@@ -86,9 +86,9 @@ namespace pwiz.Osprey.FDR
                 peps[kv.Key] = kv.Value;
 
             // Per-run precursor + peptide q-values (each file independently).
-            runPrecursorQvalues = QValueCalculator.ComputePerRunPrecursorQvalues(
+            runPrecursorQvalues = PercolatorQValues.ComputePerRunPrecursorQvalues(
                 finalScores, labels, entryIds, fileNames);
-            runPeptideQvalues = QValueCalculator.ComputePerRunPeptideQvalues(
+            runPeptideQvalues = PercolatorQValues.ComputePerRunPeptideQvalues(
                 finalScores, labels, entryIds, fileNames, peptides);
 
             // Experiment-level q-values: single-file shortcut matches
@@ -102,9 +102,9 @@ namespace pwiz.Osprey.FDR
             }
             else
             {
-                expPrecursorQvalues = QValueCalculator.ComputeExperimentPrecursorQvalues(
+                expPrecursorQvalues = PercolatorQValues.ComputeExperimentPrecursorQvalues(
                     finalScores, labels, entryIds);
-                expPeptideQvalues = QValueCalculator.ComputeExperimentPeptideQvalues(
+                expPeptideQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
                     finalScores, labels, entryIds, peptides);
             }
 
@@ -112,13 +112,13 @@ namespace pwiz.Osprey.FDR
             // each experiment q up to the entry's best (min-over-runs) combined run q. Shared by
             // the FdrEntry streaming path and the projection score pass, so both clamp
             // identically without a resident FdrEntry buffer.
-            QValueCalculator.ClampExperimentQToBestRunFlat(
+            PercolatorQValues.ClampExperimentQToBestRunFlat(
                 entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
                 expPrecursorQvalues, expPeptideQvalues);
         }
 
         /// <summary>
-        /// Bounded-memory streaming form of <see cref="QValueCalculator.ComputeFullPopulationPrecursorFdr"/> for
+        /// Bounded-memory streaming form of <see cref="PercolatorQValues.ComputeFullPopulationPrecursorFdr"/> for
         /// OSPREY_PASS2_QVALUE=transfer-compete. Streams one file's 1st-pass population at a time
         /// (run-level competition + conservative q per file) while accumulating only the
         /// per-base_id best target/decoy observation for the experiment-level competition.
@@ -205,7 +205,7 @@ namespace pwiz.Osprey.FDR
                 TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
                     out int[] wi, out double[] ws, out bool[] wd);
                 var q = new double[wi.Length];
-                QValueCalculator.ComputeConservativeQvalues(ws, wd, q);
+                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
                 for (int rank = 0; rank < wi.Length; rank++)
                 {
                     uint eid = entryIds[wi[rank]];
@@ -279,7 +279,7 @@ namespace pwiz.Osprey.FDR
                 sortedBaseId[i] = expBaseId[perm[i]];
             }
             var qExp = new double[w];
-            QValueCalculator.ComputeConservativeQvalues(sortedScore, sortedDecoy, qExp);
+            PercolatorQValues.ComputeConservativeQvalues(sortedScore, sortedDecoy, qExp);
             var baseIdExpQ = new Dictionary<uint, double>(w);
             for (int i = 0; i < w; i++) baseIdExpQ[sortedBaseId[i]] = qExp[i];
 
@@ -327,9 +327,9 @@ namespace pwiz.Osprey.FDR
         /// instead of reading the resident <c>finalScores/labels/entryIds/peptides[n]</c> arrays.
         /// Bounded: it retains only per-base_id and per-peptide bests (O(distinct)), never an O(n)
         /// buffer. Each Build* reuses the SAME <see cref="TargetDecoyCompetition.CompeteFromDicts"/> +
-        /// <see cref="QValueCalculator.ComputeConservativeQvalues"/> (+ <c>PepEstimator</c>) finish the flat
-        /// <see cref="QValueCalculator.ComputeExperimentPrecursorQMap"/> / <see cref="QValueCalculator.ComputeExperimentPeptideQMap"/>
-        /// / <see cref="QValueCalculator.ComputePepWinnerMap"/> run, so a population fed in the same order yields
+        /// <see cref="PercolatorQValues.ComputeConservativeQvalues"/> (+ <c>PepEstimator</c>) finish the flat
+        /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/> / <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>
+        /// / <see cref="PercolatorQValues.ComputePepWinnerMap"/> run, so a population fed in the same order yields
         /// byte-identical maps (verified by <c>FdrTest.TestStreamingFirstPassQMatchesFlat</c>). The
         /// PEP map is keyed by the streaming ordinal <c>g</c>, which equals the flat winner index
         /// because both visit rows in the same nested (file,row) order.
@@ -377,14 +377,14 @@ namespace pwiz.Osprey.FDR
             /// <summary>
             /// Experiment-precursor <c>base_id -&gt; q</c>: compete the global base_id bests,
             /// conservative-q, keyed by each winner's base_id -- byte-identical to
-            /// <see cref="QValueCalculator.ComputeExperimentPrecursorQMap"/>.
+            /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/>.
             /// </summary>
             public Dictionary<uint, double> BuildExperimentPrecursorQMap()
             {
                 TargetDecoyCompetition.CompeteFromDicts(_precTargets, _precDecoys,
                     out _, out double[] ws, out bool[] wd, out uint[] wb);
                 var q = new double[ws.Length];
-                QValueCalculator.ComputeConservativeQvalues(ws, wd, q);
+                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
                 var map = new Dictionary<uint, double>(wb.Length);
                 for (int rank = 0; rank < wb.Length; rank++)
                     map[wb[rank]] = q[rank];
@@ -395,7 +395,7 @@ namespace pwiz.Osprey.FDR
             /// Experiment-peptide <c>peptide -&gt; q</c>: materialize the best-per-peptide set
             /// sorted by ordinal (matching <see cref="PercolatorSampling.BestPrecursorPerPeptide"/>'s sort), compete
             /// by base_id, conservative-q, keyed by the winner's peptide -- byte-identical to
-            /// <see cref="QValueCalculator.ComputeExperimentPeptideQMap"/>.
+            /// <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>.
             /// </summary>
             public Dictionary<string, double> BuildExperimentPeptideQMap()
             {
@@ -421,7 +421,7 @@ namespace pwiz.Osprey.FDR
                 TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
                     out int[] wi, out double[] ws, out bool[] wd, out _);
                 var q = new double[ws.Length];
-                QValueCalculator.ComputeConservativeQvalues(ws, wd, q);
+                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
                 var map = new Dictionary<string, double>(wi.Length);
                 for (int rank = 0; rank < wi.Length; rank++)
                     map[best[wi[rank]].Peptide] = q[rank];
@@ -432,7 +432,7 @@ namespace pwiz.Osprey.FDR
             /// PEP <c>winner-ordinal -&gt; pep</c>: compete the global base_id bests, fit the PEP
             /// estimator on winners sorted base_id-ascending (the non-associative KDE sum is
             /// order-sensitive), then posterior-error each winner -- byte-identical to
-            /// <see cref="QValueCalculator.ComputePepWinnerMap"/>.
+            /// <see cref="PercolatorQValues.ComputePepWinnerMap"/>.
             /// </summary>
             public Dictionary<int, double> BuildPepWinnerMap()
             {
@@ -442,7 +442,7 @@ namespace pwiz.Osprey.FDR
                 var pepOrder = new int[nWinners];
                 for (int k = 0; k < nWinners; k++)
                     pepOrder[k] = k;
-                Array.Sort(pepOrder, (a, b) => wb[a].CompareTo(wb[b])); // Array.Sort OK: one winner per base_id, so wb has no ties -- matches QValueCalculator.ComputePepWinnerMap
+                Array.Sort(pepOrder, (a, b) => wb[a].CompareTo(wb[b])); // Array.Sort OK: one winner per base_id, so wb has no ties -- matches PercolatorQValues.ComputePepWinnerMap
                 var pepScores = new double[nWinners];
                 var pepIsDecoy = new bool[nWinners];
                 for (int k = 0; k < nWinners; k++)

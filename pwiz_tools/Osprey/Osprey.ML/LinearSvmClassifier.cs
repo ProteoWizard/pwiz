@@ -133,7 +133,7 @@ namespace pwiz.Osprey.ML
         public double[] TrainData;
         public double[] TestData;
 
-        // Pooled buffers for QValueCalculator.CountPassing's two per-call
+        // Pooled buffers for PercolatorQValues.CountPassing's two per-call
         // arrays (allIndices: 0..n-1; qValues: per-winner). Sized to
         // initialN at scratch construction; EnsureCountPassingCapacity
         // grows on rare oversize requests.

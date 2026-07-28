@@ -951,7 +951,7 @@ namespace pwiz.Osprey.FDR
         /// -- intended, matching blib fidelity rather than the run-precursor gate alone.
         ///
         /// NOTE (issue #4378): the IN-PASS clamp (first/second-pass Percolator) now runs in the
-        /// memory-bounded FLAT form -- <see cref="QValueCalculator.ClampExperimentQToBestRunFlat"/>
+        /// memory-bounded FLAT form -- <see cref="PercolatorQValues.ClampExperimentQToBestRunFlat"/>
         /// over the score-pass scalar arrays -- so the full FdrEntry buffer need not be resident
         /// on the streaming path. This resident overload remains for the post-Stage-6 pre-blib
         /// re-clamp (<c>MergeNodeTask</c>), which runs on the already-compacted survivor buffer.

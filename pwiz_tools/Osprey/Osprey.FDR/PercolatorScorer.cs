@@ -29,7 +29,7 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Application of a trained Percolator model to a population, 
+    /// Application of a trained Percolator model to a population, extracted from
     /// the original <c>PercolatorFdr</c> god class (issue #4468): full-population scoring, the projection-native
     /// in-place path, and the streaming first pass, plus the per-row primitives
     /// they share.
@@ -390,10 +390,10 @@ namespace pwiz.Osprey.FDR
             // O(distinct), built once); the PER-RUN q-values are per-file, so they are computed
             // one file at a time from that file's slice, never a full double[n] array. The
             // competition + q-value math is byte-for-byte the shared code the five-array path
-            // used (QValueCalculator.ComputePepWinnerMap / QValueCalculator.ComputeExperimentPrecursorQMap /
-            // QValueCalculator.ComputeExperimentPeptideQMap / QValueCalculator.ComputePerFileRunQvalues all mirror
+            // used (PercolatorQValues.ComputePepWinnerMap / PercolatorQValues.ComputeExperimentPrecursorQMap /
+            // PercolatorQValues.ComputeExperimentPeptideQMap / PercolatorQValues.ComputePerFileRunQvalues all mirror
             // StreamingFdr.ComputeStreamingCompetitionQvalues), so the streamed outputs are identical.
-            var pepByWinnerIdx = QValueCalculator.ComputePepWinnerMap(finalScores, labels, entryIds);
+            var pepByWinnerIdx = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
 
             // The per-file q-value passes below slice each file as one contiguous block
             // [off, off+count). The full-length ComputePerRun* path instead grouped by file
@@ -425,9 +425,9 @@ namespace pwiz.Osprey.FDR
                     nonEmptyFiles++;
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByBaseId = isSingleFile
-                ? null : QValueCalculator.ComputeExperimentPrecursorQMap(finalScores, labels, entryIds);
+                ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(finalScores, labels, entryIds);
             Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : QValueCalculator.ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
+                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
 
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
@@ -437,21 +437,21 @@ namespace pwiz.Osprey.FDR
             // to assign. min/max are order-independent -> byte-identical to the flat clamp.
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
-            using (var floorProgress = QValueCalculator.QProgress(@"Per-run q-value floors", perFile.Count, n))
+            using (var floorProgress = PercolatorQValues.QProgress(@"Per-run q-value floors", perFile.Count, n))
             {
                 int off = 0;
                 int floorFile = 0;
                 foreach (var kvp in perFile)
                 {
                     int count = kvp.Value.Count;
-                    QValueCalculator.ComputePerFileRunQvalues(
+                    PercolatorQValues.ComputePerFileRunQvalues(
                         finalScores, labels, entryIds, peptides, off, count,
                         out double[] runPrecFile, out double[] runPeptFile);
                     for (int r = 0; r < count; r++)
                     {
                         int g = off + r;
                         double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
-                        QValueCalculator.UpdateExperimentQClampFloor(
+                        PercolatorQValues.UpdateExperimentQClampFloor(
                             minRunBothByEntryId, minRunBothByPeptide, entryIds[g], peptides[g], labels[g], runBoth);
                     }
                     off += count;
@@ -470,7 +470,7 @@ namespace pwiz.Osprey.FDR
             {
                 var projRows = kvp.Value;
                 int count = projRows.Count;
-                QValueCalculator.ComputePerFileRunQvalues(
+                PercolatorQValues.ComputePerFileRunQvalues(
                     finalScores, labels, entryIds, peptides, wgi, count,
                     out double[] runPrecFile, out double[] runPeptFile);
                 for (int r = 0; r < count; r++)
@@ -567,8 +567,8 @@ namespace pwiz.Osprey.FDR
         /// CoelutionSum, ascending-global-ordinal order, identical
         /// <see cref="PercolatorSampling.SubsampleByPeptideGroup"/>), the SVM training runs the SAME
         /// <see cref="PercolatorTrainer.RunPercolator"/> on the SAME subset, and the score + q-value math reuses the
-        /// SAME primitives (<see cref="StreamingFdr.StreamingFirstPassQ"/>, <see cref="QValueCalculator.ComputePerFileRunQvalues"/>,
-        /// <see cref="QValueCalculator.UpdateExperimentQClampFloor"/>). This is 1st-pass-only: the 2nd pass keeps its
+        /// SAME primitives (<see cref="StreamingFdr.StreamingFirstPassQ"/>, <see cref="PercolatorQValues.ComputePerFileRunQvalues"/>,
+        /// <see cref="PercolatorQValues.UpdateExperimentQClampFloor"/>). This is 1st-pass-only: the 2nd pass keeps its
         /// O(survivors) resident projection (Stage 7/8 needs it) via the unchanged
         /// <see cref="ScoreProjectionAndComputeFdrInPlace"/>.
         ///
@@ -832,13 +832,13 @@ namespace pwiz.Osprey.FDR
                     g1++;
                     scoreProgress.Report(g1);
                 }
-                QValueCalculator.ComputePerFileRunQvalues(
+                PercolatorQValues.ComputePerFileRunQvalues(
                     fScores, fLabels, fEntryIds, fPeptides, 0, count,
                     out double[] runPrecFile, out double[] runPeptFile);
                 for (int r = 0; r < count; r++)
                 {
                     double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
-                    QValueCalculator.UpdateExperimentQClampFloor(
+                    PercolatorQValues.UpdateExperimentQClampFloor(
                         minRunBothByEntryId, minRunBothByPeptide, fEntryIds[r], fPeptides[r], fLabels[r], runBoth);
                 }
             }
@@ -882,7 +882,7 @@ namespace pwiz.Osprey.FDR
                     fPeptides[r] = buffer.Peptides[r];
                     fCharges[r] = buffer.Charges[r];
                 }
-                QValueCalculator.ComputePerFileRunQvalues(
+                PercolatorQValues.ComputePerFileRunQvalues(
                     fScores, fLabels, fEntryIds, fPeptides, 0, count,
                     out double[] runPrecFile, out double[] runPeptFile);
                 for (int r = 0; r < count; r++)

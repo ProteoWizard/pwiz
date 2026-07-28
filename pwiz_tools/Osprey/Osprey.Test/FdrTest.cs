@@ -602,7 +602,7 @@ namespace pwiz.Osprey.Test
                 labels[i] = entries[i].IsDecoy;
                 entryIds[i] = entries[i].EntryId;
             }
-            return QValueCalculator.CountPassing(scores, labels, entryIds, 0.01);
+            return PercolatorQValues.CountPassing(scores, labels, entryIds, 0.01);
         }
 
         /// <summary>
@@ -625,7 +625,7 @@ namespace pwiz.Osprey.Test
             var psmIdMapStubs = BuildWritebackFixture();
 
             // Synthetic per-stub results, index-aligned to the nested (file, entry)
-            // walk -- the exact contract QValueCalculator's direct and streaming result
+            // walk -- the exact contract PercolatorTrainer's and PercolatorScorer's result
             // assembly guarantee. Distinct values per row so any misbinding surfaces.
             var results = new PercolatorResults { Entries = new List<PercolatorResult>() };
             int seq = 0;
@@ -1682,7 +1682,7 @@ namespace pwiz.Osprey.Test
             var isDecoy = new[] { false, false, true, false };
             var q = new double[4];
 
-            QValueCalculator.ComputeConservativeQvalues(scores, isDecoy, q);
+            PercolatorQValues.ComputeConservativeQvalues(scores, isDecoy, q);
 
             // FDR with +1: pos0: (0+1)/1=1.0, pos1: (0+1)/2=0.5, pos2: (1+1)/2=1.0, pos3: (1+1)/3=0.667
             // Backward pass: [0.5, 0.5, 0.667, 0.667]
@@ -1707,7 +1707,7 @@ namespace pwiz.Osprey.Test
                 1 | 0x80000000, 2 | 0x80000000, 3 | 0x80000000, 4 | 0x80000000, 5 | 0x80000000
             };
 
-            int n = QValueCalculator.CountPassingConservative(scores, labels, entryIds, 0.50);
+            int n = PercolatorQValues.CountPassingConservative(scores, labels, entryIds, 0.50);
             Assert.AreEqual(5, n);
         }
 
@@ -1969,13 +1969,13 @@ namespace pwiz.Osprey.Test
             var peptideArr = peptides.ToArray();
 
             AssertMapsEqual(
-                QValueCalculator.ComputeExperimentPrecursorQMap(scoreArr, labelArr, entryIdArr),
+                PercolatorQValues.ComputeExperimentPrecursorQMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildExperimentPrecursorQMap(), "exp-precursor");
             AssertMapsEqual(
-                QValueCalculator.ComputeExperimentPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr),
+                PercolatorQValues.ComputeExperimentPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr),
                 streaming.BuildExperimentPeptideQMap(), "exp-peptide");
             AssertMapsEqual(
-                QValueCalculator.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
+                PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildPepWinnerMap(), "pep-winner");
         }
 
@@ -2644,8 +2644,8 @@ namespace pwiz.Osprey.Test
             var allBaseIds = new HashSet<uint>(stratum);
             for (uint b = 100; b < 180; b++) allBaseIds.Add(b);
 
-            var stratQ = QValueCalculator.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
-            var fullQ = QValueCalculator.ComputeStratifiedCompetitionQvalues(sc, lb, ids, allBaseIds);
+            var stratQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
+            var fullQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, allBaseIds);
 
             // Locate the marginal stratum target (base_id 20, not decoy).
             int marginal = -1;
@@ -2677,7 +2677,7 @@ namespace pwiz.Osprey.Test
                 uint b = ids[i] & 0x7FFFFFFFu;
                 if (b <= 20) badStratScores[i] = lb[i] ? 5.0 : 0.5;   // decoys win in-stratum
             }
-            var badQ = QValueCalculator.ComputeStratifiedCompetitionQvalues(badStratScores, lb, ids, stratum);
+            var badQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(badStratScores, lb, ids, stratum);
             Assert.IsTrue(badQ[marginal] > 0.5, string.Format(
                 "a decoy-dominated stratum must give high q, got {0}", badQ[marginal]));
         }
@@ -2719,7 +2719,7 @@ namespace pwiz.Osprey.Test
             for (uint b = 1; b <= 20; b++) stratum.Add(b);
 
             // Resident oracle: q per observation (winner obs carry the competition q).
-            var residentQ = QValueCalculator.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
+            var residentQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
 
             // Streaming: single file, no score override, survivors = the stratum targets.
             const string F = "f";

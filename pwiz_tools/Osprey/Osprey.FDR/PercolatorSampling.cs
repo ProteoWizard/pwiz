@@ -27,7 +27,7 @@ using System.Collections.Generic;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Selection of which entries train the Percolator model, 
+    /// Selection of which entries train the Percolator model, extracted from
     /// the original <c>PercolatorFdr</c> god class (issue #4468): best-precursor-per-peptide collapsing, the
     /// peptide-grouped stratified fold split, subsampling to a training-size cap,
     /// and the composition of those into a training subset.
