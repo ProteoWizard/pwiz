@@ -190,7 +190,7 @@ namespace pwiz.Osprey.FDR
             // (RandomState), so Rust's tie order is randomized per run -- both impls use
             // the same stable-sort algorithm, but neither fixes the tie order across
             // impls. Exact score ties across distinct base_ids are rare, and this is the
-            // Simple-FDR path only (default Percolator uses QValueCalculator).
+            // Simple-FDR path only (the default Percolator path runs through PercolatorEngine).
             winners = winners.OrderByDescending(w => w.Score).ToList();
 
             // First pass: walk down and find MAX cumulative_targets at any position where FDR <= threshold
