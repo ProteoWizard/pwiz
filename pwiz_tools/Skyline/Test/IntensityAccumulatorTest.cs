@@ -72,13 +72,23 @@ namespace pwiz.SkylineTest
             };
             Assert.AreEqual(1.00, PrecursorResult.AggregateObservedIonMobility(both).Value, EPSILON);
 
-            // MS1 channels present but without an observed value fall through to the fragments.
+            // MS1 channels present but valueless keep the aggregate null - no silent MS2
+            // fallback - so observed IM and the MS1-only observed CCS stay consistent (the
+            // fragment fallback is only for genuinely MS2-only precursors, the ms2 case above).
             var ms1NoValue = new[]
             {
                 new PrecursorResult.ObservedIonMobilityChannel(true, null, null, 0.7, 0),
                 new PrecursorResult.ObservedIonMobilityChannel(false, 2.00, null, 100, 0),
             };
-            Assert.AreEqual(2.00, PrecursorResult.AggregateObservedIonMobility(ms1NoValue).Value, EPSILON);
+            Assert.IsNull(PrecursorResult.AggregateObservedIonMobility(ms1NoValue));
+
+            // MS1 channel without isotope dist info (m/z-only small molecule) still
+            // contributes, area-weighted, rather than being dropped.
+            var ms1NoDistInfo = new[]
+            {
+                new PrecursorResult.ObservedIonMobilityChannel(true, 1.33, null, 500, 0),
+            };
+            Assert.AreEqual(1.33, PrecursorResult.AggregateObservedIonMobility(ms1NoDistInfo).Value, EPSILON);
 
             // No usable channels -> null.
             Assert.IsNull(PrecursorResult.AggregateObservedIonMobility(Array.Empty<PrecursorResult.ObservedIonMobilityChannel>()));
@@ -134,14 +144,28 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0.0, acc.ObservedIonMobility, EPSILON);
         }
 
-        // Per-point null IM (e.g. spectra without IM arrays) must not contribute to
-        // the observed-IM mean.
+        // Per-point null IM (e.g. spectra without IM arrays) must not contribute to the
+        // observed-IM mean, regardless of ordering: a null-IM point's intensity must not
+        // dilute the mean of the IM-bearing points even when it arrives first or between them.
         private static void TestNullIonMobilityIgnored()
         {
             var acc = new IntensityAccumulator(false, ChromExtractor.summed, TARGET_MZ, true);
             acc.AddPoint(TARGET_MZ, 10, 1.4);  // contributes
             acc.AddPoint(TARGET_MZ, 30);       // no IM, must not perturb the mean
             Assert.AreEqual(1.4, acc.ObservedIonMobility, EPSILON);
+
+            // Null-IM point FIRST: its intensity must not dilute the later IM-bearing point.
+            var accNullFirst = new IntensityAccumulator(false, ChromExtractor.summed, TARGET_MZ, true);
+            accNullFirst.AddPoint(TARGET_MZ, 1000);       // no IM
+            accNullFirst.AddPoint(TARGET_MZ, 1000, 1.20); // the only IM-bearing point
+            Assert.AreEqual(1.20, accNullFirst.ObservedIonMobility, EPSILON);
+
+            // Null-IM point BETWEEN two IM-bearing points: mean is over the IM-bearing points only.
+            var accNullMiddle = new IntensityAccumulator(false, ChromExtractor.summed, TARGET_MZ, true);
+            accNullMiddle.AddPoint(TARGET_MZ, 100, 1.00);
+            accNullMiddle.AddPoint(TARGET_MZ, 1000);      // no IM
+            accNullMiddle.AddPoint(TARGET_MZ, 100, 2.00);
+            Assert.AreEqual((100 * 1.00 + 100 * 2.00) / 200, accNullMiddle.ObservedIonMobility, EPSILON);
         }
     }
 }

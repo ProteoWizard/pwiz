@@ -29,10 +29,17 @@ namespace pwiz.Skyline.Model.Results
 
         // Summed extractor with IM tracking: intensity-weighted running mean of the
         // observed IM values across the extraction band - the "intensity center of
-        // gravity" of the mobilogram (per the original feature request), accumulated
-        // exactly the way MeanMassError is. Carried across spectra at the same
-        // retention time by the caller (SpectrumFilterPair) via this property.
+        // gravity" of the mobilogram (per the original feature request). Like MeanMassError,
+        // but weighted by ObservedIonMobilityIntensity (IM-bearing intensity) rather than
+        // TotalIntensity, so points with no ion mobility do not dilute it. Carried across
+        // spectra at the same retention time by the caller (SpectrumFilterPair).
         public double MeanObservedIonMobility { get; set; }
+
+        // Denominator for MeanObservedIonMobility: the running total of the intensity of
+        // IM-bearing points only. Kept separate from TotalIntensity (which also counts
+        // null-IM points) so null-IM intensity cannot bias the mean. Carried across spectra
+        // by the caller alongside MeanObservedIonMobility.
+        public double ObservedIonMobilityIntensity { get; set; }
 
         // Base-peak extractor with IM tracking: IM at the single highest-intensity
         // peak ever seen. Carried across spectra by the caller via this property.
@@ -89,7 +96,14 @@ namespace pwiz.Skyline.Model.Results
             if (_trackIonMobility && ionMobility.HasValue)
             {
                 if (_extractor == ChromExtractor.summed)
-                    MeanObservedIonMobility += (ionMobility.Value - MeanObservedIonMobility) * intensity / TotalIntensity;
+                {
+                    // Weight by IM-bearing intensity only, so null-IM points (which are
+                    // still counted in TotalIntensity) do not dilute the mean, whatever
+                    // order they arrive in.
+                    ObservedIonMobilityIntensity += intensity;
+                    if (ObservedIonMobilityIntensity > 0)
+                        MeanObservedIonMobility += (ionMobility.Value - MeanObservedIonMobility) * intensity / ObservedIonMobilityIntensity;
+                }
                 else if (basePeakReset)
                     BasePeakIonMobility = ionMobility.Value;
             }
