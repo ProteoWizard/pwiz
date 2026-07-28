@@ -95,8 +95,8 @@ namespace TestPerf
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
             public PointF ChromatogramClickPoint;
-            // Peptide to select for the manual-review screenshots. Instrument-specific because the
-            // net8 OOP-MSAmanda re-baseline changed which peptides survive as (non-ambiguous) targets.
+            // Peptide to select for the manual-review chromatogram click and screenshots.
+            // Instrument-specific because the search results differ between instruments.
             public string ExemplarPeptide;
 
             public string FastaPathForSearch => "DDA_search\\nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta";
@@ -210,8 +210,8 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
-                // AIDLIDEAASSIR (CLPB_ECOLI) apex ~48.16 min; TDINQALNR is no longer a net8 target here.
-                ChromatogramClickPoint = new PointF(48.16f, 5.5e5f),
+                // AIDLIDEAASSIR (CLPB_ECOLI); TDINQALNR is no longer a net8 target here.
+                ChromatogramClickPoint = new PointF(48.14f, 2.0e6f),
                 ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
@@ -232,7 +232,7 @@ namespace TestPerf
                 IrtFilterText = "iRT",
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
-                ChromatogramClickPoint = new PointF(48.16f, 5.5e5f),
+                ChromatogramClickPoint = new PointF(48.14f, 2.0e6f),
                 ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
@@ -284,9 +284,7 @@ namespace TestPerf
         }
 
         // disable audit log comparison for FullFileset tests
-        // PROOF-OF-CONCEPT (temporary): also skip while evaluating Comet -- the workflow steps
-        // (and resulting peptides) change vs the recorded MSAmanda audit logs; re-record if adopted.
-        public override bool AuditLogCompareLogs => false;
+        public override bool AuditLogCompareLogs => !TestContext.TestName.EndsWith("FullFileset");
 
         private void SetInstrumentType(InstrumentSpecificValues instrumentValues)
         {
@@ -329,7 +327,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        protected override bool IsRecordMode => false; // PROOF-OF-CONCEPT: Comet baselines recorded
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {
@@ -561,6 +559,9 @@ namespace TestPerf
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b,y";
                 importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_High_resolution;
+                // Report only the top PSM per pseudo-spectrum: keeps the Percolator pin small (much
+                // faster FDR) and is sufficient for building the library from best matches.
+                importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(@"num_output_lines", @"1");
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
@@ -789,7 +790,22 @@ namespace TestPerf
             FindNode("_HUMAN");
             WaitForGraphs();
             FindNode(_analysisValues.ExemplarPeptide);
-            RunUI(SkylineWindow.AutoZoomBestPeak);
+            // Select a single precursor and show individual transitions. With a multi-precursor peptide
+            // selected the chromatogram graph shows only one per-precursor total curve (even in "all"
+            // mode); totals carry no full-scan info, so the tracking dot the click below needs never
+            // appears. Drilling into one precursor shows its individual transition curves - each tied to a
+            // scan - which enables the tracking dot. (A single-precursor peptide already shows these, so
+            // this is a no-op there.) The transition-display mode is also a persisted setting that can
+            // otherwise leak in as "total" from an earlier test, so force it to "all".
+            RunUI(() =>
+            {
+                var pepPath = SkylineWindow.SelectedPath;
+                var nodePep = SkylineWindow.Document.FindNode(pepPath) as PeptideDocNode;
+                if (nodePep != null && nodePep.TransitionGroupCount > 0)
+                    SkylineWindow.SelectedPath = new IdentityPath(pepPath, nodePep.TransitionGroups.First().Id);
+                SkylineWindow.ShowAllTransitions();
+                SkylineWindow.AutoZoomBestPeak();
+            });
             WaitForGraphs();
             PauseForChromGraphScreenShot("Snip just one chromatogram pane", "1_SW-A");
 
