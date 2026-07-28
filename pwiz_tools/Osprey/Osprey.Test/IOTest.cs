@@ -3692,6 +3692,192 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// The file-count-bounded <see cref="RescoreHydration.HydrateCompactedStreaming"/>
+        /// must land on EXACTLY the state the resident
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> +
+        /// <see cref="RescoreCompaction.Apply"/> pair lands on. That equivalence is what
+        /// lets an HPC rescue/resume worker compact each file as it loads instead of holding
+        /// every file's pre-compaction pool (~1.19 GB per file, O(files)).
+        ///
+        /// Two files, five entries each, written in ascending entry_id order (the parquet
+        /// writer's own sort), so both hydrates see rows
+        /// [100, 101, 102, 0x80000064, 0x80000065]:
+        ///   base 100 - in the envelope's join-wide first_pass_base_ids, target + decoy stay
+        ///   base 101 - in neither term, target + decoy are compacted away in BOTH files
+        ///   base 102 - NOT in the global set, but file s2's envelope carries a use_cwt_peak
+        ///              action on it, so the action-target union rescues it in BOTH files
+        ///              (the cross-file property the streaming pre-pass has to reproduce
+        ///              before any file is filtered)
+        /// Survivors per file are therefore [100, 102, 0x80000064], and the two actions must
+        /// land on POST-compaction vec_idx: (s1, 0) for the forced integration on 100,
+        /// (s2, 1) for the use_cwt_peak on 102.
+        /// </summary>
+        [TestMethod]
+        public void TestRescoreHydrationStreamingMatchesResidentCompaction()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "rescore_stream_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var stems = new[] { "s1", "s2" };
+                var parquetPaths = new List<string>();
+                foreach (string stem in stems)
+                    parquetPaths.Add(WriteStreamingBoundaryTrio(dir, stem, stems));
+
+                // Resident: load every file's full stub list first, overlay, then compact.
+                var residentEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+                foreach (string parquetPath in parquetPaths)
+                {
+                    residentEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                        Path.GetFileNameWithoutExtension(
+                            RescoreHydration.SyntheticInputFromParquet(parquetPath)),
+                        ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
+                }
+                var resident = RescoreHydration.HydrateReconciliationOverlay(
+                    residentEntries, parquetPaths);
+                var residentStats = RescoreCompaction.Apply(resident);
+
+                // Streaming: one file's pre-compaction pool resident at a time. Apply still
+                // runs afterwards - on an already-compacted buffer it removes nothing and
+                // rebuilds the identical action map, which is what keeps it the authority.
+                var streamedEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+                var seenPreCompactionCounts = new List<int>();
+                var streamed = RescoreHydration.HydrateCompactedStreaming(
+                    streamedEntries, parquetPaths,
+                    (fileIdx, fileName, parquetPath) =>
+                        ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath),
+                    (fileName, stubs, tally) =>
+                    {
+                        seenPreCompactionCounts.Add(stubs.Count);
+                        tally.PassingTargets = stubs.Count;
+                    });
+                var streamedStats = RescoreCompaction.Apply(streamed);
+
+                // The streaming hook saw the FULL pre-compaction pool for each file, and the
+                // tallies carry it forward for the callers that used to sum the resident one.
+                CollectionAssert.AreEqual(new[] { 5, 5 }, seenPreCompactionCounts);
+                Assert.AreEqual(residentStats.EntriesBefore, streamed.TotalPreCompactionStubs);
+
+                // Post-state parity: same files in the same order, same survivors in the
+                // same order, same compaction statistics.
+                Assert.AreEqual(residentStats.EntriesAfter, streamedStats.EntriesAfter);
+                Assert.AreEqual(residentStats.FirstPassBaseIds, streamedStats.FirstPassBaseIds);
+                Assert.AreEqual(residentStats.DroppedActions, streamedStats.DroppedActions);
+                Assert.AreEqual(resident.PerFileEntries.Count, streamed.PerFileEntries.Count);
+                for (int i = 0; i < resident.PerFileEntries.Count; i++)
+                {
+                    Assert.AreEqual(resident.PerFileEntries[i].Key, streamed.PerFileEntries[i].Key);
+                    var expected = resident.PerFileEntries[i].Value;
+                    var actual = streamed.PerFileEntries[i].Value;
+                    Assert.AreEqual(expected.Count, actual.Count);
+                    for (int j = 0; j < expected.Count; j++)
+                    {
+                        Assert.AreEqual(expected[j].EntryId, actual[j].EntryId);
+                        Assert.AreEqual(expected[j].ParquetIndex, actual[j].ParquetIndex);
+                        Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[j].Score),
+                                        BitConverter.DoubleToInt64Bits(actual[j].Score));
+                        Assert.AreEqual(
+                            BitConverter.DoubleToInt64Bits(expected[j].RunPeptideQvalue),
+                            BitConverter.DoubleToInt64Bits(actual[j].RunPeptideQvalue));
+                    }
+                }
+
+                // The cross-file rescue actually happened (base 102 has no first-pass pass of
+                // its own), so this is not a vacuous comparison of two uncompacted buffers.
+                CollectionAssert.AreEqual(
+                    new[] { 100u, 102u, 0x80000064u },
+                    streamed.PerFileEntries[0].Value.ConvertAll(e => e.EntryId));
+
+                // Action map parity, including the post-compaction vec_idx remap.
+                Assert.AreEqual(resident.ReconciliationActions.Count,
+                                streamed.ReconciliationActions.Count);
+                foreach (var kvp in resident.ReconciliationActions)
+                {
+                    Assert.IsTrue(streamed.ReconciliationActions.TryGetValue(kvp.Key, out var got),
+                        string.Format("streaming lost the action at ({0}, {1})",
+                            kvp.Key.FileName, kvp.Key.Index));
+                    Assert.AreEqual(kvp.Value.GetType(), got.GetType());
+                }
+                Assert.IsInstanceOfType(streamed.ReconciliationActions[("s1", 0)],
+                    typeof(ReconcileAction.ForcedIntegration));
+                Assert.IsInstanceOfType(streamed.ReconciliationActions[("s2", 1)],
+                    typeof(ReconcileAction.UseCwtPeak));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Write one file's Stage 5 -> Stage 6 boundary trio (.scores.parquet +
+        /// .1st-pass.fdr_scores.bin + .reconciliation.json) for
+        /// <see cref="TestRescoreHydrationStreamingMatchesResidentCompaction"/> and return
+        /// the parquet path. Every envelope carries the same join-wide
+        /// <c>first_pass_base_ids</c> and <c>file_stems</c> (the sibling-consistency
+        /// contract); only the action arrays differ per file.
+        /// </summary>
+        private static string WriteStreamingBoundaryTrio(string dir, string stem, string[] stems)
+        {
+            var entryIds = new[] { 100u, 101u, 102u, 0x80000064u, 0x80000065u };
+            string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
+            string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
+
+            var scored = new List<CoelutionScoredEntry>();
+            var sidecarEntries = new List<FdrEntry>();
+            for (int i = 0; i < entryIds.Length; i++)
+            {
+                scored.Add(new CoelutionScoredEntry
+                {
+                    EntryId = entryIds[i],
+                    IsDecoy = (entryIds[i] & 0x80000000u) != 0,
+                    Sequence = "PEPTIDE",
+                    ModifiedSequence = "PEPTIDE",
+                    Charge = 2,
+                    PrecursorMz = 500.0 + i,
+                    ScanNumber = (uint)(1000 + i),
+                    ApexRt = 5.0 + i * 0.5,
+                    FileName = stem + ".mzML",
+                    PeakBounds = new XICPeakBounds { StartRt = 4.5 + i * 0.5, EndRt = 5.5 + i * 0.5 },
+                    Features = new CoelutionFeatureSet { CoelutionSum = 0.9 + i * 0.01 },
+                });
+                sidecarEntries.Add(MakeFdrEntry(entryIds[i], -3.5 + i * 0.1, 0.001 * (i + 1), 0.02));
+            }
+            ParquetScoreCache.WriteScoresParquet(parquetPath, scored,
+                new Dictionary<string, string> { { "osprey.version", "1.0.0" } });
+            FdrScoresSidecar.Write(FdrScoresSidecar.Pass1Path(mzmlSynthetic), sidecarEntries,
+                FdrScoresSidecar.Pass.FirstPass);
+
+            var reconFile = new ReconciliationFile
+            {
+                FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                FileStems = new List<string>(stems),
+                // Join-wide, identical in every sibling envelope: only base 100 passed.
+                FirstPassBaseIds = new[] { 100u },
+                SearchHash = "x",
+                LibraryHash = "y",
+                UseCwtPeakActions = new List<UseCwtPeakEntry>(),
+                ForcedIntegrationActions = new List<ForcedIntegrationEntry>(),
+                GapFillTargets = new List<GapFillEntry>(),
+            };
+            if (stem == "s1")
+            {
+                reconFile.ForcedIntegrationActions.Add(new ForcedIntegrationEntry
+                    { EntryId = 100u, ExpectedRt = 6.10, HalfWidth = 0.075 });
+            }
+            else
+            {
+                reconFile.UseCwtPeakActions.Add(new UseCwtPeakEntry
+                {
+                    ApexRt = 5.07, CandidateIdx = 1, EndRt = 5.40, EntryId = 102u, StartRt = 4.70,
+                });
+            }
+            ReconciliationFile.Save(ReconciliationFile.PathForInput(mzmlSynthetic), reconFile);
+            return parquetPath;
+        }
+
         #endregion
 
         #region RescoreCompaction Tests

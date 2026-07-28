@@ -477,7 +477,14 @@ namespace pwiz.Osprey.Tasks
 
             ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
 
-            LogFirstPassResultsAndDump(perFileEntries, config, ctx);
+            // The bundle's PreCompactionTallies are non-null only when the upstream
+            // hydrate streamed (compacting each file as it loaded, so it never held the
+            // all-files pre-compaction pool). The per-file passing-target counts below are
+            // then read from those tallies rather than recomputed off perFileEntries, which
+            // by that point holds only survivors - the same reason the lean projection path
+            // reads them off its score-pass sink.
+            LogFirstPassResultsAndDump(perFileEntries, config, ctx, null,
+                bundle.PreCompactionTallies);
 
             // Compaction delegates to RescoreCompaction.Apply on the bundle
             // path so the pre-compaction (file, vec_idx) keys in
@@ -580,9 +587,10 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
-            FeatureContributions contributions = null)
+            FeatureContributions contributions = null,
+            IReadOnlyDictionary<string, PreCompactionTally> preCompactionTallies = null)
         {
-            LogFirstPassResults(perFileEntries, config, ctx);
+            LogFirstPassResults(perFileEntries, config, ctx, preCompactionTallies);
 
             if (ctx.Diagnostics?.DumpPercolator ?? false)
                 ctx.Diagnostics?.WriteStage5PercolatorDump(perFileEntries);
@@ -697,18 +705,32 @@ namespace pwiz.Osprey.Tasks
         private void LogFirstPassResults(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            IReadOnlyDictionary<string, PreCompactionTally> preCompactionTallies = null)
         {
             int passingTargets = 0;
             foreach (var kvp in perFileEntries)
             {
-                int fileTargets = 0;
-                foreach (var entry in kvp.Value)
+                // Prefer the tally the streaming hydrate reduced while this file's full
+                // PRE-compaction stub list was resident: these counts are pre-compaction on
+                // every other path too, and kvp.Value has already lost the non-survivors
+                // when the tallies are present. Identical predicate either way.
+                int fileTargets;
+                if (preCompactionTallies != null &&
+                    preCompactionTallies.TryGetValue(kvp.Key, out var tally))
                 {
-                    if (!entry.IsDecoy &&
-                        entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                    fileTargets = tally.PassingTargets;
+                }
+                else
+                {
+                    fileTargets = 0;
+                    foreach (var entry in kvp.Value)
                     {
-                        fileTargets++;
+                        if (!entry.IsDecoy &&
+                            entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                        {
+                            fileTargets++;
+                        }
                     }
                 }
                 ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
@@ -799,9 +821,17 @@ namespace pwiz.Osprey.Tasks
                     // failure the worker's hand-rolled compaction at
                     // RescoreCompaction.Apply was written to avoid.
                     var stats = RescoreCompaction.Apply(bundle);
+                    // When the bundle was hydrated by the streaming path, Apply saw an
+                    // already-compacted buffer and re-derived the same retain set, so it
+                    // removed nothing and its EntriesBefore == EntriesAfter. Report the real
+                    // pre-compaction total from the per-file tallies that hydrate captured,
+                    // so this line means the same thing on both paths.
+                    int entriesBefore = bundle.PreCompactionTallies != null
+                        ? bundle.TotalPreCompactionStubs
+                        : stats.EntriesBefore;
                     ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                        stats.EntriesBefore, stats.EntriesAfter,
+                        entriesBefore, stats.EntriesAfter,
                         stats.FirstPassBaseIds, stats.DroppedActions));
                 }
                 else

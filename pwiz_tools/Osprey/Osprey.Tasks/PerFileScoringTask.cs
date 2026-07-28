@@ -521,9 +521,10 @@ namespace pwiz.Osprey.Tasks
             // between two separate disk reads cannot make them disagree (lean empty stubs
             // + a firing bundle hydrator). Static on a real merge node; belt-and-suspenders.
             bool hasReconSidecars = AllHaveReconSidecars(config);
+            bool streamCompaction = ShouldStreamCompaction(config, hasReconSidecars, ctx);
             var swAllFiles = Stopwatch.StartNew();
             var projections = LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
-                perFileCalibrations, perFileIsolationMz, hasReconSidecars, ctx);
+                perFileCalibrations, perFileIsolationMz, hasReconSidecars, streamCompaction, ctx);
             swAllFiles.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
@@ -532,6 +533,15 @@ namespace pwiz.Osprey.Tasks
             if (projections != null)
             {
                 totalScored = projections.TotalRows;
+            }
+            else if (_rescoreInputs?.PreCompactionTallies != null)
+            {
+                // Streamed hydrate: perFileEntries already holds only the compaction
+                // survivors, so summing it here would report the post-compaction count and
+                // could trip the "no scored entries" guard below on a join whose survivor
+                // set is empty. The per-file tally captured while each file's full stub
+                // list was briefly resident is the same number the resident sum produced.
+                totalScored = _rescoreInputs.TotalPreCompactionStubs;
             }
             else
             {
@@ -1181,6 +1191,7 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             bool hasReconSidecars,
+            bool streamCompaction,
             PipelineContext ctx)
         {
             // --task FirstPassFDR: load per-file FdrEntry stubs directly from
@@ -1218,6 +1229,26 @@ namespace pwiz.Osprey.Tasks
             // their PIN features, so only a genuine resident pool loads features. See the
             // stubs-only branch below for why that is safe.
             bool loadFeatures = needsResidentPool;
+
+            // Bounded reconciled-bundle rehydrate: hand the per-file stub load to the
+            // streaming hydrate, which compacts each file before touching the next, so the
+            // pre-compaction pool (~1.19 GB per file) is never resident for more than one
+            // file. The loop below is the resident twin - it materializes EVERY file's
+            // pre-compaction pool and lets RescoreCompaction discard the ~52x non-survivors
+            // afterwards, which is O(files) and does not fit at 82.
+            if (streamCompaction)
+            {
+                _rescoreInputs = RescoreHydration.HydrateCompactedStreaming(
+                    perFileEntries, config.InputScores,
+                    (fileIdx, fileName, parquetPath) => LoadJoinOnlyScoresForFile(
+                        config, fileIdx, fileName, parquetPath, perFileParquetPaths,
+                        perFileCalibrations, perFileIsolationMz, ctx),
+                    (fileName, stubs, tally) => TallyPreCompaction(config, stubs, tally));
+                if (ctx.Diagnostics?.CalibrationOnly ?? false)
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+                return null;
+            }
+
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
             {
                 string parquetPath = config.InputScores[fileIdx];
@@ -1304,58 +1335,168 @@ namespace pwiz.Osprey.Tasks
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
                 perFileParquetPaths[fileName] = parquetPath;
-
-                // Best-effort calibration JSON load for Stage 6
-                // reconciliation. Mirrors osprey/src/pipeline.rs:2573-2588.
-                try
-                {
-                    string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
-                    if (parquetDir != null)
-                    {
-                        // fileName is the bare input stem (the scores /
-                        // reconciled-scores suffix was stripped above via
-                        // SyntheticInputFromParquet), so combining it with
-                        // parquetDir yields the same input-stem path
-                        // ProcessFile passes to CalibrationPathForInput.
-                        string calStemPath = Path.Combine(parquetDir, fileName);
-                        string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
-                        if (File.Exists(calPath))
-                        {
-                            var calParams = CalibrationIO.LoadCalibration(calPath);
-                            if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
-                            {
-                                var mp = calParams.RtCalibration.ModelParams;
-                                if (ctx.Diagnostics?.DumpCalibration ?? false)
-                                {
-                                    ctx.Diagnostics?.WriteStage6CalibrationDump(
-                                        fileName, mp.LibraryRts, mp.FittedRts);
-                                }
-                                var rtCal = RTCalibration.FromModelParams(
-                                    mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
-                                    calParams.RtCalibration.ResidualSD);
-                                perFileCalibrations[fileName] = rtCal;
-                            }
-
-                            // Isolation-window coverage for the gap-fill m/z
-                            // filter -- read independent of RT calibration from
-                            // the isolation_scheme block, so a merge node with no
-                            // mzML still gets per-file coverage. Mirrors Rust's
-                            // isolation_intervals_from_cal (pipeline.rs).
-                            var isoIntervals = IsolationIntervalsFromWindows(
-                                calParams.Metadata?.IsolationScheme?.Windows);
-                            if (isoIntervals != null)
-                                perFileIsolationMz[fileName] = isoIntervals;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
-                }
+                LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
+                    perFileIsolationMz, ctx);
             }
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
             return builder?.Build();
+        }
+
+        /// <summary>
+        /// Whether the reconciled-bundle rehydrate can take the file-count-bounded
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> path, which compacts each
+        /// file's stubs as it loads them instead of materializing every file's pre-compaction
+        /// pool and compacting afterwards. Three conditions, all necessary:
+        ///
+        /// 1. The reconciled bundle exists (<paramref name="hasReconSidecars"/>) - it is the
+        ///    envelope that carries the compaction predicate, so without it there is nothing
+        ///    to compact against at load time.
+        /// 2. No resident-pool consumer (<see cref="NeedsResidentPool"/>). The strict
+        ///    --task SecondPassFDR merge is one: it reads PIN features off these stubs and
+        ///    its own <c>PerFileRescoreTask</c> rehydrate reads the PRE-compaction
+        ///    <c>ScoredEntries</c> milestone (first-pass protein FDR before its own
+        ///    compaction).
+        /// 3. <c>NoJoin</c>, i.e. FirstJoin is EXCLUDED from this pipeline and can only be
+        ///    reached through its bundle-adopt Rehydrate. This is what makes handing it a
+        ///    pre-compacted buffer safe: with <c>inputs</c> set and <c>StopAfterStage5</c>
+        ///    false, <c>NoJoin</c> is exactly FirstJoin's exclusion condition. Were FirstJoin
+        ///    to Run instead, it would train first-pass Percolator on whatever
+        ///    <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
+        ///
+        /// Two diagnostics also genuinely need the all-files PRE-compaction pool that
+        /// streaming refuses to build, so they keep the resident path rather than silently
+        /// reading a post-compaction one: the OSPREY_DUMP_PERCOLATOR cross-impl bisection dump
+        /// and the --model-diagnostics batch report, both emitted by FirstJoin's rehydrate
+        /// before it compacts. (The lean first-pass projection path made the same call for the
+        /// same reason - see LogFirstPassResultsProjection's note on the percolator dump.)
+        /// </summary>
+        private static bool ShouldStreamCompaction(
+            OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
+        {
+            return hasReconSidecars
+                   && config.NoJoin
+                   && !NeedsResidentPool(config)
+                   && !config.ModelDiagnostics
+                   && !(ctx.Diagnostics?.DumpPercolator ?? false);
+        }
+
+        /// <summary>
+        /// One file's stub load for the streaming reconciled-bundle rehydrate: the same
+        /// per-file work <see cref="LoadJoinOnlyScores"/>'s resident loop does (header line,
+        /// stubs-only parquet read with the PIN-schema fail-fast, parquet-path map,
+        /// best-effort calibration sibling), minus the append - the streaming hydrate
+        /// appends the compaction survivors itself once it has overlaid the 1st-pass sidecar.
+        /// PIN features are deliberately not loaded: nothing on this path reads them (the
+        /// bundle hydration nulls them anyway to keep the "Features != null means rescored"
+        /// sentinel honest), and at ~4.2 M rows they cost ~800 MB per file.
+        /// </summary>
+        private static List<FdrEntry> LoadJoinOnlyScoresForFile(
+            OspreyConfig config,
+            int fileIdx,
+            string fileName,
+            string parquetPath,
+            Dictionary<string, string> perFileParquetPaths,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            PipelineContext ctx)
+        {
+            ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
+                fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
+            var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+            // Keep the fail-fast the feature load used to provide: a foreign or truncated
+            // parquet missing the PIN schema must stop here, not surface downstream.
+            // Footer-only probe, no feature memory.
+            if (!ParquetScoreCache.HasPinFeatureColumns(parquetPath))
+            {
+                throw new InvalidDataException(string.Format(
+                    @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
+                    parquetPath));
+            }
+            ctx.LogInfo(string.Format(
+                @"  Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
+            perFileParquetPaths[fileName] = parquetPath;
+            LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
+                perFileIsolationMz, ctx);
+            return stubs;
+        }
+
+        /// <summary>
+        /// Reduce off one file's PRE-compaction stub pool everything the rehydrate used to
+        /// read off the resident all-files pool. Only the run-level FDR passing-target count
+        /// is needed: FirstJoin's Stage 5 result line reports it per file, and the streaming
+        /// hydrate has already dropped the non-survivors by the time that line is written.
+        /// Identical predicate to <c>FirstJoinTask.LogFirstPassResults</c>.
+        /// </summary>
+        private static void TallyPreCompaction(
+            OspreyConfig config, List<FdrEntry> stubs, PreCompactionTally tally)
+        {
+            int passing = 0;
+            foreach (var entry in stubs)
+            {
+                if (!entry.IsDecoy && entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                    passing++;
+            }
+            tally.PassingTargets = passing;
+        }
+
+        /// <summary>
+        /// Best-effort per-file calibration JSON load for Stage 6 reconciliation: the refined
+        /// RT calibration plus the isolation-window coverage the gap-fill m/z filter needs.
+        /// Mirrors osprey/src/pipeline.rs:2573-2588. A read failure is logged and swallowed -
+        /// a merge node with no calibration sibling still runs, with the filter disabled for
+        /// that file.
+        /// </summary>
+        private static void LoadJoinOnlyCalibration(
+            string fileName,
+            string parquetPath,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            PipelineContext ctx)
+        {
+            try
+            {
+                string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
+                if (parquetDir != null)
+                {
+                    // fileName is the bare input stem (the scores / reconciled-scores suffix
+                    // was stripped by SyntheticInputFromParquet), so combining it with
+                    // parquetDir yields the same input-stem path ProcessFile passes to
+                    // CalibrationPathForInput.
+                    string calStemPath = Path.Combine(parquetDir, fileName);
+                    string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                    if (File.Exists(calPath))
+                    {
+                        var calParams = CalibrationIO.LoadCalibration(calPath);
+                        if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                        {
+                            var mp = calParams.RtCalibration.ModelParams;
+                            if (ctx.Diagnostics?.DumpCalibration ?? false)
+                            {
+                                ctx.Diagnostics?.WriteStage6CalibrationDump(
+                                    fileName, mp.LibraryRts, mp.FittedRts);
+                            }
+                            var rtCal = RTCalibration.FromModelParams(
+                                mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                calParams.RtCalibration.ResidualSD);
+                            perFileCalibrations[fileName] = rtCal;
+                        }
+
+                        // Isolation-window coverage for the gap-fill m/z filter -- read
+                        // independent of RT calibration from the isolation_scheme block, so
+                        // a merge node with no mzML still gets per-file coverage. Mirrors
+                        // Rust's isolation_intervals_from_cal (pipeline.rs).
+                        var isoIntervals = IsolationIntervalsFromWindows(
+                            calParams.Metadata?.IsolationScheme?.Windows);
+                        if (isoIntervals != null)
+                            perFileIsolationMz[fileName] = isoIntervals;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+            }
         }
 
         /// <summary>
@@ -1403,17 +1544,25 @@ namespace pwiz.Osprey.Tasks
         {
             if (hasReconSidecars)
             {
-                try
+                // Already hydrated when the loader took the file-count-bounded streaming
+                // path (ShouldStreamCompaction): it has to own the hydrate, because the
+                // sidecar overlay and the compaction have to happen inside its per-file
+                // loop for the pre-compaction pool to stay one-file-at-a-time. The tail
+                // below (feature null-out + the summary line) is shared by both paths.
+                if (_rescoreInputs == null)
                 {
-                    _rescoreInputs = RescoreHydration.HydrateReconciliationOverlay(
-                        perFileEntries, config.InputScores);
-                }
-                catch (InvalidDataException ex)
-                {
-                    ctx.LogError(string.Format(
-                        @"--input-scores hydration failed: {0}", ex.Message));
-                    ctx.ExitCode = 1;
-                    return false;
+                    try
+                    {
+                        _rescoreInputs = RescoreHydration.HydrateReconciliationOverlay(
+                            perFileEntries, config.InputScores);
+                    }
+                    catch (InvalidDataException ex)
+                    {
+                        ctx.LogError(string.Format(
+                            @"--input-scores hydration failed: {0}", ex.Message));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
                 }
                 // Clear PIN features on bundle-hydrated stubs so
                 // PerFileRescoreTask's WriteReconciledParquet can keep
