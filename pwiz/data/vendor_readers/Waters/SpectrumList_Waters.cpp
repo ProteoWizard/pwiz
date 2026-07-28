@@ -47,6 +47,16 @@ SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const 
     useDDAProcessor_ = config_.ddaProcessing;
     rawdata_->EnableProcessing(useDDAProcessor_);
 
+    // Resolve the lockmass function once, here, while still single threaded. Doing it lazily would let
+    // spectrum() (which holds readMutex) and calibrationSpectraAreOmitted()/hasCalibrationSpectra()
+    // (which do not) race on the member and enter the MassLynx SDK unserialized. Note the out-parameter
+    // goes to a local: the SDK wrapper leaves it untouched when the call fails, so handing it the
+    // member directly would cache whatever happened to be there.
+    int lockmassFunction = LOCKMASS_FUNCTION_UNKNOWN;
+    if (!rawdata_->Info.TryGetLockMassFunction(lockmassFunction) || lockmassFunction < 0)
+        lockmassFunction = LOCKMASS_FUNCTION_UNKNOWN;
+    lockmassFunction_ = lockmassFunction;
+
     if (useDDAProcessor_)
     {       
         createDDAIndex();
@@ -109,14 +119,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL int SpectrumList_Waters::lockMassFunction() const
 {
-    if (lockmassFunction_ == LOCKMASS_FUNCTION_UNINIT)
-    {
-        if (!rawdata_->Info.TryGetLockMassFunction(lockmassFunction_))
-        {
-            lockmassFunction_ = LOCKMASS_FUNCTION_UNKNOWN;
-        }
-    }
-    return lockmassFunction_;
+    return lockmassFunction_; // resolved in the constructor, so this is safe to call from any thread
 }
 
 PWIZ_API_DECL bool SpectrumList_Waters::isLockMassFunction(int function) const
@@ -646,9 +649,15 @@ PWIZ_API_DECL bool SpectrumList_Waters::hasCalibrationSpectra() const
 {
     int lockmass = lockMassFunction();
     if (lockmass < 0)
-        return false;
-    // Ask the index rather than the config: several things can keep the lockmass function out of the
-    // list (ignoreCalibrationScans, the DDA processor), and this stays correct for all of them.
+        return false; // the source has no lockmass function at all
+    if (calibrationSpectraAreOmitted())
+        return false; // it has one, but createIndex kept it out of the list
+
+    // Otherwise its scans should be present, so ask the index rather than the config - the DDA processor
+    // also excludes the reference function, and this stays correct for that too. The scan is cheap in
+    // practice: entries are ordered by retention time and the lockspray typically leads, so a file that
+    // has calibration spectra matches almost immediately. The two early exits above cover the cases that
+    // would otherwise walk the whole index only to return false.
     for (const IndexEntry& ie : index_)
         if (ie.function == lockmass)
             return true;
