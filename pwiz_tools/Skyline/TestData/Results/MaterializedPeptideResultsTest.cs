@@ -18,9 +18,11 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -66,6 +68,7 @@ namespace pwiz.SkylineTestData.Results
 
                 int positionsChecked = 0;
                 int groupsChecked = 0;
+                int singleReplicateChecked = 0;
                 foreach (var nodePep in docResults.Peptides)
                 {
                     var materialized = MaterializedPeptideResults.Materialize(docResults.Settings, nodePep);
@@ -84,11 +87,43 @@ namespace pwiz.SkylineTestData.Results
 
                         groupsChecked += CheckTransitionGroup(materialized, nodeGroup);
                     }
+
+                    singleReplicateChecked += CheckSingleReplicate(docResults.Settings, nodePep, materialized);
                 }
 
                 Assert.AreNotEqual(0, positionsChecked);
                 Assert.AreNotEqual(0, groupsChecked);
+                Assert.AreNotEqual(0, singleReplicateChecked);
             }
+        }
+
+        /// <summary>
+        /// Materializing one replicate has to produce the same positions and peaks for that
+        /// replicate as materializing all of them.
+        /// </summary>
+        private static int CheckSingleReplicate(SrmSettings settings, PeptideDocNode nodePep,
+            MaterializedPeptideResults allReplicates)
+        {
+            const int replicateIndex = 1;
+            var oneReplicate = MaterializedPeptideResults.Materialize(settings, nodePep, replicateIndex);
+            int checkedCount = 0;
+            foreach (var nodeGroup in nodePep.TransitionGroups)
+            {
+                foreach (var nodeTran in nodeGroup.Transitions)
+                {
+                    var expectedPositions = allReplicates.GetPositions(nodeTran, replicateIndex).ToList();
+                    var actualPositions = oneReplicate.GetPositions(nodeTran, replicateIndex).ToList();
+                    Assert.AreEqual(expectedPositions.Count, actualPositions.Count);
+                    for (int i = 0; i < expectedPositions.Count; i++)
+                    {
+                        Assert.AreEqual(allReplicates.GetPeak(nodeTran, expectedPositions[i], 0),
+                            oneReplicate.GetPeak(nodeTran, actualPositions[i], 0));
+                        checkedCount++;
+                    }
+                }
+            }
+
+            return checkedCount;
         }
 
         /// <summary>

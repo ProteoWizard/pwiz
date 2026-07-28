@@ -54,6 +54,16 @@ namespace pwiz.Skyline.Model.Results
         public float? MzMatchTolerance { get; set; }
 
         /// <summary>
+        /// Restricts the work to one replicate. Null materializes every replicate.
+        /// <para>
+        /// The positions still run over all of the replicates either way, with the ones that
+        /// were skipped contributing none, so that <see cref="MaterializedPeptideResults.GetPositions"/>
+        /// means the same thing in both cases.
+        /// </para>
+        /// </summary>
+        public int? ReplicateIndex { get; set; }
+
+        /// <summary>
         /// Used to avoid holding on to many identical <see cref="ChromFileIds"/>. A fresh one
         /// is used when left null, which still shares within the one peptide being materialized.
         /// </summary>
@@ -63,10 +73,12 @@ namespace pwiz.Skyline.Model.Results
         {
             var valueCache = ValueCache ?? new ValueCache();
             var transitions = new Dictionary<int, MaterializedTransition>();
+            var chromatogramGroupInfos =
+                new Dictionary<ChromatogramGroupKey, ImmutableList<ChromatogramGroupInfo>>();
             var measuredResults = Settings?.MeasuredResults;
             if (measuredResults == null || PeptideDocNode == null)
             {
-                return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions);
+                return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions, chromatogramGroupInfos);
             }
 
             float tolerance = MzMatchTolerance ??
@@ -77,8 +89,20 @@ namespace pwiz.Skyline.Model.Results
                     nodeTran => new MaterializedTransitionBuilder());
                 for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
                 {
-                    ReadReplicate(measuredResults, measuredResults.Chromatograms[replicateIndex], nodeGroup,
-                        tolerance, builders);
+                    if (!ReplicateIndex.HasValue || ReplicateIndex.Value == replicateIndex)
+                    {
+                        var chromGroupInfos = ReadReplicate(measuredResults,
+                            measuredResults.Chromatograms[replicateIndex], nodeGroup, tolerance, builders);
+                        if (chromGroupInfos.Count > 0)
+                        {
+                            chromatogramGroupInfos[
+                                    new ChromatogramGroupKey(nodeGroup.TransitionGroup.GlobalIndex, replicateIndex)] =
+                                ImmutableList.ValueOf(chromGroupInfos);
+                        }
+                    }
+
+                    // Even a replicate which was skipped ends here, so that the positions stay
+                    // aligned with the replicate they belong to.
                     foreach (var builder in builders.Values)
                     {
                         builder.EndReplicate();
@@ -91,7 +115,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions);
+            return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions, chromatogramGroupInfos);
         }
 
         /// <summary>
@@ -100,13 +124,14 @@ namespace pwiz.Skyline.Model.Results
         /// file major, optimization step minor, skipping any file where the transition has no
         /// chromatogram.
         /// </summary>
-        private void ReadReplicate(MeasuredResults measuredResults, ChromatogramSet chromatograms,
-            TransitionGroupDocNode nodeGroup, float tolerance, IDictionary<int, MaterializedTransitionBuilder> builders)
+        private IList<ChromatogramGroupInfo> ReadReplicate(MeasuredResults measuredResults,
+            ChromatogramSet chromatograms, TransitionGroupDocNode nodeGroup, float tolerance,
+            IDictionary<int, MaterializedTransitionBuilder> builders)
         {
             if (!measuredResults.TryLoadChromatogram(chromatograms, PeptideDocNode, nodeGroup, tolerance,
                     out var chromGroupInfos))
             {
-                return;
+                return Array.Empty<ChromatogramGroupInfo>();
             }
 
             // A file should only appear once. See the same guard in TransitionGroupDocNode.ChangeResults.
@@ -156,6 +181,8 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+
+            return chromGroupInfos;
         }
 
         private class MaterializedTransitionBuilder
@@ -188,6 +215,40 @@ namespace pwiz.Skyline.Model.Results
             {
                 var chromFileIds = ChromFileIds.Intern(valueCache, ReplicatePositions.FromCounts(_counts), _fileIds);
                 return new MaterializedTransition(chromFileIds, OptimizationSteps, IonMobilities, Peaks);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Identifies the chromatograms of one transition group in one replicate.
+    /// </summary>
+    public struct ChromatogramGroupKey
+    {
+        public ChromatogramGroupKey(int transitionGroupGlobalIndex, int replicateIndex)
+        {
+            TransitionGroupGlobalIndex = transitionGroupGlobalIndex;
+            ReplicateIndex = replicateIndex;
+        }
+
+        public int TransitionGroupGlobalIndex { get; }
+        public int ReplicateIndex { get; }
+
+        public bool Equals(ChromatogramGroupKey other)
+        {
+            return TransitionGroupGlobalIndex == other.TransitionGroupGlobalIndex &&
+                   ReplicateIndex == other.ReplicateIndex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ChromatogramGroupKey other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (TransitionGroupGlobalIndex * 397) ^ ReplicateIndex;
             }
         }
     }
@@ -254,25 +315,46 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly Dictionary<int, MaterializedTransition> _transitions;
 
+        private readonly Dictionary<ChromatogramGroupKey, ImmutableList<ChromatogramGroupInfo>>
+            _chromatogramGroupInfos;
+
         public MaterializedPeptideResults(SrmSettings settings, PeptideDocNode peptideDocNode,
-            Dictionary<int, MaterializedTransition> transitions)
+            Dictionary<int, MaterializedTransition> transitions,
+            Dictionary<ChromatogramGroupKey, ImmutableList<ChromatogramGroupInfo>> chromatogramGroupInfos)
         {
             Settings = settings;
             PeptideDocNode = peptideDocNode;
             _transitions = transitions;
+            _chromatogramGroupInfos = chromatogramGroupInfos;
         }
 
         /// <summary>
-        /// Everything for one peptide across every replicate. This is what callers are
-        /// normally after; <see cref="PeptideResultsMaterializer"/> only exists to make one.
+        /// Everything for one peptide. <paramref name="replicateIndex"/> restricts the work to
+        /// one replicate; leave it null for all of them. This is what callers are normally
+        /// after; <see cref="PeptideResultsMaterializer"/> only exists to make one.
         /// </summary>
-        public static MaterializedPeptideResults Materialize(SrmSettings settings, PeptideDocNode peptideDocNode)
+        public static MaterializedPeptideResults Materialize(SrmSettings settings, PeptideDocNode peptideDocNode,
+            int? replicateIndex = null)
         {
             return new PeptideResultsMaterializer
             {
                 Settings = settings,
-                PeptideDocNode = peptideDocNode
+                PeptideDocNode = peptideDocNode,
+                ReplicateIndex = replicateIndex
             }.Materialize();
+        }
+
+        /// <summary>
+        /// The chromatograms which were read, kept because code such as GraphChromatogram and
+        /// the on demand feature calculator needs the chromatogram itself and not only the
+        /// peaks taken from it.
+        /// </summary>
+        public ImmutableList<ChromatogramGroupInfo> GetChromatogramGroupInfos(TransitionGroupDocNode nodeGroup,
+            int replicateIndex)
+        {
+            _chromatogramGroupInfos.TryGetValue(
+                new ChromatogramGroupKey(nodeGroup.TransitionGroup.GlobalIndex, replicateIndex), out var result);
+            return result ?? ImmutableList<ChromatogramGroupInfo>.EMPTY;
         }
 
         public SrmSettings Settings { get; }
