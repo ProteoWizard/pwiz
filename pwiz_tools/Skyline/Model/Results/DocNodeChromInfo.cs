@@ -552,23 +552,28 @@ namespace pwiz.Skyline.Model.Results
         [Flags]
         private enum Flags : short
         {
-            HasMassError = 1,
             IsFwhmDegenerate = 2,
-            HasPointsAcrossPeak = 4,
             TruncatedKnown = 8,
             Truncated = 16,
             ForcedIntegration = 32,
             Identified = 64,
             IdentifiedByAlignment = 128,
-            HasPeakShape = 256,
         }
 
         private Flags _flags;
+
+        /// <summary>
+        /// Everything this object knows about the peak itself. Held as the single value it
+        /// came from so that it can later be dropped as a unit, and read back from the
+        /// chromatogram cache, whenever the peak is one of the candidate peaks Skyline found.
+        /// </summary>
+        private ChromPeak _peak;
+
         public TransitionChromInfo(float startRetentionTime, float endRetentionTime)
             : base(null)
         {
-            StartRetentionTime = startRetentionTime;
-            EndRetentionTime = endRetentionTime;
+            _peak = new ChromPeak(0, startRetentionTime, endRetentionTime, 0, 0, 0, 0,
+                default(ChromPeak.FlagValues), null, null, null);
         }
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
@@ -595,18 +600,9 @@ namespace pwiz.Skyline.Model.Results
             : base(fileId)
         {
             OptimizationStep = Convert.ToInt16(optimizationStep);
-            MassError = massError;
-            RetentionTime = retentionTime;
-            StartRetentionTime = startRetentionTime;
-            EndRetentionTime = endRetentionTime;
+            _peak = new ChromPeak(retentionTime, startRetentionTime, endRetentionTime, area, backgroundArea,
+                height, fwhm, default(ChromPeak.FlagValues), massError, pointsAcrossPeak, peakShapeValues);
             IonMobility = ionMobility ?? IonMobilityFilter.EMPTY;
-            Area = area;
-            BackgroundArea = backgroundArea;
-            Height = height;
-            Fwhm = fwhm;
-            // Crawdad can set FWHM to NaN. Need to protect against that here.
-            if (float.IsNaN(fwhm))
-                Fwhm = 0;
             IsFwhmDegenerate = fwhmDegenerate;
             IsTruncated = truncated;
             Identified = identified;
@@ -614,9 +610,7 @@ namespace pwiz.Skyline.Model.Results
             RankByLevel = rankByLevel;
             Annotations = annotations;
             UserSet = userSet;
-            PointsAcrossPeak = pointsAcrossPeak;
             IsForcedIntegration = isForcedIntegration;
-            PeakShapeValues = peakShapeValues;
         }
 
         /// <summary>
@@ -626,33 +620,25 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public short OptimizationStep { get; private set; }
 
-        private short _massError;
+        public float? MassError { get { return _peak.MassError; } }
 
-        public float? MassError
+        public float RetentionTime { get { return _peak.RetentionTime; } }
+        public float StartRetentionTime { get { return _peak.StartTime; } }
+        public float EndRetentionTime { get { return _peak.EndTime; } }
+        public IonMobilityFilter IonMobility { get; private set; } // The actual ion mobility used for this transition
+        public float Area { get { return _peak.Area; } }
+        public float BackgroundArea { get { return _peak.BackgroundArea; } }
+        public float Height { get { return _peak.Height; } }
+
+        public float Fwhm
         {
             get
             {
-                if (GetFlag(Flags.HasMassError))
-                {
-                    return _massError / 10f;
-                }
-                return null;
-            }
-            private set
-            {
-                SetFlag(Flags.HasMassError, value.HasValue);
-                _massError = ChromPeak.To10x(value ?? 0);
+                // Crawdad can set FWHM to NaN. Need to protect against that here.
+                var fwhm = _peak.Fwhm;
+                return float.IsNaN(fwhm) ? 0 : fwhm;
             }
         }
-
-        public float RetentionTime { get; private set; }
-        public float StartRetentionTime { get; private set; }
-        public float EndRetentionTime { get; private set; }
-        public IonMobilityFilter IonMobility { get; private set; } // The actual ion mobility used for this transition
-        public float Area { get; private set; }
-        public float BackgroundArea { get; private set; }
-        public float Height { get; private set; }
-        public float Fwhm { get; private set; }
 
         public bool IsFwhmDegenerate
         {
@@ -705,31 +691,15 @@ namespace pwiz.Skyline.Model.Results
         public short Rank { get; private set; }
         public short RankByLevel { get; private set; }
 
-        private short _pointsAcrossPeak;
-        private PeakShapeValues _peakShapeValue;
+        /// <summary>
+        /// Note that <see cref="ChromPeak"/> has no separate "known" flag for this, so a
+        /// stored value of zero reads back as null. Every path which produces one of these
+        /// already goes through a <see cref="ChromPeak"/>, and zero points across a peak is
+        /// not a meaningful value.
+        /// </summary>
+        public short? PointsAcrossPeak { get { return _peak.PointsAcross; } }
 
-        public short? PointsAcrossPeak
-        {
-            get
-            {
-                return GetFlag(Flags.HasPointsAcrossPeak) ? _pointsAcrossPeak : (short?) null;
-            }
-            private set
-            {
-                SetFlag(Flags.HasPointsAcrossPeak, value.HasValue);
-                _pointsAcrossPeak = value ?? 0;
-            }
-        }
-
-        public PeakShapeValues? PeakShapeValues
-        {
-            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : (PeakShapeValues?) null; }
-            private set
-            {
-                SetFlag(Flags.HasPeakShape, value.HasValue);
-                _peakShapeValue = value.GetValueOrDefault();
-            }
-        }
+        public PeakShapeValues? PeakShapeValues { get { return _peak.PeakShapeValues; } }
 
         public bool IsForcedIntegration
         {
@@ -835,24 +805,12 @@ namespace pwiz.Skyline.Model.Results
         public TransitionChromInfo ChangePeak(ChromPeak peak, UserSet userSet)
         {
             var chromInfo = ImClone(this);
-            chromInfo.MassError = peak.MassError;
-            chromInfo.RetentionTime = peak.RetentionTime;
-            chromInfo.StartRetentionTime = peak.StartTime;
-            chromInfo.EndRetentionTime = peak.EndTime;
-            chromInfo.Area = peak.Area;
-            chromInfo.BackgroundArea = peak.BackgroundArea;
-            chromInfo.Height = peak.Height;
-            chromInfo.Fwhm = peak.Fwhm;
-            // Crawdad can set FWHM to NaN. Need to protect against that here.
-            if (float.IsNaN(peak.Fwhm))
-                chromInfo.Fwhm = 0;
+            chromInfo._peak = peak;
             chromInfo.IsFwhmDegenerate = peak.IsFwhmDegenerate;
             chromInfo.IsTruncated = peak.IsTruncated;
             chromInfo.Identified = peak.Identified;
             chromInfo.UserSet = userSet;
-            chromInfo.PointsAcrossPeak = peak.PointsAcross;
             chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
-            chromInfo.PeakShapeValues = peak.PeakShapeValues;
             return chromInfo;
         }
 
