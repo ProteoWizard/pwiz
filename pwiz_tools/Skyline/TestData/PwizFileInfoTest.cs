@@ -163,6 +163,23 @@ namespace pwiz.SkylineTestData
             }
             // Either way, function 3 and only function 3 is treated as lockspray
             CollectionAssert.AreEqual(new[] { 3 }, lockmassFunctions, path);
+
+            // In these files the lockspray sorts first, so the function-number heuristic would identify it
+            // even with no tag - which means the assertions above cannot tell whether MS:1000928 is being
+            // honored. Check that directly: a labeled spectrum carrying no function number to fall back
+            // on, as a waters_connect file would produce, must still be recognized.
+            var taggedWithoutFunction = new MsDataSpectrum
+            {
+                Id = @"3.0.1.2", IsCalibrationSpectrum = true, WatersFunctionNumber = null
+            };
+            Assert.IsTrue(msDataFile.IsWatersLockmassSpectrum(taggedWithoutFunction), path);
+
+            // And the converse: no tag and no function number is not something to guess about
+            var untaggedWithoutFunction = new MsDataSpectrum
+            {
+                Id = @"3.0.1.2", IsCalibrationSpectrum = false, WatersFunctionNumber = null
+            };
+            Assert.IsFalse(msDataFile.IsWatersLockmassSpectrum(untaggedWithoutFunction), path);
         }
 
         [TestMethod]
