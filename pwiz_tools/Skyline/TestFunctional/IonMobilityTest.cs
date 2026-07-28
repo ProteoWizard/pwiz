@@ -31,7 +31,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using DataboundPrecursor = pwiz.Skyline.Model.Databinding.Entities.Precursor;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -39,6 +38,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using DataboundPrecursor = pwiz.Skyline.Model.Databinding.Entities.Precursor;
 
 namespace pwiz.SkylineTestFunctional
 {

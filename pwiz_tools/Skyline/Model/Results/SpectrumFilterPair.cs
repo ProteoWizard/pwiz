@@ -240,11 +240,15 @@ namespace pwiz.Skyline.Model.Results
                 RawTimeIntensities.IsTrackedObservedIonMobilityUnit(IonMobilityInfo.IonMobility.Units);
             float[] observedIonMobilities = trackIonMobility ? new float[targetCount] : null;
             double[] meanIonMobilities = null;
+            double[] observedIonMobilityIntensities = null; // IM-bearing intensity, the denominator for meanIonMobilities
             double[] basePeakIonMobilities = null;
             if (trackIonMobility)
             {
                 if (Extractor == ChromExtractor.summed)
+                {
                     meanIonMobilities = new double[targetCount];
+                    observedIonMobilityIntensities = new double[targetCount];
+                }
                 else
                     basePeakIonMobilities = new double[targetCount];
             }
@@ -382,6 +386,7 @@ namespace pwiz.Skyline.Model.Results
                         TotalIntensity = extractedIntensities[targetIndex], // Start with the value from the previous spectrum, if any
                         MeanMassError = highAcc ? meanErrors[targetIndex] : 0,
                         MeanObservedIonMobility = meanIonMobilities != null ? meanIonMobilities[targetIndex] : 0,
+                        ObservedIonMobilityIntensity = observedIonMobilityIntensities != null ? observedIonMobilityIntensities[targetIndex] : 0,
                         BasePeakIonMobility = basePeakIonMobilities != null ? basePeakIonMobilities[targetIndex] : 0
                     };
 
@@ -416,6 +421,8 @@ namespace pwiz.Skyline.Model.Results
                         meanErrors[targetIndex] = accumulator.MeanMassError;
                     if (meanIonMobilities != null)
                         meanIonMobilities[targetIndex] = accumulator.MeanObservedIonMobility;
+                    if (observedIonMobilityIntensities != null)
+                        observedIonMobilityIntensities[targetIndex] = accumulator.ObservedIonMobilityIntensity;
                     if (basePeakIonMobilities != null)
                         basePeakIonMobilities[targetIndex] = accumulator.BasePeakIonMobility;
                 }

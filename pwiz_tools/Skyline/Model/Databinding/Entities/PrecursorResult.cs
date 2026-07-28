@@ -153,9 +153,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     continue;
                 if (nodeTran.IsMs1)
                 {
-                    if (nodeTran.HasDistInfo)
-                        yield return new ObservedIonMobilityChannel(true, chromInfo.ObservedIonMobility,
-                            chromInfo.ObservedCcs, nodeTran.IsotopeDistInfo.Proportion, 0);
+                    // MS1 isotope channels weight by predicted abundance; an MS1 precursor
+                    // with no isotope distribution (m/z-only small molecule, low-res precursor
+                    // filtering, or a neutral-loss transition) weights by observed area instead
+                    // so its observed IM/CCS is still surfaced.
+                    double weight = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : chromInfo.Area;
+                    yield return new ObservedIonMobilityChannel(true, chromInfo.ObservedIonMobility,
+                        chromInfo.ObservedCcs, weight, 0);
                 }
                 else
                 {
@@ -167,14 +171,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         // The single per-ion observed IM: predicted-abundance-weighted mean over the MS1
-        // isotope channels, falling back to the intensity-weighted mean of the offset-
-        // corrected fragment channels when there are no MS1 channels (MS2-only data).
+        // channels. Falls back to the intensity-weighted mean of the offset-corrected
+        // fragment channels only for genuinely MS2-only precursors (no MS1 channels at all)
+        // - not merely when the MS1 channels carry no observed IM - so the observed IM and
+        // the MS1-only observed CCS stay consistent instead of describing different
+        // acquisition levels.
         public static double? AggregateObservedIonMobility(IEnumerable<ObservedIonMobilityChannel> channels)
         {
             var list = channels as IList<ObservedIonMobilityChannel> ?? channels.ToList();
-            return WeightedMean(list.Where(c => c.IsMs1).Select(c => (c.ObservedIonMobility, c.Weight)))
-                   ?? WeightedMean(list.Where(c => !c.IsMs1)
-                       .Select(c => (c.ObservedIonMobility.HasValue ? c.ObservedIonMobility - c.HighEnergyOffset : (double?) null, c.Weight)));
+            if (list.Any(c => c.IsMs1))
+                return WeightedMean(list.Where(c => c.IsMs1).Select(c => (c.ObservedIonMobility, c.Weight)));
+            return WeightedMean(list.Where(c => !c.IsMs1)
+                .Select(c => (c.ObservedIonMobility.HasValue ? c.ObservedIonMobility - c.HighEnergyOffset : (double?) null, c.Weight)));
         }
 
         private static double? WeightedMean(IEnumerable<(double? value, double weight)> items)

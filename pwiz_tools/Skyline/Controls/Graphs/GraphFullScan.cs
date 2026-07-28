@@ -1537,9 +1537,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 // For IM data (not SONAR, where the Y-axis is precursor m/z), if the
                 // current target's peak in this replicate has an observed IM, draw a
                 // dotted line at that value. Paired with the dashed target-IM line
-                // above so the visible gap between them IS the IM error. The value
-                // matches what Document Grid shows on TransitionResult.ObservedIonMobility
-                // for the same peak - stable as the user scrubs scans inside the peak.
+                // above so the visible gap between them IS the IM error. The value is
+                // the current target transition's per-peak observed IM, stable as the user
+                // scrubs scans inside the peak; the Document Grid's per-precursor Observed
+                // Ion Mobility is the abundance-weighted aggregate across the transitions.
                 if (!isWatersSonarData)
                 {
                     var observedIm = TryGetCurrentTargetChromInfo()?.ObservedIonMobility;
