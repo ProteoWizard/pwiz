@@ -900,8 +900,19 @@ namespace pwiz.Skyline.Model.Results
                     // Waters - mse level 1 in raw data "function 1", mse level 2 in raw data "function 2", and "function 3" which we ignore (lockmass?)
                     // Without a function number (e.g. waters_connect files, which number channels instead)
                     // fall back on the declared MS level, which those writers do set correctly
-                    _mseLevel = dataSpectrum.WatersFunctionNumber ?? dataSpectrum.Level;
-                    returnval = _mseLevel; 
+                    var mseLevel = dataSpectrum.WatersFunctionNumber ?? dataSpectrum.Level;
+                    if (mseLevel > 0)
+                    {
+                        _mseLevel = mseLevel;
+                        returnval = _mseLevel;
+                    }
+                    else
+                    {
+                        // Neither source of truth applies - e.g. an analog or UV function, which carries no
+                        // MS level. Leave _mseLevel alone: every caller gates on it being > 0 before asking
+                        // again, so zeroing it here would disable all-ions handling for the rest of the file.
+                        returnval = 0;
+                    }
                 }
                 _mseLastSpectrumLevel = returnval;
             }
