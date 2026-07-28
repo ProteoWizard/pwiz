@@ -28,17 +28,17 @@ namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Verifies that everything a <see cref="TransitionChromInfo"/> holds can be read back
-    /// out of the chromatogram cache by <see cref="PeptideResultsLoader"/>, at the same flat
+    /// out of the chromatogram cache by <see cref="PeptideResultsMaterializer"/>, at the same flat
     /// positions the document uses. That has to be true before the document can stop holding
     /// those values.
     /// </summary>
     [TestClass]
-    public class PeptideResultsLoaderTest : AbstractUnitTest
+    public class PeptideResultsMaterializerTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
         [TestMethod]
-        public void TestLoadedPeaksMatchTransitionChromInfo()
+        public void TestMaterializedPeaksMatchTransitionChromInfo()
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2.sky");
@@ -63,11 +63,11 @@ namespace pwiz.SkylineTestData.Results
                 int groupsChecked = 0;
                 foreach (var nodePep in docResults.Peptides)
                 {
-                    var loaded = new PeptideResultsLoader
+                    var materialized = new PeptideResultsMaterializer
                     {
                         Settings = docResults.Settings,
                         PeptideDocNode = nodePep
-                    }.Load();
+                    }.Materialize();
 
                     foreach (var nodeGroup in nodePep.TransitionGroups)
                     {
@@ -78,10 +78,10 @@ namespace pwiz.SkylineTestData.Results
                                 continue;
                             }
 
-                            positionsChecked += CheckTransition(loaded, nodeTran);
+                            positionsChecked += CheckTransition(materialized, nodeTran);
                         }
 
-                        groupsChecked += CheckTransitionGroup(loaded, nodeGroup);
+                        groupsChecked += CheckTransitionGroup(materialized, nodeGroup);
                     }
                 }
 
@@ -91,11 +91,11 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// Checks that driving the aggregation from the loader reproduces the group level
+        /// Checks that driving the aggregation from the materializer reproduces the group level
         /// values the document holds. The ranks and the dot products are not compared, because
-        /// they come from the ranking pass which the loader does not drive yet.
+        /// they come from the ranking pass which the materializer does not drive yet.
         /// </summary>
-        private static int CheckTransitionGroup(LoadedPeptideResults loaded, TransitionGroupDocNode nodeGroup)
+        private static int CheckTransitionGroup(MaterializedPeptideResults materialized, TransitionGroupDocNode nodeGroup)
         {
             if (!nodeGroup.HasResults)
             {
@@ -111,8 +111,8 @@ namespace pwiz.SkylineTestData.Results
                     continue;
                 }
 
-                var rebuilt = loaded.MakeTransitionGroupChromInfos(nodeGroup, replicateIndex, expected,
-                    nodeTran => RebuildTransitionChromInfos(loaded, nodeTran, replicateIndex));
+                var rebuilt = materialized.MakeTransitionGroupChromInfos(nodeGroup, replicateIndex, expected,
+                    nodeTran => RebuildTransitionChromInfos(materialized, nodeTran, replicateIndex));
                 Assert.IsNotNull(rebuilt);
                 Assert.AreEqual(expected.Count, rebuilt.Count);
                 for (int i = 0; i < rebuilt.Count; i++)
@@ -126,10 +126,10 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// The transition chrom infos for one replicate, rebuilt entirely from what the loader
+        /// The transition chrom infos for one replicate, rebuilt entirely from what the materializer
         /// read back out of the .skyd.
         /// </summary>
-        private static IList<TransitionChromInfo> RebuildTransitionChromInfos(LoadedPeptideResults loaded,
+        private static IList<TransitionChromInfo> RebuildTransitionChromInfos(MaterializedPeptideResults materialized,
             TransitionDocNode nodeTran, int replicateIndex)
         {
             if (!nodeTran.HasResults || replicateIndex >= nodeTran.Results.Count)
@@ -140,11 +140,11 @@ namespace pwiz.SkylineTestData.Results
             var documentChromInfos = nodeTran.Results[replicateIndex];
             var result = new List<TransitionChromInfo>();
             int i = 0;
-            foreach (int position in loaded.GetPositions(nodeTran, replicateIndex))
+            foreach (int position in materialized.GetPositions(nodeTran, replicateIndex))
             {
                 var chromInfo = documentChromInfos[i++];
-                int candidatePeakIndex = loaded.FindCandidatePeakIndex(nodeTran, position, chromInfo);
-                result.Add(loaded.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
+                int candidatePeakIndex = materialized.FindCandidatePeakIndex(nodeTran, position, chromInfo);
+                result.Add(materialized.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
                     chromInfo.UserSet, chromInfo.Annotations));
             }
 
@@ -173,9 +173,9 @@ namespace pwiz.SkylineTestData.Results
 
         /// <summary>
         /// Walks the document's results as one flat sequence of positions and checks that the
-        /// loader produced the same positions holding the same values.
+        /// materializer produced the same positions holding the same values.
         /// </summary>
-        private static int CheckTransition(LoadedPeptideResults loaded, TransitionDocNode nodeTran)
+        private static int CheckTransition(MaterializedPeptideResults materialized, TransitionDocNode nodeTran)
         {
             var documentChromInfos = new List<TransitionChromInfo>();
             var countsPerReplicate = new List<int>();
@@ -185,35 +185,35 @@ namespace pwiz.SkylineTestData.Results
                 documentChromInfos.AddRange(chromInfoList);
             }
 
-            var loadedTransition = loaded.GetTransition(nodeTran);
-            Assert.IsNotNull(loadedTransition);
-            Assert.AreEqual(documentChromInfos.Count, loadedTransition.PositionCount);
+            var materializedTransition = materialized.GetTransition(nodeTran);
+            Assert.IsNotNull(materializedTransition);
+            Assert.AreEqual(documentChromInfos.Count, materializedTransition.PositionCount);
 
-            // The loader has to agree with the document about which replicate each position
+            // The materializer has to agree with the document about which replicate each position
             // belongs to, not merely about how many positions there are.
             Assert.AreEqual(ReplicatePositions.FromCounts(countsPerReplicate),
-                loadedTransition.ChromFileIds.ReplicatePositions);
+                materializedTransition.ChromFileIds.ReplicatePositions);
 
             int positionsChecked = 0;
             for (int position = 0; position < documentChromInfos.Count; position++)
             {
                 var chromInfo = documentChromInfos[position];
-                Assert.AreSame(chromInfo.FileId, loadedTransition.ChromFileIds.FileIds[position].Value);
-                Assert.AreEqual(chromInfo.OptimizationStep, loadedTransition.OptimizationSteps[position]);
+                Assert.AreSame(chromInfo.FileId, materializedTransition.ChromFileIds.FileIds[position].Value);
+                Assert.AreEqual(chromInfo.OptimizationStep, materializedTransition.OptimizationSteps[position]);
                 if (chromInfo.IsEmpty)
                 {
                     continue;
                 }
 
-                int candidatePeakIndex = loaded.FindCandidatePeakIndex(nodeTran, position, chromInfo);
+                int candidatePeakIndex = materialized.FindCandidatePeakIndex(nodeTran, position, chromInfo);
                 Assert.AreNotEqual(-1, candidatePeakIndex);
 
-                var rebuilt = loaded.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
+                var rebuilt = materialized.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
                     chromInfo.UserSet, chromInfo.Annotations);
                 Assert.IsNotNull(rebuilt);
                 Assert.AreNotSame(chromInfo, rebuilt);
 
-                // Rank is not peak data and is not something the loader can know, so compare
+                // Rank is not peak data and is not something the materializer can know, so compare
                 // everything else by rebuilding with the ranks the document recorded.
                 Assert.AreEqual(chromInfo, rebuilt.ChangeRank(true, chromInfo.Rank, chromInfo.RankByLevel));
                 positionsChecked++;

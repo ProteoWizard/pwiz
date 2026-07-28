@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
     /// make it correct first, then find out where the cost actually lands.
     /// </para>
     /// </summary>
-    public class PeptideResultsLoader
+    public class PeptideResultsMaterializer
     {
         public SrmSettings Settings { get; set; }
         public PeptideDocNode PeptideDocNode { get; set; }
@@ -55,18 +55,18 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Used to avoid holding on to many identical <see cref="ChromFileIds"/>. A fresh one
-        /// is used when left null, which still shares within the one peptide being loaded.
+        /// is used when left null, which still shares within the one peptide being materialized.
         /// </summary>
         public ValueCache ValueCache { get; set; }
 
-        public LoadedPeptideResults Load()
+        public MaterializedPeptideResults Materialize()
         {
             var valueCache = ValueCache ?? new ValueCache();
-            var transitions = new Dictionary<int, LoadedTransition>();
+            var transitions = new Dictionary<int, MaterializedTransition>();
             var measuredResults = Settings?.MeasuredResults;
             if (measuredResults == null || PeptideDocNode == null)
             {
-                return new LoadedPeptideResults(Settings, PeptideDocNode, transitions);
+                return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions);
             }
 
             float tolerance = MzMatchTolerance ??
@@ -74,10 +74,10 @@ namespace pwiz.Skyline.Model.Results
             foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
             {
                 var builders = nodeGroup.Transitions.ToDictionary(nodeTran => nodeTran.Id.GlobalIndex,
-                    nodeTran => new LoadedTransitionBuilder());
+                    nodeTran => new MaterializedTransitionBuilder());
                 for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
                 {
-                    LoadReplicate(measuredResults, measuredResults.Chromatograms[replicateIndex], nodeGroup,
+                    ReadReplicate(measuredResults, measuredResults.Chromatograms[replicateIndex], nodeGroup,
                         tolerance, builders);
                     foreach (var builder in builders.Values)
                     {
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return new LoadedPeptideResults(Settings, PeptideDocNode, transitions);
+            return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions);
         }
 
         /// <summary>
@@ -100,8 +100,8 @@ namespace pwiz.Skyline.Model.Results
         /// file major, optimization step minor, skipping any file where the transition has no
         /// chromatogram.
         /// </summary>
-        private void LoadReplicate(MeasuredResults measuredResults, ChromatogramSet chromatograms,
-            TransitionGroupDocNode nodeGroup, float tolerance, IDictionary<int, LoadedTransitionBuilder> builders)
+        private void ReadReplicate(MeasuredResults measuredResults, ChromatogramSet chromatograms,
+            TransitionGroupDocNode nodeGroup, float tolerance, IDictionary<int, MaterializedTransitionBuilder> builders)
         {
             if (!measuredResults.TryLoadChromatogram(chromatograms, PeptideDocNode, nodeGroup, tolerance,
                     out var chromGroupInfos))
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private class LoadedTransitionBuilder
+        private class MaterializedTransitionBuilder
         {
             private readonly List<ChromFileInfoId> _fileIds = new List<ChromFileInfoId>();
             private readonly List<int> _counts = new List<int>();
@@ -184,10 +184,10 @@ namespace pwiz.Skyline.Model.Results
                 _countThisReplicate = 0;
             }
 
-            public LoadedTransition Build(ValueCache valueCache)
+            public MaterializedTransition Build(ValueCache valueCache)
             {
                 var chromFileIds = ChromFileIds.Intern(valueCache, ReplicatePositions.FromCounts(_counts), _fileIds);
-                return new LoadedTransition(chromFileIds, OptimizationSteps, IonMobilities, Peaks);
+                return new MaterializedTransition(chromFileIds, OptimizationSteps, IonMobilities, Peaks);
             }
         }
     }
@@ -196,9 +196,9 @@ namespace pwiz.Skyline.Model.Results
     /// Everything read for one transition: which file and optimization step each flat
     /// position belongs to, and every candidate peak found there.
     /// </summary>
-    public class LoadedTransition
+    public class MaterializedTransition
     {
-        public LoadedTransition(ChromFileIds chromFileIds, IEnumerable<int> optimizationSteps,
+        public MaterializedTransition(ChromFileIds chromFileIds, IEnumerable<int> optimizationSteps,
             IEnumerable<IonMobilityFilter> ionMobilities, IEnumerable<ImmutableList<ChromPeak>> peaks)
         {
             ChromFileIds = chromFileIds;
@@ -222,12 +222,12 @@ namespace pwiz.Skyline.Model.Results
     /// One <see cref="PeptideDocNode"/> together with all of its result information for all
     /// replicates. Callers calculate whatever they need from this and then release it.
     /// </summary>
-    public class LoadedPeptideResults
+    public class MaterializedPeptideResults
     {
-        private readonly Dictionary<int, LoadedTransition> _transitions;
+        private readonly Dictionary<int, MaterializedTransition> _transitions;
 
-        public LoadedPeptideResults(SrmSettings settings, PeptideDocNode peptideDocNode,
-            Dictionary<int, LoadedTransition> transitions)
+        public MaterializedPeptideResults(SrmSettings settings, PeptideDocNode peptideDocNode,
+            Dictionary<int, MaterializedTransition> transitions)
         {
             Settings = settings;
             PeptideDocNode = peptideDocNode;
@@ -237,10 +237,10 @@ namespace pwiz.Skyline.Model.Results
         public SrmSettings Settings { get; }
         public PeptideDocNode PeptideDocNode { get; }
 
-        public LoadedTransition GetTransition(TransitionDocNode nodeTran)
+        public MaterializedTransition GetTransition(TransitionDocNode nodeTran)
         {
-            _transitions.TryGetValue(nodeTran.Id.GlobalIndex, out var loadedTransition);
-            return loadedTransition;
+            _transitions.TryGetValue(nodeTran.Id.GlobalIndex, out var materializedTransition);
+            return materializedTransition;
         }
 
         public int GetPositionCount(TransitionDocNode nodeTran)
@@ -277,15 +277,15 @@ namespace pwiz.Skyline.Model.Results
         public TransitionChromInfo MakeTransitionChromInfo(TransitionDocNode nodeTran, int position,
             int candidatePeakIndex, UserSet userSet, Annotations annotations)
         {
-            var loadedTransition = GetTransition(nodeTran);
-            if (loadedTransition == null || position < 0 || position >= loadedTransition.PositionCount)
+            var materializedTransition = GetTransition(nodeTran);
+            if (materializedTransition == null || position < 0 || position >= materializedTransition.PositionCount)
             {
                 return null;
             }
 
             var peak = GetPeak(nodeTran, position, candidatePeakIndex) ?? ChromPeak.EMPTY;
-            return new TransitionChromInfo(loadedTransition.ChromFileIds.FileIds[position],
-                loadedTransition.OptimizationSteps[position], peak, loadedTransition.IonMobilities[position],
+            return new TransitionChromInfo(materializedTransition.ChromFileIds.FileIds[position],
+                materializedTransition.OptimizationSteps[position], peak, materializedTransition.IonMobilities[position],
                 annotations ?? Annotations.EMPTY, userSet);
         }
 
