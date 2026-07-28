@@ -261,9 +261,6 @@ namespace pwiz.Osprey.FDR
         /// so no flat <c>fileNames</c> array is needed) and zips the results back, keeping every
         /// index aligned. The feature-contribution accumulation runs in per-file order identical
         /// to the <see cref="PercolatorEntry"/>
-        /// that SAME nested order to compute <c>finalScores</c> and to zip the results
-        /// back, keeping every index aligned. The feature-contribution accumulation
-        /// runs in per-file order identical to the <see cref="PercolatorEntry"/>
         /// streaming loop (<c>GroupIndicesByFileName</c> preserves first-seen file
         /// order == <paramref name="perFile"/> order), so the reported contributions
         /// are bit-identical too.
