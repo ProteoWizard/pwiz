@@ -501,8 +501,10 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsWatersLockmassSpectrum(MsDataSpectrum s)
         {
-            return _lockmassFunction.HasValue && 
-                   MsDataSpectrum.WatersFunctionNumberFromId(s.Id, s.IonMobilities != null) >= _lockmassFunction.Value;
+            if (s.IsCalibrationSpectrum)
+                return true; // Explicitly labeled MS:1000928 - authoritative, whatever the file's nativeID dialect
+            return _lockmassFunction.HasValue && s.WatersFunctionNumber.HasValue &&
+                   s.WatersFunctionNumber.Value >= _lockmassFunction.Value;
         }
 
         public IEnumerable<string> GetFileContentList()
@@ -814,11 +816,17 @@ namespace pwiz.ProteowizardWrapper
                             // (e.g. "electromagnetic radiation spectrum") 
                             // CONSIDER(bspratt) I really wish there was some way to communicate decisions like this to the user
                             using var spectrum = _spectrumList.spectrum(index, DetailLevel.FullMetadata);
+                            // waters_connect (Waters DATA Convert) numbers "channels" rather than MassLynx
+                            // "functions", and the two are not interchangeable - reading a channel number as a
+                            // function number discards real data. It also lockmass corrects and drops the
+                            // reference scans rather than exporting them, so there is nothing to infer. Any
+                            // that do appear are tagged MS:1000928 and caught by IsWatersLockmassSpectrum.
+                            if (MsDataSpectrum.IsWatersConnectNativeId(spectrum.id))
+                                break;
                             var msLevel = GetMsLevel(spectrum);
                             if (msLevel == 1)
                             {
-                                var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), 
-                                    HasCombinedIonMobilitySpectra && spectrum.id.Contains(MERGED_TAG));
+                                var function = MsDataSpectrum.WatersFunctionNumberFromNativeId(spectrum.id);
                                 if (function > 1)
                                     _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
                             }
@@ -1355,6 +1363,8 @@ namespace pwiz.ProteowizardWrapper
             var msDataSpectrum = new MsDataSpectrum
             {
                 Id = _trimNativeID ? id.abbreviate(idText) : idText,
+                IsCalibrationSpectrum = spectrum.hasCVParam(CVID.MS_calibration_spectrum),
+                WatersFunctionNumber = MsDataSpectrum.WatersFunctionNumberFromNativeId(idText),
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
@@ -2486,9 +2496,62 @@ namespace pwiz.ProteowizardWrapper
         public string InstrumentSerialNumber { get; set; }
         public string InstrumentVendor { get; set; }
 
-        public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
+        /// <summary>
+        /// True when this spectrum is explicitly labeled as a calibration (Waters lockmass) scan with
+        /// MS:1000928. Authoritative wherever it appears - no inference needed.
+        /// </summary>
+        public bool IsCalibrationSpectrum { get; set; }
+
+        /// <summary>
+        /// The Waters function number this spectrum belongs to, or null when the file's nativeIDs are
+        /// not in a layout that carries one. Null means "do not reason about Waters functions here".
+        /// </summary>
+        public int? WatersFunctionNumber { get; set; }
+
+        // Waters nativeID layouts that carry a function number, mapped to its position within the
+        // dotted abbreviation. MS:1000769 defines "function=N process=M scan=K"; our own Waters reader
+        // also emits "merged=N function=M block=K" for 3-array IMS.
+        private static readonly Dictionary<string, int> WATERS_FUNCTION_ID_LAYOUTS = new Dictionary<string, int>
         {
-            return int.Parse(id.Split('.')[isCombinedIonMobility ? 1 :0]); // Yes, this will throw if it's not in dotted format - and that's good
+            { @"function.process.scan", 0 },
+            { @"merged.function.block", 1 }
+        };
+
+        private const string WATERS_CONNECT_ID_PREFIX = @"channel=";
+
+        /// <summary>
+        /// True if this is a waters_connect (Waters DATA Convert) nativeID, e.g.
+        /// "channel=2 process=0 spectrum=1 scan=1" or "channel=3 process=0 spectra=19,21 scan=20".
+        /// waters_connect splits scan types into "channels" where MassLynx uses "functions", and the two
+        /// numberings are not interchangeable, so nothing may be inferred from the number.
+        /// </summary>
+        public static bool IsWatersConnectNativeId(string nativeId)
+        {
+            return nativeId != null && nativeId.StartsWith(WATERS_CONNECT_ID_PREFIX);
+        }
+
+        /// <summary>
+        /// Determine the Waters function number from a full nativeID, e.g. "function=2 process=0 scan=1".
+        /// Returns null for any layout that does not carry one - notably the waters_connect dialect - so
+        /// that callers decline to guess rather than misread some other numbering as a function number.
+        /// </summary>
+        public static int? WatersFunctionNumberFromNativeId(string nativeId)
+        {
+            if (string.IsNullOrEmpty(nativeId))
+                return null;
+            var tokens = nativeId.Split(' ');
+            var keys = new string[tokens.Length];
+            var values = new int[tokens.Length];
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                var separator = tokens[i].IndexOf('=');
+                if (separator < 0 || !int.TryParse(tokens[i].Substring(separator + 1), out values[i]))
+                    return null;
+                keys[i] = tokens[i].Substring(0, separator);
+            }
+            return WATERS_FUNCTION_ID_LAYOUTS.TryGetValue(string.Join(@".", keys), out var field)
+                ? values[field]
+                : (int?) null;
         }
 
         public override string ToString() // For debugging convenience, not user-facing

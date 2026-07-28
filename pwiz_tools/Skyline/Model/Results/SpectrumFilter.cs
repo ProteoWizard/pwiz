@@ -898,7 +898,9 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     // Waters - mse level 1 in raw data "function 1", mse level 2 in raw data "function 2", and "function 3" which we ignore (lockmass?)
-                    _mseLevel = MsDataSpectrum.WatersFunctionNumberFromId(dataSpectrum.Id, HasCombinedIonMobility);
+                    // Without a function number (e.g. waters_connect files, which number channels instead)
+                    // fall back on the declared MS level, which those writers do set correctly
+                    _mseLevel = dataSpectrum.WatersFunctionNumber ?? dataSpectrum.Level;
                     returnval = _mseLevel; 
                 }
                 _mseLastSpectrumLevel = returnval;

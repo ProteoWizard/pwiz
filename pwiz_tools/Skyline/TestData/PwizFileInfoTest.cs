@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -105,6 +106,61 @@ namespace pwiz.SkylineTestData
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 2, 3286253);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDMRM_Short_noLM.raw"), 0, 0);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDDDA_Short_noLM.raw"), 1, 3692876);
+        }
+
+        /// <summary>
+        /// Waters lockspray scans have to be recognized in mzML written both before and after msconvert
+        /// began labeling them with MS:1000928, and the waters_connect nativeID dialect must not be read
+        /// as if it carried MassLynx function numbers.
+        /// </summary>
+        [TestMethod]
+        public void TestWatersCalibrationSpectrum()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\WatersLockmassMzml.zip");
+
+            // Same three spectra either way - lockspray is function 3, and it sorts first
+            VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_untagged.mzML"), false);
+            VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_tagged.mzML"), true);
+
+            // MassLynx nativeIDs carry a function number
+            Assert.AreEqual(1, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=1 process=0 scan=1"));
+            Assert.AreEqual(3, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=3 process=0 scan=1"));
+            Assert.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 block=3"));
+
+            // waters_connect numbers channels, which are not function numbers, so nothing may be inferred
+            foreach (var watersConnectId in new[]
+                     {
+                         "channel=2 process=0 spectrum=1 scan=1",
+                         "channel=3 process=0 spectra=19,21 scan=20"
+                     })
+            {
+                Assert.IsTrue(MsDataSpectrum.IsWatersConnectNativeId(watersConnectId));
+                Assert.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(watersConnectId));
+            }
+
+            // Neither is anything else
+            foreach (var otherId in new[] { "controllerType=0 controllerNumber=1 scan=5", "scan=1", "", null })
+            {
+                Assert.IsFalse(MsDataSpectrum.IsWatersConnectNativeId(otherId));
+                Assert.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(otherId));
+            }
+        }
+
+        private static void VerifyLockmassSpectrum(string path, bool expectLabeled)
+        {
+            using var msDataFile = new MsDataFileImpl(path);
+            Assert.AreEqual(3, msDataFile.SpectrumCount, path);
+            var lockmassFunctions = new List<int>();
+            for (var i = 0; i < msDataFile.SpectrumCount; i++)
+            {
+                var spectrum = msDataFile.GetSpectrum(i);
+                // Only the newer file labels its lockspray scan, and only that scan
+                Assert.AreEqual(expectLabeled && spectrum.WatersFunctionNumber == 3, spectrum.IsCalibrationSpectrum, path);
+                if (msDataFile.IsWatersLockmassSpectrum(spectrum))
+                    lockmassFunctions.Add(spectrum.WatersFunctionNumber ?? 0);
+            }
+            // Either way, function 3 and only function 3 is treated as lockspray
+            CollectionAssert.AreEqual(new[] { 3 }, lockmassFunctions, path);
         }
 
         [TestMethod]
