@@ -155,18 +155,30 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return null;
 
-            var settings = new JsonSerializerSettings { Converters = { new RoundtripDoubleConverter() } };
-            var dto = JsonConvert.DeserializeObject<ModelDto>(File.ReadAllText(path), settings);
-            if (dto?.Means == null || dto.Stds == null || dto.FoldWeights == null || dto.FoldBiases == null)
-                return null;
-
-            var model = new PercolatorResults
+            // A corrupt or truncated sidecar must load as null (the documented "unreadable"
+            // contract) rather than throw and crash the merge node: a bad read/parse and a
+            // shape-invariant violation both fall back to the pre-persistence fail-fast.
+            try
             {
-                Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
-                FoldWeights = new List<double[]>(dto.FoldWeights),
-                FoldBiases = new List<double>(dto.FoldBiases),
-            };
-            return model;
+                var settings = new JsonSerializerSettings { Converters = { new RoundtripDoubleConverter() } };
+                var dto = JsonConvert.DeserializeObject<ModelDto>(File.ReadAllText(path), settings);
+                if (dto == null || dto.SchemaVersion != 1 ||
+                    dto.Means == null || dto.Stds == null || dto.Means.Length != dto.Stds.Length ||
+                    dto.FoldWeights == null || dto.FoldWeights.Length == 0 ||
+                    dto.FoldBiases == null || dto.FoldBiases.Length != dto.FoldWeights.Length)
+                    return null;
+
+                return new PercolatorResults
+                {
+                    Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
+                    FoldWeights = new List<double[]>(dto.FoldWeights),
+                    FoldBiases = new List<double>(dto.FoldBiases),
+                };
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }

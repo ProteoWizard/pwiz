@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Test
                 Assert.IsNotNull(reloaded, @"reloaded model should not be null");
 
                 // Structural bit-parity.
-                AssertBitEqual(model.Standardizer.NumFeatures, reloaded.Standardizer.NumFeatures, @"NumFeatures");
+                Assert.AreEqual(model.Standardizer.NumFeatures, reloaded.Standardizer.NumFeatures, @"NumFeatures");
                 for (int i = 0; i < model.Standardizer.Means.Length; i++)
                 {
                     AssertBitEqual(model.Standardizer.Means[i], reloaded.Standardizer.Means[i], @"Means[" + i + @"]");
