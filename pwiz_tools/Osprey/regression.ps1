@@ -678,6 +678,11 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
+        # Ship the persisted 1st-pass model so the merge node can run the frozen 2nd-pass
+        # modes (transfer / transfer-compete / protein-compact) without re-training. Absent
+        # for the default percolator golden (which retrains), so guard with Test-Path.
+        $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
+        if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
         $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
         if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
         New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
