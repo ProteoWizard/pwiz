@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
@@ -26,9 +27,10 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
-    /// Verifies that the values which <see cref="TransitionChromInfo"/> holds can be read
-    /// back out of the chromatogram cache by <see cref="PeptideResultsLoader"/>. That has to
-    /// be true before those values can stop being held in memory.
+    /// Verifies that everything a <see cref="TransitionChromInfo"/> holds can be read back
+    /// out of the chromatogram cache by <see cref="PeptideResultsLoader"/>, at the same flat
+    /// positions the document uses. That has to be true before the document can stop holding
+    /// those values.
     /// </summary>
     [TestClass]
     public class PeptideResultsLoaderTest : AbstractUnitTest
@@ -43,20 +45,21 @@ namespace pwiz.SkylineTestData.Results
             var doc = ResultsUtil.DeserializeDocument(docPath);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
+                // Two replicates, so that the flat position layout spans more than one of them
+                // and ReplicatePositions is actually exercised.
+                var rawPath = new MsDataFilePath(TestFilesDir.GetTestPath(
+                    "081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw));
                 var chromSets = new[]
                 {
-                    new ChromatogramSet(@"AgilentTest", new[]
-                    {
-                        new MsDataFilePath(TestFilesDir.GetTestPath(
-                            "081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw))
-                    })
+                    new ChromatogramSet(@"AgilentTest", new[] {rawPath}),
+                    new ChromatogramSet(@"AgilentTest2", new[] {rawPath})
                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
 
-                int peaksChecked = 0;
+                int positionsChecked = 0;
                 foreach (var nodePep in docResults.Peptides)
                 {
                     var loaded = new PeptideResultsLoader
@@ -74,43 +77,64 @@ namespace pwiz.SkylineTestData.Results
                                 continue;
                             }
 
-                            for (int iReplicate = 0; iReplicate < nodeTran.Results.Count; iReplicate++)
-                            {
-                                foreach (var chromInfo in nodeTran.Results[iReplicate])
-                                {
-                                    if (chromInfo.IsEmpty)
-                                    {
-                                        continue;
-                                    }
-
-                                    int peakIndex = loaded.FindPeakIndex(nodeTran, iReplicate, chromInfo);
-                                    Assert.AreNotEqual(-1, peakIndex);
-                                    var peak = loaded.GetPeak(nodeTran, iReplicate, chromInfo.FileId,
-                                        chromInfo.OptimizationStep, peakIndex);
-                                    Assert.IsTrue(peak.HasValue);
-                                    Assert.AreEqual(chromInfo.RetentionTime, peak.Value.RetentionTime);
-                                    Assert.AreEqual(chromInfo.StartRetentionTime, peak.Value.StartTime);
-                                    Assert.AreEqual(chromInfo.EndRetentionTime, peak.Value.EndTime);
-                                    Assert.AreEqual(chromInfo.Area, peak.Value.Area);
-                                    Assert.AreEqual(chromInfo.BackgroundArea, peak.Value.BackgroundArea);
-                                    Assert.AreEqual(chromInfo.Height, peak.Value.Height);
-                                    Assert.AreEqual(chromInfo.Fwhm, peak.Value.Fwhm);
-                                    Assert.AreEqual(chromInfo.MassError, peak.Value.MassError);
-
-                                    // The whole TransitionChromInfo has to come back, not just the
-                                    // values checked individually above.
-                                    var materialized = loaded.Materialize(nodeTran, iReplicate, chromInfo);
-                                    Assert.AreNotSame(chromInfo, materialized);
-                                    Assert.AreEqual(chromInfo, materialized);
-                                    peaksChecked++;
-                                }
-                            }
+                            positionsChecked += CheckTransition(loaded, nodeTran);
                         }
                     }
                 }
 
-                Assert.AreNotEqual(0, peaksChecked);
+                Assert.AreNotEqual(0, positionsChecked);
             }
+        }
+
+        /// <summary>
+        /// Walks the document's results as one flat sequence of positions and checks that the
+        /// loader produced the same positions holding the same values.
+        /// </summary>
+        private static int CheckTransition(LoadedPeptideResults loaded, TransitionDocNode nodeTran)
+        {
+            var documentChromInfos = new List<TransitionChromInfo>();
+            var countsPerReplicate = new List<int>();
+            foreach (var chromInfoList in nodeTran.Results)
+            {
+                countsPerReplicate.Add(chromInfoList.Count);
+                documentChromInfos.AddRange(chromInfoList);
+            }
+
+            var loadedTransition = loaded.GetTransition(nodeTran);
+            Assert.IsNotNull(loadedTransition);
+            Assert.AreEqual(documentChromInfos.Count, loadedTransition.PositionCount);
+
+            // The loader has to agree with the document about which replicate each position
+            // belongs to, not merely about how many positions there are.
+            Assert.AreEqual(ReplicatePositions.FromCounts(countsPerReplicate),
+                loadedTransition.ChromFileIds.ReplicatePositions);
+
+            int positionsChecked = 0;
+            for (int position = 0; position < documentChromInfos.Count; position++)
+            {
+                var chromInfo = documentChromInfos[position];
+                Assert.AreSame(chromInfo.FileId, loadedTransition.ChromFileIds.FileIds[position].Value);
+                Assert.AreEqual(chromInfo.OptimizationStep, loadedTransition.OptimizationSteps[position]);
+                if (chromInfo.IsEmpty)
+                {
+                    continue;
+                }
+
+                int candidatePeakIndex = loaded.FindCandidatePeakIndex(nodeTran, position, chromInfo);
+                Assert.AreNotEqual(-1, candidatePeakIndex);
+
+                var rebuilt = loaded.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
+                    chromInfo.UserSet, chromInfo.Annotations);
+                Assert.IsNotNull(rebuilt);
+                Assert.AreNotSame(chromInfo, rebuilt);
+
+                // Rank is not peak data and is not something the loader can know, so compare
+                // everything else by rebuilding with the ranks the document recorded.
+                Assert.AreEqual(chromInfo, rebuilt.ChangeRank(true, chromInfo.Rank, chromInfo.RankByLevel));
+                positionsChecked++;
+            }
+
+            return positionsChecked;
         }
     }
 }

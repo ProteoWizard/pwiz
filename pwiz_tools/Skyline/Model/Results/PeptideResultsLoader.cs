@@ -19,24 +19,27 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results
 {
     /// <summary>
-    /// Reads the peak values for every transition of every precursor of one
-    /// <see cref="PeptideDocNode"/>, across every replicate, from the chromatogram cache.
+    /// Reads everything about the peaks of one <see cref="PeptideDocNode"/>, across every
+    /// replicate, from the chromatogram cache.
     /// <para>
     /// This exists because a <see cref="DocNode"/> is to stop being the place complete
-    /// result information comes from. A <see cref="TransitionChromInfo"/> will reliably
-    /// hold only retention time, area and a few flags. Code which needs anything else
-    /// asks for everything belonging to one peptide, calculates what it needs, and then
-    /// lets the returned <see cref="LoadedPeptideResults"/> go.
+    /// result information comes from. A <see cref="TransitionResults"/> holds only the
+    /// areas, and a <see cref="TransitionGroupResults"/> only the areas, retention times,
+    /// chosen candidate peak indexes and the few things which cannot be derived from the
+    /// .skyd file. Code which needs anything else loads everything belonging to one
+    /// peptide, calculates what it needs, and then lets it go.
     /// </para>
     /// <para>
-    /// Reading everything for a peptide every time something is needed is not efficient.
-    /// That is deliberate for now: make it correct first, then find out where the cost
-    /// actually lands and decide what is worth holding onto.
+    /// The granularity is deliberately a whole peptide across all replicates. Reading that
+    /// much every time something is needed is not efficient, which is accepted for now:
+    /// make it correct first, then find out where the cost actually lands.
     /// </para>
     /// </summary>
     public class PeptideResultsLoader
@@ -49,32 +52,55 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public float? MzMatchTolerance { get; set; }
 
+        /// <summary>
+        /// Used to avoid holding on to many identical <see cref="ChromFileIds"/>. A fresh one
+        /// is used when left null, which still shares within the one peptide being loaded.
+        /// </summary>
+        public ValueCache ValueCache { get; set; }
+
         public LoadedPeptideResults Load()
         {
-            var peaks = new Dictionary<PeakKey, ChromPeak>();
+            var valueCache = ValueCache ?? new ValueCache();
+            var transitions = new Dictionary<int, LoadedTransition>();
             var measuredResults = Settings?.MeasuredResults;
             if (measuredResults == null || PeptideDocNode == null)
             {
-                return new LoadedPeptideResults(PeptideDocNode, peaks);
+                return new LoadedPeptideResults(PeptideDocNode, transitions);
             }
 
             float tolerance = MzMatchTolerance ??
                               (float) Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
+            foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
             {
-                var chromatograms = measuredResults.Chromatograms[replicateIndex];
-                foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
+                var builders = nodeGroup.Transitions.ToDictionary(nodeTran => nodeTran.Id.GlobalIndex,
+                    nodeTran => new LoadedTransitionBuilder());
+                for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
                 {
-                    LoadTransitionGroup(measuredResults, chromatograms, replicateIndex, nodeGroup, tolerance, peaks);
+                    LoadReplicate(measuredResults, measuredResults.Chromatograms[replicateIndex], nodeGroup,
+                        tolerance, builders);
+                    foreach (var builder in builders.Values)
+                    {
+                        builder.EndReplicate();
+                    }
+                }
+
+                foreach (var entry in builders)
+                {
+                    transitions[entry.Key] = entry.Value.Build(valueCache);
                 }
             }
 
-            return new LoadedPeptideResults(PeptideDocNode, peaks);
+            return new LoadedPeptideResults(PeptideDocNode, transitions);
         }
 
-        private void LoadTransitionGroup(MeasuredResults measuredResults, ChromatogramSet chromatograms,
-            int replicateIndex, TransitionGroupDocNode nodeGroup, float tolerance,
-            IDictionary<PeakKey, ChromPeak> peaks)
+        /// <summary>
+        /// Appends the positions contributed by one replicate. The ordering has to match the
+        /// order in which <see cref="TransitionGroupDocNode.ChangeResults"/> builds its lists:
+        /// file major, optimization step minor, skipping any file where the transition has no
+        /// chromatogram.
+        /// </summary>
+        private void LoadReplicate(MeasuredResults measuredResults, ChromatogramSet chromatograms,
+            TransitionGroupDocNode nodeGroup, float tolerance, IDictionary<int, LoadedTransitionBuilder> builders)
         {
             if (!measuredResults.TryLoadChromatogram(chromatograms, PeptideDocNode, nodeGroup, tolerance,
                     out var chromGroupInfos))
@@ -102,23 +128,92 @@ namespace pwiz.Skyline.Model.Results
                     // each one has its own set of candidate peaks.
                     var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, tolerance,
                         chromatograms.OptimizationFunction, TransformChrom.interpolated);
+                    if (optStepChromatograms.IsEmpty)
+                    {
+                        continue;
+                    }
+
+                    var builder = builders[nodeTran.Id.GlobalIndex];
                     for (int step = -optStepChromatograms.StepCount; step <= optStepChromatograms.StepCount; step++)
                     {
-                        var chromInfo = optStepChromatograms.GetChromatogramForStep(step);
-                        if (chromInfo == null)
+                        // A position gets added for every step even when there is no
+                        // chromatogram for it, because ChangeResults adds an empty peak there.
+                        var chromatogramInfo = optStepChromatograms.GetChromatogramForStep(step);
+                        if (chromatogramInfo == null)
                         {
+                            builder.AddPosition(fileId, step, IonMobilityFilter.EMPTY, new ChromPeak[0]);
                             continue;
                         }
 
-                        for (int peakIndex = 0; peakIndex < chromInfo.NumPeaks; peakIndex++)
+                        var peaks = new ChromPeak[chromatogramInfo.NumPeaks];
+                        for (int peakIndex = 0; peakIndex < peaks.Length; peakIndex++)
                         {
-                            var key = new PeakKey(nodeTran.Id.GlobalIndex, replicateIndex, fileId.GlobalIndex,
-                                step, peakIndex);
-                            peaks[key] = chromInfo.GetPeak(peakIndex);
+                            peaks[peakIndex] = chromatogramInfo.GetPeak(peakIndex);
                         }
+
+                        builder.AddPosition(fileId, step, chromatogramInfo.GetIonMobilityFilter(), peaks);
                     }
                 }
             }
+        }
+
+        private class LoadedTransitionBuilder
+        {
+            private readonly List<ChromFileInfoId> _fileIds = new List<ChromFileInfoId>();
+            private readonly List<int> _counts = new List<int>();
+            private int _countThisReplicate;
+
+            public List<int> OptimizationSteps { get; } = new List<int>();
+            public List<IonMobilityFilter> IonMobilities { get; } = new List<IonMobilityFilter>();
+            public List<ImmutableList<ChromPeak>> Peaks { get; } = new List<ImmutableList<ChromPeak>>();
+
+            public void AddPosition(ChromFileInfoId fileId, int optimizationStep, IonMobilityFilter ionMobility,
+                IEnumerable<ChromPeak> peaks)
+            {
+                _fileIds.Add(fileId);
+                OptimizationSteps.Add(optimizationStep);
+                IonMobilities.Add(ionMobility ?? IonMobilityFilter.EMPTY);
+                Peaks.Add(ImmutableList.ValueOf(peaks));
+                _countThisReplicate++;
+            }
+
+            public void EndReplicate()
+            {
+                _counts.Add(_countThisReplicate);
+                _countThisReplicate = 0;
+            }
+
+            public LoadedTransition Build(ValueCache valueCache)
+            {
+                var chromFileIds = ChromFileIds.Intern(valueCache, ReplicatePositions.FromCounts(_counts), _fileIds);
+                return new LoadedTransition(chromFileIds, OptimizationSteps, IonMobilities, Peaks);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Everything read for one transition: which file and optimization step each flat
+    /// position belongs to, and every candidate peak found there.
+    /// </summary>
+    public class LoadedTransition
+    {
+        public LoadedTransition(ChromFileIds chromFileIds, IEnumerable<int> optimizationSteps,
+            IEnumerable<IonMobilityFilter> ionMobilities, IEnumerable<ImmutableList<ChromPeak>> peaks)
+        {
+            ChromFileIds = chromFileIds;
+            OptimizationSteps = ImmutableList.ValueOf(optimizationSteps);
+            IonMobilities = ImmutableList.ValueOf(ionMobilities);
+            Peaks = ImmutableList.ValueOf(peaks);
+        }
+
+        public ChromFileIds ChromFileIds { get; }
+        public ImmutableList<int> OptimizationSteps { get; }
+        public ImmutableList<IonMobilityFilter> IonMobilities { get; }
+        public ImmutableList<ImmutableList<ChromPeak>> Peaks { get; }
+
+        public int PositionCount
+        {
+            get { return Peaks.Count; }
         }
     }
 
@@ -128,150 +223,97 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class LoadedPeptideResults
     {
-        private readonly Dictionary<PeakKey, ChromPeak> _peaks;
+        private readonly Dictionary<int, LoadedTransition> _transitions;
 
-        public LoadedPeptideResults(PeptideDocNode peptideDocNode, Dictionary<PeakKey, ChromPeak> peaks)
+        public LoadedPeptideResults(PeptideDocNode peptideDocNode, Dictionary<int, LoadedTransition> transitions)
         {
             PeptideDocNode = peptideDocNode;
-            _peaks = peaks;
+            _transitions = transitions;
         }
 
         public PeptideDocNode PeptideDocNode { get; }
 
-        public int Count
+        public LoadedTransition GetTransition(TransitionDocNode nodeTran)
         {
-            get { return _peaks.Count; }
+            _transitions.TryGetValue(nodeTran.Id.GlobalIndex, out var loadedTransition);
+            return loadedTransition;
+        }
+
+        public int GetPositionCount(TransitionDocNode nodeTran)
+        {
+            return GetTransition(nodeTran)?.PositionCount ?? 0;
         }
 
         /// <summary>
-        /// The candidate peak that Skyline detected, or null when the cache has no such peak.
+        /// The candidate peak that Skyline detected, or null when there is no such peak.
         /// </summary>
-        public ChromPeak? GetPeak(TransitionDocNode nodeTran, int replicateIndex, ChromFileInfoId fileId,
-            int optimizationStep, int peakIndex)
+        public ChromPeak? GetPeak(TransitionDocNode nodeTran, int position, int peakIndex)
         {
-            var key = new PeakKey(nodeTran.Id.GlobalIndex, replicateIndex, fileId.GlobalIndex, optimizationStep,
-                peakIndex);
-            if (_peaks.TryGetValue(key, out var peak))
-            {
-                return peak;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// The candidate peak which <paramref name="chromInfo"/> holds the values of, or null
-        /// when its peak did not come from the cache.
-        /// </summary>
-        public ChromPeak? GetPeak(TransitionDocNode nodeTran, int replicateIndex, TransitionChromInfo chromInfo)
-        {
-            int peakIndex = FindPeakIndex(nodeTran, replicateIndex, chromInfo);
-            if (peakIndex < 0)
+            var peaks = GetTransition(nodeTran)?.Peaks;
+            if (peaks == null || position < 0 || position >= peaks.Count)
             {
                 return null;
             }
 
-            return GetPeak(nodeTran, replicateIndex, chromInfo.FileId, chromInfo.OptimizationStep, peakIndex);
-        }
-
-        /// <summary>
-        /// A <see cref="TransitionChromInfo"/> with every value filled in, built from what the
-        /// document still holds plus what had to be read back from the cache. Returns
-        /// <paramref name="chromInfo"/> itself when its peak is not one of the candidate peaks,
-        /// which is what happens when the user set the boundaries themselves and the document
-        /// therefore still has to hold all of the values.
-        /// </summary>
-        public TransitionChromInfo Materialize(TransitionDocNode nodeTran, int replicateIndex,
-            TransitionChromInfo chromInfo)
-        {
-            var peak = GetPeak(nodeTran, replicateIndex, chromInfo);
-            if (!peak.HasValue)
+            var peaksAtPosition = peaks[position];
+            if (peakIndex < 0 || peakIndex >= peaksAtPosition.Count)
             {
-                return chromInfo;
+                return null;
             }
 
-            return new TransitionChromInfo(chromInfo.FileId, chromInfo.OptimizationStep, peak.Value,
-                    chromInfo.IonMobility, chromInfo.Annotations, chromInfo.UserSet)
-                .ChangeRank(true, chromInfo.Rank, chromInfo.RankByLevel);
+            return peaksAtPosition[peakIndex];
         }
 
         /// <summary>
-        /// Finds the candidate peak whose boundaries match those already recorded on
-        /// <paramref name="chromInfo"/>. Returns -1 when the peak did not come from the
-        /// cache, which is what happens when the user set the boundaries themselves.
+        /// Rebuilds the complete <see cref="TransitionChromInfo"/> for one position, which is
+        /// what code that needs more than the area has to go through. The ion mobility comes
+        /// from the chromatogram rather than from the document, because the document is to
+        /// stop holding it.
+        /// </summary>
+        public TransitionChromInfo MakeTransitionChromInfo(TransitionDocNode nodeTran, int position,
+            int candidatePeakIndex, UserSet userSet, Annotations annotations)
+        {
+            var loadedTransition = GetTransition(nodeTran);
+            if (loadedTransition == null || position < 0 || position >= loadedTransition.PositionCount)
+            {
+                return null;
+            }
+
+            var peak = GetPeak(nodeTran, position, candidatePeakIndex) ?? ChromPeak.EMPTY;
+            return new TransitionChromInfo(loadedTransition.ChromFileIds.FileIds[position],
+                loadedTransition.OptimizationSteps[position], peak, loadedTransition.IonMobilities[position],
+                annotations ?? Annotations.EMPTY, userSet);
+        }
+
+        /// <summary>
+        /// Finds the candidate peak whose boundaries match those recorded on
+        /// <paramref name="chromInfo"/>. Returns -1 when the peak did not come from the cache,
+        /// which is what happens when the user set the boundaries themselves.
         /// <para>
-        /// This matches on the peak boundaries because that is all there is to match on while
-        /// the document still holds them. Once the chosen peak index is recorded on the
-        /// <see cref="TransitionGroupChromInfo"/>, this becomes a lookup instead of a search.
+        /// This is the bridge for as long as the document still holds the peak boundaries.
+        /// Once the chosen index is stored on <see cref="TransitionGroupResults"/> it is read
+        /// from there instead of searched for.
         /// </para>
         /// </summary>
-        public int FindPeakIndex(TransitionDocNode nodeTran, int replicateIndex, TransitionChromInfo chromInfo)
+        public int FindCandidatePeakIndex(TransitionDocNode nodeTran, int position, TransitionChromInfo chromInfo)
         {
-            for (int peakIndex = 0;; peakIndex++)
+            var peaks = GetTransition(nodeTran)?.Peaks;
+            if (peaks == null || position < 0 || position >= peaks.Count)
             {
-                var peak = GetPeak(nodeTran, replicateIndex, chromInfo.FileId, chromInfo.OptimizationStep, peakIndex);
-                if (!peak.HasValue)
-                {
-                    return -1;
-                }
+                return -1;
+            }
 
-                if (peak.Value.StartTime == chromInfo.StartRetentionTime &&
-                    peak.Value.EndTime == chromInfo.EndRetentionTime)
+            var peaksAtPosition = peaks[position];
+            for (int peakIndex = 0; peakIndex < peaksAtPosition.Count; peakIndex++)
+            {
+                if (peaksAtPosition[peakIndex].StartTime == chromInfo.StartRetentionTime &&
+                    peaksAtPosition[peakIndex].EndTime == chromInfo.EndRetentionTime)
                 {
                     return peakIndex;
                 }
             }
-        }
-    }
 
-    /// <summary>
-    /// Identifies one candidate peak of one transition chromatogram. The optimization step
-    /// is part of the identity because each step is a separate chromatogram with its own
-    /// candidate peaks.
-    /// </summary>
-    public struct PeakKey
-    {
-        public PeakKey(int transitionGlobalIndex, int replicateIndex, int fileGlobalIndex, int optimizationStep,
-            int peakIndex)
-        {
-            TransitionGlobalIndex = transitionGlobalIndex;
-            ReplicateIndex = replicateIndex;
-            FileGlobalIndex = fileGlobalIndex;
-            OptimizationStep = optimizationStep;
-            PeakIndex = peakIndex;
-        }
-
-        public int TransitionGlobalIndex { get; }
-        public int ReplicateIndex { get; }
-        public int FileGlobalIndex { get; }
-        public int OptimizationStep { get; }
-        public int PeakIndex { get; }
-
-        public bool Equals(PeakKey other)
-        {
-            return TransitionGlobalIndex == other.TransitionGlobalIndex &&
-                   ReplicateIndex == other.ReplicateIndex &&
-                   FileGlobalIndex == other.FileGlobalIndex &&
-                   OptimizationStep == other.OptimizationStep &&
-                   PeakIndex == other.PeakIndex;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is PeakKey other && Equals(other);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int result = TransitionGlobalIndex;
-                result = (result * 397) ^ ReplicateIndex;
-                result = (result * 397) ^ FileGlobalIndex;
-                result = (result * 397) ^ OptimizationStep;
-                result = (result * 397) ^ PeakIndex;
-                return result;
-            }
+            return -1;
         }
     }
 }
