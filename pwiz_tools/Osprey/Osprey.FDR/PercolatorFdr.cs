@@ -151,7 +151,7 @@ namespace pwiz.Osprey.FDR
             // Throttled progress over the ~344M-row population competition (the big walk that
             // ran silent at 82 files); null (silent) on small runs. Console-only, byte-neutral.
             using (var pepProgress = QProgress(@"Population target/decoy competition", n, n))
-                CompeteAll(finalScores, labels, entryIds,
+                TargetDecoyCompetition.CompeteAll(finalScores, labels, entryIds,
                     out winnerIndices, out winnerScores, out winnerIsDecoy, pepProgress);
 
             int nWinners = winnerIndices.Length;
@@ -273,155 +273,7 @@ namespace pwiz.Osprey.FDR
 
 
 
-        // ============================================================
-        // Target-decoy competition and q-value computation
-        // ============================================================
 
-        /// <summary>
-        /// Core competition logic: group by base_id, compete, return winners sorted by score desc.
-        ///
-        /// This is deliberately a SEPARATE implementation from
-        /// <see cref="FdrController.CompeteAndFilter{T}"/>, not a duplicate to be
-        /// merged: the two serve different regimes. This array/index form is the
-        /// hot Percolator path -- it works on pre-flattened primitive arrays and a
-        /// caller-supplied index subset, returns winner arrays for downstream
-        /// scratch-pooled q-value passes (see <c>CountPassing</c>), and
-        /// allocates nothing on the scratch overload. <c>CompeteAndFilter</c> is
-        /// the ergonomic generic form for simple-FDR callers
-        /// (<see cref="PercolatorEngine.RunSimpleFdr"/>): it competes an
-        /// <c>IEnumerable&lt;T&gt;</c> via score/decoy/id selectors and returns a
-        /// typed result. Same competition rule (strict &gt;, ties to decoy), two
-        /// shapes tuned to performance vs. ergonomics.
-        /// </summary>
-        public static void CompeteFromIndices(
-            double[] scores,
-            bool[] labels,
-            uint[] entryIds,
-            int[] indices,
-            out int[] winnerIndices,
-            out double[] winnerScores,
-            out bool[] winnerIsDecoy,
-            ProgressReporter progress = null)
-        {
-            var targets = new Dictionary<uint, KeyValuePair<int, double>>();
-            var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
-
-            // Throttled per-row progress for the large experiment / PEP competitions -- the
-            // ~344M-row base_id reduction below ran ~90 s silent at 82 files. Console-only via
-            // the caller's reporter (null on the small per-file per-run calls, which report at
-            // their own per-file granularity); never affects the winners, so q-values are
-            // byte-identical.
-            long processed = 0;
-            foreach (int idx in indices)
-            {
-                if (progress != null && (++processed & 0x3FFFFF) == 0)
-                    progress.Report(processed);
-                uint baseId = entryIds[idx] & BASE_ID_MASK;
-                if (labels[idx])
-                {
-                    KeyValuePair<int, double> existing;
-                    if (decoys.TryGetValue(baseId, out existing))
-                    {
-                        if (scores[idx] > existing.Value)
-                            decoys[baseId] = new KeyValuePair<int, double>(idx, scores[idx]);
-                    }
-                    else
-                    {
-                        decoys[baseId] = new KeyValuePair<int, double>(idx, scores[idx]);
-                    }
-                }
-                else
-                {
-                    KeyValuePair<int, double> existing;
-                    if (targets.TryGetValue(baseId, out existing))
-                    {
-                        if (scores[idx] > existing.Value)
-                            targets[baseId] = new KeyValuePair<int, double>(idx, scores[idx]);
-                    }
-                    else
-                    {
-                        targets[baseId] = new KeyValuePair<int, double>(idx, scores[idx]);
-                    }
-                }
-            }
-
-            CompeteFromDicts(targets, decoys,
-                out winnerIndices, out winnerScores, out winnerIsDecoy, out _);
-        }
-
-        /// <summary>
-        /// Shared finish for target/decoy competition: given per-base_id best-target and
-        /// best-decoy maps (winning row index + score), compete each pair (higher score wins,
-        /// ties to decoy), add unpaired decoys, and sort winners by score desc / base_id asc.
-        /// Extracted from <see cref="CompeteFromIndices"/> so the flat-array path (which builds
-        /// the maps by walking an index subset) and the streaming path (issue #4355 struct-shrink
-        /// S3, which builds the identical maps by pushing rows in flat (file,row) order) share the
-        /// EXACT compete + sort, and so cannot drift. The stored index is the winning row's flat
-        /// index / streaming ordinal; both label the same row because the streaming pass visits
-        /// rows in the same order the flat arrays were built. <paramref name="winnerBaseIds"/>
-        /// carries each winner's base_id (the map key) so the streaming path can key the
-        /// experiment-precursor / PEP maps WITHOUT a resident <c>entryIds[]</c> array (the flat
-        /// path recovers the same base_id via <c>entryIds[wi[rank]] &amp; BASE_ID_MASK</c>).
-        /// </summary>
-        internal static void CompeteFromDicts(
-            Dictionary<uint, KeyValuePair<int, double>> targets,
-            Dictionary<uint, KeyValuePair<int, double>> decoys,
-            out int[] winnerIndices,
-            out double[] winnerScores,
-            out bool[] winnerIsDecoy,
-            out uint[] winnerBaseIds)
-        {
-            // Compete pairs: higher score wins, ties go to decoy
-            var winners = new List<Tuple<int, double, bool, uint>>(targets.Count);
-            foreach (var kvp in targets)
-            {
-                uint baseId = kvp.Key;
-                int tIdx = kvp.Value.Key;
-                double tScore = kvp.Value.Value;
-
-                KeyValuePair<int, double> decoyEntry;
-                if (decoys.TryGetValue(baseId, out decoyEntry))
-                {
-                    if (tScore > decoyEntry.Value)
-                        winners.Add(Tuple.Create(tIdx, tScore, false, baseId));
-                    else
-                        winners.Add(Tuple.Create(decoyEntry.Key, decoyEntry.Value, true, baseId));
-                }
-                else
-                {
-                    winners.Add(Tuple.Create(tIdx, tScore, false, baseId));
-                }
-            }
-            // Unpaired decoys
-            foreach (var kvp in decoys)
-            {
-                if (!targets.ContainsKey(kvp.Key))
-                    winners.Add(Tuple.Create(kvp.Value.Key, kvp.Value.Value, true, kvp.Key));
-            }
-
-            // Sort by score desc, then base_id asc for deterministic tiebreaking.
-            // Array.Sort OK: the secondary key Item4 is the unique base_id, so the
-            // comparator never returns 0 and the unstable-sort tie path is unreachable.
-            winners.Sort((a, b) => // Array.Sort OK: (see above) secondary key Item4 is unique base_id, comparator never ties
-            {
-                int cmp = b.Item2.CompareTo(a.Item2);
-                if (cmp != 0)
-                    return cmp;
-                return a.Item4.CompareTo(b.Item4);
-            });
-
-            winnerIndices = new int[winners.Count];
-            winnerScores = new double[winners.Count];
-            winnerIsDecoy = new bool[winners.Count];
-            winnerBaseIds = new uint[winners.Count];
-            for (int i = 0; i < winners.Count; i++)
-            {
-                winnerIndices[i] = winners[i].Item1;
-                winnerScores[i] = winners[i].Item2;
-                winnerIsDecoy[i] = winners[i].Item3;
-                winnerBaseIds[i] = winners[i].Item4;
-            }
-        }
 
         /// <summary>
         /// OSPREY_PASS2_QVALUE=transfer-compete (full-population form): given the FULL
@@ -443,7 +295,7 @@ namespace pwiz.Osprey.FDR
             int n = scores.Length;
 
             // Global target-decoy competition (group by base_id, winner per pair) + PEP on winners.
-            CompeteAll(scores, labels, entryIds,
+            TargetDecoyCompetition.CompeteAll(scores, labels, entryIds,
                 out int[] winnerIndices, out double[] winnerScores, out bool[] winnerIsDecoy);
             var pepEstimator = PepEstimator.FitDefault(winnerScores, winnerIsDecoy);
             pep = new double[n];
@@ -556,7 +408,7 @@ namespace pwiz.Osprey.FDR
                         if (stratumBaseIds.Contains(entryIds[i] & BASE_ID_MASK)) idxList.Add(i);
                     allIdx = idxList.ToArray();
                 }
-                CompeteFromIndices(scores, labels, entryIds, allIdx,
+                TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
                     out int[] wi, out double[] ws, out bool[] wd);
                 var q = new double[wi.Length];
                 ComputeConservativeQvalues(ws, wd, q);
@@ -673,21 +525,6 @@ namespace pwiz.Osprey.FDR
             }
         }
 
-        internal static void CompeteAll(
-            double[] scores,
-            bool[] labels,
-            uint[] entryIds,
-            out int[] winnerIndices,
-            out double[] winnerScores,
-            out bool[] winnerIsDecoy,
-            ProgressReporter progress = null)
-        {
-            var allIndices = new int[scores.Length];
-            for (int i = 0; i < scores.Length; i++)
-                allIndices[i] = i;
-            CompeteFromIndices(scores, labels, entryIds, allIndices,
-                out winnerIndices, out winnerScores, out winnerIsDecoy, progress);
-        }
 
         /// <summary>
         /// Compute conservative q-values: FDR = (n_decoy + 1) / n_target.
@@ -743,7 +580,7 @@ namespace pwiz.Osprey.FDR
                 int[] wi;
                 double[] ws;
                 bool[] wd;
-                CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
+                TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
 
                 var qValues = new double[wi.Length];
                 ComputeQvalues(ws, wd, qValues);
@@ -762,7 +599,7 @@ namespace pwiz.Osprey.FDR
             for (int i = 0; i < scores.Length; i++)
                 allIdx[i] = i;
 
-            int winnerCount = CompeteFromIndicesInto(
+            int winnerCount = TargetDecoyCompetition.CompeteFromIndicesInto(
                 scores, labels, entryIds, allIdx, scores.Length, scratch);
 
             double[] qVals = scratch.CountPassingQvalues;
@@ -783,135 +620,6 @@ namespace pwiz.Osprey.FDR
             return passCount;
         }
 
-        /// <summary>
-        /// Scratch-pooled internal variant of <see cref="CompeteFromIndices"/>.
-        /// Writes winners into <paramref name="scratch"/>'s three
-        /// CompetitionWinner* arrays (prefix [0..returned count) is
-        /// active). Same algorithm as the allocating version; only the
-        /// output destination differs. Returns the active winner count.
-        /// </summary>
-        private static int CompeteFromIndicesInto(
-            double[] scores, bool[] labels, uint[] entryIds,
-            int[] indices, int indicesCount,
-            SvmTrainScratch scratch)
-        {
-            // Allocate the small per-call dictionaries / list at full
-            // expected capacity to avoid rehash growth. Could be pooled
-            // on scratch in a follow-up; the n*p allocations above are
-            // the bigger LOH issue.
-            var targets = new Dictionary<uint, KeyValuePair<int, double>>(indicesCount / 2);
-            var decoys = new Dictionary<uint, KeyValuePair<int, double>>(indicesCount / 2);
-
-            for (int ii = 0; ii < indicesCount; ii++)
-            {
-                int idx = indices[ii];
-                uint baseId = entryIds[idx] & BASE_ID_MASK;
-                double s = scores[idx];
-                if (labels[idx])
-                {
-                    KeyValuePair<int, double> existing;
-                    if (decoys.TryGetValue(baseId, out existing))
-                    {
-                        if (s > existing.Value)
-                            decoys[baseId] = new KeyValuePair<int, double>(idx, s);
-                    }
-                    else
-                    {
-                        decoys[baseId] = new KeyValuePair<int, double>(idx, s);
-                    }
-                }
-                else
-                {
-                    KeyValuePair<int, double> existing;
-                    if (targets.TryGetValue(baseId, out existing))
-                    {
-                        if (s > existing.Value)
-                            targets[baseId] = new KeyValuePair<int, double>(idx, s);
-                    }
-                    else
-                    {
-                        targets[baseId] = new KeyValuePair<int, double>(idx, s);
-                    }
-                }
-            }
-
-            // Walk pairs into local struct array (parallel-array layout
-            // avoids the per-element Tuple class allocation that the
-            // public CompeteFromIndices pays).
-            int maxWinners = targets.Count + decoys.Count;
-            scratch.EnsureCountPassingCapacity(maxWinners);
-            int[] winIdx = scratch.CompetitionWinnerIndices;
-            double[] winScores = scratch.CompetitionWinnerScores;
-            bool[] winDecoy = scratch.CompetitionWinnerIsDecoy;
-            // baseIds for tie-break ordering; reuse CountPassingIndices
-            // as a uint[] surrogate (interpret bits). Cleaner: small
-            // separate buffer; for now allocate per-call (small).
-            var winBaseIds = new uint[maxWinners];
-
-            int n = 0;
-            foreach (var kvp in targets)
-            {
-                uint baseId = kvp.Key;
-                int tIdx = kvp.Value.Key;
-                double tScore = kvp.Value.Value;
-                KeyValuePair<int, double> de;
-                if (decoys.TryGetValue(baseId, out de))
-                {
-                    if (tScore > de.Value)
-                    { winIdx[n] = tIdx; winScores[n] = tScore; winDecoy[n] = false; winBaseIds[n] = baseId; n++; }
-                    else
-                    { winIdx[n] = de.Key; winScores[n] = de.Value; winDecoy[n] = true; winBaseIds[n] = baseId; n++; }
-                }
-                else
-                {
-                    winIdx[n] = tIdx; winScores[n] = tScore; winDecoy[n] = false; winBaseIds[n] = baseId; n++;
-                }
-            }
-            foreach (var kvp in decoys)
-            {
-                if (!targets.ContainsKey(kvp.Key))
-                {
-                    winIdx[n] = kvp.Value.Key; winScores[n] = kvp.Value.Value;
-                    winDecoy[n] = true; winBaseIds[n] = kvp.Key; n++;
-                }
-            }
-
-            // Sort: score desc, then baseId asc. Build index permutation
-            // then permute the parallel arrays. Sorting an int[] of
-            // length n with a comparison delegate beats the previous
-            // List<Tuple<...>>.Sort because no per-element boxing was
-            // required to populate the list.
-            var perm = new int[n];
-            for (int i = 0; i < n; i++) perm[i] = i;
-            // The tie-break key (winBaseIds) is unique per row -- post-deduplication
-            // best-per-precursor selection above guarantees one row per (base_id, isDecoy)
-            // tuple -- so the comparator never returns 0 for distinct rows and introsort's
-            // instability is moot. Exemption comment must be on the Array.Sort line itself
-            // for the regex in CodeInspectionTest.TestNoUnstableArraySort to recognize it.
-            Array.Sort(perm, (a, b) => // Array.Sort OK: unique baseId tie-break makes comparator total
-            {
-                int cmp = winScores[b].CompareTo(winScores[a]);
-                if (cmp != 0) return cmp;
-                return winBaseIds[a].CompareTo(winBaseIds[b]);
-            });
-
-            // Apply permutation in-place via scratch swap arrays. Reuse
-            // the still-spare prefix of CountPassingQvalues as a double
-            // swap buffer; for int and bool we need small temp arrays.
-            var tmpIdx = new int[n];
-            var tmpScores = new double[n];
-            var tmpDecoy = new bool[n];
-            for (int i = 0; i < n; i++)
-            {
-                tmpIdx[i] = winIdx[perm[i]];
-                tmpScores[i] = winScores[perm[i]];
-                tmpDecoy[i] = winDecoy[perm[i]];
-            }
-            Array.Copy(tmpIdx, winIdx, n);
-            Array.Copy(tmpScores, winScores, n);
-            Array.Copy(tmpDecoy, winDecoy, n);
-            return n;
-        }
 
         /// <summary>
         /// Variant of <see cref="ComputeQvalues"/> that operates on the
@@ -969,7 +677,7 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
 
             var qValues = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, qValues);
@@ -1011,7 +719,7 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteFromIndices(scores, labels, entryIds, indices, out wi, out ws, out wd);
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, indices, out wi, out ws, out wd);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -1027,7 +735,7 @@ namespace pwiz.Osprey.FDR
         /// of <see cref="ComputePerRunPeptideQvalues"/>: best-per-peptide over the file, competition,
         /// then the peptide's q propagated to every row of that peptide (others stay 1.0).
         /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> returns global indices, which
-        /// <see cref="CompeteFromIndices"/> then competes directly (both take an index subset).
+        /// <see cref="TargetDecoyCompetition.CompeteFromIndices"/> then competes directly (both take an index subset).
         /// Returns a local array indexed 0..count-1.
         /// </summary>
         private static double[] ComputePerRunPeptideQvaluesForFile(
@@ -1043,7 +751,7 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteFromIndices(scores, labels, entryIds, bestPerPeptide, out wi, out ws, out wd);
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, bestPerPeptide, out wi, out ws, out wd);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -1122,7 +830,7 @@ namespace pwiz.Osprey.FDR
                 int[] wi;
                 double[] ws;
                 bool[] wd;
-                CompeteFromIndices(fileScores, fileLabels, fileEntryIds, allIndices,
+                TargetDecoyCompetition.CompeteFromIndices(fileScores, fileLabels, fileEntryIds, allIndices,
                     out wi, out ws, out wd);
 
                 var q = new double[wi.Length];
@@ -1193,7 +901,7 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            CompeteFromIndices(sScores, sLabels, sEntryIds, allIndices, out wi, out ws, out wd);
+            TargetDecoyCompetition.CompeteFromIndices(sScores, sLabels, sEntryIds, allIndices, out wi, out ws, out wd);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -1248,7 +956,7 @@ namespace pwiz.Osprey.FDR
                 int[] wi;
                 double[] ws;
                 bool[] wd;
-                CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allIndices,
+                TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allIndices,
                     out wi, out ws, out wd);
 
                 var q = new double[wi.Length];
@@ -1291,7 +999,7 @@ namespace pwiz.Osprey.FDR
             double[] ws;
             bool[] wd;
             using (var progress = QProgress(@"Experiment precursor q-values", n, n))
-                CompeteAll(scores, labels, entryIds, out wi, out ws, out wd, progress);
+                TargetDecoyCompetition.CompeteAll(scores, labels, entryIds, out wi, out ws, out wd, progress);
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -1361,7 +1069,7 @@ namespace pwiz.Osprey.FDR
             double[] ws;
             bool[] wd;
             using (var progress = QProgress(@"Experiment peptide q-values", bestPerPeptide.Length, bestPerPeptide.Length))
-                CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
+                TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
                     out wi, out ws, out wd, progress);
 
             var q = new double[wi.Length];
@@ -1397,7 +1105,7 @@ namespace pwiz.Osprey.FDR
         /// map -- built by pushing each scored row via <see cref="Add"/> in flat (file,row) order
         /// instead of reading the resident <c>finalScores/labels/entryIds/peptides[n]</c> arrays.
         /// Bounded: it retains only per-base_id and per-peptide bests (O(distinct)), never an O(n)
-        /// buffer. Each Build* reuses the SAME <see cref="CompeteFromDicts"/> +
+        /// buffer. Each Build* reuses the SAME <see cref="TargetDecoyCompetition.CompeteFromDicts"/> +
         /// <see cref="ComputeConservativeQvalues"/> (+ <c>PepEstimator</c>) finish the flat
         /// <see cref="ComputeExperimentPrecursorQMap"/> / <see cref="ComputeExperimentPeptideQMap"/>
         /// / <see cref="ComputePepWinnerMap"/> run, so a population fed in the same order yields
@@ -1452,7 +1160,7 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public Dictionary<uint, double> BuildExperimentPrecursorQMap()
             {
-                CompeteFromDicts(_precTargets, _precDecoys,
+                TargetDecoyCompetition.CompeteFromDicts(_precTargets, _precDecoys,
                     out _, out double[] ws, out bool[] wd, out uint[] wb);
                 var q = new double[ws.Length];
                 ComputeConservativeQvalues(ws, wd, q);
@@ -1489,7 +1197,7 @@ namespace pwiz.Osprey.FDR
                         dict[baseId] = new KeyValuePair<int, double>(i, best[i].Score);
                     }
                 }
-                CompeteFromDicts(targets, decoys,
+                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
                     out int[] wi, out double[] ws, out bool[] wd, out _);
                 var q = new double[ws.Length];
                 ComputeConservativeQvalues(ws, wd, q);
@@ -1507,7 +1215,7 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public Dictionary<int, double> BuildPepWinnerMap()
             {
-                CompeteFromDicts(_precTargets, _precDecoys,
+                TargetDecoyCompetition.CompeteFromDicts(_precTargets, _precDecoys,
                     out int[] wi, out double[] ws, out bool[] wd, out uint[] wb);
                 int nWinners = wi.Length;
                 var pepOrder = new int[nWinners];

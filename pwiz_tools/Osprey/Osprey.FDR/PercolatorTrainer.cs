@@ -493,7 +493,7 @@ namespace pwiz.Osprey.FDR
             int[] winnerIndices;
             double[] winnerScores;
             bool[] winnerIsDecoy;
-            PercolatorFdr.CompeteAll(finalScores, labels, entryIds,
+            TargetDecoyCompetition.CompeteAll(finalScores, labels, entryIds,
                 out winnerIndices, out winnerScores, out winnerIsDecoy);
 
             var pepEstimator = PepEstimator.FitDefault(winnerScores, winnerIsDecoy);
@@ -1064,7 +1064,7 @@ namespace pwiz.Osprey.FDR
             var allIndices = new int[scores.Length];
             for (int i = 0; i < scores.Length; i++)
                 allIndices[i] = i;
-            PercolatorFdr.CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
 
             var qValues = new double[wi.Length];
             if (wi.Length > 0)
@@ -1290,7 +1290,7 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            PercolatorFdr.CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
 
             if (wi.Length == 0)
                 return false;
