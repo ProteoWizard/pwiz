@@ -831,11 +831,23 @@ namespace pwiz.Osprey.Tasks
             // rooted by fdrEntries here (each carries the heavy Features / CwtCandidates /
             // Fragment* / ReferenceXic* arrays). dotMemory forces its own GC before the
             // snapshot, so the write-back's parquet-reload transient collapses and the
-            // dominators are exactly that retained entry set -- the next memory lever
-            // (scored-entry streaming, shared with PerFileScoring; see
-            // ai/todos/backlog/brendanx67/TODO-osprey_perfile_scored_entry_streaming.md).
-            // No-op unless a Profile-Osprey.ps1 -MemoryProfile session is attached.
+            // dominators are exactly that retained entry set. Taken BEFORE the release
+            // below so the snapshot still shows the pre-release apex it was written to
+            // show. No-op unless a Profile-Osprey.ps1 -MemoryProfile session is attached.
             ProfilerHooks.CaptureRetentionSnapshot(@"perfile-rescore-apex");
+
+            // Drop this file's heavy per-entry payload now that its reconciled parquet is
+            // on disk. Without this the fat arrays stay rooted through every remaining
+            // file, which is the O(files) Stage-6 growth term of #4472: the survivor stubs
+            // themselves are lean (10 scalar columns off the parquet), but rescoring
+            // replaces them with entries carrying Features / CwtCandidates / Fragment* /
+            // ReferenceXic* at roughly 1-3 KB each, and gap fill appends more.
+            //
+            // MUST run AFTER WriteReconciledAndStamp above: ReconciledParquetWriter uses
+            // "Features != null" as the "this row was rescored" sentinel when it builds the
+            // overlay, so releasing before the write would silently emit a parquet with no
+            // overlaid rows.
+            ReleaseRescoredPayload(fdrEntries);
 
             // Deterministically drop this file's transients before the next file loads its
             // own: the streaming index + MS1 and the write-back's full-parquet reload. At
@@ -864,6 +876,36 @@ namespace pwiz.Osprey.Tasks
                 @"(post-GC, after release)");
 
             return (totalRescored, totalGapCwt, totalGapForced);
+        }
+
+        /// <summary>
+        /// Release the heavy per-entry payload a rescore attaches, once the file's
+        /// reconciled parquet has been written. These six arrays have no reader after
+        /// Stage 6: <see cref="ReconciledParquetWriter"/> consumes them per file during
+        /// the write above, the Stage-6 planner loads CWT candidates through its own
+        /// per-file loader rather than off these entries, and the resident 2nd pass
+        /// reloads features from the reconciled parquet
+        /// (<c>Pass2FdrSidecar.LoadReconciledFeaturesByIdentity</c>) rather than reading
+        /// them here. Keeping them rooted is what made Stage-6 memory O(files) - the
+        /// entries themselves are lean stubs until a rescore fattens them.
+        ///
+        /// Only the payload is dropped; the entry objects stay in the caller's list
+        /// because <see cref="RescoredEntries"/> is published over that shared backing
+        /// list and MergeNode reads it for the run-wide reductions.
+        /// </summary>
+        private static void ReleaseRescoredPayload(List<FdrEntry> fdrEntries)
+        {
+            if (fdrEntries == null)
+                return;
+            foreach (var entry in fdrEntries)
+            {
+                entry.Features = null;
+                entry.CwtCandidates = null;
+                entry.FragmentMzs = null;
+                entry.FragmentIntensities = null;
+                entry.ReferenceXicRts = null;
+                entry.ReferenceXicIntensities = null;
+            }
         }
 
         /// <summary>
