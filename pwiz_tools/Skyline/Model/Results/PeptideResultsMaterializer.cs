@@ -193,6 +193,34 @@ namespace pwiz.Skyline.Model.Results
     }
 
     /// <summary>
+    /// One replicate of one transition group, rebuilt from the chromatogram cache: the group
+    /// level values, and the transition chrom infos with their ranks assigned.
+    /// </summary>
+    public class MaterializedTransitionGroup
+    {
+        private readonly Dictionary<int, IList<TransitionChromInfo>> _transitionChromInfos;
+
+        public MaterializedTransitionGroup(IList<TransitionGroupChromInfo> chromInfos,
+            IList<TransitionDocNode> nodeTrans, IList<IList<TransitionChromInfo>> transitionChromInfos)
+        {
+            ChromInfos = chromInfos;
+            _transitionChromInfos = new Dictionary<int, IList<TransitionChromInfo>>();
+            for (int iTran = 0; iTran < nodeTrans.Count; iTran++)
+            {
+                _transitionChromInfos[nodeTrans[iTran].Id.GlobalIndex] = transitionChromInfos[iTran];
+            }
+        }
+
+        public IList<TransitionGroupChromInfo> ChromInfos { get; }
+
+        public IList<TransitionChromInfo> GetTransitionChromInfos(TransitionDocNode nodeTran)
+        {
+            _transitionChromInfos.TryGetValue(nodeTran.Id.GlobalIndex, out var chromInfos);
+            return chromInfos;
+        }
+    }
+
+    /// <summary>
     /// Everything read for one transition: which file and optimization step each flat
     /// position belongs to, and every candidate peak found there.
     /// </summary>
@@ -305,18 +333,237 @@ namespace pwiz.Skyline.Model.Results
         /// as well as the peaks, and has still to be driven from here.
         /// </para>
         /// </summary>
-        public IList<TransitionGroupChromInfo> MakeTransitionGroupChromInfos(TransitionGroupDocNode nodeGroup,
+        public MaterializedTransitionGroup MaterializeTransitionGroup(TransitionGroupDocNode nodeGroup,
             int replicateIndex, ChromInfoList<TransitionGroupChromInfo> previousChromInfos,
             Func<TransitionDocNode, IList<TransitionChromInfo>> getTransitionChromInfos)
         {
-            var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
-                PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos);
-            foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
+            var nodeTrans = nodeGroup.Transitions.ToArray();
+            var chromInfoLists = new IList<TransitionChromInfo>[nodeTrans.Length];
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
-                listCalculator.AddChromInfoList(nodeTran, getTransitionChromInfos(nodeTran));
+                chromInfoLists[iTran] = getTransitionChromInfos(nodeTrans[iTran]);
             }
 
-            return listCalculator.CalcChromInfoList();
+            // Rank first, because the ranks live on the transition chrom infos, and gather the
+            // areas each dot product needs while walking the same file and optimization steps.
+            var correlations = new List<FileStepCorrelation>();
+            foreach (var fileStep in GetFileSteps(chromInfoLists))
+            {
+                var correlation = RankFileStep(nodeGroup, nodeTrans, chromInfoLists, fileStep);
+                if (correlation != null)
+                {
+                    correlations.Add(correlation);
+                }
+            }
+
+            var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
+                PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos);
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                listCalculator.AddChromInfoList(nodeTrans[iTran], chromInfoLists[iTran]);
+            }
+
+            // Has to come after AddChromInfoList, which is what creates the calculators these
+            // look up by file and optimization step.
+            foreach (var correlation in correlations)
+            {
+                if (correlation.PeakAreas != null)
+                {
+                    listCalculator.SetLibInfo(correlation.FileId, correlation.OptimizationStep,
+                        correlation.PeakAreas, correlation.LibIntensities);
+                }
+
+                if (correlation.PeakAreasMs != null)
+                {
+                    listCalculator.SetIsotopeDistInfo(correlation.FileId, correlation.OptimizationStep,
+                        correlation.PeakAreasMs, correlation.IsotopeProportionsMs);
+                }
+            }
+
+            return new MaterializedTransitionGroup(listCalculator.CalcChromInfoList(), nodeTrans, chromInfoLists);
+        }
+
+        /// <summary>
+        /// The distinct file and optimization steps present, in the order they first appear.
+        /// </summary>
+        private static IEnumerable<FileStep> GetFileSteps(IList<TransitionChromInfo>[] chromInfoLists)
+        {
+            var fileSteps = new List<FileStep>();
+            foreach (var chromInfoList in chromInfoLists)
+            {
+                if (chromInfoList == null)
+                {
+                    continue;
+                }
+
+                foreach (var chromInfo in chromInfoList)
+                {
+                    if (chromInfo != null && !fileSteps.Any(fileStep => fileStep.Matches(chromInfo)))
+                    {
+                        fileSteps.Add(new FileStep(chromInfo.FileId, chromInfo.OptimizationStep));
+                    }
+                }
+            }
+
+            return fileSteps;
+        }
+
+        /// <summary>
+        /// Assigns the ranks for one file and optimization step, and gathers the areas the dot
+        /// products are calculated from. This mirrors RankAndCorrelateTransitions in
+        /// <see cref="TransitionGroupDocNode"/>.
+        /// <para>
+        /// The library intensities and isotope proportions come off the
+        /// <see cref="TransitionDocNode"/> itself, not from the library file. They do not vary
+        /// by replicate, so they are not part of what the document stops holding.
+        /// </para>
+        /// </summary>
+        private FileStepCorrelation RankFileStep(TransitionGroupDocNode nodeGroup, TransitionDocNode[] nodeTrans,
+            IList<TransitionChromInfo>[] chromInfoLists, FileStep fileStep)
+        {
+            bool isFullScanMs = Settings.TransitionSettings.FullScan.IsEnabledMs;
+            var correlation = new FileStepCorrelation(fileStep.FileId, fileStep.OptimizationStep);
+            if (nodeGroup.HasLibInfo)
+            {
+                int countTransMsMs = nodeGroup.GetMsMsTransitions(isFullScanMs).Count(t => t.ParticipatesInScoring);
+                if (countTransMsMs >= TransitionGroupDocNode.MIN_DOT_PRODUCT_TRANSITIONS)
+                {
+                    correlation.PeakAreas = new double[countTransMsMs];
+                    correlation.LibIntensities = new double[countTransMsMs];
+                }
+            }
+
+            if (nodeGroup.HasIsotopeDist)
+            {
+                int countTransMs = nodeGroup.GetMsTransitions(isFullScanMs).Count();
+                if (countTransMs >= TransitionGroupDocNode.MIN_DOT_PRODUCT_MS1_TRANSITIONS)
+                {
+                    correlation.PeakAreasMs = new double[countTransMs];
+                    correlation.IsotopeProportionsMs = new double[countTransMs];
+                }
+            }
+
+            var ranked = new List<RankedTransition>();
+            int countInfo = 0, countLibTrans = 0, countIsoTrans = 0;
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                var nodeTran = nodeTrans[iTran];
+                var chromInfo = FindChromInfo(chromInfoLists[iTran], fileStep);
+                ranked.Add(new RankedTransition(iTran, nodeTran.IsMs1, chromInfo, nodeTran.ParticipatesInScoring));
+                if (chromInfo != null)
+                {
+                    countInfo++;
+                }
+
+                if (correlation.PeakAreas != null && (!isFullScanMs || !nodeTran.IsMs1) &&
+                    nodeTran.ParticipatesInScoring)
+                {
+                    correlation.PeakAreas[countLibTrans] = chromInfo?.Area ?? 0;
+                    correlation.LibIntensities[countLibTrans] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
+                    countLibTrans++;
+                }
+
+                if (correlation.PeakAreasMs != null && nodeTran.IsMs1)
+                {
+                    correlation.PeakAreasMs[countIsoTrans] = chromInfo?.Area ?? 0;
+                    correlation.IsotopeProportionsMs[countIsoTrans] =
+                        nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0;
+                    countIsoTrans++;
+                }
+            }
+
+            if (countInfo == 0)
+            {
+                return null;
+            }
+
+            ranked.Sort((first, second) => Comparer<float>.Default.Compare(second.RankArea, first.RankArea));
+            short rankMs = 0, rankMsMs = 0;
+            for (int iRank = 0; iRank < ranked.Count; iRank++)
+            {
+                var rankedTransition = ranked[iRank];
+                if (rankedTransition.ChromInfo == null)
+                {
+                    continue;
+                }
+
+                short rank = 0, rankByLevel = 0;
+                if (rankedTransition.ChromInfo.Area > 0)
+                {
+                    rank = (short) (iRank + 1);
+                    rankByLevel = rankedTransition.IsMs1 ? ++rankMs : ++rankMsMs;
+                }
+
+                // These were made by this materializer and are not shared, so they can be
+                // changed without copying, the same as during results calculation.
+                rankedTransition.ChromInfo.ChangeRank(false, rank, rankByLevel);
+            }
+
+            return correlation;
+        }
+
+        private static TransitionChromInfo FindChromInfo(IList<TransitionChromInfo> chromInfoList, FileStep fileStep)
+        {
+            if (chromInfoList == null)
+            {
+                return null;
+            }
+
+            return chromInfoList.FirstOrDefault(chromInfo => chromInfo != null && fileStep.Matches(chromInfo));
+        }
+
+        private struct FileStep
+        {
+            public FileStep(ChromFileInfoId fileId, int optimizationStep)
+            {
+                FileId = fileId;
+                OptimizationStep = optimizationStep;
+            }
+
+            public ChromFileInfoId FileId { get; }
+            public int OptimizationStep { get; }
+
+            public bool Matches(TransitionChromInfo chromInfo)
+            {
+                return ReferenceEquals(FileId, chromInfo.FileId) && OptimizationStep == chromInfo.OptimizationStep;
+            }
+        }
+
+        private class FileStepCorrelation
+        {
+            public FileStepCorrelation(ChromFileInfoId fileId, int optimizationStep)
+            {
+                FileId = fileId;
+                OptimizationStep = optimizationStep;
+            }
+
+            public ChromFileInfoId FileId { get; }
+            public int OptimizationStep { get; }
+            public double[] PeakAreas { get; set; }
+            public double[] LibIntensities { get; set; }
+            public double[] PeakAreasMs { get; set; }
+            public double[] IsotopeProportionsMs { get; set; }
+        }
+
+        private class RankedTransition
+        {
+            public RankedTransition(int index, bool isMs1, TransitionChromInfo chromInfo, bool participatesInScoring)
+            {
+                Index = index;
+                IsMs1 = isMs1;
+                ChromInfo = chromInfo;
+                ParticipatesInScoring = participatesInScoring;
+            }
+
+            public int Index { get; }
+            public bool IsMs1 { get; }
+            public TransitionChromInfo ChromInfo { get; }
+            public bool ParticipatesInScoring { get; }
+
+            public float RankArea
+            {
+                get { return ParticipatesInScoring ? ChromInfo?.Area ?? 0 : -1.0f; }
+            }
         }
 
         /// <summary>

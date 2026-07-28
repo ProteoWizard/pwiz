@@ -35,6 +35,11 @@ namespace pwiz.SkylineTestData.Results
     [TestClass]
     public class PeptideResultsMaterializerTest : AbstractUnitTest
     {
+        // This document has neither a spectral library nor an isotope distribution, and no
+        // optimization function, so it does NOT cover the dot products or the optimization
+        // step positions. Both sides of those assertions are null here. Covering them needs a
+        // second document: BlibDriftTimeTest.zip has a library, FullScan.zip has isotope
+        // distributions, and AgilentCEOpt.zip has optimization steps.
         private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
         [TestMethod]
@@ -111,14 +116,34 @@ namespace pwiz.SkylineTestData.Results
                     continue;
                 }
 
-                var rebuilt = materialized.MakeTransitionGroupChromInfos(nodeGroup, replicateIndex, expected,
+                var rebuilt = materialized.MaterializeTransitionGroup(nodeGroup, replicateIndex, expected,
                     nodeTran => RebuildTransitionChromInfos(materialized, nodeTran, replicateIndex));
-                Assert.IsNotNull(rebuilt);
-                Assert.AreEqual(expected.Count, rebuilt.Count);
-                for (int i = 0; i < rebuilt.Count; i++)
+                Assert.IsNotNull(rebuilt.ChromInfos);
+                Assert.AreEqual(expected.Count, rebuilt.ChromInfos.Count);
+                for (int i = 0; i < rebuilt.ChromInfos.Count; i++)
                 {
-                    AssertGroupValuesEqual(expected[i], rebuilt[i]);
+                    AssertGroupValuesEqual(expected[i], rebuilt.ChromInfos[i]);
                     groupsChecked++;
+                }
+
+                // The ranks are assigned while materializing, so the rebuilt transition chrom
+                // infos should now match the document's completely.
+                foreach (var nodeTran in nodeGroup.Transitions)
+                {
+                    if (!nodeTran.HasResults || replicateIndex >= nodeTran.Results.Count)
+                    {
+                        continue;
+                    }
+
+                    var expectedChromInfos = nodeTran.Results[replicateIndex];
+                    var rebuiltChromInfos = rebuilt.GetTransitionChromInfos(nodeTran);
+                    Assert.AreEqual(expectedChromInfos.Count, rebuiltChromInfos.Count);
+                    for (int i = 0; i < rebuiltChromInfos.Count; i++)
+                    {
+                        Assert.AreEqual(expectedChromInfos[i].Rank, rebuiltChromInfos[i].Rank);
+                        Assert.AreEqual(expectedChromInfos[i].RankByLevel, rebuiltChromInfos[i].RankByLevel);
+                        Assert.AreEqual(expectedChromInfos[i], rebuiltChromInfos[i]);
+                    }
                 }
             }
 
@@ -169,6 +194,8 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(expected.UserSet, actual.UserSet);
             Assert.AreEqual(expected.QValue, actual.QValue);
             Assert.AreEqual(expected.ZScore, actual.ZScore);
+            Assert.AreEqual(expected.LibraryDotProduct, actual.LibraryDotProduct);
+            Assert.AreEqual(expected.IsotopeDotProduct, actual.IsotopeDotProduct);
         }
 
         /// <summary>
