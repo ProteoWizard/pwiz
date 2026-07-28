@@ -249,8 +249,17 @@ namespace pwiz.Osprey.Tasks
             // to exactly this set so a per-file worker matches the in-memory run.
             HashSet<uint> globalBaseIds = null;
 
+            // Per-file progress. This loop reads a sidecar + a reconciliation envelope for
+            // every file and was silent throughout: on a 20-file resume it produced a 35 s
+            // gap in the log, the kind that reads as a hang. ProgressReporter also emits a
+            // HEARTBEAT_SECONDS (30 s) tick, so one slow file cannot reopen the gap. Held as
+            // a plain local (not a using) so the loop body below keeps its indentation, the
+            // same shape PercolatorFdr's ingest reporter uses.
+            var hydrateProgress = new ProgressReporter(
+                @"Hydrating reconciliation bundle", perFileEntries.Count);
             for (int i = 0; i < perFileEntries.Count; i++)
             {
+                hydrateProgress.Report(i);
                 string parquetPath = parquetPaths[i];
                 string syntheticInput = SyntheticInputFromParquet(parquetPath);
                 string fileName = perFileEntries[i].Key;
@@ -395,6 +404,8 @@ namespace pwiz.Osprey.Tasks
                     perFileGapFill[fileName] = gapFill;
                 }
             }
+            hydrateProgress.Report(perFileEntries.Count);
+            hydrateProgress.Dispose();
 
             return new RescoreInputs
             {

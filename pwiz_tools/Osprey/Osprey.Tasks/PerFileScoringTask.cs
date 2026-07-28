@@ -1210,9 +1210,14 @@ namespace pwiz.Osprey.Tasks
             // Counts-only (issue #4355 struct-shrink S3, Stage B): the merge-node lean path builds
             // only per-file row counts; the 1st-pass streaming score path re-reads identity +
             // features from parquet, so the resident FdrProjection[] buffer is never allocated.
-            var builder = (!NeedsResidentPool(config) && !hasReconSidecars)
+            bool needsResidentPool = NeedsResidentPool(config);
+            var builder = (!needsResidentPool && !hasReconSidecars)
                 ? new FdrProjectionSet.Builder(countsOnly: true)
                 : null;
+            // The reconciled-bundle hydration (hasReconSidecars) needs the STUBS but not
+            // their PIN features, so only a genuine resident pool loads features. See the
+            // stubs-only branch below for why that is safe.
+            bool loadFeatures = needsResidentPool;
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
             {
                 string parquetPath = config.InputScores[fileIdx];
@@ -1252,11 +1257,11 @@ namespace pwiz.Osprey.Tasks
                     builder.EndFile();
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
                 }
-                else
+                else if (loadFeatures)
                 {
                     // Fat: Stage 5+ (Percolator SVM) requires the 21 PIN features on each
-                    // FdrEntry (or the reconciled-bundle overlay reads the stubs). Load
-                    // them in lockstep with the stubs and bind by row index (rows stable).
+                    // FdrEntry. Load them in lockstep with the stubs and bind by row index
+                    // (rows stable).
                     var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
                     var features = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
                     if (features.Count != stubs.Count)
@@ -1268,6 +1273,34 @@ namespace pwiz.Osprey.Tasks
                     for (int j = 0; j < stubs.Count; j++)
                         stubs[j].Features = features[j];
                     ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                }
+                else
+                {
+                    // Stubs only. This branch is the reconciled-bundle hydration
+                    // (hasReconSidecars) where HydrateReconciliationOverlay reads the STUBS
+                    // but never the features - RescoreHydration has no reference to
+                    // FdrEntry.Features at all - and FirstJoinTask nulls Features on every
+                    // hydrated entry before CompactFirstPass anyway, to keep the
+                    // "Features != null means rescored" sentinel honest for Stage 6. Loading
+                    // 21 doubles per row here only to null them cost ~800 MB per file at
+                    // ~4.2M rows, the dominant term in the O(files) rehydrate peak.
+                    //
+                    // Only safe because NeedsResidentPool is false: that is what says no
+                    // resident 2nd-pass Percolator will read entry.Features later.
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                    // Keep the fail-fast the feature load used to provide: a foreign or
+                    // truncated parquet missing the PIN schema must stop here, not surface
+                    // downstream. Footer-only probe, no feature memory (same guard the lean
+                    // streaming branch above uses).
+                    if (!ParquetScoreCache.HasPinFeatureColumns(parquetPath))
+                    {
+                        throw new InvalidDataException(string.Format(
+                            @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
+                            parquetPath));
+                    }
+                    ctx.LogInfo(string.Format(
+                        @"  Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
                 perFileParquetPaths[fileName] = parquetPath;
