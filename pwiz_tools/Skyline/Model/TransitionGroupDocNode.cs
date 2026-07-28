@@ -2470,7 +2470,13 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private sealed class TransitionGroupChromInfoListCalculator
+        /// <summary>
+        /// Internal rather than private so that <see cref="PeptideResultsLoader"/> can rebuild
+        /// the group level values from transition chrom infos it read back from the .skyd,
+        /// instead of a second implementation of the same aggregation drifting away from this
+        /// one.
+        /// </summary>
+        internal sealed class TransitionGroupChromInfoListCalculator
         {
             private readonly PeptideDocNode _nodePep;
             private readonly ChromInfoList<TransitionGroupChromInfo> _listChromInfo;

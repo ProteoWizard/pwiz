@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -65,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
             var measuredResults = Settings?.MeasuredResults;
             if (measuredResults == null || PeptideDocNode == null)
             {
-                return new LoadedPeptideResults(PeptideDocNode, transitions);
+                return new LoadedPeptideResults(Settings, PeptideDocNode, transitions);
             }
 
             float tolerance = MzMatchTolerance ??
@@ -90,7 +91,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return new LoadedPeptideResults(PeptideDocNode, transitions);
+            return new LoadedPeptideResults(Settings, PeptideDocNode, transitions);
         }
 
         /// <summary>
@@ -225,12 +226,15 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly Dictionary<int, LoadedTransition> _transitions;
 
-        public LoadedPeptideResults(PeptideDocNode peptideDocNode, Dictionary<int, LoadedTransition> transitions)
+        public LoadedPeptideResults(SrmSettings settings, PeptideDocNode peptideDocNode,
+            Dictionary<int, LoadedTransition> transitions)
         {
+            Settings = settings;
             PeptideDocNode = peptideDocNode;
             _transitions = transitions;
         }
 
+        public SrmSettings Settings { get; }
         public PeptideDocNode PeptideDocNode { get; }
 
         public LoadedTransition GetTransition(TransitionDocNode nodeTran)
@@ -283,6 +287,52 @@ namespace pwiz.Skyline.Model.Results
             return new TransitionChromInfo(loadedTransition.ChromFileIds.FileIds[position],
                 loadedTransition.OptimizationSteps[position], peak, loadedTransition.IonMobilities[position],
                 annotations ?? Annotations.EMPTY, userSet);
+        }
+
+        /// <summary>
+        /// Rebuilds the group level values for one replicate by driving the same calculator
+        /// that <see cref="TransitionGroupDocNode.ChangeResults"/> uses, so that there is only
+        /// one implementation of the aggregation.
+        /// <para>
+        /// <paramref name="previousChromInfos"/> supplies the values which are carried forward
+        /// rather than recalculated - the scores, the annotations and the original and
+        /// reintegrated peaks. Those come from <see cref="TransitionGroupResults"/> once the
+        /// document holds them there.
+        /// </para>
+        /// <para>
+        /// The ranks and the dot products are not produced here. They come out of the ranking
+        /// pass in <see cref="TransitionGroupDocNode"/>, which needs the library intensities
+        /// as well as the peaks, and has still to be driven from here.
+        /// </para>
+        /// </summary>
+        public IList<TransitionGroupChromInfo> MakeTransitionGroupChromInfos(TransitionGroupDocNode nodeGroup,
+            int replicateIndex, ChromInfoList<TransitionGroupChromInfo> previousChromInfos,
+            Func<TransitionDocNode, IList<TransitionChromInfo>> getTransitionChromInfos)
+        {
+            var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
+                PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos);
+            foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
+            {
+                listCalculator.AddChromInfoList(nodeTran, getTransitionChromInfos(nodeTran));
+            }
+
+            return listCalculator.CalcChromInfoList();
+        }
+
+        /// <summary>
+        /// The positions of one replicate, which is the range a caller needs when it is
+        /// rebuilding one replicate at a time.
+        /// </summary>
+        public IEnumerable<int> GetPositions(TransitionDocNode nodeTran, int replicateIndex)
+        {
+            var replicatePositions = GetTransition(nodeTran)?.ChromFileIds.ReplicatePositions;
+            if (replicatePositions == null)
+            {
+                return Array.Empty<int>();
+            }
+
+            return Enumerable.Range(replicatePositions.GetStart(replicateIndex),
+                replicatePositions.GetCount(replicateIndex));
         }
 
         /// <summary>

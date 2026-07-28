@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestData.Results
                 docResults = docContainer.Document;
 
                 int positionsChecked = 0;
+                int groupsChecked = 0;
                 foreach (var nodePep in docResults.Peptides)
                 {
                     var loaded = new PeptideResultsLoader
@@ -79,11 +80,95 @@ namespace pwiz.SkylineTestData.Results
 
                             positionsChecked += CheckTransition(loaded, nodeTran);
                         }
+
+                        groupsChecked += CheckTransitionGroup(loaded, nodeGroup);
                     }
                 }
 
                 Assert.AreNotEqual(0, positionsChecked);
+                Assert.AreNotEqual(0, groupsChecked);
             }
+        }
+
+        /// <summary>
+        /// Checks that driving the aggregation from the loader reproduces the group level
+        /// values the document holds. The ranks and the dot products are not compared, because
+        /// they come from the ranking pass which the loader does not drive yet.
+        /// </summary>
+        private static int CheckTransitionGroup(LoadedPeptideResults loaded, TransitionGroupDocNode nodeGroup)
+        {
+            if (!nodeGroup.HasResults)
+            {
+                return 0;
+            }
+
+            int groupsChecked = 0;
+            for (int replicateIndex = 0; replicateIndex < nodeGroup.Results.Count; replicateIndex++)
+            {
+                var expected = nodeGroup.Results[replicateIndex];
+                if (expected.IsEmpty)
+                {
+                    continue;
+                }
+
+                var rebuilt = loaded.MakeTransitionGroupChromInfos(nodeGroup, replicateIndex, expected,
+                    nodeTran => RebuildTransitionChromInfos(loaded, nodeTran, replicateIndex));
+                Assert.IsNotNull(rebuilt);
+                Assert.AreEqual(expected.Count, rebuilt.Count);
+                for (int i = 0; i < rebuilt.Count; i++)
+                {
+                    AssertGroupValuesEqual(expected[i], rebuilt[i]);
+                    groupsChecked++;
+                }
+            }
+
+            return groupsChecked;
+        }
+
+        /// <summary>
+        /// The transition chrom infos for one replicate, rebuilt entirely from what the loader
+        /// read back out of the .skyd.
+        /// </summary>
+        private static IList<TransitionChromInfo> RebuildTransitionChromInfos(LoadedPeptideResults loaded,
+            TransitionDocNode nodeTran, int replicateIndex)
+        {
+            if (!nodeTran.HasResults || replicateIndex >= nodeTran.Results.Count)
+            {
+                return null;
+            }
+
+            var documentChromInfos = nodeTran.Results[replicateIndex];
+            var result = new List<TransitionChromInfo>();
+            int i = 0;
+            foreach (int position in loaded.GetPositions(nodeTran, replicateIndex))
+            {
+                var chromInfo = documentChromInfos[i++];
+                int candidatePeakIndex = loaded.FindCandidatePeakIndex(nodeTran, position, chromInfo);
+                result.Add(loaded.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
+                    chromInfo.UserSet, chromInfo.Annotations));
+            }
+
+            return result;
+        }
+
+        private static void AssertGroupValuesEqual(TransitionGroupChromInfo expected,
+            TransitionGroupChromInfo actual)
+        {
+            Assert.AreSame(expected.FileId, actual.FileId);
+            Assert.AreEqual(expected.OptimizationStep, actual.OptimizationStep);
+            Assert.AreEqual(expected.PeakCountRatio, actual.PeakCountRatio);
+            Assert.AreEqual(expected.RetentionTime, actual.RetentionTime);
+            Assert.AreEqual(expected.StartRetentionTime, actual.StartRetentionTime);
+            Assert.AreEqual(expected.EndRetentionTime, actual.EndRetentionTime);
+            Assert.AreEqual(expected.Area, actual.Area);
+            Assert.AreEqual(expected.BackgroundArea, actual.BackgroundArea);
+            Assert.AreEqual(expected.Fwhm, actual.Fwhm);
+            Assert.AreEqual(expected.MassError, actual.MassError);
+            Assert.AreEqual(expected.Truncated, actual.Truncated);
+            Assert.AreEqual(expected.Identified, actual.Identified);
+            Assert.AreEqual(expected.UserSet, actual.UserSet);
+            Assert.AreEqual(expected.QValue, actual.QValue);
+            Assert.AreEqual(expected.ZScore, actual.ZScore);
         }
 
         /// <summary>
