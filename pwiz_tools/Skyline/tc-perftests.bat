@@ -50,6 +50,9 @@ REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
+REM # Long-running perf/tutorial tests that TeamCity skips (needs too much time/disk for the
+REM # PR perf agent). Lives next to this script; TestRunner reads it via skip=@file.
+set SKIPLIST=%SCRIPT_DIR%\tc-perftests-skiplist.txt
 pushd "%SCRIPT_DIR%"
 
 set EXIT=0
@@ -163,11 +166,11 @@ set TESTS_FAILED=0
 set FAILED_SUITES=
 
 echo ##teamcity[progressMessage 'TestRunner perf suite ^(TestPerf, perftests=on^)']
-call :run_tests %RUNNER_MODE% loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=on test=TestPerf.dll log=TestPerf.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
+call :run_tests %RUNNER_MODE% loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=on test=TestPerf.dll skip=@%SKIPLIST% log=TestPerf.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
 if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_SUITES=%FAILED_SUITES% TestPerf")
 
 echo ##teamcity[progressMessage 'TestRunner tutorial suite ^(TestTutorial, perftests=on^)']
-call :run_tests %RUNNER_MODE% loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=on test=TestTutorial.dll log=TestTutorial.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
+call :run_tests %RUNNER_MODE% loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=on test=TestTutorial.dll skip=@%SKIPLIST% log=TestTutorial.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
 if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_SUITES=%FAILED_SUITES% TestTutorial")
 
 popd
