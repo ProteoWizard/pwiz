@@ -200,7 +200,7 @@ namespace pwiz.Osprey.FDR
             }
 
             // Competition + PEP + per-run / experiment q-values over the flat score
-            // arrays. Extracted verbatim into PercolatorFdr.ComputeStreamingCompetitionQvalues
+            // arrays. Extracted verbatim into StreamingFdr.ComputeStreamingCompetitionQvalues
             // (issue #4355 step (b) increment iii) so the projection-native score
             // pass (ScoreProjectionAndComputeFdrInPlace) drives the byte-identical
             // math from a single source of truth instead of a divergent copy -- the
@@ -208,7 +208,7 @@ namespace pwiz.Osprey.FDR
             // therefore cannot drift between the two buffer shapes.
             double[] peps, runPrecursorQvalues, runPeptideQvalues,
                      expPrecursorQvalues, expPeptideQvalues;
-            PercolatorFdr.ComputeStreamingCompetitionQvalues(
+            StreamingFdr.ComputeStreamingCompetitionQvalues(
                 finalScores, labels, entryIds, peptides, fileNames,
                 out peps, out runPrecursorQvalues, out runPeptideQvalues,
                 out expPrecursorQvalues, out expPeptideQvalues);
@@ -251,7 +251,7 @@ namespace pwiz.Osprey.FDR
         /// parity-locked math already needs. Only WHERE THE DATA LIVES changes: the
         /// per-entry scoring loop (bias first, then the averaged-weight dot product in
         /// feature order) and the q-value math
-        /// (<see cref="PercolatorFdr.ComputeStreamingCompetitionQvalues"/>) are byte-for-byte those
+        /// (<see cref="StreamingFdr.ComputeStreamingCompetitionQvalues"/>) are byte-for-byte those
         /// of the <see cref="PercolatorEntry"/> path.
         ///
         /// The caller passes the flat <paramref name="labels"/> / <paramref name="entryIds"/>
@@ -392,7 +392,7 @@ namespace pwiz.Osprey.FDR
             // competition + q-value math is byte-for-byte the shared code the five-array path
             // used (PercolatorFdr.ComputePepWinnerMap / PercolatorFdr.ComputeExperimentPrecursorQMap /
             // PercolatorFdr.ComputeExperimentPeptideQMap / PercolatorFdr.ComputePerFileRunQvalues all mirror
-            // PercolatorFdr.ComputeStreamingCompetitionQvalues), so the streamed outputs are identical.
+            // StreamingFdr.ComputeStreamingCompetitionQvalues), so the streamed outputs are identical.
             var pepByWinnerIdx = PercolatorFdr.ComputePepWinnerMap(finalScores, labels, entryIds);
 
             // The per-file q-value passes below slice each file as one contiguous block
@@ -413,7 +413,7 @@ namespace pwiz.Osprey.FDR
                         kvp.Key));
 
             // Experiment q-values: the single-file shortcut is exp == per-run (matching
-            // PercolatorFdr.ComputeStreamingCompetitionQvalues), built only when multi-file. With distinct
+            // StreamingFdr.ComputeStreamingCompetitionQvalues), built only when multi-file. With distinct
             // keys (asserted above) the file count is just the number of non-empty PerFile
             // entries, so no flat fileNames[n] array is needed -- the caller no longer builds
             // one (issue #4355 Part B: dropping a full O(n) string reference array). This
@@ -557,7 +557,7 @@ namespace pwiz.Osprey.FDR
         /// subset, once to score + build the bounded q-value maps + clamp floors, once to score +
         /// emit -- recomputing the SVM score per row instead of parking an O(n) score array. Only
         /// the SUBSET (&lt;= MaxTrainSize) and the intrinsically-bounded lookups (O(base_ids) /
-        /// O(peptides), via <see cref="PercolatorFdr.StreamingFirstPassQ"/> + per-file run-q) are ever resident,
+        /// O(peptides), via <see cref="StreamingFdr.StreamingFirstPassQ"/> + per-file run-q) are ever resident,
         /// so the peak is FLAT in file count.
         ///
         /// Byte-identical to the resident projection path on the same rows in the same (file,row)
@@ -567,7 +567,7 @@ namespace pwiz.Osprey.FDR
         /// CoelutionSum, ascending-global-ordinal order, identical
         /// <see cref="PercolatorSampling.SubsampleByPeptideGroup"/>), the SVM training runs the SAME
         /// <see cref="PercolatorTrainer.RunPercolator"/> on the SAME subset, and the score + q-value math reuses the
-        /// SAME primitives (<see cref="PercolatorFdr.StreamingFirstPassQ"/>, <see cref="PercolatorFdr.ComputePerFileRunQvalues"/>,
+        /// SAME primitives (<see cref="StreamingFdr.StreamingFirstPassQ"/>, <see cref="PercolatorFdr.ComputePerFileRunQvalues"/>,
         /// <see cref="PercolatorFdr.UpdateExperimentQClampFloor"/>). This is 1st-pass-only: the 2nd pass keeps its
         /// O(survivors) resident projection (Stage 7/8 needs it) via the unchanged
         /// <see cref="ScoreProjectionAndComputeFdrInPlace"/>.
@@ -790,11 +790,11 @@ namespace pwiz.Osprey.FDR
             var featureBuf = new double[nFeatures];
 
             // ---- Pass 1: score + build the 3 bounded q maps + reduce the clamp floors ----
-            // Reuses the verified PercolatorFdr.StreamingFirstPassQ kernel; per-file run-q from a bounded one-file
+            // Reuses the verified StreamingFdr.StreamingFirstPassQ kernel; per-file run-q from a bounded one-file
             // buffer, reduced into the best-of-runs clamp floors (issue #4390). The score is
             // recomputed per row (bias first, then the averaged-weight dot product in feature order)
             // -- byte-for-byte the resident score loop, only without the O(n) finalScores array.
-            var streamingQ = new PercolatorFdr.StreamingFirstPassQ();
+            var streamingQ = new StreamingFdr.StreamingFirstPassQ();
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
@@ -974,7 +974,7 @@ namespace pwiz.Osprey.FDR
                 // Normalize a null modseq to string.Empty exactly as the resident FdrProjectionSet
                 // .Builder.AddRow does (a present-but-null modified_sequence element survives
                 // ReadFdrStubScalars' column-level guard): a null peptide would otherwise throw as a
-                // Dictionary<string,...> key in PercolatorFdr.StreamingFirstPassQ / SubsampleByPeptideGroup and
+                // Dictionary<string,...> key in StreamingFdr.StreamingFirstPassQ / SubsampleByPeptideGroup and
                 // would group differently from the resident path's ""-normalized peptides.
                 Peptides.Add(peptide ?? string.Empty);
             }

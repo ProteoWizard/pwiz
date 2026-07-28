@@ -579,7 +579,7 @@ namespace pwiz.Osprey.Tasks
                 return (eids, scs);
             }
 
-            PercolatorFdr.ComputeFullPopulationPrecursorFdrStreaming(
+            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 fileKeys, ReadFile, survivorScore, survivors,
                 out var runQ, out var expQ, out var pep, stratumBaseIds);
 

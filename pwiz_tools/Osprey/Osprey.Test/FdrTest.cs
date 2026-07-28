@@ -1907,7 +1907,7 @@ namespace pwiz.Osprey.Test
         #region StreamingFirstPassQ Tests
 
         /// <summary>
-        /// The Stage B streaming builder (<c>PercolatorFdr.StreamingFirstPassQ</c>) must produce
+        /// The Stage B streaming builder (<c>StreamingFdr.StreamingFirstPassQ</c>) must produce
         /// experiment-precursor / experiment-peptide / PEP maps BYTE-IDENTICAL to the flat
         /// array builders when fed the same population in the same flat (file,row) order -- the
         /// invariant that lets the 1st-pass score pass drop the resident
@@ -1948,7 +1948,7 @@ namespace pwiz.Osprey.Test
             var labels = new List<bool>();
             var entryIds = new List<uint>();
             var peptides = new List<string>();
-            var streaming = new PercolatorFdr.StreamingFirstPassQ();
+            var streaming = new StreamingFdr.StreamingFirstPassQ();
             int g = 0;
             for (int f = 0; f < nFiles; f++)
             {
@@ -2727,7 +2727,7 @@ namespace pwiz.Osprey.Test
             for (uint b = 1; b <= 20; b++) survivors.Add((F, b));   // target entryId == base_id
             (uint[] eids, double[] scs) Read(string _)
                 => ((uint[])ids.Clone(), (double[])sc.Clone());
-            PercolatorFdr.ComputeFullPopulationPrecursorFdrStreaming(
+            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 new[] { F }, Read,
                 new Dictionary<(string, uint), double>(), survivors,
                 out _, out var expQ, out _, stratum);
