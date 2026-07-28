@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Model.Results
             new Dictionary<ReferenceValue<TransitionGroup>, ChromatogramGroupInfo>();
 
         private ScoreQValueMap _scoreQValueMap;
+        private MaterializedPeptideResults _materializedResults;
 
         public OnDemandFeatureCalculator(FeatureCalculators calculators, SrmSettings settings,
             PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfo chromFileInfo)
@@ -389,18 +390,23 @@ namespace pwiz.Skyline.Model.Results
             return LoadChromatogramGroupInfo(transitionGroupDocNode);
         }
 
+        /// <summary>
+        /// Materialized once for this peptide and replicate, and shared by every transition
+        /// group, so that there is one place which reads results out of the .skyd rather than
+        /// one per caller.
+        /// </summary>
+        private MaterializedPeptideResults MaterializedResults
+        {
+            get
+            {
+                return _materializedResults ??=
+                    MaterializedPeptideResults.Materialize(Settings, PeptideDocNode, ReplicateIndex);
+            }
+        }
+
         private IList<ChromatogramGroupInfo> LoadChromatogramGroupInfos(TransitionGroupDocNode transitionGroup)
         {
-            var measuredResults = Settings.MeasuredResults;
-            ChromatogramGroupInfo[] infoSet;
-            if (!measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[ReplicateIndex], PeptideDocNode,
-                    transitionGroup,
-                    MzMatchTolerance, out infoSet))
-            {
-                return ImmutableList.Empty<ChromatogramGroupInfo>();
-            }
-
-            return infoSet;
+            return MaterializedResults.GetChromatogramGroupInfos(transitionGroup, ReplicateIndex);
         }
 
         private ChromatogramGroupInfo LoadChromatogramGroupInfo(TransitionGroupDocNode transitionGroup)
