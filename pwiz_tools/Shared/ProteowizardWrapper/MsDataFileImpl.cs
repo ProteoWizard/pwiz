@@ -636,9 +636,17 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Thermo_RAW_format)); }
         }
 
+        private bool? _isWatersFile;
+
         public bool IsWatersFile
         {
-            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format)); }
+            // Memoized: this walks every source file through the CLI bindings, and it is consulted per
+            // spectrum on the import path. The answer cannot change while the file is open.
+            get
+            {
+                return _isWatersFile ??=
+                    _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format));
+            }
         }
 
         public bool PassEntireDiaPasefFrame
@@ -1357,7 +1365,8 @@ namespace pwiz.ProteowizardWrapper
             {
                 Id = _trimNativeID ? id.abbreviate(idText) : idText,
                 IsCalibrationSpectrum = spectrum.hasCVParam(CVID.MS_calibration_spectrum),
-                WatersFunctionNumber = MsDataSpectrum.WatersFunctionNumberFromNativeId(idText),
+                // Waters-only question, and parsing the id allocates - skip it for every other vendor
+                WatersFunctionNumber = IsWatersFile ? MsDataSpectrum.WatersFunctionNumberFromNativeId(idText) : null,
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
