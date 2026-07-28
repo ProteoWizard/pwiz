@@ -146,6 +146,17 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 # osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
+# Every Osprey invocation in this run is timestamped and mem-stamped, so each leg's log
+# doubles as a memory-band trace: `[yyyy/MM/dd HH:mm:ss]<TAB>managedMB<TAB>privateMB<TAB>`.
+# That makes a red-or-slow gate diagnosable after the fact - the log shows whether the
+# per-file memory floor climbed (an O(files) regression) and where the tool went silent -
+# without re-running anything. Read it with ai/scripts/perfviz.py (numbers: peak, floor
+# drift per file, every reporting gap) or ai/scripts/perfviz.html (plot). The prefix costs
+# a GC.GetTotalMemory(false) + a process query per emitted line, which is noise next to the
+# pipeline itself. See ai/docs/memory-band-guide.md, including why this trace shows SHAPE
+# but not live-set MAGNITUDE.
+$memStampArgs = @('--timestamp', '--memstamp')
+
 # The mzML data zip on panorama (raw-data zip is future work). The URL's
 # second-to-last segment ("perftests") maps to <Downloads>\Perftests.
 #
@@ -385,6 +396,7 @@ function Invoke-OspreyRun {
                   '--resolution', $Resolution, '--protein-fdr', '0.01',
                   '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
     $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
+    $cliArgs += $memStampArgs
     if ($DumpProteinFdr) { $env:OSPREY_DUMP_STAGE7_PROTEIN_FDR = '1' }
     # Run with CWD = work dir so the -o blib and the Stage 7 protein-FDR dump
     # (both CWD-relative, NOT --work-dir-relative -- only derived artifacts +
@@ -595,6 +607,7 @@ function Invoke-HpcChain {
     $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
     $a1 += $extraArgs
+    $a1 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
@@ -620,6 +633,7 @@ function Invoke-HpcChain {
     $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a2 += $extraArgs
+    $a2 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
 
     # Phase 3: per-file rescore workers (Stage 6), one independent worker per
@@ -645,6 +659,7 @@ function Invoke-HpcChain {
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
         $a3 += $extraArgs
+    $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
         # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
         # consumes only those plus the calibration / reconciliation / 1st-pass
@@ -691,6 +706,7 @@ function Invoke-HpcChain {
     $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a4 += $extraArgs
+    $a4 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
 
     return (Join-Path $ph4 'output.blib')

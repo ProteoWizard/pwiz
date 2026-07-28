@@ -482,9 +482,11 @@ namespace pwiz.Osprey.Tasks
             // all-files pre-compaction pool). The per-file passing-target counts below are
             // then read from those tallies rather than recomputed off perFileEntries, which
             // by that point holds only survivors - the same reason the lean projection path
-            // reads them off its score-pass sink.
+            // reads them off its score-pass sink. The --model-diagnostics report is streamed
+            // off the same load for the same reason, and its accumulator is null when the
+            // resident twin ran, which leaves the batch report reading perFileEntries.
             LogFirstPassResultsAndDump(perFileEntries, config, ctx, null,
-                bundle.PreCompactionTallies);
+                bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator);
 
             // Compaction delegates to RescoreCompaction.Apply on the bundle
             // path so the pre-compaction (file, vec_idx) keys in
@@ -582,13 +584,25 @@ namespace pwiz.Osprey.Tasks
         /// OSPREY_DUMP_PERCOLATOR; written before compaction drops rows so the
         /// cross-impl diff sees both targets and decoys) and the
         /// OSPREY_PERCOLATOR_ONLY measurement exit.
+        ///
+        /// <paramref name="mdiagAccumulator"/> is the streamed
+        /// <c>--model-diagnostics</c> reduction the bounded reconciled-bundle rehydrate
+        /// folded every PRE-compaction row into as it loaded (see
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>), non-null only there.
+        /// It is what lets that path report at all: <paramref name="perFileEntries"/> has
+        /// already lost the ~52x non-survivors - mostly the decoys and entrapment the FDP
+        /// and calibration views are built from - so building the report off it would
+        /// silently produce a plausible WRONG page. Null everywhere else, where
+        /// <paramref name="perFileEntries"/> IS the pre-compaction pool and the batch
+        /// <see cref="ModelDiagnosticsReport.Write"/> reduces it directly.
         /// </summary>
         private void LogFirstPassResultsAndDump(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
             FeatureContributions contributions = null,
-            IReadOnlyDictionary<string, PreCompactionTally> preCompactionTallies = null)
+            IReadOnlyDictionary<string, PreCompactionTally> preCompactionTallies = null,
+            ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
         {
             LogFirstPassResults(perFileEntries, config, ctx, preCompactionTallies);
 
@@ -601,12 +615,22 @@ namespace pwiz.Osprey.Tasks
             // report from the just-scored, pre-compaction first-pass entries
             // (decoys + entrapment still present) and the trained model. Opt-in
             // and off the default output path, so it can't affect any other
-            // output; a failure is logged and swallowed inside Write.
+            // output; a failure is logged and swallowed inside the writer.
             if (config.ModelDiagnostics)
             {
-                var libraryById = ctx.Get<LibraryById>().Value;
+                // Same file order either way: the accumulator was seeded with the input-file
+                // order and perFileEntries keeps every file's key even once compacted.
                 var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
-                ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
+                if (mdiagAccumulator != null)
+                {
+                    ModelDiagnosticsReport.WriteFromAccumulator(
+                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo);
+                }
+                else
+                {
+                    var libraryById = ctx.Get<LibraryById>().Value;
+                    ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
+                }
             }
         }
 
@@ -678,22 +702,33 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Build the streaming <see cref="ModelDiagnosticsData.Accumulator"/> that the projection
-        /// path's score-pass sink folds each pre-compaction row into, so the pass-1
+        /// Build the streaming <see cref="ModelDiagnosticsData.Accumulator"/> that a
+        /// pre-compaction row source folds each row into, so the pass-1
         /// <c>--model-diagnostics</c> report emits without the resident FdrEntry pool. Derives the
         /// entrapment classification from the searched library -- the same source and one-time
         /// logging as the resident <see cref="ModelDiagnosticsReport.Write"/> path -- and seeds the
-        /// accumulator with the input-file order (from the projection) plus the run FDR level.
+        /// accumulator with the input-file order plus the run FDR level.
+        ///
+        /// Two row sources share it: the projection path's score-pass sink (fed as first-pass
+        /// Percolator scores each row) and the streaming reconciled-bundle rehydrate
+        /// (<see cref="RescoreHydration.HydrateCompactedStreaming"/>, fed per file after the
+        /// 1st-pass sidecar overlay and before compaction discards the non-survivors). Both feed
+        /// rows in the same nested (file, row) order the batch <see cref="ModelDiagnosticsData.Build"/>
+        /// walks, which is what keeps the streamed report identical to the resident one.
+        /// <paramref name="libraryById"/> is passed rather than pulled from the context because
+        /// the rehydrate caller runs before <c>LibraryById</c> is published.
         /// </summary>
-        private static ModelDiagnosticsData.Accumulator BuildModelDiagnosticsAccumulator(
-            FdrProjectionSet projections, OspreyConfig config, PipelineContext ctx)
+        internal static ModelDiagnosticsData.Accumulator BuildModelDiagnosticsAccumulator(
+            IReadOnlyList<string> fileNames,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            OspreyConfig config,
+            Action<string> logInfo)
         {
-            var libraryById = ctx.Get<LibraryById>().Value;
-            ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, ctx.LogInfo,
+            ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, logInfo,
                 out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
-            var runNames = new string[projections.PerFile.Count];
+            var runNames = new string[fileNames.Count];
             for (int i = 0; i < runNames.Length; i++)
-                runNames[i] = projections.PerFile[i].Key;
+                runNames[i] = fileNames[i];
             return new ModelDiagnosticsData.Accumulator(
                 runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr, config.FdrLevel);
         }
@@ -1700,7 +1735,8 @@ namespace pwiz.Osprey.Tasks
             // folds every pre-compaction row into it; capture the trained model for the Model tab.
             // Null off the report path, so byte-neutral there.
             var mdiagAccumulator = config.ModelDiagnostics
-                ? BuildModelDiagnosticsAccumulator(projections, config, ctx)
+                ? BuildModelDiagnosticsAccumulator(projections.PerFile.ConvertAll(kv => kv.Key),
+                    ctx.Get<LibraryById>().Value, config, ctx.LogInfo)
                 : null;
             FeatureContributions mdiagContributions = null;
             Action<FeatureContributions> captureContributions = null;

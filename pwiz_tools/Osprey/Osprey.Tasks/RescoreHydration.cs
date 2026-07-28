@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 
@@ -118,6 +119,22 @@ namespace pwiz.Osprey.Tasks
         /// whose caller still has that pool and counts it directly.
         /// </summary>
         public Dictionary<string, PreCompactionTally> PreCompactionTallies { get; set; }
+
+        /// <summary>
+        /// The <c>--model-diagnostics</c> pass-1 report reduction, folded row by row off the
+        /// same PRE-compaction pools <see cref="PreCompactionTallies"/> is reduced from, while
+        /// each file was briefly resident during
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>. The report needs the
+        /// pre-compaction entries (compaction discards ~52x of them, mostly the decoys and
+        /// entrapment the FDP and calibration views are built from), so on the streaming
+        /// hydrate it has to be accumulated during the load rather than built afterwards off a
+        /// pool that no longer exists. Null unless <c>--model-diagnostics</c> is set, so the
+        /// default path allocates nothing; the batch
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> also leaves it null -
+        /// its caller still holds the all-files pre-compaction pool and builds the report from
+        /// it directly.
+        /// </summary>
+        public ModelDiagnosticsData.Accumulator ModelDiagnosticsAccumulator { get; set; }
 
         /// <summary>Total non-Keep reconciliation actions across all files.</summary>
         public int TotalActions => ReconciliationActions.Count;
@@ -376,16 +393,17 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="loadStubs"/> is called once per file with
         /// <c>(fileIndex, fileName, parquetPath)</c> and must return that file's FULL
         /// pre-compaction stub list. <paramref name="onStubsHydrated"/> is called with
-        /// <c>(fileName, fullStubList, tally)</c> just before that list is compacted - the
-        /// caller's one look at a file's pre-compaction pool, where it fills in
-        /// <see cref="PreCompactionTally.PassingTargets"/> and anything else it used to
-        /// reduce off the resident all-files pool; it may be null.
+        /// <c>(fileIndex, fileName, fullStubList, tally)</c> just before that list is
+        /// compacted - the caller's one look at a file's pre-compaction pool, where it fills
+        /// in <see cref="PreCompactionTally.PassingTargets"/> and anything else it used to
+        /// reduce off the resident all-files pool (the <c>--model-diagnostics</c> report
+        /// accumulator is fed there too, which is why the file index is passed); it may be null.
         /// </summary>
         public static RescoreInputs HydrateCompactedStreaming(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<string> parquetPaths,
             Func<int, string, string, List<FdrEntry>> loadStubs,
-            Action<string, List<FdrEntry>, PreCompactionTally> onStubsHydrated)
+            Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -474,7 +492,7 @@ namespace pwiz.Osprey.Tasks
                 // The caller's one look at this file's full pre-compaction pool: it fills
                 // in whatever it used to reduce off the resident all-files pool.
                 var tally = new PreCompactionTally { Stubs = stubs.Count };
-                onStubsHydrated?.Invoke(fileName, stubs, tally);
+                onStubsHydrated?.Invoke(i, fileName, stubs, tally);
                 tallies[fileName] = tally;
 
                 stubs.RemoveAll(e => !retainBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));

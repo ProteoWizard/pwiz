@@ -1230,6 +1230,15 @@ namespace pwiz.Osprey.Tasks
             // stubs-only branch below for why that is safe.
             bool loadFeatures = needsResidentPool;
 
+            // Same O(files) opt-in gate the --input-files paths take at :381 and :644. This
+            // path had none, which meant the HPC worker entries (--task PerFileRescoring,
+            // --task SecondPassFDR) could take the resident pre-compaction pool SILENTLY -
+            // no error, no opt-in - on exactly the path that explodes first at scale. When
+            // the streaming hydrate below handles the load, the pool is bounded and there is
+            // nothing to guard; when it declines (see ShouldStreamCompaction) the resident
+            // twin runs, and that must be an explicit choice rather than a surprise.
+            GuardResidentPool(config, needsResidentPool || (hasReconSidecars && !streamCompaction));
+
             // Bounded reconciled-bundle rehydrate: hand the per-file stub load to the
             // streaming hydrate, which compacts each file before touching the next, so the
             // pre-compaction pool (~1.19 GB per file) is never resident for more than one
@@ -1238,12 +1247,29 @@ namespace pwiz.Osprey.Tasks
             // afterwards, which is O(files) and does not fit at 82.
             if (streamCompaction)
             {
+                // --model-diagnostics: the report needs the PRE-compaction entries (compaction
+                // discards ~52x of them, mostly the decoys and entrapment its FDP and
+                // calibration views are built from), and this load is the last place they all
+                // exist. Fold each file's rows into the same streaming accumulator the
+                // projection path uses, one file at a time, so FirstJoin's rehydrate can emit
+                // the identical report without the O(files) resident pool. Null (nothing
+                // constructed, nothing folded) off the report path.
+                var mdiagAccumulator = config.ModelDiagnostics
+                    ? FirstJoinTask.BuildModelDiagnosticsAccumulator(
+                        JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo)
+                    : null;
                 _rescoreInputs = RescoreHydration.HydrateCompactedStreaming(
                     perFileEntries, config.InputScores,
                     (fileIdx, fileName, parquetPath) => LoadJoinOnlyScoresForFile(
                         config, fileIdx, fileName, parquetPath, perFileParquetPaths,
                         perFileCalibrations, perFileIsolationMz, ctx),
-                    (fileName, stubs, tally) => TallyPreCompaction(config, stubs, tally));
+                    (fileIdx, fileName, stubs, tally) =>
+                    {
+                        TallyPreCompaction(config, stubs, tally);
+                        if (mdiagAccumulator != null)
+                            FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
+                    });
+                _rescoreInputs.ModelDiagnosticsAccumulator = mdiagAccumulator;
                 if (ctx.Diagnostics?.CalibrationOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
                 return null;
@@ -1364,12 +1390,19 @@ namespace pwiz.Osprey.Tasks
         ///    to Run instead, it would train first-pass Percolator on whatever
         ///    <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
         ///
-        /// Two diagnostics also genuinely need the all-files PRE-compaction pool that
-        /// streaming refuses to build, so they keep the resident path rather than silently
-        /// reading a post-compaction one: the OSPREY_DUMP_PERCOLATOR cross-impl bisection dump
-        /// and the --model-diagnostics batch report, both emitted by FirstJoin's rehydrate
-        /// before it compacts. (The lean first-pass projection path made the same call for the
-        /// same reason - see LogFirstPassResultsProjection's note on the percolator dump.)
+        /// One diagnostic still genuinely needs the all-files PRE-compaction pool that
+        /// streaming refuses to build, so it keeps the resident path rather than silently
+        /// reading a post-compaction one: the OSPREY_DUMP_PERCOLATOR cross-impl bisection
+        /// dump, emitted by FirstJoin's rehydrate before it compacts. (The lean first-pass
+        /// projection path made the same call for the same reason - see
+        /// LogFirstPassResultsProjection's note on the percolator dump.)
+        ///
+        /// --model-diagnostics is NOT such a case any more. It needs the same pre-compaction
+        /// rows, but it consumes them one at a time: <see cref="FeedModelDiagnostics"/> folds
+        /// every row into a ModelDiagnosticsData.Accumulator during this load, after the
+        /// 1st-pass sidecar overlay and before compaction drops the non-survivors, and
+        /// FirstJoin reports from that reduction instead of from the pool. Same rows in, same
+        /// report out, bounded memory - so the report no longer forces O(files).
         /// </summary>
         private static bool ShouldStreamCompaction(
             OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
@@ -1377,7 +1410,6 @@ namespace pwiz.Osprey.Tasks
             return hasReconSidecars
                    && config.NoJoin
                    && !NeedsResidentPool(config)
-                   && !config.ModelDiagnostics
                    && !(ctx.Diagnostics?.DumpPercolator ?? false);
         }
 
@@ -1438,6 +1470,46 @@ namespace pwiz.Osprey.Tasks
                     passing++;
             }
             tally.PassingTargets = passing;
+        }
+
+        /// <summary>
+        /// Fold one file's PRE-compaction stubs into the <c>--model-diagnostics</c> report
+        /// accumulator, handing it exactly the scalars the batch
+        /// <c>ModelDiagnosticsData.Build</c> reads off each <see cref="FdrEntry"/> - identity,
+        /// is_decoy, SVM score, and the four first-pass q-values the
+        /// <c>.1st-pass.fdr_scores.bin</c> overlay has just written onto these stubs. Rows
+        /// arrive here in the same nested (file, row) order the batch build walks
+        /// (<c>--input-scores</c> order, parquet row order within a file), which is what makes
+        /// the streamed reductions reproduce the resident ones element for element.
+        /// </summary>
+        private static void FeedModelDiagnostics(
+            ModelDiagnosticsData.Accumulator accumulator, int fileIdx, List<FdrEntry> stubs)
+        {
+            foreach (var entry in stubs)
+            {
+                accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
+                    entry.IsDecoy, entry.Score,
+                    new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
+            }
+        }
+
+        /// <summary>
+        /// The <c>--input-scores</c> per-file names in input order, each derived from its
+        /// parquet stem through the same shared suffix-strip helper
+        /// <see cref="LoadJoinOnlyScores"/>'s resident loop and
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> use, so index i here names
+        /// the file the streaming hydrate reports at index i.
+        /// </summary>
+        private static string[] JoinOnlyFileNames(OspreyConfig config)
+        {
+            var fileNames = new string[config.InputScores.Count];
+            for (int i = 0; i < fileNames.Length; i++)
+            {
+                fileNames[i] = Path.GetFileNameWithoutExtension(
+                    RescoreHydration.SyntheticInputFromParquet(config.InputScores[i])) ?? string.Empty;
+            }
+            return fileNames;
         }
 
         /// <summary>

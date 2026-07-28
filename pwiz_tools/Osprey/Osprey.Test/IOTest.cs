@@ -3744,12 +3744,14 @@ namespace pwiz.Osprey.Test
                 // rebuilds the identical action map, which is what keeps it the authority.
                 var streamedEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
                 var seenPreCompactionCounts = new List<int>();
+                var seenFileIndexes = new List<int>();
                 var streamed = RescoreHydration.HydrateCompactedStreaming(
                     streamedEntries, parquetPaths,
                     (fileIdx, fileName, parquetPath) =>
                         ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath),
-                    (fileName, stubs, tally) =>
+                    (fileIdx, fileName, stubs, tally) =>
                     {
+                        seenFileIndexes.Add(fileIdx);
                         seenPreCompactionCounts.Add(stubs.Count);
                         tally.PassingTargets = stubs.Count;
                     });
@@ -3758,6 +3760,9 @@ namespace pwiz.Osprey.Test
                 // The streaming hook saw the FULL pre-compaction pool for each file, and the
                 // tallies carry it forward for the callers that used to sum the resident one.
                 CollectionAssert.AreEqual(new[] { 5, 5 }, seenPreCompactionCounts);
+                // The hook's file index is the parquetPaths index, in order: the streaming
+                // --model-diagnostics feed keys its per-file report rows on it.
+                CollectionAssert.AreEqual(new[] { 0, 1 }, seenFileIndexes);
                 Assert.AreEqual(residentStats.EntriesBefore, streamed.TotalPreCompactionStubs);
 
                 // Post-state parity: same files in the same order, same survivors in the
