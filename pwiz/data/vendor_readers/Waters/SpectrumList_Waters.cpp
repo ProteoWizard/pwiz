@@ -107,7 +107,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, lockmassMzPosScans, lockmassMzNegScans, lockmassTolerance, msLevelsToCentroid);
 }
 
-PWIZ_API_DECL bool SpectrumList_Waters::isLockMassFunction(int function) const
+PWIZ_API_DECL int SpectrumList_Waters::lockMassFunction() const
 {
     if (lockmassFunction_ == LOCKMASS_FUNCTION_UNINIT)
     {
@@ -116,7 +116,12 @@ PWIZ_API_DECL bool SpectrumList_Waters::isLockMassFunction(int function) const
             lockmassFunction_ = LOCKMASS_FUNCTION_UNKNOWN;
         }
     }
-    return function == lockmassFunction_;
+    return lockmassFunction_;
+}
+
+PWIZ_API_DECL bool SpectrumList_Waters::isLockMassFunction(int function) const
+{
+    return function == lockMassFunction();
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const
@@ -185,6 +190,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     }
 
     result->set(spectrumType);
+    // Mark lockmass (lockspray) scans so consumers need not guess which function is the reference.
+    // Additive: the underlying spectrum type is left in place, since "calibration spectrum" is not a
+    // child of "mass spectrum" and replacing the type would strip m/z units, ms level, polarity etc.
+    if (isLockMassFunction(ie.function))
+        result->set(MS_calibration_spectrum);
     if (isMS) result->set(MS_ms_level, msLevel);
     scan.set(MS_preset_scan_configuration, ie.function + 1);
 
@@ -629,7 +639,20 @@ PWIZ_API_DECL void SpectrumList_Waters::calculatePeakMetadata(SpectrumPtr& spect
 
 PWIZ_API_DECL bool SpectrumList_Waters::calibrationSpectraAreOmitted() const
 {
-    return config_.ignoreCalibrationScans && lockmassFunction_ >= 0;
+    return config_.ignoreCalibrationScans && lockMassFunction() >= 0;
+}
+
+PWIZ_API_DECL bool SpectrumList_Waters::hasCalibrationSpectra() const
+{
+    int lockmass = lockMassFunction();
+    if (lockmass < 0)
+        return false;
+    // Ask the index rather than the config: several things can keep the lockmass function out of the
+    // list (ignoreCalibrationScans, the DDA processor), and this stays correct for all of them.
+    for (const IndexEntry& ie : index_)
+        if (ie.function == lockmass)
+            return true;
+    return false;
 }
 
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()
@@ -834,8 +857,10 @@ bool SpectrumList_Waters::hasCombinedIonMobility() const {return false;}
 bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const {return false;}
 double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
 double SpectrumList_Waters::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
+int SpectrumList_Waters::lockMassFunction() const {return LOCKMASS_FUNCTION_UNKNOWN;}
 bool SpectrumList_Waters::isLockMassFunction(int function) const {return false;}
 bool SpectrumList_Waters::calibrationSpectraAreOmitted() const {return false;}
+bool SpectrumList_Waters::hasCalibrationSpectra() const {return false;}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const { return SpectrumPtr(); }
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }

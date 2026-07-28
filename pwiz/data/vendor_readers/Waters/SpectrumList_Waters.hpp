@@ -78,6 +78,11 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
     virtual bool calibrationSpectraAreOmitted() const;
 
+    /// True if any spectrum actually presented by this list belongs to the lockmass function. False when
+    /// the source has no lockmass function, or when those spectra are not being presented (e.g. because
+    /// of ignoreCalibrationScans, or because the DDA processor excludes the reference function).
+    virtual bool hasCalibrationSpectra() const;
+
 #ifdef PWIZ_READER_WATERS
     SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config);
 
@@ -123,6 +128,10 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     mutable int lockmassFunction_; // 0-based. Special values: -1=uninitialized -2=unknown
 #define LOCKMASS_FUNCTION_UNKNOWN -2
 #define LOCKMASS_FUNCTION_UNINIT -1
+
+    /// The 0-based lockmass function number, or LOCKMASS_FUNCTION_UNKNOWN if the source has none.
+    /// Performs the one-time lookup if needed, so callers do not depend on initialization order.
+    int lockMassFunction() const;
 };
 
 } // detail

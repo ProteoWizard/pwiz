@@ -122,15 +122,30 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
+    SpectrumList_Waters* sl = dynamic_cast<SpectrumList_Waters*>(msd.run.spectrumListPtr.get());
+    ChromatogramList_Waters* cl = dynamic_cast<ChromatogramList_Waters*>(msd.run.chromatogramListPtr.get());
+
+    // FunctionIndexList() lists every function in the source, but the lockmass function is not always
+    // presented as spectra (ignoreCalibrationScans, or the DDA processor excluding the reference
+    // function). When it isn't, it must not contribute to fileContent at all - the absence of
+    // "calibration spectrum" is what tells a reader there are none to look for.
+    bool hasCalibrationSpectra = sl != NULL && sl->hasCalibrationSpectra();
+
     for (int function : rawdata->FunctionIndexList())
     {
         try
         {
+            bool isLockMass = sl != NULL && sl->isLockMassFunction(function);
+            if (isLockMass && !hasCalibrationSpectra)
+                continue;
+
             int msLevel;
             CVID spectrumType;
             translateFunctionType(WatersToPwizFunctionType(rawdata->Info.GetFunctionType(function)), msLevel, spectrumType);
             if (spectrumType != CVID_Unknown)
                 msd.fileDescription.fileContent.set(spectrumType);
+            if (isLockMass)
+                msd.fileDescription.fileContent.set(MS_calibration_spectrum);
         }
         catch (...) // unable to translate function type
         {
@@ -157,8 +172,6 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
-    SpectrumList_Waters* sl = dynamic_cast<SpectrumList_Waters*>(msd.run.spectrumListPtr.get());
-    ChromatogramList_Waters* cl = dynamic_cast<ChromatogramList_Waters*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
