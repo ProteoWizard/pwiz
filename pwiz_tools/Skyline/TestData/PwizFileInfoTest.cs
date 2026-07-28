@@ -129,22 +129,17 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 block=3"));
             Assert.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 process=0 scans=1-5"));
 
-            // waters_connect numbers channels, which are not function numbers, so nothing may be inferred
-            foreach (var watersConnectId in new[]
+            // waters_connect numbers channels, which are not function numbers, so nothing may be inferred -
+            // and nothing else carries one either
+            foreach (var idWithoutFunction in new[]
                      {
                          "channel=2 process=0 spectrum=1 scan=1",
-                         "channel=3 process=0 spectra=19,21 scan=20"
+                         "channel=3 process=0 spectra=19,21 scan=20",
+                         "controllerType=0 controllerNumber=1 scan=5",
+                         "scan=1", "", null
                      })
             {
-                Assert.IsTrue(MsDataSpectrum.IsWatersConnectNativeId(watersConnectId));
-                Assert.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(watersConnectId));
-            }
-
-            // Neither is anything else
-            foreach (var otherId in new[] { "controllerType=0 controllerNumber=1 scan=5", "scan=1", "", null })
-            {
-                Assert.IsFalse(MsDataSpectrum.IsWatersConnectNativeId(otherId));
-                Assert.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(otherId));
+                Assert.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(idWithoutFunction), idWithoutFunction);
             }
         }
 

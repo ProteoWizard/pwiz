@@ -816,13 +816,6 @@ namespace pwiz.ProteowizardWrapper
                             // (e.g. "electromagnetic radiation spectrum") 
                             // CONSIDER(bspratt) I really wish there was some way to communicate decisions like this to the user
                             using var spectrum = _spectrumList.spectrum(index, DetailLevel.FullMetadata);
-                            // waters_connect (Waters DATA Convert) numbers "channels" rather than MassLynx
-                            // "functions", and the two are not interchangeable - reading a channel number as a
-                            // function number discards real data. It also lockmass corrects and drops the
-                            // reference scans rather than exporting them, so there is nothing to infer. Any
-                            // that do appear are tagged MS:1000928 and caught by IsWatersLockmassSpectrum.
-                            if (MsDataSpectrum.IsWatersConnectNativeId(spectrum.id))
-                                break;
                             var msLevel = GetMsLevel(spectrum);
                             if (msLevel == 1)
                             {
@@ -2512,25 +2505,20 @@ namespace pwiz.ProteowizardWrapper
         // mapped to the position of the function field. MS:1000769 defines "function=N process=M scan=K";
         // our own Waters reader also emits "merged=N function=M block=K" for 3-array IMS and
         // "merged=N function=M process=P scans=A-B" when DDA processing merges several scans.
+        //
+        // Being absent from this table is how a dialect declines to be reasoned about, and the
+        // waters_connect (Waters DATA Convert) forms - "channel=2 process=0 spectrum=1 scan=1" and
+        // "channel=3 process=0 spectra=19,21 scan=20" - are absent deliberately. waters_connect splits
+        // scan types into "channels" where MassLynx uses "functions"; the numberings are not
+        // interchangeable, and reading one as the other discards real data. It also lockmass corrects
+        // and drops the reference scans rather than exporting them, so there is nothing to infer, and
+        // any that do appear are tagged MS:1000928 and caught by IsWatersLockmassSpectrum.
         private static readonly Dictionary<string, int> WATERS_FUNCTION_ID_LAYOUTS = new Dictionary<string, int>
         {
             { @"function.process.scan", 0 },
             { @"merged.function.block", 1 },
             { @"merged.function.process.scans", 1 }
         };
-
-        private const string WATERS_CONNECT_ID_PREFIX = @"channel=";
-
-        /// <summary>
-        /// True if this is a waters_connect (Waters DATA Convert) nativeID, e.g.
-        /// "channel=2 process=0 spectrum=1 scan=1" or "channel=3 process=0 spectra=19,21 scan=20".
-        /// waters_connect splits scan types into "channels" where MassLynx uses "functions", and the two
-        /// numberings are not interchangeable, so nothing may be inferred from the number.
-        /// </summary>
-        public static bool IsWatersConnectNativeId(string nativeId)
-        {
-            return nativeId != null && nativeId.StartsWith(WATERS_CONNECT_ID_PREFIX);
-        }
 
         /// <summary>
         /// Determine the Waters function number from a full nativeID, e.g. "function=2 process=0 scan=1".
