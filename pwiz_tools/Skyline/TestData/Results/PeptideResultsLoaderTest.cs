@@ -27,11 +27,11 @@ namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Verifies that the values which <see cref="TransitionChromInfo"/> holds can be read
-    /// back out of the chromatogram cache by <see cref="PeptidePeakLoader"/>. That has to
+    /// back out of the chromatogram cache by <see cref="PeptideResultsLoader"/>. That has to
     /// be true before those values can stop being held in memory.
     /// </summary>
     [TestClass]
-    public class PeptidePeakLoaderTest : AbstractUnitTest
+    public class PeptideResultsLoaderTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestData.Results
                 int peaksChecked = 0;
                 foreach (var nodePep in docResults.Peptides)
                 {
-                    var loaded = new PeptidePeakLoader
+                    var loaded = new PeptideResultsLoader
                     {
                         Settings = docResults.Settings,
                         PeptideDocNode = nodePep
@@ -96,6 +96,12 @@ namespace pwiz.SkylineTestData.Results
                                     Assert.AreEqual(chromInfo.Height, peak.Value.Height);
                                     Assert.AreEqual(chromInfo.Fwhm, peak.Value.Fwhm);
                                     Assert.AreEqual(chromInfo.MassError, peak.Value.MassError);
+
+                                    // The whole TransitionChromInfo has to come back, not just the
+                                    // values checked individually above.
+                                    var materialized = loaded.Materialize(nodeTran, iReplicate, chromInfo);
+                                    Assert.AreNotSame(chromInfo, materialized);
+                                    Assert.AreEqual(chromInfo, materialized);
                                     peaksChecked++;
                                 }
                             }

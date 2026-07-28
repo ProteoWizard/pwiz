@@ -24,14 +24,14 @@ using pwiz.Skyline.Model.DocSettings;
 namespace pwiz.Skyline.Model.Results
 {
     /// <summary>
-    /// Reads back the peak values for every transition of every precursor of one
+    /// Reads the peak values for every transition of every precursor of one
     /// <see cref="PeptideDocNode"/>, across every replicate, from the chromatogram cache.
     /// <para>
     /// This exists because a <see cref="DocNode"/> is to stop being the place complete
     /// result information comes from. A <see cref="TransitionChromInfo"/> will reliably
     /// hold only retention time, area and a few flags. Code which needs anything else
-    /// asks for everything belonging to a peptide, calculates what it needs, and then
-    /// lets the returned <see cref="LoadedPeptidePeaks"/> go.
+    /// asks for everything belonging to one peptide, calculates what it needs, and then
+    /// lets the returned <see cref="LoadedPeptideResults"/> go.
     /// </para>
     /// <para>
     /// Reading everything for a peptide every time something is needed is not efficient.
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results
     /// actually lands and decide what is worth holding onto.
     /// </para>
     /// </summary>
-    public class PeptidePeakLoader
+    public class PeptideResultsLoader
     {
         public SrmSettings Settings { get; set; }
         public PeptideDocNode PeptideDocNode { get; set; }
@@ -49,13 +49,13 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public float? MzMatchTolerance { get; set; }
 
-        public LoadedPeptidePeaks Load()
+        public LoadedPeptideResults Load()
         {
             var peaks = new Dictionary<PeakKey, ChromPeak>();
             var measuredResults = Settings?.MeasuredResults;
             if (measuredResults == null || PeptideDocNode == null)
             {
-                return new LoadedPeptidePeaks(peaks);
+                return new LoadedPeptideResults(PeptideDocNode, peaks);
             }
 
             float tolerance = MzMatchTolerance ??
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return new LoadedPeptidePeaks(peaks);
+            return new LoadedPeptideResults(PeptideDocNode, peaks);
         }
 
         private void LoadTransitionGroup(MeasuredResults measuredResults, ChromatogramSet chromatograms,
@@ -123,17 +123,20 @@ namespace pwiz.Skyline.Model.Results
     }
 
     /// <summary>
-    /// Everything <see cref="PeptidePeakLoader"/> read for one peptide. Callers are meant
-    /// to calculate whatever they need and then release this.
+    /// One <see cref="PeptideDocNode"/> together with all of its result information for all
+    /// replicates. Callers calculate whatever they need from this and then release it.
     /// </summary>
-    public class LoadedPeptidePeaks
+    public class LoadedPeptideResults
     {
         private readonly Dictionary<PeakKey, ChromPeak> _peaks;
 
-        public LoadedPeptidePeaks(Dictionary<PeakKey, ChromPeak> peaks)
+        public LoadedPeptideResults(PeptideDocNode peptideDocNode, Dictionary<PeakKey, ChromPeak> peaks)
         {
+            PeptideDocNode = peptideDocNode;
             _peaks = peaks;
         }
+
+        public PeptideDocNode PeptideDocNode { get; }
 
         public int Count
         {
@@ -172,9 +175,35 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// A <see cref="TransitionChromInfo"/> with every value filled in, built from what the
+        /// document still holds plus what had to be read back from the cache. Returns
+        /// <paramref name="chromInfo"/> itself when its peak is not one of the candidate peaks,
+        /// which is what happens when the user set the boundaries themselves and the document
+        /// therefore still has to hold all of the values.
+        /// </summary>
+        public TransitionChromInfo Materialize(TransitionDocNode nodeTran, int replicateIndex,
+            TransitionChromInfo chromInfo)
+        {
+            var peak = GetPeak(nodeTran, replicateIndex, chromInfo);
+            if (!peak.HasValue)
+            {
+                return chromInfo;
+            }
+
+            return new TransitionChromInfo(chromInfo.FileId, chromInfo.OptimizationStep, peak.Value,
+                    chromInfo.IonMobility, chromInfo.Annotations, chromInfo.UserSet)
+                .ChangeRank(true, chromInfo.Rank, chromInfo.RankByLevel);
+        }
+
+        /// <summary>
         /// Finds the candidate peak whose boundaries match those already recorded on
         /// <paramref name="chromInfo"/>. Returns -1 when the peak did not come from the
         /// cache, which is what happens when the user set the boundaries themselves.
+        /// <para>
+        /// This matches on the peak boundaries because that is all there is to match on while
+        /// the document still holds them. Once the chosen peak index is recorded on the
+        /// <see cref="TransitionGroupChromInfo"/>, this becomes a lookup instead of a search.
+        /// </para>
         /// </summary>
         public int FindPeakIndex(TransitionDocNode nodeTran, int replicateIndex, TransitionChromInfo chromInfo)
         {
