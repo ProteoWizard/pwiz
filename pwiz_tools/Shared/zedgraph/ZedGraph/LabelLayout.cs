@@ -745,6 +745,8 @@ namespace ZedGraph
 
             // Selected labels first (never pruned), then a stable hash of the label text so the
             // survivors do not depend on alphabetical ordering and two runs over the same data agree.
+            // The final tiebreaker on a position-independent identity keeps the order deterministic
+            // even when two points share the same label text (List.Sort is not a stable sort).
             entries.Sort((a, b) =>
             {
                 if (a.Point.IsSelected != b.Point.IsSelected)
@@ -752,7 +754,10 @@ namespace ZedGraph
                 var hashCompare = a.Hash.CompareTo(b.Hash);
                 if (hashCompare != 0)
                     return hashCompare;
-                return string.CompareOrdinal(a.Text, b.Text);
+                var textCompare = string.CompareOrdinal(a.Text, b.Text);
+                if (textCompare != 0)
+                    return textCompare;
+                return string.CompareOrdinal(a.TieBreak, b.TieBreak);
             });
 
             var bucketSize = 1;
@@ -811,6 +816,10 @@ namespace ZedGraph
         /// </summary>
         private bool CoversForeignMarker(LabelRect entry, int bucketSize, Dictionary<long, List<PointF>> markerCentersByBucket)
         {
+            // Own-marker exclusion assumes a non-ordinal (Linear) X axis: ownCenter is transformed
+            // from the data value while the marker centers come from LineItem.GetCoords, which uses
+            // the ordinal index on Text/ordinal axes. Both plots that use this layout (volcano and
+            // relative abundance) have Linear X axes, so the two agree to sub-pixel precision.
             var ownCenter = _graph.TransformCoord(entry.Point.Point.X, entry.Point.Point.Y, CoordType.AxisXYScale);
             foreach (var bucket in BucketKeys(entry.Rect, bucketSize))
             {
@@ -905,12 +914,16 @@ namespace ZedGraph
                 Rect = rect;
                 Text = point.Label?.Text ?? string.Empty;
                 Hash = StableTextHash(Text);
+                // Stable, position-independent identity used as the final sort tiebreaker so
+                // that points sharing the same label text still prune in a deterministic order.
+                TieBreak = point.UniqueID?.ToString() ?? string.Empty;
             }
 
             public LabeledPoint Point { get; }
             public RectangleF Rect { get; }
             public string Text { get; }
             public uint Hash { get; }
+            public string TieBreak { get; }
         }
 
         /// <summary>
