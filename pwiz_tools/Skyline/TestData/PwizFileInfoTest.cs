@@ -122,10 +122,12 @@ namespace pwiz.SkylineTestData
             VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_untagged.mzML"), false);
             VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_tagged.mzML"), true);
 
-            // MassLynx nativeIDs carry a function number
+            // MassLynx nativeIDs carry a function number, in every layout our Waters reader emits -
+            // including the DDA merged form, whose trailing "scans=1-5" is not a plain integer
             Assert.AreEqual(1, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=1 process=0 scan=1"));
             Assert.AreEqual(3, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=3 process=0 scan=1"));
             Assert.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 block=3"));
+            Assert.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 process=0 scans=1-5"));
 
             // waters_connect numbers channels, which are not function numbers, so nothing may be inferred
             foreach (var watersConnectId in new[]

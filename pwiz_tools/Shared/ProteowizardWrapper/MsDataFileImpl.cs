@@ -2508,13 +2508,15 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public int? WatersFunctionNumber { get; set; }
 
-        // Waters nativeID layouts that carry a function number, mapped to its position within the
-        // dotted abbreviation. MS:1000769 defines "function=N process=M scan=K"; our own Waters reader
-        // also emits "merged=N function=M block=K" for 3-array IMS.
+        // Waters nativeID layouts that carry a function number, keyed by their field names in order and
+        // mapped to the position of the function field. MS:1000769 defines "function=N process=M scan=K";
+        // our own Waters reader also emits "merged=N function=M block=K" for 3-array IMS and
+        // "merged=N function=M process=P scans=A-B" when DDA processing merges several scans.
         private static readonly Dictionary<string, int> WATERS_FUNCTION_ID_LAYOUTS = new Dictionary<string, int>
         {
             { @"function.process.scan", 0 },
-            { @"merged.function.block", 1 }
+            { @"merged.function.block", 1 },
+            { @"merged.function.process.scans", 1 }
         };
 
         private const string WATERS_CONNECT_ID_PREFIX = @"channel=";
@@ -2539,18 +2541,23 @@ namespace pwiz.ProteowizardWrapper
         {
             if (string.IsNullOrEmpty(nativeId))
                 return null;
+            // Identify the layout from its field names before parsing anything, so that a field this
+            // method does not need is free to hold something other than a plain integer - the merged DDA
+            // form ends in "scans=1-5", and waters_connect ids can carry "spectra=19,21".
             var tokens = nativeId.Split(' ');
             var keys = new string[tokens.Length];
-            var values = new int[tokens.Length];
             for (var i = 0; i < tokens.Length; i++)
             {
                 var separator = tokens[i].IndexOf('=');
-                if (separator < 0 || !int.TryParse(tokens[i].Substring(separator + 1), out values[i]))
+                if (separator < 0)
                     return null;
                 keys[i] = tokens[i].Substring(0, separator);
             }
-            return WATERS_FUNCTION_ID_LAYOUTS.TryGetValue(string.Join(@".", keys), out var field)
-                ? values[field]
+            if (!WATERS_FUNCTION_ID_LAYOUTS.TryGetValue(string.Join(@".", keys), out var field))
+                return null;
+            var functionValue = tokens[field].Substring(tokens[field].IndexOf('=') + 1);
+            return int.TryParse(functionValue, out var function)
+                ? function
                 : (int?) null;
         }
 
