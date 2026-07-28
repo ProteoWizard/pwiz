@@ -476,7 +476,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="PercolatorEntry"/> per stub in nested (file, entry) order,
         /// and both SVM paths return <see cref="PercolatorResults.Entries"/>
         /// index-aligned to that input (the direct and streaming result assembly
-        /// in <see cref="PercolatorFdr"/>). Walking <paramref name="perFileEntries"/>
+        /// in <see cref="PercolatorScorer"/>). Walking <paramref name="perFileEntries"/>
         /// in that same nested order therefore pairs each stub with its own result,
         /// which is why the former psm_id string + resultMap re-join was pure
         /// redundancy (issue #4355 step (b)): it re-joined by a key that position
@@ -951,7 +951,7 @@ namespace pwiz.Osprey.FDR
         /// -- intended, matching blib fidelity rather than the run-precursor gate alone.
         ///
         /// NOTE (issue #4378): the IN-PASS clamp (first/second-pass Percolator) now runs in the
-        /// memory-bounded FLAT form -- <see cref="PercolatorFdr.ClampExperimentQToBestRunFlat"/>
+        /// memory-bounded FLAT form -- <see cref="QValueCalculator.ClampExperimentQToBestRunFlat"/>
         /// over the score-pass scalar arrays -- so the full FdrEntry buffer need not be resident
         /// on the streaming path. This resident overload remains for the post-Stage-6 pre-blib
         /// re-clamp (<c>MergeNodeTask</c>), which runs on the already-compacted survivor buffer.

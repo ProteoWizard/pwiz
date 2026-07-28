@@ -41,7 +41,7 @@ namespace pwiz.Osprey.FDR
     ///
     /// This is the pure calculation: a read of the averaged weights and the
     /// accumulated target/decoy feature sums. It performs no I/O and computes no
-    /// presentation order; the presentation layer (PercolatorFdr.EmitFeatureContributions)
+    /// presentation order; the presentation layer (QValueCalculator.EmitFeatureContributions)
     /// owns the heading, the column formatting, and the most-influential-first sort.
     /// </summary>
     public sealed class FeatureContributions

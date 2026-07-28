@@ -27,8 +27,8 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Row-gathering helpers over <see cref="Matrix"/>, extracted from
-    /// <see cref="PercolatorFdr"/> because both the training and the scoring
+    /// Row-gathering helpers over <see cref="Matrix"/>, 
+    /// the original <c>PercolatorFdr</c> god class (issue #4468) because both the training and the scoring
     /// paths use them - they belong to neither, so they would have had to be
     /// duplicated or reached across once those two split apart.
     ///

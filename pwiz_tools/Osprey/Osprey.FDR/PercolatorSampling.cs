@@ -27,8 +27,8 @@ using System.Collections.Generic;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Selection of which entries train the Percolator model, extracted from
-    /// <see cref="PercolatorFdr"/>: best-precursor-per-peptide collapsing, the
+    /// Selection of which entries train the Percolator model, 
+    /// the original <c>PercolatorFdr</c> god class (issue #4468): best-precursor-per-peptide collapsing, the
     /// peptide-grouped stratified fold split, subsampling to a training-size cap,
     /// and the composition of those into a training subset.
     ///
@@ -87,7 +87,7 @@ namespace pwiz.Osprey.FDR
             var baseIdToTargetPeptide = new Dictionary<uint, string>();
             for (int i = 0; i < labels.Length; i++)
             {
-                uint baseId = entryIds[i] & PercolatorFdr.BASE_ID_MASK;
+                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
                 if (!labels[i])
                 {
                     if (!baseIdToTargetPeptide.ContainsKey(baseId))
@@ -99,7 +99,7 @@ namespace pwiz.Osprey.FDR
             var groupKeys = new string[labels.Length];
             for (int i = 0; i < labels.Length; i++)
             {
-                uint baseId = entryIds[i] & PercolatorFdr.BASE_ID_MASK;
+                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
                 string key;
                 if (!baseIdToTargetPeptide.TryGetValue(baseId, out key))
                     key = peptides[i];
@@ -207,7 +207,7 @@ namespace pwiz.Osprey.FDR
 
             for (int i = 0; i < n; i++)
             {
-                uint baseId = entryIds[i] & PercolatorFdr.BASE_ID_MASK;
+                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
                 double score = bestScores != null ? bestScores[i] : entries[i].Features[0];
 
                 Dictionary<uint, int> map = labels[i] ? bestDecoy : bestTarget;
@@ -255,7 +255,7 @@ namespace pwiz.Osprey.FDR
             var baseIdToTargetPeptide = new Dictionary<uint, string>();
             for (int i = 0; i < n; i++)
             {
-                uint baseId = entryIds[i] & PercolatorFdr.BASE_ID_MASK;
+                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
                 if (!labels[i])
                 {
                     if (!baseIdToTargetPeptide.ContainsKey(baseId))
@@ -266,7 +266,7 @@ namespace pwiz.Osprey.FDR
             var peptideGroups = new Dictionary<string, List<int>>();
             for (int i = 0; i < n; i++)
             {
-                uint baseId = entryIds[i] & PercolatorFdr.BASE_ID_MASK;
+                uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
                 string key;
                 if (!baseIdToTargetPeptide.TryGetValue(baseId, out key))
                     key = peptides[i];

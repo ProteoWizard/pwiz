@@ -28,6 +28,19 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public class PercolatorEntry
     {
+        /// <summary>
+        /// Masks the high bit off an <see cref="EntryId"/> to get its base (precursor)
+        /// id: a target and its paired decoy share a base id, which is what
+        /// target-decoy competition groups on.
+        ///
+        /// Lives here rather than on any one consumer because five classes across the
+        /// FDR pipeline mask entry ids - competition, sampling, scoring, the streaming
+        /// paths and the Stage-5 dumps - and its previous home, the
+        /// <c>PercolatorFdr</c> god class, was dissolved by the decomposition in
+        /// issue #4468.
+        /// </summary>
+        internal const uint BASE_ID_MASK = 0x7FFFFFFF;
+
         /// <summary>Source file name (for per-run FDR).</summary>
         public string FileName { get; set; }
 

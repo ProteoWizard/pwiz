@@ -31,8 +31,8 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Semi-supervised training of the Percolator model, extracted from
-    /// <see cref="PercolatorFdr"/>: the top-level <see cref="RunPercolator"/>
+    /// Semi-supervised training of the Percolator model, 
+    /// the original <c>PercolatorFdr</c> god class (issue #4468): the top-level <see cref="RunPercolator"/>
     /// orchestration, per-fold SVM and gradient-boosted-tree training, the positive
     /// training set selection each iteration re-derives, the cost grid search, and
     /// the Granholm cross-fold score calibration.
@@ -511,9 +511,9 @@ namespace pwiz.Osprey.FDR
             var uniqueFiles = new HashSet<string>(fileNames);
             bool isSingleFile = uniqueFiles.Count <= 1;
 
-            var runPrecursorQvalues = PercolatorFdr.ComputePerRunPrecursorQvalues(
+            var runPrecursorQvalues = QValueCalculator.ComputePerRunPrecursorQvalues(
                 finalScores, labels, entryIds, fileNames);
-            var runPeptideQvalues = PercolatorFdr.ComputePerRunPeptideQvalues(
+            var runPeptideQvalues = QValueCalculator.ComputePerRunPeptideQvalues(
                 finalScores, labels, entryIds, fileNames, peptides);
 
             double[] expPrecursorQvalues;
@@ -525,9 +525,9 @@ namespace pwiz.Osprey.FDR
             }
             else
             {
-                expPrecursorQvalues = PercolatorFdr.ComputeExperimentPrecursorQvalues(
+                expPrecursorQvalues = QValueCalculator.ComputeExperimentPrecursorQvalues(
                     finalScores, labels, entryIds);
-                expPeptideQvalues = PercolatorFdr.ComputeExperimentPeptideQvalues(
+                expPeptideQvalues = QValueCalculator.ComputeExperimentPeptideQvalues(
                     finalScores, labels, entryIds, peptides);
             }
 
@@ -536,7 +536,7 @@ namespace pwiz.Osprey.FDR
             // experiment-level q is never more confident than the entry's best single run.
             // Identical floors to PercolatorEngine.ClampExperimentQToBestRun, over the flat
             // score-pass arrays (no resident FdrEntry buffer). Covers the direct dispatch.
-            PercolatorFdr.ClampExperimentQToBestRunFlat(
+            QValueCalculator.ClampExperimentQToBestRunFlat(
                 entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
                 expPrecursorQvalues, expPeptideQvalues);
 
@@ -813,7 +813,7 @@ namespace pwiz.Osprey.FDR
                     currentScores[trainIndices[i]] = newTrainScores[i];
 
                 // v. Count passing targets
-                int nPassing = PercolatorFdr.CountPassing(newTrainScores, trainLabels, trainEntryIds, trainFdr, foldScratch);
+                int nPassing = QValueCalculator.CountPassing(newTrainScores, trainLabels, trainEntryIds, trainFdr, foldScratch);
 
                 // Per-cycle progress so the otherwise-silent SVM training (tens of
                 // seconds on Stellar/Astral-scale inputs) shows liveness, the way
@@ -862,7 +862,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="PercolatorConfig.GbtParams"/> instead) and the scratch pool (which
         /// exists to recycle the SVM's per-iteration <see cref="Matrix"/> buffers).
         /// Everything the fold selection depends on -- <see cref="SelectPositiveTrainingSet"/>,
-        /// <see cref="PercolatorFdr.CountPassing(double[],bool[],uint[],double)"/>, and the caller's
+        /// <see cref="QValueCalculator.CountPassing(double[],bool[],uint[],double)"/>, and the caller's
         /// peptide-grouped fold assignment --
         /// is the identical shared code, so the two methods differ only in the classifier.
         /// </summary>
@@ -1015,7 +1015,7 @@ namespace pwiz.Osprey.FDR
                 }
 
                 // iv. Keep the iteration that passes the most targets on the HELD-OUT rows.
-                int nPassing = PercolatorFdr.CountPassing(valScores, valLabels, valEntryIds, trainFdr);
+                int nPassing = QValueCalculator.CountPassing(valScores, valLabels, valEntryIds, trainFdr);
                 progress.ReportIteration(foldIndex, iteration, nPassing, nValTargets);
 
                 if (nPassing > bestPassing)
@@ -1068,7 +1068,7 @@ namespace pwiz.Osprey.FDR
 
             var qValues = new double[wi.Length];
             if (wi.Length > 0)
-                PercolatorFdr.ComputeQvalues(ws, wd, qValues);
+                QValueCalculator.ComputeQvalues(ws, wd, qValues);
 
             Func<double, int[]> selectAtThreshold = threshold =>
             {
@@ -1115,7 +1115,7 @@ namespace pwiz.Osprey.FDR
                 var scores = new double[n];
                 for (int i = 0; i < n; i++)
                     scores[i] = features[i, feat];
-                int nPass = PercolatorFdr.CountPassing(scores, labels, entryIds, fdrThreshold);
+                int nPass = QValueCalculator.CountPassing(scores, labels, entryIds, fdrThreshold);
                 if (nPass > bestPassing)
                 {
                     bestPassing = nPass;
@@ -1196,7 +1196,7 @@ namespace pwiz.Osprey.FDR
                         testEntryIds[i] = entryIds[testIdx[i]];
                     }
 
-                    totalPassing += PercolatorFdr.CountPassing(testScores, testLabels, testEntryIds, fdrThreshold, localScratch);
+                    totalPassing += QValueCalculator.CountPassing(testScores, testLabels, testEntryIds, fdrThreshold, localScratch);
                 }
                 totalPassingByC[ci] = totalPassing;
                 } finally {
@@ -1296,7 +1296,7 @@ namespace pwiz.Osprey.FDR
                 return false;
 
             var qValues = new double[wi.Length];
-            PercolatorFdr.ComputeQvalues(ws, wd, qValues);
+            QValueCalculator.ComputeQvalues(ws, wd, qValues);
 
             bool found = false;
             double minPassingScore = double.MaxValue;

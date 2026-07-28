@@ -21,17 +21,15 @@
  * limitations under the License.
  */
 
-// Native Percolator implementation for semi-supervised FDR control
+// Target-decoy q-value estimation for the Percolator FDR pipeline.
 //
-// Implements the Percolator algorithm (Kall et al. 2007) as refined by
-// mokapot (Fondrie & Noble, 2021):
-// - 3-fold cross-validation with peptide-grouped fold assignment
-// - Iterative linear SVM training on high-confidence targets vs all decoys
-// - Grid search for SVM cost parameter C
-// - Per-run and experiment-level FDR with conservative (n_decoy+1)/n_target formula
-// - Posterior error probability via KDE + isotonic regression
+// The conservative (n_decoy+1)/n_target formula, per-run and experiment-level
+// precursor and peptide q-values, the best-of-runs clamp, and posterior error
+// probability via KDE + isotonic regression.
 //
-// Port of osprey-fdr/src/percolator.rs.
+// Port of the q-value half of osprey-fdr/src/percolator.rs. Training lives in
+// PercolatorTrainer, model application in PercolatorScorer, competition in
+// TargetDecoyCompetition, and the bounded-memory forms in StreamingFdr.
 
 using System;
 using System.Collections.Generic;
@@ -41,15 +39,17 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Performs false discovery rate estimation using the Percolator algorithm.
-    /// Port of osprey-fdr/src/percolator.rs.
+    /// Target-decoy q-value estimation: the conservative (n_decoy+1)/n_target
+    /// formula, the per-run and experiment-level precursor and peptide families,
+    /// the best-of-runs monotonicity clamp, and the PEP fit.
+    ///
+    /// Takes a scored, competed population and says how confident each identification
+    /// is. What produced the scores (<see cref="PercolatorTrainer"/>,
+    /// <see cref="PercolatorScorer"/>) and which observation won its base id
+    /// (<see cref="TargetDecoyCompetition"/>) are someone else's job.
     /// </summary>
-    public static class PercolatorFdr
+    public static class QValueCalculator
     {
-        // internal so the extracted PercolatorDiagnosticsDump can mask base IDs
-        // the same way the pipeline does.
-        internal static readonly uint BASE_ID_MASK = 0x7FFFFFFF;
-
 
 
         /// <summary>
@@ -86,8 +86,8 @@ namespace pwiz.Osprey.FDR
                 pepOrder[k] = k;
             Array.Sort(pepOrder, (a, b) => // Array.Sort OK: TDC's CompeteAll already produced one winner per base_id, so each base_id appears at most once in pepOrder -- no ties.
             {
-                uint ba = entryIds[winnerIndices[a]] & BASE_ID_MASK;
-                uint bb = entryIds[winnerIndices[b]] & BASE_ID_MASK;
+                uint ba = entryIds[winnerIndices[a]] & PercolatorEntry.BASE_ID_MASK;
+                uint bb = entryIds[winnerIndices[b]] & PercolatorEntry.BASE_ID_MASK;
                 return ba.CompareTo(bb);
             });
             var pepScores = new double[nWinners];
@@ -605,7 +605,7 @@ namespace pwiz.Osprey.FDR
             var stratIdx = new List<int>();
             for (int i = 0; i < n; i++)
             {
-                if (stratumBaseIds.Contains(entryIds[i] & BASE_ID_MASK))
+                if (stratumBaseIds.Contains(entryIds[i] & PercolatorEntry.BASE_ID_MASK))
                     stratIdx.Add(i);
             }
             if (stratIdx.Count == 0)
@@ -738,7 +738,7 @@ namespace pwiz.Osprey.FDR
             var baseIdExpQ = new Dictionary<uint, double>();
             for (int rank = 0; rank < wi.Length; rank++)
             {
-                uint baseId = entryIds[wi[rank]] & BASE_ID_MASK;
+                uint baseId = entryIds[wi[rank]] & PercolatorEntry.BASE_ID_MASK;
                 baseIdExpQ[baseId] = q[rank];
             }
             return baseIdExpQ;
@@ -753,7 +753,7 @@ namespace pwiz.Osprey.FDR
             for (int i = 0; i < n; i++)
             {
                 double qv;
-                qvalues[i] = baseIdExpQ.TryGetValue(entryIds[i] & BASE_ID_MASK, out qv) ? qv : 1.0;
+                qvalues[i] = baseIdExpQ.TryGetValue(entryIds[i] & PercolatorEntry.BASE_ID_MASK, out qv) ? qv : 1.0;
             }
             return qvalues;
         }

@@ -29,9 +29,10 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Target-decoy competition, extracted from <see cref="PercolatorFdr"/>: group the
-    /// scored population by base id, let each target compete against its paired decoy,
-    /// and return the winners in descending score order.
+    /// Target-decoy competition, extracted from the original <c>PercolatorFdr</c>
+    /// god class (issue #4468): group the scored population by base id, let each
+    /// target compete against its paired decoy, and return the winners in
+    /// descending score order.
     ///
     /// This is the step that turns a per-observation score array into the one
     /// observation per precursor that q-value estimation is allowed to count. The
@@ -83,7 +84,7 @@ namespace pwiz.Osprey.FDR
             {
                 if (progress != null && (++processed & 0x3FFFFF) == 0)
                     progress.Report(processed);
-                uint baseId = entryIds[idx] & PercolatorFdr.BASE_ID_MASK;
+                uint baseId = entryIds[idx] & PercolatorEntry.BASE_ID_MASK;
                 if (labels[idx])
                 {
                     KeyValuePair<int, double> existing;
@@ -128,7 +129,7 @@ namespace pwiz.Osprey.FDR
         /// rows in the same order the flat arrays were built. <paramref name="winnerBaseIds"/>
         /// carries each winner's base_id (the map key) so the streaming path can key the
         /// experiment-precursor / PEP maps WITHOUT a resident <c>entryIds[]</c> array (the flat
-        /// path recovers the same base_id via <c>entryIds[wi[rank]] &amp; PercolatorFdr.BASE_ID_MASK</c>).
+        /// path recovers the same base_id via <c>entryIds[wi[rank]] &amp; PercolatorEntry.BASE_ID_MASK</c>).
         /// </summary>
         internal static void CompeteFromDicts(
             Dictionary<uint, KeyValuePair<int, double>> targets,
@@ -228,7 +229,7 @@ namespace pwiz.Osprey.FDR
             for (int ii = 0; ii < indicesCount; ii++)
             {
                 int idx = indices[ii];
-                uint baseId = entryIds[idx] & PercolatorFdr.BASE_ID_MASK;
+                uint baseId = entryIds[idx] & PercolatorEntry.BASE_ID_MASK;
                 double s = scores[idx];
                 if (labels[idx])
                 {

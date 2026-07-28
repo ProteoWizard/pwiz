@@ -106,7 +106,7 @@ namespace pwiz.Osprey.FDR
                 return null;
 
             // Average the fold weights + biases into a single linear model -- the same
-            // averaged-model math PercolatorFdr applies before scoring a population.
+            // averaged-model math QValueCalculator applies before scoring a population.
             int nModels = model.FoldWeights.Count;
             int nFeatures = model.FoldWeights[0].Length;
             var avgWeights = new double[nFeatures];

@@ -31,8 +31,8 @@ using pwiz.Osprey.ML;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Stage-5 (Percolator) diagnostic output, extracted from
-    /// <see cref="PercolatorFdr"/>. Everything here is write-only reporting:
+    /// Stage-5 (Percolator) diagnostic output, 
+    /// the original <c>PercolatorFdr</c> god class (issue #4468). Everything here is write-only reporting:
     /// each member either writes a cross-impl bisection dump to disk or emits
     /// console text. Nothing returns a value that feeds the pipeline, so none
     /// of it can move a score or a q-value.
@@ -189,7 +189,7 @@ namespace pwiz.Osprey.FDR
                 foreach (int i in order)
                 {
                     var e = entries[i];
-                    uint baseId = e.EntryId & PercolatorFdr.BASE_ID_MASK;
+                    uint baseId = e.EntryId & PercolatorEntry.BASE_ID_MASK;
                     sw.Write(e.EntryId.ToString(inv));
                     sw.Write('\t'); sw.Write(i.ToString(inv));
                     sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
