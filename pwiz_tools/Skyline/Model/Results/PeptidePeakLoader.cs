@@ -27,10 +27,11 @@ namespace pwiz.Skyline.Model.Results
     /// Reads back the peak values for every transition of every precursor of one
     /// <see cref="PeptideDocNode"/>, across every replicate, from the chromatogram cache.
     /// <para>
-    /// This exists so that <see cref="TransitionChromInfo"/> does not have to keep the
-    /// values that are only rarely looked at. Code which needs one of those values asks
-    /// for everything belonging to a peptide, calculates what it needs, and then lets the
-    /// returned <see cref="LoadedPeptidePeaks"/> go.
+    /// This exists because a <see cref="DocNode"/> is to stop being the place complete
+    /// result information comes from. A <see cref="TransitionChromInfo"/> will reliably
+    /// hold only retention time, area and a few flags. Code which needs anything else
+    /// asks for everything belonging to a peptide, calculates what it needs, and then
+    /// lets the returned <see cref="LoadedPeptidePeaks"/> go.
     /// </para>
     /// <para>
     /// Reading everything for a peptide every time something is needed is not efficient.
@@ -97,16 +98,24 @@ namespace pwiz.Skyline.Model.Results
 
                 foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
                 {
-                    var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, tolerance);
-                    if (chromInfo == null)
+                    // Optimization steps are separate chromatograms of the same transition, and
+                    // each one has its own set of candidate peaks.
+                    var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, tolerance,
+                        chromatograms.OptimizationFunction, TransformChrom.interpolated);
+                    for (int step = -optStepChromatograms.StepCount; step <= optStepChromatograms.StepCount; step++)
                     {
-                        continue;
-                    }
+                        var chromInfo = optStepChromatograms.GetChromatogramForStep(step);
+                        if (chromInfo == null)
+                        {
+                            continue;
+                        }
 
-                    for (int peakIndex = 0; peakIndex < chromInfo.NumPeaks; peakIndex++)
-                    {
-                        var key = new PeakKey(nodeTran.Id.GlobalIndex, replicateIndex, fileId.GlobalIndex, peakIndex);
-                        peaks[key] = chromInfo.GetPeak(peakIndex);
+                        for (int peakIndex = 0; peakIndex < chromInfo.NumPeaks; peakIndex++)
+                        {
+                            var key = new PeakKey(nodeTran.Id.GlobalIndex, replicateIndex, fileId.GlobalIndex,
+                                step, peakIndex);
+                            peaks[key] = chromInfo.GetPeak(peakIndex);
+                        }
                     }
                 }
             }
@@ -135,15 +144,31 @@ namespace pwiz.Skyline.Model.Results
         /// The candidate peak that Skyline detected, or null when the cache has no such peak.
         /// </summary>
         public ChromPeak? GetPeak(TransitionDocNode nodeTran, int replicateIndex, ChromFileInfoId fileId,
-            int peakIndex)
+            int optimizationStep, int peakIndex)
         {
-            var key = new PeakKey(nodeTran.Id.GlobalIndex, replicateIndex, fileId.GlobalIndex, peakIndex);
+            var key = new PeakKey(nodeTran.Id.GlobalIndex, replicateIndex, fileId.GlobalIndex, optimizationStep,
+                peakIndex);
             if (_peaks.TryGetValue(key, out var peak))
             {
                 return peak;
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// The candidate peak which <paramref name="chromInfo"/> holds the values of, or null
+        /// when its peak did not come from the cache.
+        /// </summary>
+        public ChromPeak? GetPeak(TransitionDocNode nodeTran, int replicateIndex, TransitionChromInfo chromInfo)
+        {
+            int peakIndex = FindPeakIndex(nodeTran, replicateIndex, chromInfo);
+            if (peakIndex < 0)
+            {
+                return null;
+            }
+
+            return GetPeak(nodeTran, replicateIndex, chromInfo.FileId, chromInfo.OptimizationStep, peakIndex);
         }
 
         /// <summary>
@@ -155,7 +180,7 @@ namespace pwiz.Skyline.Model.Results
         {
             for (int peakIndex = 0;; peakIndex++)
             {
-                var peak = GetPeak(nodeTran, replicateIndex, chromInfo.FileId, peakIndex);
+                var peak = GetPeak(nodeTran, replicateIndex, chromInfo.FileId, chromInfo.OptimizationStep, peakIndex);
                 if (!peak.HasValue)
                 {
                     return -1;
@@ -170,19 +195,27 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    /// <summary>
+    /// Identifies one candidate peak of one transition chromatogram. The optimization step
+    /// is part of the identity because each step is a separate chromatogram with its own
+    /// candidate peaks.
+    /// </summary>
     public struct PeakKey
     {
-        public PeakKey(int transitionGlobalIndex, int replicateIndex, int fileGlobalIndex, int peakIndex)
+        public PeakKey(int transitionGlobalIndex, int replicateIndex, int fileGlobalIndex, int optimizationStep,
+            int peakIndex)
         {
             TransitionGlobalIndex = transitionGlobalIndex;
             ReplicateIndex = replicateIndex;
             FileGlobalIndex = fileGlobalIndex;
+            OptimizationStep = optimizationStep;
             PeakIndex = peakIndex;
         }
 
         public int TransitionGlobalIndex { get; }
         public int ReplicateIndex { get; }
         public int FileGlobalIndex { get; }
+        public int OptimizationStep { get; }
         public int PeakIndex { get; }
 
         public bool Equals(PeakKey other)
@@ -190,6 +223,7 @@ namespace pwiz.Skyline.Model.Results
             return TransitionGlobalIndex == other.TransitionGlobalIndex &&
                    ReplicateIndex == other.ReplicateIndex &&
                    FileGlobalIndex == other.FileGlobalIndex &&
+                   OptimizationStep == other.OptimizationStep &&
                    PeakIndex == other.PeakIndex;
         }
 
@@ -205,6 +239,7 @@ namespace pwiz.Skyline.Model.Results
                 int result = TransitionGlobalIndex;
                 result = (result * 397) ^ ReplicateIndex;
                 result = (result * 397) ^ FileGlobalIndex;
+                result = (result * 397) ^ OptimizationStep;
                 result = (result * 397) ^ PeakIndex;
                 return result;
             }

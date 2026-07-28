@@ -85,7 +85,8 @@ namespace pwiz.SkylineTestData.Results
 
                                     int peakIndex = loaded.FindPeakIndex(nodeTran, iReplicate, chromInfo);
                                     Assert.AreNotEqual(-1, peakIndex);
-                                    var peak = loaded.GetPeak(nodeTran, iReplicate, chromInfo.FileId, peakIndex);
+                                    var peak = loaded.GetPeak(nodeTran, iReplicate, chromInfo.FileId,
+                                        chromInfo.OptimizationStep, peakIndex);
                                     Assert.IsTrue(peak.HasValue);
                                     Assert.AreEqual(chromInfo.RetentionTime, peak.Value.RetentionTime);
                                     Assert.AreEqual(chromInfo.StartRetentionTime, peak.Value.StartTime);
