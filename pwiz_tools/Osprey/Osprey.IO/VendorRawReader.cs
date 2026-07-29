@@ -63,7 +63,15 @@ namespace pwiz.Osprey.IO
         /// slightly, it changes WHICH spectra exist, which shifts every record
         /// after the first difference.
         /// </summary>
-        public static MzmlResult LoadAllSpectra(string path)
+        /// <param name="path">The instrument file, or an mzML under the
+        /// <c>OSPREY_MZML_VIA_PWIZ</c> diagnostic switch.</param>
+        /// <param name="requireVendorCentroiding">Whether to ask ProteoWizard for
+        /// vendor centroiding, reproducing msconvert's
+        /// <c>peakPicking vendor msLevel=1-</c>. Must be FALSE for an mzML
+        /// source: the peaks are already centroided by whatever wrote the file,
+        /// and MsDataFileImpl centroids through a <c>VendorOnlyPeakDetector</c>
+        /// that throws when no vendor API is behind the data.</param>
+        public static MzmlResult LoadAllSpectra(string path, bool requireVendorCentroiding = true)
         {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
@@ -71,8 +79,8 @@ namespace pwiz.Osprey.IO
 
             using (var msData = new MsDataFileImpl(path,
                        simAsSpectra: true,
-                       requireVendorCentroidedMS1: true,
-                       requireVendorCentroidedMS2: true))
+                       requireVendorCentroidedMS1: requireVendorCentroiding,
+                       requireVendorCentroidedMS2: requireVendorCentroiding))
             {
                 int count = msData.SpectrumCount;
                 // Per-spectrum rather than per-byte progress (the vendor reader

@@ -23,6 +23,7 @@
 
 using System;
 using System.IO;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {
@@ -46,11 +47,28 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static MzmlResult LoadAllSpectra(string path)
         {
-            if (IsMzml(path))
-                return MzmlReader.LoadAllSpectra(path);
+            bool isMzml = IsMzml(path);
 #if NET472
-            return VendorRawReader.LoadAllSpectra(path);
+            // OSPREY_MZML_VIA_PWIZ routes mzML through ProteoWizard too, so the
+            // two readers can be compared against one fixed input file. Vendor
+            // centroiding is NOT requested for an mzML: those peaks are already
+            // centroided, and MsDataFileImpl would centroid through a
+            // VendorOnlyPeakDetector that throws with no vendor API behind it.
+            if (isMzml && !OspreyEnvironment.MzmlViaPwiz)
+                return MzmlReader.LoadAllSpectra(path);
+            return VendorRawReader.LoadAllSpectra(path, requireVendorCentroiding: !isMzml);
 #else
+            if (isMzml)
+            {
+                if (OspreyEnvironment.MzmlViaPwiz)
+                {
+                    throw new NotSupportedException(
+                        "OSPREY_MZML_VIA_PWIZ requires the .NET Framework build of Osprey: it reads " +
+                        "mzML through ProteoWizard, whose pwiz_data_cli is net472-only. Unset the " +
+                        "variable to use the built-in mzML reader, or run the net472 build.");
+                }
+                return MzmlReader.LoadAllSpectra(path);
+            }
             throw new NotSupportedException(string.Format(
                 "Cannot read '{0}': reading vendor instrument files requires the .NET Framework " +
                 "build of Osprey (ProteoWizard's pwiz_data_cli is net472-only). Convert the file " +
