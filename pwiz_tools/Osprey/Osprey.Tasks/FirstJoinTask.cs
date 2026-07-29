@@ -903,6 +903,32 @@ namespace pwiz.Osprey.Tasks
                 out var perFileGapFillForRescore,
                 ctx);
 
+            // Persist the trained 1st-pass model beside each file's reconciled sidecars so a
+            // distributed --task SecondPassFDR merge node -- or any resume that skips 1st-pass
+            // training -- can run the frozen 2nd-pass modes without re-training. Written
+            // per-file (identical copies) so the merge node finds it by the same input-file
+            // stem it uses for every other reconciled sidecar. Best-effort: a write failure
+            // must not fail the run (the merge node keeps its existing fail-fast when the
+            // sidecar is absent). Save() is a no-op for the GBDT / degenerate model.
+            if (ctx.TryGet<FirstPassPercolatorModel>(out var firstPassModel) && firstPassModel.Results != null)
+            {
+                int modelWrites = 0;
+                foreach (var kvp in perFileParquetPaths)
+                {
+                    try
+                    {
+                        if (FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), firstPassModel.Results))
+                            modelWrites++;
+                    }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(@"Could not persist 1st-pass model sidecar for '" + kvp.Key + @"': " + ex.Message);
+                    }
+                }
+                if (modelWrites > 0)
+                    ctx.LogInfo(string.Format(@"Persisted 1st-pass model for frozen 2nd-pass reload ({0} file sidecar(s)).", modelWrites));
+            }
+
             if (config.StopAfterStage5)
             {
                 if (reconWriteFailures > 0)
