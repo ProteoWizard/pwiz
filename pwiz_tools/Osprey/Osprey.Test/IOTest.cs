@@ -28,6 +28,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
@@ -1567,6 +1568,67 @@ namespace pwiz.Osprey.Test
             }
 
             Assert.AreEqual(0, entries.Count); // should be skipped (only 2 fragments)
+        }
+
+        #endregion
+
+        #region Retention time precision
+
+        /// <summary>
+        /// A scan start time must survive the mzML round trip bit-exactly.
+        /// 0.86653405 is a real Thermo value (spectrum index 5679 of a TDP-43
+        /// PlasmaEV acquisition) that came out of <see cref="MzmlReader"/> as
+        /// 0.8665340500000001 on the net472 build while the net8.0 build of the
+        /// same code returned it exactly - a 1-ULP difference that made a
+        /// raw-sourced .spectra.bin disagree with an mzML-sourced one
+        /// (issue #4496).
+        ///
+        /// Root cause: .NET Framework's string-to-double conversion is not
+        /// correctly rounded for some decimals, and XmlConvert.ToDouble inherits
+        /// it. "0.86653405" parses to 0x3FEBBAA59DB3DA8E on .NET Framework and
+        /// 0x3FEBBAA59DB3DA8D (the correctly rounded value, and what C++ strtod
+        /// gives) on .NET Core 3.0+. So this test asserts what the READER
+        /// controls - that the value reaching a <see cref="Spectrum"/> is exactly
+        /// what the runtime's parser produced, with nothing perturbing it in
+        /// between. It deliberately does NOT compare against a compiled literal:
+        /// that comparison fails on net472 for reasons no Osprey code can fix,
+        /// and pinning it here would just encode the runtime defect as expected.
+        /// The cross-runtime deviation itself is tracked separately.
+        /// </summary>
+        [TestMethod]
+        public void TestMzmlReaderRetentionTimePrecision()
+        {
+            foreach (string text in new[] { @"0.86653405", @"0.97263695", @"0.5903117" })
+            {
+                double expected = XmlConvert.ToDouble(text);
+                // Exact: any delta would hide the very defect under test.
+                Assert.AreEqual(double.Parse(text, CultureInfo.InvariantCulture), expected, 0.0,
+                    @"XmlConvert vs double.Parse disagree on " + text);
+
+                string mzml = BuildMinimalMzml(
+                    msLevel: 2,
+                    retentionTimeMinutes: expected,
+                    precursorMz: 711.07312,
+                    isoTarget: 711.07312,
+                    isoLower: 1.5006999969482422,
+                    isoUpper: 1.5006999969482422,
+                    mzValues: new[] { 200.0, 300.0, 400.0 },
+                    intensityValues: new[] { 100.0f, 200.0f, 300.0f });
+
+                string path = Path.GetTempFileName() + ".mzML";
+                try
+                {
+                    File.WriteAllText(path, mzml);
+                    var result = MzmlReader.LoadAllSpectra(path);
+                    Assert.AreEqual(1, result.Ms2Spectra.Count);
+                    Assert.AreEqual(expected, result.Ms2Spectra[0].RetentionTime, 0.0,
+                        @"retention time not preserved bit-exactly for " + text);
+                }
+                finally
+                {
+                    File.Delete(path);
+                }
+            }
         }
 
         #endregion
