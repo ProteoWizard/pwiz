@@ -130,6 +130,15 @@ int main(int argc, char* argv[])
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
         }
 
+        // test ignoreCalibrationScans on a file that actually has a lockspray function. HDDDA_Short_noLM
+        // above has none, so it cannot show that the calibration spectra are dropped, nor that the
+        // "calibration spectrum" term is then withheld from fileContent - MSe_Short has function 3.
+        {
+            auto newConfig = config;
+            newConfig.ignoreCalibrationScans = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "MSe_Short.raw" }), newConfig);
+        }
+
         // test ddaProcessing
         {
             auto newConfig = config;
