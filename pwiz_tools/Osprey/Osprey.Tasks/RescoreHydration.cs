@@ -110,15 +110,22 @@ namespace pwiz.Osprey.Tasks
         public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
 
         /// <summary>
-        /// Per-file PRE-compaction tallies, keyed by file name, captured by
+        /// Per-file PRE-compaction tallies captured by
         /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>. That hydrate
         /// compacts each file as it loads and therefore never holds more than ONE
         /// file's pre-compaction pool, so the counts a caller used to take off the
         /// resident all-files pool have to be reduced during the load instead.
         /// Null on the batch <see cref="RescoreHydration.HydrateReconciliationOverlay"/>,
         /// whose caller still has that pool and counts it directly.
+        ///
+        /// Indexed by FILE INDEX, positionally aligned with <see cref="PerFileEntries"/>,
+        /// not keyed by file name: two <c>--input-scores</c> paths in different
+        /// directories can share a stem, and a name-keyed map silently let the second
+        /// overwrite the first's tally. When non-null this list is COMPLETE - one entry
+        /// per file, in load order - so a consumer that cannot find a file's tally has a
+        /// real inconsistency, not a fallback case.
         /// </summary>
-        public Dictionary<string, PreCompactionTally> PreCompactionTallies { get; set; }
+        public List<PreCompactionTally> PreCompactionTallies { get; set; }
 
         /// <summary>
         /// The <c>--model-diagnostics</c> pass-1 report reduction, folded row by row off the
@@ -133,6 +140,11 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> also leaves it null -
         /// its caller still holds the all-files pre-compaction pool and builds the report from
         /// it directly.
+        ///
+        /// Has exactly ONE reader, <c>FirstJoinTask</c>'s rehydrate, which nulls this property
+        /// as soon as it has written the report. The bundle travels on a published byproduct
+        /// slot that lives for the whole process, so an accumulator left set here would pin
+        /// its ~1-2 GB through Stage 6 and the merge with nothing left to read it.
         /// </summary>
         public ModelDiagnosticsData.Accumulator ModelDiagnosticsAccumulator { get; set; }
 
@@ -141,17 +153,19 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Total PRE-compaction stubs across all files, or 0 when
-        /// <see cref="PreCompactionTallies"/> is null (batch hydrate).
+        /// <see cref="PreCompactionTallies"/> is null (batch hydrate). Accumulated as
+        /// <c>long</c>: a file carries ~4.2 M pre-compaction stubs, so an <c>int</c> sum
+        /// overflows past ~505 files and would report a negative total.
         /// </summary>
-        public int TotalPreCompactionStubs
+        public long TotalPreCompactionStubs
         {
             get
             {
                 if (PreCompactionTallies == null)
                     return 0;
-                int n = 0;
-                foreach (var kv in PreCompactionTallies)
-                    n += kv.Value.Stubs;
+                long n = 0;
+                foreach (var tally in PreCompactionTallies)
+                    n += tally.Stubs;
                 return n;
             }
         }
@@ -313,39 +327,38 @@ namespace pwiz.Osprey.Tasks
             // Per-file progress. This loop reads a sidecar + a reconciliation envelope for
             // every file and was silent throughout: on a 20-file resume it produced a 35 s
             // gap in the log, the kind that reads as a hang. ProgressReporter also emits a
-            // HEARTBEAT_SECONDS (30 s) tick, so one slow file cannot reopen the gap. Held as
-            // a plain local (not a using) so the loop body below keeps its indentation, the
-            // same shape PercolatorFdr's ingest reporter uses.
-            var hydrateProgress = new ProgressReporter(
-                @"Hydrating reconciliation bundle", perFileEntries.Count);
-            for (int i = 0; i < perFileEntries.Count; i++)
+            // HEARTBEAT_SECONDS (30 s) tick, so one slow file cannot reopen the gap.
+            using (var hydrateProgress = new ProgressReporter(
+                       @"Hydrating reconciliation bundle", perFileEntries.Count))
             {
-                hydrateProgress.Report(i);
-                string parquetPath = parquetPaths[i];
-                string syntheticInput = SyntheticInputFromParquet(parquetPath);
-                string fileName = perFileEntries[i].Key;
-                var stubs = perFileEntries[i].Value;
+                for (int i = 0; i < perFileEntries.Count; i++)
+                {
+                    hydrateProgress.Report(i);
+                    string parquetPath = parquetPaths[i];
+                    string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                    string fileName = perFileEntries[i].Key;
+                    var stubs = perFileEntries[i].Value;
 
-                OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                    nameof(HydrateReconciliationOverlay));
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
+                        nameof(HydrateReconciliationOverlay));
 
-                string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-                var envelope = LoadEnvelope(reconPath, nameof(HydrateReconciliationOverlay));
-                consistency.Check(envelope, reconPath, nameof(HydrateReconciliationOverlay));
+                    string reconPath = ReconciliationFile.PathForInput(syntheticInput);
+                    var envelope = LoadEnvelope(reconPath, nameof(HydrateReconciliationOverlay));
+                    consistency.Check(envelope, reconPath, nameof(HydrateReconciliationOverlay));
 
-                // Build entry_id -> vec_idx map from the loaded stubs so the
-                // planner's entry_id-keyed actions can be rehomed onto
-                // (file_name, vec_idx) keys the rescore engine consumes.
-                var idToIdx = new Dictionary<uint, int>(stubs.Count);
-                for (int idx = 0; idx < stubs.Count; idx++)
-                    idToIdx[stubs[idx].EntryId] = idx;
+                    // Build entry_id -> vec_idx map from the loaded stubs so the
+                    // planner's entry_id-keyed actions can be rehomed onto
+                    // (file_name, vec_idx) keys the rescore engine consumes.
+                    var idToIdx = new Dictionary<uint, int>(stubs.Count);
+                    for (int idx = 0; idx < stubs.Count; idx++)
+                        idToIdx[stubs[idx].EntryId] = idx;
 
-                MapPlannedActions(PlanActions(envelope), fileName, reconPath, idToIdx,
-                    reconciliationActions, nameof(HydrateReconciliationOverlay));
-                CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
+                    MapPlannedActions(PlanActions(envelope), fileName, reconPath, idToIdx,
+                        reconciliationActions, nameof(HydrateReconciliationOverlay));
+                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
+                }
+                hydrateProgress.Report(perFileEntries.Count);
             }
-            hydrateProgress.Report(perFileEntries.Count);
-            hydrateProgress.Dispose();
 
             return new RescoreInputs
             {
@@ -424,7 +437,10 @@ namespace pwiz.Osprey.Tasks
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
             var reconciliationActions = new Dictionary<(string, int), ReconcileAction>();
-            var tallies = new Dictionary<string, PreCompactionTally>(nFiles);
+            // Positionally aligned with perFileEntries (both are appended in parquetPaths
+            // order), so a consumer indexes rather than looks a file up by stem - two
+            // --input-scores paths in different directories can share a stem.
+            var tallies = new List<PreCompactionTally>(nFiles);
             var consistency = new EnvelopeConsistency();
 
             // Pass 1: envelopes only. Everything kept here is small and is retained by the
@@ -441,12 +457,17 @@ namespace pwiz.Osprey.Tasks
             // file is filtered - file A can retain a base_id only because file B has an
             // action on it.
             var retainBaseIds = new HashSet<uint>();
-            using (var envelopeProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", nFiles))
+            // One reporter across BOTH passes, 2 * nFiles units. Pass 1 reads only the small
+            // on-disk envelopes and finishes in seconds, so a reporter scoped to it alone
+            // printed 100% before a single parquet row was read and then left pass 2 - the
+            // ~1.19 GB per-file load that runs for minutes a file - completely unreported.
+            // Spanning both keeps the heartbeat on the pass that actually takes the time.
+            using (var hydrateProgress = new ProgressReporter(
+                       @"Hydrating reconciliation bundle", 2L * nFiles))
             {
                 for (int i = 0; i < nFiles; i++)
                 {
-                    envelopeProgress.Report(i);
+                    hydrateProgress.Report(i);
                     string syntheticInput = SyntheticInputFromParquet(parquetPaths[i]);
                     string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
                     if (string.IsNullOrEmpty(fileName))
@@ -469,46 +490,46 @@ namespace pwiz.Osprey.Tasks
                     reconPaths.Add(reconPath);
                     plannedByFile.Add(planned);
                 }
-                envelopeProgress.Report(nFiles);
-            }
-            retainBaseIds.UnionWith(consistency.GlobalBaseIds);
+                retainBaseIds.UnionWith(consistency.GlobalBaseIds);
 
-            // Pass 2: one file's pre-compaction pool resident at a time.
-            for (int i = 0; i < nFiles; i++)
-            {
-                string fileName = fileNames[i];
-                var stubs = loadStubs(i, fileName, parquetPaths[i]);
-                if (stubs == null)
+                // Pass 2: one file's pre-compaction pool resident at a time.
+                for (int i = 0; i < nFiles; i++)
                 {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
+                    hydrateProgress.Report(nFiles + i);
+                    string fileName = fileNames[i];
+                    var stubs = loadStubs(i, fileName, parquetPaths[i]);
+                    if (stubs == null)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            "HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
+                    }
+                    // The sidecar overlay needs the FULL pre-compaction list: it was written
+                    // pre-compaction and its reader requires the stub list to be a superset of
+                    // its records. Same order as the batch twin - overlay, then compact.
+                    OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
+                        nameof(HydrateCompactedStreaming));
+
+                    // The caller's one look at this file's full pre-compaction pool: it fills
+                    // in whatever it used to reduce off the resident all-files pool.
+                    var tally = new PreCompactionTally { Stubs = stubs.Count };
+                    onStubsHydrated?.Invoke(i, fileName, stubs, tally);
+                    tallies.Add(tally);
+
+                    stubs.RemoveAll(e => !retainBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+                    stubs.TrimExcess();
+
+                    // Map the planner's actions onto POST-compaction vec_idx. Every action's
+                    // base_id is in the retain set by construction above, so an action entry
+                    // present in the parquet is guaranteed to have survived; a miss here means
+                    // the same parquet drift the batch twin rejects, with the same message.
+                    var idToIdx = new Dictionary<uint, int>(stubs.Count);
+                    for (int idx = 0; idx < stubs.Count; idx++)
+                        idToIdx[stubs[idx].EntryId] = idx;
+                    MapPlannedActions(plannedByFile[i], fileName, reconPaths[i], idToIdx,
+                        reconciliationActions, nameof(HydrateCompactedStreaming));
+
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
-                // The sidecar overlay needs the FULL pre-compaction list: it was written
-                // pre-compaction and its reader requires the stub list to be a superset of
-                // its records. Same order as the batch twin - overlay, then compact.
-                OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
-                    nameof(HydrateCompactedStreaming));
-
-                // The caller's one look at this file's full pre-compaction pool: it fills
-                // in whatever it used to reduce off the resident all-files pool.
-                var tally = new PreCompactionTally { Stubs = stubs.Count };
-                onStubsHydrated?.Invoke(i, fileName, stubs, tally);
-                tallies[fileName] = tally;
-
-                stubs.RemoveAll(e => !retainBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
-                stubs.TrimExcess();
-
-                // Map the planner's actions onto POST-compaction vec_idx. Every action's
-                // base_id is in the retain set by construction above, so an action entry
-                // present in the parquet is guaranteed to have survived; a miss here means
-                // the same parquet drift the batch twin rejects, with the same message.
-                var idToIdx = new Dictionary<uint, int>(stubs.Count);
-                for (int idx = 0; idx < stubs.Count; idx++)
-                    idToIdx[stubs[idx].EntryId] = idx;
-                MapPlannedActions(plannedByFile[i], fileName, reconPaths[i], idToIdx,
-                    reconciliationActions, nameof(HydrateCompactedStreaming));
-
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
             }
 
             return new RescoreInputs

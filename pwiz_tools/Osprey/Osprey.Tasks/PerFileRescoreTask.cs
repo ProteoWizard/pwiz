@@ -398,6 +398,14 @@ namespace pwiz.Osprey.Tasks
                     // buffer order matches the order COLD establishes in
                     // RunPercolatorFdr, independent of whether the file was rescored.
                     SortFileEntriesCanonical(kv.Value);
+                    // Same release the rescore path does once a file's reconciled parquet is
+                    // on disk: the overlay above re-fattened this file's entries straight
+                    // from that parquet, and holding those arrays for every file is the
+                    // O(files) Stage-6 growth term. A no-work file was never fattened, so
+                    // this is a no-op there. Nothing downstream reads them off the buffer -
+                    // MergeNode's 2nd pass reloads PIN features from the reconciled parquet
+                    // by identity - and this leaves the same buffer shape COLD leaves.
+                    ReleaseRescoredPayload(kv.Value);
                 }
 
                 ctx.Publish(new RescoredEntries(_perFileEntries));
@@ -815,7 +823,7 @@ namespace pwiz.Osprey.Tasks
             // Segment 3/3 (write): the reconciled parquet write-back.
             MultiProgressReporter.Current?.BeginSegment();
             // PHASE 3 -- reconciled parquet write-back + sidecar stamp.
-            WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
+            bool wroteReconciled = WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
 
             // Per-file rescore high-water mark: the raw (pre-GC) working_set peak and
             // managed_heap since the last collection -- the during-scoring transient (the
@@ -847,7 +855,15 @@ namespace pwiz.Osprey.Tasks
             // "Features != null" as the "this row was rescored" sentinel when it builds the
             // overlay, so releasing before the write would silently emit a parquet with no
             // overlaid rows.
-            ReleaseRescoredPayload(fdrEntries);
+            //
+            // And ONLY when that write actually persisted. WriteReconciledAndStamp no-ops
+            // when the file has no ParquetPaths entry or its original parquet is missing, and
+            // DELETES the reconciled parquet after a failed write - in all three cases these
+            // arrays are still the only copy of the rescore, so dropping them would discard
+            // it silently. Mirrors the Stage-4 release, which is likewise gated on its write
+            // having happened (PerFileScoringTask's parquetFooterMetadata != null branch).
+            if (wroteReconciled)
+                ReleaseRescoredPayload(fdrEntries);
 
             // Deterministically drop this file's transients before the next file loads its
             // own: the streaming index + MS1 and the write-back's full-parquet reload. At
@@ -892,6 +908,14 @@ namespace pwiz.Osprey.Tasks
         /// Only the payload is dropped; the entry objects stay in the caller's list
         /// because <see cref="RescoredEntries"/> is published over that shared backing
         /// list and MergeNode reads it for the run-wide reductions.
+        ///
+        /// Called on all three paths that end with a file's reconciled parquet on disk: the
+        /// fresh rescore (gated on the write having persisted), the per-file resume skip
+        /// (<see cref="TryResumeRescoredFile"/>), and the whole-task
+        /// <see cref="Rehydrate"/> - the last two re-fatten the same six arrays out of that
+        /// parquet via <see cref="OverlayReconciledIntoBuffer"/>, so without this they hold
+        /// the full payload for every file at once. All three therefore leave the identical
+        /// buffer shape.
         /// </summary>
         private static void ReleaseRescoredPayload(List<FdrEntry> fdrEntries)
         {
@@ -952,6 +976,16 @@ namespace pwiz.Osprey.Tasks
                     gapFillForFile = gfList;
                 OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile);
                 SortFileEntriesCanonical(fdrEntries);
+                // The overlay above re-fattened every entry from the reconciled parquet
+                // (Features / CwtCandidates / Fragment* / ReferenceXic*), so this skip arm
+                // rooted the same ~1-3 KB per entry the rescore arm does - across every
+                // resumed file, which is the O(files) Stage-6 growth term #4472 removed
+                // there. Drop it the same way: the reconciled parquet those arrays came
+                // from is on disk (that is the premise of this arm), and the only reader
+                // of the "Features != null means rescored" sentinel is
+                // ReconciledParquetWriter, which this arm returns before ever reaching.
+                // Leaves exactly the buffer shape a fresh rescore leaves.
+                ReleaseRescoredPayload(fdrEntries);
                 return true;
             }
             // About to (re-)rescore this file: clear any stale sidecar
@@ -1036,50 +1070,59 @@ namespace pwiz.Osprey.Tasks
         /// Stage 7 / a future resume consume old rescored content). On failure
         /// clears the sidecar and removes the partially-written parquet so the
         /// next run re-rescores this file from scratch.
+        ///
+        /// Returns whether the reconciled parquet was actually PERSISTED. False when
+        /// this file has no <c>ParquetPaths</c> entry or its original parquet is gone
+        /// (both no-ops) and when the write failed (the output was just deleted). The
+        /// caller must not drop the heavy per-entry payload on a false return: those
+        /// arrays are then still the only copy of the rescore, and
+        /// <see cref="ReconciledParquetWriter"/> reads them off the entries on the retry.
         /// </summary>
-        private void WriteReconciledAndStamp(
+        private bool WriteReconciledAndStamp(
             string fileName, string inputFile, List<FdrEntry> fdrEntries,
             RescorePassInputs inputs, PipelineContext ctx)
         {
             var config = inputs.Config;
             // ParquetPaths is non-null here (dereferenced at the resume probe).
-            if (inputs.ParquetPaths.TryGetValue(fileName, out string parquetPath) &&
-                File.Exists(parquetPath))
+            if (!inputs.ParquetPaths.TryGetValue(fileName, out string parquetPath) ||
+                !File.Exists(parquetPath))
             {
-                string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
-                bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                    inputs.FullLibrary, config, inputs.JoinFileStems, ctx.LogInfo, ctx.LogWarning);
-
-                if (wrote)
-                {
-                    var perFileInputs = new List<string>
-                    {
-                        FdrScoresSidecar.Pass1Path(inputFile),
-                    };
-                    if (config.Reconciliation != null && config.Reconciliation.Enabled)
-                        perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
-                    PerFileResumeDriver.Stamp(reconciledOutPath, Name, OspreyVersion.Current,
-                        inputs.TaskValidityKey, perFileInputs, ctx.LogWarning);
-                }
-                else
-                {
-                    // Clear the stale sidecar AND remove the partially-written
-                    // reconciled parquet (output mechanics, the task's own
-                    // concern) so the next run re-rescores from scratch.
-                    PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
-                    try
-                    {
-                        if (File.Exists(reconciledOutPath))
-                            File.Delete(reconciledOutPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogWarning(string.Format(
-                            @"  Failed to remove stale reconciled parquet {0} after a failed write: {1}",
-                            reconciledOutPath, ex.Message));
-                    }
-                }
+                return false;
             }
+
+            string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
+            bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
+                inputs.FullLibrary, config, inputs.JoinFileStems, ctx.LogInfo, ctx.LogWarning);
+
+            if (wrote)
+            {
+                var perFileInputs = new List<string>
+                {
+                    FdrScoresSidecar.Pass1Path(inputFile),
+                };
+                if (config.Reconciliation != null && config.Reconciliation.Enabled)
+                    perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
+                PerFileResumeDriver.Stamp(reconciledOutPath, Name, OspreyVersion.Current,
+                    inputs.TaskValidityKey, perFileInputs, ctx.LogWarning);
+                return true;
+            }
+
+            // Clear the stale sidecar AND remove the partially-written
+            // reconciled parquet (output mechanics, the task's own
+            // concern) so the next run re-rescores from scratch.
+            PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
+            try
+            {
+                if (File.Exists(reconciledOutPath))
+                    File.Delete(reconciledOutPath);
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(
+                    @"  Failed to remove stale reconciled parquet {0} after a failed write: {1}",
+                    reconciledOutPath, ex.Message));
+            }
+            return false;
         }
 
         /// <summary>

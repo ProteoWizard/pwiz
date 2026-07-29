@@ -524,12 +524,17 @@ namespace pwiz.Osprey.Tasks
             bool streamCompaction = ShouldStreamCompaction(config, hasReconSidecars, ctx);
             var swAllFiles = Stopwatch.StartNew();
             var projections = LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
-                perFileCalibrations, perFileIsolationMz, hasReconSidecars, streamCompaction, ctx);
+                perFileCalibrations, perFileIsolationMz, hasReconSidecars, streamCompaction,
+                out bool hydrationFailed, ctx);
             swAllFiles.Stop();
+            if (hydrationFailed)
+                return false;  // Error already logged and ExitCode set by the hydrate.
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
 
-            int totalScored;
+            // long: TotalPreCompactionStubs below is ~4.2 M per file and overflows an int
+            // past ~505 files.
+            long totalScored;
             if (projections != null)
             {
                 totalScored = projections.TotalRows;
@@ -766,7 +771,7 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             Dictionary<string, string> perFileParquetPaths,
-            int nFiles, int totalScored, FdrProjectionSet projections = null)
+            int nFiles, long totalScored, FdrProjectionSet projections = null)
         {
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
@@ -1183,6 +1188,9 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="InvalidDataException"/> on mismatch). Populates
         /// <paramref name="perFileEntries"/>, <paramref name="perFileParquetPaths"/>,
         /// and <paramref name="perFileCalibrations"/>.
+        /// <paramref name="hydrationFailed"/> is set when the streaming reconciled-bundle
+        /// hydrate failed on a corrupt sidecar: it already logged the error and set
+        /// <see cref="PipelineContext.ExitCode"/>, so the caller only has to stop.
         /// </summary>
         private FdrProjectionSet LoadJoinOnlyScores(
             OspreyConfig config,
@@ -1192,8 +1200,10 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             bool hasReconSidecars,
             bool streamCompaction,
+            out bool hydrationFailed,
             PipelineContext ctx)
         {
+            hydrationFailed = false;
             // --task FirstPassFDR: load per-file FdrEntry stubs directly from
             // each .scores.parquet listed via --input-scores. Skips the
             // per-file Stage 2-4 scoring (Stage 1 library load already ran
@@ -1230,14 +1240,17 @@ namespace pwiz.Osprey.Tasks
             // stubs-only branch below for why that is safe.
             bool loadFeatures = needsResidentPool;
 
-            // Same O(files) opt-in gate the --input-files paths take at :381 and :644. This
-            // path had none, which meant the HPC worker entries (--task PerFileRescoring,
-            // --task SecondPassFDR) could take the resident pre-compaction pool SILENTLY -
-            // no error, no opt-in - on exactly the path that explodes first at scale. When
-            // the streaming hydrate below handles the load, the pool is bounded and there is
-            // nothing to guard; when it declines (see ShouldStreamCompaction) the resident
-            // twin runs, and that must be an explicit choice rather than a surprise.
-            GuardResidentPool(config, needsResidentPool || (hasReconSidecars && !streamCompaction));
+            // The --input-files paths at :381 and :644 THROW on the same O(files) situation.
+            // This one must not: every configuration that reaches this loader worked before
+            // the streaming hydrate landed - the --task SecondPassFDR reconciled-input merge
+            // (Stage 7, deliberately deferred to issue #4486), a --task FirstPassFDR re-run
+            // over parquets whose sidecars are already on disk, and the OSPREY_DUMP_PERCOLATOR
+            // bisection dump, which by design keeps the resident path. Throwing would break
+            // all three. Warn with the consumer named instead, so an operator who meets the
+            // O(files) peak at scale knows which knob put them on it. When the streaming
+            // hydrate below takes the load the pool is bounded and there is nothing to say.
+            if (needsResidentPool || (hasReconSidecars && !streamCompaction))
+                WarnPreCompactionPool(config, hasReconSidecars, ctx);
 
             // Bounded reconciled-bundle rehydrate: hand the per-file stub load to the
             // streaming hydrate, which compacts each file before touching the next, so the
@@ -1258,17 +1271,26 @@ namespace pwiz.Osprey.Tasks
                     ? FirstJoinTask.BuildModelDiagnosticsAccumulator(
                         JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo)
                     : null;
-                _rescoreInputs = RescoreHydration.HydrateCompactedStreaming(
-                    perFileEntries, config.InputScores,
-                    (fileIdx, fileName, parquetPath) => LoadJoinOnlyScoresForFile(
-                        config, fileIdx, fileName, parquetPath, perFileParquetPaths,
-                        perFileCalibrations, perFileIsolationMz, ctx),
-                    (fileIdx, fileName, stubs, tally) =>
-                    {
-                        TallyPreCompaction(config, stubs, tally);
-                        if (mdiagAccumulator != null)
-                            FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
-                    });
+                // Same graceful handling as the batch twin in HydrateRescoreBundleIfPresent:
+                // a corrupt or mismatched sidecar is an operator-facing error line and a
+                // non-zero exit code, not an unhandled stack trace.
+                _rescoreInputs = HydrateRescoreBundleOrNull(
+                    () => RescoreHydration.HydrateCompactedStreaming(
+                        perFileEntries, config.InputScores,
+                        (fileIdx, fileName, parquetPath) => LoadJoinOnlyScoresForFile(
+                            config, fileIdx, fileName, parquetPath, perFileParquetPaths,
+                            perFileCalibrations, perFileIsolationMz, ctx),
+                        (fileIdx, fileName, stubs, tally) =>
+                        {
+                            TallyPreCompaction(config, stubs, tally);
+                            if (mdiagAccumulator != null)
+                                FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
+                        }), ctx);
+                if (_rescoreInputs == null)
+                {
+                    hydrationFailed = true;
+                    return null;
+                }
                 _rescoreInputs.ModelDiagnosticsAccumulator = mdiagAccumulator;
                 if (ctx.Diagnostics?.CalibrationOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
@@ -1373,44 +1395,102 @@ namespace pwiz.Osprey.Tasks
         /// Whether the reconciled-bundle rehydrate can take the file-count-bounded
         /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> path, which compacts each
         /// file's stubs as it loads them instead of materializing every file's pre-compaction
-        /// pool and compacting afterwards. Three conditions, all necessary:
+        /// pool and compacting afterwards. Two conditions, both necessary:
         ///
         /// 1. The reconciled bundle exists (<paramref name="hasReconSidecars"/>) - it is the
         ///    envelope that carries the compaction predicate, so without it there is nothing
         ///    to compact against at load time.
-        /// 2. No resident-pool consumer (<see cref="NeedsResidentPool"/>). The strict
-        ///    --task SecondPassFDR merge is one: it reads PIN features off these stubs and
-        ///    its own <c>PerFileRescoreTask</c> rehydrate reads the PRE-compaction
-        ///    <c>ScoredEntries</c> milestone (first-pass protein FDR before its own
-        ///    compaction).
-        /// 3. <c>NoJoin</c>, i.e. FirstJoin is EXCLUDED from this pipeline and can only be
-        ///    reached through its bundle-adopt Rehydrate. This is what makes handing it a
-        ///    pre-compacted buffer safe: with <c>inputs</c> set and <c>StopAfterStage5</c>
-        ///    false, <c>NoJoin</c> is exactly FirstJoin's exclusion condition. Were FirstJoin
-        ///    to Run instead, it would train first-pass Percolator on whatever
-        ///    <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
+        /// 2. Nothing in the run reads the PRE-compaction pool
+        ///    (<see cref="PreCompactionPoolReason"/> finds no consumer).
         ///
-        /// One diagnostic still genuinely needs the all-files PRE-compaction pool that
-        /// streaming refuses to build, so it keeps the resident path rather than silently
-        /// reading a post-compaction one: the OSPREY_DUMP_PERCOLATOR cross-impl bisection
-        /// dump, emitted by FirstJoin's rehydrate before it compacts. (The lean first-pass
-        /// projection path made the same call for the same reason - see
-        /// LogFirstPassResultsProjection's note on the percolator dump.)
+        /// Term 2 folds in what used to be a separate <c>NoJoin</c> condition: FirstJoin must
+        /// be EXCLUDED from this pipeline and reachable only through its bundle-adopt
+        /// Rehydrate, because a FirstJoin that Ran would train first-pass Percolator on
+        /// whatever <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
+        /// With <c>InputScores</c> set and <c>StopAfterStage5</c> false, <c>NoJoin</c> is
+        /// exactly FirstJoin's exclusion condition, so a reconciled bundle WITHOUT it is one
+        /// of the reasons the helper reports.
         ///
-        /// --model-diagnostics is NOT such a case any more. It needs the same pre-compaction
-        /// rows, but it consumes them one at a time: <see cref="FeedModelDiagnostics"/> folds
-        /// every row into a ModelDiagnosticsData.Accumulator during this load, after the
-        /// 1st-pass sidecar overlay and before compaction drops the non-survivors, and
-        /// FirstJoin reports from that reduction instead of from the pool. Same rows in, same
-        /// report out, bounded memory - so the report no longer forces O(files).
+        /// What the resident-pool terms still filter that <c>NoJoin</c> does not: the
+        /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstJoin's rehydrate before it
+        /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
+        /// silently post-compaction one), OSPREY_FDR_PROJECTION=0, a non-Percolator
+        /// FdrMethod, --fdrbench-pass 1, and OSPREY_PASS2_QVALUE=transfer. The
+        /// --task SecondPassFDR merge is NOT among them: it sets ExpectReconciledInput, which
+        /// <c>--task</c> selection makes mutually exclusive with <c>NoJoin</c>, so term 2's
+        /// NoJoin clause already excludes it.
+        ///
+        /// --model-diagnostics needs no exclusion at all any more. It needs the same
+        /// pre-compaction rows, but it consumes them one at a time:
+        /// <see cref="FeedModelDiagnostics"/> folds every row into a
+        /// ModelDiagnosticsData.Accumulator during this load, after the 1st-pass sidecar
+        /// overlay and before compaction drops the non-survivors, and FirstJoin reports from
+        /// that reduction instead of from the pool. Same rows in, same report out, bounded
+        /// memory - so the report no longer forces O(files).
         /// </summary>
         private static bool ShouldStreamCompaction(
             OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
         {
-            return hasReconSidecars
-                   && config.NoJoin
-                   && !NeedsResidentPool(config)
-                   && !(ctx.Diagnostics?.DumpPercolator ?? false);
+            return PreCompactionPoolReason(config, hasReconSidecars, ctx) == null;
+        }
+
+        /// <summary>
+        /// Tell the operator that this run is taking the RESIDENT pre-compaction first-pass
+        /// pool and which consumer put it there. A warning, not the throw the
+        /// <c>--input-files</c> paths use: every configuration that reaches
+        /// <see cref="LoadJoinOnlyScores"/>'s resident branches worked before the bounded
+        /// streaming hydrate existed, so failing them would be a regression, not a guard.
+        /// </summary>
+        private static void WarnPreCompactionPool(
+            OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
+        {
+            string reason = PreCompactionPoolReason(config, hasReconSidecars, ctx)
+                            ?? @"This configuration";
+            ctx.LogWarning(string.Format(
+                @"{0} requires the RESIDENT pre-compaction first-pass pool: every " +
+                @"--input-scores file's full stub list is held in memory at once, so memory " +
+                @"here grows O(files) and can exhaust RAM at large file counts. The bounded " +
+                @"per-file streaming hydrate cannot serve that consumer.", reason));
+        }
+
+        /// <summary>
+        /// The single consumer that forces the RESIDENT pre-compaction first-pass pool on the
+        /// <c>--input-scores</c> load, named for a human, or <c>null</c> when nothing needs it
+        /// and <see cref="RescoreHydration.HydrateCompactedStreaming"/> can compact one file
+        /// at a time. Computed once and used for both the streaming decision
+        /// (<see cref="ShouldStreamCompaction"/>) and the warning text
+        /// (<see cref="WarnPreCompactionPool"/>), so the two can never disagree about why.
+        /// Order is most-specific-first; only the reported string depends on it.
+        /// </summary>
+        private static string PreCompactionPoolReason(
+            OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
+        {
+            if (config.ExpectReconciledInput)
+                return @"The reconciled-input merge (--task SecondPassFDR, tracked in #4486)";
+            if (ctx.Diagnostics?.DumpPercolator ?? false)
+                return @"OSPREY_DUMP_PERCOLATOR";
+            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
+                return @"--fdrbench-pass 1";
+            if (OspreyEnvironment.Pass2TransferQ)
+                return @"OSPREY_PASS2_QVALUE=transfer";
+            if (!config.FdrMethod.UsesPercolatorFramework())
+                return @"A non-Percolator FDR method";
+            if (!OspreyEnvironment.UseFdrProjection)
+                return @"OSPREY_FDR_PROJECTION=0";
+            // FirstJoin is IN this pipeline, so it will Run and train first-pass Percolator
+            // off ScoredEntries - which has to be the full pre-compaction pool, not the
+            // survivors the streaming hydrate would leave. Unconditional on
+            // hasReconSidecars: every reason above is a resident-pool consumer and returns
+            // first, so reaching here means none of them applies.
+            if (!config.NoJoin)
+                return @"A reconciled-bundle rehydrate outside the streaming gate";
+            // No bundle at all. The reconciliation envelope is what carries the compaction
+            // predicate, so without it there is nothing to compact against at load time and
+            // streaming cannot run. Last because every reason above names a real consumer,
+            // and this one is a missing input rather than a consumer.
+            if (!hasReconSidecars)
+                return @"No reconciled bundle on the --input-scores inputs";
+            return null;
         }
 
         /// <summary>
@@ -1623,19 +1703,12 @@ namespace pwiz.Osprey.Tasks
                 // below (feature null-out + the summary line) is shared by both paths.
                 if (_rescoreInputs == null)
                 {
-                    try
-                    {
-                        _rescoreInputs = RescoreHydration.HydrateReconciliationOverlay(
-                            perFileEntries, config.InputScores);
-                    }
-                    catch (InvalidDataException ex)
-                    {
-                        ctx.LogError(string.Format(
-                            @"--input-scores hydration failed: {0}", ex.Message));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
+                    _rescoreInputs = HydrateRescoreBundleOrNull(
+                        () => RescoreHydration.HydrateReconciliationOverlay(
+                            perFileEntries, config.InputScores), ctx);
                 }
+                if (_rescoreInputs == null)
+                    return false;
                 // Clear PIN features on bundle-hydrated stubs so
                 // PerFileRescoreTask's WriteReconciledParquet can keep
                 // its "Features != null means this entry was rescored"
@@ -1658,6 +1731,36 @@ namespace pwiz.Osprey.Tasks
                     _rescoreInputs.TotalGapFillTargets));
             }
             return true;
+        }
+
+        /// <summary>
+        /// Run one of the two reconciled-bundle hydrates - the file-count-bounded
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> or the resident batch
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> - under one
+        /// graceful-failure policy, so a corrupt or mismatched boundary file fails the same
+        /// actionable way whichever path the run took. Returns null with the error logged and
+        /// <see cref="PipelineContext.ExitCode"/> set when the hydrate threw
+        /// <see cref="InvalidDataException"/>; other exception types propagate uncaught,
+        /// matching the original inline behavior.
+        ///
+        /// Returns the bundle rather than assigning <see cref="_rescoreInputs"/> itself so
+        /// that the null test sits at the call site, immediately before the caller
+        /// dereferences it - a bool-returning version left every caller dereferencing a field
+        /// whose non-nullness could only be established inside this method.
+        /// </summary>
+        private static RescoreInputs HydrateRescoreBundleOrNull(
+            Func<RescoreInputs> hydrate, PipelineContext ctx)
+        {
+            try
+            {
+                return hydrate();
+            }
+            catch (InvalidDataException ex)
+            {
+                ctx.LogError(string.Format(@"--input-scores hydration failed: {0}", ex.Message));
+                ctx.ExitCode = 1;
+                return null;
+            }
         }
 
         /// <summary>

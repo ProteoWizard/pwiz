@@ -487,6 +487,12 @@ namespace pwiz.Osprey.Tasks
             // resident twin ran, which leaves the batch report reading perFileEntries.
             LogFirstPassResultsAndDump(perFileEntries, config, ctx, null,
                 bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator);
+            // The accumulator holds the whole run's --model-diagnostics reduction (~1-2 GB
+            // at 82 files) and has exactly one reader, the WriteFromAccumulator call the
+            // line above just made. It reached here on the published RescoreBundle, whose
+            // byproduct slot lives for the process, so leaving the property set would pin
+            // that memory through Stage 6 and the merge for nothing.
+            bundle.ModelDiagnosticsAccumulator = null;
 
             // Compaction delegates to RescoreCompaction.Apply on the bundle
             // path so the pre-compaction (file, vec_idx) keys in
@@ -601,7 +607,7 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             PipelineContext ctx,
             FeatureContributions contributions = null,
-            IReadOnlyDictionary<string, PreCompactionTally> preCompactionTallies = null,
+            IReadOnlyList<PreCompactionTally> preCompactionTallies = null,
             ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
         {
             LogFirstPassResults(perFileEntries, config, ctx, preCompactionTallies);
@@ -735,26 +741,41 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Log per-file and total first-pass passing-target counts at the
-        /// configured run-level FDR.
+        /// configured run-level FDR. <paramref name="preCompactionTallies"/>, when present,
+        /// is indexed positionally against <paramref name="perFileEntries"/> and is COMPLETE
+        /// - one tally per file - so a short list is an inconsistency, not a fallback case.
         /// </summary>
         private void LogFirstPassResults(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
-            IReadOnlyDictionary<string, PreCompactionTally> preCompactionTallies = null)
+            IReadOnlyList<PreCompactionTally> preCompactionTallies = null)
         {
             int passingTargets = 0;
-            foreach (var kvp in perFileEntries)
+            for (int fileIdx = 0; fileIdx < perFileEntries.Count; fileIdx++)
             {
+                var kvp = perFileEntries[fileIdx];
                 // Prefer the tally the streaming hydrate reduced while this file's full
                 // PRE-compaction stub list was resident: these counts are pre-compaction on
                 // every other path too, and kvp.Value has already lost the non-survivors
                 // when the tallies are present. Identical predicate either way.
                 int fileTargets;
-                if (preCompactionTallies != null &&
-                    preCompactionTallies.TryGetValue(kvp.Key, out var tally))
+                if (preCompactionTallies != null)
                 {
-                    fileTargets = tally.PassingTargets;
+                    // Falling back to counting kvp.Value here would silently report the
+                    // POST-compaction survivor count (~52x too small) as if it were the
+                    // pre-compaction one. The tallies are built one per file in this same
+                    // order, so a missing entry means hydrate and join disagree about the
+                    // file set - stop rather than publish a plausible wrong number.
+                    if (fileIdx >= preCompactionTallies.Count)
+                    {
+                        throw new InvalidOperationException(string.Format(
+                            @"First-pass results: no pre-compaction tally for {0} (file {1} of {2}, " +
+                            @"but the streaming hydrate captured only {3}). The tallies must cover " +
+                            @"every joined file.",
+                            kvp.Key, fileIdx + 1, perFileEntries.Count, preCompactionTallies.Count));
+                    }
+                    fileTargets = preCompactionTallies[fileIdx].PassingTargets;
                 }
                 else
                 {
@@ -861,7 +882,9 @@ namespace pwiz.Osprey.Tasks
                     // removed nothing and its EntriesBefore == EntriesAfter. Report the real
                     // pre-compaction total from the per-file tallies that hydrate captured,
                     // so this line means the same thing on both paths.
-                    int entriesBefore = bundle.PreCompactionTallies != null
+                    // long: at ~4.2 M pre-compaction stubs a file this total overflows an
+                    // int past ~505 files.
+                    long entriesBefore = bundle.PreCompactionTallies != null
                         ? bundle.TotalPreCompactionStubs
                         : stats.EntriesBefore;
                     ctx.LogInfo(string.Format(
