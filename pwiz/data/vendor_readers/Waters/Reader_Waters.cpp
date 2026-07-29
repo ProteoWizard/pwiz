@@ -134,14 +134,13 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     // drops SIM, CNL, CNG and (without srmAsSpectra) SRM functions, and they are still declared here -
     // 160109_Mix1_calcurve_070.mzML announces "SRM spectrum" while holding none. Driving the loop from
     // the functions actually indexed would fix all of them at once, and is worth doing separately.
-    bool hasCalibrationSpectra = sl != NULL && sl->hasCalibrationSpectra();
+    bool ignoreLockMassFunction = sl != NULL && !sl->hasCalibrationSpectra();
 
     for (int function : rawdata->FunctionIndexList())
     {
         try
         {
-            bool isLockMass = sl != NULL && sl->isLockMassFunction(function);
-            if (isLockMass && !hasCalibrationSpectra)
+            if (ignoreLockMassFunction && sl->isLockMassFunction(function))
                 continue;
 
             int msLevel;
@@ -149,7 +148,9 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
             translateFunctionType(WatersToPwizFunctionType(rawdata->Info.GetFunctionType(function)), msLevel, spectrumType);
             if (spectrumType != CVID_Unknown)
                 msd.fileDescription.fileContent.set(spectrumType);
-            if (isLockMass)
+
+            // Reaching here for the lockmass function means its spectra are in the output
+            if (sl != NULL && sl->isLockMassFunction(function))
                 msd.fileDescription.fileContent.set(MS_calibration_spectrum);
         }
         catch (...) // unable to translate function type
