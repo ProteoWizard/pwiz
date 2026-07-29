@@ -2532,6 +2532,129 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// CWT-candidate column round-trip through the real writer and reader: the
+        /// per-row candidate lists come back bit-identical, keep their own row via the
+        /// running <see cref="FdrEntry.ParquetIndex"/>, and survive a multi-row-group
+        /// write. Covers <see cref="CwtCandidateCodec"/>'s wiring into the
+        /// cwt_candidates column, which the codec's own unit tests cannot reach
+        /// because they never touch parquet.
+        ///
+        /// A row with a NULL candidate list is included deliberately: the writer
+        /// normalizes null and empty alike to a 4-byte zero-count blob (never a null
+        /// cell) to match Rust, and nothing else exercises the null branch.
+        /// </summary>
+        [TestMethod]
+        public void TestCwtCandidatesRoundTripThroughParquet()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_cwt_parquet_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Ids out of order so the write's canonical sort runs; candidate-list
+                // lengths deliberately mixed (2 / none / 1 / null) so a per-row boundary
+                // mismap surfaces as a count mismatch instead of a silent pass.
+                var byId = new Dictionary<uint, List<CwtCandidate>>
+                {
+                    { 5, new List<CwtCandidate> {
+                        NewCwtCandidate(51.5, 51.0, 52.0, 1.5e6, 42.5, 8.25),
+                        // Boundary value that pins the byte-exact BitConverter path
+                        // (the ryu/R formatter ambiguity from the Stage 5 dump).
+                        NewCwtCandidate(0.097751617431640625, 0.5, 1.5, 1.0, 1.0, -1.5) } },
+                    { 2, new List<CwtCandidate>() },
+                    { 9, new List<CwtCandidate> {
+                        NewCwtCandidate(90.25, 90.0, 90.5, 7.5e5, 13.0, 3.125) } },
+                    { 1, null },
+                };
+
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1 })
+                {
+                    var e = MakeStreamEntry(id, id * 100.0);
+                    e.CwtCandidates = byId[id];
+                    entries.Add(e);
+                }
+
+                string path = Path.Combine(dir, "cwt.scores.parquet");
+                // Cap 2 -> ceil(4/2) = 2 row groups, so the reader's per-group append
+                // loop is exercised rather than a single-group degenerate case.
+                ParquetScoreCache.RowGroupRowCapForTest = 2;
+                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                // Full entries carry both ParquetIndex and CwtCandidates, so one load
+                // checks the candidate values AND that each list landed on the row its
+                // running index claims (the alignment defect that once made every
+                // lookup return row 0's list).
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(path);
+                Assert.AreEqual(entries.Count, reloaded.Count, "row count");
+                for (int i = 0; i < reloaded.Count; i++)
+                {
+                    Assert.AreEqual((uint)i, reloaded[i].ParquetIndex,
+                        "ParquetIndex must be the running row position");
+                }
+
+                // The column-only reader must agree row-for-row with the full load.
+                var columnOnly = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
+                Assert.AreEqual(reloaded.Count, columnOnly.Count, "cwt column row count");
+
+                foreach (var row in reloaded)
+                {
+                    var expected = byId[row.EntryId] ?? new List<CwtCandidate>();
+                    var actual = row.CwtCandidates ?? new List<CwtCandidate>();
+                    string label = "entry " + row.EntryId;
+                    Assert.AreEqual(expected.Count, actual.Count, label + " candidate count");
+                    // Null and empty must both decode to an empty list, never null:
+                    // the writer emits the 4-byte zero-count blob for each.
+                    Assert.IsNotNull(row.CwtCandidates, label + " list must not be null");
+                    Assert.AreEqual(expected.Count, columnOnly[(int)row.ParquetIndex].Count,
+                        label + " column-only candidate count");
+                    for (int k = 0; k < expected.Count; k++)
+                    {
+                        AssertCwtCandidateBitEqual(expected[k], actual[k],
+                            label + " candidate " + k);
+                    }
+                }
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        private static CwtCandidate NewCwtCandidate(double apexRt, double startRt, double endRt,
+            double area, double snr, double coelutionScore)
+        {
+            return new CwtCandidate
+            {
+                ApexRt = apexRt,
+                StartRt = startRt,
+                EndRt = endRt,
+                Area = area,
+                Snr = snr,
+                CoelutionScore = coelutionScore,
+            };
+        }
+
+        private static void AssertCwtCandidateBitEqual(CwtCandidate expected, CwtCandidate actual,
+            string label)
+        {
+            AssertBitEqual(expected.ApexRt, actual.ApexRt, label + " ApexRt");
+            AssertBitEqual(expected.StartRt, actual.StartRt, label + " StartRt");
+            AssertBitEqual(expected.EndRt, actual.EndRt, label + " EndRt");
+            AssertBitEqual(expected.Area, actual.Area, label + " Area");
+            AssertBitEqual(expected.Snr, actual.Snr, label + " Snr");
+            AssertBitEqual(expected.CoelutionScore, actual.CoelutionScore, label + " CoelutionScore");
+        }
+
+        private static void AssertBitEqual(double expected, double actual, string label)
+        {
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected),
+                BitConverter.DoubleToInt64Bits(actual), label + " bit mismatch");
+        }
+
+        /// <summary>
         /// Stage-6 streaming reconciled transfer: streaming the original parquet
         /// group-by-group with an overlay map + gap-fill list
         /// (<see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>) is logically

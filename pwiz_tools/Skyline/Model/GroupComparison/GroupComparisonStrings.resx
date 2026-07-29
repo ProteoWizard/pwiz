@@ -324,28 +324,101 @@
     <value>X-Large</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square" xml:space="preserve">
-    <value>Square</value>
+    <value>&#x25A0;</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
-    <value>Diamond</value>
+    <value>&#x25C6;</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle" xml:space="preserve">
-    <value>Triangle</value>
+    <value>&#x25B2;</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color" xml:space="preserve">
+    <value>Color</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
-    <value>Circle</value>
+    <value>&#x25CF;</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown" xml:space="preserve">
-    <value>Triangle Down</value>
+    <value>&#x25BC;</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross" xml:space="preserve">
-    <value>X Cross</value>
+    <value>&#x00D7;</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
-    <value>Plus</value>
+    <value>+</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
+    <value>&#x2605;</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineCircle" xml:space="preserve">
+    <value>&#x25CB;</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineSquare" xml:space="preserve">
+    <value>&#x25A1;</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangle" xml:space="preserve">
+    <value>&#x25B3;</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangleDown" xml:space="preserve">
+    <value>&#x25BD;</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineDiamond" xml:space="preserve">
+    <value>&#x25C7;</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_Circle" xml:space="preserve">
+    <value>Circle</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_Square" xml:space="preserve">
+    <value>Square</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_Triangle" xml:space="preserve">
+    <value>Triangle</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_TriangleDown" xml:space="preserve">
+    <value>Triangle Down</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_Diamond" xml:space="preserve">
+    <value>Diamond</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_XCross" xml:space="preserve">
+    <value>X</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_Plus" xml:space="preserve">
+    <value>Plus</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_Star" xml:space="preserve">
     <value>Star</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_OutlineCircle" xml:space="preserve">
+    <value>Outline Circle</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_OutlineSquare" xml:space="preserve">
+    <value>Outline Square</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_OutlineTriangle" xml:space="preserve">
+    <value>Outline Triangle</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_OutlineTriangleDown" xml:space="preserve">
+    <value>Outline Triangle Down</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_SymbolName_OutlineDiamond" xml:space="preserve">
+    <value>Outline Diamond</value>
+    <comment>Accessible name announced by screen readers for the symbol glyph</comment>
   </data>
   <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
     <value>Total Ion Current</value>
@@ -367,5 +440,14 @@
   </data>
   <data name="EditGroupComparisonDlg_GroupComparisonDef_Group_comparisons_at_the_protein_level_using_calibrated_values_is_not_yet_supported_in_Skyline_" xml:space="preserve">
     <value>Group comparisons at the protein level using calibrated values is not yet supported in Skyline.</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_Delete_rule" xml:space="preserve">
+    <value>Delete rule</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_Move_rule_up" xml:space="preserve">
+    <value>Move rule up</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_Move_rule_down" xml:space="preserve">
+    <value>Move rule down</value>
   </data>
 </root>

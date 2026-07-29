@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -1560,41 +1561,52 @@ namespace pwiz.Osprey.Tasks
             var snrByEntryId = new ConcurrentDictionary<uint, double>();
             var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
 
-            Parallel.ForEach(entriesByWindow, new ParallelOptions
+            // Calibration scoring is the one long determinate loop that still ran silent: the
+            // surrounding [TIMING]/[COUNT] lines are filtered out of normal output
+            // (OspreyOutput.IsMachineParseable), so a normal run showed nothing between
+            // "Running RT calibration..." and the pass summary -- ~40 s per file, ~50 min
+            // across an 82-file run.
+            int windowsDone = 0;
+            using (var progress = new ProgressReporter(
+                       "Scoring calibration windows", entriesByWindow.Count, "  "))
             {
-                MaxDegreeOfParallelism = config.NThreads
-            },
-            () => resolution.CreateScorer(),
-            (kvp, loopState, localScorer) =>
-            {
-                // Load, RT-sort, and preprocess this window's spectra so the XCorr cache
-                // aligns with the RT-sorted spectra order used for scoring.
-                var windowSpectra = windowIndex.LoadWindow(kvp.Key);
-                windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: calibration RT-only sort tie behaviour
-                // s_calXcorrScorer is shared across the window-parallel bodies here, so
-                // PreprocessSpectrumForXcorrF32 MUST remain stateless (a pure function of its
-                // input spectrum) -- adding per-call scratch state on the scorer would race.
-                var windowPreprocessed = new float[windowSpectra.Count][];
-                for (int i = 0; i < windowSpectra.Count; i++)
-                    windowPreprocessed[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(windowSpectra[i]);
-
-                foreach (var entry in kvp.Value)
-                {
-                    var match = ScoreResolvedCalibrationEntry(
-                        entry, windowSpectra, windowPreprocessed, ms1Spectra, context,
-                        rtSlope, rtIntercept, tolerance, calibrationModel, localScorer,
-                        out double entrySnr, out double entryLibRt, out double entryMeasuredRt);
-                    if (match != null)
+                Parallel.ForEach(entriesByWindow, new ParallelOptions
                     {
-                        matches.Add(match);
-                        snrByEntryId[entry.Id] = entrySnr;
-                        matchRts[entry.Id] = new KeyValuePair<double, double>(
-                            entryLibRt, entryMeasuredRt);
-                    }
-                }
-                return localScorer;
-            },
-            localScorer => { });
+                        MaxDegreeOfParallelism = config.NThreads
+                    },
+                    () => resolution.CreateScorer(),
+                    (kvp, loopState, localScorer) =>
+                    {
+                        // Load, RT-sort, and preprocess this window's spectra so the XCorr cache
+                        // aligns with the RT-sorted spectra order used for scoring.
+                        var windowSpectra = windowIndex.LoadWindow(kvp.Key);
+                        windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: calibration RT-only sort tie behaviour
+                        // s_calXcorrScorer is shared across the window-parallel bodies here, so
+                        // PreprocessSpectrumForXcorrF32 MUST remain stateless (a pure function of its
+                        // input spectrum) -- adding per-call scratch state on the scorer would race.
+                        var windowPreprocessed = new float[windowSpectra.Count][];
+                        for (int i = 0; i < windowSpectra.Count; i++)
+                            windowPreprocessed[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(windowSpectra[i]);
+
+                        foreach (var entry in kvp.Value)
+                        {
+                            var match = ScoreResolvedCalibrationEntry(
+                                entry, windowSpectra, windowPreprocessed, ms1Spectra, context,
+                                rtSlope, rtIntercept, tolerance, calibrationModel, localScorer,
+                                out double entrySnr, out double entryLibRt, out double entryMeasuredRt);
+                            if (match != null)
+                            {
+                                matches.Add(match);
+                                snrByEntryId[entry.Id] = entrySnr;
+                                matchRts[entry.Id] = new KeyValuePair<double, double>(
+                                    entryLibRt, entryMeasuredRt);
+                            }
+                        }
+                        progress.Report(Interlocked.Increment(ref windowsDone));
+                        return localScorer;
+                    },
+                    localScorer => { });
+            }
             swScoring.Stop();
             _ctx.LogInfo(string.Format(
                 "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",

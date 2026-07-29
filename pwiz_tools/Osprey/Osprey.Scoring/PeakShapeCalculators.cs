@@ -231,8 +231,8 @@ namespace pwiz.Osprey.Scoring
     /// A truly scale-free sharpness would normalize the slope by the apex
     /// (<c>slope / apex</c>) and stay linear. That is a feature redesign, not a
     /// conditioning change, and it moves the discovery set, so it needs its own
-    /// entrapment validation. It is tracked in the team's sibling pwiz-ai repo (NOT in
-    /// this one) at todos/backlog/brendanx67/TODO-osprey_scale_free_sharpness.md.
+    /// entrapment validation. Tracked as issue #4466, together with the per-run
+    /// intensity normalization it pairs with.
     ///
     /// This is the ONE peak-shape feature whose raw value can genuinely be negative:
     /// the apex is the override/CWT-supplied apex (see <see cref="PeakApexCalc"/>), NOT
