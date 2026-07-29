@@ -146,6 +146,17 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 # osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
+# Every Osprey invocation in this run is timestamped and mem-stamped, so each leg's log
+# doubles as a memory-band trace: `[yyyy/MM/dd HH:mm:ss]<TAB>managedMB<TAB>privateMB<TAB>`.
+# That makes a red-or-slow gate diagnosable after the fact - the log shows whether the
+# per-file memory floor climbed (an O(files) regression) and where the tool went silent -
+# without re-running anything. Read it with ai/scripts/perfviz.py (numbers: peak, floor
+# drift per file, every reporting gap) or ai/scripts/perfviz.html (plot). The prefix costs
+# a GC.GetTotalMemory(false) + a process query per emitted line, which is noise next to the
+# pipeline itself. See ai/docs/memory-band-guide.md, including why this trace shows SHAPE
+# but not live-set MAGNITUDE.
+$memStampArgs = @('--timestamp', '--memstamp')
+
 # The mzML data zip on panorama (raw-data zip is future work). The URL's
 # second-to-last segment ("perftests") maps to <Downloads>\Perftests.
 #
@@ -385,6 +396,7 @@ function Invoke-OspreyRun {
                   '--resolution', $Resolution, '--protein-fdr', '0.01',
                   '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
     $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
+    $cliArgs += $memStampArgs
     if ($DumpProteinFdr) { $env:OSPREY_DUMP_STAGE7_PROTEIN_FDR = '1' }
     # Run with CWD = work dir so the -o blib and the Stage 7 protein-FDR dump
     # (both CWD-relative, NOT --work-dir-relative -- only derived artifacts +
@@ -595,6 +607,7 @@ function Invoke-HpcChain {
     $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
     $a1 += $extraArgs
+    $a1 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
@@ -620,6 +633,7 @@ function Invoke-HpcChain {
     $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a2 += $extraArgs
+    $a2 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
 
     # Phase 3: per-file rescore workers (Stage 6), one independent worker per
@@ -652,6 +666,7 @@ function Invoke-HpcChain {
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
         $a3 += $extraArgs
+        $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
         # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
         # consumes only those plus the calibration / reconciliation / 1st-pass
@@ -705,6 +720,7 @@ function Invoke-HpcChain {
     $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a4 += $extraArgs
+    $a4 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
 
     return (Join-Path $ph4 'output.blib')
@@ -846,19 +862,15 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # mode 3's SecondPassFDR merge legitimately uses the RESIDENT first-pass pool
-        # (ExpectReconciledInput), which the OSPREY_ALLOW_UNBOUNDED_MEMORY guard otherwise blocks as
-        # an O(files) path. Opt in for the chain ONLY -- this is our own testing -- so modes 1/2 run
-        # with the guard armed, proving the default straight-through + resume paths stay lean. The
-        # HPC resident/rehydrate path is tracked for streaming in
-        # ai/todos/backlog/brendanx67/TODO-osprey_stage6_rescored_buffer_streaming.md.
-        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
-        try {
-            $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
-                -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest
-        } finally {
-            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
-        }
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR merge does
+        # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
+        # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
+        # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
+        # it wrapped the whole chain and would mask a genuine guard regression on any
+        # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
+        # what mode 3 exists to exercise.
+        $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
+            -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest
         $sw3.Stop()
         Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
@@ -878,12 +890,22 @@ foreach ($name in $selected) {
         $coldBlib = Join-Path $straightDir 'output_cold.blib'
         Copy-Item $straightBlib $coldBlib -Force
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        # A --model-diagnostics resume needs the RESIDENT first-pass pool and fails
-        # fast without this opt-in: the invalidation deletes the Stage 5 join + blib
-        # but leaves every <stem>.1st-pass.fdr_scores.bin in place, so
-        # PerFileScoringTask's needsResidentPool is true and GuardResidentPool throws.
-        # Same opt-in the HPC chain above takes, and equally safe here -- these are
-        # 3-file datasets, not the file counts the guard exists to protect.
+        # Scoped opt-in, and ONLY for this leg. A FULL resume with --model-diagnostics is a
+        # genuinely O(files) path that is not fixed yet: the invalidation leaves every
+        # <stem>.1st-pass.fdr_scores.bin on disk, so FirstJoin skips the first-pass score
+        # pass and emits the report through the batch ModelDiagnosticsReport.Write, which
+        # reads the RESIDENT per-file entries (PerFileScoringTask.cs, needsResidentPool at
+        # the --input-files rehydrate). The guard is therefore RIGHT to throw here, and
+        # suppressing it is the honest thing to do only because these are 3-file datasets.
+        #
+        # This is NOT the scale case. --model-diagnostics over --input-scores streams the
+        # report off ModelDiagnosticsData.Accumulator one file at a time and needs no opt-in
+        # at any file count -- that is the 82-file path this PR bounds. What remains is the
+        # full-resume batch report, tracked separately; the fix is to feed the same
+        # accumulator during the resume's per-file load and report from it.
+        #
+        # mode 3 above deliberately has NO opt-in: its old one wrapped the entire HPC chain
+        # and would mask a guard regression on any --input-scores worker.
         $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
         try {
             $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
