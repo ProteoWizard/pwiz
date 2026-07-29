@@ -405,7 +405,8 @@ namespace pwiz.Skyline.Model.Results
 
         private IList<ChromatogramGroupInfo> LoadChromatogramGroupInfos(TransitionGroupDocNode transitionGroup)
         {
-            return MoleculeResults.GetChromatogramGroupInfos(transitionGroup.TransitionGroup, ReplicateIndex);
+            return ImmutableList.ValueOf(
+                MoleculeResults.GetChromatogramGroupInfos(transitionGroup.TransitionGroup, ReplicateIndex));
         }
 
         private ChromatogramGroupInfo LoadChromatogramGroupInfo(TransitionGroupDocNode transitionGroup)

@@ -2752,8 +2752,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         resultsByPeptide.Add(nodePep.Peptide, moleculeResults);
                     }
 
-                    var arrayChromInfo = moleculeResults.GetChromatogramGroupInfos(
-                        transitionGroupDocNode.TransitionGroup, replicateIndex);
+                    var arrayChromInfo = ImmutableList.ValueOf(moleculeResults.GetChromatogramGroupInfos(
+                        transitionGroupDocNode.TransitionGroup, replicateIndex));
                     if (arrayChromInfo.Count == 0)
                     {
                         listArrayChromInfo.Add(null);

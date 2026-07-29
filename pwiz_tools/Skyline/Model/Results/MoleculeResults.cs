@@ -56,10 +56,11 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class MoleculeResults
     {
-        private Dictionary<ReferenceValue<Transition>, TransitionPeaks> _transitions;
-        private Dictionary<GroupReplicateKey, ImmutableList<ChromatogramGroupInfo>> _chromatogramGroupInfos;
-        private readonly Dictionary<ReferenceValue<TransitionGroup>, GroupResults> _groupResults =
-            new Dictionary<ReferenceValue<TransitionGroup>, GroupResults>();
+        // Indexed the way the doc node children are, since FindNodeIndex makes that a fast
+        // lookup from the identity and there is no need for a dictionary of our own.
+        private ImmutableList<ReplicateMap<ChromatogramGroupInfo>> _chromatogramGroupInfos;
+        private ImmutableList<ImmutableList<TransitionPeaks>> _transitionPeaks;
+        private GroupResults[] _groupResults;
         private readonly Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator> _integrators =
             new Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator>();
 
@@ -89,13 +90,13 @@ namespace pwiz.Skyline.Model.Results
             Transition transition)
         {
             var groupResults = GetGroupResults(transitionGroup);
-            if (groupResults == null)
+            int transitionIndex = FindTransitionGroup(transitionGroup)?.FindNodeIndex(transition) ?? -1;
+            if (groupResults == null || transitionIndex < 0)
             {
                 return null;
             }
 
-            groupResults.TransitionResults.TryGetValue(transition, out var results);
-            return results;
+            return groupResults.TransitionResults[transitionIndex];
         }
 
         public ChromInfoList<TransitionChromInfo> GetTransitionChromInfos(TransitionGroup transitionGroup,
@@ -136,20 +137,31 @@ namespace pwiz.Skyline.Model.Results
         /// the on demand feature calculator needs the chromatogram itself and not only the peaks
         /// taken from it.
         /// </summary>
-        public ImmutableList<ChromatogramGroupInfo> GetChromatogramGroupInfos(TransitionGroup transitionGroup,
+        public IEnumerable<ChromatogramGroupInfo> GetChromatogramGroupInfos(TransitionGroup transitionGroup,
             int replicateIndex)
         {
             EnsureRead();
-            _chromatogramGroupInfos.TryGetValue(new GroupReplicateKey(transitionGroup, replicateIndex),
-                out var result);
-            return result ?? ImmutableList<ChromatogramGroupInfo>.EMPTY;
+            int groupIndex = PeptideDocNode.FindNodeIndex(transitionGroup);
+            if (groupIndex < 0 || replicateIndex < 0 || replicateIndex >= ReplicateCount)
+            {
+                return ImmutableList<ChromatogramGroupInfo>.EMPTY;
+            }
+
+            return _chromatogramGroupInfos[groupIndex][replicateIndex];
         }
 
         public TransitionPeaks GetTransitionPeaks(TransitionDocNode nodeTran)
         {
             EnsureRead();
-            _transitions.TryGetValue(nodeTran.Transition, out var transitionPeaks);
-            return transitionPeaks;
+            int groupIndex = PeptideDocNode.FindNodeIndex(nodeTran.Transition.Group);
+            if (groupIndex < 0)
+            {
+                return null;
+            }
+
+            int transitionIndex = ((TransitionGroupDocNode) PeptideDocNode.Children[groupIndex])
+                .FindNodeIndex(nodeTran.Transition);
+            return transitionIndex < 0 ? null : _transitionPeaks[groupIndex][transitionIndex];
         }
 
         /// <summary>
@@ -190,22 +202,23 @@ namespace pwiz.Skyline.Model.Results
 
         private TransitionGroupDocNode FindTransitionGroup(TransitionGroup transitionGroup)
         {
-            return PeptideDocNode.TransitionGroups.FirstOrDefault(nodeGroup =>
-                ReferenceEquals(nodeGroup.TransitionGroup, transitionGroup));
+            int groupIndex = PeptideDocNode.FindNodeIndex(transitionGroup);
+            return groupIndex < 0 ? null : (TransitionGroupDocNode) PeptideDocNode.Children[groupIndex];
         }
 
         private GroupResults GetGroupResults(TransitionGroup transitionGroup)
         {
             EnsureRead();
-            if (_groupResults.TryGetValue(transitionGroup, out var groupResults))
+            int groupIndex = PeptideDocNode.FindNodeIndex(transitionGroup);
+            if (groupIndex < 0 || ReplicateCount == 0)
             {
-                return groupResults;
+                return null;
             }
 
-            var nodeGroup = FindTransitionGroup(transitionGroup);
-            groupResults = nodeGroup == null || ReplicateCount == 0 ? null : CalcGroupResults(nodeGroup);
-            _groupResults.Add(transitionGroup, groupResults);
-            return groupResults;
+            // Nothing else returns null, so there is no need to remember that a group has
+            // already been calculated.
+            return _groupResults[groupIndex] ??=
+                CalcGroupResults((TransitionGroupDocNode) PeptideDocNode.Children[groupIndex]);
         }
 
         /// <summary>
@@ -235,14 +248,8 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            var groupResults = new GroupResults(new Results<TransitionGroupChromInfo>(groupChromInfoLists));
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
-            {
-                groupResults.TransitionResults.Add(nodeTrans[iTran].Transition,
-                    new Results<TransitionChromInfo>(transitionChromInfoLists[iTran]));
-            }
-
-            return groupResults;
+            return new GroupResults(new Results<TransitionGroupChromInfo>(groupChromInfoLists),
+                transitionChromInfoLists.Select(lists => new Results<TransitionChromInfo>(lists)));
         }
 
         /// <summary>
@@ -607,52 +614,49 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private void EnsureRead()
         {
-            if (_transitions != null)
+            if (_transitionPeaks != null)
             {
                 return;
             }
 
-            var transitions = new Dictionary<ReferenceValue<Transition>, TransitionPeaks>();
-            var chromatogramGroupInfos = new Dictionary<GroupReplicateKey, ImmutableList<ChromatogramGroupInfo>>();
+            var chromatogramGroupInfos = new List<ReplicateMap<ChromatogramGroupInfo>>();
+            var transitionPeaks = new List<ImmutableList<TransitionPeaks>>();
             var measuredResults = Settings.MeasuredResults;
-            if (measuredResults != null)
+            foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
             {
-                foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
+                if (measuredResults == null)
                 {
-                    ReadTransitionGroup(measuredResults, nodeGroup, transitions, chromatogramGroupInfos);
+                    chromatogramGroupInfos.Add(ReplicateMap<ChromatogramGroupInfo>.EMPTY);
+                    transitionPeaks.Add(ImmutableList<TransitionPeaks>.EMPTY);
+                    continue;
                 }
+
+                chromatogramGroupInfos.Add(ReadTransitionGroup(measuredResults, nodeGroup, out var groupPeaks));
+                transitionPeaks.Add(groupPeaks);
             }
 
-            _chromatogramGroupInfos = chromatogramGroupInfos;
-            _transitions = transitions;
+            _chromatogramGroupInfos = ImmutableList.ValueOf(chromatogramGroupInfos);
+            _groupResults = new GroupResults[transitionPeaks.Count];
+            _transitionPeaks = ImmutableList.ValueOf(transitionPeaks);
         }
 
-        private void ReadTransitionGroup(MeasuredResults measuredResults, TransitionGroupDocNode nodeGroup,
-            IDictionary<ReferenceValue<Transition>, TransitionPeaks> transitions,
-            IDictionary<GroupReplicateKey, ImmutableList<ChromatogramGroupInfo>> chromatogramGroupInfos)
+        private ReplicateMap<ChromatogramGroupInfo> ReadTransitionGroup(MeasuredResults measuredResults,
+            TransitionGroupDocNode nodeGroup, out ImmutableList<TransitionPeaks> transitionPeaks)
         {
-            var builders = nodeGroup.Transitions.ToDictionary(
-                nodeTran => ReferenceValue.Of(nodeTran.Transition), nodeTran => new TransitionPeaksBuilder());
+            var builders = nodeGroup.Transitions.Select(nodeTran => new TransitionPeaksBuilder()).ToArray();
+            var chromatogramGroupInfos = new List<IList<ChromatogramGroupInfo>>();
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
-                var chromGroupInfos = ReadReplicate(measuredResults, measuredResults.Chromatograms[replicateIndex],
-                    nodeGroup, builders);
-                if (chromGroupInfos.Count > 0)
-                {
-                    chromatogramGroupInfos[new GroupReplicateKey(nodeGroup.TransitionGroup, replicateIndex)] =
-                        ImmutableList.ValueOf(chromGroupInfos);
-                }
-
-                foreach (var builder in builders.Values)
+                chromatogramGroupInfos.Add(ReadReplicate(measuredResults,
+                    measuredResults.Chromatograms[replicateIndex], nodeGroup, builders));
+                foreach (var builder in builders)
                 {
                     builder.EndReplicate();
                 }
             }
 
-            foreach (var entry in builders)
-            {
-                transitions[entry.Key] = entry.Value.Build();
-            }
+            transitionPeaks = ImmutableList.ValueOf(builders.Select(builder => builder.Build()));
+            return new ReplicateMap<ChromatogramGroupInfo>(chromatogramGroupInfos);
         }
 
         /// <summary>
@@ -662,8 +666,7 @@ namespace pwiz.Skyline.Model.Results
         /// chromatogram.
         /// </summary>
         private IList<ChromatogramGroupInfo> ReadReplicate(MeasuredResults measuredResults,
-            ChromatogramSet chromatograms, TransitionGroupDocNode nodeGroup,
-            IDictionary<ReferenceValue<Transition>, TransitionPeaksBuilder> builders)
+            ChromatogramSet chromatograms, TransitionGroupDocNode nodeGroup, TransitionPeaksBuilder[] builders)
         {
             float tolerance = MzMatchTolerance;
             if (!measuredResults.TryLoadChromatogram(chromatograms, PeptideDocNode, nodeGroup, tolerance,
@@ -686,8 +689,10 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
+                for (int iTran = 0; iTran < nodeGroup.TransitionCount; iTran++)
                 {
+                    var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
+
                     // Optimization steps are separate chromatograms of the same transition, and
                     // each one has its own set of candidate peaks.
                     var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, tolerance,
@@ -697,7 +702,7 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
 
-                    var builder = builders[nodeTran.Transition];
+                    var builder = builders[iTran];
                     for (int step = -optStepChromatograms.StepCount; step <= optStepChromatograms.StepCount; step++)
                     {
                         // A position gets added for every step even when there is no
@@ -762,43 +767,15 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private class GroupResults
         {
-            public GroupResults(Results<TransitionGroupChromInfo> chromInfos)
+            public GroupResults(Results<TransitionGroupChromInfo> chromInfos,
+                IEnumerable<Results<TransitionChromInfo>> transitionResults)
             {
                 ChromInfos = chromInfos;
-                TransitionResults = new Dictionary<ReferenceValue<Transition>, Results<TransitionChromInfo>>();
+                TransitionResults = ImmutableList.ValueOf(transitionResults);
             }
 
             public Results<TransitionGroupChromInfo> ChromInfos { get; }
-            public Dictionary<ReferenceValue<Transition>, Results<TransitionChromInfo>> TransitionResults { get; }
-        }
-
-        /// <summary>
-        /// Identifies the chromatograms of one transition group in one replicate.
-        /// </summary>
-        private struct GroupReplicateKey
-        {
-            public GroupReplicateKey(TransitionGroup transitionGroup, int replicateIndex)
-            {
-                TransitionGroup = transitionGroup;
-                ReplicateIndex = replicateIndex;
-            }
-
-            public ReferenceValue<TransitionGroup> TransitionGroup { get; }
-            public int ReplicateIndex { get; }
-
-            public override bool Equals(object obj)
-            {
-                return obj is GroupReplicateKey other && Equals(TransitionGroup, other.TransitionGroup) &&
-                       ReplicateIndex == other.ReplicateIndex;
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (TransitionGroup.GetHashCode() * 397) ^ ReplicateIndex;
-                }
-            }
+            public ImmutableList<Results<TransitionChromInfo>> TransitionResults { get; }
         }
 
         private struct FileStep
@@ -853,6 +830,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 get { return ParticipatesInScoring ? ChromInfo?.Area ?? 0 : -1.0f; }
             }
+        }
+
+        private IEnumerable<ReplicateMap<ChromatogramGroupInfo>> ReadChromatogramGroupInfos()
+        {
+            if (Settings.MeasuredResults == null)
+            {
+                return PeptideDocNode.TransitionGroups.Select(tg => ReplicateMap<ChromatogramGroupInfo>.EMPTY);
+            }
+
+            return PeptideDocNode.TransitionGroups.Select(tg => new ReplicateMap<ChromatogramGroupInfo>(
+                Settings.MeasuredResults.LoadChromatogramsForAllReplicates(PeptideDocNode, tg,
+                    MzMatchTolerance)));
         }
     }
 
