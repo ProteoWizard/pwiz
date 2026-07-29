@@ -33,6 +33,11 @@ namespace pwiz.Skyline.Model.Results
         /// how both forms can be carried at once while the readers are converted one at a
         /// time. The peak index lists stay null, because which candidate peak was chosen is
         /// only knowable by reading the .skyd.
+        /// <para>
+        /// Only optimization step zero is stored. Nothing here can differ between the steps of
+        /// one file: the user cannot set peak boundaries or annotations for one step on its own,
+        /// and everything else is read back from the .skyd, which has every step.
+        /// </para>
         /// </summary>
         public static TransitionGroupResults FromChromInfos(Results<TransitionGroupChromInfo> results)
         {
@@ -42,6 +47,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var fileIds = new List<ChromFileInfoId>();
+            var counts = new List<int>();
             var areas = new List<float>();
             var retentionTimes = new List<float>();
             var userSets = new List<UserSet>();
@@ -50,8 +56,14 @@ namespace pwiz.Skyline.Model.Results
             List<CustomPeak> customPeaks = null;
             foreach (var chromInfoList in results)
             {
+                int count = 0;
                 foreach (var chromInfo in chromInfoList)
                 {
+                    if (chromInfo.OptimizationStep != 0)
+                    {
+                        continue;
+                    }
+
                     CustomPeak.CollectAnnotations(ref customPeaks, areas.Count, chromInfo.Annotations);
                     fileIds.Add(chromInfo.FileId);
                     areas.Add(chromInfo.Area ?? 0);
@@ -59,11 +71,14 @@ namespace pwiz.Skyline.Model.Results
                     userSets.Add(chromInfo.UserSet);
                     qValues.Add(chromInfo.QValue ?? float.NaN);
                     zScores.Add(chromInfo.ZScore ?? float.NaN);
+                    count++;
                 }
+
+                counts.Add(count);
             }
 
             var transitionGroupResults =
-                new TransitionGroupResults(new ChromFileIds(ReplicatePositions.FromResults(results), fileIds), areas,
+                new TransitionGroupResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas,
                         retentionTimes)
                     .ChangeUserSets(userSets)
                     .ChangeQValues(qValues)
@@ -201,6 +216,16 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.CustomPeaks = ImmutableList.ValueOf(value));
         }
 
+        /// <summary>
+        /// The position of one file's entry in one replicate, or -1. Callers find a position this
+        /// way rather than counting, since the entries of a replicate are in no order they can
+        /// rely on.
+        /// </summary>
+        public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
+        {
+            return ChromFileIds.IndexOfFile(replicateIndex, fileId);
+        }
+
         public CustomPeak GetCustomPeak(int position)
         {
             return CustomPeak.FindAtPosition(CustomPeaks, position);
@@ -237,6 +262,10 @@ namespace pwiz.Skyline.Model.Results
     /// Note that this deliberately holds no retention times. The apex of an individual
     /// transition matters much less than the apex of the transition group, so code which
     /// wants it reads it back from the .skyd file instead.
+    /// <para>
+    /// There is one entry per file per replicate: optimization step zero only. Nothing stored
+    /// here can differ between the steps of one file.
+    /// </para>
     /// </summary>
     public class TransitionResults : Immutable
     {
@@ -252,22 +281,32 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var fileIds = new List<ChromFileInfoId>();
+            var counts = new List<int>();
             var areas = new List<float>();
             var userSets = new List<UserSet>();
             List<CustomPeak> customPeaks = null;
             foreach (var chromInfoList in results)
             {
+                int count = 0;
                 foreach (var chromInfo in chromInfoList)
                 {
+                    if (chromInfo.OptimizationStep != 0)
+                    {
+                        continue;
+                    }
+
                     CustomPeak.CollectAnnotations(ref customPeaks, areas.Count, chromInfo.Annotations);
                     fileIds.Add(chromInfo.FileId);
                     areas.Add(chromInfo.Area);
                     userSets.Add(chromInfo.UserSet);
+                    count++;
                 }
+
+                counts.Add(count);
             }
 
             var transitionResults =
-                new TransitionResults(new ChromFileIds(ReplicatePositions.FromResults(results), fileIds), areas)
+                new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
                     .ChangeUserSets(userSets);
             return customPeaks == null ? transitionResults : transitionResults.ChangeCustomPeaks(customPeaks);
         }
@@ -300,6 +339,15 @@ namespace pwiz.Skyline.Model.Results
         public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
         {
             return ChangeProp(ImClone(this), im => im.CustomPeaks = ImmutableList.ValueOf(value));
+        }
+
+        /// <summary>
+        /// The position of one file's entry in one replicate, or -1. See
+        /// <see cref="TransitionGroupResults.IndexOfFile"/>.
+        /// </summary>
+        public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
+        {
+            return ChromFileIds.IndexOfFile(replicateIndex, fileId);
         }
 
         public CustomPeak GetCustomPeak(int position)

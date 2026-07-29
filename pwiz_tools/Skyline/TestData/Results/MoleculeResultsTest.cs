@@ -265,15 +265,7 @@ namespace pwiz.SkylineTestData.Results
                 return 0;
             }
 
-            var documentChromInfos = new List<TransitionChromInfo>();
-            var countsPerReplicate = new List<int>();
-            foreach (var chromInfoList in nodeTran.Results)
-            {
-                countsPerReplicate.Add(chromInfoList.Count);
-                documentChromInfos.AddRange(chromInfoList);
-            }
-
-            CheckAbbreviatedResults(nodeTran, documentChromInfos, countsPerReplicate);
+            CheckAbbreviatedResults(nodeTran);
 
             var results = moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition);
             Assert.IsNotNull(results);
@@ -500,24 +492,35 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// The columnar form the document now carries alongside its chrom infos has to agree
-        /// with them position for position.
+        /// The columnar form the document carries alongside its chrom infos has to agree with them,
+        /// and has to hold one entry per file per replicate: optimization step zero only, found by
+        /// file rather than by counting.
         /// </summary>
-        private static void CheckAbbreviatedResults(TransitionDocNode nodeTran,
-            IList<TransitionChromInfo> documentChromInfos, IList<int> countsPerReplicate)
+        private static void CheckAbbreviatedResults(TransitionDocNode nodeTran)
         {
             var abbreviated = nodeTran.AbbreviatedResults;
             Assert.IsNotNull(abbreviated);
-            Assert.AreEqual(documentChromInfos.Count, abbreviated.Areas.Count);
-            Assert.AreEqual(ReplicatePositions.FromCounts(countsPerReplicate),
-                abbreviated.ChromFileIds.ReplicatePositions);
-            for (int position = 0; position < documentChromInfos.Count; position++)
+
+            int stepZeroCount = 0;
+            for (int replicateIndex = 0; replicateIndex < nodeTran.Results.Count; replicateIndex++)
             {
-                var chromInfo = documentChromInfos[position];
-                Assert.AreEqual(chromInfo.Area, abbreviated.Areas[position]);
-                Assert.AreEqual(chromInfo.UserSet, abbreviated.GetUserSet(position));
-                Assert.AreSame(chromInfo.FileId, abbreviated.ChromFileIds.FileIds[position].Value);
+                foreach (var chromInfo in nodeTran.Results[replicateIndex])
+                {
+                    int position = abbreviated.IndexOfFile(replicateIndex, chromInfo.FileId);
+                    Assert.AreNotEqual(-1, position);
+                    Assert.AreSame(chromInfo.FileId, abbreviated.ChromFileIds.FileIds[position].Value);
+                    if (chromInfo.OptimizationStep != 0)
+                    {
+                        continue;
+                    }
+
+                    Assert.AreEqual(chromInfo.Area, abbreviated.Areas[position]);
+                    Assert.AreEqual(chromInfo.UserSet, abbreviated.GetUserSet(position));
+                    stepZeroCount++;
+                }
             }
+
+            Assert.AreEqual(stepZeroCount, abbreviated.Areas.Count);
 
             // Replacing the results has to discard the derived form, including on the copy
             // that ImClone makes, which would otherwise keep the one it was cloned with.

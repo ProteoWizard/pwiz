@@ -24,6 +24,30 @@ namespace pwiz.Skyline.Model.Results
         public ReplicatePositions ReplicatePositions { get; private set; }
         public ImmutableList<ReferenceValue<ChromFileInfoId>> FileIds { get; private set; }
 
+        /// <summary>
+        /// The flat position of a file's entry in one replicate, or -1 when the replicate has
+        /// nothing for that file.
+        /// <para>
+        /// This is how a position is found. Nothing should count its way to one, because the
+        /// entries of a replicate are in no order a caller can rely on. A replicate almost
+        /// always has exactly one entry, so searching it is cheap.
+        /// </para>
+        /// </summary>
+        public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
+        {
+            int start = ReplicatePositions.GetStart(replicateIndex);
+            int end = start + ReplicatePositions.GetCount(replicateIndex);
+            for (int position = start; position < end; position++)
+            {
+                if (ReferenceEquals(FileIds[position].Value, fileId))
+                {
+                    return position;
+                }
+            }
+
+            return -1;
+        }
+
         protected bool Equals(ChromFileIds other)
         {
             return ReplicatePositions.Equals(other.ReplicatePositions) && FileIds.Equals(other.FileIds);

@@ -339,11 +339,10 @@ namespace pwiz.Skyline.Model.Results
                     // A chrom info gets added for every step even when there is no chromatogram
                     // for it, because ChangeResults adds an empty peak there.
                     var chromatogramInfo = optStepChromatograms.GetChromatogramForStep(step);
-                    var documentChromInfo = chromInfos.Count < documentChromInfos.Count
-                        ? documentChromInfos[chromInfos.Count]
-                        : null;
-                    chromInfos.Add(MakeTransitionChromInfo(nodeGroup, nodeTran, replicateIndex, chromInfos.Count,
-                        fileId, step, chromatogramInfo, documentChromInfo));
+                    // Found by file and step rather than by counting, since nothing guarantees the
+                    // document lists them in the order the cache produces them.
+                    chromInfos.Add(MakeTransitionChromInfo(nodeGroup, nodeTran, replicateIndex, fileId, step,
+                        chromatogramInfo, FindChromInfo(documentChromInfos, new FileStep(fileId, step))));
                 }
             }
 
@@ -363,35 +362,20 @@ namespace pwiz.Skyline.Model.Results
         /// </para>
         /// </summary>
         private TransitionChromInfo MakeTransitionChromInfo(TransitionGroupDocNode nodeGroup,
-            TransitionDocNode nodeTran, int replicateIndex, int indexInReplicate, ChromFileInfoId fileId, int step,
+            TransitionDocNode nodeTran, int replicateIndex, ChromFileInfoId fileId, int step,
             ChromatogramInfo chromatogramInfo, TransitionChromInfo documentChromInfo)
         {
+            // The columnar results hold one entry per file, for optimization step zero, so every
+            // step of a file gets the same annotations and user set. Nothing there can differ
+            // between the steps: the user cannot set either one for a single step.
             var results = nodeTran.AbbreviatedResults;
-            int position = GetPosition(results, replicateIndex, indexInReplicate);
-            var customPeak = position < 0 ? null : results.GetCustomPeak(position);
+            int position = results?.IndexOfFile(replicateIndex, fileId) ?? -1;
             var chromPeak = GetChromPeak(nodeGroup, nodeTran, replicateIndex, fileId, step, chromatogramInfo,
                 documentChromInfo);
             return new TransitionChromInfo(fileId, step, chromPeak,
                 chromatogramInfo?.GetIonMobilityFilter() ?? IonMobilityFilter.EMPTY,
-                customPeak?.Annotations ?? Annotations.EMPTY,
+                position < 0 ? Annotations.EMPTY : results.GetCustomPeak(position)?.Annotations ?? Annotations.EMPTY,
                 position < 0 ? UserSet.FALSE : results.GetUserSet(position));
-        }
-
-        /// <summary>
-        /// The flat position of one entry of one replicate, which is how the columnar results are
-        /// addressed. Returns -1 when they do not reach that far, which means the layout the cache
-        /// produced is not the one the document holds.
-        /// </summary>
-        private static int GetPosition(TransitionResults results, int replicateIndex, int indexInReplicate)
-        {
-            var replicatePositions = results?.ChromFileIds.ReplicatePositions;
-            if (replicatePositions == null || replicateIndex >= replicatePositions.ReplicateCount ||
-                indexInReplicate >= replicatePositions.GetCount(replicateIndex))
-            {
-                return -1;
-            }
-
-            return replicatePositions.GetStart(replicateIndex) + indexInReplicate;
         }
 
         private ChromPeak GetChromPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
