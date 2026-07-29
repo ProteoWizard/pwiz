@@ -61,6 +61,7 @@ public sealed class Reader_Waters : IReader
         bool combineIms = config?.CombineIonMobilitySpectra ?? false;
         bool globalChromMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
         bool ignoreCalibrationScans = config?.IgnoreCalibrationScans ?? false;
+        bool reportSonarBins = config?.ReportSonarBins ?? false;
         var mobilityFilter = config?.IsolationMzAndMobilityFilter ?? new List<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
 
         string fullPath = Path.GetFullPath(filename);
@@ -85,7 +86,7 @@ public sealed class Reader_Waters : IReader
         var data = new WatersRawFile(fullPath);
         try
         {
-            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, globalChromMs1Only, ignoreCalibrationScans, mobilityFilter);
+            ReadImpl(result, data, fullPath, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, globalChromMs1Only, ignoreCalibrationScans, mobilityFilter, reportSonarBins);
         }
         catch
         {
@@ -98,7 +99,7 @@ public sealed class Reader_Waters : IReader
     private static void ReadImpl(MSData result, WatersRawFile data, string analysisDir,
         int preferOnlyMsLevel, bool srmAsSpectra, bool ddaProcessing, bool combineIms,
         bool globalChromatogramsAreMs1Only, bool ignoreCalibrationScans,
-        List<Pwiz.Data.Common.Chemistry.MzMobilityWindow> mobilityFilter)
+        List<Pwiz.Data.Common.Chemistry.MzMobilityWindow> mobilityFilter, bool reportSonarBins)
     {
         // Identifier is the directory name minus the .raw extension (matches pwiz C++:
         // bfs::basename(p) drops the trailing extension component).
@@ -135,7 +136,7 @@ public sealed class Reader_Waters : IReader
         result.Run.DefaultInstrumentConfiguration = ic;
         result.Run.StartTimeStamp = ConvertHeaderTimestamp(data);
 
-        var spectrumList = new SpectrumList_Waters(data, owns: true, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, ignoreCalibrationScans, mobilityFilter)
+        var spectrumList = new SpectrumList_Waters(data, owns: true, preferOnlyMsLevel, srmAsSpectra, ddaProcessing, combineIms, ignoreCalibrationScans, mobilityFilter, reportSonarBins)
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 

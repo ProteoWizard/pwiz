@@ -263,8 +263,11 @@ public sealed class AgilentRawData : IDisposable
         _reader = new MassSpecDataReader();
         try
         {
-            if (!_reader.OpenDataFile(dotDPath))
-                throw new InvalidDataException($"MassSpecDataReader could not open {dotDPath}");
+            // pwiz C++ MassHunterData.cpp:322-324 ignores a false return from OpenDataFile: it only
+            // flags a possibly-incomplete acquisition (e.g. a stitched multi-CE .d whose name has
+            // "[stitch]"), but the reader is still usable. Throwing here rejected valid files that
+            // net472 reads fine; a genuinely unopenable file surfaces on later access instead.
+            _reader.OpenDataFile(dotDPath);
         }
         catch (PlatformNotSupportedException ex)
         {

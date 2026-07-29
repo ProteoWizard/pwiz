@@ -168,14 +168,16 @@ internal sealed class TdfData : IBrukerData
 
     private static BrukerIndexEntry MakeCombinedEntry(int idx, TdfFrame frame, int scanBegin, int scanEnd, Tag tag)
     {
-        // pwiz C++ SpectrumList_Bruker.cpp:381 emits short combineIMS native id "merged=N";
-        // the per-scan list of `<scan spectrumRef="frame=F scan=S">` carries the merged scan
-        // membership in scanList. (Earlier we used the longer form derived from
-        // SpectrumList_Bruker.cpp:785 which is the *spectrumIdentity index id*, not the
-        // emitted native id — our older smoke test pinned to "merged=0 frame=1" because
-        // that prefix happened to match.)
-        _ = scanBegin; _ = scanEnd;
-        string id = "merged=" + idx.ToString(CultureInfo.InvariantCulture);
+        // pwiz C++ SpectrumList_Bruker.cpp:785 sets the combineIMS spectrumIdentity index id to the
+        // 4-field form (and copies the emitted spectrum's id from it), so each merged spectrum is
+        // uniquely addressable and its abbreviated scan id (N.F.S.E) round-trips through
+        // FindAbbreviated -- needed by scan-id lookups such as ion-mobility library population. Keep
+        // this byte-identical to what FillSpectrum emits so SpectrumIdentity.Id == Spectrum.Id on
+        // both centroid and profile reads.
+        string id = "merged=" + idx.ToString(CultureInfo.InvariantCulture)
+            + " frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture)
+            + " scanStart=" + (scanBegin + 1).ToString(CultureInfo.InvariantCulture)
+            + " scanEnd=" + (scanEnd + 1).ToString(CultureInfo.InvariantCulture);
         return new BrukerIndexEntry { Index = idx, Id = id, Tag = tag, MsLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2 };
     }
 
@@ -335,16 +337,9 @@ internal sealed class TdfData : IBrukerData
             return;
         }
 
-        // pwiz C++ centroid+combineIMS path emits a longer native id with frame/scan range so
-        // each merged spectrum is uniquely addressable. Non-centroid path keeps the short
-        // "merged=N" form (set in MakeCombinedEntry).
-        if (preferCentroid && tag.Combined)
-        {
-            spec.Id = "merged=" + entry.Index.ToString(CultureInfo.InvariantCulture)
-                + " frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture)
-                + " scanStart=" + (tag.ScanBegin + 1).ToString(CultureInfo.InvariantCulture)
-                + " scanEnd=" + (tag.ScanEnd + 1).ToString(CultureInfo.InvariantCulture);
-        }
+        // Native id (spec.Id) already carries the 4-field "merged=N frame=F scanStart=S scanEnd=E"
+        // form for combined spectra -- set once in MakeCombinedEntry and copied to spec.Id in
+        // BuildSpectrum -- so it is identical for centroid and profile reads.
 
         int msLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2;
         spec.Params.Set(CVID.MS_ms_level, msLevel);

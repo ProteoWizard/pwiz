@@ -26,6 +26,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     private readonly bool _ddaProcessing;
     private readonly bool _combineIonMobilitySpectra;
     private readonly bool _ignoreCalibrationScans;
+    private readonly bool _reportSonarBins;
     private readonly IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow> _mobilityFilter;
     private readonly List<IndexEntry> _index = new();
     private readonly Dictionary<string, int> _idToIndex = new(StringComparer.Ordinal);
@@ -63,7 +64,8 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     internal SpectrumList_Waters(WatersRawFile data, bool owns, int preferOnlyMsLevel,
         bool srmAsSpectra, bool ddaProcessing = false, bool combineIonMobilitySpectra = false,
         bool ignoreCalibrationScans = false,
-        IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow>? mobilityFilter = null)
+        IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow>? mobilityFilter = null,
+        bool reportSonarBins = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
@@ -74,6 +76,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         _combineIonMobilitySpectra = combineIonMobilitySpectra;
         _ignoreCalibrationScans = ignoreCalibrationScans;
         _mobilityFilter = mobilityFilter ?? Array.Empty<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
+        _reportSonarBins = reportSonarBins;
         _ddaIsolationOffsets = new Lazy<(float, float)?>(_data.GetDdaIsolationWindowOffsets);
         if (ddaProcessing)
             BuildDdaIndex();
@@ -592,14 +595,22 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
                     && !Pwiz.Data.Common.Chemistry.MzMobilityWindow.MobilityValueInBounds(_mobilityFilter, driftTime))
                     continue;
                 float sonarLow = 0, sonarHigh = 0;
-                if (isSonar)
+                if (isSonar && !_reportSonarBins)
                     (sonarLow, sonarHigh) = _data.GetSonarBinPrecursorMassRange(ie.Function, s);
                 var (binMz, binInt) = _data.ReadDriftScan(ie.Function, ie.Block, s);
                 for (int i = 0; i < binMz.Length; i++)
                 {
                     mzList.Add(binMz[i]);
                     intList.Add(binInt[i]);
-                    if (isSonar) { qLowList.Add(sonarLow); qHighList.Add(sonarHigh); }
+                    if (isSonar)
+                    {
+                        // pwiz C++ SpectrumList_Waters.cpp:558-560: with reportSonarBins the lower-bound
+                        // array carries the drift scan index (= SONAR bin number, which Skyline's SONAR
+                        // chromatogram filter reads via SonarMzToBinRange), and the upper-bound array is
+                        // left zero; otherwise both carry the quadrupole precursor m/z range.
+                        if (_reportSonarBins) { qLowList.Add(s); qHighList.Add(0.0); }
+                        else { qLowList.Add(sonarLow); qHighList.Add(sonarHigh); }
+                    }
                     else driftList.Add(driftTime);
                 }
             }
