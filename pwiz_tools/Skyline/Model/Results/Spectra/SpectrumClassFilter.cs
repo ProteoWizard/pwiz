@@ -591,7 +591,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             // canonical encoded tokens (the generic grammar cannot carry them directly) and friendly
             // operator words to the symbols the grammar expects, so a transition list or command line can
             // name a CV term by "MS:1000505" and use readable operators like "isblank"/"greaterthan".
-            filterString = NormalizeAuthoredFilterString(filterString);
+            var normalized = NormalizeAuthoredFilterString(filterString);
             // Try several cultures so a filter authored in one locale parses in another (e.g. a
             // comma-decimal value from a European transition list imported on a period-decimal
             // machine). Only number formatting varies; keywords are culture-independent (English).
@@ -600,7 +600,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 try
                 {
-                    return new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(filterString));
+                    return new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(normalized));
                 }
                 catch (FilterOperandException)
                 {
@@ -694,24 +694,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 if (c == '\'')
                 {
                     // Single-quoted operand: copy verbatim through the closing quote ('' escapes a quote).
-                    result.Append(c);
-                    i++;
-                    while (i < filterString.Length)
-                    {
-                        char oc = filterString[i];
-                        result.Append(oc);
-                        i++;
-                        if (oc == '\'')
-                        {
-                            if (i < filterString.Length && filterString[i] == '\'')
-                            {
-                                result.Append('\'');
-                                i++;
-                                continue;
-                            }
-                            break;
-                        }
-                    }
+                    int end = SkipQuotedSegment(filterString, i, '\'', out _, out _);
+                    result.Append(filterString, i, end - i);
+                    i = end;
                     continue;
                 }
 
@@ -719,36 +704,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 {
                     // Double-quoted column caption: collapse to the canonical token when it carries an
                     // accession, otherwise leave it exactly as authored.
-                    int start = i;
-                    var inner = new StringBuilder();
-                    i++;
-                    bool closed = false;
-                    while (i < filterString.Length)
-                    {
-                        char qc = filterString[i];
-                        if (qc == '"')
-                        {
-                            i++;
-                            if (i < filterString.Length && filterString[i] == '"')
-                            {
-                                inner.Append('"');
-                                i++;
-                                continue;
-                            }
-                            closed = true;
-                            break;
-                        }
-                        inner.Append(qc);
-                        i++;
-                    }
-                    if (closed && TryEncodeColumnReference(inner.ToString(), out var token))
+                    int end = SkipQuotedSegment(filterString, i, '"', out var inner, out var closed);
+                    if (closed && TryEncodeColumnReference(inner, out var token))
                     {
                         result.Append(token);
                     }
                     else
                     {
-                        result.Append(filterString, start, i - start);
+                        result.Append(filterString, i, end - i);
                     }
+                    i = end;
                     continue;
                 }
 
@@ -800,6 +765,39 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Scans a quoted run beginning at the opening quote at index <paramref name="open"/>, treating a
+        /// doubled quote as an escaped quote. Returns the index just past the closing quote, or the end of
+        /// the string if the run is unterminated. <paramref name="inner"/> receives the unescaped content
+        /// between the quotes and <paramref name="closed"/> whether a closing quote was found.
+        /// </summary>
+        private static int SkipQuotedSegment(string s, int open, char quote, out string inner, out bool closed)
+        {
+            var builder = new StringBuilder();
+            int i = open + 1;
+            closed = false;
+            while (i < s.Length)
+            {
+                char c = s[i];
+                if (c == quote)
+                {
+                    i++;
+                    if (i < s.Length && s[i] == quote)
+                    {
+                        builder.Append(quote);
+                        i++;
+                        continue;
+                    }
+                    closed = true;
+                    break;
+                }
+                builder.Append(c);
+                i++;
+            }
+            inner = builder.ToString();
+            return i;
         }
 
         private static bool StartsWithUserParamMarker(string s, int i)

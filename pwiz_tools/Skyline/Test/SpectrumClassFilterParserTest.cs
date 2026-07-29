@@ -70,6 +70,11 @@ namespace pwiz.SkylineTest
             const string badText = "CollisionEnergy foobar 17";
             StringAssert.Contains(SpectrumClassFilter.ValidateFilterString(badText),
                 string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, badText));
+            // A CV term referenced by accession must appear in the error exactly as the user wrote it, not
+            // as the internal encoded token, so the by-accession authoring stays readable.
+            const string badCvText = "MS:1000505 foobar 5";
+            StringAssert.Contains(SpectrumClassFilter.ValidateFilterString(badCvText),
+                string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, badCvText));
         }
 
         [TestMethod]

@@ -198,8 +198,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// distinct accession (the term's CV accession or userParam name). A column is typed numeric when
         /// every value seen for it parses as an invariant number and at least one value was seen, else
         /// string (the runtime type inference the design calls for, since these terms carry no declared
-        /// type and no unit is available). The friendly name comes from the term. Ordered by display
-        /// name for the UI.
+        /// type and no unit is available). The friendly name comes from the term. The caller orders the
+        /// result for display (see <see cref="GetEditorCvColumns"/>).
         /// </summary>
         public static IList<SpectrumClassColumn> DiscoverCvColumns(IEnumerable<SpectrumMetadata> spectra)
         {
@@ -219,7 +219,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             return discovered.Values
                 .Select(info => (SpectrumClassColumn)new CvParamColumn(info.Accession, info.Name, info.IsNumeric))
-                .OrderBy(column => column.GetLocalizedColumnName(CultureInfo.CurrentCulture), StringComparer.CurrentCulture)
                 .ToList();
         }
 
