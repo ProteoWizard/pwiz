@@ -220,6 +220,7 @@ namespace pwiz.SkylineTestData.Results
         {
             int positionsChecked = 0;
             int groupsChecked = 0;
+            int peptidesChecked = 0;
             int dotProductsChecked = 0;
             int originalPeaksChecked = 0;
             int reintegrated = 0;
@@ -236,10 +237,13 @@ namespace pwiz.SkylineTestData.Results
                     groupsChecked += CheckTransitionGroup(moleculeResults, nodeGroup, ref dotProductsChecked,
                         ref originalPeaksChecked);
                 }
+
+                peptidesChecked += CheckPeptide(moleculeResults, nodePep);
             }
 
             Assert.AreNotEqual(0, positionsChecked);
             Assert.AreNotEqual(0, groupsChecked);
+            Assert.AreNotEqual(0, peptidesChecked);
             Assert.AreNotEqual(0, originalPeaksChecked);
             if (requireDotProducts)
             {
@@ -271,21 +275,11 @@ namespace pwiz.SkylineTestData.Results
 
             CheckAbbreviatedResults(nodeTran, documentChromInfos, countsPerReplicate);
 
-            var transitionPeaks = moleculeResults.GetTransitionPeaks(nodeTran);
-            Assert.IsNotNull(transitionPeaks);
-            Assert.AreEqual(documentChromInfos.Count, transitionPeaks.PositionCount);
-
-            // MoleculeResults has to agree with the document about which replicate each position
-            // belongs to, not merely about how many positions there are.
-            Assert.AreEqual(ReplicatePositions.FromCounts(countsPerReplicate),
-                transitionPeaks.ChromFileIds.ReplicatePositions);
-
             var results = moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition);
             Assert.IsNotNull(results);
             Assert.AreEqual(nodeTran.Results.Count, results.Count);
 
             int positionsChecked = 0;
-            int position = 0;
             for (int replicateIndex = 0; replicateIndex < nodeTran.Results.Count; replicateIndex++)
             {
                 var expectedList = nodeTran.Results[replicateIndex];
@@ -302,7 +296,9 @@ namespace pwiz.SkylineTestData.Results
                 for (int i = 0; i < expectedList.Count; i++)
                 {
                     var expected = expectedList[i];
-                    bool fromCandidatePeak = expected.IsEmpty || HasCandidatePeak(transitionPeaks, position, expected);
+                    bool fromCandidatePeak = expected.IsEmpty ||
+                                             HasCandidatePeak(moleculeResults, nodeGroup, nodeTran, replicateIndex,
+                                                 expected);
                     if (!fromCandidatePeak)
                     {
                         reintegrated++;
@@ -311,14 +307,53 @@ namespace pwiz.SkylineTestData.Results
                     Assert.AreNotSame(expected, actualList[i]);
                     AssertTransitionValuesEqual(expected, actualList[i], fromCandidatePeak);
                     AssertTransitionValuesEqual(expected, oneReplicate[i], fromCandidatePeak);
-                    Assert.AreSame(expected.FileId, transitionPeaks.ChromFileIds.FileIds[position].Value);
-                    Assert.AreEqual(expected.OptimizationStep, transitionPeaks.OptimizationSteps[position]);
-                    position++;
                     positionsChecked++;
                 }
             }
 
             return positionsChecked;
+        }
+
+        /// <summary>
+        /// The rebuilt molecule results have to equal the document's, which covers the aggregation
+        /// from the precursor level values.
+        /// </summary>
+        private static int CheckPeptide(MoleculeResults moleculeResults, PeptideDocNode nodePep)
+        {
+            if (!nodePep.HasResults)
+            {
+                return 0;
+            }
+
+            var results = moleculeResults.GetPeptideResults();
+            Assert.IsNotNull(results);
+            Assert.AreEqual(nodePep.Results.Count, results.Count);
+
+            int chromInfosChecked = 0;
+            for (int replicateIndex = 0; replicateIndex < nodePep.Results.Count; replicateIndex++)
+            {
+                var expectedList = nodePep.Results[replicateIndex];
+                var actualList = results[replicateIndex];
+                Assert.AreEqual(expectedList.Count, actualList.Count);
+
+                var oneReplicate = moleculeResults.GetPeptideChromInfos(replicateIndex);
+                Assert.AreEqual(expectedList.Count, oneReplicate.Count);
+
+                for (int i = 0; i < expectedList.Count; i++)
+                {
+                    var expected = expectedList[i];
+                    Assert.AreSame(expected.FileId, actualList[i].FileId);
+                    Assert.AreEqual(expected.PeakCountRatio, actualList[i].PeakCountRatio);
+                    Assert.AreEqual(expected.RetentionTime, actualList[i].RetentionTime);
+                    Assert.AreEqual(expected.ExcludeFromCalibration, actualList[i].ExcludeFromCalibration);
+                    Assert.AreEqual(expected.AnalyteConcentration, actualList[i].AnalyteConcentration);
+                    Assert.AreEqual(expected, actualList[i]);
+                    Assert.AreEqual(expected, oneReplicate[i]);
+                    chromInfosChecked++;
+                }
+            }
+
+            return chromInfosChecked;
         }
 
         /// <summary>
@@ -385,14 +420,36 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// Whether the peak the document holds is one of the candidate peaks in the .skyd, which
-        /// is what decides whether reproducing it needs the chromatogram itself.
+        /// Whether the peak the document holds is one of the candidate peaks in the .skyd, which is
+        /// what decides whether reproducing it needs the chromatogram itself. Read from the
+        /// chromatograms rather than asked of <see cref="MoleculeResults"/>, so that this does not
+        /// depend on the thing it is checking.
         /// </summary>
-        private static bool HasCandidatePeak(TransitionPeaks transitionPeaks, int position,
-            TransitionChromInfo chromInfo)
+        private static bool HasCandidatePeak(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTran, int replicateIndex, TransitionChromInfo chromInfo)
         {
-            return transitionPeaks.Peaks[position].Any(peak => peak.StartTime == chromInfo.StartRetentionTime &&
-                                                               peak.EndTime == chromInfo.EndRetentionTime);
+            var chromatograms = moleculeResults.Settings.MeasuredResults.Chromatograms[replicateIndex];
+            foreach (var chromGroupInfo in moleculeResults.GetChromatogramGroupInfos(nodeGroup.TransitionGroup,
+                         replicateIndex))
+            {
+                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran,
+                    moleculeResults.MzMatchTolerance, chromatograms.OptimizationFunction,
+                    TransformChrom.interpolated);
+                for (int step = -optStepChromatograms.StepCount;
+                     step <= optStepChromatograms.StepCount;
+                     step++)
+                {
+                    var chromatogramInfo = optStepChromatograms.GetChromatogramForStep(step);
+                    if (chromatogramInfo != null &&
+                        chromatogramInfo.Peaks.Any(peak => peak.StartTime == chromInfo.StartRetentionTime &&
+                                                           peak.EndTime == chromInfo.EndRetentionTime))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         /// <summary>

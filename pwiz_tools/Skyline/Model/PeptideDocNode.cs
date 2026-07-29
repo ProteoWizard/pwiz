@@ -1555,7 +1555,12 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private sealed class PeptideChromInfoListCalculator
+        /// <summary>
+        /// Internal rather than private so that <see cref="MoleculeResults"/> can aggregate the
+        /// molecule level values from chrom infos it rebuilt from the .skyd, instead of a second
+        /// implementation of the same aggregation drifting away from this one.
+        /// </summary>
+        internal sealed class PeptideChromInfoListCalculator
         {
             public PeptideChromInfoListCalculator(SrmSettings settings, int resultsIndex)
             {
@@ -1573,8 +1578,13 @@ namespace pwiz.Skyline.Model
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup)
             {
-                var listInfo = nodeGroup.Results[ResultsIndex];
-                if (listInfo.IsEmpty)
+                AddChromInfoList(nodeGroup, nodeGroup.Results[ResultsIndex]);
+            }
+
+            public void AddChromInfoList(TransitionGroupDocNode nodeGroup,
+                IList<TransitionGroupChromInfo> listInfo)
+            {
+                if (listInfo == null || listInfo.Count == 0)
                     return;
 
                 foreach (var info in listInfo)
@@ -1627,8 +1637,13 @@ namespace pwiz.Skyline.Model
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
             {
-                var listInfo = nodeTran.GetSafeChromInfo(ResultsIndex);
-                if (listInfo.IsEmpty)
+                AddChromInfoList(nodeGroup, nodeTran, nodeTran.GetSafeChromInfo(ResultsIndex));
+            }
+
+            public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
+                IList<TransitionChromInfo> listInfo)
+            {
+                if (listInfo == null || listInfo.Count == 0)
                     return;
 
                 foreach (var info in listInfo)
