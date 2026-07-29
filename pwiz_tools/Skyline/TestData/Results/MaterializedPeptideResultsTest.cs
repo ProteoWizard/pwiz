@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -66,35 +67,75 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
 
-                int positionsChecked = 0;
-                int groupsChecked = 0;
-                int singleReplicateChecked = 0;
-                foreach (var nodePep in docResults.Peptides)
+                CheckDocument(docResults);
+            }
+        }
+
+        /// <summary>
+        /// The same checks against a collision energy optimized document, where each
+        /// optimization step is a separate chromatogram contributing its own positions.
+        /// </summary>
+        [TestMethod]
+        public void TestMaterializedPeaksWithOptimizationSteps()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\AgilentCEOpt.zip");
+            string docPath = TestFilesDir.GetTestPath("AgilentCE.sky");
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+            {
+                var optRegression = doc.Settings.TransitionSettings.Prediction.CollisionEnergy;
+                int optSteps = optRegression.StepCount * 2 + 1;
+                var chromSet = new ChromatogramSet(@"Optimize",
+                    new[] {new MsDataFilePath(TestFilesDir.GetTestPath("BisMet-1pgul-opt-01.d"))},
+                    Annotations.EMPTY, optRegression);
+                docContainer.ChangeMeasuredResults(new MeasuredResults(new[] {chromSet}), 1, 1 * optSteps,
+                    3 * optSteps);
+                var docResults = docContainer.Document;
+
+                // Confirm the document really does have a position per optimization step,
+                // otherwise this covers no more than the test above.
+                Assert.IsTrue(optSteps > 1);
+                foreach (var nodeTran in docResults.MoleculeTransitions)
                 {
-                    var materialized = MaterializedPeptideResults.Materialize(docResults.Settings, nodePep);
-
-                    foreach (var nodeGroup in nodePep.TransitionGroups)
-                    {
-                        foreach (var nodeTran in nodeGroup.Transitions)
-                        {
-                            if (!nodeTran.HasResults)
-                            {
-                                continue;
-                            }
-
-                            positionsChecked += CheckTransition(materialized, nodeTran);
-                        }
-
-                        groupsChecked += CheckTransitionGroup(materialized, nodeGroup);
-                    }
-
-                    singleReplicateChecked += CheckSingleReplicate(docResults.Settings, nodePep, materialized);
+                    Assert.AreEqual(optSteps, nodeTran.Results[0].Count);
                 }
 
-                Assert.AreNotEqual(0, positionsChecked);
-                Assert.AreNotEqual(0, groupsChecked);
-                Assert.AreNotEqual(0, singleReplicateChecked);
+                CheckDocument(docResults);
             }
+        }
+
+        private static void CheckDocument(SrmDocument docResults)
+        {
+            int positionsChecked = 0;
+            int groupsChecked = 0;
+            int singleReplicateChecked = 0;
+            int replicateToCheck = Math.Min(1, docResults.Settings.MeasuredResults.Chromatograms.Count - 1);
+            foreach (var nodePep in docResults.Peptides)
+            {
+                var materialized = MaterializedPeptideResults.Materialize(docResults.Settings, nodePep);
+
+                foreach (var nodeGroup in nodePep.TransitionGroups)
+                {
+                    foreach (var nodeTran in nodeGroup.Transitions)
+                    {
+                        if (!nodeTran.HasResults)
+                        {
+                            continue;
+                        }
+
+                        positionsChecked += CheckTransition(materialized, nodeTran);
+                    }
+
+                    groupsChecked += CheckTransitionGroup(materialized, nodeGroup);
+                }
+
+                singleReplicateChecked +=
+                    CheckSingleReplicate(docResults.Settings, nodePep, materialized, replicateToCheck);
+            }
+
+            Assert.AreNotEqual(0, positionsChecked);
+            Assert.AreNotEqual(0, groupsChecked);
+            Assert.AreNotEqual(0, singleReplicateChecked);
         }
 
         /// <summary>
@@ -102,9 +143,8 @@ namespace pwiz.SkylineTestData.Results
         /// replicate as materializing all of them.
         /// </summary>
         private static int CheckSingleReplicate(SrmSettings settings, PeptideDocNode nodePep,
-            MaterializedPeptideResults allReplicates)
+            MaterializedPeptideResults allReplicates, int replicateIndex)
         {
-            const int replicateIndex = 1;
             var oneReplicate = MaterializedPeptideResults.Materialize(settings, nodePep, replicateIndex);
             int checkedCount = 0;
             foreach (var nodeGroup in nodePep.TransitionGroups)
