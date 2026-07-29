@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         // Observed IM, observed CCS, and the target IM filter, computed together in one pass
         // over the transitions and cached per row (invalidated on document change).
-        private ObservedIonMobilityValues ObservedImValues { get { return _cachedValues.GetValue3(this); } }
+        private ObservedIonMobilityCalculator.Result ObservedImValues { get { return _cachedValues.GetValue3(this); } }
 
         private static double? PercentError(double? observed, double? target)
         {
@@ -127,102 +127,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return 100.0 * (observed.Value - target.Value) / target.Value;
         }
 
-        // One observed-IM contribution: an MS1 isotope channel (weighted by predicted
-        // abundance) or an MS2 fragment channel (weighted by area, carrying the fragment's
-        // high-energy IM offset from the precursor).
-        public readonly struct ObservedIonMobilityChannel
+        // The per-ion observed IM/CCS aggregate for this replicate. The domain logic lives in
+        // the model (ObservedIonMobilityCalculator); this entity only resolves each transition's
+        // chrom info for its ResultFile and hands the (transition, chrom info) pairs over.
+        private ObservedIonMobilityCalculator.Result CalculateObservedIonMobility()
         {
-            public ObservedIonMobilityChannel(bool isMs1, double? observedIonMobility, double? observedCcs, double weight, double highEnergyOffset)
-            {
-                IsMs1 = isMs1;
-                ObservedIonMobility = observedIonMobility;
-                ObservedCcs = observedCcs;
-                Weight = weight;
-                HighEnergyOffset = highEnergyOffset;
-            }
-            public bool IsMs1 { get; }
-            public double? ObservedIonMobility { get; }
-            public double? ObservedCcs { get; }
-            public double Weight { get; }
-            public double HighEnergyOffset { get; }
-        }
-
-        private ObservedIonMobilityValues CalculateObservedIonMobilityValues()
-        {
-            var channels = new List<ObservedIonMobilityChannel>();
-            IonMobilityFilter target = null;
             var resultFile = GetResultFile();
-            foreach (var nodeTran in Precursor.DocNode.Transitions)
-            {
-                var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
-                if (chromInfo == null || chromInfo.IsEmpty)
-                    continue;
-                // Any transition carries the precursor's IM filter (its base IM/CCS, offset
-                // aside, is the same for all), so the first one is the error target.
-                if (target == null && chromInfo.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility))
-                    target = chromInfo.IonMobility;
-                if (nodeTran.IsMs1)
-                {
-                    // MS1 isotope channels weight by predicted abundance; an MS1 precursor
-                    // with no isotope distribution (m/z-only small molecule, low-res precursor
-                    // filtering, or a neutral-loss transition) weights by observed area instead
-                    // so its observed IM/CCS is still surfaced.
-                    double weight = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : chromInfo.Area;
-                    channels.Add(new ObservedIonMobilityChannel(true, chromInfo.ObservedIonMobility, chromInfo.ObservedCcs, weight, 0));
-                }
-                else
-                {
-                    double offset = chromInfo.IonMobility?.HighEnergyIonMobilityOffset ?? 0;
-                    channels.Add(new ObservedIonMobilityChannel(false, chromInfo.ObservedIonMobility, chromInfo.ObservedCcs, chromInfo.Area, offset));
-                }
-            }
-            return new ObservedIonMobilityValues(
-                AggregateObservedIonMobility(channels),
-                WeightedMean(channels.Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))),
-                target);
-        }
-
-        // Bundle of the per-ion observed IM, observed CCS, and the target IM filter, computed
-        // together in one transition pass (CalculateObservedIonMobilityValues) and cached per row.
-        private class ObservedIonMobilityValues
-        {
-            public ObservedIonMobilityValues(double? ionMobility, double? ccs, IonMobilityFilter target)
-            {
-                IonMobility = ionMobility;
-                Ccs = ccs;
-                Target = target;
-            }
-            public double? IonMobility { get; }
-            public double? Ccs { get; }
-            public IonMobilityFilter Target { get; }
-        }
-
-        // The single per-ion observed IM: predicted-abundance-weighted mean over the MS1
-        // channels. Falls back to the intensity-weighted mean of the offset-corrected
-        // fragment channels only for genuinely MS2-only precursors (no MS1 channels at all)
-        // - not merely when the MS1 channels carry no observed IM - so the observed IM and
-        // the MS1-only observed CCS stay consistent instead of describing different
-        // acquisition levels.
-        public static double? AggregateObservedIonMobility(IEnumerable<ObservedIonMobilityChannel> channels)
-        {
-            var list = channels as IList<ObservedIonMobilityChannel> ?? channels.ToList();
-            if (list.Any(c => c.IsMs1))
-                return WeightedMean(list.Where(c => c.IsMs1).Select(c => (c.ObservedIonMobility, c.Weight)));
-            return WeightedMean(list.Where(c => !c.IsMs1)
-                .Select(c => (c.ObservedIonMobility.HasValue ? c.ObservedIonMobility - c.HighEnergyOffset : (double?) null, c.Weight)));
-        }
-
-        private static double? WeightedMean(IEnumerable<(double? value, double weight)> items)
-        {
-            double weightedSum = 0, totalWeight = 0;
-            foreach (var (value, weight) in items)
-            {
-                if (!value.HasValue || weight <= 0)
-                    continue;
-                weightedSum += value.Value * weight;
-                totalWeight += weight;
-            }
-            return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
+            return ObservedIonMobilityCalculator.Calculate(
+                Precursor.DocNode.Transitions.Select(t => (t, resultFile.FindChromInfo(t.Results))));
         }
 
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
@@ -486,16 +398,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private class CachedValues
-            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>, ObservedIonMobilityValues>
+            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>, ObservedIonMobilityCalculator.Result>
         {
             protected override SrmDocument GetDocument(PrecursorResult owner)
             {
                 return owner.SrmDocument;
             }
 
-            protected override ObservedIonMobilityValues CalculateValue3(PrecursorResult owner)
+            protected override ObservedIonMobilityCalculator.Result CalculateValue3(PrecursorResult owner)
             {
-                return owner.CalculateObservedIonMobilityValues();
+                return owner.CalculateObservedIonMobility();
             }
 
             protected override TransitionGroupChromInfo CalculateValue(PrecursorResult owner)
