@@ -25,6 +25,27 @@
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
   </ItemGroup>
 
+  <!-- Vendor raw reading (issue #4496) goes through ProteowizardWrapper rather
+       than binding pwiz_data_cli directly: the wrapper already exposes every
+       field SpectraCache stores, including the isolation-window LOWER/UPPER
+       OFFSET semantics that a hand-rolled binding is most likely to get wrong.
+       net472 only, because pwiz_data_cli is net472-only: the net8.0
+       configuration keeps reading mzML through MzmlReader.
+       Requires a full build to have staged
+       pwiz_tools/Shared/ProteowizardWrapper/obj/x64 (bs.bat, or any bjam build
+       of Skyline); those vendor assemblies are build products, not checked in. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <!-- Platform matters here: ProteowizardWrapper resolves pwiz_data_cli and
+         the vendor assemblies from obj\$(Platform)\, and only obj\x64\ is ever
+         staged. An SDK-style project does not pass its Platform across a
+         ProjectReference to an old-style one (neither AdditionalProperties nor
+         SetPlatform metadata takes effect here), so the x64 mapping is made in
+         Osprey.sln instead, exactly as Skyline.sln does it. Build Osprey
+         through the solution; a bare csproj build of this project would
+         resolve the wrapper as AnyCPU and fail on every pwiz.CLI type. -->
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
+  </ItemGroup>
+
   <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
        Matches Skyline's BlibData writer (Util/Extensions/UtilDB.Compress)
        so Osprey .blib peak blobs are byte-identical to Skyline's
