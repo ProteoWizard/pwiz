@@ -305,6 +305,32 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
+        /// The columnar form the document now carries alongside its chrom infos has to agree
+        /// with them position for position.
+        /// </summary>
+        private static void CheckAbbreviatedResults(TransitionDocNode nodeTran,
+            IList<TransitionChromInfo> documentChromInfos, IList<int> countsPerReplicate)
+        {
+            var abbreviated = nodeTran.AbbreviatedResults;
+            Assert.IsNotNull(abbreviated);
+            Assert.AreEqual(documentChromInfos.Count, abbreviated.Areas.Count);
+            Assert.AreEqual(ReplicatePositions.FromCounts(countsPerReplicate),
+                abbreviated.ChromFileIds.ReplicatePositions);
+            for (int position = 0; position < documentChromInfos.Count; position++)
+            {
+                var chromInfo = documentChromInfos[position];
+                Assert.AreEqual(chromInfo.Area, abbreviated.Areas[position]);
+                Assert.AreEqual(chromInfo.UserSet, abbreviated.GetUserSet(position));
+                Assert.AreSame(chromInfo.FileId, abbreviated.ChromFileIds.FileIds[position].Value);
+            }
+
+            // Replacing the results has to discard the derived form, including on the copy
+            // that ImClone makes, which would otherwise keep the one it was cloned with.
+            var cleared = (TransitionDocNode) nodeTran.ChangeResults(null);
+            Assert.IsNull(cleared.AbbreviatedResults);
+        }
+
+        /// <summary>
         /// Returns whether there was a library dot product to compare, so that the caller can
         /// tell an agreeing comparison from one where both sides were null.
         /// </summary>
@@ -348,6 +374,8 @@ namespace pwiz.SkylineTestData.Results
                 countsPerReplicate.Add(chromInfoList.Count);
                 documentChromInfos.AddRange(chromInfoList);
             }
+
+            CheckAbbreviatedResults(nodeTran, documentChromInfos, countsPerReplicate);
 
             var materializedTransition = materialized.GetTransition(nodeTran);
             Assert.IsNotNull(materializedTransition);

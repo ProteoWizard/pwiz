@@ -351,7 +351,33 @@ namespace pwiz.Skyline.Model
             return LibInfo.GetRankValue(rankId);
         }
 
-        public Results<TransitionGroupChromInfo> Results { get; private set; }
+        private Results<TransitionGroupChromInfo> _results;
+        private TransitionGroupResults _abbreviatedResults;
+
+        public Results<TransitionGroupChromInfo> Results
+        {
+            get { return _results; }
+            private set
+            {
+                _results = value;
+                // Derived from Results, so it has to go whenever they are replaced. That
+                // includes on the copy ImClone makes, which would otherwise inherit a cache
+                // belonging to the results it is about to replace.
+                _abbreviatedResults = null;
+            }
+        }
+
+        /// <summary>
+        /// The columnar form of the results, which is eventually to be the only form held.
+        /// While both are held it is derived from <see cref="Results"/> on first use.
+        /// </summary>
+        public TransitionGroupResults AbbreviatedResults
+        {
+            get
+            {
+                return _abbreviatedResults = _abbreviatedResults ?? TransitionGroupResults.FromChromInfos(Results);
+            }
+        }
 
         public bool HasResults { get { return Results != null; } }
 

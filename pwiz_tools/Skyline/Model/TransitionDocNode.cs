@@ -314,7 +314,30 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public Results<TransitionChromInfo> Results { get; private set; }
+        private Results<TransitionChromInfo> _results;
+        private TransitionResults _abbreviatedResults;
+
+        public Results<TransitionChromInfo> Results
+        {
+            get { return _results; }
+            private set
+            {
+                _results = value;
+                // Derived from Results, so it has to go whenever they are replaced. That
+                // includes on the copy ImClone makes, which would otherwise inherit a cache
+                // belonging to the results it is about to replace.
+                _abbreviatedResults = null;
+            }
+        }
+
+        /// <summary>
+        /// The columnar form of the results, which is eventually to be the only form held.
+        /// While both are held it is derived from <see cref="Results"/> on first use.
+        /// </summary>
+        public TransitionResults AbbreviatedResults
+        {
+            get { return _abbreviatedResults = _abbreviatedResults ?? TransitionResults.FromChromInfos(Results); }
+        }
 
         public int? ResultsRank { get; private set; }
 

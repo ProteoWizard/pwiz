@@ -28,6 +28,51 @@ namespace pwiz.Skyline.Model.Results
 
     public class TransitionGroupResults : Immutable
     {
+        /// <summary>
+        /// Builds the columnar form from the chrom infos a document already holds. This is
+        /// how both forms can be carried at once while the readers are converted one at a
+        /// time. The peak index lists stay null, because which candidate peak was chosen is
+        /// only knowable by reading the .skyd.
+        /// </summary>
+        public static TransitionGroupResults FromChromInfos(Results<TransitionGroupChromInfo> results)
+        {
+            if (results == null)
+            {
+                return null;
+            }
+
+            var fileIds = new List<ChromFileInfoId>();
+            var areas = new List<float>();
+            var retentionTimes = new List<float>();
+            var userSets = new List<UserSet>();
+            var qValues = new List<float>();
+            var zScores = new List<float>();
+            List<CustomPeak> customPeaks = null;
+            foreach (var chromInfoList in results)
+            {
+                foreach (var chromInfo in chromInfoList)
+                {
+                    CustomPeak.CollectAnnotations(ref customPeaks, areas.Count, chromInfo.Annotations);
+                    fileIds.Add(chromInfo.FileId);
+                    areas.Add(chromInfo.Area ?? 0);
+                    retentionTimes.Add(chromInfo.RetentionTime ?? 0);
+                    userSets.Add(chromInfo.UserSet);
+                    qValues.Add(chromInfo.QValue ?? float.NaN);
+                    zScores.Add(chromInfo.ZScore ?? float.NaN);
+                }
+            }
+
+            var transitionGroupResults =
+                new TransitionGroupResults(new ChromFileIds(ReplicatePositions.FromResults(results), fileIds), areas,
+                        retentionTimes)
+                    .ChangeUserSets(userSets)
+                    .ChangeQValues(qValues)
+                    .ChangeZScores(zScores);
+            return customPeaks == null
+                ? transitionGroupResults
+                : transitionGroupResults.ChangeCustomPeaks(customPeaks);
+        }
+
         public TransitionGroupResults(ChromFileIds fileIds, IEnumerable<float> areas, IEnumerable<float> retentionTimes)
         {
             ChromFileIds = fileIds;
@@ -195,6 +240,38 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class TransitionResults : Immutable
     {
+        /// <summary>
+        /// Builds the columnar form from the chrom infos a document already holds. See
+        /// <see cref="TransitionGroupResults.FromChromInfos"/>.
+        /// </summary>
+        public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results)
+        {
+            if (results == null)
+            {
+                return null;
+            }
+
+            var fileIds = new List<ChromFileInfoId>();
+            var areas = new List<float>();
+            var userSets = new List<UserSet>();
+            List<CustomPeak> customPeaks = null;
+            foreach (var chromInfoList in results)
+            {
+                foreach (var chromInfo in chromInfoList)
+                {
+                    CustomPeak.CollectAnnotations(ref customPeaks, areas.Count, chromInfo.Annotations);
+                    fileIds.Add(chromInfo.FileId);
+                    areas.Add(chromInfo.Area);
+                    userSets.Add(chromInfo.UserSet);
+                }
+            }
+
+            var transitionResults =
+                new TransitionResults(new ChromFileIds(ReplicatePositions.FromResults(results), fileIds), areas)
+                    .ChangeUserSets(userSets);
+            return customPeaks == null ? transitionResults : transitionResults.ChangeCustomPeaks(customPeaks);
+        }
+
         public TransitionResults(ChromFileIds chromFileIds, IEnumerable<float> areas)
         {
             ChromFileIds = chromFileIds;
@@ -281,6 +358,23 @@ namespace pwiz.Skyline.Model.Results
                 im.StartTime = startTime;
                 im.EndTime = endTime;
             });
+        }
+
+        /// <summary>
+        /// Adds an entry for <paramref name="position"/> when there are annotations there,
+        /// leaving <paramref name="customPeaks"/> null while there are none, which is the
+        /// usual case.
+        /// </summary>
+        public static void CollectAnnotations(ref List<CustomPeak> customPeaks, int position,
+            Annotations annotations)
+        {
+            if (annotations == null || annotations.IsEmpty)
+            {
+                return;
+            }
+
+            customPeaks = customPeaks ?? new List<CustomPeak>();
+            customPeaks.Add(new CustomPeak(position).ChangeAnnotations(annotations));
         }
 
         public static CustomPeak FindAtPosition(IEnumerable<CustomPeak> customPeaks, int position)
