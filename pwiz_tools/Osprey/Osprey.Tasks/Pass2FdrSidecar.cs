@@ -602,7 +602,7 @@ namespace pwiz.Osprey.Tasks
                 return (eids, scs);
             }
 
-            PercolatorFdr.ComputeFullPopulationPrecursorFdrStreaming(
+            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 fileKeys, ReadFile, survivorScore, survivors,
                 out var runQ, out var expQ, out var pep, stratumBaseIds);
 
@@ -1359,7 +1359,7 @@ namespace pwiz.Osprey.Tasks
         /// Apply the averaged frozen model to a single raw feature vector: standardize a
         /// copy into the caller-supplied <paramref name="scratch"/> buffer, then
         /// score = avgBias + sum(avgWeights[j] * std(feat)[j]). Mirrors the per-entry math
-        /// in <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>, which likewise reuses a
+        /// in <c>PercolatorScorer.ScorePopulationAndComputeFdr</c>, which likewise reuses a
         /// single feature buffer to avoid a per-entry allocation in the scoring loop. Does
         /// not mutate <paramref name="rawFeatures"/>; overwrites <paramref name="scratch"/>
         /// (length must be &gt;= rawFeatures.Length).
@@ -1387,7 +1387,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Average the frozen Percolator fold weights + biases into a single (weights, bias)
-        /// pair -- the same averaged-model math <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>
+        /// pair -- the same averaged-model math <c>PercolatorScorer.ScorePopulationAndComputeFdr</c>
         /// applies before scoring a population. Caller has already verified the model carries
         /// at least one fold.
         /// </summary>
