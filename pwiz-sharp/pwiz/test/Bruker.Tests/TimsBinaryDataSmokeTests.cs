@@ -262,9 +262,10 @@ public class TimsBinaryDataSmokeTests
         // TimsData.cpp:699-711.
         Assert.AreEqual(9, msd.Run.SpectrumList.Count);
         var first = msd.Run.SpectrumList.GetSpectrum(0, getBinaryData: true);
-        // pwiz cpp SpectrumList_Bruker.cpp:381 native id is just "merged=N"; per-scan
-        // membership is carried by scanList <scan spectrumRef="..."> entries.
-        Assert.AreEqual("merged=0", first.Id);
+        // pwiz cpp SpectrumList_Bruker.cpp:785 emits the 4-field combined-IMS native id
+        // "merged=N frame=F scanStart=S scanEnd=E"; per-scan membership is additionally
+        // carried by the scanList <scan spectrumRef="..."> entries.
+        Assert.AreEqual("merged=0 frame=1 scanStart=1 scanEnd=927", first.Id);
         Assert.IsTrue(first.DefaultArrayLength > 100, "combined frame should have a lot of peaks");
     }
 

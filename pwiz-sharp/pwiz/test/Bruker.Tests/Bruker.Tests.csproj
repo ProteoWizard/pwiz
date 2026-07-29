@@ -17,6 +17,19 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <!-- Reference/ holds pwiz-sharp-specific override reference mzMLs. The combineIMS Hela_QC_PASEF
+       profile references shipped in Reader_Bruker_Test.data.tar.bz2 still carry the old plain
+       "merged=N" combined-spectrum native id, but the reader now emits the canonical C++ 4-field
+       form "merged=N frame=F scanStart=S scanEnd=E" (SpectrumList_Bruker.cpp:785). VendorReader-
+       TestHarness checks <bin>/Reference/<filename> first, then falls back to the cpp tree, so
+       these override the stale profile references without editing the shared archive. Remove once
+       the archive is regenerated. README.md documents the policy. -->
+  <ItemGroup>
+    <None Update="Reference\*.mzML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <!-- TimsBinaryDataSmokeTests exercises Reader_Bruker.Read() against diaPASEF.d directly to
        cover DiaFrameWindow / DiaWindowGroup / TdfMetadata.HasDiaPasefData — the harness path
        can't reach those because the only diaPASEF.d reference mzML uses an unported
