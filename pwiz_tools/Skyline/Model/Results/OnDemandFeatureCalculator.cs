@@ -399,16 +399,13 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return _moleculeResults ??= new MoleculeResults(Settings, PeptideDocNode)
-                {
-                    ReplicateIndex = ReplicateIndex
-                };
+                return _moleculeResults ??= new MoleculeResults(Settings, PeptideDocNode);
             }
         }
 
         private IList<ChromatogramGroupInfo> LoadChromatogramGroupInfos(TransitionGroupDocNode transitionGroup)
         {
-            return MoleculeResults.GetChromatogramGroupInfos(transitionGroup, ReplicateIndex);
+            return MoleculeResults.GetChromatogramGroupInfos(transitionGroup.TransitionGroup, ReplicateIndex);
         }
 
         private ChromatogramGroupInfo LoadChromatogramGroupInfo(TransitionGroupDocNode transitionGroup)

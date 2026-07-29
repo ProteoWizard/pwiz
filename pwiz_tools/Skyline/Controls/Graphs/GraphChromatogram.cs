@@ -2748,15 +2748,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     var nodePep = nodePeps[i];
                     if (!resultsByPeptide.TryGetValue(nodePep.Peptide, out var moleculeResults))
                     {
-                        moleculeResults = new MoleculeResults(settings, nodePep)
-                        {
-                            ReplicateIndex = replicateIndex
-                        };
+                        moleculeResults = new MoleculeResults(settings, nodePep);
                         resultsByPeptide.Add(nodePep.Peptide, moleculeResults);
                     }
 
-                    var arrayChromInfo = moleculeResults.GetChromatogramGroupInfos(transitionGroupDocNode,
-                        replicateIndex);
+                    var arrayChromInfo = moleculeResults.GetChromatogramGroupInfos(
+                        transitionGroupDocNode.TransitionGroup, replicateIndex);
                     if (arrayChromInfo.Count == 0)
                     {
                         listArrayChromInfo.Add(null);

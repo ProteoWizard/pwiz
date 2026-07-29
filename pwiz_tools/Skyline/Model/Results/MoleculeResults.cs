@@ -23,33 +23,40 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results
 {
     /// <summary>
-    /// One <see cref="PeptideDocNode"/> together with all of its result information, read from
-    /// the chromatogram cache the first time anything is asked for. Callers calculate whatever
-    /// they need from this and then release it.
+    /// Answers questions about the results of one <see cref="PeptideDocNode"/>, in any
+    /// replicate, reading what it needs from the chromatogram cache and holding on to it.
     /// <para>
     /// This exists because a <see cref="DocNode"/> is to stop being the place complete result
     /// information comes from. A <see cref="TransitionResults"/> holds only the areas, and a
     /// <see cref="TransitionGroupResults"/> only the areas, retention times, chosen candidate
-    /// peak indexes and the few things which cannot be derived from the .skyd file.
+    /// peak indexes and the few things which cannot be derived from the .skyd file. Everything
+    /// else is rebuilt here.
     /// </para>
     /// <para>
-    /// The granularity of the reading is deliberately a whole molecule across all replicates.
-    /// Reading that much every time something is needed is not efficient, which is accepted for
-    /// now: make it correct first, then find out where the cost actually lands.
+    /// A peak which is one of the candidate peaks Skyline found costs only the
+    /// <see cref="ChromPeak"/> records, which are small and are read for the whole molecule at
+    /// once. A peak whose boundaries the user set is not in the cache at all and has to be
+    /// integrated again, which means decompressing the chromatogram itself - far more
+    /// expensive, and why <see cref="TransitionGroupIntegrator"/> instances are kept.
     /// </para>
     /// <para>
-    /// One instance is not meant to be used from more than one thread, since it reads on demand.
+    /// One instance is not meant to be used from more than one thread, since it reads on
+    /// demand.
     /// </para>
     /// </summary>
     public class MoleculeResults
     {
         private Dictionary<ReferenceValue<Transition>, TransitionPeaks> _transitions;
         private Dictionary<GroupReplicateKey, ImmutableList<ChromatogramGroupInfo>> _chromatogramGroupInfos;
-        private int? _replicateIndex;
+        private readonly Dictionary<ReferenceValue<TransitionGroup>, GroupResults> _groupResults =
+            new Dictionary<ReferenceValue<TransitionGroup>, GroupResults>();
+        private readonly Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator> _integrators =
+            new Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator>();
         private ValueCache _valueCache;
 
         public MoleculeResults(SrmSettings settings, PeptideDocNode peptideDocNode)
@@ -66,22 +73,9 @@ namespace pwiz.Skyline.Model.Results
             get { return (float) Settings.TransitionSettings.Instrument.MzMatchTolerance; }
         }
 
-        /// <summary>
-        /// Restricts the reading to one replicate. Null reads every replicate.
-        /// <para>
-        /// The positions still run over all of the replicates either way, with the ones that
-        /// were skipped contributing none, so that <see cref="GetPositions"/> means the same
-        /// thing in both cases.
-        /// </para>
-        /// </summary>
-        public int? ReplicateIndex
+        private int ReplicateCount
         {
-            get { return _replicateIndex; }
-            set
-            {
-                AssertNotRead();
-                _replicateIndex = value;
-            }
+            get { return Settings.MeasuredResults?.Chromatograms.Count ?? 0; }
         }
 
         /// <summary>
@@ -93,9 +87,62 @@ namespace pwiz.Skyline.Model.Results
             get { return _valueCache; }
             set
             {
-                AssertNotRead();
+                if (_transitions != null)
+                {
+                    throw new InvalidOperationException(@"The chromatograms have already been read");
+                }
+
                 _valueCache = value;
             }
+        }
+
+        /// <summary>
+        /// The complete transition level results, rebuilt from the chromatogram cache.
+        /// </summary>
+        public Results<TransitionChromInfo> GetTransitionResults(TransitionGroup transitionGroup,
+            Transition transition)
+        {
+            var groupResults = GetGroupResults(transitionGroup);
+            if (groupResults == null)
+            {
+                return null;
+            }
+
+            groupResults.TransitionResults.TryGetValue(transition, out var results);
+            return results;
+        }
+
+        public ChromInfoList<TransitionChromInfo> GetTransitionChromInfos(TransitionGroup transitionGroup,
+            Transition transition, int replicateIndex)
+        {
+            var results = GetTransitionResults(transitionGroup, transition);
+            if (results == null || replicateIndex < 0 || replicateIndex >= results.Count)
+            {
+                return default;
+            }
+
+            return results[replicateIndex];
+        }
+
+        /// <summary>
+        /// The complete precursor level results, aggregated from the transition level values
+        /// the same way <see cref="TransitionGroupDocNode.ChangeResults"/> aggregates them.
+        /// </summary>
+        public Results<TransitionGroupChromInfo> GetTransitionGroupResults(TransitionGroup transitionGroup)
+        {
+            return GetGroupResults(transitionGroup)?.ChromInfos;
+        }
+
+        public ChromInfoList<TransitionGroupChromInfo> GetTransitionGroupChromInfos(TransitionGroup transitionGroup,
+            int replicateIndex)
+        {
+            var results = GetTransitionGroupResults(transitionGroup);
+            if (results == null || replicateIndex < 0 || replicateIndex >= results.Count)
+            {
+                return default;
+            }
+
+            return results[replicateIndex];
         }
 
         /// <summary>
@@ -103,11 +150,11 @@ namespace pwiz.Skyline.Model.Results
         /// the on demand feature calculator needs the chromatogram itself and not only the peaks
         /// taken from it.
         /// </summary>
-        public ImmutableList<ChromatogramGroupInfo> GetChromatogramGroupInfos(TransitionGroupDocNode nodeGroup,
+        public ImmutableList<ChromatogramGroupInfo> GetChromatogramGroupInfos(TransitionGroup transitionGroup,
             int replicateIndex)
         {
             EnsureRead();
-            _chromatogramGroupInfos.TryGetValue(new GroupReplicateKey(nodeGroup.TransitionGroup, replicateIndex),
+            _chromatogramGroupInfos.TryGetValue(new GroupReplicateKey(transitionGroup, replicateIndex),
                 out var result);
             return result ?? ImmutableList<ChromatogramGroupInfo>.EMPTY;
         }
@@ -117,11 +164,6 @@ namespace pwiz.Skyline.Model.Results
             EnsureRead();
             _transitions.TryGetValue(nodeTran.Transition, out var transitionPeaks);
             return transitionPeaks;
-        }
-
-        public int GetPositionCount(TransitionDocNode nodeTran)
-        {
-            return GetTransitionPeaks(nodeTran)?.PositionCount ?? 0;
         }
 
         /// <summary>
@@ -151,7 +193,7 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<int> GetPositions(TransitionDocNode nodeTran, int replicateIndex)
         {
             var replicatePositions = GetTransitionPeaks(nodeTran)?.ChromFileIds.ReplicatePositions;
-            if (replicatePositions == null)
+            if (replicatePositions == null || replicateIndex >= replicatePositions.ReplicateCount)
             {
                 return Array.Empty<int>();
             }
@@ -160,38 +202,201 @@ namespace pwiz.Skyline.Model.Results
                 replicatePositions.GetCount(replicateIndex));
         }
 
+        private TransitionGroupDocNode FindTransitionGroup(TransitionGroup transitionGroup)
+        {
+            return PeptideDocNode.TransitionGroups.FirstOrDefault(nodeGroup =>
+                ReferenceEquals(nodeGroup.TransitionGroup, transitionGroup));
+        }
+
+        private GroupResults GetGroupResults(TransitionGroup transitionGroup)
+        {
+            EnsureRead();
+            if (_groupResults.TryGetValue(transitionGroup, out var groupResults))
+            {
+                return groupResults;
+            }
+
+            var nodeGroup = FindTransitionGroup(transitionGroup);
+            groupResults = nodeGroup == null || ReplicateCount == 0 ? null : CalcGroupResults(nodeGroup);
+            _groupResults.Add(transitionGroup, groupResults);
+            return groupResults;
+        }
+
         /// <summary>
-        /// Rebuilds the complete <see cref="TransitionChromInfo"/> for one position, which is
-        /// what code that needs more than the area has to go through. The ion mobility comes
-        /// from the chromatogram rather than from the document, because the document is to stop
-        /// holding it.
+        /// Rebuilds every replicate of one transition group at once, because the group level
+        /// values and the ranks are calculated from all of the transitions together.
         /// </summary>
-        public TransitionChromInfo MakeTransitionChromInfo(TransitionDocNode nodeTran, int position,
-            int candidatePeakIndex, UserSet userSet, Annotations annotations)
+        private GroupResults CalcGroupResults(TransitionGroupDocNode nodeGroup)
+        {
+            var nodeTrans = nodeGroup.Transitions.ToArray();
+            var groupChromInfoLists = new List<ChromInfoList<TransitionGroupChromInfo>>(ReplicateCount);
+            var transitionChromInfoLists = nodeTrans
+                .Select(nodeTran => new List<ChromInfoList<TransitionChromInfo>>(ReplicateCount)).ToArray();
+            for (int replicateIndex = 0; replicateIndex < ReplicateCount; replicateIndex++)
+            {
+                var chromInfoLists = new IList<TransitionChromInfo>[nodeTrans.Length];
+                for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+                {
+                    chromInfoLists[iTran] = MakeTransitionChromInfos(nodeGroup, nodeTrans[iTran], replicateIndex);
+                }
+
+                groupChromInfoLists.Add(new ChromInfoList<TransitionGroupChromInfo>(
+                    MakeTransitionGroupChromInfos(nodeGroup, replicateIndex, chromInfoLists)));
+                for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+                {
+                    transitionChromInfoLists[iTran]
+                        .Add(new ChromInfoList<TransitionChromInfo>(chromInfoLists[iTran] ?? new TransitionChromInfo[0]));
+                }
+            }
+
+            var groupResults = new GroupResults(new Results<TransitionGroupChromInfo>(groupChromInfoLists));
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                groupResults.TransitionResults.Add(nodeTrans[iTran].Transition,
+                    new Results<TransitionChromInfo>(transitionChromInfoLists[iTran]));
+            }
+
+            return groupResults;
+        }
+
+        /// <summary>
+        /// Rebuilds the chrom infos of one transition in one replicate, one per flat position.
+        /// Returns null when the positions the cache produced do not line up with the ones the
+        /// document holds, which is the only case where the values here cannot be trusted.
+        /// </summary>
+        private IList<TransitionChromInfo> MakeTransitionChromInfos(TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTran, int replicateIndex)
         {
             var transitionPeaks = GetTransitionPeaks(nodeTran);
-            if (transitionPeaks == null || position < 0 || position >= transitionPeaks.PositionCount)
+            if (transitionPeaks == null || nodeTran.Results == null || replicateIndex >= nodeTran.Results.Count)
             {
                 return null;
             }
 
-            var peak = GetPeak(nodeTran, position, candidatePeakIndex) ?? ChromPeak.EMPTY;
-            return new TransitionChromInfo(transitionPeaks.ChromFileIds.FileIds[position],
-                transitionPeaks.OptimizationSteps[position], peak, transitionPeaks.IonMobilities[position],
-                annotations ?? Annotations.EMPTY, userSet);
+            var documentChromInfos = nodeTran.Results[replicateIndex];
+            var positions = GetPositions(nodeTran, replicateIndex).ToArray();
+            if (positions.Length != documentChromInfos.Count)
+            {
+                return null;
+            }
+
+            var chromInfos = new List<TransitionChromInfo>(positions.Length);
+            for (int i = 0; i < positions.Length; i++)
+            {
+                chromInfos.Add(MakeTransitionChromInfo(nodeGroup, nodeTran, replicateIndex, positions[i],
+                    documentChromInfos[i]));
+            }
+
+            return chromInfos;
+        }
+
+        /// <summary>
+        /// Rebuilds the complete <see cref="TransitionChromInfo"/> for one position. The ion
+        /// mobility comes from the chromatogram rather than from the document, because the
+        /// document is to stop holding it.
+        /// <para>
+        /// <paramref name="documentChromInfo"/> is the one thing here still taken off the doc
+        /// node: which of the candidate peaks was chosen, or the boundaries the user set when
+        /// none of them was. That is exactly what <see cref="TransitionGroupResults.ChosenPeakIndexes"/>
+        /// and <see cref="CustomPeak.StartTime"/> are for, and this stops looking at the doc
+        /// node once the document carries them.
+        /// </para>
+        /// </summary>
+        private TransitionChromInfo MakeTransitionChromInfo(TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTran, int replicateIndex, int position, TransitionChromInfo documentChromInfo)
+        {
+            var transitionPeaks = GetTransitionPeaks(nodeTran);
+            var fileId = transitionPeaks.ChromFileIds.FileIds[position];
+            int optimizationStep = transitionPeaks.OptimizationSteps[position];
+            var results = nodeTran.AbbreviatedResults;
+            var customPeak = results?.GetCustomPeak(position);
+            var chromPeak = GetChromPeak(nodeGroup, nodeTran, replicateIndex, position, fileId, optimizationStep,
+                documentChromInfo);
+            return new TransitionChromInfo(fileId, optimizationStep, chromPeak,
+                transitionPeaks.IonMobilities[position], customPeak?.Annotations ?? Annotations.EMPTY,
+                results?.GetUserSet(position) ?? UserSet.FALSE);
+        }
+
+        private ChromPeak GetChromPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
+            int replicateIndex, int position, ChromFileInfoId fileId, int optimizationStep,
+            TransitionChromInfo documentChromInfo)
+        {
+            if (documentChromInfo.IsEmpty)
+            {
+                return ChromPeak.EMPTY;
+            }
+
+            int peakIndex = FindCandidatePeakIndex(nodeTran, position, documentChromInfo);
+            if (peakIndex >= 0)
+            {
+                return GetPeak(nodeTran, position, peakIndex) ?? ChromPeak.EMPTY;
+            }
+
+            return IntegratePeak(nodeGroup, nodeTran, replicateIndex, fileId, optimizationStep, documentChromInfo);
+        }
+
+        /// <summary>
+        /// Integrates the chromatogram again between boundaries which are not those of any
+        /// candidate peak, which is what the user setting the boundaries produces. This is the
+        /// expensive path: it decompresses the chromatogram, which is why the integrator for a
+        /// file is kept once it has been made.
+        /// </summary>
+        private ChromPeak IntegratePeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
+            int replicateIndex, ChromFileInfoId fileId, int optimizationStep,
+            TransitionChromInfo documentChromInfo)
+        {
+            var integrator = GetIntegrator(nodeGroup, replicateIndex, fileId);
+            if (integrator == null)
+            {
+                return ChromPeak.EMPTY;
+            }
+
+            // Identification is not a property of the boundaries, so integrating again cannot
+            // find it. It has to be carried, the same as the boundaries themselves.
+            var flags = default(ChromPeak.FlagValues);
+            if (documentChromInfo.Identified != PeakIdentification.FALSE)
+            {
+                flags |= ChromPeak.FlagValues.contains_id;
+            }
+
+            if (documentChromInfo.Identified == PeakIdentification.ALIGNED)
+            {
+                flags |= ChromPeak.FlagValues.used_id_alignment;
+            }
+
+            return integrator.CalcPeak(nodeTran.Transition, optimizationStep,
+                documentChromInfo.StartRetentionTime, documentChromInfo.EndRetentionTime, flags);
+        }
+
+        private TransitionGroupIntegrator GetIntegrator(TransitionGroupDocNode nodeGroup, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
+            foreach (var chromGroupInfo in GetChromatogramGroupInfos(nodeGroup.TransitionGroup, replicateIndex))
+            {
+                if (!ReferenceEquals(fileId, chromatograms.FindFile(chromGroupInfo)))
+                {
+                    continue;
+                }
+
+                if (!_integrators.TryGetValue(chromGroupInfo, out var integrator))
+                {
+                    integrator = new TransitionGroupIntegrator(Settings, nodeGroup, chromatograms, chromGroupInfo);
+                    _integrators.Add(chromGroupInfo, integrator);
+                }
+
+                return integrator;
+            }
+
+            return null;
         }
 
         /// <summary>
         /// Finds the candidate peak whose boundaries match those recorded on
         /// <paramref name="chromInfo"/>. Returns -1 when the peak did not come from the cache,
         /// which is what happens when the user set the boundaries themselves.
-        /// <para>
-        /// This is the bridge for as long as the document still holds the peak boundaries. Once
-        /// the chosen index is stored on <see cref="TransitionGroupResults"/> it is read from
-        /// there instead of searched for.
-        /// </para>
         /// </summary>
-        public int FindCandidatePeakIndex(TransitionDocNode nodeTran, int position, TransitionChromInfo chromInfo)
+        private int FindCandidatePeakIndex(TransitionDocNode nodeTran, int position, TransitionChromInfo chromInfo)
         {
             var peaks = GetTransitionPeaks(nodeTran)?.Peaks;
             if (peaks == null || position < 0 || position >= peaks.Count)
@@ -217,22 +422,15 @@ namespace pwiz.Skyline.Model.Results
         /// <see cref="TransitionGroupDocNode.ChangeResults"/> uses, so that there is only one
         /// implementation of the aggregation.
         /// <para>
-        /// <paramref name="previousChromInfos"/> supplies the values which are carried forward
-        /// rather than recalculated - the scores, the annotations and the reintegrated peak.
-        /// Those come from <see cref="TransitionGroupResults"/> once the document holds them
-        /// there.
+        /// The chrom infos the doc node holds supply the values which are carried forward rather
+        /// than recalculated - the scores, the annotations and the reintegrated peak. Those come
+        /// from <see cref="TransitionGroupResults"/> once the document holds them there.
         /// </para>
         /// </summary>
-        public TransitionGroupChromInfos MakeTransitionGroupChromInfos(TransitionGroupDocNode nodeGroup,
-            int replicateIndex, ChromInfoList<TransitionGroupChromInfo> previousChromInfos,
-            Func<TransitionDocNode, IList<TransitionChromInfo>> getTransitionChromInfos)
+        private IList<TransitionGroupChromInfo> MakeTransitionGroupChromInfos(TransitionGroupDocNode nodeGroup,
+            int replicateIndex, IList<TransitionChromInfo>[] chromInfoLists)
         {
             var nodeTrans = nodeGroup.Transitions.ToArray();
-            var chromInfoLists = new IList<TransitionChromInfo>[nodeTrans.Length];
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
-            {
-                chromInfoLists[iTran] = getTransitionChromInfos(nodeTrans[iTran]);
-            }
 
             // Rank first, because the ranks live on the transition chrom infos, and gather the
             // areas each dot product needs while walking the same file and optimization steps.
@@ -246,6 +444,9 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
+            var previousChromInfos = nodeGroup.Results != null && replicateIndex < nodeGroup.Results.Count
+                ? nodeGroup.Results[replicateIndex]
+                : default;
             var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
                 PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos);
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
@@ -256,7 +457,7 @@ namespace pwiz.Skyline.Model.Results
             // Recalculated from the chromatogram rather than carried forward, which is what
             // ChangeResults does, so it never has to be stored.
             var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
-            foreach (var chromGroupInfo in GetChromatogramGroupInfos(nodeGroup, replicateIndex))
+            foreach (var chromGroupInfo in GetChromatogramGroupInfos(nodeGroup.TransitionGroup, replicateIndex))
             {
                 var fileId = chromatograms.FindFile(chromGroupInfo);
                 if (fileId != null)
@@ -282,7 +483,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return new TransitionGroupChromInfos(listCalculator.CalcChromInfoList(), nodeTrans, chromInfoLists);
+            return listCalculator.CalcChromInfoList();
         }
 
         /// <summary>
@@ -396,8 +597,8 @@ namespace pwiz.Skyline.Model.Results
                     rankByLevel = rankedTransition.IsMs1 ? ++rankMs : ++rankMsMs;
                 }
 
-                // These were read by this object and are not shared, so they can be changed
-                // without copying, the same as during results calculation.
+                // These were made here and are not shared, so they can be changed without
+                // copying, the same as during results calculation.
                 rankedTransition.ChromInfo.ChangeRank(false, rank, rankByLevel);
             }
 
@@ -414,16 +615,8 @@ namespace pwiz.Skyline.Model.Results
             return chromInfoList.FirstOrDefault(chromInfo => chromInfo != null && fileStep.Matches(chromInfo));
         }
 
-        private void AssertNotRead()
-        {
-            if (_transitions != null)
-            {
-                throw new InvalidOperationException(@"The chromatograms have already been read");
-            }
-        }
-
         /// <summary>
-        /// Reads everything about the peaks of this molecule out of the chromatogram cache. This
+        /// Reads every candidate peak of this molecule out of the chromatogram cache. This
         /// happens once, the first time anything is asked for.
         /// </summary>
         private void EnsureRead()
@@ -457,19 +650,14 @@ namespace pwiz.Skyline.Model.Results
                 nodeTran => ReferenceValue.Of(nodeTran.Transition), nodeTran => new TransitionPeaksBuilder());
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
-                if (!ReplicateIndex.HasValue || ReplicateIndex.Value == replicateIndex)
+                var chromGroupInfos = ReadReplicate(measuredResults, measuredResults.Chromatograms[replicateIndex],
+                    nodeGroup, builders);
+                if (chromGroupInfos.Count > 0)
                 {
-                    var chromGroupInfos = ReadReplicate(measuredResults,
-                        measuredResults.Chromatograms[replicateIndex], nodeGroup, builders);
-                    if (chromGroupInfos.Count > 0)
-                    {
-                        chromatogramGroupInfos[new GroupReplicateKey(nodeGroup.TransitionGroup, replicateIndex)] =
-                            ImmutableList.ValueOf(chromGroupInfos);
-                    }
+                    chromatogramGroupInfos[new GroupReplicateKey(nodeGroup.TransitionGroup, replicateIndex)] =
+                        ImmutableList.ValueOf(chromGroupInfos);
                 }
 
-                // Even a replicate which was skipped ends here, so that the positions stay
-                // aligned with the replicate they belong to.
                 foreach (var builder in builders.Values)
                 {
                     builder.EndReplicate();
@@ -584,6 +772,22 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// Everything rebuilt for one transition group, which is calculated for all of the
+        /// replicates at once because the group level values need all of the transitions.
+        /// </summary>
+        private class GroupResults
+        {
+            public GroupResults(Results<TransitionGroupChromInfo> chromInfos)
+            {
+                ChromInfos = chromInfos;
+                TransitionResults = new Dictionary<ReferenceValue<Transition>, Results<TransitionChromInfo>>();
+            }
+
+            public Results<TransitionGroupChromInfo> ChromInfos { get; }
+            public Dictionary<ReferenceValue<Transition>, Results<TransitionChromInfo>> TransitionResults { get; }
+        }
+
+        /// <summary>
         /// Identifies the chromatograms of one transition group in one replicate.
         /// </summary>
         private struct GroupReplicateKey
@@ -664,34 +868,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 get { return ParticipatesInScoring ? ChromInfo?.Area ?? 0 : -1.0f; }
             }
-        }
-    }
-
-    /// <summary>
-    /// One replicate of one transition group, rebuilt from the chromatogram cache: the group
-    /// level values, and the transition chrom infos with their ranks assigned.
-    /// </summary>
-    public class TransitionGroupChromInfos
-    {
-        private readonly Dictionary<ReferenceValue<Transition>, IList<TransitionChromInfo>> _transitionChromInfos;
-
-        public TransitionGroupChromInfos(IList<TransitionGroupChromInfo> chromInfos,
-            IList<TransitionDocNode> nodeTrans, IList<IList<TransitionChromInfo>> transitionChromInfos)
-        {
-            ChromInfos = chromInfos;
-            _transitionChromInfos = new Dictionary<ReferenceValue<Transition>, IList<TransitionChromInfo>>();
-            for (int iTran = 0; iTran < nodeTrans.Count; iTran++)
-            {
-                _transitionChromInfos[nodeTrans[iTran].Transition] = transitionChromInfos[iTran];
-            }
-        }
-
-        public IList<TransitionGroupChromInfo> ChromInfos { get; }
-
-        public IList<TransitionChromInfo> GetTransitionChromInfos(TransitionDocNode nodeTran)
-        {
-            _transitionChromInfos.TryGetValue(nodeTran.Transition, out var chromInfos);
-            return chromInfos;
         }
     }
 
