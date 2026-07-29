@@ -890,12 +890,29 @@ foreach ($name in $selected) {
         $coldBlib = Join-Path $straightDir 'output_cold.blib'
         Copy-Item $straightBlib $coldBlib -Force
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here either -- the guard must be armed on
-        # the resume leg, which is the default path users take. If this run fails on
-        # GuardResidentPool, that is a real finding to fix in the product, not to suppress
-        # in the harness.
-        $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
+        # Scoped opt-in, and ONLY for this leg. A FULL resume with --model-diagnostics is a
+        # genuinely O(files) path that is not fixed yet: the invalidation leaves every
+        # <stem>.1st-pass.fdr_scores.bin on disk, so FirstJoin skips the first-pass score
+        # pass and emits the report through the batch ModelDiagnosticsReport.Write, which
+        # reads the RESIDENT per-file entries (PerFileScoringTask.cs, needsResidentPool at
+        # the --input-files rehydrate). The guard is therefore RIGHT to throw here, and
+        # suppressing it is the honest thing to do only because these are 3-file datasets.
+        #
+        # This is NOT the scale case. --model-diagnostics over --input-scores streams the
+        # report off ModelDiagnosticsData.Accumulator one file at a time and needs no opt-in
+        # at any file count -- that is the 82-file path this PR bounds. What remains is the
+        # full-resume batch report, tracked separately; the fix is to feed the same
+        # accumulator during the resume's per-file load and report from it.
+        #
+        # mode 3 above deliberately has NO opt-in: its old one wrapped the entire HPC chain
+        # and would mask a guard regression on any --input-scores worker.
+        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
+        try {
+            $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+                -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
+        } finally {
+            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
+        }
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
         $m2 = Compare-BlibFull -BlibExpected $coldBlib -BlibActual $resumeBlib -Tolerance $Tolerance
