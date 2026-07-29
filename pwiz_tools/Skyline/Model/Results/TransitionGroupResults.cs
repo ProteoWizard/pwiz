@@ -64,11 +64,17 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public ImmutableList<CustomPeak> CustomPeaks { get; private set; }
 
-        public TransitionGroupResults ChangeCandidatePeakIndexes(ImmutableList<int> value)
+        /// <summary>
+        /// Takes an <see cref="IEnumerable{T}"/> rather than an <see cref="ImmutableList{T}"/>
+        /// so that <see cref="ImmutableListFactory.ToImmutable{T}"/> gets the chance to store
+        /// the indexes as bytes or shorts. A document which had its peaks picked normally has
+        /// around ten candidate peaks, so these fit in a byte. Passing an
+        /// <see cref="ImmutableList{T}"/> makes it a no-op, on the assumption that it has
+        /// already been optimized.
+        /// </summary>
+        public TransitionGroupResults ChangeCandidatePeakIndexes(IEnumerable<int> value)
         {
-            // Very often every position picked the same candidate peak, in which case
-            // MaybeConstant collapses the whole list to a single value.
-            return ChangeProp(ImClone(this), im => im.CandidatePeakIndexes = value.MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.CandidatePeakIndexes = value?.ToImmutable());
         }
 
         public TransitionGroupResults ChangeQValues(IEnumerable<float> value)
