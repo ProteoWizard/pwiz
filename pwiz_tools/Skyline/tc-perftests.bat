@@ -55,6 +55,13 @@ REM # PR perf agent). Lives next to this script; TestRunner reads it via skip=@f
 set SKIPLIST=%SCRIPT_DIR%\tc-perftests-skiplist.txt
 pushd "%SCRIPT_DIR%"
 
+REM # The perf/tutorial config shares its checkout on the CI agent, so a concurrent build can leave
+REM # a stale generated Net8Version.g.cs in Skyline's obj; compiled alongside the freshly stamped one
+REM # it yields CS0579 'Duplicate AssemblyVersionAttribute' and fails the build. Reset Skyline's obj
+REM # so the version-stamping target (Skyline.csproj StampNet8InformationalVersion) regenerates it
+REM # from a clean incremental state. Cheap relative to the hours-long test run.
+if exist "%SCRIPT_DIR%\obj" rmdir /s /q "%SCRIPT_DIR%\obj"
+
 set EXIT=0
 set CONFIG=Release
 set IAGREE=0
