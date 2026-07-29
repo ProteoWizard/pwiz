@@ -690,16 +690,23 @@ namespace pwiz.Osprey.IO
         #endregion
 
         /// <summary>
-        /// IEEE-754 correct double parser for mzML cvParam values.
-        /// .NET Framework 4.7.2's double.TryParse can be off by 1-2 ULPs
-        /// on 16-digit scientific values; XmlConvert.ToDouble is required
-        /// by XML schema spec to be IEEE-correct, matching Rust mzdata's
-        /// parser. Without this, cvParams like scan_start_time
-        /// "17.0286203070330" parse to slightly different f64 cross-impl,
-        /// producing 2-ULP apex_rt drift downstream.
+        /// IEEE-754 correct double parser for mzML cvParam values. Without a
+        /// correctly-rounded parse, cvParams like scan_start_time land 1-2 ULPs
+        /// away and produce apex_rt drift downstream and cross-impl.
+        ///
+        /// On .NET Framework this goes through the C runtime's strtod (see
+        /// <see cref="NativeStrtod"/>). The previous version of this method used
+        /// XmlConvert.ToDouble on the stated grounds that XML Schema requires it
+        /// to be IEEE-correct; **that is not true of .NET Framework's
+        /// implementation**, which parses "0.86653405" one ULP high. .NET Core 3.0
+        /// fixed both parsing and "R" formatting, so the .NET 8 build needs
+        /// nothing beyond XmlConvert.
         /// </summary>
         private static bool TryParseXmlDouble(string s, out double result)
         {
+#if NET472
+            return NativeStrtod.TryParse(s, out result);
+#else
             try
             {
                 result = XmlConvert.ToDouble(s);
@@ -710,6 +717,7 @@ namespace pwiz.Osprey.IO
                 result = 0.0;
                 return false;
             }
+#endif
         }
     }
 

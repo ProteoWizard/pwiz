@@ -42,13 +42,22 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class SpectrumFileReader
     {
+#if !OSPREY_VENDOR_READER
+        // Named once so both "cannot read this file" messages say the same thing
+        // about how to get a build that can.
+        private const string VENDOR_READER_ABSENT =
+            "Vendor reading is an opt-in build capability: build the net472 configuration with " +
+            "/p:OspreyVendorReader=true, which requires a bjam build to have staged " +
+            "pwiz_tools/Shared/ProteowizardWrapper/obj/x64.";
+#endif
+
         /// <summary>
         /// Load all MS1 and MS2 spectra from an mzML or vendor raw file.
         /// </summary>
         public static MzmlResult LoadAllSpectra(string path)
         {
             bool isMzml = IsMzml(path);
-#if NET472
+#if OSPREY_VENDOR_READER
             // OSPREY_MZML_VIA_PWIZ routes mzML through ProteoWizard too, so the
             // two readers can be compared against one fixed input file. Vendor
             // centroiding is NOT requested for an mzML: those peaks are already
@@ -63,16 +72,15 @@ namespace pwiz.Osprey.IO
                 if (OspreyEnvironment.MzmlViaPwiz)
                 {
                     throw new NotSupportedException(
-                        "OSPREY_MZML_VIA_PWIZ requires the .NET Framework build of Osprey: it reads " +
-                        "mzML through ProteoWizard, whose pwiz_data_cli is net472-only. Unset the " +
-                        "variable to use the built-in mzML reader, or run the net472 build.");
+                        "OSPREY_MZML_VIA_PWIZ needs a build that includes the ProteoWizard reader. " +
+                        VENDOR_READER_ABSENT + " Unset the variable to use the built-in mzML reader.");
                 }
                 return MzmlReader.LoadAllSpectra(path);
             }
             throw new NotSupportedException(string.Format(
-                "Cannot read '{0}': reading vendor instrument files requires the .NET Framework " +
-                "build of Osprey (ProteoWizard's pwiz_data_cli is net472-only). Convert the file " +
-                "to mzML with msconvert, or run the net472 build.", path));
+                "Cannot read '{0}': it is not an mzML, and this build of Osprey cannot read vendor " +
+                "instrument files. {1} Otherwise convert the file to mzML with msconvert.",
+                path, VENDOR_READER_ABSENT));
 #endif
         }
 

@@ -25,8 +25,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Osprey.Tasks", "Osprey.Task
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Osprey.Diagnostics", "Osprey.Diagnostics\Osprey.Diagnostics.csproj", "{5CB164A4-2B04-4FAE-B744-765AD5872D56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProteowizardWrapper", "..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj", "{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -133,18 +131,6 @@ Global
 		{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}.Release|x86.ActiveCfg = Release|Any CPU
 		{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}.Release|x86.Build.0 = Release|Any CPU
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Debug|x64.ActiveCfg = Debug|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Debug|x64.Build.0 = Debug|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Debug|Any CPU.Build.0 = Debug|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Debug|x86.ActiveCfg = Debug|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Debug|x86.Build.0 = Debug|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|x64.ActiveCfg = Release|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|x64.Build.0 = Release|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|Any CPU.ActiveCfg = Release|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|Any CPU.Build.0 = Release|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|x86.ActiveCfg = Release|x64
-		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|x86.Build.0 = Release|x64
 		{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}.Debug|x64.ActiveCfg = Debug|x64
 		{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}.Debug|x64.Build.0 = Debug|x64
 		{EF7990A9-10A0-4E5A-BB4D-F0E6952F0684}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

@@ -1586,24 +1586,33 @@ namespace pwiz.Osprey.Test
         /// Root cause: .NET Framework's string-to-double conversion is not
         /// correctly rounded for some decimals, and XmlConvert.ToDouble inherits
         /// it. "0.86653405" parses to 0x3FEBBAA59DB3DA8E on .NET Framework and
-        /// 0x3FEBBAA59DB3DA8D (the correctly rounded value, and what C++ strtod
-        /// gives) on .NET Core 3.0+. So this test asserts what the READER
-        /// controls - that the value reaching a <see cref="Spectrum"/> is exactly
-        /// what the runtime's parser produced, with nothing perturbing it in
-        /// between. It deliberately does NOT compare against a compiled literal:
-        /// that comparison fails on net472 for reasons no Osprey code can fix,
-        /// and pinning it here would just encode the runtime defect as expected.
-        /// The cross-runtime deviation itself is tracked separately.
+        /// 0x3FEBBAA59DB3DA8D (correctly rounded, and what C++ strtod gives) on
+        /// .NET Core 3.0+. The net472 reader now parses through the CRT's strtod
+        /// so both builds agree with each other and with ProteoWizard.
+        ///
+        /// The reference values below are COMPILED LITERALS on purpose: Roslyn
+        /// rounds them correctly at compile time, so they are a parser-independent
+        /// oracle. An earlier version of this test compared the reader against
+        /// XmlConvert.ToDouble of the same text and passed while the defect was
+        /// live, because both sides were wrong in the same way - a self-referential
+        /// assertion proves nothing.
         /// </summary>
         [TestMethod]
         public void TestMzmlReaderRetentionTimePrecision()
         {
-            foreach (string text in new[] { @"0.86653405", @"0.97263695", @"0.5903117" })
+            // Text as it appears in the mzML, paired with the correctly rounded
+            // double. The text must be exactly what a literal formats to, so the
+            // file really does contain the decimal under test.
+            var cases = new[]
             {
-                double expected = XmlConvert.ToDouble(text);
-                // Exact: any delta would hide the very defect under test.
-                Assert.AreEqual(double.Parse(text, CultureInfo.InvariantCulture), expected, 0.0,
-                    @"XmlConvert vs double.Parse disagree on " + text);
+                new { Text = @"0.86653405", Expected = 0.86653405 },
+                new { Text = @"0.97263695", Expected = 0.97263695 },
+                new { Text = @"0.5903117", Expected = 0.5903117 },
+            };
+            foreach (var testCase in cases)
+            {
+                string text = testCase.Text;
+                double expected = testCase.Expected;
 
                 string mzml = BuildMinimalMzml(
                     msLevel: 2,
@@ -1614,6 +1623,11 @@ namespace pwiz.Osprey.Test
                     isoUpper: 1.5006999969482422,
                     mzValues: new[] { 200.0, 300.0, 400.0 },
                     intensityValues: new[] { 100.0f, 200.0f, 300.0f });
+
+                // The file must actually carry the decimal under test; otherwise a
+                // formatting change could quietly swap in a different value and the
+                // assertion below would still pass.
+                StringAssert.Contains(mzml, @"value=""" + text + @"""");
 
                 string path = Path.GetTempFileName() + ".mzML";
                 try
