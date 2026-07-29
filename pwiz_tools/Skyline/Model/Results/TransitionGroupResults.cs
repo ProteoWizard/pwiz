@@ -37,7 +37,23 @@ namespace pwiz.Skyline.Model.Results
         public ChromFileIds ChromFileIds { get; private set; }
         public ImmutableList<float> Areas { get; private set; }
         public ImmutableList<float> RetentionTimes { get; private set; }
-        public ImmutableList<int> CandidatePeakIndexes { get; private set; }
+        /// <summary>
+        /// The peak currently chosen at each position.
+        /// </summary>
+        public ImmutableList<int> ChosenPeakIndexes { get; private set; }
+
+        /// <summary>
+        /// The peak Skyline originally picked, and the peak reintegration chose. Both are
+        /// kept for the parts which need to know where a peak came from rather than only
+        /// where it is now - retention time alignment and peak imputation.
+        /// <para>
+        /// In many documents all three of these lists hold the same indexes, so an incoming
+        /// list which equals one already here is stored as the same instance rather than as
+        /// a second copy.
+        /// </para>
+        /// </summary>
+        public ImmutableList<int> OriginalPeakIndexes { get; private set; }
+        public ImmutableList<int> ReintegratedPeakIndexes { get; private set; }
 
         /// <summary>
         /// Almost always all <see cref="UserSet.FALSE"/>, which is why this gets stored
@@ -65,16 +81,59 @@ namespace pwiz.Skyline.Model.Results
         public ImmutableList<CustomPeak> CustomPeaks { get; private set; }
 
         /// <summary>
-        /// Takes an <see cref="IEnumerable{T}"/> rather than an <see cref="ImmutableList{T}"/>
-        /// so that <see cref="ImmutableListFactory.ToImmutable{T}"/> gets the chance to store
-        /// the indexes as bytes or shorts. A document which had its peaks picked normally has
-        /// around ten candidate peaks, so these fit in a byte. Passing an
-        /// <see cref="ImmutableList{T}"/> makes it a no-op, on the assumption that it has
-        /// already been optimized.
+        /// These take an <see cref="IEnumerable{T}"/> rather than an
+        /// <see cref="ImmutableList{T}"/> so that <see cref="ImmutableListFactory.ToImmutable{T}"/>
+        /// gets the chance to store the indexes as bytes or shorts. A document which had its
+        /// peaks picked normally has around ten candidate peaks, so these fit in a byte.
+        /// Passing an <see cref="ImmutableList{T}"/> makes that a no-op, on the assumption
+        /// that it has already been optimized.
         /// </summary>
-        public TransitionGroupResults ChangeCandidatePeakIndexes(IEnumerable<int> value)
+        public TransitionGroupResults ChangeChosenPeakIndexes(IEnumerable<int> value)
         {
-            return ChangeProp(ImClone(this), im => im.CandidatePeakIndexes = value?.ToImmutable());
+            return ChangeProp(ImClone(this), im => im.ChosenPeakIndexes = im.ShareEqualIndexes(value?.ToImmutable()));
+        }
+
+        public TransitionGroupResults ChangeOriginalPeakIndexes(IEnumerable<int> value)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.OriginalPeakIndexes = im.ShareEqualIndexes(value?.ToImmutable()));
+        }
+
+        public TransitionGroupResults ChangeReintegratedPeakIndexes(IEnumerable<int> value)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.ReintegratedPeakIndexes = im.ShareEqualIndexes(value?.ToImmutable()));
+        }
+
+        /// <summary>
+        /// Returns whichever of the peak index lists already here holds the same indexes as
+        /// <paramref name="value"/>, so that the common case of the chosen, original and
+        /// reintegrated peaks all being the same costs one list instead of three.
+        /// <see cref="ImmutableList{T}"/> compares by contents, which is what makes this work.
+        /// </summary>
+        private ImmutableList<int> ShareEqualIndexes(ImmutableList<int> value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            if (Equals(value, ChosenPeakIndexes))
+            {
+                return ChosenPeakIndexes;
+            }
+
+            if (Equals(value, OriginalPeakIndexes))
+            {
+                return OriginalPeakIndexes;
+            }
+
+            if (Equals(value, ReintegratedPeakIndexes))
+            {
+                return ReintegratedPeakIndexes;
+            }
+
+            return value;
         }
 
         public TransitionGroupResults ChangeQValues(IEnumerable<float> value)
