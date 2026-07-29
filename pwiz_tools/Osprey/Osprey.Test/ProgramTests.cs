@@ -57,6 +57,39 @@ namespace pwiz.Osprey.Test
             };
         }
 
+        // -- SpectraCache (Stage 1 alone: inputs in, .spectra.bin out) --
+
+        [TestMethod]
+        public void TestValidateSpectraCache()
+        {
+            // Consolidated: the whole SpectraCache contract in one place.
+            // The defining difference from every other task is that it needs
+            // NO library -- caching depends only on the input file -- so the
+            // happy path below deliberately leaves LibrarySource null.
+            var config = TaskConfig(HpcTask.SpectraCache);
+            config.InputFiles = new List<string> { "a.raw" };
+            Assert.IsNull(Program.ValidateArgs(config), "no library should be required");
+
+            // A library is merely unnecessary, not rejected: staging a dataset
+            // with the eventual run's full command line must still work.
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            Assert.IsNull(Program.ValidateArgs(config), "a library should be tolerated");
+
+            AssertSpectraCacheError(c => { }, "--input <file");
+            AssertSpectraCacheError(c => c.InputScores = new List<string> { "a.scores.parquet" },
+                "not --input-scores");
+        }
+
+        private static void AssertSpectraCacheError(Action<OspreyConfig> mutate, string expected)
+        {
+            var config = TaskConfig(HpcTask.SpectraCache);
+            mutate(config);
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task SpectraCache");
+            StringAssert.Contains(err, expected);
+        }
+
         // -- PerFileScoring (mzML in) --
 
         [TestMethod]
@@ -403,6 +436,13 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestResolveTaskSpectraCache()
+        {
+            Assert.IsNull(Program.ResolveTask("SpectraCache", out HpcTask task));
+            Assert.AreEqual(HpcTask.SpectraCache, task);
+        }
+
+        [TestMethod]
         public void TestResolveTaskIsCaseInsensitive()
         {
             Assert.IsNull(Program.ResolveTask("perfilerescoring", out HpcTask task));
@@ -429,12 +469,17 @@ namespace pwiz.Osprey.Test
             //   FirstJoin        | false  | true            | false
             //   PerFileRescore   | true   | false           | false
             //   MergeNode        | false  | false           | true
+            //   SpectraCache     | false  | false           | false
+            // SpectraCache is all-false because it drives no membership at all:
+            // it runs its own one-task pipeline (AnalysisPipeline.SpectraCachePipeline)
+            // rather than gating tasks inside the canonical one.
             var cases = new (HpcTask Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
             {
                 (HpcTask.PerFileScoring, true,  false, false),
                 (HpcTask.FirstJoin,      false, true,  false),
                 (HpcTask.PerFileRescore, true,  false, false),
                 (HpcTask.MergeNode,      false, false, true),
+                (HpcTask.SpectraCache,   false, false, false),
             };
             foreach (var c in cases)
             {

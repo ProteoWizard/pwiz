@@ -23,8 +23,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Tasks
@@ -109,6 +111,105 @@ namespace pwiz.Osprey.Tasks
         internal static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
         {
             return MS1Spectrum.FindNearest(ms1Spectra, rt);
+        }
+
+        /// <summary>
+        /// Ensure a valid <c>.spectra.bin</c> cache exists for the input and return a
+        /// streaming <see cref="SpectraWindowIndex"/> over it (per-window MS2 offsets, plus
+        /// MS1 and the first-cycle isolation windows) WITHOUT materializing the full MS2
+        /// <c>List&lt;Spectrum&gt;</c>. On a cache hit (the common re-run path) the file is only
+        /// header-indexed; on a miss the mzML is parsed once (gated across parallel files),
+        /// written to the cache, then indexed and the parsed list dropped. Stages 1-4
+        /// (calibration + scoring) stream each isolation window from the returned index. The
+        /// full resident load survives only in Stage-6 rescore
+        /// (<c>PerFileRescoreTask.LoadSpectraForRescore</c>, a separate follow-up).
+        ///
+        /// Shared here rather than owned by <see cref="PerFileScoringTask"/> because
+        /// <see cref="SpectraCacheTask"/> (<c>--task SpectraCache</c>) builds exactly the
+        /// same caches. Two copies would let the staging path and the scoring path drift,
+        /// which is precisely what a raw-vs-mzML parity check must be able to rule out.
+        /// </summary>
+        internal static SpectraWindowIndex EnsureSpectraCache(string inputFile, bool serializeMzmlRead,
+            out int unsortedCount, PipelineContext ctx)
+        {
+            unsortedCount = 0;
+            // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
+            // derive an identical filename + directory (ArtifactPaths redirects the dir).
+            string cachePath = SpectraCache.GetCachePath(inputFile);
+            if (File.Exists(cachePath))
+            {
+                try
+                {
+                    // Cache hit: index the file directly (header pass only) -- never build the
+                    // full MS2 list. Returns null when stale/invalid (bad magic/version or the
+                    // source fingerprint changed), which falls through to a re-parse below.
+                    var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                    if (hit != null)
+                    {
+                        ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                        return hit;
+                    }
+                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
+                }
+                catch (Exception ex)
+                {
+                    // A present-but-corrupt/truncated cache body (intact header, e.g. an
+                    // interrupted write) throws during the index pass; re-parse the mzML and
+                    // rewrite the cache rather than faulting the file. Matches the old
+                    // LoadSpectra fallback. Only the miss-path re-index below stays a hard
+                    // error, since that indexes a cache we just wrote.
+                    ctx.LogWarning(string.Format(
+                        "Failed to index spectra cache: {0}. Re-parsing mzML.", ex.Message));
+                }
+            }
+
+            // Miss/stale/absent: parse the mzML once (materialized only transiently here),
+            // optionally serialized across files, write the cache, then index it and drop the
+            // parsed list. The "Processing file N/M: <path>" banner already named the file.
+            MzmlResult mzmlResult;
+            if (serializeMzmlRead)
+                s_mzmlReadGate.Wait();
+            try
+            {
+                mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
+            }
+            finally
+            {
+                if (serializeMzmlRead)
+                    s_mzmlReadGate.Release();
+            }
+            unsortedCount = mzmlResult.UnsortedSpectrumCount;
+
+            try
+            {
+                SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
+            }
+
+            // Index the just-written cache and stream from it (the parsed MS2 list drops when
+            // this method returns). Per-file scoring REQUIRES the cache; if it could not be
+            // written/indexed (e.g. a read-only or full output directory, or a failed write),
+            // fail clearly -- preserving the underlying error -- rather than silently fall back
+            // to a resident load that would OOM a large run.
+            SpectraWindowIndex index = null;
+            Exception indexError = null;
+            try
+            {
+                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+            }
+            catch (Exception ex)
+            {
+                indexError = ex;
+            }
+            if (index == null)
+                throw new IOException(string.Format(
+                    "Could not index the spectra cache for '{0}'. Per-file scoring streams MS2 from " +
+                    "'{1}'; ensure that directory is writable (the .scores.parquet and .calibration.json " +
+                    "outputs are written to the same place).", inputFile, cachePath), indexError);
+            return index;
         }
     }
 }
