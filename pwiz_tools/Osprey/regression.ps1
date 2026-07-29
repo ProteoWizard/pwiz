@@ -666,7 +666,7 @@ function Invoke-HpcChain {
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
         $a3 += $extraArgs
-    $a3 += $memStampArgs
+        $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
         # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
         # consumes only those plus the calibration / reconciliation / 1st-pass
