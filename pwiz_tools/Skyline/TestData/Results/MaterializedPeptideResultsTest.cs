@@ -24,6 +24,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -104,10 +106,48 @@ namespace pwiz.SkylineTestData.Results
             }
         }
 
-        private static void CheckDocument(SrmDocument docResults)
+        /// <summary>
+        /// <paramref name="requireDotProducts"/> guards against the dot product assertions
+        /// passing because both sides are null, which is what happens on a document with no
+        /// spectral library.
+        /// </summary>
+        /// <summary>
+        /// The same checks against a document with a spectral library, so that the dot
+        /// products are actually calculated rather than being null on both sides.
+        /// </summary>
+        [TestMethod]
+        public void TestMaterializedPeaksWithDotProducts()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip");
+            string docPath = TestFilesDir.GetTestPath("BlibDriftTimeTest.sky");
+            var docOriginal = ResultsUtil.DeserializeDocument(docPath);
+            using (var docContainer = new ResultsTestDocumentContainer(docOriginal, docPath))
+            {
+                var librarySpec = new BiblioSpecLiteSpec(@"drift test",
+                    TestFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
+                var doc = docContainer.Document.ChangeSettings(docContainer.Document.Settings
+                    .ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] {librarySpec})));
+                var chromSets = new[]
+                {
+                    new ChromatogramSet(@"ID12692_01_UCA168_3727_040714", new[]
+                    {
+                        new MsDataFilePath(TestFilesDir.GetTestPath(
+                            "ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5))
+                    })
+                };
+                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+                Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
+                docContainer.AssertComplete();
+
+                CheckDocument(docContainer.Document, true);
+            }
+        }
+
+        private static void CheckDocument(SrmDocument docResults, bool requireDotProducts = false)
         {
             int positionsChecked = 0;
             int groupsChecked = 0;
+            int dotProductsChecked = 0;
             int singleReplicateChecked = 0;
             int replicateToCheck = Math.Min(1, docResults.Settings.MeasuredResults.Chromatograms.Count - 1);
             foreach (var nodePep in docResults.Peptides)
@@ -126,7 +166,7 @@ namespace pwiz.SkylineTestData.Results
                         positionsChecked += CheckTransition(materialized, nodeTran);
                     }
 
-                    groupsChecked += CheckTransitionGroup(materialized, nodeGroup);
+                    groupsChecked += CheckTransitionGroup(materialized, nodeGroup, ref dotProductsChecked);
                 }
 
                 singleReplicateChecked +=
@@ -136,6 +176,10 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreNotEqual(0, positionsChecked);
             Assert.AreNotEqual(0, groupsChecked);
             Assert.AreNotEqual(0, singleReplicateChecked);
+            if (requireDotProducts)
+            {
+                Assert.AreNotEqual(0, dotProductsChecked);
+            }
         }
 
         /// <summary>
@@ -171,7 +215,8 @@ namespace pwiz.SkylineTestData.Results
         /// values the document holds. The ranks and the dot products are not compared, because
         /// they come from the ranking pass which the materializer does not drive yet.
         /// </summary>
-        private static int CheckTransitionGroup(MaterializedPeptideResults materialized, TransitionGroupDocNode nodeGroup)
+        private static int CheckTransitionGroup(MaterializedPeptideResults materialized,
+            TransitionGroupDocNode nodeGroup, ref int dotProductsChecked)
         {
             if (!nodeGroup.HasResults)
             {
@@ -193,7 +238,11 @@ namespace pwiz.SkylineTestData.Results
                 Assert.AreEqual(expected.Count, rebuilt.ChromInfos.Count);
                 for (int i = 0; i < rebuilt.ChromInfos.Count; i++)
                 {
-                    AssertGroupValuesEqual(expected[i], rebuilt.ChromInfos[i]);
+                    if (AssertGroupValuesEqual(expected[i], rebuilt.ChromInfos[i]))
+                    {
+                        dotProductsChecked++;
+                    }
+
                     groupsChecked++;
                 }
 
@@ -247,7 +296,11 @@ namespace pwiz.SkylineTestData.Results
             return result;
         }
 
-        private static void AssertGroupValuesEqual(TransitionGroupChromInfo expected,
+        /// <summary>
+        /// Returns whether there was a library dot product to compare, so that the caller can
+        /// tell an agreeing comparison from one where both sides were null.
+        /// </summary>
+        private static bool AssertGroupValuesEqual(TransitionGroupChromInfo expected,
             TransitionGroupChromInfo actual)
         {
             Assert.AreSame(expected.FileId, actual.FileId);
@@ -267,6 +320,7 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(expected.ZScore, actual.ZScore);
             Assert.AreEqual(expected.LibraryDotProduct, actual.LibraryDotProduct);
             Assert.AreEqual(expected.IsotopeDotProduct, actual.IsotopeDotProduct);
+            return expected.LibraryDotProduct.HasValue || expected.IsotopeDotProduct.HasValue;
         }
 
         /// <summary>
