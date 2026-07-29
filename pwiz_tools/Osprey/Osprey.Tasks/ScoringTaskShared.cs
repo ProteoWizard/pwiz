@@ -163,15 +163,17 @@ namespace pwiz.Osprey.Tasks
                 }
             }
 
-            // Miss/stale/absent: parse the mzML once (materialized only transiently here),
+            // Miss/stale/absent: parse the input once (materialized only transiently here),
             // optionally serialized across files, write the cache, then index it and drop the
             // parsed list. The "Processing file N/M: <path>" banner already named the file.
+            // SpectrumFileReader picks the mzML or vendor-raw reader by extension; both
+            // return the same MzmlResult, so nothing below here knows the source format.
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
             try
             {
-                mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
+                mzmlResult = SpectrumFileReader.LoadAllSpectra(inputFile);
             }
             finally
             {

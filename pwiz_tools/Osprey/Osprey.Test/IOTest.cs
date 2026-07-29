@@ -1571,6 +1571,45 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
+        #region SpectrumFileReader Tests
+
+        /// <summary>
+        /// The by-extension routing that decides whether an input is parsed by the
+        /// hand-written mzML reader or handed to ProteoWizard. Consolidated: one
+        /// wrong answer here sends a whole run to the wrong parser, and the
+        /// gzip and case variants are exactly where that would happen quietly.
+        /// The vendor branch itself needs a real instrument file and the pwiz
+        /// native dependencies, so it is covered by the raw-vs-mzML
+        /// .spectra.bin comparison rather than here (issue #4496).
+        /// </summary>
+        [TestMethod]
+        public void TestSpectrumFileReaderFormatRouting()
+        {
+            foreach (var mzml in new[]
+                     {
+                         @"a.mzML", @"a.mzml", @"a.MZML",
+                         @"C:\data\some.file.name.mzML",
+                         @"a.mzML.gz", @"a.mzml.gz",
+                     })
+            {
+                Assert.IsTrue(SpectrumFileReader.IsMzml(mzml), mzml);
+            }
+
+            foreach (var vendor in new[]
+                     {
+                         @"a.raw", @"a.RAW", @"a.d", @"a.wiff", @"a.wiff2",
+                         @"C:\data\some.file.name.raw",
+                         // Not mzML despite the substring: routing must key on the
+                         // extension, not a name that happens to contain "mzml".
+                         @"mzml_backup.raw", @"a.mzXML",
+                     })
+            {
+                Assert.IsFalse(SpectrumFileReader.IsMzml(vendor), vendor);
+            }
+        }
+
+        #endregion
+
         #region MzmlReader Tests
 
         /// <summary>

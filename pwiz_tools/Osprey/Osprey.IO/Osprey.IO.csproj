@@ -46,6 +46,13 @@
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
   </ItemGroup>
 
+  <!-- The vendor reader compiles only where ProteoWizard is available.
+       SpectrumFileReader (the by-extension dispatcher) builds on both and
+       raises a clear error on net8.0 for a vendor path. -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+    <Compile Remove="VendorRawReader.cs" />
+  </ItemGroup>
+
   <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
        Matches Skyline's BlibData writer (Util/Extensions/UtilDB.Compress)
        so Osprey .blib peak blobs are byte-identical to Skyline's
