@@ -229,6 +229,11 @@ PublishScripts/
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
+# Spurious NuGet.Config regenerated in a .nuget folder nested inside another
+# .nuget folder (seen only on some machines, e.g. idpicker/.nuget/.nuget/); never
+# part of the project. Anchored to the nested case so the tracked top-level
+# idpicker/.nuget/ files (NuGet.Config, NuGet.exe, NuGet.targets) are unaffected.
+**/.nuget/.nuget/
 
 # Microsoft Azure Build Output
 csx/
@@ -388,7 +393,8 @@ Version.cpp
 /pwiz_tools/BiblioSpec/tests/output
 /pwiz_tools/SeeMS/**/AssemblyInfo.cs
 /pwiz_tools/MSConvertGUI/**/AssemblyInfo.cs
-/pwiz_tools/OspreySharp/**/AssemblyInfo.cs
+/pwiz_tools/Osprey/**/AssemblyInfo.cs
+/pwiz_tools/Osprey/dist/
 /pwiz_tools/Bumbershoot/**/*Version.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cs

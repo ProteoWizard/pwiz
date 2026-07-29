@@ -51,6 +51,7 @@ td {
 <tr><td><nobr>--save-settings</nobr></td><td>グローバル環境の設定変更が（追加されたレポート、ライブラリ、酵素など）がプログラム設定ファイルに保存されます。</td></tr>
 <tr><td><nobr>--out</nobr>=path/to/file（ファイル）.sky</td><td>指定されたファイルに書き込まれること以外は、保存と同じです。</td></tr>
 <tr><td><nobr>--save-as</nobr>=path/to/file（ファイル）.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
+<tr><td><nobr>--save-compact-format</nobr>=&lt;never | largefilesonly | always&gt;</td><td>Sets how transitions are written when the document is saved in this run: &#39;never&#39; writes individual transition elements, &#39;always&#39; writes a compact base64 blob, and &#39;largefilesonly&#39; uses the compact blob only for large documents. Applies only to this invocation and overrides the CompactFormatOption setting persisted in user.config; when this argument is omitted, that persisted setting (which defaults to &#39;largefilesonly&#39;) is used.</td></tr>
 <tr><td><nobr>--new</nobr>[=path/to/file（ファイル）.sky]</td><td>現在のSkyline設定を使用して新規ドキュメントを作成します。</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td><nobr>--newで指定されたファイルパスが既に存在する場合に</nobr>、エラーとなる代わりにファイルパスを上書きします。</td></tr>
 <tr><td><nobr>--discard-changes</nobr></td><td>Allows <nobr>--new</nobr> or <nobr>--in</nobr> to proceed when the current document has unsaved changes. Without this flag, the command will fail with an error if there are unsaved changes.</td></tr>

@@ -758,6 +758,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} which requires an integer.</value>
   </data>
+  <data name="Edit_Item" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Item.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Edit_Undo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\edit_undo.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -3757,6 +3760,12 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__" xml:space="preserve">
     <value>Sample {0} on line {1} does not match the file {2}.</value>
+  </data>
+  <data name="PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_" xml:space="preserve">
+    <value>The replicate "{0}" on line {1} contains multiple files, so the replicate name alone is ambiguous. Add a SampleName column to select a single file within the replicate, or use a FileName column instead.</value>
+  </data>
+  <data name="PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not_match_a_single_file_in_the_replicate___2__" xml:space="preserve">
+    <value>The sample "{0}" on line {1} does not match a single file in the replicate "{2}".</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_" xml:space="preserve">
     <value>Invalid compensation voltage {0}</value>

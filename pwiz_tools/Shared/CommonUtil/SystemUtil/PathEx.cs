@@ -46,6 +46,30 @@ namespace pwiz.Common.SystemUtil
             return path.ToLowerInvariant().EndsWith(ext.ToLowerInvariant());
         }
 
+        /// <summary>
+        /// True if <paramref name="a"/> and <paramref name="b"/> refer to the same
+        /// path on disk. Normalizes both sides (GetFullPath + trailing-separator trim)
+        /// and compares case-insensitively, which is the right semantics on Windows.
+        /// Null/empty paths compare equal only to each other.
+        /// </summary>
+        public static bool SamePath(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b))
+                return string.Equals(a, b);
+            try
+            {
+                string Normalize(string p) => Path.GetFullPath(p)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                return string.Equals(Normalize(a), Normalize(b), StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                // GetFullPath throws on paths with invalid characters — fall back to a
+                // raw string comparison rather than masking that as "different".
+                return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
         public static string GetCommonRoot(IEnumerable<string> paths)
         {
             string rootPath = string.Empty;

@@ -19,7 +19,7 @@ namespace pwiz.Common.CommonResources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class MessageResources {
@@ -344,6 +344,33 @@ namespace pwiz.Common.CommonResources {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse &apos;{0}&apos; as a number.
+        /// </summary>
+        public static string PrecisionNumber_Parse_Unable_to_parse___0___as_a_number {
+            get {
+                return ResourceManager.GetString("PrecisionNumber_Parse_Unable_to_parse___0___as_a_number", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The filter value cannot be negative..
+        /// </summary>
+        public static string PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_ {
+            get {
+                return ResourceManager.GetString("PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot compare a list of {0} values with a list of {1} values..
+        /// </summary>
+        public static string ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_ {
+            get {
+                return ResourceManager.GetString("ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Run command:.
         /// </summary>

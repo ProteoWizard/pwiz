@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("zero_charge.pep.XML", null);
             BuildLibraryError("truncated.pep.XML", null);
             BuildLibraryError("missing_mzxml.pep.XML", null, null, "could not find matches for the following");
-            BuildLibraryError("..\\mascot\\F027319.dat", null, 1e-12, "No matches passed score filter");
+            BuildLibraryError("..\\mascot\\F027319.dat", null, 1e-12, "produced no spectra that passed");
             BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-scan-numbers.pepXML"), null, null, "WARNING: Could not find native id");
             BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-nativeid-format.mzid"), null, null, "WARNING: Mismatch between spectrum");
 
@@ -655,9 +655,8 @@ namespace pwiz.SkylineTestFunctional
 
             var messageDlg = WaitForOpenForm<MessageDlg>();
             Assert.IsNotNull(messageDlg, "No message box shown");
-            AssertEx.Contains(messageDlg.Message, "ERROR");
             if (messageParts.Length == 0)
-                AssertEx.Contains(messageDlg.Message, inputFile, "line");
+                AssertEx.Contains(messageDlg.Message, "ERROR", inputFile, "line");
             else
                 AssertEx.Contains(messageDlg.Message, messageParts);
             OkDialog(messageDlg, messageDlg.OkDialog);           

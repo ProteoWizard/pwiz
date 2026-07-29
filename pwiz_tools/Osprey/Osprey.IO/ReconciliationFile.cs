@@ -1,0 +1,309 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+using pwiz.Osprey.Core;
+
+namespace pwiz.Osprey.IO
+{
+    /// <summary>
+    /// Per-file <c>&lt;stem&gt;.reconciliation.json</c> Stage 5 → Stage 6
+    /// boundary file. Carries everything a Stage 6 worker needs to do
+    /// per-file rescore + gap-fill + reconciled parquet write-back without
+    /// re-running any of the joined Stage 5 work: the non-Keep
+    /// reconciliation actions for the file (split into two homogeneous
+    /// arrays so the JSON has no discriminator field gymnastics), the
+    /// gap-fill targets for the file, and the refined RT calibration.
+    ///
+    /// Mirrors <c>osprey/crates/osprey/src/reconciliation_io.rs</c>.
+    /// Field declaration order is alphabetical at every nesting level
+    /// (matches Rust). All <see cref="double"/> values are routed through
+    /// <see cref="RoundtripDoubleConverter"/> on this side and through a
+    /// matching custom <c>serde_json</c> formatter on the Rust side, so
+    /// every f64 is emitted as the same canonical fixed-point decimal
+    /// form on both runtimes — sidestepping the
+    /// Newtonsoft-<c>R</c>/Grisu vs. Rust-<c>ryu</c> threshold
+    /// disagreement on small values like <c>4.58e-5</c>. Cross-impl byte
+    /// parity is verified by a sibling test in each language.
+    /// </summary>
+    public class ReconciliationFile
+    {
+        /// <summary>
+        /// Current schema version. Bump on incompatible changes.
+        ///
+        /// v1: initial format.
+        /// v2: added <c>file_stems</c> so per-file Stage 6 rescore workers
+        ///     can compute the reconciliation parameter hash that the
+        ///     downstream <c>--task SecondPassFDR</c> merge node expects (the
+        ///     hash is computed over all files in the join, not the
+        ///     worker's single parquet). Old v1 files deserialize with an
+        ///     empty <see cref="FileStems"/> list; the worker falls back
+        ///     to its <c>OspreyConfig.InputFiles</c> stems in that case,
+        ///     preserving v1 behavior.
+        /// v3: added <c>first_pass_base_ids</c>, the JOIN-WIDE set of base_ids
+        ///     that survived first-pass compaction. FirstJoin computes it with
+        ///     every file in memory; a per-file HPC rescore worker uses it to
+        ///     compact to exactly the set the in-memory straight-through pipeline
+        ///     used, instead of recomputing a PER-FILE subset that drops cross-file
+        ///     entries (regression mode3 divergence). Required in v3 (see Load).
+        ///     NOTE: the Rust reconciliation_io.rs needs the matching field to keep
+        ///     cross-impl byte parity.
+        /// </summary>
+        public const int CurrentFormatVersion = 3;
+
+        [JsonProperty("file_stems", Order = 0)]
+        public List<string> FileStems { get; set; }
+
+        /// <summary>
+        /// Join-wide first-pass passing base_ids (sorted ascending for
+        /// deterministic, byte-parity output). See v3 note above.
+        /// </summary>
+        [JsonProperty("first_pass_base_ids", Order = 1)]
+        public uint[] FirstPassBaseIds { get; set; }
+
+        [JsonProperty("forced_integration_actions", Order = 2)]
+        public List<ForcedIntegrationEntry> ForcedIntegrationActions { get; set; }
+
+        [JsonProperty("format_version", Order = 3)]
+        public int FormatVersion { get; set; }
+
+        [JsonProperty("gap_fill_targets", Order = 4)]
+        public List<GapFillEntry> GapFillTargets { get; set; }
+
+        [JsonProperty("library_hash", Order = 5)]
+        public string LibraryHash { get; set; }
+
+        [JsonProperty("refined_rt_calibration", Order = 6, NullValueHandling = NullValueHandling.Include)]
+        public RefinedRtCalibrationJson RefinedRtCalibration { get; set; }
+
+        [JsonProperty("search_hash", Order = 7)]
+        public string SearchHash { get; set; }
+
+        [JsonProperty("use_cwt_peak_actions", Order = 8)]
+        public List<UseCwtPeakEntry> UseCwtPeakActions { get; set; }
+
+        /// <summary>
+        /// Read a reconciliation file and validate its
+        /// <c>format_version</c>. Throws on missing file, malformed JSON,
+        /// or unsupported version.
+        /// </summary>
+        public static ReconciliationFile Load(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("path must not be null or empty", nameof(path));
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Reconciliation file not found: " + path, path);
+
+            string json = File.ReadAllText(path);
+            var parsed = JsonConvert.DeserializeObject<ReconciliationFile>(json);
+            if (parsed == null)
+                throw new InvalidDataException("Reconciliation file parsed as null: " + path);
+            if (parsed.FormatVersion != CurrentFormatVersion)
+            {
+                throw new InvalidDataException(string.Format(
+                    "Reconciliation file {0} has unsupported format_version {1} (expected {2})",
+                    path, parsed.FormatVersion, CurrentFormatVersion));
+            }
+            // v2 envelopes must carry the planner's full join file_stems set;
+            // a deserialized v2 file with file_stems missing or empty would
+            // silently flow through RescoreHydration with joinFileStems = []
+            // and cause downstream --task SecondPassFDR to compute a single-file
+            // ReconciliationParameterHash for what was meant to be a
+            // multi-file join. JsonProperty does not enforce required, so
+            // assert it here. Matches the Rust serde behavior (file_stems is
+            // a required field, not defaulted).
+            if (parsed.FileStems == null || parsed.FileStems.Count == 0)
+            {
+                throw new InvalidDataException(string.Format(
+                    "Reconciliation file {0} has format_version {1} but file_stems is missing " +
+                    "or empty; v{1} envelopes are required to carry the planner's full join " +
+                    "file set.",
+                    path, CurrentFormatVersion));
+            }
+            // v3 required: the join-wide first-pass base_id set. A per-file HPC
+            // worker MUST have this to compact to the same set as the in-memory
+            // pipeline; without it the worker would recompute a per-file subset
+            // and silently diverge (regression mode3). Fail loudly instead.
+            if (parsed.FirstPassBaseIds == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    "Reconciliation file {0} has format_version {1} but first_pass_base_ids is " +
+                    "missing; v{1} envelopes are required to carry the join-wide first-pass " +
+                    "base_id set.",
+                    path, CurrentFormatVersion));
+            }
+            return parsed;
+        }
+
+        /// <summary>
+        /// Write the reconciliation file as pretty 2-space-indented JSON
+        /// with LF line endings. Stages through a sibling <c>.tmp</c>
+        /// file in the same directory and renames into place; this
+        /// avoids leaving a partially-written destination on writer
+        /// failure, but the rename is not strictly atomic when the
+        /// destination already exists (the existing file is removed
+        /// first). A crash between the remove and the rename leaves
+        /// the <c>.tmp</c> next to the missing destination, recoverable
+        /// by hand or by re-running.
+        /// </summary>
+        public static void Save(string path, ReconciliationFile file)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("path must not be null or empty", nameof(path));
+            if (file == null)
+                throw new ArgumentNullException(nameof(file));
+
+            string parent = Path.GetDirectoryName(Path.GetFullPath(path));
+            if (!string.IsNullOrEmpty(parent))
+                Directory.CreateDirectory(parent);
+
+            var settings = new JsonSerializerSettings
+            {
+                Converters = { new RoundtripDoubleConverter() },
+            };
+            string json = JsonConvert.SerializeObject(file, Formatting.Indented, settings);
+            // Newtonsoft's Formatting.Indented emits CRLF on Windows by
+            // default; normalize to LF so cross-impl byte parity with the
+            // Rust side (which always emits LF via serde_json) holds. Also
+            // emit a trailing newline so the file ends with `}\n`,
+            // matching the explicit newline Rust appends after the
+            // serializer.
+            json = json.Replace("\r\n", "\n");
+            if (!json.EndsWith("\n", StringComparison.Ordinal))
+                json += "\n";
+
+            // Atomic write via FileSaver: a sibling temp file is
+            // promoted to the destination on Commit; on exception, the
+            // using-block disposes FileSaver which deletes the temp
+            // without touching the destination. See
+            // Osprey.Core.FileSaver for details.
+            using (var saver = new FileSaver(path))
+            {
+                File.WriteAllText(saver.SafeName, json);
+                saver.Commit();
+            }
+        }
+
+        /// <summary>
+        /// Compute the per-file reconciliation JSON path: sibling to the
+        /// input mzML at <c>&lt;dir&gt;/&lt;stem&gt;.reconciliation.json</c>.
+        /// Mirrors the existing pattern used for
+        /// <c>&lt;stem&gt;.calibration.json</c>, etc.
+        /// </summary>
+        public static string PathForInput(string inputPath)
+        {
+            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
+            // Route through ArtifactPaths so the reconciliation JSON follows the
+            // scores parquet into --output-dir (default = the input's own dir),
+            // shared by the straight-through writer and the resume reader.
+            string parent = ArtifactPaths.ResolveOutputDir(inputPath);
+            string filename = stem + ".reconciliation.json";
+            return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
+        }
+    }
+
+    /// <summary>
+    /// Wire form of an <c>UseCwtPeak</c> reconciliation action for a
+    /// single entry. Field order alphabetical.
+    /// </summary>
+    public class UseCwtPeakEntry
+    {
+        [JsonProperty("apex_rt", Order = 0)]
+        public double ApexRt { get; set; }
+
+        [JsonProperty("candidate_idx", Order = 1)]
+        public uint CandidateIdx { get; set; }
+
+        [JsonProperty("end_rt", Order = 2)]
+        public double EndRt { get; set; }
+
+        [JsonProperty("entry_id", Order = 3)]
+        public uint EntryId { get; set; }
+
+        [JsonProperty("start_rt", Order = 4)]
+        public double StartRt { get; set; }
+    }
+
+    /// <summary>
+    /// Wire form of a <c>ForcedIntegration</c> reconciliation action.
+    /// Field order alphabetical.
+    /// </summary>
+    public class ForcedIntegrationEntry
+    {
+        [JsonProperty("entry_id", Order = 0)]
+        public uint EntryId { get; set; }
+
+        [JsonProperty("expected_rt", Order = 1)]
+        public double ExpectedRt { get; set; }
+
+        [JsonProperty("half_width", Order = 2)]
+        public double HalfWidth { get; set; }
+    }
+
+    /// <summary>
+    /// Wire form of a <c>GapFillTarget</c>. Field order alphabetical.
+    /// </summary>
+    public class GapFillEntry
+    {
+        [JsonProperty("charge", Order = 0)]
+        public byte Charge { get; set; }
+
+        [JsonProperty("decoy_entry_id", Order = 1)]
+        public uint DecoyEntryId { get; set; }
+
+        [JsonProperty("expected_rt", Order = 2)]
+        public double ExpectedRt { get; set; }
+
+        [JsonProperty("half_width", Order = 3)]
+        public double HalfWidth { get; set; }
+
+        [JsonProperty("modified_sequence", Order = 4)]
+        public string ModifiedSequence { get; set; }
+
+        [JsonProperty("target_entry_id", Order = 5)]
+        public uint TargetEntryId { get; set; }
+    }
+
+    /// <summary>
+    /// Wire form of the refined per-file RT calibration. Carries the
+    /// LOESS model parameters; Stage 6 workers reconstruct an in-memory
+    /// calibration via <c>RTCalibration.FromModelParams</c>.
+    /// </summary>
+    public class RefinedRtCalibrationJson
+    {
+        [JsonProperty("abs_residuals", Order = 0)]
+        public double[] AbsResiduals { get; set; }
+
+        [JsonProperty("fitted_rts", Order = 1)]
+        public double[] FittedRts { get; set; }
+
+        [JsonProperty("library_rts", Order = 2)]
+        public double[] LibraryRts { get; set; }
+
+        [JsonProperty("residual_sd", Order = 3)]
+        public double ResidualSd { get; set; }
+    }
+}

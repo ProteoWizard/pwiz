@@ -1308,18 +1308,15 @@ namespace pwiz.Skyline.Model
                 return ChangeResults(settingsNew.MeasuredResults.EmptyPeptideResults);
             }
 
-            var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();
+            var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, PrecursorKey>>();
             // Update the results summary
             var resultsCalc = new PeptideResultsCalculator(settingsNew, NormalizationMethod);
             foreach (TransitionGroupDocNode nodeGroup in Children)
             {
-                var transitionGroupKey =
-                    Tuple.Create(nodeGroup.LabelType, nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled);
-                if (!transitionGroupKeys.Add(transitionGroupKey))
+                if (transitionGroupKeys.Add(Tuple.Create(nodeGroup.LabelType, nodeGroup.PrecursorKey)))
                 {
-                    continue;
+                    resultsCalc.AddGroupChromInfo(nodeGroup);
                 }
-                resultsCalc.AddGroupChromInfo(nodeGroup);
             }
 
             return resultsCalc.UpdateResults(this);

@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
+using pwiz.Common.CommandLine;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -49,6 +50,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -93,6 +95,19 @@ namespace pwiz.Skyline
         /// True if any results files were imported successfully.
         /// </summary>
         private bool _importedResults;
+
+        static CommandLine()
+        {
+            // CommandStatusWriter lives in PortableUtil (no .resx). Supply Skyline's full
+            // error-line predicate as a lambda so the localized "Error:" prefix re-resolves
+            // to the current UI culture on every line. NEVER capture the localized string in
+            // a static: tests switch language in-process, so a frozen first-locale value
+            // would miss every later language's error lines.
+            CommandStatusWriter.IsErrorMessage = message =>
+                message != null &&
+                (message.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT, StringComparison.InvariantCulture) ||
+                 message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_, StringComparison.CurrentCulture));
+        }
 
         public CommandLine(CommandStatusWriter output, SrmDocument doc = null, string skylineFile = null)
         {
@@ -276,6 +291,9 @@ namespace pwiz.Skyline
             {
                 Trace.Listeners.Add(traceWarningListener);
                 using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
+                // Apply --save-compact-format (if given) for the duration of this invocation, so every
+                // save in this run is deterministic regardless of the persisted setting. Null is a no-op.
+                using (CompactFormatOption.SetOverride(commandArgs.SaveCompactFormat))
                 {
                     DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
                         commandArgs.ImportWarnOnFailure);
@@ -4820,7 +4838,7 @@ namespace pwiz.Skyline
             if (skylineFile == null)
             {
                 // Mimic the usage error before --new was allowed inside running Skyline UI
-                _out.WriteLine(Resources.Error___0_, new CommandArgs.ValueMissingException(CommandArgs.ARG_NEW).Message);
+                _out.WriteLine(Resources.Error___0_, new ValueMissingException(CommandArgs.ARG_NEW).Message);
                 return null;
             }
             return NewSkyFile(skylineFile, overwrite) ? _doc : null;
@@ -4833,145 +4851,6 @@ namespace pwiz.Skyline
         }
 
         #endregion
-    }
-
-    public class CommandStatusWriter : TextWriter
-    {
-        private TextWriter _writer;
-
-        public CommandStatusWriter(TextWriter writer)
-            : base(writer.FormatProvider)
-        {
-            _writer = Synchronized(writer); // Make this thread safe for more predictable console output
-        }
-
-        public bool IsTimeStamped { get; set; }
-
-        public bool IsMemStamped { get; set; }
-
-        public bool IsErrorReported { get; private set; }
-
-        public bool IsVerboseExceptions { get; set; }
-
-        public override Encoding Encoding
-        {
-            get { return _writer.Encoding; }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (_writer != null)
-            {
-                _writer.Dispose();
-                _writer = null;
-            }
-        }
-
-        public override void Flush()
-        {
-            _writer.Flush();
-        }
-
-        public override void Write(char value)
-        {
-            _writer.Write(value);
-        }
-
-        public override void Write(string value)
-        {
-            _writer.Write(value);
-        }
-
-        public override void WriteLine()
-        {
-            WriteLine(string.Empty);
-        }
-
-        public void WriteException(string formatMessage, string string0, Exception x1, bool lineSeparate = false)
-        {
-            if (!lineSeparate)
-                WriteLine(formatMessage, string0, ExceptionString(x1));
-            else
-            {
-                WriteLine(formatMessage, string0);
-                WriteException(x1);
-            }
-        }
-        public void WriteException(string formatMessage, Exception x, bool lineSeparate = false)
-        {
-            if (string.IsNullOrEmpty(formatMessage))
-                WriteException(x);
-            else if (!lineSeparate)
-                WriteLine(formatMessage, ExceptionString(x));
-            else
-            {
-                WriteLine(formatMessage);
-                WriteException(x);
-            }
-        }
-        public void WriteException(Exception x)
-        {
-            WriteLine(ExceptionString(x));
-        }
-
-        /// <summary>
-        /// Get a string reporting the exception, with information depending on the verbose exception setting.
-        /// </summary>
-        /// <param name="x">Exception to be reported</param>
-        /// <returns>A message reporting the exception</returns>
-        private string ExceptionString(Exception x)
-        {
-            return IsVerboseExceptions ? x.ToString() : x.Message;
-        }
-
-        public override void WriteLine(string value)
-        {
-            var message = new StringBuilder();
-            if (IsTimeStamped)
-                // ReSharper disable LocalizableElement
-                message.Append(DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t"));
-                // ReSharper restore LocalizableElement
-            if (IsMemStamped)
-            {
-                lock (_writer)
-                {
-                    // This can take long enough that we need to introduce a lock to keep
-                    // output ordered as much as possible
-                    message.Append(MemStamp(GC.GetTotalMemory(false)));
-                    message.Append(MemStamp(Process.GetCurrentProcess().PrivateMemorySize64));
-                }
-            }
-            message.Append(value);
-            _writer.WriteLine(message);
-            Flush();
-
-            if (IsErrorMessage(value))
-            {
-                IsErrorReported = true;
-            }
-        }
-
-        public const string ERROR_MESSAGE_HINT = @"Error:";
-
-        private bool IsErrorMessage(string message)
-        {
-            if (message != null && !IsErrorReported)
-            {
-                return message.StartsWith(ERROR_MESSAGE_HINT, StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
-                       message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
-                           StringComparison.CurrentCulture);
-            }
-
-            return false;
-        }
-
-        private string MemStamp(long memUsed)
-        {
-            const double mb = 1024 * 1024;
-            // ReSharper disable LocalizableElement
-            return string.Format("{0}\t", Math.Round(memUsed/mb));
-            // ReSharper restore LocalizableElement
-        }
     }
 
     public class ExportCommandProperties : ExportProperties

@@ -460,4 +460,35 @@ namespace Test
             CompareFiles(extension);
         }
     }
+
+    /// <summary>
+    /// Parser-only tests for MainLogic.ParseCommandLine — no msconvert.exe / vendor data required,
+    /// so these can run in any environment where the MSConvertGUI assembly loads.
+    /// </summary>
+    [TestClass]
+    public class MainLogicParserTest
+    {
+        private static MainLogic CreateLogic()
+        {
+            return new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), new object());
+        }
+
+        [TestMethod]
+        public void ZlibFlagRoundTrip()
+        {
+            // (argv, expectedCompression)
+            var cases = new (string argv, MSDataFile.Compression expected)[]
+            {
+                ("fake.mzML",                      MSDataFile.Compression.Compression_Zlib), // msconvert.exe default is on
+                ("--zlib|fake.mzML",               MSDataFile.Compression.Compression_Zlib),
+                ("--zlib=off|fake.mzML",           MSDataFile.Compression.Compression_None),
+            };
+
+            foreach (var (argv, expected) in cases)
+            {
+                var config = CreateLogic().ParseCommandLine("out", argv);
+                Assert.AreEqual(expected, config.WriteConfig.compression, "argv=" + argv);
+            }
+        }
+    }
 }

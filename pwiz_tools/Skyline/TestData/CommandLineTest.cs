@@ -33,6 +33,9 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline;
+using pwiz.Common.CommandLine;
+using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
+using ArgumentGroup = pwiz.Common.CommandLine.ArgumentGroup<pwiz.Skyline.CommandArgs>;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -829,7 +832,7 @@ namespace pwiz.SkylineTestData
                     Resources.PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_, printErrors);
 
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-variable=X" },
-                    new CommandArgs.ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
+                    new ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
 
                 // Variable failure on loss-only modification
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Water Loss (D, E, S, T)", "--pep-add-mod-variable=true" },
@@ -1234,7 +1237,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + badDecoyMethod);
             var arg = CommandArgs.ARG_DECOYS_ADD;
-            AssertEx.Contains(output, new CommandArgs.ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
+            AssertEx.Contains(output, new ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
 
             output = RunCommand("--in=" + outPath,
                                        "--decoys-add");
@@ -1564,7 +1567,7 @@ namespace pwiz.SkylineTestData
             };
             string output = RunCommand(args);
 
-            AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
+            AssertEx.Contains(output, new ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
             args[args.Length - 1] = "--exp-primary-count=1";
             output = RunCommand(args);
 
@@ -1824,7 +1827,7 @@ namespace pwiz.SkylineTestData
 
             //Test value lists for failing values
             const string bogusValue = "BOGUS";
-            CommandArgs.Argument[] valueListArgs = 
+            Argument[] valueListArgs = 
             {
                 CommandArgs.ARG_REPORT_FORMAT,
                 CommandArgs.ARG_EXP_STRATEGY,
@@ -1836,7 +1839,7 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueListArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
+                AssertEx.Contains(output, new ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
             }
 
             // Transition list, isolation list, and method export
@@ -1862,7 +1865,7 @@ namespace pwiz.SkylineTestData
                 TextUtil.LineSeparate(ExportInstrumentType.METHOD_TYPES),
                 SkylineResources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
 
-            CommandArgs.Argument[] valueIntArguments =
+            Argument[] valueIntArguments =
             {
                 CommandArgs.ARG_EXP_MAX_TRANS,
                 CommandArgs.ARG_EXP_DWELL_TIME
@@ -1871,10 +1874,10 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueIntArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(valueIntArg, bogusValue).Message);
+                AssertEx.Contains(output, new ValueInvalidIntException(valueIntArg, bogusValue).Message);
             }
 
-            CommandArgs.Argument[] valueDoubleArguments =
+            Argument[] valueDoubleArguments =
             {
                 CommandArgs.ARG_EXP_RUN_LENGTH,
                 CommandArgs.ARG_IMPORT_LOCKMASS_POSITIVE,
@@ -1885,16 +1888,16 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueDoubleArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
+                AssertEx.Contains(output, new ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
             }
             const int bigValue = 100000000;
             args[3] = "--exp-dwell-time=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue,
+            AssertEx.Contains(output, new ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue,
                 AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX).Message);
             args[3] = "--exp-run-length=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue,
+            AssertEx.Contains(output, new ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue,
                 AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX).Message);
 
 
@@ -3811,7 +3814,7 @@ namespace pwiz.SkylineTestData
 
         private static void CheckUsageOutput(string output)
         {
-            foreach (CommandArgs.ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is CommandArgs.ArgumentGroup))
+            foreach (ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is ArgumentGroup))
             {
                 if (group.IncludeInUsage)
                 {
@@ -3969,7 +3972,7 @@ namespace pwiz.SkylineTestData
             // --new without a path should fail in CLI mode.
             // The DocArgument validation catches it as "no document specified".
             string output = AbstractUnitTestEx.RunCommand(false, CommandArgs.ARG_NEW);
-            AssertEx.Contains(output, new CommandArgs.ValueMissingException(CommandArgs.ARG_NEW).Message);
+            AssertEx.Contains(output, new ValueMissingException(CommandArgs.ARG_NEW).Message);
         }
 
         [TestMethod]

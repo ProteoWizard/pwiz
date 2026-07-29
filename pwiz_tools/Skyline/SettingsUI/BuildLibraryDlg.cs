@@ -74,6 +74,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
             BiblioSpecLiteBuilder.EXT_SPECLIB,
+            BiblioSpecLiteBuilder.EXT_PARQUET,
         };
 
         public static readonly string[] RESULTS_EXTS_SMALL_MOL =

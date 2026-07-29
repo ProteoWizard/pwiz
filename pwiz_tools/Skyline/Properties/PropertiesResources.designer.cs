@@ -555,7 +555,43 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SearchToolList_Title_Edit_Search_Tools", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to A settings preset named &apos;{0}&apos; already exists..
+        /// </summary>
+        public static string SearchSettingsPresetList_EditItem_A_settings_preset_named__0__already_exists {
+            get {
+                return ResourceManager.GetString("SearchSettingsPresetList_EditItem_A_settings_preset_named__0__already_exists", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Rename Settings Preset.
+        /// </summary>
+        public static string SearchSettingsPresetList_EditItem_Rename_Settings_Preset {
+            get {
+                return ResourceManager.GetString("SearchSettingsPresetList_EditItem_Rename_Settings_Preset", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Settings &amp;Presets.
+        /// </summary>
+        public static string SearchSettingsPresetList_Label_Settings_Presets {
+            get {
+                return ResourceManager.GetString("SearchSettingsPresetList_Label_Settings_Presets", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Settings Presets.
+        /// </summary>
+        public static string SearchSettingsPresetList_Title_Edit_Settings_Presets {
+            get {
+                return ResourceManager.GetString("SearchSettingsPresetList_Title_Edit_Settings_Presets", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to &amp;Servers.
         /// </summary>

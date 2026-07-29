@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -36,15 +38,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
     {
         public static readonly FilterPage Ms1FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms1FilterPage_MS1,
             ()=>SpectraResources.SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram,
-            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1))
-            ,
+            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),FilterOperations.OP_EQUALS, 1),
             SpectrumClassColumn.MS1.Select(col => col.PropertyPath));
 
         public static readonly FilterPage Ms2FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms2FilterPage_MS2_,
             ()=>SpectraResources.SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram,
-            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
+            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)), FilterOperations.OP_IS_GREATER_THAN, 1),
             SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
 
         public static readonly FilterPage GenericFilterPage = new FilterPage(SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
@@ -126,19 +125,34 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             var dataSchema = new DataSchema();
-            var predicates = Clauses.Select(x => x.MakePredicate<SpectrumClass>(dataSchema)).ToList();
+            var predicates = Clauses
+                .Select(clause => clause.MakePredicate<SpectrumClass>(dataSchema)).ToList();
             return x =>
             {
-                var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
-                foreach (var predicate in predicates)
+                try
                 {
-                    if (predicate(spectrumClass))
+                    var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
+                    foreach (var predicate in predicates)
                     {
-                        return true;
+                        if (predicate(spectrumClass))
+                        {
+                            return true;
+                        }
                     }
-                }
 
-                return false;
+                    return false;
+                }
+                catch (ListComparisonException exception)
+                {
+                    // A multi-value comparison operand pairwise-compares against the spectrum's value list
+                    // (e.g. CollisionEnergy per MS level), which is valid when the lengths line up but can
+                    // only be detected per spectrum. When they do not, surface the mismatch with
+                    // spectrum-filter context so chromatogram extraction reports a clear error rather than
+                    // failing with an opaque exception.
+                    throw new InvalidDataException(string.Format(
+                        SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                        exception.Message), exception);
+                }
             };
         }
 
@@ -246,8 +260,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return filterSpec.Predicate.InvariantOperandText;
             }
 
-            var operandType = filterSpec.Operation.GetOperandType(dataSchema, column.ValueType);
-            if (operandType == null)
+            if (!filterSpec.Operation.HasOperand())
             {
                 return null;
             }
@@ -260,6 +273,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     return string.Empty;
                 }
 
+                // Use the operation-aware filter handler so values format the same as the grid
+                // (e.g. Equals shows "5, 7" rather than the explicit-precision form "5E+0,7E+0").
+                var handler = dataSchema.GetFilterHandler(column.ValueType);
+                if (handler != null)
+                {
+                    return handler.OperandToString(filterSpec.Operation, dataSchema.DataSchemaLocalizer.FormatProvider, value);
+                }
                 return column.FormatAbbreviatedValue(value);
             }
             catch
@@ -358,6 +378,116 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
             return FilterPages.Blank(GenericFilterPage);
+        }
+
+        public string ToFilterString()
+        {
+            return CreateSerializer().ToFilterString(Clauses);
+        }
+
+        public static SpectrumClassFilter ParseFilterString(string filterString)
+        {
+            // Try several cultures so a filter authored in one locale parses in another (e.g. a
+            // comma-decimal value from a European transition list imported on a period-decimal
+            // machine). Only number formatting varies; keywords are culture-independent (English).
+            FormatException firstError = null;
+            foreach (var localizer in GetParseLocalizers())
+            {
+                try
+                {
+                    return new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(filterString));
+                }
+                catch (FilterOperandException)
+                {
+                    // An operand that is invalid for its column's type (e.g. a negative CollisionEnergy)
+                    // is invalid in every locale, so surface its specific message rather than retrying
+                    // and reporting the generic "invalid format" message below.
+                    throw;
+                }
+                catch (FormatException ex)
+                {
+                    firstError = firstError ?? ex;
+                }
+            }
+            // Replace the serializer's terse "invalid filter string" with a message that shows the
+            // expected form (e.g. column/operator/value with spaces, combined with "and"/"or").
+            throw new FormatException(string.Format(
+                SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, filterString),
+                firstError);
+        }
+
+        /// <summary>
+        /// Returns null if <paramref name="filterString"/> parses and refers only to known
+        /// spectrum properties; otherwise a message describing the problem. The serializer is
+        /// syntactically lenient (an unrecognized column name is preserved rather than rejected),
+        /// so this also checks that every referenced column resolves to a real spectrum property.
+        /// </summary>
+        public static string ValidateFilterString(string filterString)
+        {
+            if (string.IsNullOrEmpty(filterString))
+            {
+                return null;
+            }
+            SpectrumClassFilter filter;
+            try
+            {
+                filter = ParseFilterString(filterString);
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            foreach (var clause in filter.Clauses)
+            {
+                foreach (var filterSpec in clause.FilterSpecs)
+                {
+                    if (SpectrumClassColumn.FindColumn(filterSpec.ColumnId) == null)
+                    {
+                        return string.Format(
+                            SpectraResources.SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__,
+                            filterSpec.Column);
+                    }
+                }
+            }
+            return null;
+        }
+
+        private static FilterClauseSerializer CreateSerializer()
+        {
+            return new FilterClauseSerializer(
+                ColumnDescriptor.RootColumn(new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer()), typeof(SpectrumClass)));
+        }
+
+        private static FilterClauseSerializer CreateSerializer(DataSchemaLocalizer localizer)
+        {
+            return new FilterClauseSerializer(
+                ColumnDescriptor.RootColumn(new DataSchema(localizer), typeof(SpectrumClass)));
+        }
+
+        /// <summary>
+        /// Cultures to try when parsing a filter string, in priority order: invariant (period
+        /// decimals; US/UK/Asian-authored files), French (the representative comma-decimal locale,
+        /// so a European-authored value parses on a period-decimal machine), then the current
+        /// culture (the user's own typing). Only the decimal separator differs between these;
+        /// "and"/"or" are intentionally English in the parseable form regardless of culture, so
+        /// no locale-specific keyword handling belongs here.
+        /// </summary>
+        private static IEnumerable<DataSchemaLocalizer> GetParseLocalizers()
+        {
+            var seen = new HashSet<string>();
+            var cultures = new[]
+            {
+                CultureInfo.InvariantCulture,
+                CultureInfo.GetCultureInfo(@"fr-FR"),
+                CultureInfo.CurrentCulture
+            };
+            foreach (var culture in cultures)
+            {
+                if (seen.Add(culture.Name))
+                {
+                    yield return new DataSchemaLocalizer(culture, culture);
+                }
+            }
         }
     }
 }

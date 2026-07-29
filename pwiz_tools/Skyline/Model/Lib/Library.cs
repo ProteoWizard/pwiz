@@ -370,12 +370,33 @@ namespace pwiz.Skyline.Model.Lib
 
         public void ReleaseLibraries(params LibrarySpec[] specs)
         {
+            // Collect streams to close inside the lock, then close OUTSIDE the lock.
+            // CloseStream() drops into the ConnectionPool, which has its own lock —
+            // doing that while holding _loadedLibraries widens the lock scope across an
+            // unbounded operation and creates an A/B deadlock risk with any caller that
+            // takes the pool lock first.
+            List<IPooledStream> streamsToClose = null;
             lock (_loadedLibraries)
             {
                 foreach (var spec in specs)
                 {
-                    _loadedLibraries.Remove(GetKey(spec));
+                    var key = GetKey(spec);
+                    if (_loadedLibraries.TryGetValue(key, out var library))
+                    {
+                        streamsToClose ??= new List<IPooledStream>();
+                        streamsToClose.AddRange(library.ReadStreams);
+                    }
+                    _loadedLibraries.Remove(key);
                 }
+            }
+            if (streamsToClose != null)
+            {
+                // Close pooled streams (e.g. SQLite connections held by BiblioSpec) so
+                // callers that delete the underlying file right after release don't have
+                // to fall back to GC.Collect to drop the unreferenced PooledSqliteConnection's
+                // finalizer-only handle.
+                foreach (var stream in streamsToClose)
+                    stream.CloseStream();
             }
         }
 

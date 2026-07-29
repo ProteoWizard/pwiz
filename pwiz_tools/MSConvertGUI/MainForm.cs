@@ -650,8 +650,9 @@ namespace MSConvertGUI
             if (!WriteIndexBox.Checked)
                 commandLine.Append("--noindex|");
 
-            if (UseZlibBox.Checked)
-                commandLine.Append("--zlib|");
+            // msconvert.exe defaults --zlib to true, so we must emit --zlib=off explicitly when unchecked --
+            // otherwise this command line would silently re-enable compression when handed back to msconvert.exe.
+            commandLine.Append(UseZlibBox.Checked ? "--zlib|" : "--zlib=off|");
 
             if (GzipBox.Checked)
                 commandLine.Append("--gzip|");
@@ -697,7 +698,9 @@ namespace MSConvertGUI
             Precision32.Checked = (commandLine.IndexOf("--32") >= 0);
             Precision64.Checked = !Precision32.Checked;
             WriteIndexBox.Checked = !(commandLine.IndexOf("--noindex") >= 0);
-            UseZlibBox.Checked = (commandLine.IndexOf("--zlib") >= 0);
+            // Match the bare --zlib token (framed by | separators), so --zlib=off does not satisfy a
+            // substring check and incorrectly tick the box.
+            UseZlibBox.Checked = ("|" + commandLine + "|").IndexOf("|--zlib|") >= 0;
             GzipBox.Checked = (commandLine.IndexOf("--gzip") >= 0);
             NumpressLinearBox.Checked = (commandLine.IndexOf("--numpressLinear") >= 0);
             NumpressSlofBox.Checked = (commandLine.IndexOf("--numpressSlof") >= 0);
@@ -740,6 +743,7 @@ namespace MSConvertGUI
                     case "--32":
                     case "--noindex":
                     case "--zlib":
+                    case "--zlib=off":
                     case "--gzip":
                     case "--numpressLinear":
                     case "--numpressSlof":
