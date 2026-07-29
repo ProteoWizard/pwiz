@@ -593,7 +593,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!IsVisibleIon(rmi))
                     continue;
 
-                var matchedIon = rmi.MatchedIonsSorted.First(IsVisibleIon);
+                var matchedIon = rmi.MatchedIons.First(IsVisibleIon);
 
                 Color color = IonTypeExtension.GetTypeColor(matchedIon.IonType, rmi.Rank);
 
@@ -622,7 +622,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!_ionMatches.TryGetValue(point.X, out rmi) || !IsVisibleIon(rmi))
                 return null;
 
-            var matchedIon = rmi.MatchedIonsSorted.First(IsVisibleIon);
+            var matchedIon = rmi.MatchedIons.First(IsVisibleIon);
 
             FontSpec fontSpec;
             switch (matchedIon.IonType)
@@ -676,7 +676,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      .Count() > 1;
                 
             StringBuilder sb = new StringBuilder();
-            foreach (var mfi in rmi.MatchedIonsSorted.Where(IsVisibleIon))
+            foreach (var mfi in rmi.MatchedIons.Where(IsVisibleIon))
             {
                 if (sb.Length > 0)
                     sb.AppendLine();
@@ -686,7 +686,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // If predicted m/z should be displayed, but hasn't been yet, then display now.
             if (ShowMz && !showMzInLabel)
             {
-                sb.AppendLine().Append(GetDisplayMz(rmi.MatchedIonsSorted.First().PredictedMz));
+                sb.AppendLine().Append(GetDisplayMz(rmi.MatchedIons.First().PredictedMz));
             }
             // If showing observed m/z, and it is different from the predicted m/z, then display it last.
             if (ShowObservedMz)
@@ -696,7 +696,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (ShowMassError)
             {
-                sb.AppendLine().Append(GetMassErrorString(rmi, rmi.MatchedIonsSorted.First()));
+                sb.AppendLine().Append(GetMassErrorString(rmi, rmi.MatchedIons.First()));
             }
             return sb.ToString();
         }

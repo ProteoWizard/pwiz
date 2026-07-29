@@ -123,7 +123,7 @@ namespace pwiz.SkylineTest
             {
                 var expectedIon = expectedIons[i];
                 var rankedPeak = rankedPeaks[i];
-                var matchedIon = rankedPeak.MatchedIonsSorted.FirstOrDefault(ion=>Equals(ion.PredictedMz, expectedIon.PredictedMz));
+                var matchedIon = rankedPeak.MatchedIons.FirstOrDefault(ion=>Equals(ion.PredictedMz, expectedIon.PredictedMz));
                 if (matchedIon == null)
                 {
                     Assert.Fail("Ranked peak #{0} has no matched ion with m/z {1}", i, expectedIon.PredictedMz);

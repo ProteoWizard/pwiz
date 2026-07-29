@@ -3676,7 +3676,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddDetailRowNoBold(@"  ", @"  ", rt); // blank separator line
                 table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons,
                     GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
-                foreach (var mfi in rmi.MatchedIonsSorted)
+                foreach (var mfi in rmi.MatchedIons)
                     table.AddDetailRowNoBold(AbstractSpectrumGraphItem.GetLabel(mfi, rmi.Rank, false, !_showIonSeriesAnnotations),
                         mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
                         AbstractSpectrumGraphItem.GetMassErrorString(rmi, mfi), rt);
