@@ -207,16 +207,23 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         private class FilterColumn
         {
-            public FilterColumn(PropertyPath propertyPath, Type propertyType, string caption)
+            public FilterColumn(PropertyPath propertyPath, Type propertyType, string caption,
+                SpectrumClassColumn spectrumColumn = null)
             {
                 PropertyPath = propertyPath;
                 PropertyType = propertyType;
                 Caption = caption;
+                SpectrumColumn = spectrumColumn;
             }
 
             public PropertyPath PropertyPath { get; }
             public Type PropertyType { get; }
             public string Caption { get; }
+
+            // The dynamic CV/user-parameter column this represents, or null for an ordinary databound
+            // property. A CV column's operand type depends on the operator rather than the column's
+            // discovered ValueType (see GetOperandType).
+            public SpectrumClassColumn SpectrumColumn { get; }
 
             public static FilterColumn FromColumnDescriptor(ColumnDescriptor columnDescriptor)
             {
@@ -227,7 +234,7 @@ namespace pwiz.Skyline.EditUI
             public static FilterColumn FromSpectrumClassColumn(SpectrumClassColumn column)
             {
                 return new FilterColumn(column.PropertyPath, column.ValueType,
-                    column.GetLocalizedColumnName(CultureInfo.CurrentCulture));
+                    column.GetLocalizedColumnName(CultureInfo.CurrentCulture), column);
             }
         }
 
@@ -242,21 +249,58 @@ namespace pwiz.Skyline.EditUI
             var dataSchema = _rootColumn.DataSchema;
             foreach (var filterSpec in clause.FilterSpecs)
             {
-                var propertyPath = filterSpec.ColumnId;
-                var entry = _propertyColumns.FirstOrDefault(kvp => Equals(kvp.Value.PropertyPath, propertyPath));
-                if (entry.Value == null)
+                var filterColumn = ResolveFilterColumn(filterSpec.ColumnId);
+                if (filterColumn == null)
                 {
                     continue;
                 }
                 rows.Add(new Row
                 {
-                    Property = entry.Key,
+                    Property = filterColumn.Caption,
                     Operation = filterSpec.Operation.DisplayName,
-                    Value = filterSpec.Predicate.GetOperandDisplayText(dataSchema, entry.Value.PropertyType)
+                    Value = filterSpec.Predicate.GetOperandDisplayText(dataSchema,
+                        GetOperandType(filterColumn, filterSpec.Operation))
                 });
             }
 
             return rows;
+        }
+
+        /// <summary>
+        /// Finds the offered column for a saved filter spec's path. If the path is a CV/user-parameter
+        /// column the editor does not currently offer (a userParam absent from the loaded data, or a term
+        /// excluded from the catalog), it is reconstructed from its encoded path and registered, so the
+        /// criterion is shown and preserved rather than silently dropped when the dialog is confirmed.
+        /// </summary>
+        private FilterColumn ResolveFilterColumn(PropertyPath propertyPath)
+        {
+            var filterColumn = _propertyColumns.Values.FirstOrDefault(fc => Equals(fc.PropertyPath, propertyPath));
+            if (filterColumn != null)
+            {
+                return filterColumn;
+            }
+            var spectrumColumn = SpectrumClassColumn.FindColumn(propertyPath);
+            if (spectrumColumn == null || !SpectrumClassColumn.IsCvParamColumn(spectrumColumn))
+            {
+                return null;
+            }
+            AddFilterColumn(FilterColumn.FromSpectrumClassColumn(spectrumColumn));
+            return _propertyColumns.Values.FirstOrDefault(fc => Equals(fc.PropertyPath, propertyPath));
+        }
+
+        /// <summary>
+        /// The type used to parse and display a column's operand. For a CV/user-parameter column the operand
+        /// type depends on the operator (matching how chromatogram extraction evaluates it), not on the
+        /// column's discovered ValueType - so a "contains" operand is text even on a term whose values are
+        /// numeric, and an ordered comparison is numeric.
+        /// </summary>
+        private static Type GetOperandType(FilterColumn filterColumn, IFilterOperation operation)
+        {
+            if (filterColumn.SpectrumColumn != null && SpectrumClassColumn.IsCvParamColumn(filterColumn.SpectrumColumn))
+            {
+                return SpectrumClassFilter.GetCvOperandType(operation);
+            }
+            return filterColumn.PropertyType;
         }
 
         public void OkDialog()
@@ -487,7 +531,8 @@ namespace pwiz.Skyline.EditUI
                 try
                 {
                     filterPredicate =
-                        FilterPredicate.Parse(_rootColumn.DataSchema, propertyColumnDescriptor.PropertyType, filterOperation,
+                        FilterPredicate.Parse(_rootColumn.DataSchema,
+                            GetOperandType(propertyColumnDescriptor, filterOperation), filterOperation,
                             row.Value);
                 }
                 catch (Exception ex)

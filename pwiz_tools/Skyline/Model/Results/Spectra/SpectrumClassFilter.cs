@@ -250,9 +250,20 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 };
             }
 
-            var type = DetermineCvOperandType(spec);
-            var rawPredicate = spec.Predicate.MakePredicate(dataSchema, type);
+            var type = GetCvOperandType(op);
             var columnDisplay = column.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            if (type == typeof(double) && !OperandIsNumeric(spec))
+            {
+                // An ordered comparison forces a numeric operand; a non-numeric one (e.g. a typo) would
+                // otherwise throw a raw parse error when the operand is deserialized below. Fail with the
+                // spectrum-filter context instead, matching the non-numeric-value hard-fail.
+                throw new InvalidDataException(string.Format(
+                    SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        SpectraResources.SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number,
+                        spec.Predicate.InvariantOperandText, columnDisplay)));
+            }
+            var rawPredicate = spec.Predicate.MakePredicate(dataSchema, type);
             return metadata =>
             {
                 var value = CoerceCvValue(column.GetValue(metadata), type, columnDisplay);
@@ -273,18 +284,18 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// Decides whether a CV/user-parameter spec is a numeric or a string comparison. There is no
-        /// stored type for these terms, so the operator implies it: the ordered comparisons are numeric
-        /// (and hard-fail on a non-numeric value); everything else here - "contains"/"starts with" and
-        /// non-numeric-operand equality - compares as text. Numeric-operand equality is handled per value
-        /// in <see cref="CompileCvSpec"/> before this is reached.
+        /// The operand type for a CV/user-parameter comparison, chosen by the operator (there is no stored
+        /// type for these terms): the ordered comparisons are numeric (and hard-fail on a non-numeric
+        /// value); everything else - "contains"/"starts with" and equality - compares as text. Numeric-
+        /// operand equality is still handled per value in <see cref="CompileCvSpec"/>. The filter editor
+        /// calls this so its operand validation matches how the filter is actually evaluated, rather than
+        /// typing by the column's discovered ValueType (which would reject an operand extraction accepts).
         /// </summary>
-        private static Type DetermineCvOperandType(FilterSpec spec)
+        public static Type GetCvOperandType(IFilterOperation operation)
         {
-            var op = spec.Operation;
-            if (Equals(op, FilterOperations.OP_IS_GREATER_THAN) || Equals(op, FilterOperations.OP_IS_LESS_THAN) ||
-                Equals(op, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL) ||
-                Equals(op, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL))
+            if (Equals(operation, FilterOperations.OP_IS_GREATER_THAN) || Equals(operation, FilterOperations.OP_IS_LESS_THAN) ||
+                Equals(operation, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL) ||
+                Equals(operation, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL))
             {
                 return typeof(double);
             }

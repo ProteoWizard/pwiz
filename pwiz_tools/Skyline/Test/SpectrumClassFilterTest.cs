@@ -251,6 +251,16 @@ namespace pwiz.SkylineTest
                         SpectraResources.SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number,
                         @"not a number", columnDisplay)));
 
+            // An ordered comparison whose OPERAND is not a number (e.g. a typo) is rejected with the same
+            // spectrum-filter context when the predicate is compiled, rather than throwing a raw parse
+            // error. The ordered path forces a numeric operand, so a non-numeric one is caught up front.
+            AssertEx.ThrowsException<InvalidDataException>(
+                () => Numeric(FilterOperations.OP_IS_GREATER_THAN, @"abc"),
+                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        SpectraResources.SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number,
+                        @"abc", columnDisplay)));
+
             // A string term filters with equals/contains. Identity is the accession; the term's unit is
             // not part of it (units are unavailable from the ontology), so matching is unit-independent.
             var stringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
@@ -281,6 +291,14 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(StringFilter(FilterOperations.OP_EQUALS, @"5")(literalFive));
             Assert.IsTrue(StringFilter(FilterOperations.OP_NOT_EQUALS, @"5")(thermo));
             Assert.IsFalse(StringFilter(FilterOperations.OP_NOT_EQUALS, @"5")(literalFive));
+
+            // The operand type for a CV comparison is chosen by the operator (matching how the predicate
+            // evaluates it), so the filter editor can validate operands the same way: ordered comparisons
+            // are numeric, everything else (contains/equals) is text - independent of the column's type.
+            Assert.AreEqual(typeof(double), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_IS_GREATER_THAN));
+            Assert.AreEqual(typeof(double), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_IS_LESS_THAN_OR_EQUAL));
+            Assert.AreEqual(typeof(string), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_CONTAINS));
+            Assert.AreEqual(typeof(string), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_EQUALS));
         }
 
         private void TestCvParamDeclaredFilter()

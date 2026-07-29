@@ -113,6 +113,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(unfilteredPoints, Points(filterNotDeclared));
 
             VerifyEditorOffersCvColumns();
+            VerifyEditorPreservesUnofferedCvClause();
+            VerifyEditorAcceptsStringOperatorOnNumericCvColumn();
         }
 
         /// <summary>
@@ -161,6 +163,71 @@ namespace pwiz.SkylineTestFunctional
                 { new FilterSpec(filterStringColumn.PropertyPath, FilterOperations.OP_CONTAINS, @"cv=-70") }));
             Assert.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => Equals(tg.SpectrumClassFilter, expected)),
                 @"the CV filter created through the editor was not applied to any transition group");
+        }
+
+        /// <summary>
+        /// A filter referencing a CV/user-parameter column the editor does not currently offer (here a
+        /// userParam absent from the loaded data, so it is neither in the ontology catalog nor discovered)
+        /// is preserved when the editor is opened and confirmed, rather than being silently dropped.
+        /// </summary>
+        private void VerifyEditorPreservesUnofferedCvClause()
+        {
+            var userParamColumn = SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", false);
+            Assert.IsFalse(SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document)
+                    .Any(c => Equals(c.PropertyPath, userParamColumn.PropertyPath)),
+                @"the userParam should not be a discoverable column");
+            var userParamCaption = userParamColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            var userParamFilter = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(userParamColumn.PropertyPath, FilterOperations.OP_IS_DECLARED, (string)null) }));
+
+            var precursorPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0);
+            RunUI(() => SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, userParamFilter, true));
+            var groupPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups,
+                SkylineWindow.Document.MoleculeTransitionGroupCount - 1);
+            RunUI(() => SkylineWindow.SelectedPath = groupPath);
+
+            // The editor must show a row for the un-offered userParam (reconstructed from its encoded path)
+            // rather than silently dropping it, so confirming the dialog cannot lose the clause.
+            var dlg = ShowDialog<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter);
+            bool rowShown = false;
+            RunUI(() => rowShown = dlg.RowBindingList.Any(row => Equals(row.Property, userParamCaption)));
+            OkDialog(dlg, dlg.Close);
+            Assert.IsTrue(rowShown, @"the editor dropped the un-offered userParam filter row");
+        }
+
+        /// <summary>
+        /// A CV term discovered as numeric is offered with an inferred numeric ValueType, but a string
+        /// operator (Contains) with a non-numeric operand must still be accepted, because chromatogram
+        /// extraction types the operand by the operator rather than the column - so the editor must not
+        /// reject a filter that extraction would run.
+        /// </summary>
+        private void VerifyEditorAcceptsStringOperatorOnNumericCvColumn()
+        {
+            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
+            var discovered = SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document)
+                .First(c => Equals(c.PropertyPath, bpiColumn.PropertyPath));
+            Assert.AreEqual(typeof(double), discovered.ValueType,
+                @"base peak intensity should be discovered as a numeric column");
+
+            var precursorPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0);
+            RunUI(() => SkylineWindow.SelectedPath = precursorPath);
+            RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
+            {
+                dlg.CreateCopy = true;
+                var row = dlg.RowBindingList.AddNew();
+                Assert.IsNotNull(row);
+                row.Property = discovered.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+                row.SetOperation(FilterOperations.OP_CONTAINS);
+                row.SetValue(@"e05");
+                // A string operator on a numeric-discovered CV column is accepted (typed by the operator),
+                // so OkDialog closes rather than blocking with a "not a number" error.
+                dlg.OkDialog();
+            });
+
+            var expected = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(discovered.PropertyPath, FilterOperations.OP_CONTAINS, @"e05") }));
+            Assert.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => Equals(tg.SpectrumClassFilter, expected)),
+                @"a Contains filter on a numeric-discovered CV column was not accepted by the editor");
         }
 
         private static SpectrumClassFilter StringCvFilter(string containsText)
