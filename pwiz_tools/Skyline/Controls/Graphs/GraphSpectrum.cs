@@ -1729,13 +1729,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Suppress MouseLeave while the menu is open so the ruler stays visible.
             _contextMenuOpen = true;
-            menuStrip.Closed += (s, e) =>
+            // One-shot handler: ZedGraphControl reuses the same ContextMenuStrip across
+            // right-clicks, so unsubscribe on close to avoid accumulating handlers.
+            ToolStripDropDownClosedEventHandler onMenuClosed = null;
+            onMenuClosed = (s, e) =>
             {
+                menuStrip.Closed -= onMenuClosed;
                 _contextMenuOpen = false;
                 if (!graphControl.ClientRectangle.Contains(
                         graphControl.PointToClient(Cursor.Position)))
                     UpdateHoveredPeak(null);
             };
+            menuStrip.Closed += onMenuClosed;
 
             // Insert just below the first separator so ruler items sit close to the
             // ion-type/charge items that BuildSpectrumMenu placed above it.
