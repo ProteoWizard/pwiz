@@ -501,6 +501,11 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsWatersLockmassSpectrum(MsDataSpectrum s)
         {
+            // MS:1000928 is not Waters-specific - the UIMF reader labels its calibration frames with it too -
+            // and GetMaxIonMobilityInList calls this without checking the vendor, so gate here rather than
+            // silently changing what a UIMF import does.
+            if (!IsWatersFile)
+                return false;
             if (s.IsCalibrationSpectrum)
                 return true; // Explicitly labeled MS:1000928 - authoritative, whatever the file's nativeID dialect
             return _lockmassFunction.HasValue && s.WatersFunctionNumber.HasValue &&
