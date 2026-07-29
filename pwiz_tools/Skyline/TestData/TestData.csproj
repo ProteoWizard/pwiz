@@ -174,7 +174,7 @@
     <Compile Include="ResourcesTest.cs" />
     <Compile Include="Results\AgilentCEOptTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
-    <Compile Include="Results\MaterializedPeptideResultsTest.cs" />
+    <Compile Include="Results\MoleculeResultsTest.cs" />
     <Compile Include="Results\AgilentMseTest.cs" />
     <Compile Include="Results\AsymCEOptTest.cs" />
     <Compile Include="Results\BetterTransTest.cs" />

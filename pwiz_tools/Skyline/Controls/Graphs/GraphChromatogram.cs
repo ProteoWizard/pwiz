@@ -980,7 +980,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                         nodePeps,
                                         nodeGroups,
                                         groupPaths,
-                                        mzMatchTolerance,
                                         out changedGroups))
                     {
                         // Update the file choice toolbar, if the set of groups has changed
@@ -1005,7 +1004,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                nodePeps,
                                                                nodeGroups,
                                                                groupPaths,
-                                                               mzMatchTolerance,
                                                                out changedGroups))
                 {
                     // Update the file choice toolbar, if the set of groups has changed
@@ -2723,7 +2721,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                      PeptideDocNode[] nodePeps,
                                      TransitionGroupDocNode[] nodeGroups,
                                      IdentityPath[] groupPaths,
-                                     float mzMatchTolerance,
                                      out bool changedGroups)
         {
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups) 
@@ -2738,30 +2735,27 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Get chromatogram sets for all transition groups, recording unique
                 // file paths in the process. The transition groups can belong to more than
-                // one peptide, so one MaterializedPeptideResults gets made per peptide.
+                // one peptide, so one MoleculeResults gets made per peptide.
                 int replicateIndex = results.Chromatograms.IndexOf(
                     chromatogramSet => ReferenceEquals(chromatogramSet, chromatograms));
                 var settings = DocumentUI.Settings;
-                var materializedByPeptide = new Dictionary<int, MaterializedPeptideResults>();
+                var resultsByPeptide = new Dictionary<ReferenceValue<Peptide>, MoleculeResults>();
                 var listArrayChromInfo = new List<IList<ChromatogramGroupInfo>>();
                 var listFiles = new List<MsDataFileUri>();
                 for (int i = 0; i < nodeGroups.Length; i++)
                 {
                     var transitionGroupDocNode = nodeGroups[i];
                     var nodePep = nodePeps[i];
-                    if (!materializedByPeptide.TryGetValue(nodePep.Peptide.GlobalIndex, out var materialized))
+                    if (!resultsByPeptide.TryGetValue(nodePep.Peptide, out var moleculeResults))
                     {
-                        materialized = new PeptideResultsMaterializer
+                        moleculeResults = new MoleculeResults(settings, nodePep)
                         {
-                            Settings = settings,
-                            PeptideDocNode = nodePep,
-                            ReplicateIndex = replicateIndex,
-                            MzMatchTolerance = mzMatchTolerance
-                        }.Materialize();
-                        materializedByPeptide.Add(nodePep.Peptide.GlobalIndex, materialized);
+                            ReplicateIndex = replicateIndex
+                        };
+                        resultsByPeptide.Add(nodePep.Peptide, moleculeResults);
                     }
 
-                    var arrayChromInfo = materialized.GetChromatogramGroupInfos(transitionGroupDocNode,
+                    var arrayChromInfo = moleculeResults.GetChromatogramGroupInfos(transitionGroupDocNode,
                         replicateIndex);
                     if (arrayChromInfo.Count == 0)
                     {

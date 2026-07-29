@@ -33,12 +33,12 @@ namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// Verifies that everything a <see cref="TransitionChromInfo"/> holds can be read back
-    /// out of the chromatogram cache by <see cref="PeptideResultsMaterializer"/>, at the same flat
+    /// out of the chromatogram cache by <see cref="MoleculeResults"/>, at the same flat
     /// positions the document uses. That has to be true before the document can stop holding
     /// those values.
     /// </summary>
     [TestClass]
-    public class MaterializedPeptideResultsTest : AbstractUnitTest
+    public class MoleculeResultsTest : AbstractUnitTest
     {
         // This document has neither a spectral library nor an isotope distribution, and no
         // optimization function, so it does NOT cover the dot products or the optimization
@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestData.Results
         private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
         [TestMethod]
-        public void TestMaterializedPeaksMatchTransitionChromInfo()
+        public void TestMoleculeResultsMatchTransitionChromInfo()
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2.sky");
@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestData.Results
         /// optimization step is a separate chromatogram contributing its own positions.
         /// </summary>
         [TestMethod]
-        public void TestMaterializedPeaksWithOptimizationSteps()
+        public void TestMoleculeResultsWithOptimizationSteps()
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\AgilentCEOpt.zip");
             string docPath = TestFilesDir.GetTestPath("AgilentCE.sky");
@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestData.Results
         /// products are actually calculated rather than being null on both sides.
         /// </summary>
         [TestMethod]
-        public void TestMaterializedPeaksWithDotProducts()
+        public void TestMoleculeResultsWithDotProducts()
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip");
             string docPath = TestFilesDir.GetTestPath("BlibDriftTimeTest.sky");
@@ -154,7 +154,7 @@ namespace pwiz.SkylineTestData.Results
             int replicateToCheck = Math.Min(1, docResults.Settings.MeasuredResults.Chromatograms.Count - 1);
             foreach (var nodePep in docResults.Peptides)
             {
-                var materialized = MaterializedPeptideResults.Materialize(docResults.Settings, nodePep);
+                var moleculeResults = new MoleculeResults(docResults.Settings, nodePep);
 
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
@@ -165,14 +165,14 @@ namespace pwiz.SkylineTestData.Results
                             continue;
                         }
 
-                        positionsChecked += CheckTransition(materialized, nodeTran);
+                        positionsChecked += CheckTransition(moleculeResults, nodeTran);
                     }
 
-                    groupsChecked += CheckTransitionGroup(materialized, nodeGroup, ref dotProductsChecked, ref originalPeaksChecked);
+                    groupsChecked += CheckTransitionGroup(moleculeResults, nodeGroup, ref dotProductsChecked, ref originalPeaksChecked);
                 }
 
                 singleReplicateChecked +=
-                    CheckSingleReplicate(docResults.Settings, nodePep, materialized, replicateToCheck);
+                    CheckSingleReplicate(docResults.Settings, nodePep, moleculeResults, replicateToCheck);
             }
 
             Assert.AreNotEqual(0, positionsChecked);
@@ -186,13 +186,13 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// Materializing one replicate has to produce the same positions and peaks for that
-        /// replicate as materializing all of them.
+        /// Reading one replicate has to produce the same positions and peaks for that
+        /// replicate as reading all of them.
         /// </summary>
         private static int CheckSingleReplicate(SrmSettings settings, PeptideDocNode nodePep,
-            MaterializedPeptideResults allReplicates, int replicateIndex)
+            MoleculeResults allReplicates, int replicateIndex)
         {
-            var oneReplicate = MaterializedPeptideResults.Materialize(settings, nodePep, replicateIndex);
+            var oneReplicate = new MoleculeResults(settings, nodePep) {ReplicateIndex = replicateIndex};
             int checkedCount = 0;
             foreach (var nodeGroup in nodePep.TransitionGroups)
             {
@@ -214,11 +214,11 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// Checks that driving the aggregation from the materializer reproduces the group level
+        /// Checks that driving the aggregation from MoleculeResults reproduces the group level
         /// values the document holds. The ranks and the dot products are not compared, because
-        /// they come from the ranking pass which the materializer does not drive yet.
+        /// they come from the ranking pass which MoleculeResults does not drive yet.
         /// </summary>
-        private static int CheckTransitionGroup(MaterializedPeptideResults materialized,
+        private static int CheckTransitionGroup(MoleculeResults moleculeResults,
             TransitionGroupDocNode nodeGroup, ref int dotProductsChecked, ref int originalPeaksChecked)
         {
             if (!nodeGroup.HasResults)
@@ -235,8 +235,8 @@ namespace pwiz.SkylineTestData.Results
                     continue;
                 }
 
-                var rebuilt = materialized.MaterializeTransitionGroup(nodeGroup, replicateIndex, expected,
-                    nodeTran => RebuildTransitionChromInfos(materialized, nodeTran, replicateIndex));
+                var rebuilt = moleculeResults.MakeTransitionGroupChromInfos(nodeGroup, replicateIndex, expected,
+                    nodeTran => RebuildTransitionChromInfos(moleculeResults, nodeTran, replicateIndex));
                 Assert.IsNotNull(rebuilt.ChromInfos);
                 Assert.AreEqual(expected.Count, rebuilt.ChromInfos.Count);
                 for (int i = 0; i < rebuilt.ChromInfos.Count; i++)
@@ -254,7 +254,7 @@ namespace pwiz.SkylineTestData.Results
                     groupsChecked++;
                 }
 
-                // The ranks are assigned while materializing, so the rebuilt transition chrom
+                // The ranks are assigned while reading, so the rebuilt transition chrom
                 // infos should now match the document's completely.
                 foreach (var nodeTran in nodeGroup.Transitions)
                 {
@@ -279,10 +279,10 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// The transition chrom infos for one replicate, rebuilt entirely from what the materializer
+        /// The transition chrom infos for one replicate, rebuilt entirely from what MoleculeResults
         /// read back out of the .skyd.
         /// </summary>
-        private static IList<TransitionChromInfo> RebuildTransitionChromInfos(MaterializedPeptideResults materialized,
+        private static IList<TransitionChromInfo> RebuildTransitionChromInfos(MoleculeResults moleculeResults,
             TransitionDocNode nodeTran, int replicateIndex)
         {
             if (!nodeTran.HasResults || replicateIndex >= nodeTran.Results.Count)
@@ -293,11 +293,11 @@ namespace pwiz.SkylineTestData.Results
             var documentChromInfos = nodeTran.Results[replicateIndex];
             var result = new List<TransitionChromInfo>();
             int i = 0;
-            foreach (int position in materialized.GetPositions(nodeTran, replicateIndex))
+            foreach (int position in moleculeResults.GetPositions(nodeTran, replicateIndex))
             {
                 var chromInfo = documentChromInfos[i++];
-                int candidatePeakIndex = materialized.FindCandidatePeakIndex(nodeTran, position, chromInfo);
-                result.Add(materialized.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
+                int candidatePeakIndex = moleculeResults.FindCandidatePeakIndex(nodeTran, position, chromInfo);
+                result.Add(moleculeResults.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
                     chromInfo.UserSet, chromInfo.Annotations));
             }
 
@@ -363,9 +363,9 @@ namespace pwiz.SkylineTestData.Results
 
         /// <summary>
         /// Walks the document's results as one flat sequence of positions and checks that the
-        /// materializer produced the same positions holding the same values.
+        /// same positions hold the same values.
         /// </summary>
-        private static int CheckTransition(MaterializedPeptideResults materialized, TransitionDocNode nodeTran)
+        private static int CheckTransition(MoleculeResults moleculeResults, TransitionDocNode nodeTran)
         {
             var documentChromInfos = new List<TransitionChromInfo>();
             var countsPerReplicate = new List<int>();
@@ -377,35 +377,35 @@ namespace pwiz.SkylineTestData.Results
 
             CheckAbbreviatedResults(nodeTran, documentChromInfos, countsPerReplicate);
 
-            var materializedTransition = materialized.GetTransition(nodeTran);
-            Assert.IsNotNull(materializedTransition);
-            Assert.AreEqual(documentChromInfos.Count, materializedTransition.PositionCount);
+            var transitionPeaks = moleculeResults.GetTransitionPeaks(nodeTran);
+            Assert.IsNotNull(transitionPeaks);
+            Assert.AreEqual(documentChromInfos.Count, transitionPeaks.PositionCount);
 
-            // The materializer has to agree with the document about which replicate each position
+            // MoleculeResults has to agree with the document about which replicate each position
             // belongs to, not merely about how many positions there are.
             Assert.AreEqual(ReplicatePositions.FromCounts(countsPerReplicate),
-                materializedTransition.ChromFileIds.ReplicatePositions);
+                transitionPeaks.ChromFileIds.ReplicatePositions);
 
             int positionsChecked = 0;
             for (int position = 0; position < documentChromInfos.Count; position++)
             {
                 var chromInfo = documentChromInfos[position];
-                Assert.AreSame(chromInfo.FileId, materializedTransition.ChromFileIds.FileIds[position].Value);
-                Assert.AreEqual(chromInfo.OptimizationStep, materializedTransition.OptimizationSteps[position]);
+                Assert.AreSame(chromInfo.FileId, transitionPeaks.ChromFileIds.FileIds[position].Value);
+                Assert.AreEqual(chromInfo.OptimizationStep, transitionPeaks.OptimizationSteps[position]);
                 if (chromInfo.IsEmpty)
                 {
                     continue;
                 }
 
-                int candidatePeakIndex = materialized.FindCandidatePeakIndex(nodeTran, position, chromInfo);
+                int candidatePeakIndex = moleculeResults.FindCandidatePeakIndex(nodeTran, position, chromInfo);
                 Assert.AreNotEqual(-1, candidatePeakIndex);
 
-                var rebuilt = materialized.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
+                var rebuilt = moleculeResults.MakeTransitionChromInfo(nodeTran, position, candidatePeakIndex,
                     chromInfo.UserSet, chromInfo.Annotations);
                 Assert.IsNotNull(rebuilt);
                 Assert.AreNotSame(chromInfo, rebuilt);
 
-                // Rank is not peak data and is not something the materializer can know, so compare
+                // Rank is not peak data and is not something MoleculeResults can know, so compare
                 // everything else by rebuilding with the ranks the document recorded.
                 Assert.AreEqual(chromInfo, rebuilt.ChangeRank(true, chromInfo.Rank, chromInfo.RankByLevel));
                 positionsChecked++;

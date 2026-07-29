@@ -1726,7 +1726,7 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Internal rather than private so that <see cref="PeptideResultsMaterializer"/> can
+        /// Internal rather than private so that <see cref="MoleculeResults"/> can
         /// derive this the same way. It is recalculated from the chromatogram every time
         /// results are updated, so it never needs to be stored.
         /// </summary>
@@ -2502,7 +2502,7 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Internal rather than private so that <see cref="PeptideResultsMaterializer"/> can rebuild
+        /// Internal rather than private so that <see cref="MoleculeResults"/> can rebuild
         /// the group level values from transition chrom infos it read back from the .skyd,
         /// instead of a second implementation of the same aggregation drifting away from this
         /// one.
