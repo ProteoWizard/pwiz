@@ -319,9 +319,9 @@ namespace pwiz.Common.SystemUtil
                 // Say so rather than going quiet. Whatever the caller does next with the directory this
                 // ran from is now liable to fail on files that are still mapped, and an
                 // UnauthorizedAccessException out of a delete gives no hint of where it came from.
-                writer?.WriteLine(string.Format(
+                writer?.WriteLine(
                     MessageResources.ProcessRunner_KillAndWaitForExit_Warning__process__0__had_not_exited__1__seconds_after_being_killed__files_it_has_open_may_still_be_locked_,
-                    processId, KILL_WAIT_MILLISECONDS / 1000));
+                    processId, KILL_WAIT_MILLISECONDS / 1000);
             }
             catch (Exception)
             {
