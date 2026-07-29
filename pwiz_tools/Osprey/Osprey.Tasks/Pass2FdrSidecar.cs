@@ -93,6 +93,29 @@ namespace pwiz.Osprey.Tasks
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
+            // Frozen 2nd-pass modes need the trained 1st-pass model. On a distributed
+            // --task SecondPassFDR merge node (or any resume that skipped 1st-pass training)
+            // it was never published in-process; reload it from the per-file sidecar and
+            // publish so the frozen dispatch below finds it instead of fail-fasting. No-op
+            // when the model is already present, the mode is the default retrain, or the
+            // sidecar is absent (the existing fail-fast then applies).
+            // protein-compact is intentionally NOT here: it also needs the
+            // ProteinCompactStratum, which is not yet persisted to the merge node
+            // (follow-up). Reloading only the model would log a misleading "reloaded"
+            // success and still fail-fast on the missing stratum. transfer /
+            // transfer-compete need the model alone.
+            bool wantsFrozenModel = OspreyEnvironment.Pass2TransferQ ||
+                                    OspreyEnvironment.Pass2TransferCompete;
+            if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
+            {
+                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+                if (reloaded != null)
+                {
+                    ctx.Publish(new FirstPassPercolatorModel { Results = reloaded });
+                    ctx.LogInfo(@"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass.");
+                }
+            }
+
             // When the projection 2nd-pass compute ran (flag on), this holds the scored
             // FdrProjectionSet -- non-null is the flag that the StreamingSink already
             // wrote each file's .2nd-pass.fdr_scores.bin + validity sidecar DURING the
