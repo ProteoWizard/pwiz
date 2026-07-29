@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 
@@ -45,6 +44,12 @@ namespace pwiz.Skyline.Model.Results
     /// expensive, and why <see cref="TransitionGroupIntegrator"/> instances are kept.
     /// </para>
     /// <para>
+    /// One of these may use as much memory as it likes. Few exist at a time: the currently
+    /// selected molecule, and short lived ones made per molecule while results are being
+    /// recalculated. Interning is for values on their way somewhere long lived, such as a
+    /// <see cref="DocNode"/>, and nothing here is.
+    /// </para>
+    /// <para>
     /// One instance is not meant to be used from more than one thread, since it reads on
     /// demand.
     /// </para>
@@ -57,7 +62,6 @@ namespace pwiz.Skyline.Model.Results
             new Dictionary<ReferenceValue<TransitionGroup>, GroupResults>();
         private readonly Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator> _integrators =
             new Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator>();
-        private ValueCache _valueCache;
 
         public MoleculeResults(SrmSettings settings, PeptideDocNode peptideDocNode)
         {
@@ -76,24 +80,6 @@ namespace pwiz.Skyline.Model.Results
         private int ReplicateCount
         {
             get { return Settings.MeasuredResults?.Chromatograms.Count ?? 0; }
-        }
-
-        /// <summary>
-        /// Used to avoid holding on to many identical <see cref="ChromFileIds"/>. A fresh one is
-        /// used when left null, which still shares within the one molecule being read.
-        /// </summary>
-        public ValueCache ValueCache
-        {
-            get { return _valueCache; }
-            set
-            {
-                if (_transitions != null)
-                {
-                    throw new InvalidOperationException(@"The chromatograms have already been read");
-                }
-
-                _valueCache = value;
-            }
         }
 
         /// <summary>
@@ -626,7 +612,6 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
 
-            var valueCache = ValueCache ?? new ValueCache();
             var transitions = new Dictionary<ReferenceValue<Transition>, TransitionPeaks>();
             var chromatogramGroupInfos = new Dictionary<GroupReplicateKey, ImmutableList<ChromatogramGroupInfo>>();
             var measuredResults = Settings.MeasuredResults;
@@ -634,7 +619,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
                 {
-                    ReadTransitionGroup(measuredResults, nodeGroup, valueCache, transitions, chromatogramGroupInfos);
+                    ReadTransitionGroup(measuredResults, nodeGroup, transitions, chromatogramGroupInfos);
                 }
             }
 
@@ -643,7 +628,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private void ReadTransitionGroup(MeasuredResults measuredResults, TransitionGroupDocNode nodeGroup,
-            ValueCache valueCache, IDictionary<ReferenceValue<Transition>, TransitionPeaks> transitions,
+            IDictionary<ReferenceValue<Transition>, TransitionPeaks> transitions,
             IDictionary<GroupReplicateKey, ImmutableList<ChromatogramGroupInfo>> chromatogramGroupInfos)
         {
             var builders = nodeGroup.Transitions.ToDictionary(
@@ -666,7 +651,7 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var entry in builders)
             {
-                transitions[entry.Key] = entry.Value.Build(valueCache);
+                transitions[entry.Key] = entry.Value.Build();
             }
         }
 
@@ -764,9 +749,9 @@ namespace pwiz.Skyline.Model.Results
                 _countThisReplicate = 0;
             }
 
-            public TransitionPeaks Build(ValueCache valueCache)
+            public TransitionPeaks Build()
             {
-                var chromFileIds = ChromFileIds.Intern(valueCache, ReplicatePositions.FromCounts(_counts), _fileIds);
+                var chromFileIds = new ChromFileIds(ReplicatePositions.FromCounts(_counts), _fileIds);
                 return new TransitionPeaks(chromFileIds, OptimizationSteps, IonMobilities, Peaks);
             }
         }

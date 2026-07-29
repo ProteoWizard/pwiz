@@ -5,22 +5,20 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
 {
+    /// <summary>
+    /// Which file each flat position belongs to, and which replicate.
+    /// <para>
+    /// Nearly every node in a document has the same replicate and file layout, so these are
+    /// worth interning once they are held somewhere long lived, such as on a
+    /// <see cref="DocNode"/>. Equality is by value, which is what will make that work.
+    /// </para>
+    /// </summary>
     public class ChromFileIds : Immutable
     {
         public ChromFileIds(ReplicatePositions replicatePositions, IEnumerable<ChromFileInfoId> fileIds)
         {
             ReplicatePositions = replicatePositions;
             FileIds = ImmutableList.ValueOf(fileIds.Select(ReferenceValue.Of));
-        }
-        /// <summary>
-        /// Nearly every node in a document has the same replicate and file layout, so these
-        /// get interned to avoid holding on to many identical instances. Equality is by
-        /// value, which is what makes the interning work.
-        /// </summary>
-        public static ChromFileIds Intern(ValueCache valueCache, ReplicatePositions replicatePositions,
-            IEnumerable<ChromFileInfoId> fileIds)
-        {
-            return valueCache.CacheValue(new ChromFileIds(replicatePositions, fileIds));
         }
 
         public ReplicatePositions ReplicatePositions { get; private set; }
