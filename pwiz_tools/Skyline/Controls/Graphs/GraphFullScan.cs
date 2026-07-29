@@ -3212,81 +3212,17 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_currentGraphItem == null || !_currentGraphItem.RulersApplicable)
                 return;
 
-            // Capture the hovered key now — MouseLeave fires when the context menu window
-            // appears on top of the graph, which would clear HoveredSeriesKey before the
-            // user can click "Pin Ruler".
-            var hoveredKey = _currentGraphItem?.HoveredSeriesKey;
-            bool hasPinned = _pinnedSeriesKeys.Count > 0;
-
-            // Suppress MouseLeave while the menu is open so the ruler stays visible.
-            _contextMenuOpen = true;
-            // One-shot handler: ZedGraphControl reuses the same ContextMenuStrip across
-            // right-clicks, so unsubscribe on close to avoid accumulating handlers.
-            ToolStripDropDownClosedEventHandler onMenuClosed = null;
-            onMenuClosed = (s, e) =>
-            {
-                menuStrip.Closed -= onMenuClosed;
-                _contextMenuOpen = false;
-                if (!graphControl.ClientRectangle.Contains(
-                        graphControl.PointToClient(Cursor.Position)))
-                    UpdateHoveredPeak(null);
-            };
-            menuStrip.Closed += onMenuClosed;
-
-            // Insert just below the first separator so ruler items sit close to the
-            // ion-type/charge items that BuildSpectrumMenu placed above it.
-            int insertAt = FindIndexAfterFirstSeparator(menuStrip);
-
-            // Master on/off toggle — always offered for applicable spectra so the feature
-            // can be turned back on after it has been disabled.
-            var toggleItem = new ToolStripMenuItem(SpectrumGraphItem.RulerToggleMenuText);
-            toggleItem.Click += (s, e) => ToggleRulersEnabled();
-            menuStrip.Items.Insert(insertAt++, toggleItem);
-
-            // Per-series Pin / Unpin items only while the feature is enabled.
-            if (SpectrumGraphItem.RulersEnabled)
-            {
-                if (hoveredKey.HasValue)
-                {
-                    var key = hoveredKey.Value;
-                    if (_pinnedSeriesKeys.Contains(key))
-                    {
-                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinRuler);
-                        item.Click += (s, e) => UnpinRuler(key);
-                        menuStrip.Items.Insert(insertAt++, item);
-                    }
-                    else
-                    {
-                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_PinRuler);
-                        item.Click += (s, e) => PinRuler(key);
-                        menuStrip.Items.Insert(insertAt++, item);
-                    }
-                }
-
-                if (hasPinned)
-                {
-                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinAllRulers);
-                    item.Click += (s, e) => UnpinAllRulers();
-                    menuStrip.Items.Insert(insertAt++, item);
-                }
-            }
-
-            // Trailing separator to visually group ruler items, unless the next item is
-            // already a separator (avoid two adjacent separators).
-            if (insertAt >= menuStrip.Items.Count || !(menuStrip.Items[insertAt] is ToolStripSeparator))
-                menuStrip.Items.Insert(insertAt, new ToolStripSeparator());
-        }
-
-        // Returns the index right after the first ToolStripSeparator in the menu, or
-        // the menu length (append at end) when no separator is found.
-        private static int FindIndexAfterFirstSeparator(ContextMenuStrip menuStrip)
-        {
-            for (int i = 0; i < menuStrip.Items.Count; i++)
-            {
-                if (menuStrip.Items[i] is ToolStripSeparator)
-                    return i + 1;
-            }
-            return menuStrip.Items.Count;
+            SpectrumGraphItem.AddRulerMenuItems(
+                menuStrip,
+                _currentGraphItem?.HoveredSeriesKey,
+                _pinnedSeriesKeys,
+                graphControl,
+                open => _contextMenuOpen = open,
+                () => UpdateHoveredPeak(null),
+                ToggleRulersEnabled,
+                PinRuler,
+                UnpinRuler,
+                UnpinAllRulers);
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)

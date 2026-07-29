@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
@@ -230,6 +231,98 @@ namespace pwiz.Skyline.Controls.Graphs
             RulersEnabled
                 ? GraphsResources.SequenceRulerMenu_DisableRulers
                 : GraphsResources.SequenceRulerMenu_EnableRulers;
+
+        /// <summary>
+        /// Adds the sequence-ruler context-menu items (master toggle, per-series pin/unpin,
+        /// unpin-all) to <paramref name="menuStrip"/>. Shared by every graph host that shows
+        /// rulers (spectrum, full-scan, library viewer) so the menu stays consistent. The host
+        /// supplies its own hovered/pinned state, graph control, and pin/unpin actions via the
+        /// delegates. The caller is responsible for the "rulers applicable" guard before calling.
+        /// </summary>
+        public static void AddRulerMenuItems(
+            ContextMenuStrip menuStrip,
+            IonSeriesKey? hoveredKey,
+            ICollection<IonSeriesKey> pinnedKeys,
+            Control graphControl,
+            Action<bool> setContextMenuOpen,
+            Action clearHoveredPeak,
+            Action toggleRulers,
+            Action<IonSeriesKey> pinRuler,
+            Action<IonSeriesKey> unpinRuler,
+            Action unpinAllRulers)
+        {
+            bool hasPinned = pinnedKeys.Count > 0;
+
+            // Suppress MouseLeave while the menu is open so the ruler stays visible. Use a
+            // one-shot handler: ZedGraphControl reuses the same ContextMenuStrip across
+            // right-clicks, so unsubscribe on close to avoid accumulating handlers.
+            setContextMenuOpen(true);
+            ToolStripDropDownClosedEventHandler onMenuClosed = null;
+            onMenuClosed = (s, e) =>
+            {
+                menuStrip.Closed -= onMenuClosed;
+                setContextMenuOpen(false);
+                if (!graphControl.ClientRectangle.Contains(
+                        graphControl.PointToClient(Cursor.Position)))
+                    clearHoveredPeak();
+            };
+            menuStrip.Closed += onMenuClosed;
+
+            // Insert just below the first separator so ruler items sit close to the
+            // ion-type/charge items that BuildSpectrumMenu placed above it.
+            int insertAt = FindIndexAfterFirstSeparator(menuStrip);
+
+            // Master on/off toggle — always offered for applicable spectra so the feature
+            // can be turned back on after it has been disabled.
+            var toggleItem = new ToolStripMenuItem(RulerToggleMenuText);
+            toggleItem.Click += (s, e) => toggleRulers();
+            menuStrip.Items.Insert(insertAt++, toggleItem);
+
+            // Per-series Pin / Unpin items only while the feature is enabled.
+            if (RulersEnabled)
+            {
+                if (hoveredKey.HasValue)
+                {
+                    var key = hoveredKey.Value;
+                    if (pinnedKeys.Contains(key))
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinRuler);
+                        item.Click += (s, e) => unpinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                    else
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_PinRuler);
+                        item.Click += (s, e) => pinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                }
+
+                if (hasPinned)
+                {
+                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinAllRulers);
+                    item.Click += (s, e) => unpinAllRulers();
+                    menuStrip.Items.Insert(insertAt++, item);
+                }
+            }
+
+            // Trailing separator to visually group ruler items, unless the next item is
+            // already a separator (avoid two adjacent separators).
+            if (insertAt >= menuStrip.Items.Count || !(menuStrip.Items[insertAt] is ToolStripSeparator))
+                menuStrip.Items.Insert(insertAt, new ToolStripSeparator());
+        }
+
+        // Returns the index right after the first ToolStripSeparator in the menu, or
+        // the menu length (append at end) when no separator is found.
+        private static int FindIndexAfterFirstSeparator(ContextMenuStrip menuStrip)
+        {
+            for (int i = 0; i < menuStrip.Items.Count; i++)
+            {
+                if (menuStrip.Items[i] is ToolStripSeparator)
+                    return i + 1;
+            }
+            return menuStrip.Items.Count;
+        }
 
         public SpectrumGraphItem(PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
