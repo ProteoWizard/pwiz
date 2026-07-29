@@ -356,10 +356,15 @@ internal sealed class TdfData : IBrukerData
         if (!tag.Combined || preferCentroid)
             spec.Params.Set(CVID.MS_centroid_spectrum);
 
-        // Centroid+combined spectra carry the merged scan range's K0 bounds as userParams
-        // (pwiz C++ TimsData.cpp `getCombinedSpectrumData` emits them when the spectrum is
-        // returned in centroid mode).
-        if (preferCentroid && tag.Combined)
+        // All combined TDF spectra carry the merged scan range's K0 bounds as userParams,
+        // unconditional on centroid vs profile: pwiz C++ SpectrumList_Bruker.cpp:382-387 emits
+        // them for every combined TDF spectrum (>= FullMetadata detail), before and independent
+        // of the FullData/centroid block. Skyline reads them (MsDataFileImpl -> IonMobility-
+        // MeasurementRangeLow/High) to tell "library IM outside the instrument's measured ramp
+        // (no value)" apart from "no signal within the ramp (zero)"; gating this on preferCentroid
+        // dropped the range on the non-centroid MS1 extraction path and mis-recovered peaks whose
+        // library IM lies just outside the ramp (e.g. TestPerf BrukerPrmPasef heavy peptides).
+        if (tag.Combined)
         {
             var bounds = _tims.ScanNumberToOneOverK0(frame.FrameId,
                 new[] { (double)tag.ScanBegin, (double)tag.ScanEnd });
