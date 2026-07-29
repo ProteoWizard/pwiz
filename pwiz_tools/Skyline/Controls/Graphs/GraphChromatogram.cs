@@ -2737,18 +2737,33 @@ namespace pwiz.Skyline.Controls.Graphs
             try
             {
                 // Get chromatogram sets for all transition groups, recording unique
-                // file paths in the process.
-                var listArrayChromInfo = new List<ChromatogramGroupInfo[]>();
+                // file paths in the process. The transition groups can belong to more than
+                // one peptide, so one MaterializedPeptideResults gets made per peptide.
+                int replicateIndex = results.Chromatograms.IndexOf(
+                    chromatogramSet => ReferenceEquals(chromatogramSet, chromatograms));
+                var settings = DocumentUI.Settings;
+                var materializedByPeptide = new Dictionary<int, MaterializedPeptideResults>();
+                var listArrayChromInfo = new List<IList<ChromatogramGroupInfo>>();
                 var listFiles = new List<MsDataFileUri>();
                 for (int i = 0; i < nodeGroups.Length; i++)
                 {
                     var transitionGroupDocNode = nodeGroups[i];
-                    if (!results.TryLoadChromatogram(
-                        chromatograms, 
-                        nodePeps[i], 
-                        transitionGroupDocNode, 
-                        mzMatchTolerance, 
-                        out var arrayChromInfo))
+                    var nodePep = nodePeps[i];
+                    if (!materializedByPeptide.TryGetValue(nodePep.Peptide.GlobalIndex, out var materialized))
+                    {
+                        materialized = new PeptideResultsMaterializer
+                        {
+                            Settings = settings,
+                            PeptideDocNode = nodePep,
+                            ReplicateIndex = replicateIndex,
+                            MzMatchTolerance = mzMatchTolerance
+                        }.Materialize();
+                        materializedByPeptide.Add(nodePep.Peptide.GlobalIndex, materialized);
+                    }
+
+                    var arrayChromInfo = materialized.GetChromatogramGroupInfos(transitionGroupDocNode,
+                        replicateIndex);
+                    if (arrayChromInfo.Count == 0)
                     {
                         listArrayChromInfo.Add(null);
                         continue;
