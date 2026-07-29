@@ -319,14 +319,12 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet::SpectrumList_FilterPredic
 PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata::Spectrum& spectrum) const
 {
     // A spectrum may carry more than one child of "spectrum type" - a Waters lockspray scan is both an
-    // MS1 spectrum and a calibration spectrum - and no rule fixes the order a writer emits them in. Ask
-    // whether any of them is a mass spectrum rather than trusting whichever happens to come first,
-    // otherwise a real MS1 can be taken for a non-MS spectrum and dropped from an msLevel filter.
-    vector<CVParam> spectrumTypes = spectrum.cvParamChildren(MS_spectrum_type);
-    if (spectrumTypes.empty())
+    // MS1 spectrum and a calibration spectrum - and no rule fixes the order a writer emits them in, so
+    // asking only for the first child could take a real MS1 for a non-MS spectrum and drop it. Match
+    // SpectrumList_FilterPredicate_AnalyzerType::accept below, which already asks this way.
+    if (!spectrum.hasCVParamChild(MS_spectrum_type))
         return boost::logic::indeterminate;
-    if (!std::any_of(spectrumTypes.begin(), spectrumTypes.end(),
-                     [](const CVParam& spectrumType) { return cvIsA(spectrumType.cvid, MS_mass_spectrum); }))
+    if (!spectrum.hasCVParamChild(MS_mass_spectrum))
         return msLevelSet_.contains(0); // non-MS spectra are considered ms level 0
     CVParam param = spectrum.cvParam(MS_ms_level);
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
