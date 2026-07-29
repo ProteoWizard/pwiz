@@ -862,19 +862,15 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # mode 3's SecondPassFDR merge legitimately uses the RESIDENT first-pass pool
-        # (ExpectReconciledInput), which the OSPREY_ALLOW_UNBOUNDED_MEMORY guard otherwise blocks as
-        # an O(files) path. Opt in for the chain ONLY -- this is our own testing -- so modes 1/2 run
-        # with the guard armed, proving the default straight-through + resume paths stay lean. The
-        # HPC resident/rehydrate path is tracked for streaming in
-        # ai/todos/backlog/brendanx67/TODO-osprey_stage6_rescored_buffer_streaming.md.
-        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
-        try {
-            $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
-                -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest
-        } finally {
-            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
-        }
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR merge does
+        # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
+        # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
+        # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
+        # it wrapped the whole chain and would mask a genuine guard regression on any
+        # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
+        # what mode 3 exists to exercise.
+        $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
+            -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest
         $sw3.Stop()
         Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
@@ -894,19 +890,12 @@ foreach ($name in $selected) {
         $coldBlib = Join-Path $straightDir 'output_cold.blib'
         Copy-Item $straightBlib $coldBlib -Force
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        # A --model-diagnostics resume needs the RESIDENT first-pass pool and fails
-        # fast without this opt-in: the invalidation deletes the Stage 5 join + blib
-        # but leaves every <stem>.1st-pass.fdr_scores.bin in place, so
-        # PerFileScoringTask's needsResidentPool is true and GuardResidentPool throws.
-        # Same opt-in the HPC chain above takes, and equally safe here -- these are
-        # 3-file datasets, not the file counts the guard exists to protect.
-        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
-        try {
-            $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-                -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
-        } finally {
-            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
-        }
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here either -- the guard must be armed on
+        # the resume leg, which is the default path users take. If this run fails on
+        # GuardResidentPool, that is a real finding to fix in the product, not to suppress
+        # in the harness.
+        $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
         $m2 = Compare-BlibFull -BlibExpected $coldBlib -BlibActual $resumeBlib -Tolerance $Tolerance
