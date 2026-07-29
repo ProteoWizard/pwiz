@@ -385,7 +385,7 @@ namespace pwiz.Osprey.Tasks
         /// is a loud exception at the next <see cref="Get{TInfo}"/>, not silent corruption.
         ///
         /// NOT for the <c>PerFileEntries</c> milestone family: the DEBUG republish guard
-        /// (<c>_consumedByproducts</c> / <see cref="AssertMilestoneConsumedBeforeRepublish{TInfo}"/>)
+        /// (<c>_consumedByproducts</c> / <c>AssertMilestoneConsumedBeforeRepublish</c>)
         /// is not updated here, so releasing a milestone and republishing over the same
         /// backing list would read stale state. Prefer <see cref="Consume{TInfo}"/>.
         /// </summary>
