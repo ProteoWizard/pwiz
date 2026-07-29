@@ -154,64 +154,6 @@ namespace TestRunnerLib
         public string ParallelClientId { get; private set; }
 
         /// <summary>
-        /// How long to wait for another parallel test client to finish with a tools directory before
-        /// giving up on it. Only reached if a client is wedged, since the lock is released as soon as
-        /// its test is over, pass or fail.
-        /// </summary>
-        private static readonly TimeSpan TOOLS_DIRECTORY_LOCK_TIMEOUT = TimeSpan.FromMinutes(15);
-
-        /// <summary>
-        /// Claim a test's tools directory for as long as the returned object is held, or null when not
-        /// running in parallel and there is nobody to claim it against.
-        /// <para>
-        /// Parallel clients share the build directory through a Docker volume mount, and a tools
-        /// directory is named for the test and the culture, so two clients running the same test in the
-        /// same culture want the same directory - most easily when pass 1 cycles into a culture another
-        /// client is running pass 2 in. Windows honors share modes across the mount, so an exclusive
-        /// handle is enough to keep them apart, and it dies with the process if a client is killed
-        /// (issue 4447).
-        /// </para>
-        /// <para>
-        /// Keyed by the same name the directory itself gets. Keying it by the test's own name instead
-        /// would look right but be wrong: long names are shortened to their capitals and digits, so
-        /// e.g. TestDdaTutorial and TestDiaTutorial share a directory while looking distinct here.
-        /// The wait happens out here rather than inside the test, where it would count against the
-        /// test's own time.
-        /// </para>
-        /// </summary>
-        private IDisposable LockToolsDirectory(TestInfo test)
-        {
-            if (!IsParallelClient)
-                return null; // Nothing else is sharing this build directory
-
-            var installDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-            var lockDirectory = Path.Combine(installDirectory, @"ToolsDirectoryLocks");
-            Directory.CreateDirectory(lockDirectory);
-            var lockPath = Path.Combine(lockDirectory, PathEx.GetTestDirectoryName(test.TestMethod.Name, Language.Name) + @".lock");
-
-            var waited = Stopwatch.StartNew();
-            do
-            {
-                try
-                {
-                    return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-                }
-                catch (IOException)
-                {
-                    Thread.Sleep(500); // Held by another client running a test that needs the same directory
-                }
-            } while (waited.Elapsed < TOOLS_DIRECTORY_LOCK_TIMEOUT);
-
-            // Continuing unlocked risks the collision this is meant to avoid, but it beats stalling the
-            // whole run behind one wedged client, so say so loudly and carry on
-            // N.B. not "!!!", which Report() reads as the start of a test failure block and would then
-            // swallow the rest of the log into one bogus failure
-            Log("# Gave up after {0} minutes waiting for {1}; continuing without it.\r\n",
-                TOOLS_DIRECTORY_LOCK_TIMEOUT.TotalMinutes, lockPath);
-            return null;
-        }
-
-        /// <summary>
         /// TestContext property whose mere presence marks this process as a parallel test client.
         /// Shared so that the tests reading it cannot drift from the name written here - they silently
         /// always read false when they do.
@@ -651,19 +593,16 @@ namespace TestRunnerLib
                 if (test.SkipTestUntil != null)
                     Log("Note: SkipTestUntil attribute is present, but the skip date has been reached so the test will run.");
 
-                // Run the test and time it, holding this test's tools directory for the whole of it
-                using (LockToolsDirectory(test))
-                {
-                    if (test.TestInitialize != null)
-                        test.TestInitialize.Invoke(testObject, null);
+                // Run the test and time it.
+                if (test.TestInitialize != null)
+                    test.TestInitialize.Invoke(testObject, null);
 
-                    test.TestMethod.Invoke(testObject, null);
+                test.TestMethod.Invoke(testObject, null);
 
-                    // Need to set the test outcome to passed or it won't get set which impacts cleanup
-                    TestContext.HasPassed = true;
-                    if (test.TestCleanup != null)
-                        test.TestCleanup.Invoke(testObject, null);
-                }
+                // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                TestContext.HasPassed = true;
+                if (test.TestCleanup != null)
+                    test.TestCleanup.Invoke(testObject, null);
             }
             else if (test.SkipTestUntil != null)
             {

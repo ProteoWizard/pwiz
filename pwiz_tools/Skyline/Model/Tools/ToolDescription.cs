@@ -454,16 +454,13 @@ namespace pwiz.Skyline.Model.Tools
         }
 
 
-        // Long test names make for long Tools directory names, which can make for long command lines - maybe too long. So limit that directory name length by
-        // shortening to acronym and original length (e.g. "Foo7WithBar" => "F7WB10", "Foo7WithoutBar" => "F7WB13"))
         private static string LimitDirectoryNameLength()
         {
-            // N.B. this is only unique per test and culture, not per parallel test client. The parallel
-            // work queue hands a test/language pair to one client at a time, and the test runner locks
-            // this directory by the same name, which together keep two clients out of it for everything
-            // except pass 1: that pass cycles the culture itself rather than using the language it was
-            // queued under, so it can reach a culture another client is running pass 2 in. See
-            // QueuedTestInfo in TestRunner (issue 4447).
+            // N.B. this is only unique per test and culture, not per parallel test client, and not even
+            // per test: shortening means different tests can land in one directory. So the parallel work
+            // queue checks a test out against the directory names it will use rather than against the
+            // test itself, and hands out no two tests that would meet in one of them. See
+            // QueuedTestInfo.RequiredToolsDirectories in TestRunner (issue 4447).
             return PathEx.GetTestDirectoryName(Program.TestName, Thread.CurrentThread.CurrentCulture.Name);
         }
 
