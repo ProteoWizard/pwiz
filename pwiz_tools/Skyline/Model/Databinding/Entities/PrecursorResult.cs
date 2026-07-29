@@ -98,23 +98,27 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
         public double? ObservedIonMobility
         {
-            get { return AggregateObservedIonMobility(EnumerateObservedChannels()); }
+            get { return ObservedImValues.IonMobility; }
         }
         [Format(Formats.CCS, NullValue = TextUtil.EXCEL_NA)]
         public double? ObservedCcs
         {
-            get { return WeightedMean(EnumerateObservedChannels().Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))); }
+            get { return ObservedImValues.Ccs; }
         }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? IonMobilityErrorPercent
         {
-            get { return PercentError(ObservedIonMobility, GetTargetIonMobilityFilter()?.IonMobility?.Mobility); }
+            get { return PercentError(ObservedImValues.IonMobility, ObservedImValues.Target?.IonMobility?.Mobility); }
         }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? CcsErrorPercent
         {
-            get { return PercentError(ObservedCcs, GetTargetIonMobilityFilter()?.CollisionalCrossSectionSqA); }
+            get { return PercentError(ObservedImValues.Ccs, ObservedImValues.Target?.CollisionalCrossSectionSqA); }
         }
+
+        // Observed IM, observed CCS, and the target IM filter, computed together in one pass
+        // over the transitions and cached per row (invalidated on document change).
+        private ObservedIonMobilityValues ObservedImValues { get { return _cachedValues.GetValue3(this); } }
 
         private static double? PercentError(double? observed, double? target)
         {
@@ -143,14 +147,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             public double HighEnergyOffset { get; }
         }
 
-        private IEnumerable<ObservedIonMobilityChannel> EnumerateObservedChannels()
+        private ObservedIonMobilityValues CalculateObservedIonMobilityValues()
         {
+            var channels = new List<ObservedIonMobilityChannel>();
+            IonMobilityFilter target = null;
             var resultFile = GetResultFile();
             foreach (var nodeTran in Precursor.DocNode.Transitions)
             {
                 var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
                 if (chromInfo == null || chromInfo.IsEmpty)
                     continue;
+                // Any transition carries the precursor's IM filter (its base IM/CCS, offset
+                // aside, is the same for all), so the first one is the error target.
+                if (target == null && chromInfo.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility))
+                    target = chromInfo.IonMobility;
                 if (nodeTran.IsMs1)
                 {
                     // MS1 isotope channels weight by predicted abundance; an MS1 precursor
@@ -158,16 +168,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     // filtering, or a neutral-loss transition) weights by observed area instead
                     // so its observed IM/CCS is still surfaced.
                     double weight = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : chromInfo.Area;
-                    yield return new ObservedIonMobilityChannel(true, chromInfo.ObservedIonMobility,
-                        chromInfo.ObservedCcs, weight, 0);
+                    channels.Add(new ObservedIonMobilityChannel(true, chromInfo.ObservedIonMobility, chromInfo.ObservedCcs, weight, 0));
                 }
                 else
                 {
                     double offset = chromInfo.IonMobility?.HighEnergyIonMobilityOffset ?? 0;
-                    yield return new ObservedIonMobilityChannel(false, chromInfo.ObservedIonMobility,
-                        chromInfo.ObservedCcs, chromInfo.Area, offset);
+                    channels.Add(new ObservedIonMobilityChannel(false, chromInfo.ObservedIonMobility, chromInfo.ObservedCcs, chromInfo.Area, offset));
                 }
             }
+            return new ObservedIonMobilityValues(
+                AggregateObservedIonMobility(channels),
+                WeightedMean(channels.Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))),
+                target);
+        }
+
+        // Bundle of the per-ion observed IM, observed CCS, and the target IM filter, computed
+        // together in one transition pass (CalculateObservedIonMobilityValues) and cached per row.
+        private class ObservedIonMobilityValues
+        {
+            public ObservedIonMobilityValues(double? ionMobility, double? ccs, IonMobilityFilter target)
+            {
+                IonMobility = ionMobility;
+                Ccs = ccs;
+                Target = target;
+            }
+            public double? IonMobility { get; }
+            public double? Ccs { get; }
+            public IonMobilityFilter Target { get; }
         }
 
         // The single per-ion observed IM: predicted-abundance-weighted mean over the MS1
@@ -196,20 +223,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 totalWeight += weight;
             }
             return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
-        }
-
-        // Target ion mobility / CCS for the error denominators, from any transition that
-        // carries the precursor's IM filter (its base IM, offset aside, is the same for all).
-        private IonMobilityFilter GetTargetIonMobilityFilter()
-        {
-            var resultFile = GetResultFile();
-            foreach (var nodeTran in Precursor.DocNode.Transitions)
-            {
-                var chromInfo = resultFile.FindChromInfo(nodeTran.Results);
-                if (chromInfo?.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility))
-                    return chromInfo.IonMobility;
-            }
-            return null;
         }
 
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
@@ -472,12 +485,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo);
         }
 
-        private class CachedValues 
-            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>>
+        private class CachedValues
+            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>, ObservedIonMobilityValues>
         {
             protected override SrmDocument GetDocument(PrecursorResult owner)
             {
                 return owner.SrmDocument;
+            }
+
+            protected override ObservedIonMobilityValues CalculateValue3(PrecursorResult owner)
+            {
+                return owner.CalculateObservedIonMobilityValues();
             }
 
             protected override TransitionGroupChromInfo CalculateValue(PrecursorResult owner)
