@@ -114,8 +114,10 @@ namespace pwiz.Skyline.Model.Results
             var list = channels as IList<Channel> ?? channels.ToList();
             if (list.Any(c => c.IsMs1))
                 return WeightedMean(list.Where(c => c.IsMs1).Select(c => (c.ObservedIonMobility, c.Weight)));
+            // double? - double yields null when the fragment has no observed IM, so the
+            // offset-corrected value is null exactly when it should be (WeightedMean skips it).
             return WeightedMean(list.Where(c => !c.IsMs1)
-                .Select(c => (c.ObservedIonMobility.HasValue ? c.ObservedIonMobility - c.HighEnergyOffset : (double?) null, c.Weight)));
+                .Select(c => (c.ObservedIonMobility - c.HighEnergyOffset, c.Weight)));
         }
 
         private static double? WeightedMean(IEnumerable<(double? value, double weight)> items)
