@@ -124,10 +124,10 @@ namespace pwiz.SkylineTestData
 
             // MassLynx nativeIDs carry a function number, in every layout our Waters reader emits -
             // including the DDA merged form, whose trailing "scans=1-5" is not a plain integer
-            Assert.AreEqual(1, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=1 process=0 scan=1"));
-            Assert.AreEqual(3, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=3 process=0 scan=1"));
-            Assert.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 block=3"));
-            Assert.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 process=0 scans=1-5"));
+            AssertEx.AreEqual(1, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=1 process=0 scan=1"));
+            AssertEx.AreEqual(3, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=3 process=0 scan=1"));
+            AssertEx.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 block=3"));
+            AssertEx.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 process=0 scans=1-5"));
 
             // waters_connect numbers channels, which are not function numbers, so nothing may be inferred -
             // and nothing else carries one either
@@ -139,20 +139,20 @@ namespace pwiz.SkylineTestData
                          "scan=1", "", null
                      })
             {
-                Assert.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(idWithoutFunction), idWithoutFunction);
+                AssertEx.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(idWithoutFunction), idWithoutFunction);
             }
         }
 
         private static void VerifyLockmassSpectrum(string path, bool expectLabeled)
         {
             using var msDataFile = new MsDataFileImpl(path);
-            Assert.AreEqual(3, msDataFile.SpectrumCount, path);
+            AssertEx.AreEqual(3, msDataFile.SpectrumCount, path);
             var lockmassFunctions = new List<int>();
             for (var i = 0; i < msDataFile.SpectrumCount; i++)
             {
                 var spectrum = msDataFile.GetSpectrum(i);
                 // Only the newer file labels its lockspray scan, and only that scan
-                Assert.AreEqual(expectLabeled && spectrum.WatersFunctionNumber == 3, spectrum.IsCalibrationSpectrum, path);
+                AssertEx.AreEqual(expectLabeled && spectrum.WatersFunctionNumber == 3, spectrum.IsCalibrationSpectrum, path);
                 if (msDataFile.IsWatersLockmassSpectrum(spectrum))
                     lockmassFunctions.Add(spectrum.WatersFunctionNumber ?? 0);
             }
@@ -162,19 +162,15 @@ namespace pwiz.SkylineTestData
             // In these files the lockspray sorts first, so the function-number heuristic would identify it
             // even with no tag - which means the assertions above cannot tell whether MS:1000928 is being
             // honored. Check that directly: a labeled spectrum carrying no function number to fall back
-            // on, as a waters_connect file would produce, must still be recognized.
-            var taggedWithoutFunction = new MsDataSpectrum
-            {
-                Id = @"3.0.1.2", IsCalibrationSpectrum = true, WatersFunctionNumber = null
-            };
-            Assert.IsTrue(msDataFile.IsWatersLockmassSpectrum(taggedWithoutFunction), path);
+            // on, as a waters_connect file would produce, must still be recognized. Id is deliberately
+            // left unset - IsWatersLockmassSpectrum no longer reads it, and setting it would suggest
+            // otherwise.
+            var taggedWithoutFunction = new MsDataSpectrum { IsCalibrationSpectrum = true, WatersFunctionNumber = null };
+            AssertEx.IsTrue(msDataFile.IsWatersLockmassSpectrum(taggedWithoutFunction), path);
 
             // And the converse: no tag and no function number is not something to guess about
-            var untaggedWithoutFunction = new MsDataSpectrum
-            {
-                Id = @"3.0.1.2", IsCalibrationSpectrum = false, WatersFunctionNumber = null
-            };
-            Assert.IsFalse(msDataFile.IsWatersLockmassSpectrum(untaggedWithoutFunction), path);
+            var untaggedWithoutFunction = new MsDataSpectrum { IsCalibrationSpectrum = false, WatersFunctionNumber = null };
+            AssertEx.IsFalse(msDataFile.IsWatersLockmassSpectrum(untaggedWithoutFunction), path);
         }
 
         [TestMethod]

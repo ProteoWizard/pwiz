@@ -127,8 +127,13 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
 
     // FunctionIndexList() lists every function in the source, but the lockmass function is not always
     // presented as spectra (ignoreCalibrationScans, or the DDA processor excluding the reference
-    // function). When it isn't, it must not contribute to fileContent at all - the absence of
-    // "calibration spectrum" is what tells a reader there are none to look for.
+    // function). When it isn't, it must not contribute to fileContent at all, so that the absence of
+    // "calibration spectrum" means there are none to look for.
+    //
+    // Note this loop does not make that guarantee for the other types it advertises: createIndex also
+    // drops SIM, CNL, CNG and (without srmAsSpectra) SRM functions, and they are still declared here -
+    // 160109_Mix1_calcurve_070.mzML announces "SRM spectrum" while holding none. Driving the loop from
+    // the functions actually indexed would fix all of them at once, and is worth doing separately.
     bool hasCalibrationSpectra = sl != NULL && sl->hasCalibrationSpectra();
 
     for (int function : rawdata->FunctionIndexList())

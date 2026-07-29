@@ -908,9 +908,12 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        // Neither source of truth applies - e.g. an analog or UV function, which carries no
-                        // MS level. Leave _mseLevel alone: every caller gates on it being > 0 before asking
-                        // again, so zeroing it here would disable all-ions handling for the rest of the file.
+                        // Reached only when the id carries no function number AND no MS level is declared -
+                        // a waters_connect analog channel, say. A MassLynx analog or UV function does not
+                        // land here: it has no MS level but its id still carries a function number, so it
+                        // takes the branch above. Leave _mseLevel alone rather than zeroing it: every caller
+                        // gates on it being > 0 before asking again, so a zero would disable all-ions
+                        // handling for the rest of the file.
                         returnval = 0;
                     }
                 }

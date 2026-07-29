@@ -42,7 +42,7 @@ namespace detail {
 using namespace Waters;
 
 SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config)
-    : msd_(msd), rawdata_(rawdata), config_(config), lockmassFunction_(LOCKMASS_FUNCTION_UNINIT)
+    : msd_(msd), rawdata_(rawdata), config_(config), lockmassFunction_(LOCKMASS_FUNCTION_UNKNOWN)
 {
     useDDAProcessor_ = config_.ddaProcessing;
     rawdata_->EnableProcessing(useDDAProcessor_);
@@ -654,10 +654,11 @@ PWIZ_API_DECL bool SpectrumList_Waters::hasCalibrationSpectra() const
         return false; // it has one, but createIndex kept it out of the list
 
     // Otherwise its scans should be present, so ask the index rather than the config - the DDA processor
-    // also excludes the reference function, and this stays correct for that too. The scan is cheap in
-    // practice: entries are ordered by retention time and the lockspray typically leads, so a file that
-    // has calibration spectra matches almost immediately. The two early exits above cover the cases that
-    // would otherwise walk the whole index only to return false.
+    // also excludes the reference function, and this stays correct for that too. Entries are ordered by
+    // retention time and the lockspray typically leads, so a file that really has calibration spectra
+    // matches almost immediately. The exception is DDA processing, where the reference function is
+    // excluded but neither exit above fires, so this does walk the whole index to return false - once
+    // per file open, since Reader_Waters calls it exactly once.
     for (const IndexEntry& ie : index_)
         if (ie.function == lockmass)
             return true;
