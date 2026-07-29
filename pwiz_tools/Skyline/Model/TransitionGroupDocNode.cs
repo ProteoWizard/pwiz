@@ -1699,7 +1699,12 @@ namespace pwiz.Skyline.Model
             return bestPeak;
         }
 
-        private ScoredPeakBounds GetOriginalPeak(ChromatogramGroupInfo chromGroupInfo, float tolerance)
+        /// <summary>
+        /// Internal rather than private so that <see cref="PeptideResultsMaterializer"/> can
+        /// derive this the same way. It is recalculated from the chromatogram every time
+        /// results are updated, so it never needs to be stored.
+        /// </summary>
+        internal ScoredPeakBounds GetOriginalPeak(ChromatogramGroupInfo chromGroupInfo, float tolerance)
         {
             var score = chromGroupInfo.Header.MaxPeakScore;
             if (!score.HasValue)

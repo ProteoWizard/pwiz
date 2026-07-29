@@ -76,13 +76,13 @@ namespace pwiz.Skyline.Model.Results
             var chromatogramGroupInfos =
                 new Dictionary<ChromatogramGroupKey, ImmutableList<ChromatogramGroupInfo>>();
             var measuredResults = Settings?.MeasuredResults;
+            float tolerance = MzMatchTolerance ??
+                              (float) (Settings?.TransitionSettings.Instrument.MzMatchTolerance ?? 0);
             if (measuredResults == null || PeptideDocNode == null)
             {
-                return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions, chromatogramGroupInfos);
+                return new MaterializedPeptideResults(Settings, PeptideDocNode, tolerance, transitions,
+                    chromatogramGroupInfos);
             }
-
-            float tolerance = MzMatchTolerance ??
-                              (float) Settings.TransitionSettings.Instrument.MzMatchTolerance;
             foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
             {
                 var builders = nodeGroup.Transitions.ToDictionary(nodeTran => nodeTran.Id.GlobalIndex,
@@ -115,7 +115,8 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return new MaterializedPeptideResults(Settings, PeptideDocNode, transitions, chromatogramGroupInfos);
+            return new MaterializedPeptideResults(Settings, PeptideDocNode, tolerance, transitions,
+                chromatogramGroupInfos);
         }
 
         /// <summary>
@@ -319,14 +320,17 @@ namespace pwiz.Skyline.Model.Results
             _chromatogramGroupInfos;
 
         public MaterializedPeptideResults(SrmSettings settings, PeptideDocNode peptideDocNode,
-            Dictionary<int, MaterializedTransition> transitions,
+            float mzMatchTolerance, Dictionary<int, MaterializedTransition> transitions,
             Dictionary<ChromatogramGroupKey, ImmutableList<ChromatogramGroupInfo>> chromatogramGroupInfos)
         {
             Settings = settings;
             PeptideDocNode = peptideDocNode;
+            MzMatchTolerance = mzMatchTolerance;
             _transitions = transitions;
             _chromatogramGroupInfos = chromatogramGroupInfos;
         }
+
+        public float MzMatchTolerance { get; }
 
         /// <summary>
         /// Everything for one peptide. <paramref name="replicateIndex"/> restricts the work to
@@ -456,6 +460,18 @@ namespace pwiz.Skyline.Model.Results
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
                 listCalculator.AddChromInfoList(nodeTrans[iTran], chromInfoLists[iTran]);
+            }
+
+            // Recalculated from the chromatogram rather than carried forward, which is what
+            // ChangeResults does, so it never has to be stored.
+            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
+            foreach (var chromGroupInfo in GetChromatogramGroupInfos(nodeGroup, replicateIndex))
+            {
+                var fileId = chromatograms.FindFile(chromGroupInfo);
+                if (fileId != null)
+                {
+                    listCalculator.SetOriginalPeak(fileId, nodeGroup.GetOriginalPeak(chromGroupInfo, MzMatchTolerance));
+                }
             }
 
             // Has to come after AddChromInfoList, which is what creates the calculators these

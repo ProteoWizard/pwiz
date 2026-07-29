@@ -107,11 +107,6 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// <paramref name="requireDotProducts"/> guards against the dot product assertions
-        /// passing because both sides are null, which is what happens on a document with no
-        /// spectral library.
-        /// </summary>
-        /// <summary>
         /// The same checks against a document with a spectral library, so that the dot
         /// products are actually calculated rather than being null on both sides.
         /// </summary>
@@ -143,11 +138,18 @@ namespace pwiz.SkylineTestData.Results
             }
         }
 
+        /// <summary>
+        /// <paramref name="requireDotProducts"/> guards against the dot product assertions
+        /// passing because both sides are null, which is what happens on a document with no
+        /// spectral library. OriginalPeak is guarded unconditionally, because it is derived
+        /// rather than copied and every one of these documents has it.
+        /// </summary>
         private static void CheckDocument(SrmDocument docResults, bool requireDotProducts = false)
         {
             int positionsChecked = 0;
             int groupsChecked = 0;
             int dotProductsChecked = 0;
+            int originalPeaksChecked = 0;
             int singleReplicateChecked = 0;
             int replicateToCheck = Math.Min(1, docResults.Settings.MeasuredResults.Chromatograms.Count - 1);
             foreach (var nodePep in docResults.Peptides)
@@ -166,7 +168,7 @@ namespace pwiz.SkylineTestData.Results
                         positionsChecked += CheckTransition(materialized, nodeTran);
                     }
 
-                    groupsChecked += CheckTransitionGroup(materialized, nodeGroup, ref dotProductsChecked);
+                    groupsChecked += CheckTransitionGroup(materialized, nodeGroup, ref dotProductsChecked, ref originalPeaksChecked);
                 }
 
                 singleReplicateChecked +=
@@ -176,6 +178,7 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreNotEqual(0, positionsChecked);
             Assert.AreNotEqual(0, groupsChecked);
             Assert.AreNotEqual(0, singleReplicateChecked);
+            Assert.AreNotEqual(0, originalPeaksChecked);
             if (requireDotProducts)
             {
                 Assert.AreNotEqual(0, dotProductsChecked);
@@ -216,7 +219,7 @@ namespace pwiz.SkylineTestData.Results
         /// they come from the ranking pass which the materializer does not drive yet.
         /// </summary>
         private static int CheckTransitionGroup(MaterializedPeptideResults materialized,
-            TransitionGroupDocNode nodeGroup, ref int dotProductsChecked)
+            TransitionGroupDocNode nodeGroup, ref int dotProductsChecked, ref int originalPeaksChecked)
         {
             if (!nodeGroup.HasResults)
             {
@@ -241,6 +244,11 @@ namespace pwiz.SkylineTestData.Results
                     if (AssertGroupValuesEqual(expected[i], rebuilt.ChromInfos[i]))
                     {
                         dotProductsChecked++;
+                    }
+
+                    if (expected[i].OriginalPeak != null)
+                    {
+                        originalPeaksChecked++;
                     }
 
                     groupsChecked++;
@@ -320,6 +328,10 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(expected.ZScore, actual.ZScore);
             Assert.AreEqual(expected.LibraryDotProduct, actual.LibraryDotProduct);
             Assert.AreEqual(expected.IsotopeDotProduct, actual.IsotopeDotProduct);
+
+            // Derived from the chromatogram rather than carried forward, so this checks the
+            // derivation and not just that the value was copied.
+            Assert.AreEqual(expected.OriginalPeak, actual.OriginalPeak);
             return expected.LibraryDotProduct.HasValue || expected.IsotopeDotProduct.HasValue;
         }
 
