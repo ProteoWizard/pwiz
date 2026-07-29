@@ -133,6 +133,11 @@ namespace pwiz.Common.CommandLine
                 {
                     if (ArgUsage.IsRemoteUrl(Value))
                         return Value;
+                    // net8's Path.GetFullPath, unlike net472's, no longer throws on characters that are
+                    // invalid in a Windows path (e.g. '?' '*' '"' '<' '>' '|'); reject them explicitly so
+                    // an invalid path value is still surfaced as a ValueInvalidPathException below.
+                    if (Value.IndexOfAny(new[] { '?', '*', '"', '<', '>', '|' }) >= 0)
+                        throw new ArgumentException(@"path contains invalid characters");
                     return Path.GetFullPath(Value);
                 }
                 catch (Exception)

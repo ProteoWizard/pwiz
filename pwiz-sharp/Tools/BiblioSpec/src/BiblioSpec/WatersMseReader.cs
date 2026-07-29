@@ -300,6 +300,30 @@ public sealed class WatersMseReader : BuildParser
             Verbosity.Debug(
                 $"Using forced pusher interval of {_pusherInterval.ToString(CultureInfo.InvariantCulture)}.");
         }
+        else
+        {
+            // cpp parity: WatersMseReader.cpp:154-178 -- with no forced value, derive the pusher
+            // interval from the sibling Waters .raw (1000 / TRANSPORT_RF). Swap the CSV suffix for
+            // ".raw" (checking the more specific "_IA_final_fragment.csv" first); if that raw exists,
+            // WatersPusherInterval reads its TRANSPORT_RF scan stat. Without this drift-time data in
+            // the CSV cannot be processed and BlibBuild aborts.
+            string rawPath = _csvName;
+            foreach (var suffix in new[] { "_IA_final_fragment.csv", "_final_fragment.csv" })
+            {
+                if (rawPath.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    rawPath = string.Concat(rawPath.AsSpan(0, rawPath.Length - suffix.Length), ".raw");
+                    break;
+                }
+            }
+            double pusher = Pwiz.Vendor.Waters.WatersPusherInterval.FromRawFile(rawPath);
+            if (pusher > 0)
+            {
+                _pusherInterval = pusher;
+                Verbosity.Debug(
+                    $"Pusher interval is {_pusherInterval.ToString(CultureInfo.InvariantCulture)}.");
+            }
+        }
 
         // cpp parity: WatersMseReader.cpp:182 — point the spec reader at ourselves.
         // The inner MseSpecFileReader pulls peaks from each MsePSM directly.

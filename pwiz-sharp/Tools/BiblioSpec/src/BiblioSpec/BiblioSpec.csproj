@@ -17,6 +17,10 @@
          vendor spectrum list with it so vendor-side centroiding kicks in for .wiff /
          .raw / .baf / .lcd inputs (cpp parity: PwizReader.cpp:67-68 "peakPicking true 1-"). -->
     <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Analysis\Analysis.csproj" />
+    <!-- Waters vendor reader: WatersMseReader derives the ion-mobility pusher interval from the
+         sibling .raw (via WatersPusherInterval) when none is forced, mirroring the native
+         BlibBuild's USE_WATERS_READER path. -->
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Waters\Waters.csproj" />
   </ItemGroup>
 
   <ItemGroup>
