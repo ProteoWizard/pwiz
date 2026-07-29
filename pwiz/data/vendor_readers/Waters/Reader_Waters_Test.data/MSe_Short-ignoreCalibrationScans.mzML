@@ -66,7 +66,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="pwiz_Reader_Waters" version="3.0.26209">
+    <software id="pwiz_Reader_Waters" version="3.0.26210">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -176,26 +176,26 @@
       </spectrum>
     </spectrumList>
     <chromatogramList count="1" defaultDataProcessingRef="pwiz_Reader_Waters_conversion">
-      <chromatogram index="0" id="TIC" defaultArrayLength="3">
+      <chromatogram index="0" id="TIC" defaultArrayLength="2">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="28">
+          <binaryDataArray encodedLength="24">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
-            <binary>eJxLib1jU6Iibrvbx8oWAB5HBEQ=</binary>
+            <binary>eJwrURG33e1jZQsACuACaw==</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="28">
+          <binaryDataArray encodedLength="24">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJzbMtnDK2CvoZcA715PACCkBIU=</binary>
+            <binary>eJwL2GvoJcC71xMADHUCrA==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="3" encodedLength="24">
+          <binaryDataArray arrayLength="2" encodedLength="20">
             <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="function" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
-            <binary>eJxjZmBgYARiJiAGAABAAAc=</binary>
+            <binary>eJxjZGBgYAJiAAAYAAQ=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

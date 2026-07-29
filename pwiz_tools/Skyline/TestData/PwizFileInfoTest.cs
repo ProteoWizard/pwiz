@@ -103,7 +103,10 @@ namespace pwiz.SkylineTestData
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Bruker, "Hela_QC_PASEF_Slot1-first-6-frames.d"), 1, 23340182);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Mobilion, "ExampleTuneMix_binned5" + ExtensionTestContext.ExtMobilionRaw), 29, 60899367);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw"), 30, 32992246);
-            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 2, 3286253);
+            // Was 2 points peaking at 3286253, which was the lockspray scan's own TIC - the global
+            // chromatogram summed the lockmass function even though ignoreCalibrationScans keeps its
+            // spectra out of the file. Only the low energy function remains.
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 1, 2912084);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDMRM_Short_noLM.raw"), 0, 0);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDDDA_Short_noLM.raw"), 1, 3692876);
         }
