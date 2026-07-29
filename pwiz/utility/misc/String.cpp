@@ -21,6 +21,9 @@
 #include "String.hpp"
 #include <limits>
 #include <algorithm>
+#include <iomanip>
+#include <locale>
+#include <sstream>
 #include <boost/spirit/include/karma.hpp>
 
 using boost::spirit::karma::real_policies;
@@ -84,6 +87,50 @@ struct float5_policy_scientific : real_policies<T>
 };
 
 
+namespace {
+
+/// Parse a decimal string back to double independently of the global locale.
+/// karma generates locale-independently, so the round-trip check has to read
+/// that way too; strtod would follow a comma-decimal-point locale and reject
+/// text karma had just written with a period.
+double parseClassic(const std::string& text)
+{
+    std::istringstream iss(text);
+    iss.imbue(std::locale::classic());
+    double value = 0;
+    iss >> value;
+    return value;
+}
+
+/// The shortest decimal form of value that reloads bit-exact, found by trying
+/// 15, 16 and 17 significant digits in turn (17 = max_digits10, which always
+/// round-trips a double). Default float formatting is %g semantics, i.e.
+/// SIGNIFICANT digits, which is what round-tripping needs at every magnitude;
+/// karma's precision() counts FRACTIONAL digits and so cannot express this.
+///
+/// Deliberately not std::to_chars: floating-point to_chars is C++17 but its
+/// library support is not universal across the toolsets pwiz builds with
+/// (libstdc++ needs GCC 11, libc++ a recent LLVM), and this file is compiled
+/// everywhere. Deliberately not snprintf either: that follows the global
+/// locale, and would emit a comma decimal point into XML under e.g. de_DE.
+std::string toRoundTripString(double value)
+{
+    std::string widest;
+    for (int significantDigits = 15; significantDigits <= 17; ++significantDigits)
+    {
+        std::ostringstream oss;
+        oss.imbue(std::locale::classic());
+        oss << std::setprecision(significantDigits) << value;
+        widest = oss.str();
+        if (parseClassic(widest) == value)
+            return widest;
+    }
+    return widest; // 17 significant digits always round-trips a double
+}
+
+} // namespace
+
+
 template<typename PolicyT> std::string generateWithPolicy(typename PolicyT::value_type value)
 {
     static const real_generator<typename PolicyT::value_type, PolicyT> policy = PolicyT();
@@ -104,7 +151,24 @@ std::string pwiz::util::toString(double value, RealConvertPolicy policyFlags)
 
     switch (policyFlags)
     {
-        case RealConvertPolicy::AutoNotation: return generateWithPolicy<double12_policy<double>>(value);
+        case RealConvertPolicy::AutoNotation:
+        {
+            // 12 fractional digits is enough for almost every value pwiz writes,
+            // and it is what keeps output free of lexical_cast noise like
+            // 123.00000000007. But it is a SILENT truncation when a value needs
+            // more: a Thermo scan start time of 1.8119944333330003 minutes was
+            // written as 1.811994433333 and reloaded one ULP away, so an mzML
+            // could not reproduce the value read from the raw file.
+            //
+            // Keep the historical text whenever it already reloads bit-exact
+            // (the overwhelmingly common case, so existing output and file sizes
+            // are unchanged), and fall back to the shortest round-tripping form
+            // only where the fast path would lose information.
+            std::string result = generateWithPolicy<double12_policy<double>>(value);
+            if (parseClassic(result) == value)
+                return result;
+            return toRoundTripString(value);
+        }
         case RealConvertPolicy::FixedNotation: return generateWithPolicy<double12_policy_fixed<double>>(value);
         case RealConvertPolicy::ScientificNotation: return generateWithPolicy<double12_policy_scientific<double>>(value);
         default: throw std::runtime_error("[toString] unknown RealConvertPolicy");
