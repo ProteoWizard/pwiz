@@ -46,6 +46,31 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Put dotnet on PATH if the caller's environment doesn't already have it. A TeamCity agent
+# can launch the build with a minimal PATH that omits the install location, and the usual
+# symptom is a bare "dotnet: command not found" that looks like dotnet isn't installed at
+# all. Probe the standard locations (and DOTNET_ROOT) before giving up, and if a candidate
+# exists but isn't runnable -- a dangling /usr/bin/dotnet symlink is the classic case --
+# say so explicitly instead of reporting it as missing.
+resolve_dotnet() {
+    command -v dotnet >/dev/null 2>&1 && return 0
+    local cand
+    for cand in /usr/bin/dotnet /usr/local/bin/dotnet /usr/share/dotnet/dotnet \
+                /usr/lib/dotnet/dotnet "${DOTNET_ROOT:-}/dotnet" "$HOME/.dotnet/dotnet"; do
+        [ -n "$cand" ] || continue
+        if [ -x "$cand" ]; then
+            export PATH="$(dirname "$cand"):$PATH"
+            echo "##teamcity[message text='dotnet was not on PATH; using $cand']"
+            return 0
+        fi
+        if [ -e "$cand" ] || [ -L "$cand" ]; then
+            echo "##teamcity[message text='$cand exists but is not executable (dangling symlink?): $(ls -ld "$cand" 2>&1)' status='WARNING']"
+        fi
+    done
+    echo "##teamcity[message text='dotnet not found on PATH or at /usr/bin, /usr/local/bin, /usr/share/dotnet, /usr/lib/dotnet, \$DOTNET_ROOT, ~/.dotnet' status='ERROR']"
+    return 1
+}
+
 CONFIG=Release
 IAGREE=0
 REQUIRE_VENDOR=0
@@ -95,8 +120,9 @@ if [ "$IAGREE" = 1 ] && [ -f "$SEVEN_ZZ" ] && [ ! -x "$SEVEN_ZZ" ]; then
     chmod +x "$SEVEN_ZZ"
 fi
 
+resolve_dotnet
 echo "##teamcity[progressMessage 'dotnet --version']"
-dotnet --version || { echo "##teamcity[message text='dotnet not on PATH' status='ERROR']"; exit 1; }
+dotnet --version || { echo "##teamcity[message text='dotnet --version failed' status='ERROR']"; exit 1; }
 
 # Build targets. Without vendor support, msconvert alone covers the core
 # stack. With it, MsConvert plus the Thermo reader (the one native-free vendor

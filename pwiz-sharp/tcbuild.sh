@@ -36,8 +36,31 @@ fail() {
     exit "${2:-1}"
 }
 
+# Same dotnet resolution as build.sh: a TeamCity agent can launch the build with a minimal
+# PATH that omits the install location, and a dangling /usr/bin/dotnet symlink looks
+# identical to "not installed" unless we say otherwise.
+resolve_dotnet() {
+    command -v dotnet >/dev/null 2>&1 && return 0
+    local cand
+    for cand in /usr/bin/dotnet /usr/local/bin/dotnet /usr/share/dotnet/dotnet \
+                /usr/lib/dotnet/dotnet "${DOTNET_ROOT:-}/dotnet" "$HOME/.dotnet/dotnet"; do
+        [ -n "$cand" ] || continue
+        if [ -x "$cand" ]; then
+            export PATH="$(dirname "$cand"):$PATH"
+            echo "##teamcity[message text='dotnet was not on PATH; using $cand']"
+            return 0
+        fi
+        if [ -e "$cand" ] || [ -L "$cand" ]; then
+            echo "##teamcity[message text='$cand exists but is not executable (dangling symlink?): $(ls -ld "$cand" 2>&1)' status='WARNING']"
+        fi
+    done
+    return 1
+}
+
+resolve_dotnet || fail "dotnet not found on PATH or at /usr/bin, /usr/local/bin, /usr/share/dotnet, /usr/lib/dotnet, \$DOTNET_ROOT, ~/.dotnet"
+
 echo "##teamcity[progressMessage 'dotnet --version (resolves via global.json)']"
-dotnet --version || fail "dotnet not on PATH"
+dotnet --version || fail "dotnet --version failed"
 
 # clean.sh is optional: keep the build working on a checkout that only has the
 # Windows clean.bat, rather than failing the whole run over hygiene.
