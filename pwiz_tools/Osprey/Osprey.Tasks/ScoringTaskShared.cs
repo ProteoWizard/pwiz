@@ -54,7 +54,8 @@ namespace pwiz.Osprey.Tasks
         // bits, shared by a target and its paired decoy.
         internal const uint BASE_ID_MASK = 0x7FFFFFFFu;
 
-        // Serializes mzML reads across concurrent ProcessFile() calls. The
+        // Serializes input parsing across concurrent ProcessFile() calls (mzML or
+        // vendor raw; the name predates vendor reading). The
         // producer inside MzmlReader.LoadAllSpectra is a sequential XmlReader over
         // a FileStream, so 3 files parsing in parallel means 3 sequential disk
         // scans fighting for the same head/cache. Gating the parse step funnels
@@ -118,7 +119,8 @@ namespace pwiz.Osprey.Tasks
         /// streaming <see cref="SpectraWindowIndex"/> over it (per-window MS2 offsets, plus
         /// MS1 and the first-cycle isolation windows) WITHOUT materializing the full MS2
         /// <c>List&lt;Spectrum&gt;</c>. On a cache hit (the common re-run path) the file is only
-        /// header-indexed; on a miss the mzML is parsed once (gated across parallel files),
+        /// header-indexed; on a miss the input is parsed once - mzML or vendor raw, whichever
+        /// <see cref="SpectrumFileReader"/> selects - (gated across parallel files),
         /// written to the cache, then indexed and the parsed list dropped. Stages 1-4
         /// (calibration + scoring) stream each isolation window from the returned index. The
         /// full resident load survives only in Stage-6 rescore
@@ -149,17 +151,17 @@ namespace pwiz.Osprey.Tasks
                         ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
                         return hit;
                     }
-                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
+                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing the input.");
                 }
                 catch (Exception ex)
                 {
                     // A present-but-corrupt/truncated cache body (intact header, e.g. an
-                    // interrupted write) throws during the index pass; re-parse the mzML and
+                    // interrupted write) throws during the index pass; re-parse the input and
                     // rewrite the cache rather than faulting the file. Matches the old
                     // LoadSpectra fallback. Only the miss-path re-index below stays a hard
                     // error, since that indexes a cache we just wrote.
                     ctx.LogWarning(string.Format(
-                        "Failed to index spectra cache: {0}. Re-parsing mzML.", ex.Message));
+                        "Failed to index spectra cache: {0}. Re-parsing the input.", ex.Message));
                 }
             }
 

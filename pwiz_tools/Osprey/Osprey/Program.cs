@@ -232,12 +232,13 @@ namespace pwiz.Osprey
                     LogInfo(string.Format("Task: {0} (single-task run)",
                         TaskCliName(config.SelectedTask.Value)));
                 // --task PerFileScoring writes per-file .scores.parquet next to each
-                // input mzML, not a blib -- report the real output rather than the
-                // ignored --output blib path. (PerFileRescoring still writes --output.)
+                // input file, mzML or vendor raw, not a blib - report the real output
+                // rather than the ignored --output blib path. (PerFileRescoring still
+                // writes --output.)
                 if (config.SelectedTask == HpcTask.SpectraCache)
                     LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
                 else if (config.NoJoin && !fromInputScores)
-                    LogInfo("Output: per-file .scores.parquet (next to each input mzML)");
+                    LogInfo("Output: per-file .scores.parquet (next to each input file)");
                 else
                     LogInfo(string.Format("Output: {0}", config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
