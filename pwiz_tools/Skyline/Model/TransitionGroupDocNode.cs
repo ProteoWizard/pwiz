@@ -386,6 +386,16 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Whether the columnar results are there without having to be derived. False means nothing
+        /// has put any there and nothing has asked for them, which is what
+        /// <see cref="ChangeResults"/> leaves behind.
+        /// </summary>
+        public bool HasAbbreviatedResults
+        {
+            get { return _abbreviatedResults != null; }
+        }
+
+        /// <summary>
         /// Returns this node when the results are the ones it already has, because a document which
         /// has not changed has to stay reference equal.
         /// </summary>
@@ -2243,13 +2253,15 @@ namespace pwiz.Skyline.Model
 
                 var nodeGroupNew = nodeGroup;
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
-                {
-                    // Only when the results really changed. The columnar form is derived from
-                    // them, so replacing it otherwise would throw away a converted one and give
-                    // back an unconverted one, and would make an unchanged document a new object.
-                    nodeGroupNew = nodeGroupNew.ChangeResults(results)
-                        .ChangeAbbreviatedResults(TransitionGroupResults.FromChromInfos(results));
-                }
+                    nodeGroupNew = nodeGroupNew.ChangeResults(results);
+
+                // Filled in rather than replaced. Replacing the chrom infos above is what discards
+                // the columnar form derived from the ones being replaced, so this puts back a form
+                // derived from the new ones. What it must not do is overwrite the columnar results
+                // a document was read with: those say which candidate peak each peak is, which
+                // nothing here knows.
+                if (!nodeGroupNew.HasAbbreviatedResults)
+                    nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(TransitionGroupResults.FromChromInfos(results));
 
                 nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
 
@@ -2272,10 +2284,9 @@ namespace pwiz.Skyline.Model
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
                 var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
                 if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
-                {
-                    nodeTran = nodeTran.ChangeResults(results)
-                        .ChangeAbbreviatedResults(TransitionResults.FromChromInfos(results));
-                }
+                    nodeTran = nodeTran.ChangeResults(results);
+                if (!nodeTran.HasAbbreviatedResults)
+                    nodeTran = nodeTran.ChangeAbbreviatedResults(TransitionResults.FromChromInfos(results));
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
                 return nodeTran;

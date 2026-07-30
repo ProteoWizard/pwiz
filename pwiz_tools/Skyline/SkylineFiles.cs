@@ -1211,7 +1211,14 @@ namespace pwiz.Skyline
                                     documentToSave = renamedLibrary.Document;
                             }
 
-                            documentToSave.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
+                            // TODO: false, to write the columnar results instead of the chrom
+                            // infos. Blocked until opening such a document gets its peaks back:
+                            // UpdateResults picks peaks afresh from the .skyd rather than
+                            // rebuilding them from the columnar results, so a document saved that
+                            // way opens with no peaks at all. SaveColumnarResultsTest is the test
+                            // which has to pass before this changes.
+                            documentToSave.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT,
+                                progressMonitor, true);
 
                             // The .sky file was written successfully. Commit the renamed library files
                             // and then the .sky file itself.

@@ -147,6 +147,11 @@ namespace pwiz.SkylineTestData.Results
                 {
                     Assert.IsNotNull(nodeTran.Results);
                 }
+
+                // What this does NOT cover: opening the saved document and loading its
+                // chromatograms again. Whether the peaks come back depends on UpdateResults
+                // rebuilding them from the columnar results rather than picking them afresh,
+                // which needs a document opened the way the application opens one.
             }
         }
 

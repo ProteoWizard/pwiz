@@ -341,6 +341,14 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// See <see cref="TransitionGroupDocNode.HasAbbreviatedResults"/>.
+        /// </summary>
+        public bool HasAbbreviatedResults
+        {
+            get { return _abbreviatedResults != null; }
+        }
+
+        /// <summary>
         /// Returns this node when the results are the ones it already has, because a document which
         /// has not changed has to stay reference equal.
         /// </summary>

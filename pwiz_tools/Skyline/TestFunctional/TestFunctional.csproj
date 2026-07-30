@@ -195,6 +195,7 @@
     <Compile Include="ReorderElementsTest.cs" />
     <Compile Include="ReportsHelpDocumentationTest.cs" />
     <Compile Include="RescoreTest.cs" />
+    <Compile Include="SaveColumnarResultsTest.cs" />
     <Compile Include="RetentionTimeManagerSaveAsTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RetentionTimeRegressionExceptionTest.cs" />
