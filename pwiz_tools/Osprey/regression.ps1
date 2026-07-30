@@ -476,9 +476,18 @@ function Resolve-DatasetInputs {
         $srcInfo = Get-Item $library
         if ((-not (Test-Path $stripped)) -or ((Get-Item $stripped).LastWriteTimeUtc -lt $srcInfo.LastWriteTimeUtc)) {
             Write-Host "  deriving decoy-free library (one time, ~1 min)..."
+            # Write to a temp file and rename into place, so the final path only ever
+            # holds a complete derivation. An interrupted run (Ctrl-C, a cancelled
+            # TeamCity build, an agent reboot) otherwise leaves a TRUNCATED file whose
+            # mtime is newer than the source library, so the staleness check above
+            # accepts it and EVERY later run fails deep inside the library parse with
+            # "Missing PrecursorCharge at row N" - an error naming the library rather
+            # than the interruption that caused it. Observed 2026-07-29.
+            $tmp = "$stripped.tmp"
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue
             $kept = 0; $dropped = 0
             $reader = [IO.StreamReader]::new($library)
-            $writer = [IO.StreamWriter]::new($stripped, $false, [Text.UTF8Encoding]::new($false))
+            $writer = [IO.StreamWriter]::new($tmp, $false, [Text.UTF8Encoding]::new($false))
             try {
                 $header = $reader.ReadLine()
                 if ($null -eq $header) { throw "Empty library: $library" }
@@ -495,6 +504,8 @@ function Resolve-DatasetInputs {
                 }
             } finally { $writer.Dispose(); $reader.Dispose() }
             if ($dropped -eq 0) { throw "StripDecoys removed nothing from $library -- the decoy_ convention changed" }
+            # Only now is the derivation known good, so publish it atomically.
+            Move-Item $tmp $stripped -Force
             Write-Host ("  derived {0}: kept {1:N0} rows, dropped {2:N0} decoy rows" -f (Split-Path -Leaf $stripped), $kept, $dropped)
         }
         $library = $stripped

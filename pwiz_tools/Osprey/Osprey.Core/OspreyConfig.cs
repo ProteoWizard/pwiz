@@ -414,7 +414,13 @@ namespace pwiz.Osprey.Core
         PerFileScoring,
         FirstJoin,
         PerFileRescore,
-        MergeNode
+        MergeNode,
+        // Stage 1 alone: build each input's .spectra.bin cache and stop. Not an
+        // HPC fan-out node like the four above but the data-staging step ahead of
+        // them, which is why it needs no library and publishes no byproducts.
+        // Appended rather than ordered first so the existing members keep their
+        // ordinal values.
+        SpectraCache
     }
 
     /// <summary>

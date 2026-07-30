@@ -762,6 +762,83 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// A build WITHOUT the vendor reader must still run against a <c>.spectra.bin</c>
+        /// that an opt-in build produced from a vendor raw file. That is the whole point of
+        /// staging caches once on a vendor-capable machine: every other machine consumes
+        /// them with no ProteoWizard and no mzML conversion.
+        ///
+        /// The guarantee is an ORDERING one - <c>EnsureSpectraCache</c> has to consult the
+        /// cache before it dispatches on file extension - and nothing else pins it. An
+        /// up-front extension check, added for a friendlier error message, would silently
+        /// break this workflow while every other test stayed green.
+        ///
+        /// The assertion is sound in either build. Where the vendor reader is absent
+        /// <see cref="SpectrumFileReader"/> throws for a non-mzML path, so a cache MISS
+        /// fails loudly rather than passing for the wrong reason; where it is present the
+        /// stand-in file is not a real raw, so a miss fails there too.
+        /// </summary>
+        [TestMethod]
+        public void TestVendorCacheUsableWithoutVendorReader()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyVendorCache" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Stands in for a Thermo .raw. The extension is what dispatch keys off,
+                // and the bytes are never read because the cache hit precedes the reader.
+                string rawPath = Path.Combine(dir, @"vendor_file.raw");
+                File.WriteAllBytes(rawPath, new byte[] { 1, 2, 3, 4 });
+
+                var ms2 = new List<Spectrum>
+                {
+                    new Spectrum
+                    {
+                        ScanNumber = 1,
+                        RetentionTime = 10.5,
+                        PrecursorMz = 500.0,
+                        IsolationWindow = new IsolationWindow(500.0, 1.5, 1.5),
+                        Mzs = new[] { 100.0, 200.0 },
+                        Intensities = new[] { 1000.0f, 2000.0f }
+                    }
+                };
+                var ms1 = new List<MS1Spectrum>
+                {
+                    new MS1Spectrum
+                    {
+                        ScanNumber = 0,
+                        RetentionTime = 10.0,
+                        Mzs = new[] { 400.0 },
+                        Intensities = new[] { 5000.0f }
+                    }
+                };
+
+                // Saved WITH the source path, so the header carries the same fingerprint an
+                // opt-in build would have written, and the read back exercises the real
+                // staleness check rather than the no-fingerprint shortcut.
+                string cachePath = SpectraCache.GetCachePath(rawPath);
+                SpectraCache.SaveSpectraCache(cachePath, ms2, ms1, rawPath);
+
+                var ctx = new PipelineContext(new OspreyConfig(), new OspreyTask[0], null, null, null);
+                SpectraWindowIndex index = ScoringTaskShared.EnsureSpectraCache(
+                    rawPath, false, out int unsortedCount, ctx);
+
+                Assert.IsNotNull(index);
+                Assert.AreEqual(ms2.Count, index.Ms2Count);
+                // Deliberately NOT asserting unsortedCount here. EnsureSpectraCache
+                // zeroes it up front and only assigns on the cache-MISS branch, which
+                // this test asserts is not taken - so the assertion could never fail and
+                // would read as coverage it does not provide.
+                List<Spectrum> streamed = index.LoadWindow(SpectraCache.WindowKey(500.0));
+                Assert.AreEqual(1, streamed.Count);
+                Assert.AreEqual(10.5, streamed[0].RetentionTime, 0.0);
+            }
+            finally
+            {
+                TryDeleteDirectory(dir);
+            }
+        }
+
         // Distinct, non-round peak values per record so any field/peak mis-decode
         // surfaces; isolation offsets vary per scan so those decode paths are checked.
         private static Spectrum MakeIndexMs2(uint scan, double rt, double center, int nPeaks)
@@ -1571,6 +1648,120 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
+        #region Retention time precision
+
+        /// <summary>
+        /// A scan start time must survive the mzML round trip bit-exactly.
+        /// 0.86653405 is a real Thermo value (spectrum index 5679 of a TDP-43
+        /// PlasmaEV acquisition) that came out of <see cref="MzmlReader"/> as
+        /// 0.8665340500000001 on the net472 build while the net8.0 build of the
+        /// same code returned it exactly - a 1-ULP difference that made a
+        /// raw-sourced .spectra.bin disagree with an mzML-sourced one
+        /// (issue #4496).
+        ///
+        /// Root cause: .NET Framework's string-to-double conversion is not
+        /// correctly rounded for some decimals, and XmlConvert.ToDouble inherits
+        /// it. "0.86653405" parses to 0x3FEBBAA59DB3DA8E on .NET Framework and
+        /// 0x3FEBBAA59DB3DA8D (correctly rounded, and what C++ strtod gives) on
+        /// .NET Core 3.0+. The net472 reader now parses through the CRT's strtod
+        /// so both builds agree with each other and with ProteoWizard.
+        ///
+        /// The reference values below are COMPILED LITERALS on purpose: Roslyn
+        /// rounds them correctly at compile time, so they are a parser-independent
+        /// oracle. An earlier version of this test compared the reader against
+        /// XmlConvert.ToDouble of the same text and passed while the defect was
+        /// live, because both sides were wrong in the same way - a self-referential
+        /// assertion proves nothing.
+        /// </summary>
+        [TestMethod]
+        public void TestMzmlReaderRetentionTimePrecision()
+        {
+            // Text as it appears in the mzML, paired with the correctly rounded
+            // double. The text must be exactly what a literal formats to, so the
+            // file really does contain the decimal under test.
+            var cases = new[]
+            {
+                new { Text = @"0.86653405", Expected = 0.86653405 },
+                new { Text = @"0.97263695", Expected = 0.97263695 },
+                new { Text = @"0.5903117", Expected = 0.5903117 },
+            };
+            foreach (var testCase in cases)
+            {
+                string text = testCase.Text;
+                double expected = testCase.Expected;
+
+                string mzml = BuildMinimalMzml(
+                    msLevel: 2,
+                    retentionTimeMinutes: expected,
+                    precursorMz: 711.07312,
+                    isoTarget: 711.07312,
+                    isoLower: 1.5006999969482422,
+                    isoUpper: 1.5006999969482422,
+                    mzValues: new[] { 200.0, 300.0, 400.0 },
+                    intensityValues: new[] { 100.0f, 200.0f, 300.0f });
+
+                // The file must actually carry the decimal under test; otherwise a
+                // formatting change could quietly swap in a different value and the
+                // assertion below would still pass.
+                StringAssert.Contains(mzml, @"value=""" + text + @"""");
+
+                string path = Path.GetTempFileName() + ".mzML";
+                try
+                {
+                    File.WriteAllText(path, mzml);
+                    var result = MzmlReader.LoadAllSpectra(path);
+                    Assert.AreEqual(1, result.Ms2Spectra.Count);
+                    Assert.AreEqual(expected, result.Ms2Spectra[0].RetentionTime, 0.0,
+                        @"retention time not preserved bit-exactly for " + text);
+                }
+                finally
+                {
+                    File.Delete(path);
+                }
+            }
+        }
+
+        #endregion
+
+        #region SpectrumFileReader Tests
+
+        /// <summary>
+        /// The by-extension routing that decides whether an input is parsed by the
+        /// hand-written mzML reader or handed to ProteoWizard. Consolidated: one
+        /// wrong answer here sends a whole run to the wrong parser, and the
+        /// gzip and case variants are exactly where that would happen quietly.
+        /// The vendor branch itself needs a real instrument file and the pwiz
+        /// native dependencies, so it is covered by the raw-vs-mzML
+        /// .spectra.bin comparison rather than here (issue #4496).
+        /// </summary>
+        [TestMethod]
+        public void TestSpectrumFileReaderFormatRouting()
+        {
+            foreach (var mzml in new[]
+                     {
+                         @"a.mzML", @"a.mzml", @"a.MZML",
+                         @"C:\data\some.file.name.mzML",
+                         @"a.mzML.gz", @"a.mzml.gz",
+                     })
+            {
+                Assert.IsTrue(SpectrumFileReader.IsMzml(mzml), mzml);
+            }
+
+            foreach (var vendor in new[]
+                     {
+                         @"a.raw", @"a.RAW", @"a.d", @"a.wiff", @"a.wiff2",
+                         @"C:\data\some.file.name.raw",
+                         // Not mzML despite the substring: routing must key on the
+                         // extension, not a name that happens to contain "mzml".
+                         @"mzml_backup.raw", @"a.mzXML",
+                     })
+            {
+                Assert.IsFalse(SpectrumFileReader.IsMzml(vendor), vendor);
+            }
+        }
+
+        #endregion
+
         #region MzmlReader Tests
 
         /// <summary>
@@ -2371,6 +2562,19 @@ namespace pwiz.Osprey.Test
                 cmd.Parameters.AddWithValue("@name", tableName);
                 long count = (long)(cmd.ExecuteScalar() ?? 0);
                 Assert.AreEqual(1L, count, "Table " + tableName + " should exist");
+            }
+        }
+
+        private static void TryDeleteDirectory(string path)
+        {
+            try
+            {
+                if (Directory.Exists(path))
+                    Directory.Delete(path, true);
+            }
+            catch (Exception)
+            {
+                // Best effort: a temp directory left behind must never fail a test.
             }
         }
 
