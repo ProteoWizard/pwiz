@@ -253,6 +253,151 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// Works out which candidate peak each of a precursor's peaks is, and gets rid of the
+        /// chrom infos which <see cref="TransitionResults.ChromInfos"/> was holding on to because
+        /// nothing yet knew. Returns the precursor unchanged when there is nothing to convert.
+        /// <para>
+        /// A file is converted only when the boundaries of every one of its transition peaks match
+        /// a candidate peak, and the same one. If any of them does not, all of them are treated as
+        /// peaks whose boundaries the user set, and are recovered by integrating between those
+        /// boundaries instead. Empty peaks say nothing either way: they come back empty.
+        /// </para>
+        /// </summary>
+        public TransitionGroupDocNode ConvertResults(TransitionGroupDocNode nodeGroup)
+        {
+            var groupResults = nodeGroup.AbbreviatedResults;
+            var nodeTrans = nodeGroup.Transitions.ToArray();
+            if (groupResults == null || !nodeTrans.Any(nodeTran => nodeTran.AbbreviatedResults?.IsConverted == false))
+            {
+                return nodeGroup;
+            }
+
+            var replicatePositions = groupResults.ChromFileIds.ReplicatePositions;
+            var chosenPeakIndexes = new int[groupResults.ChromFileIds.FileIds.Count];
+            var transitionResults = nodeTrans.Select(nodeTran => nodeTran.AbbreviatedResults).ToArray();
+            bool everyFileRead = true;
+            for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+            {
+                int start = replicatePositions.GetStart(replicateIndex);
+                for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
+                {
+                    var fileId = groupResults.ChromFileIds.FileIds[position].Value;
+                    var chromGroupInfo = FindChromatogramGroupInfo(nodeGroup, replicateIndex, fileId);
+                    if (chromGroupInfo == null)
+                    {
+                        // Its chromatograms have not been read, so nothing can be said about it and
+                        // nothing of it can be given up.
+                        everyFileRead = false;
+                        chosenPeakIndexes[position] = -1;
+                        continue;
+                    }
+
+                    chosenPeakIndexes[position] = FindChosenPeakIndex(nodeGroup, nodeTrans, transitionResults,
+                        replicateIndex, chromGroupInfo, fileId);
+                    if (chosenPeakIndexes[position] < 0)
+                    {
+                        CarryPeakBounds(nodeTrans, transitionResults, fileId);
+                    }
+                }
+            }
+
+            var childrenNew = new List<DocNode>(nodeTrans.Length);
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                childrenNew.Add(nodeTrans[iTran].ChangeAbbreviatedResults(
+                    everyFileRead ? transitionResults[iTran]?.ChangeChromInfos(null) : transitionResults[iTran]));
+            }
+
+            return (TransitionGroupDocNode) nodeGroup
+                .ChangeAbbreviatedResults(groupResults.ChangeChosenPeakIndexes(chosenPeakIndexes))
+                .ChangeChildrenChecked(childrenNew);
+        }
+
+        /// <summary>
+        /// The candidate peak which every one of the precursor's transition peaks is, in one file,
+        /// or -1 when they are not all the same one.
+        /// </summary>
+        private ChromatogramGroupInfo FindChromatogramGroupInfo(TransitionGroupDocNode nodeGroup, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
+            return GetChromatogramGroupInfos(nodeGroup.TransitionGroup, replicateIndex)
+                .FirstOrDefault(info => ReferenceEquals(fileId, chromatograms.FindFile(info)));
+        }
+
+        private int FindChosenPeakIndex(TransitionGroupDocNode nodeGroup, TransitionDocNode[] nodeTrans,
+            TransitionResults[] transitionResults, int replicateIndex, ChromatogramGroupInfo chromGroupInfo,
+            ChromFileInfoId fileId)
+        {
+            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
+            int chosenPeakIndex = -1;
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                var chromInfo = transitionResults[iTran]?.FindChromInfo(fileId, 0);
+                if (chromInfo == null || chromInfo.IsEmpty)
+                {
+                    continue;
+                }
+
+                var chromatogramInfo = chromGroupInfo.GetAllTransitionInfo(nodeTrans[iTran], MzMatchTolerance,
+                    chromatograms.OptimizationFunction, TransformChrom.interpolated).GetChromatogramForStep(0);
+                int peakIndex = IndexOfPeak(chromatogramInfo, chromInfo);
+                if (peakIndex < 0 || (chosenPeakIndex >= 0 && peakIndex != chosenPeakIndex))
+                {
+                    return -1;
+                }
+
+                chosenPeakIndex = peakIndex;
+            }
+
+            return chosenPeakIndex;
+        }
+
+        private static int IndexOfPeak(ChromatogramInfo chromatogramInfo, TransitionChromInfo chromInfo)
+        {
+            if (chromatogramInfo == null)
+            {
+                return -1;
+            }
+
+            for (int peakIndex = 0; peakIndex < chromatogramInfo.NumPeaks; peakIndex++)
+            {
+                var peak = chromatogramInfo.GetPeak(peakIndex);
+                if (peak.StartTime == chromInfo.StartRetentionTime && peak.EndTime == chromInfo.EndRetentionTime)
+                {
+                    return peakIndex;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Records the peak boundaries of every transition in one file, which is what happens when
+        /// the peaks are not all the same candidate peak. Integrating between them is then the only
+        /// way any of them comes back.
+        /// </summary>
+        private static void CarryPeakBounds(TransitionDocNode[] nodeTrans, TransitionResults[] transitionResults,
+            ChromFileInfoId fileId)
+        {
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                var chromInfo = transitionResults[iTran]?.FindChromInfo(fileId, 0);
+                if (chromInfo == null || chromInfo.IsEmpty)
+                {
+                    continue;
+                }
+
+                int position = transitionResults[iTran].ChromFileIds.IndexOfFile(fileId);
+                if (position >= 0)
+                {
+                    transitionResults[iTran] = transitionResults[iTran].ChangeCustomPeakBounds(position,
+                        chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.Identified);
+                }
+            }
+        }
+
+        /// <summary>
         /// The chromatograms which were read, kept because code such as GraphChromatogram and the
         /// on demand feature calculator needs the chromatogram itself and not only the peaks
         /// taken from it.

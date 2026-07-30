@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestData.Results
 
                 // Every moved peak has to end up integrated again rather than found among the
                 // candidate peaks, otherwise this is the same test as the one above.
-                int reintegrated = CheckDocument(docContainer.Document);
+                int reintegrated = CheckDocument(docContainer.Document, false);
                 Assert.AreEqual(peaksMoved, reintegrated);
             }
         }
@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestData.Results
         /// Returns how many peaks had to be integrated again because they were not among the
         /// candidate peaks.
         /// </summary>
-        private static int CheckDocument(SrmDocument docResults)
+        private static int CheckDocument(SrmDocument docResults, bool expectChosenPeakIndexes = true)
         {
             int positionsChecked = 0;
             int groupsChecked = 0;
@@ -180,10 +180,16 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreNotEqual(0, peptidesChecked);
             Assert.AreNotEqual(0, originalPeaksChecked);
 
-            // UpdateResults has to have left the chosen peak indexes behind. Without them
-            // MoleculeResults falls back to searching for the peak, and everything above would
-            // still pass while the stored form went untested.
-            Assert.AreNotEqual(0, chosenPeakIndexesFound);
+            // Converting has to have left the chosen peak indexes behind, except where every peak
+            // is one the user set, which has no candidate peak to point at.
+            if (expectChosenPeakIndexes)
+            {
+                Assert.AreNotEqual(0, chosenPeakIndexesFound);
+            }
+            else
+            {
+                Assert.AreEqual(0, chosenPeakIndexesFound);
+            }
             return reintegrated;
         }
 

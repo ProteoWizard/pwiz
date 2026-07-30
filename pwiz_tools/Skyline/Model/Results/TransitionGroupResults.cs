@@ -521,42 +521,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Whether every chrom info here can be rebuilt from the .skyd, and so none of them needs
-        /// keeping. A peak qualifies when it is empty, when the boundaries the user set are kept
-        /// for it, or when the precursor knows which candidate peak it is - which is the same index
-        /// for every optimization step of the file.
-        /// </summary>
-        public bool CanDropChromInfos(TransitionGroupResults groupResults)
-        {
-            if (groupResults == null || ChromInfos == null)
-            {
-                return false;
-            }
-
-            foreach (var chromInfo in ChromInfos)
-            {
-                if (chromInfo.IsEmpty)
-                {
-                    continue;
-                }
-
-                int position = ChromFileIds.IndexOfFile(chromInfo.FileId);
-                if (position >= 0 && GetCustomPeak(position)?.HasPeakBounds == true)
-                {
-                    continue;
-                }
-
-                int groupPosition = groupResults.ChromFileIds.IndexOfFile(chromInfo.FileId);
-                if (groupPosition < 0 || !groupResults.GetChosenPeakIndex(groupPosition).HasValue)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// The chrom info for one file and optimization step which has not been converted, or null.
         /// A file belongs to one replicate, so the file and the step identify it on their own.
         /// </summary>
@@ -586,6 +550,30 @@ namespace pwiz.Skyline.Model.Results
         public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
         {
             return ChangeProp(ImClone(this), im => im.CustomPeaks = ImmutableList.ValueOf(value));
+        }
+
+        /// <summary>
+        /// Records the boundaries of the peak at one position, keeping whatever else is already
+        /// known about it. Used when the peak turns out not to be one of the candidate peaks, and
+        /// so can only be got back by integrating between its boundaries.
+        /// </summary>
+        public TransitionResults ChangeCustomPeakBounds(int position, float startTime, float endTime,
+            PeakIdentification identified)
+        {
+            var customPeaks = CustomPeaks?.ToList() ?? new List<CustomPeak>();
+            int index = customPeaks.FindIndex(customPeak => customPeak.Position == position);
+            var newCustomPeak = (index < 0 ? new CustomPeak(position) : customPeaks[index])
+                .ChangePeakBounds(startTime, endTime, identified);
+            if (index < 0)
+            {
+                customPeaks.Add(newCustomPeak);
+            }
+            else
+            {
+                customPeaks[index] = newCustomPeak;
+            }
+
+            return ChangeCustomPeaks(customPeaks);
         }
 
         /// <summary>
