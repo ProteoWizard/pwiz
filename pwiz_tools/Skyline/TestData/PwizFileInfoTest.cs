@@ -122,8 +122,10 @@ namespace pwiz.SkylineTestData
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\WatersLockmassMzml.zip");
 
             // Same three spectra either way - lockspray is function 3, and it sorts first. Our own
-            // msconvert writes the untagged form; the tagged one stands in for a writer that labels,
-            // which the standard permits and the UIMF reader already does.
+            // msconvert writes the untagged form. The tagged one stands in for a writer that labels,
+            // declaring "calibration spectrum" as the lockspray scan's sole spectrum type exactly as
+            // the UIMF reader does - that term is a child of "spectrum type" but not of "mass
+            // spectrum", so it replaces MS1 rather than joining it, while the ms level still says 1.
             VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_untagged.mzML"), false);
             VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_tagged.mzML"), true);
 
