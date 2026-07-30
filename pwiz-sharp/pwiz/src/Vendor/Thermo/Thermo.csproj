@@ -22,9 +22,10 @@
       $(ThermoAssembliesDir) on every build (idempotent — skipped if the files are already
       current).
       -->
-    <ThermoArchive>$(PwizVendorArchivesPath)\vendor_api_Thermo.7z</ThermoArchive>
-    <ThermoAssembliesDir>$(PwizVendorAssembliesPath)\Thermo</ThermoAssembliesDir>
-    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <!-- Forward slashes so these resolve on Linux as well as Windows. $(SevenZaExe) is no
+         longer set here: Directory.Build.props picks 7za.exe or 7zz per OS. -->
+    <ThermoArchive>$(PwizVendorArchivesPath)/vendor_api_Thermo.7z</ThermoArchive>
+    <ThermoAssembliesDir>$(PwizVendorAssembliesPath)/Thermo</ThermoAssembliesDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,7 +60,7 @@
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences"
           Inputs="$(ThermoArchive)"
-          Outputs="$(ThermoAssembliesDir)\ThermoFisher.CommonCore.RawFileReader.dll">
+          Outputs="$(ThermoAssembliesDir)/ThermoFisher.CommonCore.RawFileReader.dll">
     <!--
       Extract vendor_api/Thermo/*.dll from the encrypted 7z on build. The
       -pi-agree-to-the-vendor-licenses password gates the archive (see make_Thermo_7z.bat).
@@ -67,10 +68,10 @@
       flattened RawFileReader DLL.
       -->
     <MakeDir Directories="$(ThermoAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ThermoAssembliesDir)&quot; &quot;$(ThermoArchive)&quot; vendor_api\Thermo\*.dll" StandardOutputImportance="low" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ThermoAssembliesDir)&quot; &quot;$(ThermoArchive)&quot; vendor_api/Thermo/*.dll" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout so <HintPath> entries stay simple. -->
     <ItemGroup>
-      <_ThermoDll Include="$(ThermoAssembliesDir)\vendor_api\Thermo\*.dll" />
+      <_ThermoDll Include="$(ThermoAssembliesDir)/vendor_api/Thermo/*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_ThermoDll)"
           DestinationFolder="$(ThermoAssembliesDir)"
@@ -79,27 +80,27 @@
 
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Reference Include="ThermoFisher.CommonCore.Data">
-      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.Data.dll</HintPath>
+      <HintPath>$(ThermoAssembliesDir)/ThermoFisher.CommonCore.Data.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="ThermoFisher.CommonCore.RawFileReader">
-      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+      <HintPath>$(ThermoAssembliesDir)/ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
-      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
+      <HintPath>$(ThermoAssembliesDir)/ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="ThermoFisher.CommonCore.MassPrecisionEstimator">
-      <HintPath>$(ThermoAssembliesDir)\ThermoFisher.CommonCore.MassPrecisionEstimator.dll</HintPath>
+      <HintPath>$(ThermoAssembliesDir)/ThermoFisher.CommonCore.MassPrecisionEstimator.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="OpenMcdf">
-      <HintPath>$(ThermoAssembliesDir)\OpenMcdf.dll</HintPath>
+      <HintPath>$(ThermoAssembliesDir)/OpenMcdf.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="OpenMcdf.Extensions">
-      <HintPath>$(ThermoAssembliesDir)\OpenMcdf.Extensions.dll</HintPath>
+      <HintPath>$(ThermoAssembliesDir)/OpenMcdf.Extensions.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

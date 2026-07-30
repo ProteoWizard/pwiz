@@ -12,9 +12,8 @@
     (CompressedTLMRawDataReader.dll etc.) on every build (idempotent). Sharp targets x64 only.
     -->
   <PropertyGroup>
-    <ShimadzuArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Shimadzu.7z</ShimadzuArchive>
-    <ShimadzuAssembliesDir>$(PwizVendorAssembliesPath)\Shimadzu</ShimadzuAssembliesDir>
-    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <ShimadzuArchive>$(PwizCppAuxRoot)/msrc/utility/vendor_api_Shimadzu.7z</ShimadzuArchive>
+    <ShimadzuAssembliesDir>$(PwizVendorAssembliesPath)/Shimadzu</ShimadzuAssembliesDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,17 +41,17 @@
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(ShimadzuArchive)"
-          Outputs="$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll">
+          Outputs="$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll">
     <MakeDir Directories="$(ShimadzuAssembliesDir)" />
     <!-- Pull the top-level managed assemblies (no x86/ x64/ subfolder prefix) and the x64
          native helpers used by the file-format readers (CompressedTLMRawDataReader, CRHAKEI2,
          IOModuleQTFL, etc.). The cpp pwiz_aux project ships both x86 and x64 directories;
          pwiz-sharp only builds x64. -->
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ShimadzuAssembliesDir)&quot; &quot;$(ShimadzuArchive)&quot; &quot;vendor_api\Shimadzu\*.dll&quot; &quot;vendor_api\Shimadzu\x64\*.dll&quot;" StandardOutputImportance="low" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ShimadzuAssembliesDir)&quot; &quot;$(ShimadzuArchive)&quot; &quot;vendor_api/Shimadzu/*.dll&quot; &quot;vendor_api/Shimadzu/x64/*.dll&quot;" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout so the references below are stable. -->
     <ItemGroup>
-      <_ShimadzuExtractedTop Include="$(ShimadzuAssembliesDir)\vendor_api\Shimadzu\*.dll" />
-      <_ShimadzuExtractedX64 Include="$(ShimadzuAssembliesDir)\vendor_api\Shimadzu\x64\*.dll" />
+      <_ShimadzuExtractedTop Include="$(ShimadzuAssembliesDir)/vendor_api/Shimadzu/*.dll" />
+      <_ShimadzuExtractedX64 Include="$(ShimadzuAssembliesDir)/vendor_api/Shimadzu/x64/*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_ShimadzuExtractedTop)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_ShimadzuExtractedX64)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
@@ -65,7 +64,7 @@
        output for runtime resolution. -->
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Reference Include="Shimadzu.LabSolutions.IO.IoModule">
-      <HintPath>$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll</HintPath>
+      <HintPath>$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
@@ -75,7 +74,7 @@
        must land next to Pwiz.Vendor.Shimadzu.dll for the SDK to open .lcd files.
 
        This MUST be a target-emitted ItemGroup, not a top-level one. A top-level wildcard like
-       <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)\*.dll"/> is glob-resolved at project
+       <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)/*.dll"/> is glob-resolved at project
        LOAD time — i.e., before ExtractShimadzuAssemblies has a chance to populate the
        directory. On a cold checkout (TC agent that's never built this project before) that
        leaves the Content list empty (or partial), Pwiz.Vendor.Shimadzu.dll lands in bin without
@@ -94,8 +93,8 @@
           DependsOnTargets="ExtractShimadzuAssemblies"
           BeforeTargets="AssignTargetPaths">
     <ItemGroup>
-      <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)\*.dll"
-                        Exclude="$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll" />
+      <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)/*.dll"
+                        Exclude="$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll" />
       <Content Include="@(_ShimadzuRuntime)">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <!-- See Sciex.csproj for the rationale: keep the dll out of downstream publish bundles

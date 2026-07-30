@@ -18,14 +18,21 @@
          refiner through Reader_Waters; mirrors cpp's pwiz/analysis/spectrum_processing/
          SpectrumList_LockmassRefinerTest.cpp. The lockmass refiner class is in
          Pwiz.Vendor.Waters in C# (cpp's is generic Analysis), so the test needs both refs. -->
-    <ProjectReference Include="..\..\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\..\src\Vendor\Waters\Waters.csproj" Condition="'$(NativeVendorsAvailable)' == 'true'" />
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
   <!-- The lockmass test reads ATEHLSTLSEK_profile.raw through the Waters SDK, so it can't
        compile or run in NO_VENDOR_SUPPORT mode. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <Compile Remove="SpectrumProcessing\SpectrumList_LockmassRefinerTests.cs" />
   </ItemGroup>
+
+  <!-- Mirror Analysis.csproj's symbol so tests can gate on the same condition the product
+       code does. ChromatogramListFactoryTests mixes vendor and non-vendor cases in one
+       file, so it gates per-method rather than being removed wholesale. -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
 
 </Project>

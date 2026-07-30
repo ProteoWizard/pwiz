@@ -11,9 +11,10 @@
     unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
     -->
   <PropertyGroup>
-    <AgilentArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
-    <AgilentAssembliesDir>$(PwizVendorAssembliesPath)\Agilent</AgilentAssembliesDir>
-    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <!-- Forward slashes so these resolve on Linux as well as Windows. $(SevenZaExe) is no
+         longer set here: Directory.Build.props picks 7za.exe or 7zz per OS. -->
+    <AgilentArchive>$(PwizCppAuxRoot)/msrc/utility/vendor_api_Agilent.7z</AgilentArchive>
+    <AgilentAssembliesDir>$(PwizVendorAssembliesPath)/Agilent</AgilentAssembliesDir>
   </PropertyGroup>
 
   <ItemGroup>

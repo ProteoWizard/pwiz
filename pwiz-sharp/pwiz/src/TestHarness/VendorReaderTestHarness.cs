@@ -810,8 +810,21 @@ public static class VendorReaderTestHarness
         foreach (var sf in sourceFiles)
         {
             if (!sf.Location.StartsWith(uriPrefix, StringComparison.OrdinalIgnoreCase)) continue;
-            string location = sf.Location[uriPrefix.Length..].TrimStart('/');
-            string localPath = Path.Combine(location, sf.Name);
+
+            // The readers emit cpp's literal "file:///" + path (see MSDataFile.cs), which
+            // yields two different shapes:
+            //   Windows: "file:///" + "C:\dir"  -> file:///C:\dir   -> rest = "/C:\dir"
+            //   POSIX:   "file:///" + "/dir"    -> file:////dir     -> rest = "//dir"
+            // The old TrimStart('/') handled only the first and turned the second into a
+            // relative path, so File.Exists never matched and every source file silently lost
+            // its MS_SHA_1. Uri.LocalPath is no better here: it reads the POSIX form's leading
+            // "//" as a UNC authority (\\dir\...). Decide from the shape instead.
+            string rest = sf.Location[uriPrefix.Length..];
+            string localDir = rest.Length >= 3 && rest[0] == '/' && char.IsLetter(rest[1]) && rest[2] == ':'
+                ? rest[1..]                        // drive-letter path: drop the single leading slash
+                : "/" + rest.TrimStart('/');       // POSIX absolute path: collapse to one slash
+
+            string localPath = Path.Combine(localDir, sf.Name);
             if (!File.Exists(localPath)) continue;
             sf.Set(CVID.MS_SHA_1, Sha1Calculator.HashFile(localPath));
         }

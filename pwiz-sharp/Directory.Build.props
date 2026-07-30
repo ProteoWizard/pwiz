@@ -42,6 +42,21 @@
     <!-- ../libraries — vendor 7z archives (msparser, 7za.exe, bsdtar.exe, etc.). -->
     <PwizLibrariesPath>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\libraries'))</PwizLibrariesPath>
 
+    <!-- The 7-Zip extractor used by the vendor ExtractVendorAssemblies targets. 7za.exe is a
+         Windows PE binary, so non-Windows builds use the Linux 7zz that ships alongside it in
+         libraries/ (tracked with its executable bit). Defined centrally so a project only has
+         to reference $(SevenZaExe); a project that hardcodes 7za.exe cannot build off-Windows.
+         Forward slashes throughout: Windows 7-Zip accepts them, Linux requires them. -->
+    <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)/7za.exe</SevenZaExe>
+    <SevenZaExe Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/7zz</SevenZaExe>
+
+    <!-- Vendor support is not one switch once Linux is in scope. Thermo's SDK is managed
+         ThermoFisher.CommonCore (cross-platform), but Waters/Agilent/Bruker/Sciex/Shimadzu/
+         Mobilion wrap native Windows DLLs and cannot load off-Windows at all. Projects that
+         pull in a native-SDK vendor must gate on $(NativeVendorsAvailable); projects that
+         only need Thermo can keep using $(IAgreeToVendorLicenses). -->
+    <NativeVendorsAvailable Condition="'$(IAgreeToVendorLicenses)' == 'true' AND '$(OS)' == 'Windows_NT'">true</NativeVendorsAvailable>
+
     <!-- pwiz-sharp/vendor-assemblies — destination of vendor SDK 7z extraction
          (Bruker.csproj / Sciex.csproj / etc. ExtractVendorAssemblies targets
          unpack into here, MobilionShim.vcxproj's MBI SDK lives here, etc.). -->

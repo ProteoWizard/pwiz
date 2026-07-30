@@ -215,9 +215,17 @@ internal sealed class WiffFile : AbstractWiffFile
         // native readers active for SIM/SRM-bearing samples (the SDK enqueues
         // their finalizers and the file handle survives past return; those paths are
         // soft-failed in the harness). Non-SIM/SRM samples release on _provider.Close().
-        foreach (var exp in _experiments)
+        // Null-guarded because this also runs from the finalizer: if the constructor threw
+        // part-way (e.g. the SDK failed to initialize), the fields it had not reached yet are
+        // still null, and an exception escaping a finalizer terminates the process rather than
+        // surfacing the original failure. The Dispose/Close calls below are individually
+        // try/caught for the same reason; only this loop could throw before reaching them.
+        if (_experiments != null)
         {
-            try { exp.Dispose(); } catch { /* best-effort */ }
+            foreach (var exp in _experiments)
+            {
+                try { exp.Dispose(); } catch { /* best-effort */ }
+            }
         }
         try { _msSample.Dispose(); } catch { /* best-effort */ }
         try { _sample.Dispose(); } catch { /* best-effort */ }

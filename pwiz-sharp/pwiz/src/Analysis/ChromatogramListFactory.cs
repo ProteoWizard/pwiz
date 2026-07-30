@@ -116,7 +116,11 @@ public static class ChromatogramListFactory
             return new ChromatogramListFilter(inner, new ChromatogramIndexSetPredicate(set));
         };
 
+#if !NO_VENDOR_SUPPORT
         // "lockmassRefiner mz=NNN [mzNegIons=NNN] [tol=NNN]" — Waters-only.
+        // Vendor-specific: ChromatogramListLockmassRefiner reaches into
+        // ChromatogramList_Waters' lockmass-aware overload, so it's only compiled when
+        // Waters is available — same gating as SpectrumListFactory's entry.
         map["lockmassrefiner"] = (args, inner, _) =>
         {
             double mz = ParseKey(ref args, "mz=", 0.0);
@@ -130,6 +134,7 @@ public static class ChromatogramListFactory
                 throw new ArgumentException("lockmassMz and lockmassTolerance must be positive real numbers");
             return new ChromatogramListLockmassRefiner(inner, mz, mzNeg, tol);
         };
+#endif
 
         return map;
     }

@@ -16,6 +16,11 @@ public class ChromatogramListFactoryTests
         Assert.AreEqual("chrom_5", wrapped.ChromatogramIdentity(3).Id);
     }
 
+    // The lockmassRefiner filter is only registered when Waters is available (see
+    // ChromatogramListFactory). Without the guard these would not merely fail: the
+    // RejectsBadArgs rows assert ArgumentException, which "Unknown chromatogram filter"
+    // also satisfies, so they would pass for the wrong reason in a no-vendor build.
+#if !NO_VENDOR_SUPPORT
     [TestMethod]
     public void Wrap_LockmassRefiner_NonWaters_LogsWarningAndPassesThrough()
     {
@@ -42,6 +47,7 @@ public class ChromatogramListFactoryTests
         var inner = ChromatogramListFilterTests.Build();
         Assert.ThrowsException<ArgumentException>(() => ChromatogramListFactory.Wrap(inner, spec));
     }
+#endif
 
     [TestMethod]
     public void Wrap_UnknownFilter_Throws()
