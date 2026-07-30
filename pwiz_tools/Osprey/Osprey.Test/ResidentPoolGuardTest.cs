@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -48,37 +49,62 @@ namespace pwiz.Osprey.Test
             // of the opt-in flags -- the default straight-through + resume paths land here.
             var lean = new OspreyConfig();
             Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(lean, needsResidentPool: false,
-                allowUnbounded: false, useFdrProjection: true));
+                allowUnfixedResident: null, useFdrProjection: true));
 
             // HPC reconciled-input merge trips the fat pool: guarded (armed), and the message is
-            // actionable -- it names the trigger AND the env var the operator would set.
+            // actionable -- it names the token the operator would set, not just a symptom.
             var hpc = new OspreyConfig { ExpectReconciledInput = true };
             string hpcErr = PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
-                allowUnbounded: false, useFdrProjection: true);
+                allowUnfixedResident: null, useFdrProjection: true);
             Assert.IsNotNull(hpcErr);
-            StringAssert.Contains(hpcErr, "OSPREY_ALLOW_UNBOUNDED_MEMORY");
-            StringAssert.Contains(hpcErr, "reconciled-input merge");
+            StringAssert.Contains(hpcErr, "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.HPC_MERGE);
 
-            // Both explicit opt-ins exempt the same fat path (no error):
-            //   OSPREY_ALLOW_UNBOUNDED_MEMORY (allowUnbounded == true)
+            // Naming THIS path exempts it (no error):
             Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
-                allowUnbounded: true, useFdrProjection: true));
+                allowUnfixedResident: ResidentPaths.HPC_MERGE, useFdrProjection: true));
             //   OSPREY_FDR_PROJECTION=0 (useFdrProjection == false, the A/B-oracle switch)
             Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
-                allowUnbounded: false, useFdrProjection: false));
+                allowUnfixedResident: null, useFdrProjection: false));
 
-            // Each user-reachable trigger names itself so the failure is diagnosable:
+            // Naming a DIFFERENT path does not: the token grants one exemption, not amnesty.
+            // This is the property the former blanket boolean lacked.
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.FDRBENCH_PASS1, useFdrProjection: true));
+
+            // Each user-reachable trigger names its own token so the failure is diagnosable:
             var mdiag = new OspreyConfig { ModelDiagnostics = true };
-            StringAssert.Contains(
-                PerFileScoringTask.ResidentPoolGuardError(mdiag, true, false, true), "--model-diagnostics");
+            StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(mdiag, true, null, true),
+                ResidentPaths.MDIAG_FULL_RESUME);
 
             var fdrbench1 = new OspreyConfig { OutputFdrBench = "bench.tsv", FdrBenchPass = 1 };
-            StringAssert.Contains(
-                PerFileScoringTask.ResidentPoolGuardError(fdrbench1, true, false, true), "--fdrbench-pass 1");
+            StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, true, null, true),
+                ResidentPaths.FDRBENCH_PASS1);
 
             var simple = new OspreyConfig { FdrMethod = FdrMethod.Simple };
-            StringAssert.Contains(
-                PerFileScoringTask.ResidentPoolGuardError(simple, true, false, true), "non-Percolator");
+            StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(simple, true, null, true),
+                ResidentPaths.NON_PERCOLATOR_FDR);
+
+            // A resident path with NO token is refused unconditionally -- no value admits it.
+            // This is the ratchet: when something we streamed goes resident again, as transfer
+            // did, it cannot be waved through. It has to be fixed, or deliberately listed.
+            // (lean is the default config: Percolator, no fdrbench, no mdiag, not a merge.)
+            foreach (string token in new[] { null, "", ResidentPaths.HPC_MERGE, "anything" })
+            {
+                Assert.IsNotNull(
+                    PerFileScoringTask.ResidentPoolGuardError(lean, true, token, true), token);
+            }
+
+            // The high-water mark itself. This list may SHRINK as paths are streamed; it must
+            // never GROW. Asserting the WHOLE set rather than membership is the point: an
+            // addition then shows up in review as the ratchet running backwards, instead of
+            // as an environment variable somebody set months ago and nobody re-examined.
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    ResidentPaths.HPC_MERGE, ResidentPaths.FDRBENCH_PASS1,
+                    ResidentPaths.MDIAG_FULL_RESUME, ResidentPaths.NON_PERCOLATOR_FDR
+                },
+                ResidentPaths.KNOWN_UNFIXED.ToArray());
 
             // The trigger SET itself, not just the message it produces. Each of these takes the
             // O(files) resident pool and so arms the guard above.

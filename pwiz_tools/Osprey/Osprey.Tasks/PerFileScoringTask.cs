@@ -1921,15 +1921,14 @@ namespace pwiz.Osprey.Tasks
         /// operator explicitly accepted unbounded memory (<c>OSPREY_ALLOW_UNBOUNDED_MEMORY</c>, or
         /// the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch which is itself an explicit resident
         /// opt-in), throw with the trigger named so the failure is actionable rather than an opaque
-        /// OOM at scale. Triggers: the HPC reconciled-input merge, <c>--fdrbench-pass 1</c>, a
-        /// non-Percolator FdrMethod, and <c>--model-diagnostics</c> on a full resume. Streaming the
-        /// remaining resident paths is tracked in
-        /// <c>TODO-osprey_stage6_rescored_buffer_streaming.md</c>.
+        /// OOM at scale. Triggers: the HPC reconciled-input merge (#4486), <c>--fdrbench-pass 1</c>,
+        /// a non-Percolator FdrMethod, and <c>--model-diagnostics</c> on a full resume (#4505 - the
+        /// scale case was streamed by #4420; only the full-resume batch report remains).
         /// </summary>
         private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
         {
             string error = ResidentPoolGuardError(config, needsResidentPool,
-                OspreyEnvironment.AllowUnboundedMemory, OspreyEnvironment.UseFdrProjection);
+                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection);
             if (error != null)
                 throw new InvalidOperationException(error);
         }
@@ -1937,26 +1936,59 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Pure core of <see cref="GuardResidentPool"/> (env statics passed in so it is unit
         /// testable): returns the actionable error message when the run would take the resident
-        /// first-pass pool without an explicit unbounded-memory opt-in, or <c>null</c> when the
-        /// pool is not needed or the operator opted in. <paramref name="useFdrProjection"/> == false
-        /// is the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch, itself an explicit resident opt-in.
+        /// first-pass pool, or <c>null</c> when the pool is not needed or this exact path was
+        /// named. <paramref name="useFdrProjection"/> == false is the <c>OSPREY_FDR_PROJECTION=0</c>
+        /// A/B-oracle switch, itself an explicit resident opt-in.
+        ///
+        /// <para>The allowance is a TOKEN, not a boolean, and it must match the path this run
+        /// actually takes. A resident path with no token in <see cref="ResidentPaths.KNOWN_UNFIXED"/>
+        /// is refused unconditionally - no environment variable can admit it - because reaching
+        /// here off the known list means something we believed bounded became resident again.
+        /// That is the case the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c> could not
+        /// distinguish, and is how transfer regressed unnoticed.</para>
         /// </summary>
         internal static string ResidentPoolGuardError(
-            OspreyConfig config, bool needsResidentPool, bool allowUnbounded, bool useFdrProjection)
+            OspreyConfig config, bool needsResidentPool, string allowUnfixedResident, bool useFdrProjection)
         {
-            if (!needsResidentPool || allowUnbounded || !useFdrProjection)
+            if (!needsResidentPool || !useFdrProjection)
                 return null;
-            string trigger =
-                config.ExpectReconciledInput ? @"the reconciled-input merge (HPC --task SecondPassFDR)"
-                : !config.FdrMethod.UsesPercolatorFramework() ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
-                : (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ? @"--fdrbench-pass 1"
-                : config.ModelDiagnostics ? @"--model-diagnostics on a full resume"
-                : @"this configuration";
+            string trigger = ResidentPoolTrigger(config);
+            if (trigger == null)
+            {
+                return
+                    @"This configuration requires the RESIDENT first-pass pool, which holds every " +
+                    @"entry in memory and grows O(files), but it is not one of the paths known to " +
+                    @"be unfixed. Something that was streamed is resident again - fix that rather " +
+                    @"than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this path.";
+            }
+            if (string.Equals(trigger, allowUnfixedResident, StringComparison.Ordinal))
+                return null;
             return string.Format(
-                @"{0} requires the RESIDENT first-pass pool, which holds every entry in memory and " +
-                @"grows O(files) -- it does not scale to large file counts and can exhaust memory. " +
-                @"Set OSPREY_ALLOW_UNBOUNDED_MEMORY=1 to accept unbounded memory and proceed " +
-                @"(intended for testing / small runs); otherwise this path is unavailable.", trigger);
+                @"This run takes the '{0}' RESIDENT first-pass pool path, which holds every entry " +
+                @"in memory and grows O(files) - it does not scale to large file counts and can " +
+                @"exhaust memory. Set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to accept it and proceed " +
+                @"(intended for local testing / small runs); otherwise this path is unavailable.",
+                trigger);
+        }
+
+        /// <summary>
+        /// The <see cref="ResidentPaths"/> token for the known-unfixed resident path this config
+        /// takes, or <c>null</c> when it needs the resident pool for a reason NOT on that list.
+        /// Order is most-specific-first and mirrors <see cref="PreCompactionPoolReason"/>.
+        /// <c>--model-diagnostics</c> is last because it only forces the pool in combination with
+        /// a full resume (the caller's <c>FirstPassSidecarsPresent</c> conjunction).
+        /// </summary>
+        private static string ResidentPoolTrigger(OspreyConfig config)
+        {
+            if (config.ExpectReconciledInput)
+                return ResidentPaths.HPC_MERGE;
+            if (!config.FdrMethod.UsesPercolatorFramework())
+                return ResidentPaths.NON_PERCOLATOR_FDR;
+            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
+                return ResidentPaths.FDRBENCH_PASS1;
+            if (config.ModelDiagnostics)
+                return ResidentPaths.MDIAG_FULL_RESUME;
+            return null;
         }
 
         /// <summary>

@@ -365,18 +365,25 @@ namespace pwiz.Osprey.Core
             IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
 
         /// <summary>
-        /// OSPREY_ALLOW_UNBOUNDED_MEMORY: opt in to the RESIDENT first-pass pool paths, which
-        /// hold every entry resident and grow O(files) so they do not scale to large file
-        /// counts. DEFAULT OFF: with this unset, a run that would take such a path fails fast
-        /// with an error naming the trigger, rather than silently exhausting memory -- so no
-        /// user reaches an O(files) memory path by accident. Set to a non-zero value ONLY for
-        /// our own testing (A/B byte-identity oracles, small runs, HPC test harnesses). The
-        /// existing <see cref="UseFdrProjection"/>=false (OSPREY_FDR_PROJECTION=0) switch is
-        /// itself an explicit resident-path opt-in and is honored the same way. Read once at
-        /// process start. See ai/todos/active/TODO-20260720_osprey_pass2_per_run_qvalue.md.
+        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the ONE known-unfixed resident path this run may
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=mdiag-full-resume</c>. Legal values are
+        /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
+        /// that is not on that list, is refused no matter what this is set to.
+        ///
+        /// This REPLACES the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c>, which granted
+        /// amnesty to every trigger at once. That is not a hypothetical failure: it let
+        /// <c>OSPREY_PASS2_QVALUE=transfer</c> silently regress back onto the resident pool for
+        /// ten days (#4438 removed the forcing, a #4446 merge artifact restored it), because
+        /// developers simply set the boolean and a re-broken memory bound looked like normal
+        /// operating procedure. A named token cannot do that: an unlisted path errors even with
+        /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
+        /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
+        ///
+        /// Read once at process start. Intended for local testing; CI names its token explicitly
+        /// (regression.ps1 mode 2), so what CI depends on is visible rather than ambient.
         /// </summary>
-        public static readonly bool AllowUnboundedMemory =
-            IsSetAndNotZero(@"OSPREY_ALLOW_UNBOUNDED_MEMORY");
+        public static readonly string AllowUnfixedResident =
+            (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
 
         private static string NormalizePass2QValue(string raw)
         {
