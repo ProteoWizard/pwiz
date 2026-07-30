@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
 
-                    CustomPeak.CollectAnnotations(ref customPeaks, areas.Count, chromInfo.Annotations);
+                    CustomPeak.Collect(ref customPeaks, MakeCustomPeak(areas.Count, chromInfo));
                     fileIds.Add(chromInfo.FileId);
                     areas.Add(chromInfo.Area ?? 0);
                     retentionTimes.Add(chromInfo.RetentionTime ?? 0);
@@ -86,6 +87,22 @@ namespace pwiz.Skyline.Model.Results
             return customPeaks == null
                 ? transitionGroupResults
                 : transitionGroupResults.ChangeCustomPeaks(customPeaks);
+        }
+
+        /// <summary>
+        /// The entry for one position, or null when it has nothing which cannot be derived from
+        /// the .skyd. Only the annotations are kept here. The precursor level values are all
+        /// aggregated from the transitions, so the boundaries a user set are needed only at the
+        /// transition level, where <see cref="TransitionResults"/> keeps them.
+        /// </summary>
+        private static CustomPeak MakeCustomPeak(int position, TransitionGroupChromInfo chromInfo)
+        {
+            if (chromInfo.Annotations == null || chromInfo.Annotations.IsEmpty)
+            {
+                return null;
+            }
+
+            return new CustomPeak(position).ChangeAnnotations(chromInfo.Annotations);
         }
 
         public TransitionGroupResults(ChromFileIds fileIds, IEnumerable<float> areas, IEnumerable<float> retentionTimes)
@@ -295,7 +312,7 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
 
-                    CustomPeak.CollectAnnotations(ref customPeaks, areas.Count, chromInfo.Annotations);
+                    CustomPeak.Collect(ref customPeaks, MakeCustomPeak(areas.Count, chromInfo));
                     fileIds.Add(chromInfo.FileId);
                     areas.Add(chromInfo.Area);
                     userSets.Add(chromInfo.UserSet);
@@ -309,6 +326,40 @@ namespace pwiz.Skyline.Model.Results
                 new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
                     .ChangeUserSets(userSets);
             return customPeaks == null ? transitionResults : transitionResults.ChangeCustomPeaks(customPeaks);
+        }
+
+        /// <summary>
+        /// The entry for one position, or null when it has nothing which cannot be derived from the
+        /// .skyd.
+        /// <para>
+        /// A peak the user set is not one of the candidate peaks Skyline found, so its boundaries
+        /// have to be kept: everything else about it is recovered by integrating the chromatogram
+        /// again between them. A peak Skyline chose is one of the candidate peaks, and is found
+        /// again by its area.
+        /// </para>
+        /// </summary>
+        private static CustomPeak MakeCustomPeak(int position, TransitionChromInfo chromInfo)
+        {
+            bool hasAnnotations = chromInfo.Annotations != null && !chromInfo.Annotations.IsEmpty;
+            bool isUserSet = chromInfo.UserSet != UserSet.FALSE && !chromInfo.IsEmpty;
+            if (!hasAnnotations && !isUserSet)
+            {
+                return null;
+            }
+
+            var customPeak = new CustomPeak(position);
+            if (hasAnnotations)
+            {
+                customPeak = customPeak.ChangeAnnotations(chromInfo.Annotations);
+            }
+
+            if (isUserSet)
+            {
+                customPeak = customPeak.ChangePeakBounds(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime,
+                    chromInfo.Identified);
+            }
+
+            return customPeak;
         }
 
         public TransitionResults(ChromFileIds chromFileIds, IEnumerable<float> areas)
@@ -382,12 +433,18 @@ namespace pwiz.Skyline.Model.Results
         public Annotations Annotations { get; private set; }
 
         /// <summary>
-        /// Set only when the peak boundaries are not those of a candidate peak, which is what
+        /// Set when the peak boundaries may not be those of a candidate peak, which is what
         /// happens when the user sets them. The values which depend on the boundaries get
         /// recalculated by integrating the chromatogram again between these times.
         /// </summary>
         public float? StartTime { get; private set; }
         public float? EndTime { get; private set; }
+
+        /// <summary>
+        /// Whether the peak contains an identification, which cannot be derived from the
+        /// boundaries alone and so has to be kept alongside them.
+        /// </summary>
+        public PeakIdentification Identified { get; private set; }
 
         public bool HasPeakBounds
         {
@@ -399,30 +456,30 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.Annotations = value ?? Annotations.EMPTY);
         }
 
-        public CustomPeak ChangePeakBounds(float? startTime, float? endTime)
+        public CustomPeak ChangePeakBounds(float? startTime, float? endTime, PeakIdentification identified)
         {
             return ChangeProp(ImClone(this), im =>
             {
                 im.StartTime = startTime;
                 im.EndTime = endTime;
+                im.Identified = identified;
             });
         }
 
         /// <summary>
-        /// Adds an entry for <paramref name="position"/> when there are annotations there,
-        /// leaving <paramref name="customPeaks"/> null while there are none, which is the
-        /// usual case.
+        /// Adds an entry for <paramref name="position"/> when there is anything to keep there,
+        /// leaving <paramref name="customPeaks"/> null while there is nothing, which is the usual
+        /// case.
         /// </summary>
-        public static void CollectAnnotations(ref List<CustomPeak> customPeaks, int position,
-            Annotations annotations)
+        public static void Collect(ref List<CustomPeak> customPeaks, CustomPeak customPeak)
         {
-            if (annotations == null || annotations.IsEmpty)
+            if (customPeak == null)
             {
                 return;
             }
 
             customPeaks = customPeaks ?? new List<CustomPeak>();
-            customPeaks.Add(new CustomPeak(position).ChangeAnnotations(annotations));
+            customPeaks.Add(customPeak);
         }
 
         public static CustomPeak FindAtPosition(IEnumerable<CustomPeak> customPeaks, int position)
@@ -433,7 +490,8 @@ namespace pwiz.Skyline.Model.Results
         protected bool Equals(CustomPeak other)
         {
             return Position == other.Position && Equals(Annotations, other.Annotations) &&
-                   Nullable.Equals(StartTime, other.StartTime) && Nullable.Equals(EndTime, other.EndTime);
+                   Nullable.Equals(StartTime, other.StartTime) && Nullable.Equals(EndTime, other.EndTime) &&
+                   Identified == other.Identified;
         }
 
         public override bool Equals(object obj)
@@ -464,6 +522,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ Annotations.GetHashCode();
                 result = (result * 397) ^ StartTime.GetHashCode();
                 result = (result * 397) ^ EndTime.GetHashCode();
+                result = (result * 397) ^ (int) Identified;
                 return result;
             }
         }

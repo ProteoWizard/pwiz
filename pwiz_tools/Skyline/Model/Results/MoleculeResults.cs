@@ -285,9 +285,21 @@ namespace pwiz.Skyline.Model.Results
         {
             var nodeTrans = nodeGroup.Transitions.ToArray();
             var chromInfoLists = new IList<TransitionChromInfo>[nodeTrans.Length];
-            for (int iTran = 0; iTran < chromInfoLists.Length; iTran++)
+            var lists = new List<TransitionChromInfo>[nodeTrans.Length];
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
-                chromInfoLists[iTran] = CalcTransitionChromInfos(nodeGroup, nodeTrans[iTran], replicateIndex);
+                lists[iTran] = new List<TransitionChromInfo>();
+                chromInfoLists[iTran] = lists[iTran];
+            }
+
+            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
+            foreach (var chromGroupInfo in GetChromatogramGroupInfos(nodeGroup.TransitionGroup, replicateIndex))
+            {
+                var fileId = chromatograms.FindFile(chromGroupInfo);
+                if (fileId != null)
+                {
+                    ReadFile(nodeGroup, nodeTrans, lists, chromatograms, chromGroupInfo, fileId, replicateIndex);
+                }
             }
 
             // The ranks live on the transition chrom infos, so they get assigned before anything
@@ -311,93 +323,133 @@ namespace pwiz.Skyline.Model.Results
         /// builds its lists: file major, optimization step minor, skipping any file where the
         /// transition has no chromatogram.
         /// </summary>
-        private IList<TransitionChromInfo> CalcTransitionChromInfos(TransitionGroupDocNode nodeGroup,
-            TransitionDocNode nodeTran, int replicateIndex)
+        private void ReadFile(TransitionGroupDocNode nodeGroup, TransitionDocNode[] nodeTrans,
+            List<TransitionChromInfo>[] lists, ChromatogramSet chromatograms,
+            ChromatogramGroupInfo chromGroupInfo, ChromFileInfoId fileId, int replicateIndex)
         {
-            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
-            var documentChromInfos = nodeTran.GetSafeChromInfo(replicateIndex);
-            var chromInfos = new List<TransitionChromInfo>();
-            foreach (var chromGroupInfo in GetChromatogramGroupInfos(nodeGroup.TransitionGroup, replicateIndex))
+            // Optimization steps are separate chromatograms of the same transition, and each one
+            // has its own set of candidate peaks.
+            var optStepChromatograms = new OptStepChromatograms[nodeTrans.Length];
+            var customPeaks = new CustomPeak[nodeTrans.Length];
+            var positions = new int[nodeTrans.Length];
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
-                var fileId = chromatograms.FindFile(chromGroupInfo);
-                if (fileId == null)
-                {
-                    continue;
-                }
-
-                // Optimization steps are separate chromatograms of the same transition, and each
-                // one has its own set of candidate peaks.
-                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, MzMatchTolerance,
+                optStepChromatograms[iTran] = chromGroupInfo.GetAllTransitionInfo(nodeTrans[iTran], MzMatchTolerance,
                     chromatograms.OptimizationFunction, TransformChrom.interpolated);
-                if (optStepChromatograms.IsEmpty)
+
+                // One entry per file, holding the values of optimization step zero, found by file
+                // rather than by counting.
+                var results = nodeTrans[iTran].AbbreviatedResults;
+                positions[iTran] = results?.IndexOfFile(replicateIndex, fileId) ?? -1;
+                customPeaks[iTran] = positions[iTran] < 0 ? null : results.GetCustomPeak(positions[iTran]);
+            }
+
+            int chosenPeakIndex = FindChosenPeakIndex(nodeTrans, optStepChromatograms, customPeaks, positions);
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                if (optStepChromatograms[iTran].IsEmpty)
                 {
                     continue;
                 }
 
-                for (int step = -optStepChromatograms.StepCount; step <= optStepChromatograms.StepCount; step++)
+                var results = nodeTrans[iTran].AbbreviatedResults;
+                var annotations = customPeaks[iTran]?.Annotations ?? Annotations.EMPTY;
+                var userSet = positions[iTran] < 0 ? UserSet.FALSE : results.GetUserSet(positions[iTran]);
+                int stepCount = optStepChromatograms[iTran].StepCount;
+                for (int step = -stepCount; step <= stepCount; step++)
                 {
                     // A chrom info gets added for every step even when there is no chromatogram
                     // for it, because ChangeResults adds an empty peak there.
-                    var chromatogramInfo = optStepChromatograms.GetChromatogramForStep(step);
-                    // Found by file and step rather than by counting, since nothing guarantees the
-                    // document lists them in the order the cache produces them.
-                    chromInfos.Add(MakeTransitionChromInfo(nodeGroup, nodeTran, replicateIndex, fileId, step,
-                        chromatogramInfo, FindChromInfo(documentChromInfos, new FileStep(fileId, step))));
+                    var chromatogramInfo = optStepChromatograms[iTran].GetChromatogramForStep(step);
+                    var chromPeak = GetChromPeak(nodeGroup, nodeTrans[iTran], replicateIndex, fileId, step,
+                        chromatogramInfo, chosenPeakIndex, customPeaks[iTran]);
+                    lists[iTran].Add(new TransitionChromInfo(fileId, step, chromPeak,
+                        chromatogramInfo?.GetIonMobilityFilter() ?? IonMobilityFilter.EMPTY, annotations, userSet));
                 }
             }
-
-            return chromInfos;
         }
 
         /// <summary>
-        /// Rebuilds the complete <see cref="TransitionChromInfo"/> for one position. The ion
-        /// mobility comes from the chromatogram rather than from the document, because the
-        /// document is to stop holding it.
+        /// Which of the candidate peaks was chosen in one file. This is a property of the peak
+        /// group, so one index holds for every transition and every optimization step.
         /// <para>
-        /// <paramref name="documentChromInfo"/> is the one thing here still taken off the doc
-        /// node: which of the candidate peaks was chosen, or the boundaries the user set when none
-        /// of them was. That is exactly what <see cref="TransitionGroupResults.ChosenPeakIndexes"/>
-        /// and <see cref="CustomPeak.StartTime"/> are for, and this stops looking at the doc node
-        /// once the document carries them.
+        /// It is found from the areas the columnar results keep, because the area is the only thing
+        /// about the chosen peak they hold. The transition with the most signal decides, since a
+        /// transition with little or none has an area which several of the candidate peaks could
+        /// produce. Once <see cref="TransitionGroupResults.ChosenPeakIndexes"/> is populated the
+        /// index is read from there and none of this is needed.
         /// </para>
         /// </summary>
-        private TransitionChromInfo MakeTransitionChromInfo(TransitionGroupDocNode nodeGroup,
-            TransitionDocNode nodeTran, int replicateIndex, ChromFileInfoId fileId, int step,
-            ChromatogramInfo chromatogramInfo, TransitionChromInfo documentChromInfo)
+        private static int FindChosenPeakIndex(TransitionDocNode[] nodeTrans,
+            OptStepChromatograms[] optStepChromatograms, CustomPeak[] customPeaks, int[] positions)
         {
-            // The columnar results hold one entry per file, for optimization step zero, so every
-            // step of a file gets the same annotations and user set. Nothing there can differ
-            // between the steps: the user cannot set either one for a single step.
-            var results = nodeTran.AbbreviatedResults;
-            int position = results?.IndexOfFile(replicateIndex, fileId) ?? -1;
-            var chromPeak = GetChromPeak(nodeGroup, nodeTran, replicateIndex, fileId, step, chromatogramInfo,
-                documentChromInfo);
-            return new TransitionChromInfo(fileId, step, chromPeak,
-                chromatogramInfo?.GetIonMobilityFilter() ?? IonMobilityFilter.EMPTY,
-                position < 0 ? Annotations.EMPTY : results.GetCustomPeak(position)?.Annotations ?? Annotations.EMPTY,
-                position < 0 ? UserSet.FALSE : results.GetUserSet(position));
+            var byArea = new List<KeyValuePair<float, int>>();
+            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            {
+                // A peak the user set is not one of the candidate peaks, so it says nothing about
+                // which one was chosen.
+                if (optStepChromatograms[iTran].IsEmpty || positions[iTran] < 0 ||
+                    customPeaks[iTran]?.HasPeakBounds == true)
+                {
+                    continue;
+                }
+
+                byArea.Add(new KeyValuePair<float, int>(nodeTrans[iTran].AbbreviatedResults.Areas[positions[iTran]],
+                    iTran));
+            }
+
+            byArea.Sort((first, second) => second.Key.CompareTo(first.Key));
+            foreach (var entry in byArea)
+            {
+                int peakIndex = FindPeakIndex(optStepChromatograms[entry.Value].GetChromatogramForStep(0), entry.Key);
+                if (peakIndex >= 0)
+                {
+                    return peakIndex;
+                }
+            }
+
+            return -1;
         }
 
-        private ChromPeak GetChromPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
-            int replicateIndex, ChromFileInfoId fileId, int step, ChromatogramInfo chromatogramInfo,
-            TransitionChromInfo documentChromInfo)
+        /// <summary>
+        /// The candidate peak with a particular area, or -1 when there is none, which is what
+        /// happens when no peak was chosen at all.
+        /// </summary>
+        private static int FindPeakIndex(ChromatogramInfo chromatogramInfo, float area)
         {
-            if (chromatogramInfo == null || documentChromInfo == null || documentChromInfo.IsEmpty)
+            if (chromatogramInfo == null)
             {
-                return ChromPeak.EMPTY;
+                return -1;
             }
 
             for (int peakIndex = 0; peakIndex < chromatogramInfo.NumPeaks; peakIndex++)
             {
-                var peak = chromatogramInfo.GetPeak(peakIndex);
-                if (peak.StartTime == documentChromInfo.StartRetentionTime &&
-                    peak.EndTime == documentChromInfo.EndRetentionTime)
+                if (chromatogramInfo.GetPeak(peakIndex).Area == area)
                 {
-                    return peak;
+                    return peakIndex;
                 }
             }
 
-            return IntegratePeak(nodeGroup, nodeTran, replicateIndex, fileId, step, documentChromInfo);
+            return -1;
+        }
+
+        private ChromPeak GetChromPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
+            int replicateIndex, ChromFileInfoId fileId, int step, ChromatogramInfo chromatogramInfo, int peakIndex,
+            CustomPeak customPeak)
+        {
+            if (chromatogramInfo == null)
+            {
+                return ChromPeak.EMPTY;
+            }
+
+            if (customPeak?.HasPeakBounds == true)
+            {
+                return IntegratePeak(nodeGroup, nodeTran, replicateIndex, fileId, step, customPeak);
+            }
+
+            return peakIndex < 0 || peakIndex >= chromatogramInfo.NumPeaks
+                ? ChromPeak.EMPTY
+                : chromatogramInfo.GetPeak(peakIndex);
         }
 
         /// <summary>
@@ -407,7 +459,7 @@ namespace pwiz.Skyline.Model.Results
         /// file is kept once it has been made.
         /// </summary>
         private ChromPeak IntegratePeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
-            int replicateIndex, ChromFileInfoId fileId, int step, TransitionChromInfo documentChromInfo)
+            int replicateIndex, ChromFileInfoId fileId, int step, CustomPeak customPeak)
         {
             var integrator = GetIntegrator(nodeGroup, replicateIndex, fileId);
             if (integrator == null)
@@ -416,20 +468,20 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Identification is not a property of the boundaries, so integrating again cannot
-            // find it. It has to be carried, the same as the boundaries themselves.
+            // find it. It is carried on the custom peak, the same as the boundaries themselves.
             var flags = default(ChromPeak.FlagValues);
-            if (documentChromInfo.Identified != PeakIdentification.FALSE)
+            if (customPeak.Identified != PeakIdentification.FALSE)
             {
                 flags |= ChromPeak.FlagValues.contains_id;
             }
 
-            if (documentChromInfo.Identified == PeakIdentification.ALIGNED)
+            if (customPeak.Identified == PeakIdentification.ALIGNED)
             {
                 flags |= ChromPeak.FlagValues.used_id_alignment;
             }
 
-            return integrator.CalcPeak(nodeTran.Transition, step, documentChromInfo.StartRetentionTime,
-                documentChromInfo.EndRetentionTime, flags);
+            return integrator.CalcPeak(nodeTran.Transition, step, customPeak.StartTime.Value,
+                customPeak.EndTime.Value, flags);
         }
 
         private TransitionGroupIntegrator GetIntegrator(TransitionGroupDocNode nodeGroup, int replicateIndex,
