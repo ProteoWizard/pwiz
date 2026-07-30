@@ -314,39 +314,14 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private Results<TransitionChromInfo> _results;
-        private TransitionResults _abbreviatedResults;
-
-        public Results<TransitionChromInfo> Results
-        {
-            get { return _results; }
-            private set
-            {
-                _results = value;
-                // Derived from Results, so it has to go whenever they are replaced. That
-                // includes on the copy ImClone makes, which would otherwise inherit a cache
-                // belonging to the results it is about to replace.
-                _abbreviatedResults = null;
-            }
-        }
+        public Results<TransitionChromInfo> Results { get; private set; }
 
         /// <summary>
-        /// The columnar form of the results, which is eventually to be the only form held. See
-        /// <see cref="TransitionGroupDocNode.AbbreviatedResults"/> for which paths set it and which
-        /// leave it to be derived from <see cref="Results"/> on first use.
+        /// The results of this transition. Not derived from <see cref="Results"/>, which a
+        /// transition no longer keeps: this is the only form it has, and everything else about its
+        /// peaks is read back from the .skyd through a <see cref="MoleculeResults"/>.
         /// </summary>
-        public TransitionResults AbbreviatedResults
-        {
-            get { return _abbreviatedResults = _abbreviatedResults ?? TransitionResults.FromChromInfos(Results); }
-        }
-
-        /// <summary>
-        /// See <see cref="TransitionGroupDocNode.HasAbbreviatedResults"/>.
-        /// </summary>
-        public bool HasAbbreviatedResults
-        {
-            get { return _abbreviatedResults != null; }
-        }
+        public TransitionResults AbbreviatedResults { get; private set; }
 
         /// <summary>
         /// Returns this node when the results are the ones it already has, because a document which
@@ -354,9 +329,9 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public TransitionDocNode ChangeAbbreviatedResults(TransitionResults prop)
         {
-            if (Equals(_abbreviatedResults, prop))
+            if (Equals(AbbreviatedResults, prop))
                 return this;
-            return ChangeProp(ImClone(this), im => im._abbreviatedResults = prop);
+            return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
         }
 
         public int? ResultsRank { get; private set; }

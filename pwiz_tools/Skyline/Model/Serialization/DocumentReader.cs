@@ -1649,7 +1649,7 @@ namespace pwiz.Skyline.Model.Serialization
             for (int iTran = 0; iTran < children.Length; iTran++)
             {
                 var nodeTran = children[iTran];
-                var results = nodeTran.HasAbbreviatedResults
+                var results = nodeTran.AbbreviatedResults != null
                     ? null
                     : sharedTransitionAreas.MakeTransitionResults(iTran);
                 childrenNew[iTran] = results == null ? nodeTran : nodeTran.ChangeAbbreviatedResults(results);

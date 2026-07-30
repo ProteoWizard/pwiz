@@ -194,56 +194,68 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// The rebuilt transition results have to equal the document's exactly, position for
-        /// position, and the same values have to come back one replicate at a time.
+        /// The chrom infos rebuilt for a transition have to agree with the columnar results the
+        /// transition keeps, which is the only thing left to compare them against: the document
+        /// does not hold the chrom infos any more.
+        /// <para>
+        /// Not circular. The areas came from the import, while the rebuilt chrom infos come from
+        /// working out which candidate peak in the .skyd each peak is and reading it, or from
+        /// integrating between boundaries the user set. Picking the wrong peak shows up here.
+        /// </para>
         /// </summary>
         private static int CheckTransition(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
             TransitionDocNode nodeTran, ref int reintegrated)
         {
-            if (!nodeTran.HasResults)
+            var abbreviated = nodeTran.AbbreviatedResults;
+            if (abbreviated == null)
             {
                 return 0;
             }
 
-            CheckAbbreviatedResults(nodeTran);
-
             var results = moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition);
             Assert.IsNotNull(results);
-            Assert.AreEqual(nodeTran.Results.Count, results.Count);
 
             // Asking again has to give back what was worked out the first time, rather than
             // reading and rebuilding it all over.
             Assert.AreSame(results,
                 moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition));
 
-            int positionsChecked = 0;
-            for (int replicateIndex = 0; replicateIndex < nodeTran.Results.Count; replicateIndex++)
-            {
-                var expectedList = nodeTran.Results[replicateIndex];
-                var actualList = results[replicateIndex];
-                Assert.AreEqual(expectedList.Count, actualList.Count);
+            CheckFromChromInfos(nodeTran, results);
 
+            int positionsChecked = 0;
+            for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
+            {
                 // The same values have to come back whether asked for one replicate at a time
                 // or all at once.
                 var oneReplicate =
                     moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition,
                         replicateIndex);
-                Assert.AreEqual(expectedList.Count, oneReplicate.Count);
+                Assert.AreEqual(results[replicateIndex].Count, oneReplicate.Count);
 
-                for (int i = 0; i < expectedList.Count; i++)
+                for (int i = 0; i < results[replicateIndex].Count; i++)
                 {
-                    var expected = expectedList[i];
-                    bool fromCandidatePeak = expected.IsEmpty ||
-                                             HasCandidatePeak(moleculeResults, nodeGroup, nodeTran, replicateIndex,
-                                                 expected);
-                    if (!fromCandidatePeak)
+                    var chromInfo = results[replicateIndex][i];
+                    Assert.AreEqual(chromInfo, oneReplicate[i]);
+                    if (chromInfo.OptimizationStep != 0)
                     {
+                        continue;
+                    }
+
+                    int position = abbreviated.IndexOfFile(replicateIndex, chromInfo.FileId);
+                    Assert.AreNotEqual(-1, position);
+                    Assert.AreEqual(abbreviated.Areas[position], chromInfo.Area);
+                    Assert.AreEqual(abbreviated.GetUserSet(position), chromInfo.UserSet);
+
+                    var customPeak = abbreviated.GetCustomPeak(position);
+                    if (customPeak?.HasPeakBounds == true)
+                    {
+                        // Reproduced by integrating between them rather than by finding a
+                        // candidate peak, so the boundaries have to be the ones kept.
+                        Assert.AreEqual(customPeak.StartTime.Value, chromInfo.StartRetentionTime);
+                        Assert.AreEqual(customPeak.EndTime.Value, chromInfo.EndRetentionTime);
                         reintegrated++;
                     }
 
-                    Assert.AreNotSame(expected, actualList[i]);
-                    AssertTransitionValuesEqual(expected, actualList[i], fromCandidatePeak);
-                    AssertTransitionValuesEqual(expected, oneReplicate[i], fromCandidatePeak);
                     positionsChecked++;
                 }
             }
@@ -322,102 +334,6 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// Compares field by field before comparing the whole thing, because the message from a
-        /// failed comparison of two of these names no field.
-        /// <para>
-        /// <paramref name="fromCandidatePeak"/> false means the peak had to be integrated again
-        /// from the boundaries the document holds, and then
-        /// <see cref="PeakShapeValues.ShapeCorrelation"/> cannot come back exactly. Integration
-        /// snaps the boundaries to the nearest points of the chromatogram, but the shape
-        /// correlation is measured against a median chromatogram sampled between the boundaries
-        /// it was <i>asked</i> for. Those are the user's, and the document does not keep them -
-        /// it keeps the snapped ones. Skyline has the same gap: recalculating results
-        /// re-integrates user set peaks from the stored boundaries too, and the original value
-        /// survives only because <see cref="TransitionChromInfo.Equivalent"/> does not compare
-        /// the peak shape values. Everything else does come back exactly.
-        /// </para>
-        /// </summary>
-        private static void AssertTransitionValuesEqual(TransitionChromInfo expected, TransitionChromInfo actual,
-            bool fromCandidatePeak)
-        {
-            Assert.AreSame(expected.FileId, actual.FileId);
-            Assert.AreEqual(expected.OptimizationStep, actual.OptimizationStep);
-            Assert.AreEqual(expected.StartRetentionTime, actual.StartRetentionTime);
-            Assert.AreEqual(expected.EndRetentionTime, actual.EndRetentionTime);
-            Assert.AreEqual(expected.RetentionTime, actual.RetentionTime);
-            Assert.AreEqual(expected.Area, actual.Area);
-            Assert.AreEqual(expected.BackgroundArea, actual.BackgroundArea);
-            Assert.AreEqual(expected.Height, actual.Height);
-            Assert.AreEqual(expected.Fwhm, actual.Fwhm);
-            Assert.AreEqual(expected.IsFwhmDegenerate, actual.IsFwhmDegenerate);
-            Assert.AreEqual(expected.IsTruncated, actual.IsTruncated);
-            Assert.AreEqual(expected.IsForcedIntegration, actual.IsForcedIntegration);
-            Assert.AreEqual(expected.MassError, actual.MassError);
-            Assert.AreEqual(expected.PointsAcrossPeak, actual.PointsAcrossPeak);
-            Assert.AreEqual(expected.Identified, actual.Identified);
-            Assert.AreEqual(expected.IonMobility, actual.IonMobility);
-            Assert.AreEqual(expected.Rank, actual.Rank);
-            Assert.AreEqual(expected.RankByLevel, actual.RankByLevel);
-            Assert.AreEqual(expected.UserSet, actual.UserSet);
-            Assert.AreEqual(expected.Annotations, actual.Annotations);
-            Assert.AreEqual(expected.PeakShapeValues.HasValue, actual.PeakShapeValues.HasValue);
-            if (expected.PeakShapeValues.HasValue)
-            {
-                Assert.AreEqual(expected.PeakShapeValues.Value.StdDev, actual.PeakShapeValues.Value.StdDev);
-                Assert.AreEqual(expected.PeakShapeValues.Value.Skewness, actual.PeakShapeValues.Value.Skewness);
-                Assert.AreEqual(expected.PeakShapeValues.Value.Kurtosis, actual.PeakShapeValues.Value.Kurtosis);
-                float expectedCorrelation = expected.PeakShapeValues.Value.ShapeCorrelation;
-                float actualCorrelation = actual.PeakShapeValues.Value.ShapeCorrelation;
-                if (fromCandidatePeak || float.IsNaN(expectedCorrelation))
-                {
-                    Assert.AreEqual(expectedCorrelation, actualCorrelation);
-                }
-                else
-                {
-                    Assert.AreEqual(expectedCorrelation, actualCorrelation, 0.05);
-                }
-            }
-
-            if (fromCandidatePeak)
-            {
-                Assert.AreEqual(expected, actual);
-            }
-        }
-
-        /// <summary>
-        /// Whether the peak the document holds is one of the candidate peaks in the .skyd, which is
-        /// what decides whether reproducing it needs the chromatogram itself. Read from the
-        /// chromatograms rather than asked of <see cref="MoleculeResults"/>, so that this does not
-        /// depend on the thing it is checking.
-        /// </summary>
-        private static bool HasCandidatePeak(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
-            TransitionDocNode nodeTran, int replicateIndex, TransitionChromInfo chromInfo)
-        {
-            var chromatograms = moleculeResults.Settings.MeasuredResults.Chromatograms[replicateIndex];
-            foreach (var chromGroupInfo in moleculeResults.GetChromatogramGroupInfos(nodeGroup.TransitionGroup,
-                         replicateIndex))
-            {
-                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran,
-                    moleculeResults.MzMatchTolerance, chromatograms.OptimizationFunction,
-                    TransformChrom.interpolated);
-                for (int step = -optStepChromatograms.StepCount;
-                     step <= optStepChromatograms.StepCount;
-                     step++)
-                {
-                    var chromatogramInfo = optStepChromatograms.GetChromatogramForStep(step);
-                    if (chromatogramInfo != null &&
-                        chromatogramInfo.Peaks.Any(peak => peak.StartTime == chromInfo.StartRetentionTime &&
-                                                           peak.EndTime == chromInfo.EndRetentionTime))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// The rebuilt precursor results have to equal the document's, which covers the
         /// aggregation, the ranks and the dot products at once.
         /// </summary>
@@ -462,53 +378,29 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// The columnar form the document carries alongside its chrom infos has to agree with them,
-        /// and has to hold one entry per file per replicate: optimization step zero only, found by
-        /// file rather than by counting.
+        /// Turning a document's chrom infos into columnar results, which is what reading one
+        /// written the old way does. Nothing is kept but the columnar results afterwards, so this
+        /// works from chrom infos <see cref="MoleculeResults"/> rebuilt rather than from any the
+        /// document holds.
         /// </summary>
-        private static void CheckAbbreviatedResults(TransitionDocNode nodeTran)
+        private static void CheckFromChromInfos(TransitionDocNode nodeTran,
+            Results<TransitionChromInfo> rebuilt)
         {
-            var abbreviated = nodeTran.AbbreviatedResults;
-            Assert.IsNotNull(abbreviated);
-
-            // Loading the chromatograms is what converts these. Until then the chrom infos are
-            // kept, because which candidate peak each peak is cannot be told without them.
-            Assert.IsTrue(abbreviated.IsConverted);
-            var unconverted = TransitionResults.FromChromInfos(nodeTran.Results);
+            var unconverted = TransitionResults.FromChromInfos(rebuilt);
             Assert.IsFalse(unconverted.IsConverted);
-            Assert.AreEqual(nodeTran.Results.Sum(chromInfoList => chromInfoList.Count),
-                unconverted.ChromInfos.Count);
-            foreach (var chromInfo in nodeTran.Results[0])
+            Assert.AreEqual(rebuilt.Sum(chromInfoList => chromInfoList.Count), unconverted.ChromInfos.Count);
+            foreach (var chromInfo in rebuilt[0])
             {
-                Assert.AreSame(chromInfo,
-                    unconverted.FindChromInfo(chromInfo.FileId, chromInfo.OptimizationStep));
+                Assert.AreSame(chromInfo, unconverted.FindChromInfo(chromInfo.FileId, chromInfo.OptimizationStep));
             }
 
-            int stepZeroCount = 0;
-            for (int replicateIndex = 0; replicateIndex < nodeTran.Results.Count; replicateIndex++)
-            {
-                foreach (var chromInfo in nodeTran.Results[replicateIndex])
-                {
-                    int position = abbreviated.IndexOfFile(replicateIndex, chromInfo.FileId);
-                    Assert.AreNotEqual(-1, position);
-                    Assert.AreSame(chromInfo.FileId, abbreviated.ChromFileIds.FileIds[position].Value);
-                    if (chromInfo.OptimizationStep != 0)
-                    {
-                        continue;
-                    }
+            // What the document keeps has been converted: which candidate peak each peak is has
+            // been worked out, so the chrom infos are not needed any more.
+            Assert.IsTrue(nodeTran.AbbreviatedResults.IsConverted);
 
-                    Assert.AreEqual(chromInfo.Area, abbreviated.Areas[position]);
-                    Assert.AreEqual(chromInfo.UserSet, abbreviated.GetUserSet(position));
-                    stepZeroCount++;
-                }
-            }
-
-            Assert.AreEqual(stepZeroCount, abbreviated.Areas.Count);
-
-            // Replacing the results has to discard the derived form, including on the copy
-            // that ImClone makes, which would otherwise keep the one it was cloned with.
+            // Not derived from the chrom infos, so replacing those leaves them alone.
             var cleared = (TransitionDocNode) nodeTran.ChangeResults(null);
-            Assert.IsNull(cleared.AbbreviatedResults);
+            Assert.AreSame(nodeTran.AbbreviatedResults, cleared.AbbreviatedResults);
         }
 
         private static void AssertGroupValuesEqual(TransitionGroupChromInfo expected,

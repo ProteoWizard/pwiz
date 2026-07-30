@@ -58,6 +58,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(savedPath));
             WaitForDocumentLoaded();
 
+            // Otherwise nothing would have recalculated results, and the peaks would have survived
+            // only because nothing looked at a chromatogram.
+            Assert.IsTrue(SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+
             var actualPeaks = GetPeaks(SkylineWindow.Document);
             Assert.AreEqual(expectedPeaks.Count, actualPeaks.Count);
             for (int i = 0; i < expectedPeaks.Count; i++)
@@ -111,23 +115,26 @@ namespace pwiz.SkylineTestFunctional
             return peaksMoved;
         }
 
+        /// <summary>
+        /// What a transition keeps: the columnar results. Its chrom infos are not stored, so there
+        /// is nothing to read there.
+        /// </summary>
         private static List<string> GetPeaks(SrmDocument document)
         {
             var peaks = new List<string>();
             foreach (var nodeTran in document.MoleculeTransitions)
             {
-                if (!nodeTran.HasResults)
+                var results = nodeTran.AbbreviatedResults;
+                if (results == null)
                 {
                     continue;
                 }
 
-                foreach (var chromInfoList in nodeTran.Results)
+                for (int position = 0; position < results.Areas.Count; position++)
                 {
-                    foreach (var chromInfo in chromInfoList)
-                    {
-                        peaks.Add(string.Format(@"{0} {1} {2} {3}", chromInfo.StartRetentionTime,
-                            chromInfo.EndRetentionTime, chromInfo.Area, chromInfo.UserSet));
-                    }
+                    var customPeak = results.GetCustomPeak(position);
+                    peaks.Add(string.Format(@"{0} {1} {2} {3}", results.Areas[position],
+                        results.GetUserSet(position), customPeak?.StartTime, customPeak?.EndTime));
                 }
             }
 
