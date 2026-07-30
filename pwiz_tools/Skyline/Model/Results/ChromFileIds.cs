@@ -33,6 +33,23 @@ namespace pwiz.Skyline.Model.Results
         /// always has exactly one entry, so searching it is cheap.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// The flat position of a file's entry, or -1. A file belongs to one replicate, so it
+        /// identifies a position on its own when the replicate is not already known.
+        /// </summary>
+        public int IndexOfFile(ChromFileInfoId fileId)
+        {
+            for (int position = 0; position < FileIds.Count; position++)
+            {
+                if (ReferenceEquals(FileIds[position].Value, fileId))
+                {
+                    return position;
+                }
+            }
+
+            return -1;
+        }
+
         public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
         {
             int start = ReplicatePositions.GetStart(replicateIndex);

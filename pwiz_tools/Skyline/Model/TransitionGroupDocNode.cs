@@ -2284,38 +2284,48 @@ namespace pwiz.Skyline.Model
                 // to the total
                 RankAndCorrelateTransitions(nodeGroup);
 
+                var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
+                var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
+
+                // Set rather than left to be derived, because the chosen peak indexes are only
+                // knowable here, with the chromatograms in hand.
+                var abbreviatedResults = TransitionGroupResults.FromChromInfos(results, GetChosenPeakIndex);
+
                 // Update nodes with new results as necessary
                 IList<DocNode> childrenNew = new List<DocNode>();
                 for (int iTran = 0, len = nodeGroup.Children.Count; iTran < len; iTran++)
                 {
                     var nodeTran = (TransitionDocNode)nodeGroup.Children[iTran];
-                    childrenNew.Add(UpdateTransitionNode(nodeTran, iTran));
+                    childrenNew.Add(UpdateTransitionNode(nodeTran, iTran, abbreviatedResults));
                 }
-
-                var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
-                var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
 
                 var nodeGroupNew = nodeGroup;
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
-                // Set rather than left to be derived, because the chosen peak indexes are only
-                // knowable here, with the chromatograms in hand. Has to come after ChangeResults,
-                // which discards whatever was derived from the results being replaced.
-                nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(
-                    TransitionGroupResults.FromChromInfos(results, GetChosenPeakIndex));
+                // Has to come after ChangeResults, which discards whatever was derived from the
+                // results being replaced.
+                nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(abbreviatedResults);
 
                 nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
                 return nodeGroupNew;
             }
 
-            private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran)
+            private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran,
+                TransitionGroupResults abbreviatedGroupResults)
             {
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
                 var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
                 if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
                     nodeTran = nodeTran.ChangeResults(results);
-                nodeTran = nodeTran.ChangeAbbreviatedResults(TransitionResults.FromChromInfos(results));
+
+                // The chrom infos are only dropped where every one of them can be rebuilt from the
+                // .skyd. A pass which did not look at a chromatogram knows no chosen peak index,
+                // and has to leave them be rather than lose them.
+                var abbreviatedResults = TransitionResults.FromChromInfos(results);
+                if (abbreviatedResults != null && abbreviatedResults.CanDropChromInfos(abbreviatedGroupResults))
+                    abbreviatedResults = abbreviatedResults.ChangeChromInfos(null);
+                nodeTran = nodeTran.ChangeAbbreviatedResults(abbreviatedResults);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
                 return nodeTran;

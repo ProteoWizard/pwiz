@@ -459,6 +459,19 @@ namespace pwiz.SkylineTestData.Results
             var abbreviated = nodeTran.AbbreviatedResults;
             Assert.IsNotNull(abbreviated);
 
+            // Loading the chromatograms is what converts these. Until then the chrom infos are
+            // kept, because which candidate peak each peak is cannot be told without them.
+            Assert.IsTrue(abbreviated.IsConverted);
+            var unconverted = TransitionResults.FromChromInfos(nodeTran.Results);
+            Assert.IsFalse(unconverted.IsConverted);
+            Assert.AreEqual(nodeTran.Results.Sum(chromInfoList => chromInfoList.Count),
+                unconverted.ChromInfos.Count);
+            foreach (var chromInfo in nodeTran.Results[0])
+            {
+                Assert.AreSame(chromInfo,
+                    unconverted.FindChromInfo(chromInfo.FileId, chromInfo.OptimizationStep));
+            }
+
             int stepZeroCount = 0;
             for (int replicateIndex = 0; replicateIndex < nodeTran.Results.Count; replicateIndex++)
             {

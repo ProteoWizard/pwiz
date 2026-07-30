@@ -376,10 +376,22 @@ namespace pwiz.Skyline.Model.Results
     public class TransitionResults : Immutable
     {
         /// <summary>
-        /// Builds the columnar form from the chrom infos a document already holds. See
+        /// Builds the columnar form from the chrom infos a document already holds, keeping the
+        /// chrom infos themselves in <see cref="ChromInfos"/>. See
         /// <see cref="TransitionGroupResults.FromChromInfos"/>.
         /// </summary>
         public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results)
+        {
+            return FromChromInfos(results, true);
+        }
+
+        /// <summary>
+        /// <paramref name="keepChromInfos"/> false means the caller knows which candidate peak each
+        /// peak is, so the chrom infos can be rebuilt from the .skyd and none of them needs to be
+        /// kept. Only a caller with the chromatograms can know that, which is why the plain
+        /// overload keeps them.
+        /// </summary>
+        public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results, bool keepChromInfos)
         {
             if (results == null)
             {
@@ -390,12 +402,16 @@ namespace pwiz.Skyline.Model.Results
             var counts = new List<int>();
             var areas = new List<float>();
             var userSets = new List<UserSet>();
+            var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
             List<CustomPeak> customPeaks = null;
             foreach (var chromInfoList in results)
             {
                 int count = 0;
                 foreach (var chromInfo in chromInfoList)
                 {
+                    // Every step is kept, because the ones which are not step zero can only be got
+                    // back from the .skyd, and this is the state of not having looked at it yet.
+                    chromInfos?.Add(chromInfo);
                     if (chromInfo.OptimizationStep != 0)
                     {
                         continue;
@@ -414,7 +430,12 @@ namespace pwiz.Skyline.Model.Results
             var transitionResults =
                 new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
                     .ChangeUserSets(userSets);
-            return customPeaks == null ? transitionResults : transitionResults.ChangeCustomPeaks(customPeaks);
+            if (customPeaks != null)
+            {
+                transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
+            }
+
+            return chromInfos == null ? transitionResults : transitionResults.ChangeChromInfos(chromInfos);
         }
 
         /// <summary>
@@ -471,6 +492,92 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public ImmutableList<CustomPeak> CustomPeaks { get; private set; }
 
+        /// <summary>
+        /// The chrom infos which have not been worked out from the .skyd file yet, each knowing its
+        /// own file and optimization step. Null once they have been.
+        /// <para>
+        /// A document read from a file arrives with these, because which candidate peak each peak
+        /// is cannot be told without the chromatograms, and until that is known nothing here can be
+        /// rebuilt. Loading the chromatogram cache is what gets rid of them: see
+        /// <see cref="TransitionGroupDocNode.UpdateResults"/>, which works out
+        /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> and then has no need of them.
+        /// </para>
+        /// <para>
+        /// So this is the whole of what the columnar form costs before conversion, and nothing
+        /// while it is converted. It is the reason a document can be read at all before its .skyd
+        /// is available.
+        /// </para>
+        /// </summary>
+        public ImmutableList<TransitionChromInfo> ChromInfos { get; private set; }
+
+        public bool IsConverted
+        {
+            get { return ChromInfos == null; }
+        }
+
+        public TransitionResults ChangeChromInfos(IEnumerable<TransitionChromInfo> value)
+        {
+            return ChangeProp(ImClone(this), im => im.ChromInfos = value == null ? null : ImmutableList.ValueOf(value));
+        }
+
+        /// <summary>
+        /// Whether every chrom info here can be rebuilt from the .skyd, and so none of them needs
+        /// keeping. A peak qualifies when it is empty, when the boundaries the user set are kept
+        /// for it, or when the precursor knows which candidate peak it is - which is the same index
+        /// for every optimization step of the file.
+        /// </summary>
+        public bool CanDropChromInfos(TransitionGroupResults groupResults)
+        {
+            if (groupResults == null || ChromInfos == null)
+            {
+                return false;
+            }
+
+            foreach (var chromInfo in ChromInfos)
+            {
+                if (chromInfo.IsEmpty)
+                {
+                    continue;
+                }
+
+                int position = ChromFileIds.IndexOfFile(chromInfo.FileId);
+                if (position >= 0 && GetCustomPeak(position)?.HasPeakBounds == true)
+                {
+                    continue;
+                }
+
+                int groupPosition = groupResults.ChromFileIds.IndexOfFile(chromInfo.FileId);
+                if (groupPosition < 0 || !groupResults.GetChosenPeakIndex(groupPosition).HasValue)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// The chrom info for one file and optimization step which has not been converted, or null.
+        /// A file belongs to one replicate, so the file and the step identify it on their own.
+        /// </summary>
+        public TransitionChromInfo FindChromInfo(ChromFileInfoId fileId, int optimizationStep)
+        {
+            if (ChromInfos == null)
+            {
+                return null;
+            }
+
+            foreach (var chromInfo in ChromInfos)
+            {
+                if (ReferenceEquals(chromInfo.FileId, fileId) && chromInfo.OptimizationStep == optimizationStep)
+                {
+                    return chromInfo;
+                }
+            }
+
+            return null;
+        }
+
         public TransitionResults ChangeUserSets(IEnumerable<UserSet> value)
         {
             return ChangeProp(ImClone(this), im => im.UserSets = ImmutableList.ValueOf(value).MaybeConstant());
@@ -506,7 +613,8 @@ namespace pwiz.Skyline.Model.Results
         protected bool Equals(TransitionResults other)
         {
             return Equals(ChromFileIds, other.ChromFileIds) && Equals(Areas, other.Areas) &&
-                   Equals(UserSets, other.UserSets) && Equals(CustomPeaks, other.CustomPeaks);
+                   Equals(UserSets, other.UserSets) && Equals(CustomPeaks, other.CustomPeaks) &&
+                   Equals(ChromInfos, other.ChromInfos);
         }
 
         public override bool Equals(object obj)
@@ -532,6 +640,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ Areas.GetHashCode();
                 result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
         }
