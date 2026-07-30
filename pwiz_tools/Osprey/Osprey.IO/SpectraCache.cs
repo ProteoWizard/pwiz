@@ -435,10 +435,43 @@ namespace pwiz.Osprey.IO
             try
             {
                 var fi = new FileInfo(sourcePath);
-                if (!fi.Exists)
+                if (fi.Exists)
+                {
+                    size = fi.Length;
+                    mtimeMs = new DateTimeOffset(fi.LastWriteTimeUtc).ToUnixTimeMilliseconds();
                     return;
-                size = fi.Length;
-                mtimeMs = new DateTimeOffset(fi.LastWriteTimeUtc).ToUnixTimeMilliseconds();
+                }
+
+                // Several vendor formats are DIRECTORIES (Agilent .d, Bruker .d,
+                // Waters .raw), and FileInfo.Exists is false for a directory. Leaving
+                // the fingerprint at 0 would not be a conservative default: the reader
+                // SKIPS the staleness comparison when the stored size is 0, so such a
+                // cache would be accepted no matter how the source had changed. Sum the
+                // contents instead and take the newest write time, which moves whenever
+                // any file in the bundle is rewritten. The walk costs far less than the
+                // parse it protects.
+                //
+                // Trade-off: a vendor SDK that writes a sidecar into the bundle when it
+                // reads it would move this fingerprint and cost a re-parse on the next
+                // run. That is a performance cost, not a correctness one, and it says so
+                // in the log ("Spectra cache stale or invalid"), whereas trusting a stale
+                // cache would be silent and wrong. Verified not to happen for Agilent .d:
+                // msconvert read one of the tracked test bundles and left no file in it
+                // modified.
+                var di = new DirectoryInfo(sourcePath);
+                if (!di.Exists)
+                    return;
+                long totalSize = 0;
+                long newestMtimeMs = 0;
+                foreach (var f in di.EnumerateFiles(@"*", SearchOption.AllDirectories))
+                {
+                    totalSize += f.Length;
+                    long fileMtimeMs = new DateTimeOffset(f.LastWriteTimeUtc).ToUnixTimeMilliseconds();
+                    if (fileMtimeMs > newestMtimeMs)
+                        newestMtimeMs = fileMtimeMs;
+                }
+                size = totalSize;
+                mtimeMs = newestMtimeMs;
             }
             catch (Exception)
             {

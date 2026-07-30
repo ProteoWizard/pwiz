@@ -762,6 +762,80 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// A build WITHOUT the vendor reader must still run against a <c>.spectra.bin</c>
+        /// that an opt-in build produced from a vendor raw file. That is the whole point of
+        /// staging caches once on a vendor-capable machine: every other machine consumes
+        /// them with no ProteoWizard and no mzML conversion.
+        ///
+        /// The guarantee is an ORDERING one - <c>EnsureSpectraCache</c> has to consult the
+        /// cache before it dispatches on file extension - and nothing else pins it. An
+        /// up-front extension check, added for a friendlier error message, would silently
+        /// break this workflow while every other test stayed green.
+        ///
+        /// The assertion is sound in either build. Where the vendor reader is absent
+        /// <see cref="SpectrumFileReader"/> throws for a non-mzML path, so a cache MISS
+        /// fails loudly rather than passing for the wrong reason; where it is present the
+        /// stand-in file is not a real raw, so a miss fails there too.
+        /// </summary>
+        [TestMethod]
+        public void TestVendorCacheUsableWithoutVendorReader()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyVendorCache" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Stands in for a Thermo .raw. The extension is what dispatch keys off,
+                // and the bytes are never read because the cache hit precedes the reader.
+                string rawPath = Path.Combine(dir, @"vendor_file.raw");
+                File.WriteAllBytes(rawPath, new byte[] { 1, 2, 3, 4 });
+
+                var ms2 = new List<Spectrum>
+                {
+                    new Spectrum
+                    {
+                        ScanNumber = 1,
+                        RetentionTime = 10.5,
+                        PrecursorMz = 500.0,
+                        IsolationWindow = new IsolationWindow(500.0, 1.5, 1.5),
+                        Mzs = new[] { 100.0, 200.0 },
+                        Intensities = new[] { 1000.0f, 2000.0f }
+                    }
+                };
+                var ms1 = new List<MS1Spectrum>
+                {
+                    new MS1Spectrum
+                    {
+                        ScanNumber = 0,
+                        RetentionTime = 10.0,
+                        Mzs = new[] { 400.0 },
+                        Intensities = new[] { 5000.0f }
+                    }
+                };
+
+                // Saved WITH the source path, so the header carries the same fingerprint an
+                // opt-in build would have written, and the read back exercises the real
+                // staleness check rather than the no-fingerprint shortcut.
+                string cachePath = SpectraCache.GetCachePath(rawPath);
+                SpectraCache.SaveSpectraCache(cachePath, ms2, ms1, rawPath);
+
+                var ctx = new PipelineContext(new OspreyConfig(), new OspreyTask[0], null, null, null);
+                SpectraWindowIndex index = ScoringTaskShared.EnsureSpectraCache(
+                    rawPath, false, out int unsortedCount, ctx);
+
+                Assert.IsNotNull(index);
+                Assert.AreEqual(ms2.Count, index.Ms2Count);
+                Assert.AreEqual(0, unsortedCount);
+                List<Spectrum> streamed = index.LoadWindow(SpectraCache.WindowKey(500.0));
+                Assert.AreEqual(1, streamed.Count);
+                Assert.AreEqual(10.5, streamed[0].RetentionTime, 0.0);
+            }
+            finally
+            {
+                TryDeleteDirectory(dir);
+            }
+        }
+
         // Distinct, non-round peak values per record so any field/peak mis-decode
         // surfaces; isolation offsets vary per scan so those decode paths are checked.
         private static Spectrum MakeIndexMs2(uint scan, double rt, double center, int nPeaks)
@@ -2485,6 +2559,19 @@ namespace pwiz.Osprey.Test
                 cmd.Parameters.AddWithValue("@name", tableName);
                 long count = (long)(cmd.ExecuteScalar() ?? 0);
                 Assert.AreEqual(1L, count, "Table " + tableName + " should exist");
+            }
+        }
+
+        private static void TryDeleteDirectory(string path)
+        {
+            try
+            {
+                if (Directory.Exists(path))
+                    Directory.Delete(path, true);
+            }
+            catch (Exception)
+            {
+                // Best effort: a temp directory left behind must never fail a test.
             }
         }
 

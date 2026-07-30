@@ -199,7 +199,13 @@ namespace pwiz.Osprey
                 {
                     foreach (string inputFile in config.InputFiles)
                     {
-                        if (!File.Exists(inputFile))
+                        // A directory counts as present. Several vendor formats ARE
+                        // directories (Agilent .d, Bruker .d, Waters .raw), so testing
+                        // File.Exists alone rejected every one of them here, before any
+                        // reader was consulted, on builds with and without the vendor
+                        // reader. It also blocked reusing a raw-derived .spectra.bin,
+                        // which must work on a build that cannot read the raw itself.
+                        if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
                         {
                             LogError(string.Format("Input file not found: {0}", inputFile));
                             return 1;
