@@ -68,7 +68,19 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public class Stats
         {
-            /// <summary>Total stubs across all files BEFORE compaction.</summary>
+            /// <summary>
+            /// Total stubs across all files as <see cref="Apply"/> found them - which is
+            /// "before compaction" only on the batch hydrate.
+            ///
+            /// On a bundle from <see cref="RescoreHydration.HydrateCompactedStreaming"/>
+            /// (marked by a non-null <see cref="RescoreInputs.PreCompactionTallies"/>) the
+            /// buffer arrives ALREADY compacted to the same retained set <see cref="Apply"/>
+            /// re-derives, so this equals <see cref="EntriesAfter"/> and is NOT the
+            /// pre-compaction total. A caller that wants the real pre-compaction figure on
+            /// that path must read <see cref="RescoreInputs.TotalPreCompactionStubs"/>, which
+            /// the streaming hydrate reduced per file while each file's full pool was briefly
+            /// resident.
+            /// </summary>
             public int EntriesBefore { get; set; }
 
             /// <summary>Total stubs across all files AFTER compaction.</summary>
@@ -201,6 +213,22 @@ namespace pwiz.Osprey.Tasks
             int entriesAfter = 0;
             foreach (var kvp in inputs.PerFileEntries)
                 entriesAfter += kvp.Value.Count;
+
+            // Streaming pre-filter invariant. A bundle carrying per-file tallies came from
+            // HydrateCompactedStreaming, which already retained exactly the set derived
+            // above - the join-wide first-pass base_ids unioned with every planner action
+            // target - so this pass must have found nothing left to remove. Documented as
+            // "a provably conservative pre-filter in front of Apply"; check it rather than
+            // rely on it, because a divergence would mean the streamed survivor set differs
+            // from the resident twin's and every downstream number would shift silently.
+            if (inputs.PreCompactionTallies != null && entriesAfter != entriesBefore)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "RescoreCompaction: the streamed bundle was pre-compacted to a different " +
+                    "set than Apply re-derives ({0} entries in, {1} retained). The streaming " +
+                    "hydrate and Apply must agree on the retained set.",
+                    entriesBefore, entriesAfter));
+            }
 
             // 4. Rebuild reconciliation_actions with post-compaction
             //    vec_idx. Walk the now-compact list, look up each entry's
