@@ -11,9 +11,8 @@
     unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
     -->
   <PropertyGroup>
-    <AgilentArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
-    <AgilentAssembliesDir>$(PwizVendorAssembliesPath)\Agilent</AgilentAssembliesDir>
-    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <AgilentArchive>$(PwizCppAuxRoot)/msrc/utility/vendor_api_Agilent.7z</AgilentArchive>
+    <AgilentAssembliesDir>$(PwizVendorAssembliesPath)/Agilent</AgilentAssembliesDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,13 +49,13 @@
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(AgilentArchive)"
-          Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
+          Outputs="$(AgilentAssembliesDir)/MassSpecDataReader.dll;$(AgilentAssembliesDir)/BaseDataAccess.dll;$(AgilentAssembliesDir)/MIDAC.dll">
     <MakeDir Directories="$(AgilentAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; vendor_api\Agilent\x64\*.dll vendor_api\Agilent\x64\*.config" StandardOutputImportance="low" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; vendor_api/Agilent/x64/*.dll vendor_api/Agilent/x64/*.config" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout so the references below are stable. -->
     <ItemGroup>
-      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.dll" />
-      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.config" />
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)/vendor_api/Agilent/x64/*.dll" />
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)/vendor_api/Agilent/x64/*.config" />
     </ItemGroup>
     <Copy SourceFiles="@(_AgilentExtracted)" DestinationFolder="$(AgilentAssembliesDir)" SkipUnchangedFiles="true" />
   </Target>
@@ -100,41 +99,53 @@
        plain .NET assemblies, not COM interop wrappers. -->
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Reference Include="MassSpecDataReader">
-      <HintPath>$(AgilentAssembliesDir)\MassSpecDataReader.dll</HintPath>
+      <HintPath>$(AgilentAssembliesDir)/MassSpecDataReader.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="BaseCommon">
-      <HintPath>$(AgilentAssembliesDir)\BaseCommon.dll</HintPath>
+      <HintPath>$(AgilentAssembliesDir)/BaseCommon.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="BaseDataAccess">
-      <HintPath>$(AgilentAssembliesDir)\BaseDataAccess.dll</HintPath>
+      <HintPath>$(AgilentAssembliesDir)/BaseDataAccess.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="BaseError">
-      <HintPath>$(AgilentAssembliesDir)\BaseError.dll</HintPath>
+      <HintPath>$(AgilentAssembliesDir)/BaseError.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="BaseTof">
-      <HintPath>$(AgilentAssembliesDir)\BaseTof.dll</HintPath>
+      <HintPath>$(AgilentAssembliesDir)/BaseTof.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="MIDAC">
-      <HintPath>$(AgilentAssembliesDir)\MIDAC.dll</HintPath>
+      <HintPath>$(AgilentAssembliesDir)/MIDAC.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
 
-  <!-- Native runtime DLLs (agtsampleinforw.dll plus the .config) need to land in the build
-       output. The managed Reference items above already copy the .NET assemblies because
-       Private=true. -->
+  <!-- Runtime DLLs that must land in the build output AND flow transitively to consumers
+       (Agilent.Tests, Skyline staging, ...). The native agtsampleinforw.dll isn't a managed
+       Reference at all, so it needs an explicit copy. BaseTof.dll IS listed as a managed
+       Reference above, but pwiz-sharp's C# never references BaseTof types; it's loaded at
+       runtime by CalibrationMgr for TOF calibration. Newer MSBuild/SDK toolchains trim that
+       unused reference out of the transitive copy set, so it copy-locals into THIS project's
+       bin but not into consumers' bins, and Agilent.Tests then dies with
+       "Could not load file or assembly 'BaseTof.dll'" at CalibrationMgr..ctor(). Staging it as
+       Content forces it into every consumer's output regardless of compile-time usage. (Newly
+       exposed by the fresh AWS agent; the old agent masked it with a system MassHunter install.) -->
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
-    <Content Include="$(AgilentAssembliesDir)\agtsampleinforw.dll">
+    <Content Include="$(AgilentAssembliesDir)/agtsampleinforw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>agtsampleinforw.dll</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="$(AgilentAssembliesDir)\BaseDataAccess.dll.config">
+    <Content Include="$(AgilentAssembliesDir)/BaseTof.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>BaseTof.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(AgilentAssembliesDir)/BaseDataAccess.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>BaseDataAccess.dll.config</Link>
       <Visible>false</Visible>
