@@ -84,6 +84,26 @@ public class TicSourceDiagnostic
                 }
             }
 
+            // The raw, unformatted string the SDK hands us, straight from
+            // MassLynxRaw's scan-stat table. This is the input to source A, before any
+            // parsing or pwiz formatting, so it distinguishes "the SDK reports a different
+            // number here" from "we format the same number differently".
+            try
+            {
+                using var raw = new WatersRawFile(path);
+                foreach (int fn in new[] { 1, 2, 3 })
+                    for (int scan = 0; scan < 6; scan++)
+                    {
+                        string s = raw.GetScanItem(fn, scan, WatersScanItem.TotalIonCurrent);
+                        if (!string.IsNullOrEmpty(s))
+                            Console.WriteLine($"[TIC-DIAG]   SDK GetScanItem(func={fn}, scan={scan}, TIC) = \"{s}\"");
+                    }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TIC-DIAG]   raw SDK probe failed: {ex.GetType().Name}: {ex.Message}");
+            }
+
             try
             {
                 var msd = new MSData();

@@ -26,10 +26,17 @@ targets['CoreWindows'] = targets['CoreWindowsRelease']
 #targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
 targets['CoreLinux'] = {'master': {}}
 
-# pwiz-sharp is the .NET 8 C# port; the corresponding TeamCity build runs `pwiz-sharp/build.bat`
-# (dotnet restore + build + test). Independent from the cpp build configs above — only files
-# under pwiz-sharp/ should trigger it.
+# pwiz-sharp is the .NET 8 C# port; the corresponding TeamCity builds run
+# `pwiz-sharp/build.bat` on Windows and `pwiz-sharp/build.sh` on Linux (dotnet restore +
+# build + test). Independent from the cpp build configs above — only files under
+# pwiz-sharp/ should trigger them.
 targets['CoreWindowsNet'] = {'master': {"ProteoWizard_CoreWindowsNet": "Core Windows .NET"}}
+targets['CoreLinuxNet'] = {'master': {"ProteoWizard_CoreLinuxNet": "Core Linux .NET"}}
+# Both platforms build the same C# sources from the same tree, so any change that warrants a
+# Windows .NET build warrants the Linux one too — otherwise a cross-platform regression (a
+# hardcoded 7za.exe, a backslash path, a Windows-only vendor reference) only surfaces on the
+# next unrelated Linux trigger.
+targets['CoreNet'] = merge(targets['CoreWindowsNet'], targets['CoreLinuxNet'])
 
 targets['SkylineRelease'] = \
 {
@@ -121,7 +128,7 @@ matchPaths = [
     # pwiz-sharp: standalone .NET 8 port. Builds run via `pwiz-sharp/build.bat`. Match this
     # before the generic libraries/scripts/.bat patterns below so changes under pwiz-sharp/
     # don't trigger the cpp Core/Skyline/Bumbershoot/Container chain.
-    ("pwiz-sharp/.*", targets['CoreWindowsNet']),
+    ("pwiz-sharp/.*", targets['CoreNet']),
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
