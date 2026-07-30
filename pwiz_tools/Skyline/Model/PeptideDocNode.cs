@@ -1079,10 +1079,15 @@ namespace pwiz.Skyline.Model
                 {
                     IList<DocNode> childrenNew = new List<DocNode>(nodeResult.Children.Count);
 
+                    // One for the whole molecule, since making one reads all of its chromatograms.
+                    var moleculeResults = settingsNew.HasResults
+                        ? new MoleculeResults(settingsNew, nodeResult)
+                        : null;
+
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff, moleculeResults);
                         // Skip if the node can no longer be measured on the target instrument
                         if (!transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz))
                             continue;

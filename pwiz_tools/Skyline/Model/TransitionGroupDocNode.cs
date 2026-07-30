@@ -1008,7 +1008,11 @@ namespace pwiz.Skyline.Model
             return node;
         }
 
-        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
+        /// <summary>
+        /// <paramref name="moleculeResults"/> is shared by every precursor of the molecule, since
+        /// making one reads all of its chromatograms. Null makes one only if something needs it.
+        /// </summary>
+        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff, MoleculeResults moleculeResults = null)
         {
             double precursorMz = PrecursorMz;
             IsotopeDistInfo isotopeDist = IsotopeDist;
@@ -1231,7 +1235,7 @@ namespace pwiz.Skyline.Model
             // A change in the precursor m/z may impact which results match this node
             // Or if the dot-product may need to be recalculated
             if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz || dotProductChange)
-                nodeResult = nodeResult.UpdateResults(settingsNew, diff, nodePep, this);
+                nodeResult = nodeResult.UpdateResults(settingsNew, diff, nodePep, this, moleculeResults);
 
             return nodeResult;
         }
@@ -1316,7 +1320,8 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode UpdateResults(SrmSettings settingsNew,
                                                     SrmSettingsDiff diff,
                                                     PeptideDocNode nodePep,
-                                                    TransitionGroupDocNode nodePrevious)
+                                                    TransitionGroupDocNode nodePrevious,
+                                                    MoleculeResults moleculeResults = null)
         {
             if (!settingsNew.HasResults)
             {
@@ -1364,7 +1369,8 @@ namespace pwiz.Skyline.Model
                     select ((TransitionDocNode)child).Key(this));
             }
 
-            var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
+            var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex,
+                moleculeResults);
             var measuredResults = settingsNew.MeasuredResults;
             List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
             try
@@ -2125,16 +2131,22 @@ namespace pwiz.Skyline.Model
             // Allow look-up of former result position
             private readonly IDictionary<int, int> _dictChromIdIndex;
 
+            // Shared by every precursor of the molecule, since making one reads all of its
+            // chromatograms. Null means make one only if something needs it.
+            private readonly MoleculeResults _moleculeResults;
+
             public TransitionGroupResultsCalculator(SrmSettings settings,
                                                     PeptideDocNode nodePep,
                                                     TransitionGroupDocNode nodeGroup,                                                    
-                                                    IDictionary<int, int> dictChromIdIndex)
+                                                    IDictionary<int, int> dictChromIdIndex,
+                                                    MoleculeResults moleculeResults)
             {
                 Settings = settings;
 
                 _nodePep = nodePep;
                 _nodeGroup = nodeGroup;
                 _dictChromIdIndex = dictChromIdIndex;
+                _moleculeResults = moleculeResults;
 
                 // Shouldn't be necessary to create one of these, if there are
                 // no transitions
@@ -2230,8 +2242,13 @@ namespace pwiz.Skyline.Model
                 // The chrom infos the columnar results are still holding on to can only be got rid
                 // of by looking at the candidate peaks in the .skyd, which is what MoleculeResults
                 // does. Nothing to look at until the chromatograms are loaded.
-                if (Settings.MeasuredResults != null)
-                    nodeGroupNew = new MoleculeResults(Settings, _nodePep).ConvertResults(nodeGroupNew);
+                // Asked before making a MoleculeResults, because making one reads every
+                // chromatogram of the molecule.
+                if (Settings.MeasuredResults != null && MoleculeResults.NeedsConverting(nodeGroupNew))
+                {
+                    nodeGroupNew = (_moleculeResults ?? new MoleculeResults(Settings, _nodePep))
+                        .ConvertResults(nodeGroupNew);
+                }
 
                 return nodeGroupNew;
             }

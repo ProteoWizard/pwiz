@@ -263,11 +263,21 @@ namespace pwiz.Skyline.Model.Results
         /// boundaries instead. Empty peaks say nothing either way: they come back empty.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Whether any of a precursor's transitions is still holding chrom infos which have not
+        /// been worked out. Static, and asked before a <see cref="MoleculeResults"/> is made, since
+        /// making one reads every chromatogram of the molecule.
+        /// </summary>
+        public static bool NeedsConverting(TransitionGroupDocNode nodeGroup)
+        {
+            return nodeGroup.Transitions.Any(nodeTran => nodeTran.AbbreviatedResults?.IsConverted == false);
+        }
+
         public TransitionGroupDocNode ConvertResults(TransitionGroupDocNode nodeGroup)
         {
             var groupResults = nodeGroup.AbbreviatedResults;
             var nodeTrans = nodeGroup.Transitions.ToArray();
-            if (groupResults == null || !nodeTrans.Any(nodeTran => nodeTran.AbbreviatedResults?.IsConverted == false))
+            if (groupResults == null || !NeedsConverting(nodeGroup))
             {
                 return nodeGroup;
             }
@@ -278,6 +288,14 @@ namespace pwiz.Skyline.Model.Results
             bool everyFileRead = true;
             for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
             {
+                // A replicate which is still being imported or rescored has nothing settled to look
+                // at, and asking would read chromatograms which are about to be replaced.
+                if (!Settings.MeasuredResults.Chromatograms[replicateIndex].IsLoaded)
+                {
+                    everyFileRead = false;
+                    continue;
+                }
+
                 int start = replicatePositions.GetStart(replicateIndex);
                 for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
                 {
