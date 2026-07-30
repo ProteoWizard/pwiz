@@ -811,18 +811,19 @@ public static class VendorReaderTestHarness
         {
             if (!sf.Location.StartsWith(uriPrefix, StringComparison.OrdinalIgnoreCase)) continue;
 
-            // The readers emit cpp's literal "file:///" + path (see MSDataFile.cs), which
-            // yields two different shapes:
-            //   Windows: "file:///" + "C:\dir"  -> file:///C:\dir   -> rest = "/C:\dir"
-            //   POSIX:   "file:///" + "/dir"    -> file:////dir     -> rest = "//dir"
-            // The old TrimStart('/') handled only the first and turned the second into a
-            // relative path, so File.Exists never matched and every source file silently lost
-            // its MS_SHA_1. Uri.LocalPath is no better here: it reads the POSIX form's leading
-            // "//" as a UNC authority (\\dir\...). Decide from the shape instead.
-            string rest = sf.Location[uriPrefix.Length..];
-            string localDir = rest.Length >= 3 && rest[0] == '/' && char.IsLetter(rest[1]) && rest[2] == ':'
-                ? rest[1..]                        // drive-letter path: drop the single leading slash
-                : "/" + rest.TrimStart('/');       // POSIX absolute path: collapse to one slash
+            // Readers emit one of three shapes (they mirror cpp, which is inconsistent about
+            // the slash count):
+            //   "file:///" + "C:\dir"  -> rest = "/C:\dir"   (Thermo, Agilent, Shimadzu, UIMF, ...)
+            //   "file://"  + "C:\dir"  -> rest = "C:\dir"    (Waters, Bruker, Sciex)
+            //   "file:///" + "/dir"    -> rest = "//dir"     (any reader, POSIX)
+            // Uri.LocalPath is no help: it reads the POSIX form's leading "//" as a UNC
+            // authority (\\dir\...). Strip all leading slashes, then decide from the shape:
+            // a drive-letter path is already absolute, anything else is a POSIX absolute path
+            // that needs its single leading slash restored.
+            string trimmed = sf.Location[uriPrefix.Length..].TrimStart('/');
+            string localDir = trimmed.Length >= 2 && char.IsLetter(trimmed[0]) && trimmed[1] == ':'
+                ? trimmed                          // drive-letter path: already absolute
+                : "/" + trimmed;                   // POSIX absolute path: restore one slash
 
             string localPath = Path.Combine(localDir, sf.Name);
             if (!File.Exists(localPath)) continue;
