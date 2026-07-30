@@ -156,6 +156,7 @@ namespace pwiz.SkylineTestData.Results
             int groupsChecked = 0;
             int peptidesChecked = 0;
             int originalPeaksChecked = 0;
+            int chosenPeakIndexesFound = 0;
             int reintegrated = 0;
             foreach (var nodePep in docResults.Peptides)
             {
@@ -168,6 +169,7 @@ namespace pwiz.SkylineTestData.Results
                     }
 
                     groupsChecked += CheckTransitionGroup(moleculeResults, nodeGroup, ref originalPeaksChecked);
+                    chosenPeakIndexesFound += CountChosenPeakIndexes(nodeGroup);
                 }
 
                 peptidesChecked += CheckPeptide(moleculeResults, nodePep);
@@ -177,6 +179,11 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreNotEqual(0, groupsChecked);
             Assert.AreNotEqual(0, peptidesChecked);
             Assert.AreNotEqual(0, originalPeaksChecked);
+
+            // UpdateResults has to have left the chosen peak indexes behind. Without them
+            // MoleculeResults falls back to searching for the peak, and everything above would
+            // still pass while the stored form went untested.
+            Assert.AreNotEqual(0, chosenPeakIndexesFound);
             return reintegrated;
         }
 
@@ -231,6 +238,34 @@ namespace pwiz.SkylineTestData.Results
             }
 
             return positionsChecked;
+        }
+
+        /// <summary>
+        /// How many of the precursor's files have a chosen peak index, which is what
+        /// <see cref="TransitionGroupDocNode.UpdateResults"/> works out from the chromatograms.
+        /// </summary>
+        private static int CountChosenPeakIndexes(TransitionGroupDocNode nodeGroup)
+        {
+            if (!nodeGroup.HasResults)
+            {
+                return 0;
+            }
+
+            var results = nodeGroup.AbbreviatedResults;
+            int count = 0;
+            for (int replicateIndex = 0; replicateIndex < nodeGroup.Results.Count; replicateIndex++)
+            {
+                foreach (var chromInfo in nodeGroup.Results[replicateIndex])
+                {
+                    int position = results.IndexOfFile(replicateIndex, chromInfo.FileId);
+                    if (position >= 0 && results.GetChosenPeakIndex(position).HasValue)
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
         }
 
         /// <summary>

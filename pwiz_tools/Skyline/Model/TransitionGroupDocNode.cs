@@ -369,7 +369,13 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// The columnar form of the results, which is eventually to be the only form held.
-        /// While both are held it is derived from <see cref="Results"/> on first use.
+        /// <para>
+        /// <see cref="UpdateResults"/> sets this, because it has the chromatograms and so can fill
+        /// in <see cref="TransitionGroupResults.ChosenPeakIndexes"/>, which cannot be derived from
+        /// the chrom infos. Anything else which puts results on the node - reading a document,
+        /// merging, the many callers of <see cref="ChangeResults"/> - leaves it to be derived from
+        /// <see cref="Results"/> on first use, without the peak indexes.
+        /// </para>
         /// </summary>
         public TransitionGroupResults AbbreviatedResults
         {
@@ -377,6 +383,17 @@ namespace pwiz.Skyline.Model
             {
                 return _abbreviatedResults = _abbreviatedResults ?? TransitionGroupResults.FromChromInfos(Results);
             }
+        }
+
+        /// <summary>
+        /// Returns this node when the results are the ones it already has, because a document which
+        /// has not changed has to stay reference equal.
+        /// </summary>
+        public TransitionGroupDocNode ChangeAbbreviatedResults(TransitionGroupResults prop)
+        {
+            if (Equals(_abbreviatedResults, prop))
+                return this;
+            return ChangeProp(ImClone(this), im => im._abbreviatedResults = prop);
         }
 
         public bool HasResults { get { return Results != null; } }
@@ -1558,6 +1575,7 @@ namespace pwiz.Skyline.Model
                 numSteps = chromatograms.OptimizationFunction.StepCount;
             var transitionGroupIntegrators = chromGroupInfos.Select(chromGroupInfo =>
                 new TransitionGroupIntegrator(settingsNew, this, chromatograms, chromGroupInfo)).ToList();
+            var chosenPeakIndexes = Enumerable.Repeat(-1, countGroupInfos).ToArray();
             // Calculate the transition info, and the max values for the transition group
             for (int iTran = 0; iTran < Children.Count; iTran++)
             {
@@ -1671,6 +1689,13 @@ namespace pwiz.Skyline.Model
                             }
                         }
 
+                        // Which candidate peak this is, for the columnar results. One index covers
+                        // the whole precursor, so the first transition which has one settles it:
+                        // a transition whose peak is a different one has boundaries the user set,
+                        // and no candidate peak to point at.
+                        if (step == 0 && info != null && chosenPeakIndexes[j] < 0)
+                            chosenPeakIndexes[j] = IndexOfPeak(info, chromInfo);
+
                         if (firstChromInfo == null)
                             firstChromInfo = chromInfo;
                         else
@@ -1693,7 +1718,32 @@ namespace pwiz.Skyline.Model
             {
                 var originalPeak = GetOriginalPeak(chromGroupInfos[j], mzMatchTolerance);
                 resultsCalc.SetOriginalPeak(fileIds[j], originalPeak);
+                resultsCalc.SetChosenPeakIndex(fileIds[j], chosenPeakIndexes[j]);
             }
+        }
+
+        /// <summary>
+        /// Which of the candidate peaks in the .skyd has the boundaries of
+        /// <paramref name="chromInfo"/>, or -1 when none of them does, which is what a peak the
+        /// user set looks like.
+        /// </summary>
+        private static int IndexOfPeak(ChromatogramInfo chromatogramInfo, TransitionChromInfo chromInfo)
+        {
+            if (chromInfo == null || chromInfo.IsEmpty)
+            {
+                return -1;
+            }
+
+            for (int peakIndex = 0; peakIndex < chromatogramInfo.NumPeaks; peakIndex++)
+            {
+                var peak = chromatogramInfo.GetPeak(peakIndex);
+                if (peak.StartTime == chromInfo.StartRetentionTime && peak.EndTime == chromInfo.EndRetentionTime)
+                {
+                    return peakIndex;
+                }
+            }
+
+            return -1;
         }
 
         private ChromPeak GetTransitionBestPeak(ChromatogramInfo chromatogramInfo, ScoredPeakBounds reintegratedPeakBounds, out UserSet userSet)
@@ -2104,6 +2154,15 @@ namespace pwiz.Skyline.Model
             private readonly TransitionGroupDocNode _nodeGroup;
             private readonly List<TransitionGroupChromInfoListCalculator> _listResultCalcs;
             private readonly TransitionChromInfoSet[] _arrayTransitionChromInfoSets;
+
+            /// <summary>
+            /// Which candidate peak was chosen, per replicate and file. This is the one thing the
+            /// columnar results need which cannot be worked out from the chrom infos, so it is
+            /// collected here while the chromatograms are in hand.
+            /// </summary>
+            private readonly List<Dictionary<ReferenceValue<ChromFileInfoId>, int>> _listChosenPeakIndexes =
+                new List<Dictionary<ReferenceValue<ChromFileInfoId>, int>>();
+
             // Allow look-up of former result position
             private readonly IDictionary<int, int> _dictChromIdIndex;
 
@@ -2145,6 +2204,45 @@ namespace pwiz.Skyline.Model
                 }
                 _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings, _nodePep,
                     iResult, transitionCount, listChromInfo));
+                _listChosenPeakIndexes.Add(new Dictionary<ReferenceValue<ChromFileInfoId>, int>());
+            }
+
+            public void SetChosenPeakIndex(ChromFileInfoId fileId, int peakIndex)
+            {
+                _listChosenPeakIndexes[_listChosenPeakIndexes.Count - 1][fileId] = peakIndex;
+            }
+
+            /// <summary>
+            /// The chosen peak index for one replicate and file, or -1 when it is not known.
+            /// <para>
+            /// Not every pass over the results looks at a chromatogram: one which is only reusing
+            /// what the node already has never sees a candidate peak, and would otherwise replace
+            /// the indexes with nothing. So whatever was worked out last time gets carried forward,
+            /// from whichever position that replicate used to be in.
+            /// </para>
+            /// </summary>
+            private int GetChosenPeakIndex(int replicateIndex, ChromFileInfoId fileId)
+            {
+                if (replicateIndex >= 0 && replicateIndex < _listChosenPeakIndexes.Count &&
+                    _listChosenPeakIndexes[replicateIndex].TryGetValue(fileId, out int peakIndex) && peakIndex >= 0)
+                {
+                    return peakIndex;
+                }
+
+                var previous = _nodeGroup.AbbreviatedResults;
+                if (previous?.ChosenPeakIndexes == null)
+                {
+                    return -1;
+                }
+
+                int iResultOld = GetOldPosition(replicateIndex);
+                if (iResultOld < 0)
+                {
+                    return -1;
+                }
+
+                int previousPosition = previous.IndexOfFile(iResultOld, fileId);
+                return previousPosition < 0 ? -1 : previous.GetChosenPeakIndex(previousPosition) ?? -1;
             }
 
             public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
@@ -2201,6 +2299,12 @@ namespace pwiz.Skyline.Model
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
+                // Set rather than left to be derived, because the chosen peak indexes are only
+                // knowable here, with the chromatograms in hand. Has to come after ChangeResults,
+                // which discards whatever was derived from the results being replaced.
+                nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(
+                    TransitionGroupResults.FromChromInfos(results, GetChosenPeakIndex));
+
                 nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
                 return nodeGroupNew;
             }
@@ -2211,6 +2315,7 @@ namespace pwiz.Skyline.Model
                 var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
                 if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
                     nodeTran = nodeTran.ChangeResults(results);
+                nodeTran = nodeTran.ChangeAbbreviatedResults(TransitionResults.FromChromInfos(results));
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
                 return nodeTran;

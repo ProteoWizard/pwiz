@@ -42,6 +42,18 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public static TransitionGroupResults FromChromInfos(Results<TransitionGroupChromInfo> results)
         {
+            return FromChromInfos(results, null);
+        }
+
+        /// <summary>
+        /// <paramref name="getChosenPeakIndex"/> says which of the candidate peaks in the .skyd the
+        /// peak of one replicate and file is. Only a caller which has the chromatograms can know
+        /// that, so it is null when the columnar form is being derived from a document which
+        /// already holds its chrom infos.
+        /// </summary>
+        public static TransitionGroupResults FromChromInfos(Results<TransitionGroupChromInfo> results,
+            Func<int, ChromFileInfoId, int> getChosenPeakIndex)
+        {
             if (results == null)
             {
                 return null;
@@ -54,11 +66,12 @@ namespace pwiz.Skyline.Model.Results
             var userSets = new List<UserSet>();
             var qValues = new List<float>();
             var zScores = new List<float>();
+            var chosenPeakIndexes = getChosenPeakIndex == null ? null : new List<int>();
             List<CustomPeak> customPeaks = null;
-            foreach (var chromInfoList in results)
+            for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
             {
                 int count = 0;
-                foreach (var chromInfo in chromInfoList)
+                foreach (var chromInfo in results[replicateIndex])
                 {
                     if (chromInfo.OptimizationStep != 0)
                     {
@@ -72,6 +85,7 @@ namespace pwiz.Skyline.Model.Results
                     userSets.Add(chromInfo.UserSet);
                     qValues.Add(chromInfo.QValue ?? float.NaN);
                     zScores.Add(chromInfo.ZScore ?? float.NaN);
+                    chosenPeakIndexes?.Add(getChosenPeakIndex(replicateIndex, chromInfo.FileId));
                     count++;
                 }
 
@@ -84,6 +98,10 @@ namespace pwiz.Skyline.Model.Results
                     .ChangeUserSets(userSets)
                     .ChangeQValues(qValues)
                     .ChangeZScores(zScores);
+            if (chosenPeakIndexes != null)
+            {
+                transitionGroupResults = transitionGroupResults.ChangeChosenPeakIndexes(chosenPeakIndexes);
+            }
             return customPeaks == null
                 ? transitionGroupResults
                 : transitionGroupResults.ChangeCustomPeaks(customPeaks);
@@ -244,14 +262,25 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Which of the candidate peaks in the .skyd is the chosen one, or null while the document
-        /// does not carry them. One index covers every transition of the precursor: a transition
-        /// whose peak is a different one has boundaries the user set, and so a
-        /// <see cref="CustomPeak"/> of its own.
+        /// Which of the candidate peaks in the .skyd is the chosen one, or null when that is not
+        /// known. One index covers every transition of the precursor: a transition whose peak is a
+        /// different one has boundaries the user set, and so a <see cref="CustomPeak"/> of its own.
+        /// <para>
+        /// A negative index reads back as null rather than as "no candidate peak". The paths which
+        /// put results on a node without looking at any chromatogram cannot know an index, and this
+        /// is what they leave behind. A peak which really is not one of the candidate peaks is the
+        /// user's, and says so by having a <see cref="CustomPeak"/> with boundaries.
+        /// </para>
         /// </summary>
         public int? GetChosenPeakIndex(int position)
         {
-            return ChosenPeakIndexes == null ? (int?) null : ChosenPeakIndexes[position];
+            if (ChosenPeakIndexes == null)
+            {
+                return null;
+            }
+
+            int chosenPeakIndex = ChosenPeakIndexes[position];
+            return chosenPeakIndex < 0 ? (int?) null : chosenPeakIndex;
         }
 
         public CustomPeak GetCustomPeak(int position)
@@ -283,6 +312,55 @@ namespace pwiz.Skyline.Model.Results
 
             var score = scores[position];
             return float.IsNaN(score) ? (float?) null : score;
+        }
+
+        /// <summary>
+        /// Compared by value, so that recalculating results which have not changed can leave the
+        /// document alone. Reference equality of an unchanged document is relied on all over
+        /// Skyline, and these are set from the results calculation.
+        /// </summary>
+        protected bool Equals(TransitionGroupResults other)
+        {
+            return Equals(ChromFileIds, other.ChromFileIds) && Equals(Areas, other.Areas) &&
+                   Equals(RetentionTimes, other.RetentionTimes) &&
+                   Equals(ChosenPeakIndexes, other.ChosenPeakIndexes) &&
+                   Equals(OriginalPeakIndexes, other.OriginalPeakIndexes) &&
+                   Equals(ReintegratedPeakIndexes, other.ReintegratedPeakIndexes) &&
+                   Equals(UserSets, other.UserSets) && Equals(QValues, other.QValues) &&
+                   Equals(ZScores, other.ZScores) && Equals(CustomPeaks, other.CustomPeaks);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return obj.GetType() == GetType() && Equals((TransitionGroupResults) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = ChromFileIds.GetHashCode();
+                result = (result * 397) ^ Areas.GetHashCode();
+                result = (result * 397) ^ RetentionTimes.GetHashCode();
+                result = (result * 397) ^ (ChosenPeakIndexes?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (OriginalPeakIndexes?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ReintegratedPeakIndexes?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (QValues?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ZScores?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
+                return result;
+            }
         }
     }
 
@@ -420,6 +498,42 @@ namespace pwiz.Skyline.Model.Results
         public UserSet GetUserSet(int position)
         {
             return UserSets == null ? UserSet.FALSE : UserSets[position];
+        }
+
+        /// <summary>
+        /// Compared by value. See <see cref="TransitionGroupResults.Equals(TransitionGroupResults)"/>.
+        /// </summary>
+        protected bool Equals(TransitionResults other)
+        {
+            return Equals(ChromFileIds, other.ChromFileIds) && Equals(Areas, other.Areas) &&
+                   Equals(UserSets, other.UserSets) && Equals(CustomPeaks, other.CustomPeaks);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return obj.GetType() == GetType() && Equals((TransitionResults) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = ChromFileIds.GetHashCode();
+                result = (result * 397) ^ Areas.GetHashCode();
+                result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
+                return result;
+            }
         }
     }
 

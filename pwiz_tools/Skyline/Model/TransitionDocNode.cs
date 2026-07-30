@@ -331,12 +331,24 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// The columnar form of the results, which is eventually to be the only form held.
-        /// While both are held it is derived from <see cref="Results"/> on first use.
+        /// The columnar form of the results, which is eventually to be the only form held. See
+        /// <see cref="TransitionGroupDocNode.AbbreviatedResults"/> for which paths set it and which
+        /// leave it to be derived from <see cref="Results"/> on first use.
         /// </summary>
         public TransitionResults AbbreviatedResults
         {
             get { return _abbreviatedResults = _abbreviatedResults ?? TransitionResults.FromChromInfos(Results); }
+        }
+
+        /// <summary>
+        /// Returns this node when the results are the ones it already has, because a document which
+        /// has not changed has to stay reference equal.
+        /// </summary>
+        public TransitionDocNode ChangeAbbreviatedResults(TransitionResults prop)
+        {
+            if (Equals(_abbreviatedResults, prop))
+                return this;
+            return ChangeProp(ImClone(this), im => im._abbreviatedResults = prop);
         }
 
         public int? ResultsRank { get; private set; }
