@@ -243,6 +243,17 @@ namespace pwiz.Skyline.Model.Results
             return ChromFileIds.IndexOfFile(replicateIndex, fileId);
         }
 
+        /// <summary>
+        /// Which of the candidate peaks in the .skyd is the chosen one, or null while the document
+        /// does not carry them. One index covers every transition of the precursor: a transition
+        /// whose peak is a different one has boundaries the user set, and so a
+        /// <see cref="CustomPeak"/> of its own.
+        /// </summary>
+        public int? GetChosenPeakIndex(int position)
+        {
+            return ChosenPeakIndexes == null ? (int?) null : ChosenPeakIndexes[position];
+        }
+
         public CustomPeak GetCustomPeak(int position)
         {
             return CustomPeak.FindAtPosition(CustomPeaks, position);

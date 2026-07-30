@@ -344,7 +344,8 @@ namespace pwiz.Skyline.Model.Results
                 customPeaks[iTran] = positions[iTran] < 0 ? null : results.GetCustomPeak(positions[iTran]);
             }
 
-            int chosenPeakIndex = FindChosenPeakIndex(nodeTrans, optStepChromatograms, customPeaks, positions);
+            int chosenPeakIndex = GetChosenPeakIndex(nodeGroup, replicateIndex, fileId, nodeTrans,
+                optStepChromatograms, customPeaks, positions);
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
                 if (optStepChromatograms[iTran].IsEmpty)
@@ -370,61 +371,67 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Which of the candidate peaks was chosen in one file. This is a property of the peak
-        /// group, so one index holds for every transition and every optimization step.
-        /// <para>
-        /// It is found from the areas the columnar results keep, because the area is the only thing
-        /// about the chosen peak they hold. The transition with the most signal decides, since a
-        /// transition with little or none has an area which several of the candidate peaks could
-        /// produce. Once <see cref="TransitionGroupResults.ChosenPeakIndexes"/> is populated the
-        /// index is read from there and none of this is needed.
-        /// </para>
+        /// Which of the candidate peaks in the .skyd was chosen in one file, or -1 when no peak was
+        /// chosen. This is a property of the peak group: one index covers every transition and
+        /// every optimization step, because a transition whose peak is a different one has
+        /// boundaries the user set instead, and so a <see cref="CustomPeak"/> of its own.
         /// </summary>
-        private static int FindChosenPeakIndex(TransitionDocNode[] nodeTrans,
-            OptStepChromatograms[] optStepChromatograms, CustomPeak[] customPeaks, int[] positions)
+        private int GetChosenPeakIndex(TransitionGroupDocNode nodeGroup, int replicateIndex, ChromFileInfoId fileId,
+            TransitionDocNode[] nodeTrans, OptStepChromatograms[] optStepChromatograms, CustomPeak[] customPeaks,
+            int[] positions)
         {
-            var byArea = new List<KeyValuePair<float, int>>();
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            var results = nodeGroup.AbbreviatedResults;
+            int position = results?.IndexOfFile(replicateIndex, fileId) ?? -1;
+            if (position >= 0)
             {
-                // A peak the user set is not one of the candidate peaks, so it says nothing about
-                // which one was chosen.
-                if (optStepChromatograms[iTran].IsEmpty || positions[iTran] < 0 ||
-                    customPeaks[iTran]?.HasPeakBounds == true)
+                int? chosenPeakIndex = results.GetChosenPeakIndex(position);
+                if (chosenPeakIndex.HasValue)
                 {
-                    continue;
-                }
-
-                byArea.Add(new KeyValuePair<float, int>(nodeTrans[iTran].AbbreviatedResults.Areas[positions[iTran]],
-                    iTran));
-            }
-
-            byArea.Sort((first, second) => second.Key.CompareTo(first.Key));
-            foreach (var entry in byArea)
-            {
-                int peakIndex = FindPeakIndex(optStepChromatograms[entry.Value].GetChromatogramForStep(0), entry.Key);
-                if (peakIndex >= 0)
-                {
-                    return peakIndex;
+                    return chosenPeakIndex.Value;
                 }
             }
 
-            return -1;
+            return SearchForChosenPeakIndex(nodeTrans, optStepChromatograms, customPeaks, positions);
         }
 
         /// <summary>
-        /// The candidate peak with a particular area, or -1 when there is none, which is what
-        /// happens when no peak was chosen at all.
+        /// Works out which candidate peak was chosen while the document does not carry
+        /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> yet.
+        /// <para>
+        /// The area is the only thing about the chosen peak the columnar results keep, so the index
+        /// is the one whose area matches at every transition of the precursor. One transition is
+        /// not enough on its own: a transition with little or no signal has an area which several
+        /// of the candidate peaks could produce, and a zero area peak inside a chosen peak group is
+        /// ordinary. Together they pin it down.
+        /// </para>
         /// </summary>
-        private static int FindPeakIndex(ChromatogramInfo chromatogramInfo, float area)
+        private static int SearchForChosenPeakIndex(TransitionDocNode[] nodeTrans,
+            OptStepChromatograms[] optStepChromatograms, CustomPeak[] customPeaks, int[] positions)
         {
-            if (chromatogramInfo == null)
+            // A peak the user set is not one of the candidate peaks, so it says nothing about which
+            // one was chosen.
+            var eligible = Enumerable.Range(0, nodeTrans.Length).Where(iTran =>
+                !optStepChromatograms[iTran].IsEmpty && positions[iTran] >= 0 &&
+                customPeaks[iTran]?.HasPeakBounds != true).ToArray();
+            if (eligible.Length == 0)
             {
                 return -1;
             }
 
-            for (int peakIndex = 0; peakIndex < chromatogramInfo.NumPeaks; peakIndex++)
+            var chromatograms = eligible
+                .Select(iTran => optStepChromatograms[iTran].GetChromatogramForStep(0)).ToArray();
+            int numPeaks = chromatograms.Max(chromatogramInfo => chromatogramInfo?.NumPeaks ?? 0);
+            for (int peakIndex = 0; peakIndex < numPeaks; peakIndex++)
             {
-                if (chromatogramInfo.GetPeak(peakIndex).Area == area)
+                bool matchesEvery = true;
+                for (int i = 0; i < eligible.Length && matchesEvery; i++)
+                {
+                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Areas[positions[eligible[i]]];
+                    matchesEvery = chromatograms[i] != null && peakIndex < chromatograms[i].NumPeaks &&
+                                   chromatograms[i].GetPeak(peakIndex).Area == area;
+                }
+
+                if (matchesEvery)
                 {
                     return peakIndex;
                 }

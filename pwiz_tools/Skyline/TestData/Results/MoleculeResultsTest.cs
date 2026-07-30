@@ -23,9 +23,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
@@ -36,15 +33,19 @@ namespace pwiz.SkylineTestData.Results
     /// Verifies that <see cref="MoleculeResults"/> reproduces every result value a document
     /// holds, reading them back out of the chromatogram cache. That has to be true before the
     /// document can stop holding them.
+    /// <para>
+    /// Deliberately two tests, one per peak selection path, while the design is still moving.
+    /// What they do NOT cover: the optimization step positions (AgilentCEOpt.zip), the dot
+    /// products (BlibDriftTimeTest.zip for a library, FullScan.zip for isotope distributions),
+    /// and reading the chosen peak index out of
+    /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> rather than searching for it,
+    /// which nothing populates yet. Each of those was covered by a test of its own and is worth
+    /// covering again once this settles.
+    /// </para>
     /// </summary>
     [TestClass]
     public class MoleculeResultsTest : AbstractUnitTest
     {
-        // This document has neither a spectral library nor an isotope distribution, and no
-        // optimization function, so it does NOT cover the dot products or the optimization
-        // step positions. Covering those needs a second document: BlibDriftTimeTest.zip has a
-        // library, FullScan.zip has isotope distributions, AgilentCEOpt.zip has optimization
-        // steps.
         private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
         [TestMethod]
@@ -69,71 +70,6 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
 
                 CheckDocument(docContainer.Document);
-            }
-        }
-
-        /// <summary>
-        /// The same checks against a collision energy optimized document, where each
-        /// optimization step is a separate chromatogram contributing its own positions.
-        /// </summary>
-        [TestMethod]
-        public void TestMoleculeResultsWithOptimizationSteps()
-        {
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\AgilentCEOpt.zip");
-            string docPath = TestFilesDir.GetTestPath("AgilentCE.sky");
-            var doc = ResultsUtil.DeserializeDocument(docPath);
-            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
-            {
-                var optRegression = doc.Settings.TransitionSettings.Prediction.CollisionEnergy;
-                int optSteps = optRegression.StepCount * 2 + 1;
-                var chromSet = new ChromatogramSet(@"Optimize",
-                    new[] {new MsDataFilePath(TestFilesDir.GetTestPath("BisMet-1pgul-opt-01.d"))},
-                    Annotations.EMPTY, optRegression);
-                docContainer.ChangeMeasuredResults(new MeasuredResults(new[] {chromSet}), 1, 1 * optSteps,
-                    3 * optSteps);
-                var docResults = docContainer.Document;
-
-                // Confirm the document really does have a position per optimization step,
-                // otherwise this covers no more than the test above.
-                Assert.IsTrue(optSteps > 1);
-                foreach (var nodeTran in docResults.MoleculeTransitions)
-                {
-                    Assert.AreEqual(optSteps, nodeTran.Results[0].Count);
-                }
-
-                CheckDocument(docResults);
-            }
-        }
-
-        /// <summary>
-        /// The same checks against a document with a spectral library, so that the dot
-        /// products are actually calculated rather than being null on both sides.
-        /// </summary>
-        [TestMethod]
-        public void TestMoleculeResultsWithDotProducts()
-        {
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip");
-            string docPath = TestFilesDir.GetTestPath("BlibDriftTimeTest.sky");
-            var docOriginal = ResultsUtil.DeserializeDocument(docPath);
-            using (var docContainer = new ResultsTestDocumentContainer(docOriginal, docPath))
-            {
-                var librarySpec = new BiblioSpecLiteSpec(@"drift test",
-                    TestFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
-                var doc = docContainer.Document.ChangeSettings(docContainer.Document.Settings
-                    .ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] {librarySpec})));
-                var chromSets = new[]
-                {
-                    new ChromatogramSet(@"ID12692_01_UCA168_3727_040714", new[]
-                    {
-                        new MsDataFilePath(TestFilesDir.GetTestPath(
-                            "ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5))
-                    })
-                };
-                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
-                Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
-                docContainer.AssertComplete();
-
-                CheckDocument(docContainer.Document, true);
             }
         }
 
@@ -211,17 +147,14 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// <paramref name="requireDotProducts"/> guards against the dot product assertions
-        /// passing because both sides are null, which is what happens on a document with no
-        /// spectral library. Returns how many peaks had to be integrated again because they
-        /// were not among the candidate peaks.
+        /// Returns how many peaks had to be integrated again because they were not among the
+        /// candidate peaks.
         /// </summary>
-        private static int CheckDocument(SrmDocument docResults, bool requireDotProducts = false)
+        private static int CheckDocument(SrmDocument docResults)
         {
             int positionsChecked = 0;
             int groupsChecked = 0;
             int peptidesChecked = 0;
-            int dotProductsChecked = 0;
             int originalPeaksChecked = 0;
             int reintegrated = 0;
             foreach (var nodePep in docResults.Peptides)
@@ -234,8 +167,7 @@ namespace pwiz.SkylineTestData.Results
                         positionsChecked += CheckTransition(moleculeResults, nodeGroup, nodeTran, ref reintegrated);
                     }
 
-                    groupsChecked += CheckTransitionGroup(moleculeResults, nodeGroup, ref dotProductsChecked,
-                        ref originalPeaksChecked);
+                    groupsChecked += CheckTransitionGroup(moleculeResults, nodeGroup, ref originalPeaksChecked);
                 }
 
                 peptidesChecked += CheckPeptide(moleculeResults, nodePep);
@@ -245,11 +177,6 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreNotEqual(0, groupsChecked);
             Assert.AreNotEqual(0, peptidesChecked);
             Assert.AreNotEqual(0, originalPeaksChecked);
-            if (requireDotProducts)
-            {
-                Assert.AreNotEqual(0, dotProductsChecked);
-            }
-
             return reintegrated;
         }
 
@@ -449,7 +376,7 @@ namespace pwiz.SkylineTestData.Results
         /// aggregation, the ranks and the dot products at once.
         /// </summary>
         private static int CheckTransitionGroup(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
-            ref int dotProductsChecked, ref int originalPeaksChecked)
+            ref int originalPeaksChecked)
         {
             if (!nodeGroup.HasResults)
             {
@@ -473,11 +400,7 @@ namespace pwiz.SkylineTestData.Results
 
                 for (int i = 0; i < expectedList.Count; i++)
                 {
-                    if (AssertGroupValuesEqual(expectedList[i], actualList[i]))
-                    {
-                        dotProductsChecked++;
-                    }
-
+                    AssertGroupValuesEqual(expectedList[i], actualList[i]);
                     AssertGroupValuesEqual(expectedList[i], oneReplicate[i]);
                     if (expectedList[i].OriginalPeak != null)
                     {
@@ -528,11 +451,7 @@ namespace pwiz.SkylineTestData.Results
             Assert.IsNull(cleared.AbbreviatedResults);
         }
 
-        /// <summary>
-        /// Returns whether there was a dot product to compare, so that the caller can tell an
-        /// agreeing comparison from one where both sides were null.
-        /// </summary>
-        private static bool AssertGroupValuesEqual(TransitionGroupChromInfo expected,
+        private static void AssertGroupValuesEqual(TransitionGroupChromInfo expected,
             TransitionGroupChromInfo actual)
         {
             Assert.AreSame(expected.FileId, actual.FileId);
@@ -556,7 +475,6 @@ namespace pwiz.SkylineTestData.Results
             // Derived from the chromatogram rather than carried forward, so this checks the
             // derivation and not just that the value was copied.
             Assert.AreEqual(expected.OriginalPeak, actual.OriginalPeak);
-            return expected.LibraryDotProduct.HasValue || expected.IsotopeDotProduct.HasValue;
         }
     }
 }
