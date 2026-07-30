@@ -23,7 +23,11 @@
 
 using System;
 using System.IO;
+#if OSPREY_VENDOR_READER
+// Only the ProteoWizard build reads OspreyEnvironment here; without the
+// conditional this is a redundant-using warning in the default build.
 using pwiz.Osprey.Core;
+#endif
 
 namespace pwiz.Osprey.IO
 {
@@ -34,11 +38,19 @@ namespace pwiz.Osprey.IO
     /// format and everything downstream keeps seeing one
     /// <see cref="MzmlResult"/>.
     ///
-    /// mzML is handled by the hand-written <see cref="MzmlReader"/> on every
-    /// target framework. Vendor formats go through ProteoWizard, which is
-    /// net472-only (pwiz_data_cli has no .NET 8 build), so on net8.0 a vendor
-    /// path is a clear error rather than a silent fallback that would produce
-    /// nothing.
+    /// Which reader handles mzML depends on whether the build HAS ProteoWizard:
+    ///
+    /// * With it (net472, <c>/p:OspreyVendorReader=true</c>): ProteoWizard reads
+    ///   everything, mzML included. One parser for all mass spec data is the
+    ///   intended end state, and byte-level parity with <see cref="MzmlReader"/>
+    ///   is proven, so there is nothing left for a second parser to add.
+    /// * Without it (net8.0, or net472 by default): <see cref="MzmlReader"/> reads
+    ///   mzML because it is the only reader present, and a vendor path is a clear
+    ///   error rather than a silent fallback that would produce nothing.
+    ///
+    /// ProteoWizard is net472-only today (<c>pwiz_data_cli</c> has no .NET 8
+    /// build). Once #4178 supplies one, <see cref="MzmlReader"/> should be removed
+    /// and this class stops having a decision to make.
     /// </summary>
     public static class SpectrumFileReader
     {
@@ -58,25 +70,30 @@ namespace pwiz.Osprey.IO
         {
             bool isMzml = IsMzml(path);
 #if OSPREY_VENDOR_READER
-            // OSPREY_MZML_VIA_PWIZ routes mzML through ProteoWizard too, so the
-            // two readers can be compared against one fixed input file. Vendor
-            // centroiding is NOT requested for an mzML: those peaks are already
+            // EVERY format goes through ProteoWizard in a build that has it, mzML
+            // included. Reader-vs-reader parity is proven byte-for-byte on three
+            // datasets, so a second mzML parser earns nothing but a second place for
+            // a defect to live - and it is the one parser here that ProteoWizard,
+            // Skyline and msconvert do not already agree on. MzmlReader survives only
+            // because pwiz_data_cli has no .NET 8 build; when #4178 lands it should be
+            // deleted outright and this method collapses to a single call.
+            //
+            // OSPREY_MZML_VIA_MZMLREADER forces the hand-written reader back for one
+            // run. That is what keeps the parity check expressible: the same mzML read
+            // both ways must produce byte-identical .spectra.bin.
+            //
+            // Vendor centroiding is NOT requested for an mzML: those peaks are already
             // centroided, and MsDataFileImpl would centroid through a
             // VendorOnlyPeakDetector that throws with no vendor API behind it.
-            if (isMzml && !OspreyEnvironment.MzmlViaPwiz)
+            if (isMzml && OspreyEnvironment.MzmlViaMzmlReader)
                 return MzmlReader.LoadAllSpectra(path);
             return VendorRawReader.LoadAllSpectra(path, requireVendorCentroiding: !isMzml);
 #else
+            // No ProteoWizard in this build, so mzML is MzmlReader's by necessity and
+            // OSPREY_MZML_VIA_MZMLREADER is a no-op rather than an error: it asks for
+            // what already happens.
             if (isMzml)
-            {
-                if (OspreyEnvironment.MzmlViaPwiz)
-                {
-                    throw new NotSupportedException(
-                        "OSPREY_MZML_VIA_PWIZ needs a build that includes the ProteoWizard reader. " +
-                        VENDOR_READER_ABSENT + " Unset the variable to use the built-in mzML reader.");
-                }
                 return MzmlReader.LoadAllSpectra(path);
-            }
             throw new NotSupportedException(string.Format(
                 "Cannot read '{0}': it is not an mzML, and this build of Osprey cannot read vendor " +
                 "instrument files. {1} Otherwise convert the file to mzML with msconvert.",

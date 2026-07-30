@@ -63,8 +63,9 @@ namespace pwiz.Osprey.IO
         /// slightly, it changes WHICH spectra exist, which shifts every record
         /// after the first difference.
         /// </summary>
-        /// <param name="path">The instrument file, or an mzML under the
-        /// <c>OSPREY_MZML_VIA_PWIZ</c> diagnostic switch.</param>
+        /// <param name="path">The instrument file, or an mzML - in a build with
+        /// ProteoWizard every format arrives here, and only
+        /// <c>OSPREY_MZML_VIA_MZMLREADER</c> diverts mzML away.</param>
         /// <param name="requireVendorCentroiding">Whether to ask ProteoWizard for
         /// vendor centroiding, reproducing msconvert's
         /// <c>peakPicking vendor msLevel=1-</c>. Must be FALSE for an mzML
