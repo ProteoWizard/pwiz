@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
+using TestRunnerLib;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -312,7 +313,7 @@ namespace pwiz.SkylineTestUtil
             CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
             // Also check for file locks on the persistent files directory
             // since it is essentially an extension of the test directory.
-            if (!TestContext.Properties.Contains("ParallelTest")) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
+            if (!TestContext.Properties.Contains(RunTests.PARALLEL_TEST_PROPERTY)) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
             {
                 if (!PathEx.IsDownloadsPathShared())
                 {
