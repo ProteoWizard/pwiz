@@ -69,6 +69,13 @@ namespace pwiz.Skyline.Model.Results
         private readonly Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator> _integrators =
             new Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator>();
 
+        /// <summary>
+        /// What has been worked out so far, one entry per transition group, indexed the same way.
+        /// Rebuilding a precursor means rebuilding every one of its transitions, so it is worth
+        /// keeping: whoever asked for one of them usually goes on to ask for the rest.
+        /// </summary>
+        private GroupResults[] _groupResults;
+
         public MoleculeResults(SrmSettings settings, PeptideDocNode peptideDocNode)
         {
             Settings = settings;
@@ -94,35 +101,26 @@ namespace pwiz.Skyline.Model.Results
         public Results<TransitionChromInfo> GetTransitionResults(TransitionGroup transitionGroup,
             Transition transition)
         {
-            var nodeGroup = FindTransitionGroup(transitionGroup);
-            int transitionIndex = nodeGroup?.FindNodeIndex(transition) ?? -1;
-            if (transitionIndex < 0 || ReplicateCount == 0)
+            var groupResults = GetGroupResults(transitionGroup);
+            int transitionIndex = FindTransitionGroup(transitionGroup)?.FindNodeIndex(transition) ?? -1;
+            if (groupResults == null || transitionIndex < 0)
             {
                 return null;
             }
 
-            var chromInfoLists = new List<ChromInfoList<TransitionChromInfo>>(ReplicateCount);
-            for (int replicateIndex = 0; replicateIndex < ReplicateCount; replicateIndex++)
-            {
-                chromInfoLists.Add(new ChromInfoList<TransitionChromInfo>(
-                    CalcTransitionChromInfos(nodeGroup, replicateIndex)[transitionIndex]));
-            }
-
-            return new Results<TransitionChromInfo>(chromInfoLists);
+            return groupResults.TransitionResults[transitionIndex];
         }
 
         public ChromInfoList<TransitionChromInfo> GetTransitionChromInfos(TransitionGroup transitionGroup,
             Transition transition, int replicateIndex)
         {
-            var nodeGroup = FindTransitionGroup(transitionGroup);
-            int transitionIndex = nodeGroup?.FindNodeIndex(transition) ?? -1;
-            if (transitionIndex < 0 || replicateIndex < 0 || replicateIndex >= ReplicateCount)
+            var results = GetTransitionResults(transitionGroup, transition);
+            if (results == null || replicateIndex < 0 || replicateIndex >= results.Count)
             {
                 return default;
             }
 
-            return new ChromInfoList<TransitionChromInfo>(
-                CalcTransitionChromInfos(nodeGroup, replicateIndex)[transitionIndex]);
+            return results[replicateIndex];
         }
 
         /// <summary>
@@ -131,31 +129,77 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public Results<TransitionGroupChromInfo> GetTransitionGroupResults(TransitionGroup transitionGroup)
         {
-            var nodeGroup = FindTransitionGroup(transitionGroup);
-            if (nodeGroup == null || ReplicateCount == 0)
-            {
-                return null;
-            }
-
-            var chromInfoLists = new List<ChromInfoList<TransitionGroupChromInfo>>(ReplicateCount);
-            for (int replicateIndex = 0; replicateIndex < ReplicateCount; replicateIndex++)
-            {
-                chromInfoLists.Add(CalcTransitionGroupChromInfos(nodeGroup, replicateIndex));
-            }
-
-            return new Results<TransitionGroupChromInfo>(chromInfoLists);
+            return GetGroupResults(transitionGroup)?.ChromInfos;
         }
 
         public ChromInfoList<TransitionGroupChromInfo> GetTransitionGroupChromInfos(TransitionGroup transitionGroup,
             int replicateIndex)
         {
-            var nodeGroup = FindTransitionGroup(transitionGroup);
-            if (nodeGroup == null || replicateIndex < 0 || replicateIndex >= ReplicateCount)
+            var results = GetTransitionGroupResults(transitionGroup);
+            if (results == null || replicateIndex < 0 || replicateIndex >= results.Count)
             {
                 return default;
             }
 
-            return CalcTransitionGroupChromInfos(nodeGroup, replicateIndex);
+            return results[replicateIndex];
+        }
+
+        /// <summary>
+        /// Everything for one precursor, worked out once. Both levels come out of the same pass:
+        /// the ranks and the dot products are calculated from all of the transitions together, and
+        /// the precursor values are aggregated from the transition values.
+        /// </summary>
+        private GroupResults GetGroupResults(TransitionGroup transitionGroup)
+        {
+            EnsureRead();
+            int groupIndex = PeptideDocNode.FindNodeIndex(transitionGroup);
+            if (groupIndex < 0 || ReplicateCount == 0)
+            {
+                return null;
+            }
+
+            // Nothing else returns null, so there is no need to remember that a precursor has
+            // already been worked out.
+            return _groupResults[groupIndex] ??=
+                CalcGroupResults((TransitionGroupDocNode) PeptideDocNode.Children[groupIndex]);
+        }
+
+        private GroupResults CalcGroupResults(TransitionGroupDocNode nodeGroup)
+        {
+            var groupChromInfoLists = new List<ChromInfoList<TransitionGroupChromInfo>>(ReplicateCount);
+            var transitionChromInfoLists = Enumerable.Range(0, nodeGroup.TransitionCount)
+                .Select(iTran => new List<ChromInfoList<TransitionChromInfo>>(ReplicateCount)).ToArray();
+            for (int replicateIndex = 0; replicateIndex < ReplicateCount; replicateIndex++)
+            {
+                var chromInfoLists = CalcTransitionChromInfos(nodeGroup, replicateIndex, out var correlations);
+                groupChromInfoLists.Add(CalcTransitionGroupChromInfos(nodeGroup, replicateIndex, chromInfoLists,
+                    correlations));
+                for (int iTran = 0; iTran < transitionChromInfoLists.Length; iTran++)
+                {
+                    transitionChromInfoLists[iTran]
+                        .Add(new ChromInfoList<TransitionChromInfo>(chromInfoLists[iTran]));
+                }
+            }
+
+            return new GroupResults(new Results<TransitionGroupChromInfo>(groupChromInfoLists),
+                transitionChromInfoLists.Select(lists => new Results<TransitionChromInfo>(lists)));
+        }
+
+        /// <summary>
+        /// Everything worked out for one precursor, which is calculated for all of the replicates
+        /// at once because the precursor values need all of the transitions.
+        /// </summary>
+        private class GroupResults
+        {
+            public GroupResults(Results<TransitionGroupChromInfo> chromInfos,
+                IEnumerable<Results<TransitionChromInfo>> transitionResults)
+            {
+                ChromInfos = chromInfos;
+                TransitionResults = ImmutableList.ValueOf(transitionResults);
+            }
+
+            public Results<TransitionGroupChromInfo> ChromInfos { get; }
+            public ImmutableList<Results<TransitionChromInfo>> TransitionResults { get; }
         }
 
         /// <summary>
@@ -190,21 +234,17 @@ namespace pwiz.Skyline.Model.Results
             foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
             {
                 transitionGroupCount++;
-                var groupChromInfos = CalcTransitionGroupChromInfos(nodeGroup, replicateIndex);
+                var groupChromInfos = GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex);
                 if (groupChromInfos.Count == 0)
                 {
                     continue;
                 }
 
                 listCalculator.AddChromInfoList(nodeGroup, groupChromInfos);
-
-                // The transition chrom infos have to be the ones the group values came from, so
-                // they are calculated once here rather than asked for one transition at a time.
-                var transitionChromInfos = CalcTransitionChromInfos(nodeGroup, replicateIndex);
                 foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
                 {
                     listCalculator.AddChromInfoList(nodeGroup, nodeTran,
-                        transitionChromInfos[nodeGroup.FindNodeIndex(nodeTran.Transition)]);
+                        GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition, replicateIndex));
                 }
             }
 
@@ -269,16 +309,10 @@ namespace pwiz.Skyline.Model.Results
         /// Rebuilds the chrom infos of every transition of one transition group in one replicate,
         /// with the ranks and the dot products assigned. One transition cannot be done on its own,
         /// because both of those come from all of the transitions together.
-        /// </summary>
-        private IList<TransitionChromInfo>[] CalcTransitionChromInfos(TransitionGroupDocNode nodeGroup,
-            int replicateIndex)
-        {
-            return CalcTransitionChromInfos(nodeGroup, replicateIndex, out _);
-        }
-
-        /// <summary>
+        /// <para>
         /// <paramref name="correlations"/> receives the areas each dot product is calculated from,
         /// which the ranking pass has already had to gather. Only the group level values need them.
+        /// </para>
         /// </summary>
         private IList<TransitionChromInfo>[] CalcTransitionChromInfos(TransitionGroupDocNode nodeGroup,
             int replicateIndex, out List<FileStepCorrelation> correlations)
@@ -525,10 +559,10 @@ namespace pwiz.Skyline.Model.Results
         /// </para>
         /// </summary>
         private ChromInfoList<TransitionGroupChromInfo> CalcTransitionGroupChromInfos(
-            TransitionGroupDocNode nodeGroup, int replicateIndex)
+            TransitionGroupDocNode nodeGroup, int replicateIndex, IList<TransitionChromInfo>[] chromInfoLists,
+            List<FileStepCorrelation> correlations)
         {
             var nodeTrans = nodeGroup.Transitions.ToArray();
-            var chromInfoLists = CalcTransitionChromInfos(nodeGroup, replicateIndex, out var correlations);
             var previousChromInfos = nodeGroup.Results != null && replicateIndex < nodeGroup.Results.Count
                 ? nodeGroup.Results[replicateIndex]
                 : default;
@@ -717,6 +751,7 @@ namespace pwiz.Skyline.Model.Results
                 measuredResults == null
                     ? ReplicateMap<ChromatogramGroupInfo>.EMPTY
                     : ReadTransitionGroup(measuredResults, nodeGroup)));
+            _groupResults = new GroupResults[_chromatogramGroupInfos.Count];
         }
 
         private ReplicateMap<ChromatogramGroupInfo> ReadTransitionGroup(MeasuredResults measuredResults,

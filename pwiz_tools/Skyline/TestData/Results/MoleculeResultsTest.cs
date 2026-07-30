@@ -205,6 +205,11 @@ namespace pwiz.SkylineTestData.Results
             Assert.IsNotNull(results);
             Assert.AreEqual(nodeTran.Results.Count, results.Count);
 
+            // Asking again has to give back what was worked out the first time, rather than
+            // reading and rebuilding it all over.
+            Assert.AreSame(results,
+                moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition));
+
             int positionsChecked = 0;
             for (int replicateIndex = 0; replicateIndex < nodeTran.Results.Count; replicateIndex++)
             {
@@ -421,6 +426,7 @@ namespace pwiz.SkylineTestData.Results
             var results = moleculeResults.GetTransitionGroupResults(nodeGroup.TransitionGroup);
             Assert.IsNotNull(results);
             Assert.AreEqual(nodeGroup.Results.Count, results.Count);
+            Assert.AreSame(results, moleculeResults.GetTransitionGroupResults(nodeGroup.TransitionGroup));
 
             int groupsChecked = 0;
             for (int replicateIndex = 0; replicateIndex < nodeGroup.Results.Count; replicateIndex++)
