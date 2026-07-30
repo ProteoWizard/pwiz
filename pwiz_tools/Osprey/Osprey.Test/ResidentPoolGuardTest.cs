@@ -34,6 +34,9 @@ namespace pwiz.Osprey.Test
     /// UNLESS the operator explicitly accepted unbounded memory
     /// (OSPREY_ALLOW_UNBOUNDED_MEMORY, or OSPREY_FDR_PROJECTION=0 which forces the resident
     /// A/B-oracle path). So no user reaches an O(files) memory path by accident.
+    /// Also pins the trigger set that arms it
+    /// (<see cref="PerFileScoringTask.NeedsResidentPool(OspreyConfig, bool)"/>), since a
+    /// wrongly-added trigger is what re-broke 82-file OSPREY_PASS2_QVALUE=transfer runs.
     /// </summary>
     [TestClass]
     public class ResidentPoolGuardTest
@@ -76,6 +79,33 @@ namespace pwiz.Osprey.Test
             var simple = new OspreyConfig { FdrMethod = FdrMethod.Simple };
             StringAssert.Contains(
                 PerFileScoringTask.ResidentPoolGuardError(simple, true, false, true), "non-Percolator");
+
+            // The trigger SET itself, not just the message it produces. Each of these takes the
+            // O(files) resident pool and so arms the guard above.
+            AssertNeedsResidentPool(true, hpc);
+            AssertNeedsResidentPool(true, fdrbench1);
+            AssertNeedsResidentPool(true, simple);
+            // OSPREY_FDR_PROJECTION=0 is itself an explicit resident opt-in.
+            Assert.IsTrue(PerFileScoringTask.NeedsResidentPool(lean, useFdrProjection: false));
+
+            // Nothing else does. Context for OSPREY_PASS2_QVALUE=transfer, which #4438 took off
+            // the list (the per-run-only redesign maps each adjusted peak through that file's
+            // own 1st-pass score to run-q sidecar, one file at a time) and a #4446 merge
+            // artifact silently put back, killing an 82-file transfer run on the guard in ~25 s:
+            // the predicate is now env-free apart from the projection switch, so the triggers
+            // are exactly the four above. That is what these two assertions pin.
+            AssertNeedsResidentPool(false, lean);
+            AssertNeedsResidentPool(false, mdiag);
+        }
+
+        /// <summary>
+        /// Assert the resident-pool predicate on the projection path (the shipping default),
+        /// where <paramref name="config"/> alone decides.
+        /// </summary>
+        private static void AssertNeedsResidentPool(bool expected, OspreyConfig config)
+        {
+            Assert.AreEqual(expected,
+                PerFileScoringTask.NeedsResidentPool(config, useFdrProjection: true));
         }
     }
 }

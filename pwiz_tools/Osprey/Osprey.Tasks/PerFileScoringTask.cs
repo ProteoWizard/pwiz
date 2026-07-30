@@ -1471,8 +1471,10 @@ namespace pwiz.Osprey.Tasks
                 return @"OSPREY_DUMP_PERCOLATOR";
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
                 return @"--fdrbench-pass 1";
-            if (OspreyEnvironment.Pass2TransferQ)
-                return @"OSPREY_PASS2_QVALUE=transfer";
+            // OSPREY_PASS2_QVALUE=transfer is deliberately NOT a reason here, and must not
+            // become one again: the per-run-only redesign maps each adjusted peak through
+            // that file's own 1st-pass (score -> run q) sidecar, one file at a time, so it
+            // needs no pre-compaction pool. See NeedsResidentPool.
             if (!config.FdrMethod.UsesPercolatorFramework())
                 return @"A non-Percolator FDR method";
             if (!OspreyEnvironment.UseFdrProjection)
@@ -1863,11 +1865,29 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static bool NeedsResidentPool(OspreyConfig config)
         {
+            return NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection);
+        }
+
+        /// <summary>
+        /// Pure core of <see cref="NeedsResidentPool(OspreyConfig)"/> (the env static is passed
+        /// in so it is unit testable), and the single definition of the trigger set.
+        /// <c>OSPREY_PASS2_QVALUE=transfer</c> is NOT a trigger and must not become one again:
+        /// #4438 removed it when the per-run-only redesign dropped the full pre-compaction
+        /// score-&gt;q table, and a #4446 merge artifact silently restored it, re-breaking
+        /// 82-file transfer runs on <see cref="GuardResidentPool"/> with the memory bounding
+        /// #4438 had shipped. Deliberately reads no <see cref="OspreyEnvironment"/> state other
+        /// than the passed-in projection switch: the trigger set is then enumerable, and
+        /// <c>ResidentPoolGuardTest</c> pins it. Note the test cannot by itself catch a
+        /// re-added env read (the var is unset in a test process), so a pass-2 mode arriving
+        /// in this list is a review-caught error - it contradicts #4438's invariant that
+        /// transfer resolves run q per file, from data already on disk.
+        /// </summary>
+        internal static bool NeedsResidentPool(OspreyConfig config, bool useFdrProjection)
+        {
             return config.ExpectReconciledInput ||
-                   !OspreyEnvironment.UseFdrProjection ||
+                   !useFdrProjection ||
                    !config.FdrMethod.UsesPercolatorFramework() ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                   OspreyEnvironment.Pass2TransferQ;
+                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
         }
 
         /// <summary>
