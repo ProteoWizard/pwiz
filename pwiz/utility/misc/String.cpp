@@ -89,17 +89,24 @@ struct float5_policy_scientific : real_policies<T>
 
 namespace {
 
-/// Parse a decimal string back to double independently of the global locale.
-/// karma generates locale-independently, so the round-trip check has to read
-/// that way too; strtod would follow a comma-decimal-point locale and reject
-/// text karma had just written with a period.
-double parseClassic(const std::string& text)
+/// True when text reloads to exactly value, read independently of the global
+/// locale. karma generates locale-independently, so the round-trip check has to
+/// read that way too; strtod would follow a comma-decimal-point locale and
+/// reject text karma had just written with a period.
+///
+/// The failbit test is NOT redundant with the equality test. C++11 requires an
+/// extraction that goes out of range to set failbit AND store the largest
+/// representable value, so a decimal just above DBL_MAX such as
+/// 1.79769313486232e+308 reads back as exactly DBL_MAX and compares equal
+/// without being the same number. A consumer reading that text with strtod
+/// gets inf instead.
+bool reloadsExactly(const std::string& text, double value)
 {
     std::istringstream iss(text);
     iss.imbue(std::locale::classic());
-    double value = 0;
-    iss >> value;
-    return value;
+    double reloaded = 0;
+    iss >> reloaded;
+    return !iss.fail() && reloaded == value;
 }
 
 /// The shortest decimal form of value that reloads bit-exact, found by trying
@@ -122,7 +129,7 @@ std::string toRoundTripString(double value)
         oss.imbue(std::locale::classic());
         oss << std::setprecision(significantDigits) << value;
         widest = oss.str();
-        if (parseClassic(widest) == value)
+        if (reloadsExactly(widest, value))
             return widest;
     }
     return widest; // 17 significant digits always round-trips a double
@@ -165,7 +172,7 @@ std::string pwiz::util::toString(double value, RealConvertPolicy policyFlags)
             // are unchanged), and fall back to the shortest round-tripping form
             // only where the fast path would lose information.
             std::string result = generateWithPolicy<double12_policy<double>>(value);
-            if (parseClassic(result) == value)
+            if (reloadsExactly(result, value))
                 return result;
             return toRoundTripString(value);
         }

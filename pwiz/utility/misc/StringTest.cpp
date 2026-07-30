@@ -53,7 +53,10 @@ void testRoundTrip()
         // Ordinary values that the fast path already represents exactly; these
         // must keep their existing short text (see testFastPathTextUnchanged).
         0.0, 1.0, 0.1, 12.5, 500.25, -3.75,
-        // Range extremes and awkward magnitudes.
+        // Range extremes and awkward magnitudes. DBL_MAX is the one that caught
+        // toString accepting a 15-digit form whose decimal exceeds DBL_MAX: an
+        // out-of-range istringstream extraction stores the largest representable
+        // value, so the round-trip check saw equality where strtod sees inf.
         1e-9, 1e9, 1.7976931348623157e308, 2.2250738585072014e-308,
         std::numeric_limits<double>::epsilon(),
         // A value whose shortest round-trip form needs all 17 digits.
@@ -64,6 +67,9 @@ void testRoundTrip()
     {
         double value = values[i];
         string text = toString(value);
+        // strtod, not the istringstream toString validates with: the oracle has
+        // to be a reader independent of the code under test, and the two differ
+        // on out-of-range text, which is where the defect was.
         double reloaded = strtod(text.c_str(), NULL);
         if (os_) *os_ << "  " << text << " <- " << value << endl;
         unit_assert_operator_equal(value, reloaded);
