@@ -78,6 +78,14 @@ namespace pwiz.Skyline.Model.Serialization
             public const string molecule = "molecule";
             public const string transition_data = "transition_data";
             public const string results_data = "results_data";
+
+            // The columnar results: what a document holds instead of the chrom infos, once it
+            // knows which candidate peak in the .skyd each of its peaks is. Deliberately not the
+            // same element names as the chrom infos, so that a reader which does not know about
+            // them says so rather than reading half of what is there.
+            public const string transition_results_columnar = "transition_results_columnar";
+            public const string precursor_results_columnar = "precursor_results_columnar";
+            public const string columnar_peak = "columnar_peak";
             public const string linked_peptide = "linked_peptide";
             public const string linked_fragment_ion = "linked_fragment_ion";
             public const string crosslinks = "crosslinks";
@@ -209,6 +217,9 @@ namespace pwiz.Skyline.Model.Serialization
             public const string analyte_concentration = "analyte_concentration";
             public const string points_across = "points_across";
             public const string forced_integration = "forced_integration";
+
+            // Which of the candidate peaks in the .skyd the peak is, for the columnar results
+            public const string peak_index = "peak_index";
             public const string orphaned_crosslink_ion = "orphaned_crosslink_ion";
             public const string std_dev = "std_dev";
             public const string skewness = "skewness";

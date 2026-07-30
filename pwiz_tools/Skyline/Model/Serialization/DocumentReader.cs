@@ -277,6 +277,11 @@ namespace pwiz.Skyline.Model.Serialization
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
+
+            /// <summary>
+            /// What a document written without the chrom infos has instead of them.
+            /// </summary>
+            public TransitionResults ColumnarResults { get; private set; }
             public MeasuredIon MeasuredIon { get; private set; }
             public bool Quantitative { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
@@ -345,6 +350,8 @@ namespace pwiz.Skyline.Model.Serialization
                             LibInfo = ReadTransitionLibInfo(reader);
                         else if (reader.IsStartElement(EL.transition_results) || reader.IsStartElement(EL.results_data))
                             Results = ReadTransitionResults(reader);
+                        else if (reader.IsStartElement(EL.transition_results_columnar))
+                            ColumnarResults = _documentReader.ReadColumnarTransitionResults(reader);
                         // Discard informational elements.  These values are always
                         // calculated from the settings to ensure consistency.
                         // Note that we do use product_mz for sanity checks and to disambiguate some older mass-only small molecule documents.
@@ -1419,6 +1426,9 @@ namespace pwiz.Skyline.Model.Serialization
                 var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
+                var columnarResults = reader.IsStartElement(EL.precursor_results_columnar)
+                    ? ReadColumnarTransitionGroupResults(reader)
+                    : null;
 
                 nodeGroup = new TransitionGroupDocNode(group,
                                                   annotations,
@@ -1438,6 +1448,11 @@ namespace pwiz.Skyline.Model.Serialization
                 reader.ReadEndElement();
 
                 nodeGroup = (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(children);
+
+                // After the children, since replacing them is what discards the columnar results
+                // derived from whatever was there before.
+                if (columnarResults != null)
+                    nodeGroup = nodeGroup.ChangeAbbreviatedResults(columnarResults);
             }
             nodeGroup = nodeGroup.ChangePrecursorConcentration(precursorConcentration);
             return nodeGroup;
@@ -1459,6 +1474,133 @@ namespace pwiz.Skyline.Model.Serialization
             if (reader.IsStartElement(EL.precursor_results))
                 return ReadResults(reader, EL.precursor_peak, ReadTransitionGroupChromInfo);
             return null;
+        }
+
+        /// <summary>
+        /// Reads the columnar results, which a document written without the chrom infos has
+        /// instead of them. One entry per replicate and file, in that order, which is what makes
+        /// the flat positions.
+        /// </summary>
+        private ChromFileIds ReadColumnarResults(XmlReader reader, Action<XmlReader, int> readPeak)
+        {
+            var results = Settings.MeasuredResults;
+            if (results == null)
+                throw new InvalidDataException(SerializationResources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
+
+            var counts = new int[results.Chromatograms.Count];
+            var fileIds = new List<ChromFileInfoId>();
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
+            }
+
+            reader.ReadStartElement();
+            ChromatogramSet chromatogramSet = null;
+            int index = -1;
+            while (reader.IsStartElement(EL.columnar_peak))
+            {
+                string name = reader.GetAttribute(ATTR.replicate);
+                if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
+                {
+                    if (!results.TryGetChromatogramSet(name, out chromatogramSet, out index))
+                        throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
+                }
+
+                string fileId = reader.GetAttribute(ATTR.file);
+                var fileInfoId = fileId != null
+                    ? chromatogramSet.FindFileById(fileId)
+                    : chromatogramSet.MSDataFileInfos[0].FileId;
+                if (fileInfoId == null)
+                    throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
+
+                readPeak(reader, fileIds.Count);
+                fileIds.Add(fileInfoId);
+                counts[index]++;
+                // Consume the tag
+                reader.Read();
+            }
+
+            reader.ReadEndElement();
+            return new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
+        }
+
+        private TransitionResults ReadColumnarTransitionResults(XmlReader reader)
+        {
+            var areas = new List<float>();
+            var userSets = new List<UserSet>();
+            List<CustomPeak> customPeaks = null;
+            var chromFileIds = ReadColumnarResults(reader, (r, position) =>
+            {
+                areas.Add(r.GetFloatAttribute(ATTR.area));
+                userSets.Add(ReadUserSet(r));
+                CustomPeak.Collect(ref customPeaks,
+                    ReadCustomPeak(r, position, AnnotationDef.AnnotationTarget.transition_result));
+            });
+            var transitionResults = new TransitionResults(chromFileIds, areas).ChangeUserSets(userSets);
+            return customPeaks == null ? transitionResults : transitionResults.ChangeCustomPeaks(customPeaks);
+        }
+
+        private TransitionGroupResults ReadColumnarTransitionGroupResults(XmlReader reader)
+        {
+            var areas = new List<float>();
+            var retentionTimes = new List<float>();
+            var chosenPeakIndexes = new List<int>();
+            var qValues = new List<float>();
+            var zScores = new List<float>();
+            var userSets = new List<UserSet>();
+            List<CustomPeak> customPeaks = null;
+            var chromFileIds = ReadColumnarResults(reader, (r, position) =>
+            {
+                areas.Add(r.GetFloatAttribute(ATTR.area));
+                retentionTimes.Add(r.GetFloatAttribute(ATTR.retention_time));
+                chosenPeakIndexes.Add(r.GetNullableIntAttribute(ATTR.peak_index) ?? -1);
+                qValues.Add(r.GetNullableFloatAttribute(ATTR.qvalue) ?? float.NaN);
+                zScores.Add(r.GetNullableFloatAttribute(ATTR.zscore) ?? float.NaN);
+                userSets.Add(ReadUserSet(r));
+                CustomPeak.Collect(ref customPeaks,
+                    ReadCustomPeak(r, position, AnnotationDef.AnnotationTarget.precursor_result));
+            });
+            var groupResults = new TransitionGroupResults(chromFileIds, areas, retentionTimes)
+                .ChangeChosenPeakIndexes(chosenPeakIndexes)
+                .ChangeUserSets(userSets)
+                .ChangeQValues(qValues)
+                .ChangeZScores(zScores);
+            return customPeaks == null ? groupResults : groupResults.ChangeCustomPeaks(customPeaks);
+        }
+
+        private static UserSet ReadUserSet(XmlReader reader)
+        {
+            return reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict, UserSet.FALSE,
+                XmlUtil.EnumCase.upper);
+        }
+
+        private CustomPeak ReadCustomPeak(XmlReader reader, int position,
+            AnnotationDef.AnnotationTarget annotationTarget)
+        {
+            float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
+            float? endTime = reader.GetNullableFloatAttribute(ATTR.end_time);
+            var identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
+                PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
+            var annotations = Annotations.EMPTY;
+            if (!reader.IsEmptyElement)
+            {
+                reader.ReadStartElement();
+                annotations = ReadTargetAnnotations(reader, annotationTarget);
+            }
+
+            if (!startTime.HasValue && !endTime.HasValue && annotations.IsEmpty)
+            {
+                return null;
+            }
+
+            var customPeak = new CustomPeak(position).ChangeAnnotations(annotations);
+            if (startTime.HasValue && endTime.HasValue)
+            {
+                customPeak = customPeak.ChangePeakBounds(startTime, endTime, identified);
+            }
+
+            return customPeak;
         }
 
         /// <summary>
@@ -1703,6 +1845,9 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+
+            if (info.ColumnarResults != null)
+                node = node.ChangeAbbreviatedResults(info.ColumnarResults);
 
             return node;
         }

@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
@@ -50,6 +51,20 @@ namespace pwiz.Skyline.Model.Serialization
         public SkylineVersion SkylineVersion { get; private set; }
         public SrmDocument Document { get; private set; }
         public CompactFormatOption CompactFormatOption { get; set; }
+
+        /// <summary>
+        /// Whether to write out every attribute of the chrom infos, which is how documents have
+        /// always been written. Sharing a document sets this, because whoever reads the .sky.zip
+        /// afterwards - the Panorama website - reads the numbers rather than working them out from
+        /// the chromatograms.
+        /// <para>
+        /// Otherwise only the columnar results are written: the areas, the retention times and
+        /// which candidate peak each peak is. That is not a compact <i>encoding</i> of the same
+        /// thing, so <see cref="CompactFormatOption"/>, which chooses whether to use protocol
+        /// buffers, does not apply to it and is ignored.
+        /// </para>
+        /// </summary>
+        public bool WriteChromInfos { get; set; } = true;
 
         public event Action<int> WroteTransitions;
 
@@ -621,7 +636,11 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElements(new[] { libInfo }, helpers);
             }
 
-            if (node.HasResults)
+            if (!WriteChromInfos)
+            {
+                WriteTransitionGroupResults(writer, node.AbbreviatedResults);
+            }
+            else if (node.HasResults)
             {
                 WriteResults(writer, Settings, node.Results,
                     EL.precursor_results, EL.precursor_peak, WriteTransitionGroupChromInfo);
@@ -813,7 +832,11 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (nodeTransition.HasResults)
             {
-                if (UseCompactFormat())
+                if (!WriteChromInfos)
+                {
+                    WriteTransitionResults(writer, nodeTransition.AbbreviatedResults);
+                }
+                else if (UseCompactFormat())
                 {
                     var protoResults = new SkylineDocumentProto.Types.TransitionResults();
                     protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
@@ -970,6 +993,105 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteString(entry.Value);
                 writer.WriteEndElement();
             }
+        }
+
+        /// <summary>
+        /// Writes one entry per replicate and file, in that order, which is what
+        /// <see cref="ChromFileIds"/> is: the reader rebuilds the flat positions from the order
+        /// they come back in.
+        /// </summary>
+        private void WriteColumnarResults(XmlWriter writer, ChromFileIds chromFileIds, string start,
+            Action<XmlWriter, int> writePeak)
+        {
+            if (chromFileIds == null)
+            {
+                return;
+            }
+
+            var chromatograms = Settings.MeasuredResults.Chromatograms;
+            bool started = false;
+            var replicatePositions = chromFileIds.ReplicatePositions;
+            for (int replicateIndex = 0;
+                 replicateIndex < Math.Min(replicatePositions.ReplicateCount, chromatograms.Count);
+                 replicateIndex++)
+            {
+                var chromatogramSet = chromatograms[replicateIndex];
+                int position = replicatePositions.GetStart(replicateIndex);
+                for (int end = position + replicatePositions.GetCount(replicateIndex); position < end; position++)
+                {
+                    if (!started)
+                    {
+                        writer.WriteStartElement(start);
+                        started = true;
+                    }
+
+                    writer.WriteStartElement(EL.columnar_peak);
+                    writer.WriteAttribute(ATTR.replicate, chromatogramSet.Name);
+                    if (chromatogramSet.FileCount > 1)
+                    {
+                        writer.WriteAttribute(ATTR.file,
+                            chromatogramSet.GetFileSaveId(chromFileIds.FileIds[position]));
+                    }
+
+                    writePeak(writer, position);
+                    writer.WriteEndElement();
+                }
+            }
+
+            if (started)
+                writer.WriteEndElement();
+        }
+
+        private void WriteTransitionResults(XmlWriter writer, TransitionResults results)
+        {
+            WriteColumnarResults(writer, results?.ChromFileIds, EL.transition_results_columnar, (w, position) =>
+            {
+                w.WriteAttribute(ATTR.area, results.Areas[position]);
+                WriteUserSet(w, results.GetUserSet(position));
+                WriteCustomPeak(w, results.GetCustomPeak(position));
+            });
+        }
+
+        private void WriteTransitionGroupResults(XmlWriter writer, TransitionGroupResults results)
+        {
+            WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar, (w, position) =>
+            {
+                w.WriteAttribute(ATTR.area, results.Areas[position]);
+                w.WriteAttribute(ATTR.retention_time, results.RetentionTimes[position]);
+                w.WriteAttributeNullable(ATTR.peak_index, results.GetChosenPeakIndex(position));
+                w.WriteAttributeNullable(ATTR.qvalue, results.GetQValue(position));
+                w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
+                WriteUserSet(w, results.GetUserSet(position));
+                WriteCustomPeak(w, results.GetCustomPeak(position));
+            });
+        }
+
+        private static void WriteUserSet(XmlWriter writer, UserSet userSet)
+        {
+            if (userSet != UserSet.FALSE)
+                writer.WriteAttribute(ATTR.user_set, userSet.ToString().ToUpperInvariant());
+        }
+
+        /// <summary>
+        /// The boundaries of a peak which is not one of the candidate peaks, and the annotations.
+        /// Both are things the .skyd cannot give back.
+        /// </summary>
+        private static void WriteCustomPeak(XmlWriter writer, CustomPeak customPeak)
+        {
+            if (customPeak == null)
+            {
+                return;
+            }
+
+            if (customPeak.HasPeakBounds)
+            {
+                writer.WriteAttribute(ATTR.start_time, customPeak.StartTime.Value);
+                writer.WriteAttribute(ATTR.end_time, customPeak.EndTime.Value);
+                if (customPeak.Identified != PeakIdentification.FALSE)
+                    writer.WriteAttribute(ATTR.identified, customPeak.Identified.ToString().ToLowerInvariant());
+            }
+
+            WriteAnnotations(writer, customPeak.Annotations);
         }
 
         private static void WriteResults<TItem>(XmlWriter writer, SrmSettings settings,

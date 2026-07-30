@@ -1887,12 +1887,26 @@ namespace pwiz.Skyline.Model
             if (HasResults && Results.Count == measuredResults.Chromatograms.Count && Results.All(r => r.IsEmpty))
                 return this;
 
+            // A document read from a file written without the chrom infos has only the columnar
+            // results, and this runs before its chromatograms are loaded. Emptying them would
+            // throw away everything the file said about its peaks. Only that case is kept: where
+            // there are chrom infos the columnar results are derived from them, and keeping a copy
+            // made before they were emptied would leave the two disagreeing.
+            bool keepColumnarResults = !HasResults;
             IList<DocNode> childrenNew = new List<DocNode>(Children.Count);
             foreach (TransitionDocNode nodeTransition in Children)
-                childrenNew.Add(nodeTransition.ChangeResults(measuredResults.EmptyTransitionResults));
+            {
+                var nodeTransitionNew = nodeTransition.ChangeResults(measuredResults.EmptyTransitionResults);
+                if (keepColumnarResults)
+                    nodeTransitionNew = nodeTransitionNew.ChangeAbbreviatedResults(nodeTransition.AbbreviatedResults);
+                childrenNew.Add(nodeTransitionNew);
+            }
 
             var empty = measuredResults.EmptyTransitionGroupResults;
-            return (TransitionGroupDocNode) ChangeResults(empty).ChangeChildren(childrenNew);
+            var nodeResult = ChangeResults(empty);
+            if (keepColumnarResults)
+                nodeResult = nodeResult.ChangeAbbreviatedResults(AbbreviatedResults);
+            return (TransitionGroupDocNode) nodeResult.ChangeChildren(childrenNew);
         }
         private IEnumerable<TransitionGroupDocNode> GetMatchingGroups(PeptideDocNode nodePep)
         {

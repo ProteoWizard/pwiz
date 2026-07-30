@@ -456,7 +456,11 @@ namespace pwiz.Skyline.Model
         {
             string entryName = GetDocumentFileName();
             string docFilePath = Path.Combine(EnsureTempDir().DirPath, entryName);
-            Document.SerializeToFile(docFilePath, docFilePath, ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor);
+            // With every attribute of the chrom infos, because whoever reads the .sky.zip
+            // afterwards - the Panorama website - reads the numbers rather than working them out
+            // from the chromatograms.
+            Document.SerializeToFile(docFilePath, docFilePath, ShareType.SkylineVersion ?? SkylineVersion.CURRENT,
+                ProgressMonitor, true);
             AddDocumentAndAuditLog(zip, docFilePath);
         }
 

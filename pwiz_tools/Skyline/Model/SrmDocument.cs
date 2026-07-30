@@ -2257,8 +2257,18 @@ namespace pwiz.Skyline.Model
         public void SerializeToXmlWriter(XmlWriter writer, SkylineVersion skylineVersion, IProgressMonitor progressMonitor,
             IProgressStatus progressStatus)
         {
+            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, progressStatus, true);
+        }
+
+        /// <summary>
+        /// <paramref name="writeChromInfos"/> false writes the columnar results instead of every
+        /// attribute of the chrom infos. See <see cref="DocumentWriter.WriteChromInfos"/>.
+        /// </summary>
+        public void SerializeToXmlWriter(XmlWriter writer, SkylineVersion skylineVersion, IProgressMonitor progressMonitor,
+            IProgressStatus progressStatus, bool writeChromInfos)
+        {
             var document = DocumentAnnotationUpdater.UpdateAnnotations(this, progressMonitor, progressStatus);
-            var documentWriter = new DocumentWriter(document, skylineVersion);
+            var documentWriter = new DocumentWriter(document, skylineVersion) { WriteChromInfos = writeChromInfos };
             if (progressMonitor != null)
             {
                 int transitionsWritten = 0;
@@ -2286,13 +2296,20 @@ namespace pwiz.Skyline.Model
             return Path.Combine(directory, fileName);
         }
 
-        public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
+        /// <summary>
+        /// <paramref name="writeChromInfos"/> false writes the columnar results instead of every
+        /// attribute of the chrom infos, which is what a saved document holds. Sharing a document
+        /// sets it true, because whoever reads the .sky.zip afterwards reads the numbers rather
+        /// than working them out from the chromatograms.
+        /// </summary>
+        public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion,
+            IProgressMonitor progressMonitor, bool writeChromInfos = true)
         {
             string hash;
             using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), new UTF8Encoding(false))) // UTF-8 without BOM
             {
                 writer.Formatting = Formatting.Indented;
-                hash = Serialize(writer, displayName, skylineVersion, progressMonitor);
+                hash = Serialize(writer, displayName, skylineVersion, progressMonitor, writeChromInfos);
             }
 
             var auditLogPath = GetAuditLogPath(displayName);
@@ -2307,11 +2324,13 @@ namespace pwiz.Skyline.Model
                 TryHelper.TryTwice(() => File.Delete(auditLogPath));
         }
 
-        public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
+        public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion,
+            IProgressMonitor progressMonitor, bool writeChromInfos = true)
         {
             writer.WriteStartDocument();
             writer.WriteStartElement(@"srm_settings");
-            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)),
+                writeChromInfos);
             writer.WriteEndElement();
             writer.WriteEndDocument();
             writer.Flush();
