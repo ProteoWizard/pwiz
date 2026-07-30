@@ -825,7 +825,10 @@ namespace pwiz.Osprey.Test
 
                 Assert.IsNotNull(index);
                 Assert.AreEqual(ms2.Count, index.Ms2Count);
-                Assert.AreEqual(0, unsortedCount);
+                // Deliberately NOT asserting unsortedCount here. EnsureSpectraCache
+                // zeroes it up front and only assigns on the cache-MISS branch, which
+                // this test asserts is not taken - so the assertion could never fail and
+                // would read as coverage it does not provide.
                 List<Spectrum> streamed = index.LoadWindow(SpectraCache.WindowKey(500.0));
                 Assert.AreEqual(1, streamed.Count);
                 Assert.AreEqual(10.5, streamed[0].RetentionTime, 0.0);

@@ -57,14 +57,14 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        // -- SpectraCache (Stage 1 alone: inputs in, .spectra.bin out) --
+        // - SpectraCache (Stage 1 alone: inputs in, .spectra.bin out) --
 
         [TestMethod]
         public void TestValidateSpectraCache()
         {
             // Consolidated: the whole SpectraCache contract in one place.
             // The defining difference from every other task is that it needs
-            // NO library -- caching depends only on the input file -- so the
+            // NO library - caching depends only on the input file - so the
             // happy path below deliberately leaves LibrarySource null.
             var config = TaskConfig(HpcTask.SpectraCache);
             config.InputFiles = new List<string> { "a.raw" };
@@ -90,7 +90,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, expected);
         }
 
-        // -- PerFileScoring (mzML in) --
+        // - PerFileScoring (mzML in) --
 
         [TestMethod]
         public void TestValidatePerFileScoringHappyPath()
@@ -138,7 +138,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "not --input-scores");
         }
 
-        // -- PerFileRescore (--input-scores in) --
+        // - PerFileRescore (--input-scores in) --
 
         [TestMethod]
         public void TestValidatePerFileRescoreHappyPath()
@@ -188,7 +188,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "not -i <mzML>");
         }
 
-        // -- FirstJoin (--input-scores in, 2+ files, reconciliation on) --
+        // - FirstJoin (--input-scores in, 2+ files, reconciliation on) --
 
         [TestMethod]
         public void TestValidateFirstJoinHappyPath()
@@ -265,7 +265,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "Reconciliation.Enabled");
         }
 
-        // -- MergeNode (reconciled --input-scores in) --
+        // - MergeNode (reconciled --input-scores in) --
 
         [TestMethod]
         public void TestValidateMergeNodeHappyPath()
@@ -330,7 +330,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "cannot be combined with --input");
         }
 
-        // -- Default (no --task): full pipeline from -i mzML or --input-scores --
+        // - Default (no --task): full pipeline from -i mzML or --input-scores --
 
         [TestMethod]
         public void TestValidateDefaultFullHappyPath()
@@ -664,7 +664,7 @@ namespace pwiz.Osprey.Test
                 File.WriteAllText(Path.Combine(dir, "b.scores.parquet"), string.Empty); // no reconciled sibling
                 File.WriteAllText(Path.Combine(dir, "c.scores-reconciled.parquet"), string.Empty); // no original
                 // An input stem ending in ".reconciled" stays an original (Copilot
-                // ambiguity regression guard) -- its Stage 4 file must be returned
+                // ambiguity regression guard) - its Stage 4 file must be returned
                 // as an original, not misread as a reconciled output.
                 File.WriteAllText(Path.Combine(dir, "d.reconciled.scores.parquet"), string.Empty);
                 var resolved = Program.ResolveInputScores(new List<string> { dir });

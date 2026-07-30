@@ -55,9 +55,23 @@ namespace pwiz.Osprey.IO
         // implementation behind pwiz_data_cli's own conversions. Present on every
         // supported Windows and under Wine. The single PInvoke declaration for
         // Osprey lives here, per the "isolate PInvoke in one place" rule.
-        [DllImport(@"ucrtbase.dll", EntryPoint = "strtod", CallingConvention = CallingConvention.Cdecl,
+        // _strtod_l rather than strtod: plain strtod follows the process-global UCRT
+        // locale, so a third-party DLL calling setlocale to a comma-decimal locale
+        // would make "17.0286203070330" parse as 17 with 2 characters consumed. That
+        // fails the whole-string check and returns 0.0 for every retention time in the
+        // file. XmlConvert.ToDouble was culture-invariant by contract and this has to
+        // be too. Verified under de-DE: plain strtod stops at the '.', _strtod_l with
+        // the C locale returns the full value.
+        [DllImport(@"ucrtbase.dll", EntryPoint = "_strtod_l", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
-        private static extern double Strtod(IntPtr text, out IntPtr endPtr);
+        private static extern double StrtodL(IntPtr text, out IntPtr endPtr, IntPtr locale);
+
+        // _create_locale(LC_ALL = 0, "C") - an invariant locale handle, created once.
+        [DllImport(@"ucrtbase.dll", EntryPoint = "_create_locale", CallingConvention = CallingConvention.Cdecl,
+            ExactSpelling = true, SetLastError = false)]
+        private static extern IntPtr CreateLocale(int category, string locale);
+
+        private static readonly IntPtr C_LOCALE = CreateLocale(0, @"C");
 
         /// <summary>
         /// Parse an XML decimal value. Returns false unless the WHOLE string was
@@ -77,6 +91,12 @@ namespace pwiz.Osprey.IO
             if (trimmed.Length == 0)
                 return false;
 
+            // Hex float forms ("0x1.8p3" -> 12) are accepted by the CRT and rejected by
+            // XML Schema. No value-level check can catch them: they parse to ordinary
+            // finite numbers, unlike the nan/inf spellings caught below.
+            if (trimmed.IndexOf('x') >= 0 || trimmed.IndexOf('X') >= 0)
+                return false;
+
             // Marshal explicitly rather than letting the string marshaller do it:
             // validating "was everything consumed" needs the start pointer to
             // compare endPtr against, which the automatic marshaller does not
@@ -85,13 +105,21 @@ namespace pwiz.Osprey.IO
             IntPtr buffer = Marshal.StringToHGlobalAnsi(trimmed);
             try
             {
-                double parsed = Strtod(buffer, out IntPtr endPtr);
+                double parsed = StrtodL(buffer, out IntPtr endPtr, C_LOCALE);
                 long consumed = endPtr.ToInt64() - buffer.ToInt64();
                 if (consumed <= 0 || consumed != trimmed.Length)
                     return false;
                 // Overflow returns +/-HUGE_VAL; the old XmlConvert path threw and
                 // reported failure, and no mzML value is legitimately infinite.
-                if (double.IsInfinity(parsed))
+                //
+                // NaN matters more than it looks. The CRT accepts spellings XML Schema
+                // does not - "nan", "NaN", "-nan(ind)", and hex floats like "0x1.8p3" -
+                // and XmlConvert.ToDouble threw on all of them. A NaN that got through
+                // would defeat every downstream guard rather than trip one, because
+                // both "NaN > 0" and "NaN <= 0" are false: SpectrumBuilder's
+                // isolation-window fail-fast would pass it straight through and cache
+                // an IsolationWindow(NaN) that silently matches no precursor at all.
+                if (double.IsInfinity(parsed) || double.IsNaN(parsed))
                     return false;
                 value = parsed;
                 return true;

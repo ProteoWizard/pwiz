@@ -103,9 +103,11 @@ namespace pwiz.Osprey.Tasks
                     index = ScoringTaskShared.EnsureSpectraCache(
                         inputFile, false, out int unsortedCount, ctx);
                     if (unsortedCount > 0)
+                    {
                         ctx.LogWarning(string.Format(
                             "{0}: {1} spectra had unsorted centroids (sorted before caching).",
                             Path.GetFileName(inputFile), unsortedCount));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -118,6 +120,21 @@ namespace pwiz.Osprey.Tasks
                     continue;
                 }
                 swFile.Stop();
+
+                // A cache with no MS2 is a staging failure, not a staged file. It is
+                // header-valid, so every later scoring run ACCEPTS it, reports "No
+                // spectra found" and drops the file - and never re-parses, because the
+                // cache is valid rather than stale. The scoring path already refuses a
+                // zero-MS2 index; staging has to refuse it too or it launders the
+                // problem into a cache. The usual cause is a reader configuration that
+                // filtered every spectrum out, which is worth failing loudly on.
+                if (index.Ms2Count == 0)
+                {
+                    ctx.LogError(string.Format(
+                        "No MS2 spectra were read from {0}; refusing to stage an empty cache.", inputFile));
+                    ctx.ExitCode = 1;
+                    continue;
+                }
                 built++;
 
                 string cachePath = SpectraCache.GetCachePath(inputFile);

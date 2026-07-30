@@ -375,8 +375,10 @@ namespace pwiz.Osprey
                         // input file, and demanding one would make staging a dataset
                         // wait on a library that is often chosen later.
                         if (hasInputScores)
+                        {
                             return "--task SpectraCache takes -i <file>, not --input-scores " +
                                    "(it builds spectra caches from raw inputs, not from scores).";
+                        }
                         if (!hasInputFiles)
                             return "--task SpectraCache requires --input <file...>.";
                         return null;

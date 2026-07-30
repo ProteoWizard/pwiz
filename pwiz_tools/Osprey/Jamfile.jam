@@ -47,7 +47,7 @@ if [ modules.peek : NT ]
     # Osprey uses SDK-style csproj that auto-generates AssemblyInfo from
     # the MSBuild properties in pwiz_tools/Osprey/Directory.Build.props
     # (Company, Copyright, Version, etc.).  Unlike SkylineBatch/AutoQC/SeeMS,
-    # we do NOT generate Properties/AssemblyInfo.cs here -- doing so would
+    # we do NOT generate Properties/AssemblyInfo.cs here - doing so would
     # conflict with the SDK auto-gen and break the standalone build.ps1 flow
     # with CS0579 duplicate-attribute errors.  Instead we override the
     # Directory.Build.props placeholder version via /p:Version at build time.
@@ -90,11 +90,18 @@ if [ modules.peek : NT ]
         REM Osprey.sln, so it has to be built here first.  Its own up-to-date
         REM check makes this a couple of seconds when current.  Building
         REM CommonUtil comes along as its ProjectReference.
-        IF "$(OSPREY_VENDOR_READER)"=="true" (
-            echo Building ProteowizardWrapper for Osprey vendor raw reading...
-            msbuild $(PWIZ_WRAPPER_PATH)/ProteowizardWrapper.csproj /p:Configuration=$(CONFIGURATION);Platform=x64 /nologo /verbosity:minimal
-            IF ERRORLEVEL 1 exit %ERRORLEVEL%
-        )
+        REM Branch with GOTO rather than a parenthesized IF block. cmd.exe parses a
+        REM whole ( ) block before running any of it, so %ERRORLEVEL% inside one is
+        REM substituted with its value at PARSE time - 0 - and a failed wrapper build
+        REM would `exit 0`, killing the action before Osprey.sln builds while bjam
+        REM recorded success. Verified: the block form returns 0 on a command that
+        REM exits 7; this form returns 7. Same top-level idiom as Skyline
+        REM (Skyline/Jamfile.jam:185), which is correct for exactly this reason.
+        IF NOT "$(OSPREY_VENDOR_READER)"=="true" GOTO skip_wrapper_build
+        echo Building ProteowizardWrapper for Osprey vendor raw reading...
+        msbuild $(PWIZ_WRAPPER_PATH)/ProteowizardWrapper.csproj /p:Configuration=$(CONFIGURATION);Platform=x64 /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+        :skip_wrapper_build
         echo Building Osprey $(OSPREY_VERSION) in $(CONFIGURATION:L) configuration...
         msbuild $(OSPREY_PATH)/Osprey.sln /p:Configuration=$(CONFIGURATION);Platform=x64;Version=$(OSPREY_VERSION);OspreyVendorReader=$(OSPREY_VENDOR_READER) /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
@@ -122,7 +129,7 @@ if [ modules.peek : NT ]
     #
     # Note the TFM subdirectory. Osprey multi-targets net472;net8.0
     # (Directory.Build.props), and pwiz_data_cli is a net472-only mixed-mode
-    # assembly, so only the net472 output can load it -- putting the native
+    # assembly, so only the net472 output can load it - putting the native
     # vendor DLLs anywhere else would leave the wrapper unable to resolve them
     # at run time with nothing but "could not load file or assembly" to go on.
     # Both configurations are covered the way Skyline covers them: the vendor

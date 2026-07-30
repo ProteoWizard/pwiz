@@ -87,7 +87,13 @@ namespace pwiz.Osprey.IO
             // VendorOnlyPeakDetector that throws with no vendor API behind it.
             if (isMzml && OspreyEnvironment.MzmlViaMzmlReader)
                 return MzmlReader.LoadAllSpectra(path);
-            return VendorRawReader.LoadAllSpectra(path, requireVendorCentroiding: !isMzml);
+            // Ask for vendor centroiding only where a vendor API can actually do it.
+            // "Not mzML" is not the same question: an .mzXML or .mgf reaches here too,
+            // and requesting it for one of those lands in MsDataFileImpl's
+            // VendorOnlyPeakDetector, whose constructor leaves a null algorithm and
+            // whose first spectrum throws NoVendorPeakPickingException - an error about
+            // peak picking that says nothing about the real problem, the format choice.
+            return VendorRawReader.LoadAllSpectra(path, requireVendorCentroiding: IsVendorFormat(path));
 #else
             // No ProteoWizard in this build, so mzML is MzmlReader's by necessity and
             // OSPREY_MZML_VIA_MZMLREADER is a no-op rather than an error: it asks for
@@ -99,6 +105,28 @@ namespace pwiz.Osprey.IO
                 "instrument files. {1} Otherwise convert the file to mzML with msconvert.",
                 path, VENDOR_READER_ABSENT));
 #endif
+        }
+
+        /// <summary>
+        /// Whether this path is a vendor instrument format, i.e. one with a vendor API
+        /// behind it that can centroid. Deliberately a positive list rather than
+        /// "anything that is not mzML": ProteoWizard also reads mzXML, MGF and MS2,
+        /// and none of those has a vendor peak picker to ask.
+        ///
+        /// Several of these are DIRECTORIES rather than files (Agilent and Bruker .d,
+        /// Waters .raw), which is why the extension is taken from the path rather than
+        /// from any file inside it.
+        /// </summary>
+        public static bool IsVendorFormat(string path)
+        {
+            string ext = Path.GetExtension(path);
+            if (string.IsNullOrEmpty(ext))
+                return false;
+            return string.Equals(ext, @".raw", StringComparison.OrdinalIgnoreCase)      // Thermo, Waters
+                   || string.Equals(ext, @".d", StringComparison.OrdinalIgnoreCase)     // Agilent, Bruker
+                   || string.Equals(ext, @".wiff", StringComparison.OrdinalIgnoreCase)  // Sciex
+                   || string.Equals(ext, @".wiff2", StringComparison.OrdinalIgnoreCase) // Sciex
+                   || string.Equals(ext, @".lcd", StringComparison.OrdinalIgnoreCase);  // Shimadzu
         }
 
         /// <summary>

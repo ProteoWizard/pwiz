@@ -78,15 +78,31 @@ namespace pwiz.Osprey.IO
             var ms1Spectra = new List<MS1Spectrum>();
             int unsortedCount = 0;
 
+            // combineIonMobilitySpectra defaults to TRUE in the wrapper (Skyline wants
+            // IMS in 3-array frames) and FALSE in pwiz, which is what msconvert uses.
+            // Left at the wrapper default, an IMS acquisition would come back as one
+            // combined frame per drift-bin group instead of the per-scan spectra the
+            // mzML has - a different spectrum SET, which shifts every .spectra.bin
+            // record, not just their values. Osprey reads no mobility dimension at all,
+            // so the combined form has nothing to offer it either.
+            //
+            // Two ReaderConfig values still differ from msconvert and CANNOT be set
+            // from here: ignoreCalibrationScans (wrapper hardcodes true, dropping
+            // Waters lockmass scans) and allowMsMsWithoutPrecursor (wrapper hardcodes
+            // false, dropping precursor-less MS2). Both are deliberate Skyline choices
+            // in shared code. They bound the parity claim rather than break it: it
+            // holds for Thermo, where it was measured, and Waters or Bruker PASEF data
+            // needs its own comparison before being trusted.
             using (var msData = new MsDataFileImpl(path,
                        simAsSpectra: true,
+                       combineIonMobilitySpectra: false,
                        requireVendorCentroidedMS1: requireVendorCentroiding,
                        requireVendorCentroidedMS2: requireVendorCentroiding))
             {
                 int count = msData.SpectrumCount;
                 // Per-spectrum rather than per-byte progress (the vendor reader
                 // exposes no byte position), on the same throttled interval the
-                // mzML read uses -- a large raw file is minutes of otherwise
+                // mzML read uses - a large raw file is minutes of otherwise
                 // silent work.
                 using (var progress = new ProgressReporter(
                            string.Format("Reading {0}", Path.GetFileName(path)), count,
