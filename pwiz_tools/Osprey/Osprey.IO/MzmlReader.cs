@@ -695,7 +695,8 @@ namespace pwiz.Osprey.IO
         /// away and produce apex_rt drift downstream and cross-impl.
         ///
         /// On .NET Framework this goes through the C runtime's strtod (see
-        /// <see cref="NativeStrtod"/>). The previous version of this method used
+        /// <c>NativeStrtod</c>, which is compiled only for net472, so a cref to it
+        /// would not resolve in the net8.0 pass). The previous version of this method used
         /// XmlConvert.ToDouble on the stated grounds that XML Schema requires it
         /// to be IEEE-correct; **that is not true of .NET Framework's
         /// implementation**, which parses "0.86653405" one ULP high. .NET Core 3.0
