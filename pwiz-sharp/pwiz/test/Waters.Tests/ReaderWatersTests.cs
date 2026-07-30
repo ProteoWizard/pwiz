@@ -18,6 +18,21 @@ namespace Pwiz.Vendor.Waters.Tests;
 [TestClass]
 public class ReaderWatersTests
 {
+    /// <summary>
+    /// Diff precision for every Waters run, matching pwiz C++ <c>Reader_Waters_Test.cpp</c>
+    /// (<c>config.diffPrecision = 1e-5</c>), which sets it on the base config that all of its
+    /// per-variant configs are copied from.
+    ///
+    /// Waters needs the looser tolerance because MassLynx reports the per-scan stats (TIC, base
+    /// peak m/z and intensity, peaks-in-scan) only as an already-formatted string -- there is no
+    /// numeric accessor in the SDK, so pwiz C++ reads the same string and parses it. When the
+    /// underlying value lands on a rounding tie the SDK's own formatting is not reproducible
+    /// across machines: ATEHLSTLSEK_LM_684.3469 scan 3 of function 2 yields "163408" on a
+    /// developer machine and "163409" on the CI agents from the identical call on the identical
+    /// file. That is a 6.1e-6 relative difference, which 1e-5 absorbs and the 1e-6 default does not.
+    /// </summary>
+    private const double WATERS_DIFF_PRECISION = 1e-5;
+
     private static string? FindTestDataRoot()
     {
         string? dir = AppContext.BaseDirectory;
@@ -250,6 +265,7 @@ public class ReaderWatersTests
             Assert.Inconclusive($"{fixtureFolderName} not present under test data.");
             return null;
         }
-        return new FixtureRunContext(new Reader_Waters(), root, new IsNamedRawFile(fixtureFolderName), fixtureFolderName);
+        return new FixtureRunContext(new Reader_Waters(), root, new IsNamedRawFile(fixtureFolderName),
+            fixtureFolderName, WATERS_DIFF_PRECISION);
     }
 }

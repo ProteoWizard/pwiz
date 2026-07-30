@@ -90,10 +90,18 @@ public sealed class FixtureRunContext
     private readonly TestPathPredicate _predicate;
     private readonly string _fixtureName;
     private readonly TestResult _result = new();
+    private readonly double? _diffPrecision;
     private int _runs;
 
-    /// <summary>Constructs the context. Returns from a per-fixture SetUp helper.</summary>
-    public FixtureRunContext(IReader reader, string rootPath, TestPathPredicate predicate, string fixtureName)
+    /// <summary>
+    /// Constructs the context. Returns from a per-fixture SetUp helper.
+    /// <paramref name="diffPrecision"/> is the reader-wide diff precision, applied to every
+    /// <see cref="Run"/> whose config does not set one of its own. It mirrors the pwiz C++
+    /// pattern where the reader test declares one base <c>ReaderTestConfig</c> with
+    /// <c>diffPrecision</c> set and copies it into each per-variant config.
+    /// </summary>
+    public FixtureRunContext(IReader reader, string rootPath, TestPathPredicate predicate, string fixtureName,
+        double? diffPrecision = null)
     {
         ArgumentNullException.ThrowIfNull(reader);
         ArgumentNullException.ThrowIfNull(rootPath);
@@ -103,12 +111,14 @@ public sealed class FixtureRunContext
         _root = rootPath;
         _predicate = predicate;
         _fixtureName = fixtureName;
+        _diffPrecision = diffPrecision;
     }
 
     /// <summary>Runs the harness for this fixture under <paramref name="config"/> and accumulates the result.</summary>
     public void Run(ReaderTestConfig config)
     {
         ArgumentNullException.ThrowIfNull(config);
+        config.DiffPrecision ??= _diffPrecision;
         _runs++;
         _result.Add(VendorReaderTestHarness.TestReader(_reader, _root, _predicate, config));
     }
