@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# ------------------------------------------------------------------------
+# pwiz-sharp build entry point for Linux. Analogue of build.bat; TeamCity
+# calls it from tcbuild.sh (ProteoWizard_CoreLinuxNet). Runs locally too.
+#
+# Usage:
+#   ./build.sh [Debug|Release] [--i-agree-to-the-vendor-licenses]
+#              [--require-vendor-support] [--without-mascot] [--automated]
+#
+# Flags (same semantics as build.bat):
+#   --i-agree-to-the-vendor-licenses
+#       Acknowledge the vendor SDK EULAs so the encrypted vendor archives are
+#       extracted. NOTE the Linux caveat below: this enables only the vendor
+#       SDKs that actually work off-Windows.
+#   --require-vendor-support
+#       Fail if vendor support isn't enabled, instead of silently building a
+#       stripped artifact.
+#   --without-mascot
+#       Skip the MascotShim native wrapper (needs CMake + msparser).
+#   --automated
+#       Tag InformationalVersion "(automated build)".
+#
+# WHAT IS AND ISN'T BUILT ON LINUX
+#   Vendor support is not one switch once Linux is in scope (see
+#   $(NativeVendorsAvailable) in Directory.Build.props). Thermo's SDK is
+#   managed ThermoFisher.CommonCore and works cross-platform; Waters, Agilent,
+#   Bruker, Sciex, Shimadzu, Mobilion and UNIFI wrap native Windows DLLs (or
+#   Windows-only tooling) and cannot load here at all, so their projects and
+#   test suites are excluded from this script rather than being built and then
+#   failing at run time.
+#
+#   Also intentionally NOT done here (all Windows-only, unlike build.bat):
+#     - the Inno Setup installer + Installer.Tests
+#     - dotCover coverage (build.bat auto-enables it under TEAMCITY_VERSION;
+#       the Linux config reports plain test results instead)
+#
+# Test runner: build.bat fans out through scripts/Run-Tests-Parallel.ps1 to
+# keep TeamCity service messages from interleaving. Here we run `dotnet test`
+# per project sequentially, which avoids the same interleaving without
+# depending on pwsh being installed on the agent. Every project runs even if
+# an earlier one fails, so one red suite doesn't hide the rest; the script
+# still exits non-zero if any failed.
+# ------------------------------------------------------------------------
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+CONFIG=Release
+IAGREE=0
+REQUIRE_VENDOR=0
+AUTOMATED=0
+WITHOUT_MASCOT=0
+
+for arg in "$@"; do
+    case "$arg" in
+        --i-agree-to-the-vendor-licenses) IAGREE=1 ;;
+        --require-vendor-support)         REQUIRE_VENDOR=1 ;;
+        --without-mascot)                 WITHOUT_MASCOT=1 ;;
+        --automated)                      AUTOMATED=1 ;;
+        --coverage)
+            echo "##teamcity[message text='--coverage is not supported on Linux; ignoring' status='WARNING']" ;;
+        Debug|debug)                      CONFIG=Debug ;;
+        Release|release)                  CONFIG=Release ;;
+        *)
+            echo "Unrecognized argument: $arg" >&2
+            echo "##teamcity[message text='Unrecognized argument: $arg' status='ERROR']"
+            exit 2 ;;
+    esac
+done
+
+if [ "$REQUIRE_VENDOR" = 1 ] && [ "$IAGREE" = 0 ]; then
+    echo "##teamcity[message text='--require-vendor-support set but --i-agree-to-the-vendor-licenses was not passed; refusing to build a stripped artifact.' status='ERROR']"
+    exit 2
+fi
+
+MSBUILD_PROPS=(-p:Configuration="$CONFIG")
+[ "$IAGREE" = 1 ]          && MSBUILD_PROPS+=(-p:IAgreeToVendorLicenses=true)
+[ "$AUTOMATED" = 1 ]       && MSBUILD_PROPS+=(-p:AutomatedBuild=true)
+[ "$WITHOUT_MASCOT" = 1 ]  && MSBUILD_PROPS+=(-p:MascotSupport=false)
+
+if [ "$IAGREE" = 1 ]; then
+    echo "##teamcity[message text='Vendor support: ENABLED (cross-platform SDKs only; native Windows vendors are excluded on Linux)']"
+else
+    echo "##teamcity[message text='Vendor support: DISABLED (no --i-agree-to-the-vendor-licenses); building core only']"
+fi
+
+# The Linux 7-Zip binary ships next to 7za.exe in libraries/ and is referenced
+# by $(SevenZaExe) from Directory.Build.props. Git preserves its executable bit,
+# but a checkout that lost file modes (or an archive export) leaves it
+# non-executable and every vendor extraction fails with "Permission denied".
+SEVEN_ZZ="$SCRIPT_DIR/../libraries/7zz"
+if [ "$IAGREE" = 1 ] && [ -f "$SEVEN_ZZ" ] && [ ! -x "$SEVEN_ZZ" ]; then
+    echo "##teamcity[message text='libraries/7zz was not executable; fixing mode' status='WARNING']"
+    chmod +x "$SEVEN_ZZ"
+fi
+
+echo "##teamcity[progressMessage 'dotnet --version']"
+dotnet --version || { echo "##teamcity[message text='dotnet not on PATH' status='ERROR']"; exit 1; }
+
+# Build targets. Without vendor support, msconvert alone covers the core
+# stack. With it, MsConvert plus the Thermo reader (the one native-free vendor
+# SDK) — deliberately NOT Pwiz.sln, which pulls in the Windows-only vendors.
+if [ "$IAGREE" = 1 ]; then
+    BUILD_TARGET=(
+        "Tools/Commandline/MsConvert/src/MsConvert.csproj"
+        "pwiz/src/Vendor/Thermo/Thermo.csproj"
+    )
+else
+    BUILD_TARGET=("Tools/Commandline/MsConvert/src/MsConvert.csproj")
+fi
+
+for proj in "${BUILD_TARGET[@]}"; do
+    echo "##teamcity[progressMessage 'dotnet restore $proj']"
+    dotnet restore "$proj" "${MSBUILD_PROPS[@]}" \
+        || { echo "##teamcity[message text='dotnet restore $proj failed' status='ERROR']"; exit 1; }
+done
+
+for proj in "${BUILD_TARGET[@]}"; do
+    echo "##teamcity[progressMessage 'dotnet build $proj ($CONFIG)']"
+    dotnet build "$proj" --no-restore -nologo "${MSBUILD_PROPS[@]}" \
+        || { echo "##teamcity[message text='dotnet build $proj failed' status='ERROR']"; exit 1; }
+done
+
+# Test projects: the platform-agnostic suites, plus Thermo when vendor support
+# is on. The native-Windows vendor suites (Agilent/Bruker/Sciex/Shimadzu/
+# Waters/UIMF/Mobilion/UNIFI) and Installer.Tests are excluded by design.
+TEST_TARGET=(
+    "pwiz/test/Util.Tests/Util.Tests.csproj"
+    "pwiz/test/Common.Tests/Common.Tests.csproj"
+    "pwiz/test/MsData.Tests/MsData.Tests.csproj"
+    "pwiz/test/MsData.NativeAot.Tests/MsData.NativeAot.Tests.csproj"
+    "pwiz/test/IdentData.Tests/IdentData.Tests.csproj"
+    "pwiz/test/Analysis.Tests/Analysis.Tests.csproj"
+    "Tools/Commandline/MsConvert/test/MsConvert.Tests.csproj"
+)
+[ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/test/Thermo.Tests/Thermo.Tests.csproj")
+
+TC_TEST_RESULTS="$SCRIPT_DIR/TestResults"
+rm -rf "$TC_TEST_RESULTS"
+mkdir -p "$TC_TEST_RESULTS"
+
+TC_LOGGER=()
+[ -n "${TEAMCITY_VERSION:-}" ] && TC_LOGGER=(--logger teamcity)
+
+TESTS_FAILED=0
+FAILED_PROJECTS=""
+for proj in "${TEST_TARGET[@]}"; do
+    echo "##teamcity[progressMessage 'dotnet test $proj ($CONFIG)']"
+    dotnet test "$proj" --no-build -nologo "${MSBUILD_PROPS[@]}" \
+        --results-directory "$TC_TEST_RESULTS" --logger "trx" "${TC_LOGGER[@]+"${TC_LOGGER[@]}"}"
+    if [ $? -ne 0 ]; then
+        TESTS_FAILED=1
+        FAILED_PROJECTS="$FAILED_PROJECTS $(basename "$proj")"
+    fi
+done
+
+if [ "$TESTS_FAILED" -ne 0 ]; then
+    echo "##teamcity[message text='dotnet test reported failures in:$FAILED_PROJECTS' status='ERROR']"
+    exit 1
+fi
+
+exit 0
