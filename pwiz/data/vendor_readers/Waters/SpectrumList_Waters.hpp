@@ -78,11 +78,6 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
     virtual bool calibrationSpectraAreOmitted() const;
 
-    /// True if any spectrum actually presented by this list belongs to the lockmass function. False when
-    /// the source has no lockmass function, or when those spectra are not being presented (e.g. because
-    /// of ignoreCalibrationScans, or because the DDA processor excludes the reference function).
-    virtual bool hasCalibrationSpectra() const;
-
 #ifdef PWIZ_READER_WATERS
     SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config);
 
@@ -130,9 +125,9 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
 
     /// The 0-based lockmass function number, or LOCKMASS_FUNCTION_UNKNOWN if the source has none.
     /// Resolved once by the constructor, so this is a plain read and is safe from any thread. Do not
-    /// make it lazy again: spectrum() calls it holding readMutex while hasCalibrationSpectra() and
-    /// calibrationSpectraAreOmitted() call it without, so a lazy write would race and would also let
-    /// two threads into the MassLynx SDK at once.
+    /// make it lazy again: spectrum() calls it holding readMutex while calibrationSpectraAreOmitted()
+    /// calls it without, so a lazy write would race and would also let two threads into the MassLynx
+    /// SDK at once.
     int lockMassFunction() const;
 };
 

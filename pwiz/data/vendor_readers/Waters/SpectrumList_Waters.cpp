@@ -48,10 +48,10 @@ SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const 
     rawdata_->EnableProcessing(useDDAProcessor_);
 
     // Resolve the lockmass function once, here, while still single threaded. Doing it lazily would let
-    // spectrum() (which holds readMutex) and calibrationSpectraAreOmitted()/hasCalibrationSpectra()
-    // (which do not) race on the member and enter the MassLynx SDK unserialized. Note the out-parameter
-    // goes to a local: the SDK wrapper leaves it untouched when the call fails, so handing it the
-    // member directly would cache whatever happened to be there.
+    // spectrum() (which holds readMutex) and calibrationSpectraAreOmitted() (which does not) race on
+    // the member and enter the MassLynx SDK unserialized. Note the out-parameter goes to a local: the
+    // SDK wrapper leaves it untouched when the call fails, so handing it the member directly would
+    // cache whatever happened to be there.
     int lockmassFunction = LOCKMASS_FUNCTION_UNKNOWN;
     if (!rawdata_->Info.TryGetLockMassFunction(lockmassFunction) || lockmassFunction < 0)
         lockmassFunction = LOCKMASS_FUNCTION_UNKNOWN;
@@ -193,11 +193,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     }
 
     result->set(spectrumType);
-    // Mark lockmass (lockspray) scans so consumers need not guess which function is the reference.
-    // Additive: the underlying spectrum type is left in place, since "calibration spectrum" is not a
-    // child of "mass spectrum" and replacing the type would strip m/z units, ms level, polarity etc.
-    if (isLockMassFunction(ie.function))
-        result->set(MS_calibration_spectrum);
     if (isMS) result->set(MS_ms_level, msLevel);
     scan.set(MS_preset_scan_configuration, ie.function + 1);
 
@@ -645,26 +640,6 @@ PWIZ_API_DECL bool SpectrumList_Waters::calibrationSpectraAreOmitted() const
     return config_.ignoreCalibrationScans && lockMassFunction() >= 0;
 }
 
-PWIZ_API_DECL bool SpectrumList_Waters::hasCalibrationSpectra() const
-{
-    int lockmass = lockMassFunction();
-    if (lockmass < 0)
-        return false; // the source has no lockmass function at all
-    if (calibrationSpectraAreOmitted())
-        return false; // it has one, but createIndex kept it out of the list
-
-    // Otherwise its scans should be present, so ask the index rather than the config - the DDA processor
-    // also excludes the reference function, and this stays correct for that too. Entries are ordered by
-    // retention time and the lockspray typically leads, so a file that really has calibration spectra
-    // matches almost immediately. The exception is DDA processing, where the reference function is
-    // excluded but neither exit above fires, so this does walk the whole index to return false - once
-    // per file open, since Reader_Waters calls it exactly once.
-    for (const IndexEntry& ie : index_)
-        if (ie.function == lockmass)
-            return true;
-    return false;
-}
-
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
     using namespace boost::spirit::karma;
@@ -870,7 +845,6 @@ double SpectrumList_Waters::ccsToIonMobility(double ccs, double mz, int charge) 
 int SpectrumList_Waters::lockMassFunction() const {return LOCKMASS_FUNCTION_UNKNOWN;}
 bool SpectrumList_Waters::isLockMassFunction(int function) const {return false;}
 bool SpectrumList_Waters::calibrationSpectraAreOmitted() const {return false;}
-bool SpectrumList_Waters::hasCalibrationSpectra() const {return false;}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const { return SpectrumPtr(); }
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }

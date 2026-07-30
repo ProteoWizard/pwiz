@@ -2525,8 +2525,8 @@ namespace pwiz.ProteowizardWrapper
         // "channel=3 process=0 spectra=19,21 scan=20" - are absent deliberately. waters_connect splits
         // scan types into "channels" where MassLynx uses "functions"; the numberings are not
         // interchangeable, and reading one as the other discards real data. It also lockmass corrects
-        // and drops the reference scans rather than exporting them, so there is nothing to infer, and
-        // any that do appear are tagged MS:1000928 and caught by IsWatersLockmassSpectrum.
+        // and drops the reference scans rather than exporting them, so there is nothing to infer; the
+        // only thing that would identify one is an explicit MS:1000928.
         private static readonly Dictionary<string, int> WATERS_FUNCTION_ID_LAYOUTS = new Dictionary<string, int>
         {
             { @"function.process.scan", 0 },

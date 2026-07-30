@@ -122,36 +122,15 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
-    SpectrumList_Waters* sl = dynamic_cast<SpectrumList_Waters*>(msd.run.spectrumListPtr.get());
-    ChromatogramList_Waters* cl = dynamic_cast<ChromatogramList_Waters*>(msd.run.chromatogramListPtr.get());
-
-    // FunctionIndexList() lists every function in the source, but the lockmass function is not always
-    // presented as spectra (ignoreCalibrationScans, or the DDA processor excluding the reference
-    // function). When it isn't, it must not contribute to fileContent at all, so that the absence of
-    // "calibration spectrum" means there are none to look for.
-    //
-    // Note this loop does not make that guarantee for the other types it advertises: createIndex also
-    // drops SIM, CNL, CNG and (without srmAsSpectra) SRM functions, and they are still declared here -
-    // 160109_Mix1_calcurve_070.mzML announces "SRM spectrum" while holding none. Driving the loop from
-    // the functions actually indexed would fix all of them at once, and is worth doing separately.
-    bool ignoreLockMassFunction = sl != NULL && !sl->hasCalibrationSpectra();
-
     for (int function : rawdata->FunctionIndexList())
     {
         try
         {
-            if (ignoreLockMassFunction && sl->isLockMassFunction(function))
-                continue;
-
             int msLevel;
             CVID spectrumType;
             translateFunctionType(WatersToPwizFunctionType(rawdata->Info.GetFunctionType(function)), msLevel, spectrumType);
             if (spectrumType != CVID_Unknown)
                 msd.fileDescription.fileContent.set(spectrumType);
-
-            // Reaching here for the lockmass function means its spectra are in the output
-            if (sl != NULL && sl->isLockMassFunction(function))
-                msd.fileDescription.fileContent.set(MS_calibration_spectrum);
         }
         catch (...) // unable to translate function type
         {
@@ -178,6 +157,8 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
+    SpectrumList_Waters* sl = dynamic_cast<SpectrumList_Waters*>(msd.run.spectrumListPtr.get());
+    ChromatogramList_Waters* cl = dynamic_cast<ChromatogramList_Waters*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
