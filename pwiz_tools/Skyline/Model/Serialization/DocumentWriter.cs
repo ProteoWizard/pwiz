@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
@@ -65,6 +66,17 @@ namespace pwiz.Skyline.Model.Serialization
         /// </para>
         /// </summary>
         public bool WriteChromInfos { get; set; } = true;
+
+        /// <summary>
+        /// The files whose transition areas the precursor being written carries. Set while its
+        /// results are written and read while its transitions are.
+        /// </summary>
+        private HashSet<ReferenceValue<ChromFileInfoId>> _sharedTransitionAreaFiles;
+
+        // Kept for as long as one molecule is being written, since making one reads every
+        // chromatogram of the molecule
+        private PeptideDocNode _moleculeResultsPeptide;
+        private MoleculeResults _moleculeResults;
 
         public event Action<int> WroteTransitions;
 
@@ -570,6 +582,13 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="node">The transition group document node</param>
         private void WriteTransitionGroupXml(XmlWriter writer, PeptideDocNode nodePep, TransitionGroupDocNode node)
         {
+            // A transition does not hold on to its chrom infos, so writing them means working them
+            // out again from the chromatograms.
+            if (WriteChromInfos)
+            {
+                node = RestoreTransitionChromInfos(nodePep, node);
+            }
+
             TransitionGroup group = node.TransitionGroup;
             var isCustomIon = nodePep.Peptide.IsCustomMolecule;
             writer.WriteAttribute(ATTR.charge, group.PrecursorAdduct.AdductCharge);
@@ -638,7 +657,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (!WriteChromInfos)
             {
-                WriteTransitionGroupResults(writer, node.AbbreviatedResults);
+                WriteTransitionGroupResults(writer, node);
             }
             else if (node.HasResults)
             {
@@ -834,7 +853,10 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 if (!WriteChromInfos)
                 {
-                    WriteTransitionResults(writer, nodeTransition.AbbreviatedResults);
+                    // Left out when the precursor already carries these areas and there is nothing
+                    // else here to say.
+                    if (!IsCoveredBySharedTransitionAreas(nodeTransition.AbbreviatedResults))
+                        WriteTransitionResults(writer, nodeTransition.AbbreviatedResults);
                 }
                 else if (UseCompactFormat())
                 {
@@ -1052,8 +1074,10 @@ namespace pwiz.Skyline.Model.Serialization
             });
         }
 
-        private void WriteTransitionGroupResults(XmlWriter writer, TransitionGroupResults results)
+        private void WriteTransitionGroupResults(XmlWriter writer, TransitionGroupDocNode nodeGroup)
         {
+            var results = nodeGroup.AbbreviatedResults;
+            _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(nodeGroup, results);
             WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar, (w, position) =>
             {
                 w.WriteAttribute(ATTR.area, results.Areas[position]);
@@ -1063,7 +1087,104 @@ namespace pwiz.Skyline.Model.Serialization
                 w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
                 WriteUserSet(w, results.GetUserSet(position));
                 WriteCustomPeak(w, results.GetCustomPeak(position));
+                var areas = GetSharedTransitionAreas(nodeGroup, results.ChromFileIds.FileIds[position]);
+                if (areas != null)
+                {
+                    w.WriteAttributeString(ATTR.transition_areas, string.Join(@" ",
+                        areas.Select(area => area.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture))));
+                }
             });
+        }
+
+        /// <summary>
+        /// Gives a precursor's transitions their chrom infos back, for the paths which write every
+        /// attribute of them. One <see cref="MoleculeResults"/> serves the whole molecule, since
+        /// making one reads all of its chromatograms.
+        /// </summary>
+        private TransitionGroupDocNode RestoreTransitionChromInfos(PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup)
+        {
+            if (Settings.MeasuredResults == null || !nodeGroup.Transitions.Any())
+            {
+                return nodeGroup;
+            }
+
+            if (!ReferenceEquals(nodePep, _moleculeResultsPeptide))
+            {
+                _moleculeResultsPeptide = nodePep;
+                _moleculeResults = new MoleculeResults(Settings, nodePep);
+            }
+
+            var childrenNew = new List<DocNode>(nodeGroup.TransitionCount);
+            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+            {
+                var results = _moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition);
+                childrenNew.Add(results == null ? nodeTran : nodeTran.ChangeResults(results));
+            }
+
+            return (TransitionGroupDocNode) nodeGroup.ChangeChildren(childrenNew);
+        }
+
+        /// <summary>
+        /// The areas of every transition of a precursor in one file, or null when any of them has
+        /// something else to say: no peak there at all, a user set peak, annotations, or boundaries
+        /// which are not a candidate peak's. Then they each need an element of their own.
+        /// </summary>
+        private static float[] GetSharedTransitionAreas(TransitionGroupDocNode nodeGroup, ChromFileInfoId fileId)
+        {
+            var areas = new float[nodeGroup.TransitionCount];
+            for (int iTran = 0; iTran < areas.Length; iTran++)
+            {
+                var results = ((TransitionDocNode) nodeGroup.Children[iTran]).AbbreviatedResults;
+                int position = results?.ChromFileIds.IndexOfFile(fileId) ?? -1;
+                if (position < 0 || results.GetUserSet(position) != UserSet.FALSE ||
+                    results.GetCustomPeak(position) != null)
+                {
+                    return null;
+                }
+
+                areas[iTran] = results.Areas[position];
+            }
+
+            return areas;
+        }
+
+        /// <summary>
+        /// The files whose transition areas the precursor carries, so that a transition which has
+        /// nothing to say beyond those areas can be left out altogether.
+        /// </summary>
+        private static HashSet<ReferenceValue<ChromFileInfoId>> GetSharedTransitionAreaFiles(
+            TransitionGroupDocNode nodeGroup, TransitionGroupResults results)
+        {
+            if (results == null)
+            {
+                return null;
+            }
+
+            var fileIds = new HashSet<ReferenceValue<ChromFileInfoId>>();
+            foreach (var fileId in results.ChromFileIds.FileIds)
+            {
+                if (GetSharedTransitionAreas(nodeGroup, fileId) != null)
+                {
+                    fileIds.Add(fileId);
+                }
+            }
+
+            return fileIds;
+        }
+
+        /// <summary>
+        /// Whether every area this transition has is already in the precursor's transition areas.
+        /// </summary>
+        private bool IsCoveredBySharedTransitionAreas(TransitionResults results)
+        {
+            if (_sharedTransitionAreaFiles == null || results == null)
+            {
+                return false;
+            }
+
+            var fileIds = results.ChromFileIds.FileIds;
+            return fileIds.Count == _sharedTransitionAreaFiles.Count && fileIds.All(_sharedTransitionAreaFiles.Contains);
         }
 
         private static void WriteUserSet(XmlWriter writer, UserSet userSet)

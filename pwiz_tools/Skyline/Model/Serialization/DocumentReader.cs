@@ -1426,8 +1426,9 @@ namespace pwiz.Skyline.Model.Serialization
                 var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
+                SharedTransitionAreas sharedTransitionAreas = null;
                 var columnarResults = reader.IsStartElement(EL.precursor_results_columnar)
-                    ? ReadColumnarTransitionGroupResults(reader)
+                    ? ReadColumnarTransitionGroupResults(reader, out sharedTransitionAreas)
                     : null;
 
                 nodeGroup = new TransitionGroupDocNode(group,
@@ -1444,6 +1445,7 @@ namespace pwiz.Skyline.Model.Serialization
                     nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
                 }
                 children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues);
+                children = ApplySharedTransitionAreas(children, sharedTransitionAreas);
 
                 reader.ReadEndElement();
 
@@ -1541,8 +1543,66 @@ namespace pwiz.Skyline.Model.Serialization
             return customPeaks == null ? transitionResults : transitionResults.ChangeCustomPeaks(customPeaks);
         }
 
-        private TransitionGroupResults ReadColumnarTransitionGroupResults(XmlReader reader)
+        /// <summary>
+        /// The transition areas a precursor carries for the transitions which had nothing else to
+        /// say, so were not written at all. See <see cref="DocumentWriter"/>.
+        /// </summary>
+        private class SharedTransitionAreas
         {
+            public SharedTransitionAreas(ChromFileIds chromFileIds, IList<float[]> areasByPosition)
+            {
+                ChromFileIds = chromFileIds;
+                AreasByPosition = areasByPosition;
+            }
+
+            private ChromFileIds ChromFileIds { get; }
+            private IList<float[]> AreasByPosition { get; }
+
+            /// <summary>
+            /// The results of one transition, or null when the precursor carried nothing for it,
+            /// which means it was written out on its own.
+            /// </summary>
+            public TransitionResults MakeTransitionResults(int transitionIndex)
+            {
+                var replicatePositions = ChromFileIds.ReplicatePositions;
+                var fileIds = new List<ChromFileInfoId>();
+                var counts = new List<int>();
+                var areas = new List<float>();
+                for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+                {
+                    int count = 0;
+                    int position = replicatePositions.GetStart(replicateIndex);
+                    for (int end = position + replicatePositions.GetCount(replicateIndex); position < end; position++)
+                    {
+                        if (AreasByPosition[position] == null)
+                        {
+                            continue;
+                        }
+
+                        fileIds.Add(ChromFileIds.FileIds[position]);
+                        areas.Add(AreasByPosition[position][transitionIndex]);
+                        count++;
+                    }
+
+                    counts.Add(count);
+                }
+
+                if (areas.Count == 0)
+                {
+                    return null;
+                }
+
+                // A transition is only left out when nothing was set on it, so its user sets are
+                // all FALSE, which is what a written out one would have said.
+                return new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
+                    .ChangeUserSets(Enumerable.Repeat(UserSet.FALSE, areas.Count));
+            }
+        }
+
+        private TransitionGroupResults ReadColumnarTransitionGroupResults(XmlReader reader,
+            out SharedTransitionAreas sharedTransitionAreas)
+        {
+            var areasByPosition = new List<float[]>();
             var areas = new List<float>();
             var retentionTimes = new List<float>();
             var chosenPeakIndexes = new List<int>();
@@ -1558,15 +1618,57 @@ namespace pwiz.Skyline.Model.Serialization
                 qValues.Add(r.GetNullableFloatAttribute(ATTR.qvalue) ?? float.NaN);
                 zScores.Add(r.GetNullableFloatAttribute(ATTR.zscore) ?? float.NaN);
                 userSets.Add(ReadUserSet(r));
+                areasByPosition.Add(ReadTransitionAreas(r));
                 CustomPeak.Collect(ref customPeaks,
                     ReadCustomPeak(r, position, AnnotationDef.AnnotationTarget.precursor_result));
             });
+            sharedTransitionAreas = areasByPosition.Any(positionAreas => positionAreas != null)
+                ? new SharedTransitionAreas(chromFileIds, areasByPosition)
+                : null;
             var groupResults = new TransitionGroupResults(chromFileIds, areas, retentionTimes)
                 .ChangeChosenPeakIndexes(chosenPeakIndexes)
                 .ChangeUserSets(userSets)
                 .ChangeQValues(qValues)
                 .ChangeZScores(zScores);
             return customPeaks == null ? groupResults : groupResults.ChangeCustomPeaks(customPeaks);
+        }
+
+        /// <summary>
+        /// Gives the transitions which were not written out the areas the precursor carries for
+        /// them. A transition which was written out has its own results already and keeps them.
+        /// </summary>
+        private static TransitionDocNode[] ApplySharedTransitionAreas(TransitionDocNode[] children,
+            SharedTransitionAreas sharedTransitionAreas)
+        {
+            if (sharedTransitionAreas == null)
+            {
+                return children;
+            }
+
+            var childrenNew = new TransitionDocNode[children.Length];
+            for (int iTran = 0; iTran < children.Length; iTran++)
+            {
+                var nodeTran = children[iTran];
+                var results = nodeTran.HasAbbreviatedResults
+                    ? null
+                    : sharedTransitionAreas.MakeTransitionResults(iTran);
+                childrenNew[iTran] = results == null ? nodeTran : nodeTran.ChangeAbbreviatedResults(results);
+            }
+
+            return childrenNew;
+        }
+
+        private static float[] ReadTransitionAreas(XmlReader reader)
+        {
+            string strAreas = reader.GetAttribute(ATTR.transition_areas);
+            if (strAreas == null)
+            {
+                return null;
+            }
+
+            return strAreas.Split(' ')
+                .Select(strArea => float.Parse(strArea, System.Globalization.CultureInfo.InvariantCulture))
+                .ToArray();
         }
 
         private static UserSet ReadUserSet(XmlReader reader)
@@ -1835,19 +1937,23 @@ namespace pwiz.Skyline.Model.Serialization
                 var complexFragmentIon = new NeutralFragmentIon(parts, info.Losses);
                 var chargedIon = new ComplexFragmentIon(transition, complexFragmentIon, mods);
                 node = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, info.Annotations, quantInfo,
-                    info.ExplicitValues, info.Results);
+                    info.ExplicitValues, null);
             }
             else
             {
                 var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
                 node = new TransitionDocNode(transition, info.Annotations, losses,
-                    mass, quantInfo, info.ExplicitValues, info.Results);
+                    mass, quantInfo, info.ExplicitValues, null);
             }
 
             ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
 
-            if (info.ColumnarResults != null)
-                node = node.ChangeAbbreviatedResults(info.ColumnarResults);
+            // The columnar results are what the node keeps. A document written the old way has its
+            // chrom infos turned into them here and then does not hold on to the chrom infos: they
+            // are read back from the .skyd, or worked out from the columnar results.
+            var columnarResults = info.ColumnarResults ?? TransitionResults.FromChromInfos(info.Results);
+            if (columnarResults != null)
+                node = node.ChangeAbbreviatedResults(columnarResults);
 
             return node;
         }

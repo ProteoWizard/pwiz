@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData.Results
@@ -58,7 +59,13 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
 
-                var docRoundTrip = RoundTrip(docResults, false);
+                var docRoundTrip = RoundTrip(docResults, false, out string compactXml);
+
+                // Nothing in this document has a user set peak, annotations or a missing area, so
+                // every transition area rides on its precursor and no transition needs an element
+                // of its own.
+                StringAssert.Contains(compactXml, @"transition_areas=");
+                Assert.IsFalse(compactXml.Contains(@"transition_results_columnar"));
                 int transitionsChecked = 0;
                 int precursorsChecked = 0;
                 int chosenPeakIndexesChecked = 0;
@@ -133,26 +140,88 @@ namespace pwiz.SkylineTestData.Results
                 // Without these the comparisons above would agree about nothing worth agreeing on.
                 Assert.AreNotEqual(0, chosenPeakIndexesChecked);
 
-                // The chrom infos are not written at all, so what comes back has no peaks in them
-                // until the chromatograms are loaded again. Everything said about those peaks is
-                // in the columnar results compared above.
+                // A transition keeps only its columnar results either way.
                 foreach (var nodeTran in docRoundTrip.MoleculeTransitions)
                 {
-                    Assert.IsTrue(nodeTran.Results.All(chromInfoList => chromInfoList.IsEmpty));
+                    Assert.IsTrue(nodeTran.Results == null ||
+                                  nodeTran.Results.All(chromInfoList => chromInfoList.IsEmpty));
                 }
 
-                // Sharing writes them, which is what the Panorama website reads.
-                var docShared = RoundTrip(docResults, true);
-                foreach (var nodeTran in docShared.MoleculeTransitions)
+                // Sharing writes them, which is what the Panorama website reads. A transition does
+                // not hold on to its chrom infos any more, so these are worked out again from the
+                // chromatograms while writing.
+                // What the writer has to work from when it writes the chrom infos.
+                var firstPep = docResults.Peptides.First();
+                var firstGroup = firstPep.TransitionGroups.First();
+                var firstTran = firstGroup.Transitions.First();
+                var restored = new MoleculeResults(docResults.Settings, firstPep)
+                    .GetTransitionResults(firstGroup.TransitionGroup, firstTran.Transition);
+                Assert.IsNotNull(restored, @"MoleculeResults gave nothing back for the first transition");
+                Assert.AreNotEqual(0, restored.Sum(chromInfoList => chromInfoList.Count),
+                    @"MoleculeResults gave no chrom infos for the first transition");
+
+                var docShared = RoundTrip(docResults, true, out string sharedXml);
+                StringAssert.Contains(sharedXml, @"<transition_peak");
+
+                // Reading them back turns them into the columnar results, which is what a document
+                // read the old way now keeps, and the areas have to be the ones written.
+                int sharedAreasChecked = 0;
+                using (var expected = docResults.MoleculeTransitions.GetEnumerator())
+                using (var actual = docShared.MoleculeTransitions.GetEnumerator())
                 {
-                    Assert.IsNotNull(nodeTran.Results);
+                    while (expected.MoveNext() && actual.MoveNext())
+                    {
+                        var expectedAreas = expected.Current.AbbreviatedResults.Areas;
+                        var actualAreas = actual.Current.AbbreviatedResults.Areas;
+                        CollectionAssert.AreEqual(expectedAreas.ToArray(), actualAreas.ToArray(),
+                            string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.Count,
+                                actualAreas.Count));
+                        sharedAreasChecked += expectedAreas.Count;
+                    }
                 }
+
+                Assert.AreNotEqual(0, sharedAreasChecked);
+
+                CheckUserSetPeakStillWritten(docResults);
 
                 // What this does NOT cover: opening the saved document and loading its
                 // chromatograms again. Whether the peaks come back depends on UpdateResults
                 // rebuilding them from the columnar results rather than picking them afresh,
                 // which needs a document opened the way the application opens one.
             }
+        }
+
+        /// <summary>
+        /// A peak whose boundaries the user set cannot ride on its precursor's transition areas:
+        /// the boundaries have to be kept, and integrating between them is the only way it comes
+        /// back. So those transitions are written out on their own after all.
+        /// </summary>
+        private void CheckUserSetPeakStillWritten(SrmDocument docResults)
+        {
+            var peptideGroup = docResults.MoleculeGroups.First();
+            var nodePep = peptideGroup.Molecules.First();
+            var nodeGroup = nodePep.TransitionGroups.First();
+            var chromInfo = nodeGroup.Results[0].First();
+            var chromatograms = docResults.Settings.MeasuredResults.Chromatograms[0];
+            double width = chromInfo.EndRetentionTime.Value - chromInfo.StartRetentionTime.Value;
+            var docMoved = docResults.ChangePeak(
+                new IdentityPath(peptideGroup.Id, nodePep.Id, nodeGroup.Id), chromatograms.Name,
+                chromatograms.MSDataFileInfos[0].FilePath, null,
+                chromInfo.StartRetentionTime.Value + width / 10, chromInfo.EndRetentionTime.Value - width / 10,
+                UserSet.TRUE, PeakIdentification.FALSE, false);
+            Assert.AreNotSame(docResults, docMoved);
+
+            var docRoundTrip = RoundTrip(docMoved, false, out string compactXml);
+            StringAssert.Contains(compactXml, @"transition_results_columnar");
+
+            var expectedResults = docMoved.MoleculeTransitions.First().AbbreviatedResults;
+            var actualResults = docRoundTrip.MoleculeTransitions.First().AbbreviatedResults;
+            CollectionAssert.AreEqual(expectedResults.Areas.ToArray(), actualResults.Areas.ToArray(), @"areas");
+            CollectionAssert.AreEqual(expectedResults.UserSets.ToArray(), actualResults.UserSets.ToArray(),
+                @"user sets");
+            CollectionAssert.AreEqual(expectedResults.CustomPeaks?.ToArray(), actualResults.CustomPeaks?.ToArray(),
+                @"custom peaks");
+            Assert.IsNotNull(actualResults.CustomPeaks);
         }
 
         /// <summary>
@@ -180,7 +249,7 @@ namespace pwiz.SkylineTestData.Results
             return fileInfo.FilePath;
         }
 
-        private SrmDocument RoundTrip(SrmDocument document, bool writeChromInfos)
+        private SrmDocument RoundTrip(SrmDocument document, bool writeChromInfos, out string xml)
         {
             var stringBuilder = new StringBuilder();
             using (var writer = new XmlTextWriter(new StringWriter(stringBuilder)))
@@ -189,6 +258,7 @@ namespace pwiz.SkylineTestData.Results
                 document.Serialize(writer, null, SkylineVersion.CURRENT, null, writeChromInfos);
             }
 
+            xml = stringBuilder.ToString();
             using (var reader = new StringReader(stringBuilder.ToString()))
             {
                 return (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);

@@ -220,6 +220,10 @@ namespace pwiz.Skyline.Model.Serialization
 
             // Which of the candidate peaks in the .skyd the peak is, for the columnar results
             public const string peak_index = "peak_index";
+
+            // The areas of all of a precursor's transitions, in child order, so that transitions
+            // with nothing else to say do not each need an element of their own
+            public const string transition_areas = "transition_areas";
             public const string orphaned_crosslink_ion = "orphaned_crosslink_ion";
             public const string std_dev = "std_dev";
             public const string skewness = "skewness";

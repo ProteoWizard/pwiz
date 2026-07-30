@@ -1906,10 +1906,11 @@ namespace pwiz.Skyline.Model
             IList<DocNode> childrenNew = new List<DocNode>(Children.Count);
             foreach (TransitionDocNode nodeTransition in Children)
             {
-                var nodeTransitionNew = nodeTransition.ChangeResults(measuredResults.EmptyTransitionResults);
-                if (keepColumnarResults)
-                    nodeTransitionNew = nodeTransitionNew.ChangeAbbreviatedResults(nodeTransition.AbbreviatedResults);
-                childrenNew.Add(nodeTransitionNew);
+                // Always for a transition: the columnar results are the only results it has, so
+                // emptying them would leave nothing at all. The precursor still has chrom infos of
+                // its own, and where it does they are what its columnar results are derived from.
+                childrenNew.Add(nodeTransition.ChangeResults(measuredResults.EmptyTransitionResults)
+                    .ChangeAbbreviatedResults(nodeTransition.AbbreviatedResults));
             }
 
             var empty = measuredResults.EmptyTransitionGroupResults;
@@ -2279,14 +2280,28 @@ namespace pwiz.Skyline.Model
                 return nodeGroupNew;
             }
 
+            /// <summary>
+            /// The columnar results are what a transition keeps. The chrom infos are calculated
+            /// here, used to make them, and then let go: everything about them is either in the
+            /// columnar results or can be read back from the .skyd.
+            /// </summary>
             private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran)
             {
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
-                var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
-                if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
-                    nodeTran = nodeTran.ChangeResults(results);
-                if (!nodeTran.HasAbbreviatedResults)
-                    nodeTran = nodeTran.ChangeAbbreviatedResults(TransitionResults.FromChromInfos(results));
+                var results = Results<TransitionChromInfo>.Merge(null, chromInfoSet.ChromInfoLists);
+
+                // Only when this pass actually worked something out. A pass which read no
+                // chromatogram - because none is loaded yet - has nothing to say, and must not
+                // replace what a document was read with. Held on to across ChangeResults, which
+                // discards whatever the results being replaced had.
+                var abbreviatedResults = TransitionResults.FromChromInfos(results);
+                if (!(abbreviatedResults?.Areas.Count > 0))
+                    abbreviatedResults = nodeTran.AbbreviatedResults;
+
+                var emptyResults = Settings.MeasuredResults.EmptyTransitionResults;
+                if (!Results<TransitionChromInfo>.EqualsDeep(emptyResults, nodeTran.Results))
+                    nodeTran = nodeTran.ChangeResults(emptyResults);
+                nodeTran = nodeTran.ChangeAbbreviatedResults(abbreviatedResults);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
                 return nodeTran;
