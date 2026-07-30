@@ -125,15 +125,12 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Runtime DLLs that must land in the build output AND flow transitively to consumers
-       (Agilent.Tests, Skyline staging). The native agtsampleinforw.dll isn't a managed
-       Reference at all, so it needs an explicit copy. BaseTof.dll IS a managed Reference above,
-       but pwiz-sharp's C# never references BaseTof types; it's loaded at runtime by
-       CalibrationMgr for TOF calibration. Newer MSBuild/SDK toolchains trim that unused
-       reference out of the transitive copy set, so it copy-locals into THIS project's bin but
-       not into consumers' bins, and Agilent.Tests then fails to load BaseTof.dll at
-       CalibrationMgr..ctor(). Staging it as Content forces it into every consumer's output
-       regardless of compile-time usage. -->
+  <!-- Runtime files that must land in the build output. The native agtsampleinforw.dll isn't a
+       managed Reference at all, so it needs an explicit copy; the managed Reference items above
+       copy themselves because Private=true. BaseTof.dll is staged explicitly too: it is only a
+       runtime dependency (loaded by CalibrationMgr for TOF calibration, never referenced by
+       pwiz-sharp's C#), so an explicit Content item keeps it in the output independent of
+       reference-trimming decisions. -->
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <Content Include="$(AgilentAssembliesDir)\agtsampleinforw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -148,6 +145,30 @@
     <Content Include="$(AgilentAssembliesDir)\BaseDataAccess.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>BaseDataAccess.dll.config</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <!-- Visual C++ 2013 runtime, deployed app-local.
+       BaseTof.dll is the one mixed-mode (C++/CLI) assembly in Agilent's MHDAC set: its PE import
+       table lists MSVCR120.dll + MSVCP120.dll (the other Agilent DLLs are pure managed and import
+       only mscoree.dll). On a machine without the VC++ 2013 x64 redistributable, loading BaseTof
+       fails with ERROR_MOD_NOT_FOUND, surfaced as
+         "Could not load file or assembly '...BaseTof.dll'. The specified module could not be found."
+       — the file is present, its native dependency is not. Every Agilent reader test failed this
+       way on a freshly provisioned CI agent; developer machines and the older agents happened to
+       have the redist installed, which masked it.
+       Microsoft supports app-local deployment of the VC runtime, and pwiz already vendors these
+       DLLs, so copy them next to BaseTof.dll instead of requiring a machine-wide install. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Content Include="$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC120.CRT\x64\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>msvcr120.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC120.CRT\x64\msvcp120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>msvcp120.dll</Link>
       <Visible>false</Visible>
     </Content>
   </ItemGroup>
