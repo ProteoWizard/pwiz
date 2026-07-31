@@ -278,6 +278,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// These results with every annotation not named removed. Returns this when there was
+        /// nothing to remove, so an unchanged document stays reference equal.
+        /// </summary>
+        public TransitionGroupResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
+        {
+            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks);
+            if (ReferenceEquals(newCustomPeaks, CustomPeaks))
+                return this;
+            return ChangeCustomPeaks(newCustomPeaks);
+        }
+
+        /// <summary>
         /// The position of one file's entry in one replicate, or -1. Callers find a position this
         /// way rather than counting, since the entries of a replicate are in no order they can
         /// rely on.
@@ -715,6 +727,17 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// See <see cref="TransitionGroupResults.StripAnnotationValues"/>.
+        /// </summary>
+        public TransitionResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
+        {
+            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks);
+            if (ReferenceEquals(newCustomPeaks, CustomPeaks))
+                return this;
+            return ChangeCustomPeaks(newCustomPeaks);
+        }
+
+        /// <summary>
         /// Records the boundaries of the peak at one position, keeping whatever else is already
         /// known about it. Used when the peak turns out not to be one of the candidate peaks, and
         /// so can only be got back by integrating between its boundaries.
@@ -809,6 +832,72 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
+        }
+    }
+
+    /// <summary>
+    /// Removing annotations from the columnar results, which is where they live now. The
+    /// annotations of a peak are on its <see cref="CustomPeak"/>, and a peak whose annotations all
+    /// go and which has nothing else to say stops needing one at all.
+    /// </summary>
+    public static class StripAnnotations
+    {
+        /// <summary>
+        /// The custom peaks with every annotation not in <paramref name="annotationNamesToKeep"/>
+        /// removed, or the same list when there was nothing to remove, so that a document which
+        /// does not change stays reference equal.
+        /// </summary>
+        public static ImmutableList<CustomPeak> FromCustomPeaks(ICollection<string> annotationNamesToKeep,
+            ImmutableList<CustomPeak> customPeaks)
+        {
+            if (customPeaks == null)
+            {
+                return null;
+            }
+
+            List<CustomPeak> newCustomPeaks = null;
+            for (int i = 0; i < customPeaks.Count; i++)
+            {
+                var customPeak = customPeaks[i];
+                var annotations = customPeak.Annotations;
+                if (!Strip(annotationNamesToKeep, ref annotations))
+                {
+                    newCustomPeaks?.Add(customPeak);
+                    continue;
+                }
+
+                if (newCustomPeaks == null)
+                {
+                    newCustomPeaks = new List<CustomPeak>(customPeaks.Take(i));
+                }
+
+                // A peak with no annotations left and no boundaries of its own has nothing which
+                // cannot be read back from the .skyd, so it stops being a custom peak.
+                var newCustomPeak = customPeak.ChangeAnnotations(annotations);
+                if (!newCustomPeak.Annotations.IsEmpty || newCustomPeak.HasPeakBounds)
+                {
+                    newCustomPeaks.Add(newCustomPeak);
+                }
+            }
+
+            return newCustomPeaks == null ? customPeaks : ImmutableList.ValueOf(newCustomPeaks);
+        }
+
+        private static bool Strip(ICollection<string> annotationNamesToKeep, ref Annotations annotations)
+        {
+            bool stripped = false;
+            foreach (var entry in annotations.ListAnnotations())
+            {
+                if (annotationNamesToKeep.Contains(entry.Key))
+                {
+                    continue;
+                }
+
+                annotations = annotations.ChangeAnnotation(entry.Key, null);
+                stripped = true;
+            }
+
+            return stripped;
         }
     }
 

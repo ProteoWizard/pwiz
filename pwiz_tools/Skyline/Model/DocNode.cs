@@ -223,28 +223,25 @@ namespace pwiz.Skyline.Model
                     newDocNode = docNodeParent.ChangeChildren(newChildren);
                 }
             }
-            if (newDocNode is TransitionGroupDocNode)
+            // The annotations of a peak live on its CustomPeak in the columnar results now. Both
+            // of these return the same instance when there was nothing to strip, so a document
+            // which does not change stays reference equal.
+            if (newDocNode is TransitionGroupDocNode transitionGroupDocNode)
             {
-                var transitionGroupDocNode = newDocNode as TransitionGroupDocNode;
-                if (transitionGroupDocNode.Results != null)
+                var results = transitionGroupDocNode.AbbreviatedResults;
+                if (results != null)
                 {
-                    var results = transitionGroupDocNode.Results;
-                    if (StripAnnotationValues(annotationNamesToKeep, ref results))
-                    {
-                        newDocNode = transitionGroupDocNode.ChangeResults(results);
-                    }
+                    newDocNode = transitionGroupDocNode.ChangeAbbreviatedResults(
+                        results.StripAnnotationValues(annotationNamesToKeep));
                 }
             }
-            if (newDocNode is TransitionDocNode)
+            if (newDocNode is TransitionDocNode transitionDocNode)
             {
-                var transitionDocNode = newDocNode as TransitionDocNode;
-                if (transitionDocNode.Results != null)
+                var results = transitionDocNode.AbbreviatedResults;
+                if (results != null)
                 {
-                    var results = transitionDocNode.Results;
-                    if (StripAnnotationValues(annotationNamesToKeep, ref results))
-                    {
-                        newDocNode = transitionDocNode.ChangeResults(results);
-                    }
+                    newDocNode = transitionDocNode.ChangeAbbreviatedResults(
+                        results.StripAnnotationValues(annotationNamesToKeep));
                 }
             }
             return newDocNode;
