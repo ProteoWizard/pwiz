@@ -73,17 +73,6 @@ namespace pwiz.Skyline.Model.Serialization
             return _stringPool.GetString(species);
         }
 
-        private PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, ChromFileInfo fileInfo)
-        {
-            float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
-            float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
-            bool excludeFromCalibration = reader.GetBoolAttribute(ATTR.exclude_from_calibration);
-            double? analyteConcentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
-            return new PeptideChromInfo(fileInfo.FileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY)
-                .ChangeExcludeFromCalibration(excludeFromCalibration)
-                .ChangeAnalyteConcentration(analyteConcentration);
-        }
-
         private SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader)
         {
             // Look for an appropriate deserialization helper for spectrum
@@ -1030,7 +1019,7 @@ namespace pwiz.Skyline.Model.Serialization
             var annotations = Annotations.EMPTY;
             ExplicitMods mods = null, lookupMods = null;
             CrosslinkStructure crosslinkStructure = null;
-            Results<PeptideChromInfo> results = null;
+            PeptideResults results = null;
             TransitionGroupDocNode[] children = null;
             Adduct adduct = Adduct.EMPTY;
             var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attributes, doesn't advance the reader
@@ -1343,11 +1332,89 @@ namespace pwiz.Skyline.Model.Serialization
 
         }
 
-        private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader)
+        /// <summary>
+        /// The two values a molecule keeps, read straight into a <see cref="PeptideResults"/>. A
+        /// document written the old way records the peak count ratio and the retention time here
+        /// too, but both are aggregated from the precursors and worked out again on demand, so they
+        /// are not even read. Null when the molecule has neither value, which is the usual case.
+        /// </summary>
+        private PeptideResults ReadPeptideResults(XmlReader reader)
         {
-            if (reader.IsStartElement(EL.peptide_results))
-                return ReadResults(reader, EL.peptide_result, ReadPeptideChromInfo);
-            return null;
+            if (!reader.IsStartElement(EL.peptide_results))
+            {
+                return null;
+            }
+
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return null;
+            }
+
+            var measuredResults = Settings.MeasuredResults;
+            if (measuredResults == null)
+                throw new InvalidDataException(SerializationResources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
+
+            int replicateCount = measuredResults.Chromatograms.Count;
+            var fileIdsByReplicate = new List<ChromFileInfoId>[replicateCount];
+            var excludeByReplicate = new List<bool>[replicateCount];
+            var concentrationByReplicate = new List<double?>[replicateCount];
+            bool anythingToKeep = false;
+
+            reader.ReadStartElement();
+            ChromatogramSet chromatogramSet = null;
+            int index = -1;
+            while (reader.IsStartElement(EL.peptide_result))
+            {
+                string name = reader.GetAttribute(ATTR.replicate);
+                if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
+                {
+                    if (!measuredResults.TryGetChromatogramSet(name, out chromatogramSet, out index))
+                        throw new InvalidDataException(string.Format(SerializationResources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
+                }
+
+                string fileId = reader.GetAttribute(ATTR.file);
+                var fileInfoId = fileId != null
+                    ? chromatogramSet.FindFileById(fileId)
+                    : chromatogramSet.MSDataFileInfos[0].FileId;
+                if (fileInfoId == null)
+                    throw new InvalidDataException(string.Format(SerializationResources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
+
+                bool exclude = reader.GetBoolAttribute(ATTR.exclude_from_calibration);
+                double? concentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
+                // Consume the tag
+                reader.Read();
+
+                (fileIdsByReplicate[index] = fileIdsByReplicate[index] ?? new List<ChromFileInfoId>()).Add(fileInfoId);
+                (excludeByReplicate[index] = excludeByReplicate[index] ?? new List<bool>()).Add(exclude);
+                (concentrationByReplicate[index] = concentrationByReplicate[index] ?? new List<double?>())
+                    .Add(concentration);
+                anythingToKeep = anythingToKeep || exclude || concentration.HasValue;
+            }
+            reader.ReadEndElement();
+
+            if (!anythingToKeep)
+            {
+                return null;
+            }
+
+            var fileIds = new List<ChromFileInfoId>();
+            var counts = new List<int>();
+            var excludeFromCalibration = new List<bool>();
+            var analyteConcentrations = new List<double?>();
+            for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
+            {
+                counts.Add(fileIdsByReplicate[replicateIndex]?.Count ?? 0);
+                if (fileIdsByReplicate[replicateIndex] == null)
+                    continue;
+                fileIds.AddRange(fileIdsByReplicate[replicateIndex]);
+                excludeFromCalibration.AddRange(excludeByReplicate[replicateIndex]);
+                analyteConcentrations.AddRange(concentrationByReplicate[replicateIndex]);
+            }
+
+            return new PeptideResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds))
+                .ChangeExcludeFromCalibration(excludeFromCalibration)
+                .ChangeAnalyteConcentrations(analyteConcentrations);
         }
 
         /// <summary>

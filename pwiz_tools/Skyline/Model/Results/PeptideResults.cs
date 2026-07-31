@@ -38,49 +38,6 @@ namespace pwiz.Skyline.Model.Results
     public class PeptideResults : Immutable
     {
         /// <summary>
-        /// Builds the columnar form from the chrom infos a document holds, keeping only the two
-        /// values which cannot be derived. Returns null when there is nothing to keep, which is the
-        /// usual case: most documents have no analyte concentrations and exclude no replicate.
-        /// </summary>
-        public static PeptideResults FromChromInfos(Results<PeptideChromInfo> results)
-        {
-            if (results == null)
-            {
-                return null;
-            }
-
-            var fileIds = new List<ChromFileInfoId>();
-            var counts = new List<int>();
-            var excludeFromCalibration = new List<bool>();
-            var analyteConcentrations = new List<double?>();
-            bool anythingToKeep = false;
-            foreach (var chromInfoList in results)
-            {
-                int count = 0;
-                foreach (var chromInfo in chromInfoList)
-                {
-                    fileIds.Add(chromInfo.FileId);
-                    excludeFromCalibration.Add(chromInfo.ExcludeFromCalibration);
-                    analyteConcentrations.Add(chromInfo.AnalyteConcentration);
-                    anythingToKeep = anythingToKeep || chromInfo.ExcludeFromCalibration ||
-                                     chromInfo.AnalyteConcentration.HasValue;
-                    count++;
-                }
-
-                counts.Add(count);
-            }
-
-            if (!anythingToKeep)
-            {
-                return null;
-            }
-
-            return new PeptideResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds))
-                .ChangeExcludeFromCalibration(excludeFromCalibration)
-                .ChangeAnalyteConcentrations(analyteConcentrations);
-        }
-
-        /// <summary>
         /// An empty set laid out to match the document's replicates and files, for a molecule which
         /// is about to be given one of the two values it can keep and has none yet. Built from the
         /// measured results rather than from any chrom infos, so it reads nothing.

@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model
                               int? rank,
                               ExplicitRetentionTimeInfo explicitRetentionTimeInfo,
                               Annotations annotations,
-                              Results<PeptideChromInfo> results,
+                              PeptideResults results,
                               TransitionGroupDocNode[] children,
                               bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model
                 explicitRetentionTimeInfo = null; // Users sometimes say RT=0 when they actually mean "unknown"
             }
             ExplicitRetentionTime = explicitRetentionTimeInfo;
-            AbbreviatedResults = PeptideResults.FromChromInfos(results);
+            AbbreviatedResults = results;
 
             if (settings != null)
             {
