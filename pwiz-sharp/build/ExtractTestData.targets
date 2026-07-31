@@ -37,13 +37,28 @@
           Inputs="$(VendorTestArchive)"
           Outputs="$(IntermediateOutputPath)vendor-test-data.extracted">
     <PropertyGroup>
-      <_BsdTarExe>$(MSBuildThisFileDirectory)..\..\libraries\bsdtar.exe</_BsdTarExe>
+      <!-- libraries/bsdtar.exe is a Windows PE; running it off-Windows fails with
+           "Exec format error", and because IgnoreExitCode swallows that while the sentinel
+           below still gets touched, the extraction silently never happens and the fixtures
+           just aren't there. Use the system tar elsewhere. GNU tar's -k errors on existing
+           files rather than skipping (the reason bsdtar is used on Windows at all), so ask
+           for --skip-old-files, which is the skip-quietly spelling. -->
+      <_TarExe Condition="'$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\..\libraries\bsdtar.exe</_TarExe>
+      <_TarKeepArgs Condition="'$(OS)' == 'Windows_NT'">-xkf</_TarKeepArgs>
+      <_TarExe Condition="'$(OS)' != 'Windows_NT'">tar</_TarExe>
+      <_TarKeepArgs Condition="'$(OS)' != 'Windows_NT'">--skip-old-files -xf</_TarKeepArgs>
     </PropertyGroup>
     <MakeDir Directories="$(VendorTestDataParent);$(IntermediateOutputPath)" />
     <Message Importance="high" Text="Extracting $(VendorTestArchive) -&gt; $(VendorTestDataParent)" />
-    <Exec Command="&quot;$(_BsdTarExe)&quot; -xkf &quot;$(VendorTestArchive)&quot; -C &quot;$(VendorTestDataParent)&quot;"
+    <Exec Command="&quot;$(_TarExe)&quot; $(_TarKeepArgs) &quot;$(VendorTestArchive)&quot; -C &quot;$(VendorTestDataParent)&quot;"
           IgnoreExitCode="true"
-          IgnoreStandardErrorWarningFormat="true" />
+          IgnoreStandardErrorWarningFormat="true">
+      <Output TaskParameter="ExitCode" PropertyName="_TarExitCode" />
+    </Exec>
+    <!-- Windows bsdtar 2.7 exits 1 just for reporting skipped files, so its exit code says
+         nothing; GNU tar --skip-old-files exits 0 unless something genuinely went wrong. -->
+    <Warning Condition="'$(OS)' != 'Windows_NT' and '$(_TarExitCode)' != '0'"
+             Text="Extracting $(VendorTestArchive) failed (exit $(_TarExitCode)); vendor fixtures will be missing and their tests will report Inconclusive." />
     <Touch Files="$(IntermediateOutputPath)vendor-test-data.extracted" AlwaysCreate="true" />
   </Target>
 
