@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestData.Results
                         {
                             Assert.AreEqual(0.25205, 
                                 (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.ModifiedTarget);
-                            Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
+                            Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0, false), 0.0001);
                             nPeptides++;
                         }
                     }

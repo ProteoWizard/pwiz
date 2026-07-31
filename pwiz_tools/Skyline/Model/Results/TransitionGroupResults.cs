@@ -452,6 +452,7 @@ namespace pwiz.Skyline.Model.Results
             var truncated = new List<bool?>();
             var emptyPeaks = new List<bool>();
             var identified = new List<PeakIdentification>();
+            var forcedIntegration = new List<bool>();
             var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
             List<CustomPeak> customPeaks = null;
             foreach (var chromInfoList in results)
@@ -474,6 +475,7 @@ namespace pwiz.Skyline.Model.Results
                     truncated.Add(chromInfo.IsTruncated);
                     emptyPeaks.Add(chromInfo.IsEmpty);
                     identified.Add(chromInfo.Identified);
+                    forcedIntegration.Add(chromInfo.IsForcedIntegration);
                     count++;
                 }
 
@@ -485,7 +487,8 @@ namespace pwiz.Skyline.Model.Results
                     .ChangeUserSets(userSets)
                     .ChangeTruncated(truncated)
                     .ChangeEmptyPeaks(emptyPeaks)
-                    .ChangeIdentified(identified);
+                    .ChangeIdentified(identified)
+                    .ChangeForcedIntegration(forcedIntegration);
             if (customPeaks != null)
             {
                 transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
@@ -570,6 +573,14 @@ namespace pwiz.Skyline.Model.Results
         public ImmutableList<PeakIdentification> Identified { get; private set; }
 
         /// <summary>
+        /// Whether each peak was integrated only because integration was forced, which
+        /// <see cref="TransitionChromInfo.IsGoodPeak"/> excludes from the peak count. Kept for the
+        /// same reason as <see cref="Identified"/>: the peak count ratio is shown for every
+        /// molecule in the tree, and must not cost a chromatogram read.
+        /// </summary>
+        public ImmutableList<bool> ForcedIntegration { get; private set; }
+
+        /// <summary>
         /// The positions which have something that cannot be derived from the .skyd file.
         /// Sparse: most positions have no entry.
         /// </summary>
@@ -645,6 +656,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.Identified = ImmutableList.ValueOf(value).MaybeConstant());
         }
 
+        public TransitionResults ChangeForcedIntegration(IEnumerable<bool> value)
+        {
+            return ChangeProp(ImClone(this), im => im.ForcedIntegration = ImmutableList.ValueOf(value).MaybeConstant());
+        }
+
         /// <summary>
         /// Whether the peak at one position ran off the end of the chromatogram, or null when
         /// nothing worked that out. See <see cref="Truncated"/>.
@@ -669,6 +685,21 @@ namespace pwiz.Skyline.Model.Results
         public PeakIdentification GetIdentified(int position)
         {
             return Identified == null ? PeakIdentification.FALSE : Identified[position];
+        }
+
+        /// <summary>
+        /// Whether the peak at one position counts towards the peak count ratio, which is what
+        /// <see cref="TransitionChromInfo.IsGoodPeak"/> decides. Everything it looks at is stored,
+        /// so this needs no chromatogram.
+        /// </summary>
+        public bool IsGoodPeak(int position, bool integrateAll)
+        {
+            if (IsEmptyPeak(position) || !(Areas[position] > 0))
+            {
+                return false;
+            }
+
+            return integrateAll || ForcedIntegration == null || !ForcedIntegration[position];
         }
 
         /// <summary>
@@ -770,6 +801,7 @@ namespace pwiz.Skyline.Model.Results
             return Equals(ChromFileIds, other.ChromFileIds) && Equals(Areas, other.Areas) &&
                    Equals(UserSets, other.UserSets) && Equals(Truncated, other.Truncated) &&
                    Equals(EmptyPeaks, other.EmptyPeaks) && Equals(Identified, other.Identified) &&
+                   Equals(ForcedIntegration, other.ForcedIntegration) &&
                    Equals(CustomPeaks, other.CustomPeaks) &&
                    Equals(ChromInfos, other.ChromInfos);
         }
@@ -799,6 +831,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (Truncated?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (EmptyPeaks?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (Identified?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ForcedIntegration?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
                 return result;

@@ -473,7 +473,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
-                float? peakFoundRatio = nodePep.GetPeakCountRatio(bestResultIndex);
+                float? peakFoundRatio = nodePep.GetPeakCountRatio(bestResultIndex, document.Settings.TransitionSettings.Integration.IsIntegrateAll);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)

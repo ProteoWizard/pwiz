@@ -391,11 +391,19 @@ namespace pwiz.Skyline.Model
             return ChangeAbbreviatedResults(change(peptideResults, position));
         }
 
-        public bool HasResults { get { return Results != null; } }
+        /// <summary>
+        /// Whether this molecule has measured results, asked of its precursors. It cannot be asked
+        /// of <see cref="AbbreviatedResults"/>, which is null for any document that excludes no
+        /// replicate and has no analyte concentrations - which is most of them.
+        /// </summary>
+        public bool HasResults
+        {
+            get { return TransitionGroups.Any(nodeGroup => nodeGroup.HasAbbreviatedResults); }
+        }
 
         public ChromInfoList<PeptideChromInfo> GetSafeChromInfo(int i)
         {
-            return HasResults && Results.Count > i ? Results[i] : default(ChromInfoList<PeptideChromInfo>);
+            return Results != null && Results.Count > i ? Results[i] : default(ChromInfoList<PeptideChromInfo>);
         }
 
         public float GetRankValue(PeptideRankId rankId)
@@ -406,15 +414,47 @@ namespace pwiz.Skyline.Model
             return value;
         }
 
-        public float? GetPeakCountRatio(int i)
+        /// <summary>
+        /// The peak count ratio of one replicate, averaged over the precursors, worked out from
+        /// their transitions' columnar results. This is the same arithmetic the precursor level
+        /// calculator does - good peaks over transitions - and it reads no chromatogram, which
+        /// matters because the tree shows it for every molecule.
+        /// </summary>
+        public float? GetPeakCountRatio(int i, bool integrateAll)
         {
             if (i == -1)
                 return AveragePeakCountRatio;
 
-            var result = GetSafeChromInfo(i);
-            if (result.IsEmpty)
-                return null;
-            return result.GetAverageValue(chromInfo => chromInfo.PeakCountRatio);
+
+            double total = 0;
+            int groupCount = 0;
+            foreach (var nodeGroup in TransitionGroups)
+            {
+                int goodPeaks = 0;
+                int transitionCount = 0;
+                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                {
+                    var results = nodeTran.AbbreviatedResults;
+                    if (results == null)
+                        continue;
+                    transitionCount++;
+                    foreach (int position in results.GetPositions(i))
+                    {
+                        if (results.IsGoodPeak(position, integrateAll))
+                        {
+                            goodPeaks++;
+                            break;
+                        }
+                    }
+                }
+
+                if (transitionCount == 0)
+                    continue;
+                total += (double) goodPeaks/transitionCount;
+                groupCount++;
+            }
+
+            return groupCount == 0 ? (float?) null : (float) (total/groupCount);
         }
 
         public float? AveragePeakCountRatio
@@ -1428,16 +1468,19 @@ namespace pwiz.Skyline.Model
         private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)
         {
             // First check whether any child results are present
+            // Results != null rather than HasResults: this is about the chrom infos this node is
+            // carrying, and HasResults now answers the different question of whether the molecule
+            // has measured results at all, which it asks of the precursors.
             if (!settingsNew.HasResults || Children.Count == 0)
             {
-                if (!HasResults)
+                if (Results == null)
                     return this;
                 return ChangeResults(null);
             }
             else if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) &&
-                     (!HasResults || Results.All(r => r.IsEmpty)))
+                     (Results == null || Results.All(r => r.IsEmpty)))
             {
-                if (HasResults && Results.Count == settingsNew.MeasuredResults.Chromatograms.Count)
+                if (Results != null && Results.Count == settingsNew.MeasuredResults.Chromatograms.Count)
                     return this;
                 return ChangeResults(settingsNew.MeasuredResults.EmptyPeptideResults);
             }

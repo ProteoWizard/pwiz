@@ -252,7 +252,7 @@ namespace pwiz.SkylineTestTutorial
                 var nodePep = (PeptideDocNode)((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode).Model;
                 Assert.AreEqual(null,
                                 nodePep.GetPeakCountRatio(
-                                    SkylineWindow.SequenceTree.GetDisplayResultsIndex(nodePep)));
+                                    SkylineWindow.SequenceTree.GetDisplayResultsIndex(nodePep), false));
                 SkylineWindow.SequenceTree.SelectedPath = SkylineWindow.Document.GetPathTo(1, 157);
                 Assert.AreEqual("VTVVDDQSVILK", SkylineWindow.SequenceTree.SelectedNode.Text);
             });

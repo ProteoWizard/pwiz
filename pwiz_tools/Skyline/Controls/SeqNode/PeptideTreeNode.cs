@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             int index = sequenceTree.GetDisplayResultsIndex(nodePep);
 
-            float? ratio = (nodePep.HasResults ? nodePep.GetPeakCountRatio(index) : null);
+            float? ratio = (nodePep.HasResults ? nodePep.GetPeakCountRatio(index, settings.TransitionSettings.Integration.IsIntegrateAll) : null);
             if (ratio == null)
                 return (int)SequenceTree.StateImageId.peak_blank;
             if (ratio < 0.5)

@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestData.Results
                     if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
                     {
                         AssertEx.AreEqual(21.94865, (double)nodePep.GetMeasuredRetentionTime(0), .0001, testModeStr + " RT");
-                        AssertEx.AreEqual(1.0, (double)nodePep.GetPeakCountRatio(0), 0.0001, testModeStr + "peak count ration");
+                        AssertEx.AreEqual(1.0, (double)nodePep.GetPeakCountRatio(0, false), 0.0001, testModeStr + "peak count ration");
                         nPeptides++;
                     }
                 }
