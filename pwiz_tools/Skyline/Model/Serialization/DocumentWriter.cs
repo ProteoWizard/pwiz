@@ -1061,7 +1061,7 @@ namespace pwiz.Skyline.Model.Serialization
             WriteColumnarResults(writer, results?.ChromFileIds, EL.transition_results_columnar, (w, position) =>
             {
                 w.WriteAttribute(ATTR.area, results.Areas[position]);
-                WriteUserSet(w, results.GetUserSet(position));
+                w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
                 WriteCustomPeak(w, results.GetCustomPeak(position));
             });
         }
@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Model.Serialization
                 w.WriteAttributeNullable(ATTR.peak_index, results.GetChosenPeakIndex(position));
                 w.WriteAttributeNullable(ATTR.qvalue, results.GetQValue(position));
                 w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
-                WriteUserSet(w, results.GetUserSet(position));
+                w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
                 WriteCustomPeak(w, results.GetCustomPeak(position));
                 var areas = sharedAreas[position];
                 if (areas != null)
@@ -1206,12 +1206,6 @@ namespace pwiz.Skyline.Model.Serialization
 
             var fileIds = results.ChromFileIds.FileIds;
             return fileIds.Count == _sharedTransitionAreaFiles.Count && fileIds.All(_sharedTransitionAreaFiles.Contains);
-        }
-
-        private static void WriteUserSet(XmlWriter writer, UserSet userSet)
-        {
-            if (userSet != UserSet.FALSE)
-                writer.WriteAttribute(ATTR.user_set, userSet.ToString().ToUpperInvariant());
         }
 
         /// <summary>
