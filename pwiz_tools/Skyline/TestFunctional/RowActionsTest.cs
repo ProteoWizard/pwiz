@@ -26,6 +26,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -179,11 +180,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, peptides.Count);
             foreach (var peptide in peptides)
             {
-                Assert.AreEqual(3, peptide.Results.Count);
+                // Rebuilt from the .skyd: a molecule no longer keeps its chrom infos.
+                var peptideChromInfos =
+                    new MoleculeResults(SkylineWindow.Document.Settings, peptide).GetPeptideChromInfos();
+                Assert.AreEqual(3, peptideChromInfos.Count);
                 for (int iReplicate = 0; iReplicate < 3; iReplicate++)
                 {
-                    Assert.AreEqual(1, peptide.Results[iReplicate].Count);
-                    var peptideChromInfo = peptide.Results[iReplicate].First();
+                    Assert.AreEqual(1, peptideChromInfos[iReplicate].Count);
+                    var peptideChromInfo = peptideChromInfos[iReplicate].First();
                     AssertEx.IsNotNull(peptideChromInfo.RetentionTime);
                 }
             }
@@ -217,11 +221,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, peptides.Count);
             foreach (var peptide in peptides)
             {
-                Assert.AreEqual(3, peptide.Results.Count);
+                var peptideChromInfos =
+                    new MoleculeResults(SkylineWindow.Document.Settings, peptide).GetPeptideChromInfos();
+                Assert.AreEqual(3, peptideChromInfos.Count);
                 for (int iReplicate = 0; iReplicate < 3; iReplicate++)
                 {
-                    Assert.AreEqual(1, peptide.Results[iReplicate].Count);
-                    var peptideChromInfo = peptide.Results[iReplicate].First();
+                    Assert.AreEqual(1, peptideChromInfos[iReplicate].Count);
+                    var peptideChromInfo = peptideChromInfos[iReplicate].First();
                     bool shouldHaveValue = iReplicate != 1;
                     Assert.AreEqual(shouldHaveValue, peptideChromInfo.RetentionTime.HasValue);
                 }

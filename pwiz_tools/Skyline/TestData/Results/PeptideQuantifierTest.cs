@@ -21,6 +21,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
@@ -42,7 +43,8 @@ namespace pwiz.SkylineTestData.Results
                         QuantificationSettings.DEFAULT.ChangeNormalizationMethod(NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy)));
                     for (int replicateIndex = 0; replicateIndex < doc.Settings.MeasuredResults.Chromatograms.Count; replicateIndex++)
                     {
-                        var expected = peptide.Results[replicateIndex].First().LabelRatios.First().Ratio.Ratio;
+                        var expected = new MoleculeResults(doc.Settings, peptide).GetPeptideChromInfos()[replicateIndex]
+                            .First().LabelRatios.First().Ratio.Ratio;
                         var actual = peptideQuantifier.SumQuantities(
                             peptideQuantifier.GetTransitionIntensities(doc.Settings, replicateIndex, false).Values).Value;
                         Assert.AreEqual(expected, actual, .0001, "Error on replicate {0}", replicateIndex);

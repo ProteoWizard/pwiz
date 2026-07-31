@@ -21,6 +21,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
@@ -66,9 +67,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // The third group, being reporters only, should have no RT value at all
 
             var molecules = SkylineWindow.Document.PeptideGroups.Select(pg => pg.Molecules.First()).ToArray();
-            var transitionChromInfo0 = molecules[0].Results[0].First();
-            var transitionChromInfo1 = molecules[1].Results[0].First();
-            var transitionChromInfo2 = molecules[2].Results[0].First();
+            // Rebuilt from the .skyd: a molecule no longer keeps its chrom infos.
+            var settings = SkylineWindow.Document.Settings;
+            var transitionChromInfo0 = new MoleculeResults(settings, molecules[0]).GetPeptideChromInfos()[0].First();
+            var transitionChromInfo1 = new MoleculeResults(settings, molecules[1]).GetPeptideChromInfos()[0].First();
+            var transitionChromInfo2 = new MoleculeResults(settings, molecules[2]).GetPeptideChromInfos()[0].First();
             Assert.AreEqual(transitionChromInfo0.RetentionTime, transitionChromInfo1.RetentionTime);
             Assert.AreEqual(29.879, transitionChromInfo0.RetentionTime.Value, .01);
             Assert.IsNull(transitionChromInfo2.RetentionTime); // No RT - all transitions are non-scoring
@@ -93,8 +96,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             ImportResultsFile(TestFilesDir.GetTestPath(mzmlFile));
 
             var molecules = SkylineWindow.Document.Molecules.ToArray();
-            var transitionChromInfo0 = molecules[0].Results[0].First();
-            var transitionChromInfo1 = molecules[1].Results[0].First();
+            var settings2 = SkylineWindow.Document.Settings;
+            var transitionChromInfo0 = new MoleculeResults(settings2, molecules[0]).GetPeptideChromInfos()[0].First();
+            var transitionChromInfo1 = new MoleculeResults(settings2, molecules[1]).GetPeptideChromInfos()[0].First();
             Assert.AreEqual(24.2548, transitionChromInfo0.RetentionTime.Value, .01);
             Assert.AreEqual(26.3618, transitionChromInfo1.RetentionTime.Value, .01);
 

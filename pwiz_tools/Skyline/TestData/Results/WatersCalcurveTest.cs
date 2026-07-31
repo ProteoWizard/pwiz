@@ -221,9 +221,13 @@ namespace pwiz.SkylineTestData.Results
                         PeptideDocNode nodePep1 = (PeptideDocNode)nodePepGroup1.Children[j];
                         PeptideDocNode nodePep2 = (PeptideDocNode)nodePepGroup2.Children[j];
                         Assert.AreNotSame(nodePep1, nodePep2);
-                        Assert.AreEqual(nodePep1.Results.Count, nodePep2.Results.Count);
-                        for (int k = 0; k < nodePep1.Results.Count; k++)
-                            Assert.AreEqual(nodePep1.Results[k][0].PeakCountRatio, nodePep2.Results[k][0].PeakCountRatio);
+                        // The peak count ratio comes from the precursors now, so the two molecules
+                        // are compared replicate by replicate rather than through chrom infos
+                        // neither of them keeps.
+                        var replicateCount = doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0;
+                        for (int k = 0; k < replicateCount; k++)
+                            Assert.AreEqual(nodePep1.GetPeakCountRatio(k, false),
+                                nodePep2.GetPeakCountRatio(k, false));
                         for (int k = 0; k < nodePep1.Children.Count; k++)
                         {
                             TransitionGroupDocNode nodeGroup1 = (TransitionGroupDocNode)nodePep1.Children[k];
@@ -619,4 +623,4 @@ namespace pwiz.SkylineTestData.Results
             return doc;
         }
     }
-}
+}

@@ -156,14 +156,14 @@ namespace pwiz.Skyline.Model.ElementLocators
                 yield break;
             }
 
-            foreach (var replicateIndexChromInfo in EnumerateChromInfos(parentDocNode))
+            foreach (var replicateIndexChromInfo in EnumerateChromInfos(document, parentDocNode))
             {
                 var chromatogramSet = measuredResults.Chromatograms[replicateIndexChromInfo.Item1];
                 yield return ChangeChromInfo(chromatogramSet, replicateIndexChromInfo.Item2);
             }
         }
 
-        protected abstract IEnumerable<Tuple<int, TChromInfo>> EnumerateChromInfos(TDocNode parent);
+        protected abstract IEnumerable<Tuple<int, TChromInfo>> EnumerateChromInfos(SrmDocument document, TDocNode parent);
         public abstract int GetOptimizationStep(TChromInfo chromInfo);
 
         public virtual Annotations GetAnnotations(TChromInfo chromInfo)
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.ElementLocators
             get { return @"TransitionResult"; }
         }
 
-        protected override IEnumerable<Tuple<int, TransitionChromInfo>> EnumerateChromInfos(TransitionDocNode parent)
+        protected override IEnumerable<Tuple<int, TransitionChromInfo>> EnumerateChromInfos(SrmDocument document, TransitionDocNode parent)
         {
             if (null == parent.Results)
             {
@@ -263,15 +263,17 @@ namespace pwiz.Skyline.Model.ElementLocators
             get { return @"MoleculeResult"; }
         }
 
-        protected override IEnumerable<Tuple<int, PeptideChromInfo>> EnumerateChromInfos(PeptideDocNode parent)
+        protected override IEnumerable<Tuple<int, PeptideChromInfo>> EnumerateChromInfos(SrmDocument document, PeptideDocNode parent)
         {
-            if (parent.Results == null)
+            // Rebuilt from the .skyd: a molecule no longer keeps its chrom infos.
+            var results = new MoleculeResults(document.Settings, parent).GetPeptideChromInfos();
+            if (results == null)
             {
                 yield break;
             }
-            for (int i = 0; i < parent.Results.Count; i++)
+            for (int i = 0; i < results.Count; i++)
             {
-                foreach (var peptideChromInfo in parent.Results[i])
+                foreach (var peptideChromInfo in results[i])
                 {
                     yield return Tuple.Create(i, peptideChromInfo);
                 }
@@ -298,7 +300,7 @@ namespace pwiz.Skyline.Model.ElementLocators
             get { return @"PrecursorResult"; }
         }
 
-        protected override IEnumerable<Tuple<int, TransitionGroupChromInfo>> EnumerateChromInfos(TransitionGroupDocNode parent)
+        protected override IEnumerable<Tuple<int, TransitionGroupChromInfo>> EnumerateChromInfos(SrmDocument document, TransitionGroupDocNode parent)
         {
             if (parent.Results == null)
             {
@@ -340,4 +342,4 @@ namespace pwiz.Skyline.Model.ElementLocators
             return chromInfo.ChangeAnnotations(newAnnotations);
         }
     }
-}
+}

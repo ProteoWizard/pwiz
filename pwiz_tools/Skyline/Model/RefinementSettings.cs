@@ -1070,8 +1070,12 @@ namespace pwiz.Skyline.Model
                         var newPeptideDocNode = new PeptideDocNode(newPeptide, newdoc.Settings,
                             mol.ExplicitMods != null && mol.ExplicitMods.HasIsotopeLabels ? mol.ExplicitMods : null, // Custom molecules use modifications - but just the static isotope labels 
                             null,
-                            mol.GlobalStandardType, mol.Rank, mol.ExplicitRetentionTime, note, mol.Results, new TransitionGroupDocNode[0],
+                            mol.GlobalStandardType, mol.Rank, mol.ExplicitRetentionTime, note, null, new TransitionGroupDocNode[0],
                             mol.AutoManageChildren);
+                        // The two values a molecule keeps come across as they are. The constructor
+                        // takes chrom infos, which a molecule no longer has, so they cannot ride in
+                        // on that.
+                        newPeptideDocNode = newPeptideDocNode.ChangeAbbreviatedResults(mol.AbbreviatedResults);
 
                         foreach (var transitionGroupDocNode in mol.TransitionGroups)
                         {

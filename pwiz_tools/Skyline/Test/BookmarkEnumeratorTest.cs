@@ -177,7 +177,9 @@ namespace pwiz.SkylineTest
             {
                 if (molecule.HasResults)
                 {
-                    Increment(elementCounts,typeof(PeptideChromInfo), molecule.Results.Sum(result=>result.Count));
+                    // One per file the molecule has results for: its chrom infos are rebuilt from
+                    // the .skyd rather than stored, but there is still one of them per file.
+                    Increment(elementCounts, typeof(PeptideChromInfo), molecule.GetResultFileIds().Count());
                 }
 
                 foreach (var transitionGroup in molecule.TransitionGroups)

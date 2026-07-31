@@ -227,7 +227,8 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var peptide in document.Molecules)
                 {
                     VerifyTotalAreas(peptide, chromFileInfoId);
-                    var peptideChromInfo = FindChromInfo(peptide.Results, chromFileInfoId);
+                    var peptideChromInfo = FindChromInfo(
+                        new MoleculeResults(document.Settings, peptide).GetPeptideChromInfos(), chromFileInfoId);
                     if (peptideChromInfo == null)
                     {
                         continue;

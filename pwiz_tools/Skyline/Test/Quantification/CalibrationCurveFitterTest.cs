@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
@@ -132,7 +133,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
@@ -177,7 +178,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
@@ -263,7 +264,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
                 double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, epsilon, msg);
@@ -309,7 +310,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
                 double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, epsilon, msg);
@@ -417,7 +418,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = peptide.Results[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, epsilon, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();

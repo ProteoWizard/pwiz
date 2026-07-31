@@ -1811,7 +1811,7 @@ namespace pwiz.SkylineTestUtil
                         Fail(@"unexpected empty note"); 
                     AreEqual(mol.SourceKey, convertedMol.SourceKey);
                     AreEqual(mol.Rank, convertedMol.Rank);
-                    AreEqual(mol.Results, convertedMol.Results);
+                    AreEqual(mol.AbbreviatedResults, convertedMol.AbbreviatedResults);
                     AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
                     AreEqual(mol.BestResult, convertedMol.BestResult);
                     ConvertedSmallMoleculeIsSimilar(convertedMol, mol, conversionMode);

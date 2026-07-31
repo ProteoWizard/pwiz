@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model
                 explicitRetentionTimeInfo = null; // Users sometimes say RT=0 when they actually mean "unknown"
             }
             ExplicitRetentionTime = explicitRetentionTimeInfo;
-            Results = results;
+            AbbreviatedResults = PeptideResults.FromChromInfos(results);
 
             if (settings != null)
             {
@@ -352,8 +352,6 @@ namespace pwiz.Skyline.Model
         public int? Rank { get; private set; }
         public bool IsDecoy { get { return Peptide.IsDecoy; } }
 
-        public Results<PeptideChromInfo> Results { get; private set; }
-
         /// <summary>
         /// The two things about a molecule's results which nothing can work out - whether the user
         /// left a replicate out of the calibration curve, and the concentration they entered for it.
@@ -399,11 +397,6 @@ namespace pwiz.Skyline.Model
         public bool HasResults
         {
             get { return TransitionGroups.Any(nodeGroup => nodeGroup.HasAbbreviatedResults); }
-        }
-
-        public ChromInfoList<PeptideChromInfo> GetSafeChromInfo(int i)
-        {
-            return Results != null && Results.Count > i ? Results[i] : default(ChromInfoList<PeptideChromInfo>);
         }
 
         public float GetRankValue(PeptideRankId rankId)
@@ -457,11 +450,42 @@ namespace pwiz.Skyline.Model
             return groupCount == 0 ? (float?) null : (float) (total/groupCount);
         }
 
+        /// <summary>
+        /// The peak count ratio averaged over the replicates which have one, worked out the same
+        /// way <see cref="GetPeakCountRatio"/> works out a single replicate's.
+        /// </summary>
         public float? AveragePeakCountRatio
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.PeakCountRatio);
+                double total = 0;
+                int count = 0;
+                for (int replicateIndex = 0; replicateIndex < ResultsReplicateCount; replicateIndex++)
+                {
+                    // The tree shows this, so it must not read a chromatogram. Integration is not
+                    // known here, and a forced peak is rare, so it counts the same either way.
+                    var peakCountRatio = GetPeakCountRatio(replicateIndex, false);
+                    if (!peakCountRatio.HasValue)
+                        continue;
+                    total += peakCountRatio.Value;
+                    count++;
+                }
+
+                return count == 0 ? (float?) null : (float) (total/count);
+            }
+        }
+
+        /// <summary>
+        /// How many replicates the precursors have results for.
+        /// </summary>
+        private int ResultsReplicateCount
+        {
+            get
+            {
+                return TransitionGroups
+                    .Select(nodeGroup =>
+                        nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0)
+                    .DefaultIfEmpty(0).Max();
             }
         }
 
@@ -498,11 +522,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return AverageRetentionTime(Enumerable
-                    .Range(0, TransitionGroups.Select(nodeGroup =>
-                            nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0)
-                        .DefaultIfEmpty(0).Max())
-                    .SelectMany(GetMeasuredRetentionTimes));
+                return AverageRetentionTime(Enumerable.Range(0, ResultsReplicateCount).SelectMany(GetMeasuredRetentionTimes));
             }
         }
 
@@ -544,11 +564,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 // Every retention time the precursors measured, from their columnar results.
-                var statTimes = new Statistics(Enumerable
-                    .Range(0, TransitionGroups.Select(nodeGroup =>
-                            nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0)
-                        .DefaultIfEmpty(0).Max())
-                    .SelectMany(GetMeasuredRetentionTimes)
+                var statTimes = new Statistics(Enumerable.Range(0, ResultsReplicateCount).SelectMany(GetMeasuredRetentionTimes)
                     .Select(retentionTime => (double) retentionTime));
                 return statTimes.Length > 0
                     ? (float?)statTimes.Percentile(IrtStandard.GetSpectrumTimePercentile(ModifiedTarget))
@@ -637,11 +653,6 @@ namespace pwiz.Skyline.Model
                 return null;
 
             return (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2;
-        }
-
-        private float? GetAverageResultValue(Func<PeptideChromInfo, float?> getVal)
-        {
-            return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
         /// <summary>
@@ -824,21 +835,6 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeColor(Color prop)
         {
             return ChangeProp(ImClone(this), im => im.Color = prop);
-        }
-
-        public PeptideDocNode ChangeResults(Results<PeptideChromInfo> prop)
-        {
-            return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     im.Results = prop;
-                                                     // What a molecule keeps of them. Only set when
-                                                     // there is something to keep, so that the usual
-                                                     // document carries nothing here at all.
-                                                     var abbreviated = PeptideResults.FromChromInfos(prop);
-                                                     if (abbreviated != null)
-                                                         im.AbbreviatedResults = abbreviated;
-
-                                                 });
         }
 
         public PeptideDocNode ChangeExplicitRetentionTime(ExplicitRetentionTimeInfo prop)
@@ -1504,21 +1500,12 @@ namespace pwiz.Skyline.Model
         private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)
         {
             // First check whether any child results are present
-            // Results != null rather than HasResults: this is about the chrom infos this node is
-            // carrying, and HasResults now answers the different question of whether the molecule
-            // has measured results at all, which it asks of the precursors.
+            // A molecule keeps only the two values nothing can work out, and this pass changes
+            // neither of them, so there is nothing to clear or initialize here. The precursors
+            // below still need updating.
             if (!settingsNew.HasResults || Children.Count == 0)
             {
-                if (Results == null)
-                    return this;
-                return ChangeResults(null);
-            }
-            else if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) &&
-                     (Results == null || Results.All(r => r.IsEmpty)))
-            {
-                if (Results != null && Results.Count == settingsNew.MeasuredResults.Chromatograms.Count)
-                    return this;
-                return ChangeResults(settingsNew.MeasuredResults.EmptyPeptideResults);
+                return this;
             }
 
             var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, PrecursorKey>>();
@@ -2297,7 +2284,10 @@ namespace pwiz.Skyline.Model
 
         public bool AnyReintegratedPeaks()
         {
-            return TransitionGroups.Any(tg => tg.Results?.Any(chromInfoList => chromInfoList.Any(transitionGroupChromInfo => transitionGroupChromInfo.ReintegratedPeak != null)) ?? false);
+            // From the columnar results, which record the reintegrated peak as an index into the
+            // candidate peaks. A position which has none holds a negative index.
+            return TransitionGroups.Any(tg =>
+                tg.AbbreviatedResults?.ReintegratedPeakIndexes?.Any(index => index >= 0) ?? false);
         }
 
         #region object overrides
@@ -2310,7 +2300,7 @@ namespace pwiz.Skyline.Model
                 Equals(other.ExplicitMods, ExplicitMods) &&
                 Equals(other.SourceKey, SourceKey) &&
                 other.Rank.Equals(Rank) &&
-                Equals(other.Results, Results) &&
+                Equals(other.AbbreviatedResults, AbbreviatedResults) &&
                 Equals(other.ExplicitRetentionTime, ExplicitRetentionTime) &&
 
                 Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
@@ -2339,7 +2329,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (SourceKey != null ? SourceKey.GetHashCode() : 0);
                 result = (result*397) ^ (Rank.HasValue ? Rank.Value : 0);
                 result = (result*397) ^ (ExplicitRetentionTime != null ? ExplicitRetentionTime.GetHashCode() : 0);
-                result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
+                result = (result*397) ^ (AbbreviatedResults != null ? AbbreviatedResults.GetHashCode() : 0);
 
                 result = (result*397) ^ InternalStandardConcentration.GetHashCode();
                 result = (result*397) ^ ConcentrationMultiplier.GetHashCode();

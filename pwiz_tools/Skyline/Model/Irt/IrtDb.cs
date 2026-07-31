@@ -692,7 +692,7 @@ namespace pwiz.Skyline.Model.Irt
                     {
                         var nodePepNew = (PeptideDocNode)nodePepMinimal.ChangeChildren(new[]
                             { nodeTranGroup.ChangeResults(null).ChangeChildren(transitions) });
-                        peptides.Add(nodePepNew.ChangeResults(null));
+                        peptides.Add(nodePepNew.ChangeAbbreviatedResults(null));
                         addedDocPeptides = true;
                     }
                 }
