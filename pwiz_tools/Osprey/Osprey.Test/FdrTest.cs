@@ -2110,6 +2110,147 @@ namespace pwiz.Osprey.Test
                 streaming.BuildPepWinnerMap(), "pep-winner");
         }
 
+        /// <summary>
+        /// The mean(best-N) streaming builder (<c>StreamingFirstPassQ(meanBestN)</c>) must produce
+        /// experiment-precursor / experiment-peptide q maps identical to the resident mean(best-N)
+        /// path (<see cref="TargetDecoyCompetition.ComputeBaseIdMeanBestN"/> -&gt;
+        /// <see cref="TargetDecoyCompetition.CompeteFromIndices"/> /
+        /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> -&gt; conservative-q) when fed the
+        /// same population in the same flat order. Each fixture gives every (base_id, side) &gt;= N
+        /// observations, so the missing-run floor is never used and the streaming histogram-median
+        /// floor cannot introduce any difference: the maps are then byte-identical. Peptides shared
+        /// across base_ids exercise the max roll-up. Run at N = 2, 3, 4 to validate the top-N
+        /// generalization.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingMeanBest2MatchesResident()
+        {
+            AssertStreamingMeanBestNMatchesResident(2);
+        }
+
+        [TestMethod]
+        public void TestStreamingMeanBest3MatchesResident()
+        {
+            AssertStreamingMeanBestNMatchesResident(3);
+        }
+
+        [TestMethod]
+        public void TestStreamingMeanBest4MatchesResident()
+        {
+            AssertStreamingMeanBestNMatchesResident(4);
+        }
+
+        private static void AssertStreamingMeanBestNMatchesResident(int n)
+        {
+            var rng = new Random(20260728 + n);
+            const int nFiles = 4;
+            const int nBaseIds = 50;
+            var perFile = new List<(uint EntryId, bool IsDecoy, double Score, string Peptide)>[nFiles];
+            for (int f = 0; f < nFiles; f++)
+                perFile[f] = new List<(uint, bool, double, string)>();
+
+            for (uint baseId = 1; baseId <= nBaseIds; baseId++)
+            {
+                string peptide = "PEP" + (baseId % 30); // Shared peptides span base_ids (charges).
+                foreach (bool isDecoy in new[] { false, true })
+                {
+                    uint entryId = isDecoy ? (baseId | 0x80000000u) : baseId;
+                    int nObs = n + rng.Next(nFiles - n + 1); // N..nFiles observations -> floor never used.
+                    var files = Enumerable.Range(0, nFiles).OrderBy(_ => rng.Next()).Take(nObs);
+                    foreach (int f in files)
+                    {
+                        double score = Math.Round(rng.NextDouble() * 8.0 - 2.0, 1); // 1 dp -> ties.
+                        perFile[f].Add((entryId, isDecoy, score, peptide));
+                    }
+                }
+            }
+
+            var scores = new List<double>();
+            var labels = new List<bool>();
+            var entryIds = new List<uint>();
+            var peptides = new List<string>();
+            var streaming = new StreamingFdr.StreamingFirstPassQ(n);
+            int g = 0;
+            for (int f = 0; f < nFiles; f++)
+            foreach (var row in perFile[f])
+            {
+                scores.Add(row.Score);
+                labels.Add(row.IsDecoy);
+                entryIds.Add(row.EntryId);
+                peptides.Add(row.Peptide);
+                streaming.Add(g, row.Score, row.EntryId, row.IsDecoy, row.Peptide);
+                g++;
+            }
+
+            var scoreArr = scores.ToArray();
+            var labelArr = labels.ToArray();
+            var entryIdArr = entryIds.ToArray();
+            var peptideArr = peptides.ToArray();
+
+            AssertMapsEqual(
+                ResidentMeanBestNPrecursorQMap(scoreArr, labelArr, entryIdArr, n),
+                streaming.BuildExperimentPrecursorQMap(), "mbN exp-precursor");
+            AssertMapsEqual(
+                ResidentMeanBestNPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr, n),
+                streaming.BuildExperimentPeptideQMap(), "mbN exp-peptide");
+        }
+
+        /// <summary>
+        /// The reproducibility demotion through the streaming path, including the single-run decoy
+        /// floor: two targets with the SAME peak (5.0) - one seen in two runs (keeps mean 5.0), one
+        /// in a single run (scores mean(5.0, decoy floor) ~ 1.5). With decoy mass placed between the
+        /// two aggregate scores, the one-run precursor's experiment q is strictly worse than the
+        /// two-run precursor's, proving the demotion happens on the bounded streaming path (the raw
+        /// max would have scored both identically). Deterministic (no RNG); a large robust-target
+        /// block keeps the q distribution non-degenerate.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingMeanBest2DemotesSingleRun()
+        {
+            var rows = new List<(int G, uint EntryId, bool IsDecoy, double Score, string Peptide)>();
+            int g = 0;
+
+            // A block of robust two-run targets well above the field so q is meaningful.
+            for (uint baseId = 1; baseId <= 30; baseId++)
+            {
+                rows.Add((g++, baseId, false, 6.0, "PEP" + baseId));
+                rows.Add((g++, baseId, false, 6.0, "PEP" + baseId));
+            }
+            // Control two-run target and single-run target, IDENTICAL peak 5.0.
+            const uint twoRunBase = 50u;
+            const uint oneRunBase = 51u;
+            rows.Add((g++, twoRunBase, false, 5.0, "PEPTWO"));
+            rows.Add((g++, twoRunBase, false, 5.0, "PEPTWO"));
+            rows.Add((g++, oneRunBase, false, 5.0, "PEPONE"));
+            // Mid decoys at mean 3.0: above the one-run aggregate (~1.5), below the 5.0 targets.
+            for (uint baseId = 300; baseId < 310; baseId++)
+            {
+                uint d = baseId | 0x80000000u;
+                rows.Add((g++, d, true, 3.0, "DECMID" + baseId));
+                rows.Add((g++, d, true, 3.0, "DECMID" + baseId));
+            }
+            // Bulk low decoys at -2.0: set the decoy-median floor to -2.0.
+            for (uint baseId = 400; baseId < 460; baseId++)
+            {
+                uint d = baseId | 0x80000000u;
+                rows.Add((g++, d, true, -2.0, "DECLOW" + baseId));
+                rows.Add((g++, d, true, -2.0, "DECLOW" + baseId));
+            }
+
+            var mb2 = new StreamingFdr.StreamingFirstPassQ(2);
+            foreach (var r in rows)
+                mb2.Add(r.G, r.Score, r.EntryId, r.IsDecoy, r.Peptide);
+            var map = mb2.BuildExperimentPrecursorQMap();
+
+            Assert.IsTrue(map.ContainsKey(twoRunBase) && map.ContainsKey(oneRunBase),
+                "both same-peak targets present");
+            foreach (double q in map.Values)
+                Assert.IsTrue(q >= 0.0 && q <= 1.0, "q in [0,1]");
+            Assert.IsTrue(map[oneRunBase] > map[twoRunBase],
+                string.Format("single-run demotion: one-run q ({0}) should exceed two-run q ({1}) at the same peak",
+                    map[oneRunBase], map[twoRunBase]));
+        }
+
         private static void AssertMapsEqual<TKey>(
             Dictionary<TKey, double> flat, Dictionary<TKey, double> streaming, string which)
         {
@@ -2126,6 +2267,54 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(kvp.Value, sv, 0.0,
                     string.Format("{0}: value differs at key {1}", which, kvp.Key));
             }
+        }
+
+        // Resident mean(best-N) experiment-precursor q map, reproduced from the primitives exactly
+        // as PercolatorQValues.ComputeExperimentPrecursorQMap does in its mean-best-N branch:
+        // per-row aggregate score -> global competition -> conservative q keyed by base_id.
+        private static Dictionary<uint, double> ResidentMeanBestNPrecursorQMap(
+            double[] scores, bool[] labels, uint[] entryIds, int n)
+        {
+            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, n);
+            var allIndices = Enumerable.Range(0, scores.Length).ToArray();
+            TargetDecoyCompetition.CompeteFromIndices(agg, labels, entryIds, allIndices,
+                out int[] wi, out double[] ws, out bool[] wd);
+            var q = new double[wi.Length];
+            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+            var map = new Dictionary<uint, double>(wi.Length);
+            for (int rank = 0; rank < wi.Length; rank++)
+                map[entryIds[wi[rank]] & 0x7FFFFFFFu] = q[rank];
+            return map;
+        }
+
+        // Resident mean(best-N) experiment-peptide q map, reproduced from the primitives exactly as
+        // PercolatorQValues.ComputeExperimentPeptideQMap does in its mean-best-N branch: best
+        // precursor per peptide over the aggregate scores -> competition -> q keyed by peptide.
+        private static Dictionary<string, double> ResidentMeanBestNPeptideQMap(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides, int n)
+        {
+            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, n);
+            var allIndices = Enumerable.Range(0, scores.Length).ToArray();
+            var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(allIndices, agg, labels, peptides);
+            var peptScores = new double[bestPerPeptide.Length];
+            var peptLabels = new bool[bestPerPeptide.Length];
+            var peptEntryIds = new uint[bestPerPeptide.Length];
+            var allPeptIndices = new int[bestPerPeptide.Length];
+            for (int i = 0; i < bestPerPeptide.Length; i++)
+            {
+                peptScores[i] = agg[bestPerPeptide[i]];
+                peptLabels[i] = labels[bestPerPeptide[i]];
+                peptEntryIds[i] = entryIds[bestPerPeptide[i]];
+                allPeptIndices[i] = i;
+            }
+            TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
+                out int[] wi, out double[] ws, out bool[] wd);
+            var q = new double[wi.Length];
+            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+            var map = new Dictionary<string, double>(wi.Length);
+            for (int rank = 0; rank < wi.Length; rank++)
+                map[peptides[bestPerPeptide[wi[rank]]]] = q[rank];
+            return map;
         }
 
         #endregion

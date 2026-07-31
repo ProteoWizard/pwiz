@@ -791,7 +791,7 @@ namespace pwiz.Osprey.FDR
             // buffer, reduced into the best-of-runs clamp floors (issue #4390). The score is
             // recomputed per row (bias first, then the averaged-weight dot product in feature order)
             // -- byte-for-byte the resident score loop, only without the O(n) finalScores array.
-            var streamingQ = new StreamingFdr.StreamingFirstPassQ();
+            var streamingQ = new StreamingFdr.StreamingFirstPassQ(OspreyEnvironment.MeanBestN);
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
