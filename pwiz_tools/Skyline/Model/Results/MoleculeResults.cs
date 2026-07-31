@@ -470,24 +470,25 @@ namespace pwiz.Skyline.Model.Results
         private IList<PeptideChromInfo> CarryPeptideAttributes(IList<PeptideChromInfo> chromInfos,
             int replicateIndex)
         {
-            if (chromInfos == null || PeptideDocNode.Results == null ||
-                replicateIndex >= PeptideDocNode.Results.Count)
+            // From the columnar results, which is where a molecule keeps these. Null there means
+            // there is nothing to carry, which is the usual case, and costs nothing to find out.
+            var peptideResults = PeptideDocNode.AbbreviatedResults;
+            if (chromInfos == null || peptideResults == null)
             {
                 return chromInfos;
             }
 
-            var documentChromInfos = PeptideDocNode.Results[replicateIndex];
             return chromInfos.Select(chromInfo =>
             {
-                var documentChromInfo = documentChromInfos.FirstOrDefault(info =>
-                    ReferenceEquals(info.FileId, chromInfo.FileId));
-                if (documentChromInfo == null)
+                int position = peptideResults.IndexOfFile(replicateIndex, chromInfo.FileId);
+                if (position < 0)
                 {
                     return chromInfo;
                 }
 
-                return chromInfo.ChangeExcludeFromCalibration(documentChromInfo.ExcludeFromCalibration)
-                    .ChangeAnalyteConcentration(documentChromInfo.AnalyteConcentration);
+                return chromInfo
+                    .ChangeExcludeFromCalibration(peptideResults.GetExcludeFromCalibration(position))
+                    .ChangeAnalyteConcentration(peptideResults.GetAnalyteConcentration(position));
             }).ToArray();
         }
 

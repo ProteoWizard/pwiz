@@ -355,6 +355,29 @@ namespace pwiz.Skyline.Model
 
         public Results<PeptideChromInfo> Results { get; private set; }
 
+        /// <summary>
+        /// The two things about a molecule's results which nothing can work out - whether the user
+        /// left a replicate out of the calibration curve, and the concentration they entered for it.
+        /// Null when there are neither, which is the usual case.
+        /// <para>
+        /// Everything else is aggregated from the precursors and rebuilt on demand through a
+        /// <see cref="MoleculeResults"/>, so unlike the precursor and transition levels there is no
+        /// columnar copy of it to keep.
+        /// </para>
+        /// </summary>
+        public PeptideResults AbbreviatedResults { get; private set; }
+
+        /// <summary>
+        /// Returns this node when the results are the ones it already has, because a document which
+        /// has not changed has to stay reference equal.
+        /// </summary>
+        public PeptideDocNode ChangeAbbreviatedResults(PeptideResults prop)
+        {
+            if (Equals(AbbreviatedResults, prop))
+                return this;
+            return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
+        }
+
         public bool HasResults { get { return Results != null; } }
 
         public ChromInfoList<PeptideChromInfo> GetSafeChromInfo(int i)
@@ -698,6 +721,12 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im =>
                                                  {
                                                      im.Results = prop;
+                                                     // What a molecule keeps of them. Only set when
+                                                     // there is something to keep, so that the usual
+                                                     // document carries nothing here at all.
+                                                     var abbreviated = PeptideResults.FromChromInfos(prop);
+                                                     if (abbreviated != null)
+                                                         im.AbbreviatedResults = abbreviated;
                                                      im.BestResult = im.CalcBestResult();
                                                  });
         }
