@@ -64,7 +64,7 @@
     </ProjectReference>
     <!-- OFX.Logging stub: see comment in Sciex.csproj. -->
     <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
-                      Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+                      Condition="'$(NativeVendorsAvailable)' == 'true'">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Content</OutputItemType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -84,7 +84,9 @@
        default ALC for the legacy .wiff path (AnalystDataProvider was compiled against those
        identities). The two ALCs coexist because their resolved assemblies have different
        PublicKeyTokens, so there's no identity collision. -->
-  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <!-- Gated on $(NativeVendorsAvailable), not $(IAgreeToVendorLicenses): the files staged below
+       come from Sciex.csproj's extraction, which only runs on Windows. -->
+  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(NativeVendorsAvailable)' == 'true'">
     <PropertyGroup>
       <!-- System.Data.SQLite.dll (1.0.109) and Unity.Abstractions.dll (Cecil-patched) are
            committed at pwiz-sharp/vendor-archives/Sciex/. Both originate from the SmartAssembly
