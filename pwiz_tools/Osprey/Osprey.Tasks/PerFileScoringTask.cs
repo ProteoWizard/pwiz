@@ -1963,7 +1963,10 @@ namespace pwiz.Osprey.Tasks
                     @"be unfixed. Something that was streamed is resident again - fix that rather " +
                     @"than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this path.";
             }
-            if (string.Equals(trigger, allowUnfixedResident, StringComparison.Ordinal))
+            // Case-insensitive to match how the rest of the CLI parses tokens (ParseFdrBenchPass):
+            // the error names the exact token to set, so rejecting it for capitalization would
+            // read as the guard ignoring what the operator just did.
+            if (string.Equals(trigger, allowUnfixedResident, StringComparison.OrdinalIgnoreCase))
                 return null;
             return string.Format(
                 @"This run takes the '{0}' RESIDENT first-pass pool path, which holds every entry " +

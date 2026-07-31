@@ -79,6 +79,12 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: ResidentPaths.FDRBENCH_PASS1, useFdrProjection: true));
 
+            // Capitalization does not defeat it -- the error names the exact token to set, so
+            // rejecting the operator's own value for case would read as the guard ignoring them.
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.HPC_MERGE.ToUpperInvariant(),
+                useFdrProjection: true));
+
             // Each user-reachable trigger names its own token so the failure is diagnosable:
             var mdiag = new OspreyConfig { ModelDiagnostics = true };
             StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(mdiag, true, null, true),
