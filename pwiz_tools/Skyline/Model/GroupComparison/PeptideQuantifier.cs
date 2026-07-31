@@ -276,26 +276,13 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
-            IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,
+            IDictionary<PeptideDocNode.TransitionKey, QuantifiablePeak> peptideStandards,
             NormalizationMethod normalizationMethod,
             int replicateIndex,
             TransitionGroupDocNode transitionGroup, TransitionDocNode transition,
             bool treatMissingAsZero)
         {
-            if (null == transition.Results)
-            {
-                return null;
-            }
-            if (replicateIndex >= transition.Results.Count)
-            {
-                return null;
-            }
-            var chromInfos = transition.Results[replicateIndex];
-            if (chromInfos.IsEmpty)
-            {
-                return null;
-            }
-            var chromInfo = GetTransitionChromInfo(transition, replicateIndex);
+            var chromInfo = GetTransitionPeak(transition, replicateIndex);
             if (null == chromInfo)
             {
                 return null;
@@ -321,7 +308,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else
                 {
-                    TransitionChromInfo chromInfoStandard;
+                    QuantifiablePeak chromInfoStandard;
                     if (!peptideStandards.TryGetValue(GetRatioTransitionKey(transitionGroup, transition), out chromInfoStandard))
                     {
                         return null;
@@ -378,30 +365,16 @@ namespace pwiz.Skyline.Model.GroupComparison
             return new Quantity(normalizedArea.Value, denominator, truncated);
         }
 
-        private TransitionChromInfo GetTransitionChromInfo(TransitionDocNode transitionDocNode, int replicateIndex)
+        /// <summary>
+        /// From the columnar results, which hold optimization step zero only, so there is no step
+        /// to skip past. Nothing here reads a chromatogram.
+        /// </summary>
+        private static QuantifiablePeak GetTransitionPeak(TransitionDocNode transitionDocNode, int replicateIndex)
         {
-            if (null == transitionDocNode.Results || replicateIndex < 0 ||
-                replicateIndex >= transitionDocNode.Results.Count)
-            {
-                return null;
-            }
-            var chromInfos = transitionDocNode.Results[replicateIndex];
-            if (chromInfos.IsEmpty)
-            {
-                return null;
-            }
-            foreach (var chromInfo in chromInfos)
-            {
-                if (0 != chromInfo.OptimizationStep)
-                {
-                    continue;
-                }
-                return chromInfo;
-            }
-            return null;
+            return transitionDocNode.AbbreviatedResults?.GetQuantifiablePeaks(replicateIndex).FirstOrDefault();
         }
 
-        private Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> GetTransitionsToNormalizeAgainst(
+        private Dictionary<PeptideDocNode.TransitionKey, QuantifiablePeak> GetTransitionsToNormalizeAgainst(
             SrmSettings settings, PeptideDocNode peptideDocNode, int replicateIndex)
         {
             NormalizationMethod.RatioToLabel ratioToLabel = NormalizationMethod as NormalizationMethod.RatioToLabel;
@@ -409,7 +382,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            var result = new Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo>();
+            var result = new Dictionary<PeptideDocNode.TransitionKey, QuantifiablePeak>();
             foreach (var transitionGroup in peptideDocNode.TransitionGroups)
             {
                 if (!Equals(ratioToLabel.IsotopeLabelTypeName, transitionGroup.TransitionGroup.LabelType.Name))
@@ -422,16 +395,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         continue;
                     }
-                    if (null == transition.Results || transition.Results.Count <= replicateIndex)
-                    {
-                        continue;
-                    }
-                    var chromInfoList = transition.Results[replicateIndex];
-                    if (chromInfoList.IsEmpty)
-                    {
-                        continue;
-                    }
-                    var chromInfo = chromInfoList.FirstOrDefault(chrom => 0 == chrom.OptimizationStep);
+                    var chromInfo = GetTransitionPeak(transition, replicateIndex);
                     if (null != chromInfo && !chromInfo.IsEmpty)
                     {
                         result[GetRatioTransitionKey(transitionGroup, transition)] = chromInfo;
@@ -544,7 +508,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, bool allowTruncated, TransitionGroupDocNode transitionGroup,
-            TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
+            TransitionDocNode transition, int replicateIndex, QuantifiablePeak chromInfo)
         {
             if (treatMissingAsZero && chromInfo.IsEmpty)
             {
@@ -562,9 +526,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             if (qValueCutoff.HasValue)
             {
-                TransitionGroupChromInfo transitionGroupChromInfo = FindTransitionGroupChromInfo(transitionGroup,
-                    replicateIndex, chromInfo.FileId);
-                if (transitionGroupChromInfo != null && transitionGroupChromInfo.QValue > qValueCutoff.Value)
+                var qValue = FindQValue(transitionGroup, replicateIndex, chromInfo.FileId);
+                if (qValue > qValueCutoff.Value)
                 {
                     return treatMissingAsZero ? 0 : default(double?);
                 }
@@ -572,20 +535,17 @@ namespace pwiz.Skyline.Model.GroupComparison
             return chromInfo.Area;
         }
 
-        private static TransitionGroupChromInfo FindTransitionGroupChromInfo(TransitionGroupDocNode transitionGroup,
-            int replicateIndex, ChromFileInfoId chromFileInfoId)
+        /// <summary>
+        /// The q value of a precursor at one file, from its columnar results. The scores are stored
+        /// there because they come from the peak scoring model and cannot be read back from the
+        /// .skyd, which is what lets this stay as cheap as the rest of quantification.
+        /// </summary>
+        private static float? FindQValue(TransitionGroupDocNode transitionGroup, int replicateIndex,
+            ChromFileInfoId chromFileInfoId)
         {
-            if (transitionGroup.Results == null || transitionGroup.Results.Count <= replicateIndex)
-            {
-                return null;
-            }
-            var chromInfoList = transitionGroup.Results[replicateIndex];
-            if (chromInfoList.IsEmpty)
-            {
-                return null;
-            }
-            return chromInfoList.FirstOrDefault(
-                chromInfo => chromInfo != null && ReferenceEquals(chromInfo.FileId, chromFileInfoId));
+            var results = transitionGroup.AbbreviatedResults;
+            int position = results?.IndexOfFile(replicateIndex, chromFileInfoId) ?? -1;
+            return position < 0 ? null : results.GetQValue(position);
         }
     }
 }

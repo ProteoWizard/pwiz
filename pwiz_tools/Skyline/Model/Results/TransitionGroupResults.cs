@@ -430,6 +430,8 @@ namespace pwiz.Skyline.Model.Results
             var counts = new List<int>();
             var areas = new List<float>();
             var userSets = new List<UserSet>();
+            var truncated = new List<bool?>();
+            var emptyPeaks = new List<bool>();
             var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
             List<CustomPeak> customPeaks = null;
             foreach (var chromInfoList in results)
@@ -449,6 +451,8 @@ namespace pwiz.Skyline.Model.Results
                     fileIds.Add(chromInfo.FileId);
                     areas.Add(chromInfo.Area);
                     userSets.Add(chromInfo.UserSet);
+                    truncated.Add(chromInfo.IsTruncated);
+                    emptyPeaks.Add(chromInfo.IsEmpty);
                     count++;
                 }
 
@@ -457,7 +461,9 @@ namespace pwiz.Skyline.Model.Results
 
             var transitionResults =
                 new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
-                    .ChangeUserSets(userSets);
+                    .ChangeUserSets(userSets)
+                    .ChangeTruncated(truncated)
+                    .ChangeEmptyPeaks(emptyPeaks);
             if (customPeaks != null)
             {
                 transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
@@ -513,6 +519,26 @@ namespace pwiz.Skyline.Model.Results
         /// through <see cref="ImmutableListFactory.MaybeConstant{T}"/>.
         /// </summary>
         public ImmutableList<UserSet> UserSets { get; private set; }
+
+        /// <summary>
+        /// Whether the peak at each position ran off the end of the chromatogram. Three states,
+        /// as on <see cref="TransitionChromInfo.IsTruncated"/>: null means nothing was worked out.
+        /// <para>
+        /// Kept per position rather than only for the peaks whose boundaries the user set, unlike
+        /// the other things which could be read back from the .skyd, because quantification asks
+        /// for it over the whole document and must not have to read a chromatogram to get it.
+        /// Nearly always uniform, so it collapses to a constant list.
+        /// </para>
+        /// </summary>
+        public ImmutableList<bool?> Truncated { get; private set; }
+
+        /// <summary>
+        /// Whether each position has no peak at all, which is not the same as a peak whose area is
+        /// zero: quantification counts the first as missing and the second as measured. This is
+        /// what <see cref="TransitionChromInfo.IsEmpty"/> says, and it cannot be told from
+        /// <see cref="Areas"/>, which is zero either way.
+        /// </summary>
+        public ImmutableList<bool> EmptyPeaks { get; private set; }
 
         /// <summary>
         /// The positions which have something that cannot be derived from the .skyd file.
@@ -575,6 +601,57 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.UserSets = ImmutableList.ValueOf(value).MaybeConstant());
         }
 
+        public TransitionResults ChangeTruncated(IEnumerable<bool?> value)
+        {
+            return ChangeProp(ImClone(this), im => im.Truncated = ImmutableList.ValueOf(value).MaybeConstant());
+        }
+
+        public TransitionResults ChangeEmptyPeaks(IEnumerable<bool> value)
+        {
+            return ChangeProp(ImClone(this), im => im.EmptyPeaks = ImmutableList.ValueOf(value).MaybeConstant());
+        }
+
+        /// <summary>
+        /// Whether the peak at one position ran off the end of the chromatogram, or null when
+        /// nothing worked that out. See <see cref="Truncated"/>.
+        /// </summary>
+        public bool? GetTruncated(int position)
+        {
+            return Truncated?[position];
+        }
+
+        /// <summary>
+        /// Whether there is no peak at one position at all. See <see cref="EmptyPeaks"/>.
+        /// </summary>
+        public bool IsEmptyPeak(int position)
+        {
+            return EmptyPeaks != null && EmptyPeaks[position];
+        }
+
+        /// <summary>
+        /// What quantification needs to know about the peaks of one replicate, in position order.
+        /// <para>
+        /// This is deliberately everything quantification needs and nothing else, so that it can
+        /// run over a whole document without a chromatogram being read. Only optimization step zero
+        /// is here, which is the step quantification uses.
+        /// </para>
+        /// </summary>
+        public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int replicateIndex)
+        {
+            var replicatePositions = ChromFileIds.ReplicatePositions;
+            if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
+            {
+                yield break;
+            }
+
+            int start = replicatePositions.GetStart(replicateIndex);
+            for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
+            {
+                yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, Areas[position],
+                    GetTruncated(position), IsEmptyPeak(position));
+            }
+        }
+
         public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
         {
             return ChangeProp(ImClone(this), im => im.CustomPeaks = ImmutableList.ValueOf(value));
@@ -629,7 +706,8 @@ namespace pwiz.Skyline.Model.Results
         protected bool Equals(TransitionResults other)
         {
             return Equals(ChromFileIds, other.ChromFileIds) && Equals(Areas, other.Areas) &&
-                   Equals(UserSets, other.UserSets) && Equals(CustomPeaks, other.CustomPeaks) &&
+                   Equals(UserSets, other.UserSets) && Equals(Truncated, other.Truncated) &&
+                   Equals(EmptyPeaks, other.EmptyPeaks) && Equals(CustomPeaks, other.CustomPeaks) &&
                    Equals(ChromInfos, other.ChromInfos);
         }
 
@@ -655,11 +733,39 @@ namespace pwiz.Skyline.Model.Results
                 int result = ChromFileIds.GetHashCode();
                 result = (result * 397) ^ Areas.GetHashCode();
                 result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (Truncated?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (EmptyPeaks?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
         }
+    }
+
+    /// <summary>
+    /// One transition peak, as quantification sees it. Built from
+    /// <see cref="TransitionResults"/> rather than from a <see cref="TransitionChromInfo"/>, so
+    /// that quantifying a document reads no chromatograms.
+    /// </summary>
+    public class QuantifiablePeak
+    {
+        public QuantifiablePeak(ChromFileInfoId fileId, float area, bool? isTruncated, bool isEmpty)
+        {
+            FileId = fileId;
+            Area = area;
+            IsTruncated = isTruncated;
+            IsEmpty = isEmpty;
+        }
+
+        public ChromFileInfoId FileId { get; }
+        public float Area { get; }
+        public bool? IsTruncated { get; }
+
+        /// <summary>
+        /// No peak at all, as opposed to a peak whose area is zero. Quantification counts the
+        /// first as missing and the second as measured.
+        /// </summary>
+        public bool IsEmpty { get; }
     }
 
     /// <summary>

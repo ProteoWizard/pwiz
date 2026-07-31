@@ -289,7 +289,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         /// </summary>
         private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransitionGroup(Parameters parameters, TransitionGroupDocNode transitionGroup)
         {
-            var transitionsByMsLevel = transitionGroup.Transitions.Where(transition => null != transition.Results)
+            var transitionsByMsLevel = transitionGroup.Transitions
+                .Where(transition => null != transition.AbbreviatedResults)
                 .GroupBy(transition => transition.IsMs1);
             return transitionsByMsLevel.SelectMany(msLevelGroup =>
             {
@@ -310,14 +311,18 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransition(Parameters parameters, TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
         {
-            for (int iResult = 0; iResult < transition.Results.Count; iResult++)
+            // The columnar results, which hold optimization step zero only, so there is no step to
+            // skip past and no chromatogram to read.
+            var results = transition.AbbreviatedResults;
+            if (results == null)
             {
-                foreach (var chromInfo in transition.Results[iResult])
+                yield break;
+            }
+
+            for (int iResult = 0; iResult < results.ChromFileIds.ReplicatePositions.ReplicateCount; iResult++)
+            {
+                foreach (var chromInfo in results.GetQuantifiablePeaks(iResult))
                 {
-                    if (chromInfo.OptimizationStep != 0)
-                    {
-                        continue;
-                    }
                     double? area = GetTransitionArea(parameters, transitionGroup, transition, iResult, chromInfo);
                     if (area.HasValue)
                     {
@@ -328,7 +333,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         private static double? GetTransitionArea(Parameters parameters, TransitionGroupDocNode transitionGroup,
-            TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
+            TransitionDocNode transition, int replicateIndex, QuantifiablePeak chromInfo)
         {
             return PeptideQuantifier.GetArea(parameters.TreatMissingValuesAsZero, parameters.QValueCutoff,
                 false, transitionGroup, transition, replicateIndex, chromInfo);
