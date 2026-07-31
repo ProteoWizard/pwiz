@@ -166,12 +166,18 @@ TC_TEST_RESULTS="$SCRIPT_DIR/TestResults"
 rm -rf "$TC_TEST_RESULTS"
 mkdir -p "$TC_TEST_RESULTS"
 
+# NOTE: deliberately no --logger:teamcity here, unlike scripts/Run-Tests-Parallel.ps1 on the
+# Windows side. TeamCity.VSTest.TestAdapter 1.0.40 (Directory.Build.targets) registers that
+# logger only on Windows; on Linux vstest fails argument parsing with "Could not find a test
+# logger ... 'teamcity'" and every suite dies before running a single test. Verified on
+# SDK 8.0.423 against a scratch MSTest project with the package restored: requesting the
+# logger fails, omitting it runs clean.
+#
+# Consequence: no per-test ##teamcity service messages on Linux (the adapter does not
+# auto-emit them either -- 0 messages observed with TEAMCITY_VERSION set). Results are still
+# written as trx under $TC_TEST_RESULTS; surfacing them in the TeamCity UI needs an XML report
+# processing feature on the build config pointing at pwiz-sharp/TestResults/*.trx.
 TC_LOGGER=()
-# Colon form to match scripts/Run-Tests-Parallel.ps1, which is the invocation proven to work
-# on the Windows agents. NOTE: the teamcity logger comes from TeamCity's own .NET integration
-# on the agent -- nothing in this repo references TeamCity.VSTest.TestAdapter -- so whether it
-# resolves is an agent property, not a repo one.
-[ -n "${TEAMCITY_VERSION:-}" ] && TC_LOGGER=(--logger:teamcity)
 
 TESTS_FAILED=0
 FAILED_PROJECTS=""
