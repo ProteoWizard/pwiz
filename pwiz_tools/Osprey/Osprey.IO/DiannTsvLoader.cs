@@ -55,7 +55,18 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
-            using (var reader = new StreamReader(path))
+            // Report progress over the file's BYTES rather than its rows: a 13 GB entrapment
+            // TSV otherwise runs for over a minute with nothing on the console between
+            // LibraryLoader's "Loading spectral library from ..." and the interning summary.
+            // Byte progress needs the stream, so it is wired here rather than in ParseReader,
+            // which stays a plain TextReader entry point for tests. Mirrors MzmlReader.
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
+                FileShare.Read, 16 * 1024 * 1024))
+            using (var progress = new ProgressReporter(
+                string.Format("Parsing {0}", Path.GetFileName(path)), stream.Length, string.Empty,
+                ProgressReporter.IO_INTERVAL_SECONDS))
+            using (var progressStream = new ProgressStream(stream, progress))
+            using (var reader = new StreamReader(progressStream))
             {
                 return ParseReader(reader, logInfo);
             }
