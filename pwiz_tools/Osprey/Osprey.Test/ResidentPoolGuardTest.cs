@@ -62,9 +62,17 @@ namespace pwiz.Osprey.Test
             // Naming THIS path exempts it (no error):
             Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: ResidentPaths.HPC_MERGE, useFdrProjection: true));
-            //   OSPREY_FDR_PROJECTION=0 (useFdrProjection == false, the A/B-oracle switch)
-            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
+            // OSPREY_FDR_PROJECTION=0 (the A/B byte-identity oracle) is NOT an automatic
+            // exemption any more -- it is its own token. Unnamed it is refused like anything
+            // else, which closes the last route to a resident pool nobody had to ask for.
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: null, useFdrProjection: false));
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.PROJECTION_OFF, useFdrProjection: false));
+            // It outranks a config-driven trigger, because it selects the legacy implementation
+            // for the whole run: naming the other reason is not enough.
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.HPC_MERGE, useFdrProjection: false));
 
             // Naming a DIFFERENT path does not: the token grants one exemption, not amnesty.
             // This is the property the former blanket boolean lacked.
@@ -102,7 +110,8 @@ namespace pwiz.Osprey.Test
                 new[]
                 {
                     ResidentPaths.HPC_MERGE, ResidentPaths.FDRBENCH_PASS1,
-                    ResidentPaths.MDIAG_FULL_RESUME, ResidentPaths.NON_PERCOLATOR_FDR
+                    ResidentPaths.MDIAG_FULL_RESUME, ResidentPaths.NON_PERCOLATOR_FDR,
+                    ResidentPaths.PROJECTION_OFF
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
 

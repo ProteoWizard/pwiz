@@ -1918,12 +1918,13 @@ namespace pwiz.Osprey.Tasks
         /// Fail fast when a run would build the RESIDENT first-pass pool -- an O(files) memory
         /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstJoin.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
-        /// operator explicitly accepted unbounded memory (<c>OSPREY_ALLOW_UNBOUNDED_MEMORY</c>, or
-        /// the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch which is itself an explicit resident
-        /// opt-in), throw with the trigger named so the failure is actionable rather than an opaque
-        /// OOM at scale. Triggers: the HPC reconciled-input merge (#4486), <c>--fdrbench-pass 1</c>,
-        /// a non-Percolator FdrMethod, and <c>--model-diagnostics</c> on a full resume (#4505 - the
-        /// scale case was streamed by #4420; only the full-resume batch report remains).
+        /// operator named THIS path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c>, throw with the token
+        /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: the
+        /// HPC reconciled-input merge (#4486), <c>--fdrbench-pass 1</c> (#4507), a non-Percolator
+        /// FdrMethod, <c>--model-diagnostics</c> on a full resume (#4505 - the scale case was
+        /// streamed by #4420; only the full-resume batch report remains), and
+        /// <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident implementation
+        /// outright and so must be named like any other.
         /// </summary>
         private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
         {
@@ -1938,7 +1939,8 @@ namespace pwiz.Osprey.Tasks
         /// testable): returns the actionable error message when the run would take the resident
         /// first-pass pool, or <c>null</c> when the pool is not needed or this exact path was
         /// named. <paramref name="useFdrProjection"/> == false is the <c>OSPREY_FDR_PROJECTION=0</c>
-        /// A/B-oracle switch, itself an explicit resident opt-in.
+        /// A/B-oracle switch, which is no longer an automatic exemption: it is its own token, so
+        /// forcing the legacy implementation is stated rather than inferred.
         ///
         /// <para>The allowance is a TOKEN, not a boolean, and it must match the path this run
         /// actually takes. A resident path with no token in <see cref="ResidentPaths.KNOWN_UNFIXED"/>
@@ -1950,9 +1952,9 @@ namespace pwiz.Osprey.Tasks
         internal static string ResidentPoolGuardError(
             OspreyConfig config, bool needsResidentPool, string allowUnfixedResident, bool useFdrProjection)
         {
-            if (!needsResidentPool || !useFdrProjection)
+            if (!needsResidentPool)
                 return null;
-            string trigger = ResidentPoolTrigger(config);
+            string trigger = ResidentPoolTrigger(config, useFdrProjection);
             if (trigger == null)
             {
                 return
@@ -1977,9 +1979,17 @@ namespace pwiz.Osprey.Tasks
         /// Order is most-specific-first and mirrors <see cref="PreCompactionPoolReason"/>.
         /// <c>--model-diagnostics</c> is last because it only forces the pool in combination with
         /// a full resume (the caller's <c>FirstPassSidecarsPresent</c> conjunction).
+        ///
+        /// <para><c>OSPREY_FDR_PROJECTION=0</c> is checked FIRST and deliberately outranks the
+        /// config-driven reasons: it selects the legacy implementation for the WHOLE run, so it
+        /// is the honest description of why the run is resident even when another trigger also
+        /// applies. Naming it is therefore coarse by design - but it is now named, where it used
+        /// to bypass the guard silently.</para>
         /// </summary>
-        private static string ResidentPoolTrigger(OspreyConfig config)
+        private static string ResidentPoolTrigger(OspreyConfig config, bool useFdrProjection)
         {
+            if (!useFdrProjection)
+                return ResidentPaths.PROJECTION_OFF;
             if (config.ExpectReconciledInput)
                 return ResidentPaths.HPC_MERGE;
             if (!config.FdrMethod.UsesPercolatorFramework())

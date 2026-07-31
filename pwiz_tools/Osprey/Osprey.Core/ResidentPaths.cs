@@ -74,12 +74,27 @@ namespace pwiz.Osprey.Core
         public const string NON_PERCOLATOR_FDR = @"non-percolator-fdr";
 
         /// <summary>
+        /// <c>OSPREY_FDR_PROJECTION=0</c>: the operator explicitly forced the legacy
+        /// <c>FdrEntry</c>-buffer implementation, so the whole run is resident by request. This
+        /// is the A/B byte-identity oracle that proves the streaming path did not change
+        /// results, and it is deliberately COARSE - naming it exempts the run wholesale, because
+        /// residency is the thing being asked for rather than a symptom to diagnose.
+        ///
+        /// <para>It still has to be named. The previous blanket bypass let this switch silently
+        /// exempt every OTHER resident trigger too, which is the same masking property that hid
+        /// the transfer regression. This entry leaves the list last: it can only go when the
+        /// legacy path itself does, which needs #4507 (FDRBench pass 1) and #4505 (mdiag full
+        /// resume) first.</para>
+        /// </summary>
+        public const string PROJECTION_OFF = @"projection-off";
+
+        /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
         /// <c>ResidentPoolGuardTest</c> - see the class remarks for why it may only shrink.
         /// </summary>
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
-            HPC_MERGE, FDRBENCH_PASS1, MDIAG_FULL_RESUME, NON_PERCOLATOR_FDR
+            HPC_MERGE, FDRBENCH_PASS1, MDIAG_FULL_RESUME, NON_PERCOLATOR_FDR, PROJECTION_OFF
         };
     }
 }
