@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model
             if (Results != null)
             {
                 transitionProto.Results = new SkylineDocumentProto.Types.TransitionResults();
-                transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(settings.MeasuredResults));
+                transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(Results, settings.MeasuredResults));
             }
 
             if (!Equals(ExplicitValues, ExplicitTransitionValues.EMPTY))
@@ -897,15 +897,16 @@ namespace pwiz.Skyline.Model
             return transitionDocNode;
         }
 
-        public IEnumerable<SkylineDocumentProto.Types.TransitionPeak> GetTransitionPeakProtos(MeasuredResults measuredResults)
+        public static IEnumerable<SkylineDocumentProto.Types.TransitionPeak> GetTransitionPeakProtos(
+            Results<TransitionChromInfo> results, MeasuredResults measuredResults)
         {
-            if (Results == null)
+            if (results == null)
             {
                 yield break;
             }
-            for (int replicateIndex = 0; replicateIndex < Results.Count; replicateIndex++)
+            for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
             {
-                var replicateResults = Results[replicateIndex];
+                var replicateResults = results[replicateIndex];
                 if (replicateResults.IsEmpty)
                 {
                     continue;

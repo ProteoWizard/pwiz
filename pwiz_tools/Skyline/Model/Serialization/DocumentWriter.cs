@@ -73,11 +73,6 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private HashSet<ReferenceValue<ChromFileInfoId>> _sharedTransitionAreaFiles;
 
-        // Kept for as long as one molecule is being written, since making one reads every
-        // chromatogram of the molecule
-        private PeptideDocNode _moleculeResultsPeptide;
-        private MoleculeResults _moleculeResults;
-
         public event Action<int> WroteTransitions;
 
         public void WriteXml(XmlWriter writer)
@@ -359,16 +354,23 @@ namespace pwiz.Skyline.Model.Serialization
                 WriteLookupMods(writer, node);
                 WriteCrosslinkStructure(writer, explicitMods?.CrosslinkStructure);
             }
-            if (node.HasResults)
+            // One per molecule, made once and handed down, because making one reads every
+            // chromatogram of the molecule. The doc nodes no longer keep their chrom infos, so this
+            // is where every attribute of them written below comes from.
+            var moleculeResults = WriteChromInfos && Settings.MeasuredResults != null
+                ? new MoleculeResults(Settings, node)
+                : null;
+            var peptideChromInfos = moleculeResults?.GetPeptideChromInfos();
+            if (peptideChromInfos != null)
             {
-                WriteResults(writer, Settings, node.Results,
+                WriteResults(writer, Settings, peptideChromInfos,
                     EL.peptide_results, EL.peptide_result, (w, i) => WritePeptideChromInfo(w, i, scoreCalc));
             }
 
             foreach (TransitionGroupDocNode nodeGroup in node.Children)
             {
                 writer.WriteStartElement(EL.precursor);
-                WriteTransitionGroupXml(writer, node, nodeGroup);
+                WriteTransitionGroupXml(writer, node, nodeGroup, moleculeResults);
                 writer.WriteEndElement();
             }
             writer.WriteEndElement();
@@ -580,15 +582,9 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="writer">The XML writer</param>
         /// <param name="nodePep">The parent peptide document node</param>
         /// <param name="node">The transition group document node</param>
-        private void WriteTransitionGroupXml(XmlWriter writer, PeptideDocNode nodePep, TransitionGroupDocNode node)
+        private void WriteTransitionGroupXml(XmlWriter writer, PeptideDocNode nodePep, TransitionGroupDocNode node,
+            MoleculeResults moleculeResults)
         {
-            // A transition does not hold on to its chrom infos, so writing them means working them
-            // out again from the chromatograms.
-            if (WriteChromInfos)
-            {
-                node = RestoreTransitionChromInfos(nodePep, node);
-            }
-
             TransitionGroup group = node.TransitionGroup;
             var isCustomIon = nodePep.Peptide.IsCustomMolecule;
             writer.WriteAttribute(ATTR.charge, group.PrecursorAdduct.AdductCharge);
@@ -659,10 +655,14 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 WriteTransitionGroupResults(writer, node);
             }
-            else if (node.HasResults)
+            else
             {
-                WriteResults(writer, Settings, node.Results,
-                    EL.precursor_results, EL.precursor_peak, WriteTransitionGroupChromInfo);
+                var groupChromInfos = moleculeResults?.GetTransitionGroupChromInfos(group);
+                if (groupChromInfos != null)
+                {
+                    WriteResults(writer, Settings, groupChromInfos,
+                        EL.precursor_results, EL.precursor_peak, WriteTransitionGroupChromInfo);
+                }
             }
 
             if (UseCompactFormat())
@@ -681,7 +681,7 @@ namespace pwiz.Skyline.Model.Serialization
                 foreach (TransitionDocNode nodeTransition in node.Children)
                 {
                     writer.WriteStartElement(EL.transition);
-                    WriteTransitionXml(writer, nodePep, node, nodeTransition);
+                    WriteTransitionXml(writer, nodePep, node, nodeTransition, moleculeResults);
                     writer.WriteEndElement();
                 }
             }
@@ -749,7 +749,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="nodeGroup">The transition node's parent group node</param>
         /// <param name="nodeTransition">The transition document node</param>
         private void WriteTransitionXml(XmlWriter writer, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-                                        TransitionDocNode nodeTransition)
+                                        TransitionDocNode nodeTransition, MoleculeResults moleculeResults)
         {
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
@@ -849,28 +849,38 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
             }
 
-            if (nodeTransition.HasResults)
+            if (!WriteChromInfos)
             {
-                if (!WriteChromInfos)
+                // Left out when the precursor already carries these areas and there is nothing
+                // else here to say.
+                if (nodeTransition.AbbreviatedResults != null &&
+                    !IsCoveredBySharedTransitionAreas(nodeTransition.AbbreviatedResults))
                 {
-                    // Left out when the precursor already carries these areas and there is nothing
-                    // else here to say.
-                    if (!IsCoveredBySharedTransitionAreas(nodeTransition.AbbreviatedResults))
-                        WriteTransitionResults(writer, nodeTransition.AbbreviatedResults);
+                    WriteTransitionResults(writer, nodeTransition.AbbreviatedResults);
                 }
-                else if (UseCompactFormat())
+            }
+            else
+            {
+                // Worked out from the chromatograms, since a transition does not keep them.
+                var transitionChromInfos = moleculeResults?.GetTransitionChromInfos(nodeGroup.TransitionGroup,
+                    nodeTransition.Transition);
+                if (transitionChromInfos != null)
                 {
-                    var protoResults = new SkylineDocumentProto.Types.TransitionResults();
-                    protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
-                    byte[] bytes = protoResults.ToByteArray();
-                    writer.WriteStartElement(EL.results_data);
-                    writer.WriteBase64(bytes, 0, bytes.Length);
-                    writer.WriteEndElement();
-                }
-                else
-                {
-                    WriteResults(writer, Settings, nodeTransition.Results,
-                        EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
+                    if (UseCompactFormat())
+                    {
+                        var protoResults = new SkylineDocumentProto.Types.TransitionResults();
+                        protoResults.Peaks.AddRange(TransitionDocNode.GetTransitionPeakProtos(transitionChromInfos,
+                            Settings.MeasuredResults));
+                        byte[] bytes = protoResults.ToByteArray();
+                        writer.WriteStartElement(EL.results_data);
+                        writer.WriteBase64(bytes, 0, bytes.Length);
+                        writer.WriteEndElement();
+                    }
+                    else
+                    {
+                        WriteResults(writer, Settings, transitionChromInfos,
+                            EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
+                    }
                 }
             }
 
@@ -1086,35 +1096,6 @@ namespace pwiz.Skyline.Model.Serialization
                     w.WriteFloatsAttribute(ATTR.transition_areas, areas);
                 }
             });
-        }
-
-        /// <summary>
-        /// Gives a precursor's transitions their chrom infos back, for the paths which write every
-        /// attribute of them. One <see cref="MoleculeResults"/> serves the whole molecule, since
-        /// making one reads all of its chromatograms.
-        /// </summary>
-        private TransitionGroupDocNode RestoreTransitionChromInfos(PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup)
-        {
-            if (Settings.MeasuredResults == null || !nodeGroup.Transitions.Any())
-            {
-                return nodeGroup;
-            }
-
-            if (!ReferenceEquals(nodePep, _moleculeResultsPeptide))
-            {
-                _moleculeResultsPeptide = nodePep;
-                _moleculeResults = new MoleculeResults(Settings, nodePep);
-            }
-
-            var childrenNew = new List<DocNode>(nodeGroup.TransitionCount);
-            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-            {
-                var results = _moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition);
-                childrenNew.Add(results == null ? nodeTran : nodeTran.ChangeResults(results));
-            }
-
-            return (TransitionGroupDocNode) nodeGroup.ChangeChildren(childrenNew);
         }
 
         /// <summary>
