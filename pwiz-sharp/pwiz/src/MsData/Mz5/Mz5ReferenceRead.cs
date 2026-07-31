@@ -318,13 +318,26 @@ public sealed class Mz5ReferenceRead
         if (conn.Has(Mz5Datasets.ChromatogramMetaData))
             _msd.Run.ChromatogramList = new Mz5ChromatogramList(conn, this);
 
-        // CVRefs hold IntPtr to HDF5-allocated strings; reclaim now that all
-        // param-container fills are done.
+        // CVRefs hold IntPtr into HDF5-allocated strings, so they cannot outlive the reclaim
+        // below -- and the two lists constructed just above resolve CVIDs lazily, per spectrum,
+        // at GetSpectrum time, which is long after Fill returns. Reclaiming while those pointers
+        // were still reachable left CVIDByRef dereferencing freed memory: on Windows the block
+        // usually still held the old bytes so the prefix read back intact and everything worked
+        // by luck, while glibc reuses it and every lazily-resolved param came back CVID_Unknown
+        // (m/z and intensity arrays lost their array-type params, so spectra read as empty).
+        //
+        // Resolve the whole table into the memo first, then reclaim, then drop the array: after
+        // this point nothing can dereference a stale pointer, because every index either hits
+        // the memo or falls off the end and yields CVID_Unknown.
         if (_cvRefs.Length > 0)
         {
+            for (uint i = 0; i < _cvRefs.Length; i++)
+                CVIDByRef(i);
+
             long t = CVRefMZ5.CreateType();
             try { Reclaim(_cvRefs, t); }
             finally { H5T.close(t); }
+            _cvRefs = Array.Empty<CVRefMZ5>();
         }
     }
 
