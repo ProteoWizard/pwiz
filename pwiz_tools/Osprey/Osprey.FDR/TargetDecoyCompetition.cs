@@ -407,9 +407,26 @@ namespace pwiz.Osprey.FDR
             private int _len;      // slots used == min(Count, N)
             public int Count;      // total observations seen
 
+            /// <summary>True for a score this accumulator will admit. NaN and +/-Infinity are both
+            /// excluded: a NaN can never be evicted (every comparison against it is false) and an
+            /// infinite floor makes AggregateScore's <c>(n - _len) * floor</c> term 0*Inf = NaN
+            /// even for a FULLY detected group, so a single bad value would poison the entire
+            /// experiment rather than one base_id. Spelled out rather than double.IsFinite because
+            /// net472 does not have it.</summary>
+            private static bool IsUsable(double score)
+            {
+                return !double.IsNaN(score) && !double.IsInfinity(score);
+            }
+
             public static MeanBestNAcc First(double score, int n)
             {
+                // An unusable FIRST observation must not seed the buffer - it would occupy _top[0]
+                // permanently for exactly the reasons Add guards against. Seeding empty is correct
+                // and not a special case: AggregateScore over _len == 0 is (n * floor) / n, the
+                // floor, which is what "this unit has no valid observations" should score.
                 var top = new double[n];
+                if (!IsUsable(score))
+                    return new MeanBestNAcc { _top = top, _len = 0, Count = 0 };
                 top[0] = score;
                 return new MeanBestNAcc { _top = top, _len = 1, Count = 1 };
             }
@@ -424,7 +441,7 @@ namespace pwiz.Osprey.FDR
                 // AccumulatePeptideReps. The MAX aggregation this replaces was structurally immune,
                 // so the guard is new surface, not an inherited gap. Dropping the observation
                 // matches what max did with it: nothing.
-                if (double.IsNaN(score))
+                if (!IsUsable(score))
                     return;
                 Count++;
                 if (_len < n)

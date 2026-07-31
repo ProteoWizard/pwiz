@@ -193,9 +193,22 @@ namespace pwiz.Osprey.Tasks
             // read from a process-wide static rather than the config, which is why it is not
             // already covered by SearchIdentity; promoting it to a real command argument would
             // subsume this line.
-            return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + @";expagg=" + OspreyEnvironment.ExperimentAgg;
+            string key = base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
+            // ONLY when the aggregation is actually engaged. NormalizeExperimentAgg returns the
+            // constant "max" when the variable is unset, so appending unconditionally would change
+            // every DEFAULT run's key and invalidate every output directory produced before this
+            // change - re-running Stage 5 FDR, protein FDR and compaction (hours at 82 files) to
+            // reproduce byte-identical output. The floor toggles belong here too: they feed the
+            // aggregate written into this task's own Pass1Path output, so a floor sweep in one
+            // directory would otherwise reuse the previous arm's q as the new arm's measurement.
+            if (!OspreyEnvironment.ExperimentAggMeanBest)
+                return key;
+            return key
+                + @";expagg=" + OspreyEnvironment.ExperimentAgg
+                + @";floormean=" + OspreyEnvironment.MeanBest2FloorMean
+                + @";floorpct=" + (OspreyEnvironment.MeanBest2FloorPercentile?.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
         }
 
         public override bool Run(PipelineContext ctx)
@@ -229,7 +242,10 @@ namespace pwiz.Osprey.Tasks
             // (normalized to the byte-identical max default) so a typo cannot be mistaken for a
             // mean(best-N) run - this flag exists to be A/B'd, so a silent fallback would corrupt
             // the comparison rather than fail it. Mirrors the OSPREY_PASS2_QVALUE warning.
-            if (OspreyEnvironment.MeanBestFloorOverspecified)
+            // Only when the aggregation is engaged: with OSPREY_EXPERIMENT_AGG unset the floor is
+            // never consulted, so refusing a default run over two variables it does not read
+            // would break the ordinary pipeline for an operator who simply left a sweep exported.
+            if (OspreyEnvironment.ExperimentAggMeanBest && OspreyEnvironment.MeanBestFloorOverspecified)
             {
                 throw new InvalidOperationException(
                     "OSPREY_MEANBEST2_FLOOR_MEAN and OSPREY_MEANBEST2_FLOOR_PCT are both set. " +

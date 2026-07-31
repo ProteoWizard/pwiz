@@ -472,9 +472,11 @@ namespace pwiz.Osprey.Core
         /// consulted, so an operator sweeping OSPREY_MEANBEST2_FLOOR_PCT with a stale
         /// OSPREY_MEANBEST2_FLOOR_MEAN=1 still exported would log a percentile arm while measuring
         /// the mean. The consuming site refuses the combination.</summary>
-        public static readonly bool MeanBestFloorOverspecified =
-            IsSetAndNotZero(@"OSPREY_MEANBEST2_FLOOR_MEAN") &&
-            ParseDoubleOrNull(@"OSPREY_MEANBEST2_FLOOR_PCT").HasValue;
+        /// Computed, not snapshotted: the two toggles above are settable properties (so tests can
+        /// pin the floor), and a readonly field capturing the raw environment at type load would
+        /// disagree with them in both directions.
+        public static bool MeanBestFloorOverspecified =>
+            MeanBest2FloorMean && MeanBest2FloorPercentile.HasValue;
 
         // Parse N from OSPREY_EXPERIMENT_AGG=mean-best-<N>. Returns 0 (the max default) when unset,
         // not a mean-best-<N> value, or N < 2.

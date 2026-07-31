@@ -178,14 +178,41 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestMeanBestNIgnoresNaN()
         {
-            var scores = new[] { 5.0, double.NaN, 7.0, -3.0, -1.0, 0.0 };
+            // base10 takes the NaN SECOND (the Add path) and base20 takes it FIRST (the First
+            // path, which seeds the buffer). Position matters: an earlier version of this test
+            // only covered the Add path, so a missing guard in First - where a NaN occupies
+            // _top[0] permanently and can never be evicted - passed unnoticed.
+            var scores = new[] { 5.0, double.NaN, 7.0, double.NaN, 4.0, 6.0, -3.0, -1.0, 0.0 };
+            var labels = new[] { false, false, false, false, false, false, true, true, true };
+            var entryIds = new uint[]
+                { 10, 10, 10, 20, 20, 20, 10 | DECOY_BIT, 20 | DECOY_BIT, 30 | DECOY_BIT };
+
+            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, 2);
+
+            Assert.IsFalse(double.IsNaN(agg[0]), @"NaN mid-group must not propagate");
+            Assert.AreEqual(6.0, agg[0], 1e-12, @"base10 = mean(7,5), the NaN dropped entirely");
+            Assert.IsFalse(double.IsNaN(agg[3]), @"NaN as the FIRST observation must not propagate");
+            Assert.AreEqual(5.0, agg[3], 1e-12, @"base20 = mean(6,4), the leading NaN dropped");
+        }
+
+        /// <summary>
+        /// An infinite score is excluded for a reason NaN alone does not cover: AggregateScore's
+        /// missing-run term is <c>(n - _len) * floor</c>, which for a FULLY detected group is
+        /// <c>0.0 * floor</c> -- and 0*Infinity is NaN. So one infinite value admitted anywhere
+        /// would poison every base_id in the experiment through the shared floor, not just its own.
+        /// </summary>
+        [TestMethod]
+        public void TestMeanBestNIgnoresInfinity()
+        {
+            var scores = new[] { 5.0, double.PositiveInfinity, 7.0, -3.0, -1.0, 0.0 };
             var labels = new[] { false, false, false, true, true, true };
             var entryIds = new uint[] { 10, 10, 10, 10 | DECOY_BIT, 20 | DECOY_BIT, 30 | DECOY_BIT };
 
             var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, 2);
 
-            Assert.IsFalse(double.IsNaN(agg[0]), @"NaN must not propagate into the aggregate");
-            Assert.AreEqual(6.0, agg[0], 1e-12, @"base10 = mean(7,5), the NaN dropped entirely");
+            foreach (double a in agg)
+                Assert.IsFalse(double.IsNaN(a), @"an infinite observation must not produce NaN");
+            Assert.AreEqual(6.0, agg[0], 1e-12, @"base10 = mean(7,5), the infinity dropped");
         }
 
         /// <summary>
