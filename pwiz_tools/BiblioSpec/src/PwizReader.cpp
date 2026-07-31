@@ -163,6 +163,7 @@ bool PwizReader::getSpectrum(int identifier,
     }
     unique_ptr<SpectrumInfo> specInfo(new SpectrumInfo());
     specInfo->SpectrumInfo::update(*foundSpec, getPeaks);
+    ensureMzAscending(*specInfo);
     
     // confirm that it's an ms/ms spectrum
     if( getPeaks && specInfo->msLevel != 2 ){
@@ -303,6 +304,7 @@ bool PwizReader::getSpectrum(int identifier,
     }
     unique_ptr<SpectrumInfo> specInfo(new SpectrumInfo());
     specInfo->SpectrumInfo::update(*foundSpec, getPeaks);
+    ensureMzAscending(*specInfo);
     
     // confirm that it's an ms/ms spectrum
     if( specInfo->msLevel != 2 ){
@@ -427,10 +429,27 @@ void PwizReader::addCharges(BiblioSpec::Spectrum& returnSpectrum,
 }
 
 /**
+ * Put a spectrum's peaks in ascending m/z order if its writer did not. Ascending m/z is nowhere
+ * required of a writer, but everything downstream assumes it - and this has to happen here, on the
+ * SpectrumInfo, because it is the only point both transfer paths share. BlibBuild never builds a
+ * BiblioSpec::Spectrum at all: it goes BuildParser -> getSpectrum(int, SpecData&) -> transferSpec,
+ * and hands the raw arrays to insertPeaks, so a library built from a writer that presented some
+ * other order would be stored in that order and stay that way for every consumer of the .blib.
+ */
+void PwizReader::ensureMzAscending(SpectrumInfo& specInfo)
+{
+    if (is_sorted(specInfo.data.begin(), specInfo.data.end(),
+                  [](const MZIntensityPair& a, const MZIntensityPair& b) { return a.mz < b.mz; }))
+        return;
+    sort(specInfo.data.begin(), specInfo.data.end(),
+         [](const MZIntensityPair& a, const MZIntensityPair& b) { return a.mz < b.mz; });
+}
+
+/**
  * Copy the information from the Pwiz spectrum to the BiblioSpec
  * SpecData.
  */
-void PwizReader::transferSpec(BiblioSpec::SpecData& returnData, 
+void PwizReader::transferSpec(BiblioSpec::SpecData& returnData,
                               unique_ptr<SpectrumInfo>& specInfo){
     
     returnData.id = specInfo->scanNumber;

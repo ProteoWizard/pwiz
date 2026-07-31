@@ -2434,6 +2434,34 @@ namespace pwiz.ProteowizardWrapper
             Mzs = mzs;
             Intensities = intensities;
             IonMobilities = ionMobilities;
+
+            // Combined ion mobility spectra are deliberately not globally m/z ordered,
+            // m/z ascends within each mobility bin and the consumers that need them
+            // flat sort them later on dedicated threads.
+            // NOTE: anything added above that holds one value per peak must also be carried across
+            // by EnsureMzAscending, or the sort will leave every value plausible and every pairing
+            // wrong - a worse failure than the unsorted input it exists to correct.
+            if (IonMobilities == null)
+            {
+                EnsureMzAscending();
+            }
+        }
+
+        /// <summary>
+        /// Put the peaks in ascending m/z order if the writer did not. Ascending m/z is nowhere
+        /// required by the mzML specification, but it is what every consumer assumes: extraction
+        /// binary searches the m/z axis, so on a spectrum ordered any other way the search lands
+        /// nowhere useful and the chromatogram comes out empty with no error at all. Writers that
+        /// present some other order do exist - one shipped peaks in ascending intensity - so the
+        /// order is checked rather than trusted.
+        /// The check is a single pass and costs nothing next to decoding the arrays; the sort only
+        /// runs for a writer that did not present m/z order.
+        /// </summary>
+        private void EnsureMzAscending()
+        {
+            if (Mzs == null || Intensities == null || Intensities.Length != Mzs.Length)
+                return;
+            ParallelDoubleSort.Sort(Mzs, Intensities);
         }
 
         public void SetEmptyArrays()
