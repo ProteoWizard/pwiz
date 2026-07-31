@@ -367,13 +367,16 @@ namespace pwiz.Skyline.Model
             _accumulatedCompletions.Add(completion);
             if (_consumedCount == _loadingCount || _accumulatedCompletions.Count == _threadCount)
             {
-                _complete(_accumulatedCompletions);
+                // Take the batch before committing it, so that a commit which throws does not
+                // leave its completions to be committed a second time with the next batch.
+                var batch = _accumulatedCompletions.ToArray();
                 _accumulatedCompletions.Clear();
+                Commit(batch);
             }
             // Report errors and cancellations as soon as possible
             else if (!completion.Status.IsComplete)
             {
-                _complete(new SingletonList<Completion>(completion));
+                Commit(new SingletonList<Completion>(completion));
                 // Add an empty completion, which will be ignored during batch
                 _accumulatedCompletions[_accumulatedCompletions.Count - 1] = new Completion(null, new ProgressStatus());
             }
@@ -384,13 +387,57 @@ namespace pwiz.Skyline.Model
             var completedCount = Interlocked.Increment(ref _completedCount);
             var completion = new Completion(cache, status);
             if (_completionWorker == null)
-                _complete(new SingletonList<Completion>(completion));
+                Commit(new SingletonList<Completion>(completion));
             else
             {
                 _completionWorker.Add(completion);
 
                 if (completedCount == _loadingCount)
                     _completionWorker.DoneAdding();
+            }
+        }
+
+        /// <summary>
+        /// Hands a batch of loaded files to the loader that is waiting for them.
+        /// <para>
+        /// Every caller of this runs on a <see cref="QueueWorker{TItem}"/> thread - the
+        /// "Commit loaded files" worker, or the "Load file" worker when there is nothing to
+        /// accumulate - and a <see cref="QueueWorker{TItem}"/> puts anything its work throws into
+        /// its Exception property and stops. Nothing reads that property here, so an exception
+        /// escaping this method used to end committing altogether: no later loaded file was ever
+        /// committed, the document stayed unloaded for the rest of the session, and nothing was
+        /// reported. Tell the loader it failed instead, and go on to the next batch.
+        /// </para>
+        /// </summary>
+        private void Commit(IList<Completion> completions)
+        {
+            try
+            {
+                _complete(completions);
+            }
+            catch (Exception exception)
+            {
+                ReportCommitFailure(exception);
+            }
+        }
+
+        /// <summary>
+        /// Reports a batch which could not be committed as a file which could not be loaded, so
+        /// that it reaches the user the way any other failure to import results does.
+        /// </summary>
+        private void ReportCommitFailure(Exception exception)
+        {
+            try
+            {
+                _complete(new SingletonList<Completion>(
+                    new Completion(null, new ProgressStatus().ChangeErrorException(exception))));
+            }
+            catch (Exception failedToReport)
+            {
+                // The loader could not be told about the failure either, so there is nowhere left
+                // to report it. Leaving this thread is still better than throwing from it.
+                Messages.WriteAsyncDebugMessage(@"Unable to report a failure to commit loaded files: {0}",
+                    failedToReport);
             }
         }
     }

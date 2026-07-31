@@ -1853,18 +1853,34 @@ namespace pwiz.Skyline.Model.Results
         {
             lock (ReadStream)
             {
-                var stream = ReadStream.Stream;
                 try
                 {
-                    return func(stream);
+                    return CallWithStreamOnce(func);
                 }
-                catch (Exception)
+                catch (ObjectDisposedException)
                 {
-                    // If an exception is thrown, close the stream in case the failure is something
-                    // like a network failure that can be remedied by re-opening the stream.
-                    ReadStream.CloseStream();
-                    throw;
+                    // Another thread closed the stream while this read was in progress, which
+                    // happens when the document swaps in a new cache, as rescoring does. Reading
+                    // again either reconnects to the file, or reports the FileModifiedException
+                    // that callers already know how to fall back from.
+                    return CallWithStreamOnce(func);
                 }
+            }
+        }
+
+        private T CallWithStreamOnce<T>(Func<Stream, T> func)
+        {
+            var stream = ReadStream.Stream;
+            try
+            {
+                return func(stream);
+            }
+            catch (Exception)
+            {
+                // If an exception is thrown, close the stream in case the failure is something
+                // like a network failure that can be remedied by re-opening the stream.
+                ReadStream.CloseStream();
+                throw;
             }
         }
 
