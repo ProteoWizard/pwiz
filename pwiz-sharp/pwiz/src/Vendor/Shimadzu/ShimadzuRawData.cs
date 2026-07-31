@@ -599,13 +599,6 @@ public sealed class ShimadzuRawData : IDisposable
         try { _dataObject.IO.Close(); }
         catch { /* SDK may throw on bogus state — best-effort close */ }
     }
-
-    /// <summary>Quick sanity check used by both <see cref="Reader_Shimadzu.Identify"/> and <see cref="Reader_Shimadzu.Read"/>.</summary>
-    public static bool IsShimadzuLcd(string path)
-    {
-        return !string.IsNullOrEmpty(path)
-            && path.EndsWith(".lcd", StringComparison.OrdinalIgnoreCase);
-    }
 }
 
 /// <summary>Polarity enum mirroring <c>Shimadzu.LabSolutions.IO.Generic.Polarities</c> integer values.</summary>

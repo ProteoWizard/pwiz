@@ -38,7 +38,7 @@ public sealed class Reader_Shimadzu : IReader
     public CVID Identify(string filename, string? head)
     {
         ArgumentNullException.ThrowIfNull(filename);
-        return ShimadzuRawData.IsShimadzuLcd(filename) ? CvType : CVID.CVID_Unknown;
+        return IsShimadzuLcd(filename) ? CvType : CVID.CVID_Unknown;
     }
 
     /// <inheritdoc/>
@@ -47,7 +47,7 @@ public sealed class Reader_Shimadzu : IReader
         ArgumentNullException.ThrowIfNull(filename);
         ArgumentNullException.ThrowIfNull(result);
 
-        if (!ShimadzuRawData.IsShimadzuLcd(filename))
+        if (!IsShimadzuLcd(filename))
             throw new InvalidDataException($"Not a Shimadzu .lcd file: {filename}");
         if (!File.Exists(filename))
             throw new FileNotFoundException("Shimadzu .lcd file not found", filename);
@@ -262,4 +262,15 @@ public sealed class Reader_Shimadzu : IReader
         ("LCMS", CVID.MS_Shimadzu_Scientific_Instruments_instrument_model, true),
     };
 #endif
+
+    /// <summary>
+    /// Pure filename test, with no dependency on the Shimadzu SDK. It lives here rather than on
+    /// ShimadzuRawData because that type is compiled out in NO_VENDOR_SUPPORT builds, and
+    /// Identify() has to keep working in that mode -- that is the whole point of it.
+    /// </summary>
+    private static bool IsShimadzuLcd(string path)
+    {
+        return !string.IsNullOrEmpty(path)
+            && path.EndsWith(".lcd", StringComparison.OrdinalIgnoreCase);
+    }
 }
