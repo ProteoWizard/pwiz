@@ -82,7 +82,13 @@ namespace pwiz.Osprey
                     config.InputFiles = synthetic;
                 }
 
-                var pipelineTasks = CanonicalPipeline();
+                // --task SpectraCache stages data rather than analyzing it: it runs
+                // its own one-task pipeline instead of the canonical four. Selecting
+                // it by list, not by an IsIncluded gate on every other task, keeps the
+                // canonical pipeline's membership rules about the analysis itself.
+                var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
+                    ? SpectraCachePipeline()
+                    : CanonicalPipeline();
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
@@ -144,6 +150,19 @@ namespace pwiz.Osprey
                 new FirstJoinTask(),
                 new PerFileRescoreTask(),
                 new MergeNodeTask(),
+            };
+        }
+
+        /// <summary>
+        /// The one-task pipeline behind <c>--task SpectraCache</c>: build every
+        /// input's <c>.spectra.bin</c> and stop, without a library or any of the
+        /// analysis stages.
+        /// </summary>
+        internal static OspreyTask[] SpectraCachePipeline()
+        {
+            return new OspreyTask[]
+            {
+                new SpectraCacheTask(),
             };
         }
 

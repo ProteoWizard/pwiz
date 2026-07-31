@@ -724,7 +724,18 @@ namespace pwiz.Osprey.FDR
             double[] ws;
             bool[] wd;
             using (var progress = QProgress(@"Experiment precursor q-values", n, n))
-                TargetDecoyCompetition.CompeteAll(scores, labels, entryIds, out wi, out ws, out wd, progress);
+            {
+                if (OspreyEnvironment.ExperimentAggMeanBest)
+                {
+                    var aggScore = TargetDecoyCompetition.ComputeBaseIdMeanBestN(
+                        scores, labels, entryIds, OspreyEnvironment.MeanBestN);
+                    TargetDecoyCompetition.CompeteAll(aggScore, labels, entryIds, out wi, out ws, out wd, progress);
+                }
+                else
+                {
+                    TargetDecoyCompetition.CompeteAll(scores, labels, entryIds, out wi, out ws, out wd, progress);
+                }
+            }
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
@@ -772,11 +783,21 @@ namespace pwiz.Osprey.FDR
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides)
         {
             int n = scores.Length;
+
+            // Reproducibility roll-up (OSPREY_EXPERIMENT_AGG=mean-best-2): the peptide score is
+            // the MAX over its precursors of each precursor's mean-best-2 score. Substituting the
+            // per-row mean-best-2 array for the raw scores turns BestPrecursorPerPeptide's
+            // max-over-observations into exactly that (every observation of a base_id carries the
+            // same precursor score). Default (max) is byte-identical: effScores == scores.
+            double[] effScores = OspreyEnvironment.ExperimentAggMeanBest
+                ? TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, OspreyEnvironment.MeanBestN)
+                : scores;
+
             var allIndices = new int[n];
             for (int i = 0; i < n; i++)
                 allIndices[i] = i;
 
-            var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(allIndices, scores, labels, peptides);
+            var bestPerPeptide = PercolatorSampling.BestPrecursorPerPeptide(allIndices, effScores, labels, peptides);
 
             var peptScores = new double[bestPerPeptide.Length];
             var peptLabels = new bool[bestPerPeptide.Length];
@@ -784,7 +805,7 @@ namespace pwiz.Osprey.FDR
             var allPeptIndices = new int[bestPerPeptide.Length];
             for (int i = 0; i < bestPerPeptide.Length; i++)
             {
-                peptScores[i] = scores[bestPerPeptide[i]];
+                peptScores[i] = effScores[bestPerPeptide[i]];
                 peptLabels[i] = labels[bestPerPeptide[i]];
                 peptEntryIds[i] = entryIds[bestPerPeptide[i]];
                 allPeptIndices[i] = i;
