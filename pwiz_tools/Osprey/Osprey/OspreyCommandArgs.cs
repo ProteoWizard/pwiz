@@ -208,7 +208,8 @@ namespace pwiz.Osprey
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            new[] { @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR" }, (c, p) => true);
+            new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR" },
+            (c, p) => true);
         public static readonly OspreyArgument ARG_INPUT_SCORES = new OspreyArgument(@"input-scores",
             () => @"<paths|dir>", (c, p) => true) { Variadic = true, ProcessVariadic = (c, toks) =>
             {
@@ -360,7 +361,11 @@ namespace pwiz.Osprey
                 {
                     // A non-flag token that exists on disk is a positional input file. Anything
                     // else starting with '-' is unknown and fails fast (caught by Main).
-                    if (!arg.StartsWith(@"-") && File.Exists(arg))
+                    // Directory.Exists matters as much as File.Exists here: the vendor formats
+                    // that are DIRECTORIES (Agilent .d, Bruker .d, Waters .raw) would otherwise
+                    // fall through to "Unknown argument" and be silently dropped from the run,
+                    // while the same path passed with -i was accepted.
+                    if (!arg.StartsWith(@"-") && (File.Exists(arg) || Directory.Exists(arg)))
                     {
                         _inputFiles.Add(arg);
                         i++;
@@ -394,7 +399,7 @@ namespace pwiz.Osprey
                     i++;
                     if (i >= args.Length || args[i].StartsWith(@"-"))
                         throw new ArgumentException(
-                            @"--task requires a task name (PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            @"--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
                     i++;
                     continue;
                 }
@@ -445,6 +450,8 @@ namespace pwiz.Osprey
 
         private OspreyConfig ToConfig()
         {
+            for (int i = 0; i < _inputFiles.Count; i++)
+                _inputFiles[i] = NormalizeInputPath(_inputFiles[i]);
             _config.InputFiles = _inputFiles;
 
             // --work-dir sets both the derived-artifact output directory and the spectra-cache
@@ -531,6 +538,26 @@ namespace pwiz.Osprey
             }
 
             return _config;
+        }
+
+        /// <summary>
+        /// Strip a trailing directory separator from an input path. Shell tab completion
+        /// adds one for a directory, and the vendor formats this build can read ARE
+        /// directories (Agilent .d, Bruker .d, Waters .raw). Left on, the path has no
+        /// filename component, so every derived artifact - the .spectra.bin, the
+        /// .scores.parquet, the FDR sidecars - loses its stem and is written INSIDE the
+        /// bundle. For the cache that is self-defeating as well as untidy: the artifact
+        /// then counts toward the bundle's own fingerprint, so the cache never matches
+        /// the source it was built from and every run re-parses.
+        /// </summary>
+        private static string NormalizeInputPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            // A bare root ("C:\", "/") trims to something that means a different place, and
+            // is never a real input, so leave it exactly as given.
+            return string.IsNullOrEmpty(Path.GetFileName(trimmed)) ? path : trimmed;
         }
 
         private static OspreyArgument FindByToken(string token)
@@ -657,7 +684,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
             sb.AppendLine(@"<title>Osprey command-line usage</title>");
-            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
+            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
             // Self-contained stylesheet (Osprey does not reference Skyline, so it cannot call
             // DocumentationGenerator.GetStyleSheetHtml). The table rules are copied from that Skyline
             // stylesheet so Osprey's generated help matches Skyline's look (cell padding,

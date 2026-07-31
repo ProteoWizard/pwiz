@@ -91,7 +91,7 @@ namespace pwiz.Osprey
                     {
                         if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
                         {
-                            LogError("--task requires a task name (PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
                             return 1;
                         }
                         taskName = args[i + 1];
@@ -199,7 +199,13 @@ namespace pwiz.Osprey
                 {
                     foreach (string inputFile in config.InputFiles)
                     {
-                        if (!File.Exists(inputFile))
+                        // A directory counts as present. Several vendor formats ARE
+                        // directories (Agilent .d, Bruker .d, Waters .raw), so testing
+                        // File.Exists alone rejected every one of them here, before any
+                        // reader was consulted, on builds with and without the vendor
+                        // reader. It also blocked reusing a raw-derived .spectra.bin,
+                        // which must work on a build that cannot read the raw itself.
+                        if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
                         {
                             LogError(string.Format("Input file not found: {0}", inputFile));
                             return 1;
@@ -226,10 +232,13 @@ namespace pwiz.Osprey
                     LogInfo(string.Format("Task: {0} (single-task run)",
                         TaskCliName(config.SelectedTask.Value)));
                 // --task PerFileScoring writes per-file .scores.parquet next to each
-                // input mzML, not a blib -- report the real output rather than the
-                // ignored --output blib path. (PerFileRescoring still writes --output.)
-                if (config.NoJoin && !fromInputScores)
-                    LogInfo("Output: per-file .scores.parquet (next to each input mzML)");
+                // input file, mzML or vendor raw, not a blib - report the real output
+                // rather than the ignored --output blib path. (PerFileRescoring still
+                // writes --output.)
+                if (config.SelectedTask == HpcTask.SpectraCache)
+                    LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
+                else if (config.NoJoin && !fromInputScores)
+                    LogInfo("Output: per-file .scores.parquet (next to each input file)");
                 else
                     LogInfo(string.Format("Output: {0}", config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
@@ -310,9 +319,14 @@ namespace pwiz.Osprey
                 task = HpcTask.MergeNode;
                 return null;
             }
+            if (string.Equals(taskName, "SpectraCache", StringComparison.OrdinalIgnoreCase))
+            {
+                task = HpcTask.SpectraCache;
+                return null;
+            }
             task = default;
             return string.Format(
-                "--task: unknown task '{0}'. Valid tasks: PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.",
+                "--task: unknown task '{0}'. Valid tasks: SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.",
                 taskName);
         }
 
@@ -331,6 +345,7 @@ namespace pwiz.Osprey
                 case HpcTask.FirstJoin: return "FirstPassFDR";
                 case HpcTask.PerFileRescore: return "PerFileRescoring";
                 case HpcTask.MergeNode: return "SecondPassFDR";
+                case HpcTask.SpectraCache: return "SpectraCache";
                 default: return task.ToString();
             }
         }
@@ -354,6 +369,20 @@ namespace pwiz.Osprey
             {
                 switch (config.SelectedTask.Value)
                 {
+                    case HpcTask.SpectraCache:
+                        // Stage 1 alone: inputs in, .spectra.bin out. Deliberately
+                        // does NOT require --library: caching depends only on the
+                        // input file, and demanding one would make staging a dataset
+                        // wait on a library that is often chosen later.
+                        if (hasInputScores)
+                        {
+                            return "--task SpectraCache takes -i <file>, not --input-scores " +
+                                   "(it builds spectra caches from raw inputs, not from scores).";
+                        }
+                        if (!hasInputFiles)
+                            return "--task SpectraCache requires --input <file...>.";
+                        return null;
+
                     case HpcTask.PerFileScoring:
                         // Stage 1-4 worker: mzML in, per-file .scores.parquet out.
                         if (hasInputScores)

@@ -321,7 +321,7 @@ namespace pwiz.Osprey.Test
             }
 
             var config = new PercolatorConfig { MaxIterations = 3 };
-            var results = PercolatorFdr.RunPercolator(entries, config);
+            var results = PercolatorTrainer.RunPercolator(entries, config);
 
             // Should have results for all entries
             Assert.AreEqual(40, results.Entries.Count);
@@ -357,7 +357,7 @@ namespace pwiz.Osprey.Test
         public void TestPercolatorEmpty()
         {
             var config = new PercolatorConfig();
-            var results = PercolatorFdr.RunPercolator(new List<PercolatorEntry>(), config);
+            var results = PercolatorTrainer.RunPercolator(new List<PercolatorEntry>(), config);
             Assert.AreEqual(0, results.Entries.Count);
         }
 
@@ -385,7 +385,7 @@ namespace pwiz.Osprey.Test
             }
 
             var config = new PercolatorConfig { MaxIterations = 3, UseGradientBoostedTrees = true };
-            var results = PercolatorFdr.RunPercolator(entries, config);
+            var results = PercolatorTrainer.RunPercolator(entries, config);
 
             Assert.AreEqual(40, results.Entries.Count);
             Assert.AreEqual(3, results.FoldGbtModels.Count, "expected one tree ensemble per fold");
@@ -420,9 +420,9 @@ namespace pwiz.Osprey.Test
         {
             var entries = MakeNonMonotoneEntries();
 
-            var linear = PercolatorFdr.RunPercolator(
+            var linear = PercolatorTrainer.RunPercolator(
                 entries, new PercolatorConfig { MaxIterations = 5 });
-            var trees = PercolatorFdr.RunPercolator(
+            var trees = PercolatorTrainer.RunPercolator(
                 entries, new PercolatorConfig { MaxIterations = 5, UseGradientBoostedTrees = true });
 
             int linearPassing = CountPassingTargets(entries, linear);
@@ -448,7 +448,7 @@ namespace pwiz.Osprey.Test
             var entries = MakeNonMonotoneEntries();
             var trainConfig = new PercolatorConfig { MaxIterations = 3, TrainOnly = true };
 
-            var linearModel = PercolatorFdr.RunPercolator(entries, trainConfig);
+            var linearModel = PercolatorTrainer.RunPercolator(entries, trainConfig);
             var linearScorer = FrozenModelScorer.TryCreate(linearModel);
             Assert.IsNotNull(linearScorer, "frozen linear model must be scorable");
             Assert.IsFalse(linearScorer.IsGradientBoostedTrees);
@@ -456,7 +456,7 @@ namespace pwiz.Osprey.Test
 
             var treeConfig = new PercolatorConfig
                 { MaxIterations = 3, TrainOnly = true, UseGradientBoostedTrees = true };
-            var treeModel = PercolatorFdr.RunPercolator(entries, treeConfig);
+            var treeModel = PercolatorTrainer.RunPercolator(entries, treeConfig);
             var treeScorer = FrozenModelScorer.TryCreate(treeModel);
             Assert.IsNotNull(treeScorer,
                 "frozen tree model must be scorable -- a null here silently drops " +
@@ -502,8 +502,8 @@ namespace pwiz.Osprey.Test
             var entries = MakeNonMonotoneEntries();
             var config = new PercolatorConfig { MaxIterations = 4, UseGradientBoostedTrees = true };
 
-            var first = PercolatorFdr.RunPercolator(entries, config);
-            var second = PercolatorFdr.RunPercolator(entries, config);
+            var first = PercolatorTrainer.RunPercolator(entries, config);
+            var second = PercolatorTrainer.RunPercolator(entries, config);
 
             Assert.AreEqual(first.Entries.Count, second.Entries.Count);
             for (int i = 0; i < first.Entries.Count; i++)
@@ -538,7 +538,7 @@ namespace pwiz.Osprey.Test
         public void TestGbdtScoringIsThreadSafeAndChunkInvariant()
         {
             var entries = MakeNonMonotoneEntries();
-            var results = PercolatorFdr.RunPercolator(
+            var results = PercolatorTrainer.RunPercolator(
                 entries, new PercolatorConfig { MaxIterations = 3, UseGradientBoostedTrees = true });
             var model = results.FoldGbtModels[0];
 
@@ -602,7 +602,7 @@ namespace pwiz.Osprey.Test
                 labels[i] = entries[i].IsDecoy;
                 entryIds[i] = entries[i].EntryId;
             }
-            return PercolatorFdr.CountPassing(scores, labels, entryIds, 0.01);
+            return PercolatorQValues.CountPassing(scores, labels, entryIds, 0.01);
         }
 
         /// <summary>
@@ -625,7 +625,7 @@ namespace pwiz.Osprey.Test
             var psmIdMapStubs = BuildWritebackFixture();
 
             // Synthetic per-stub results, index-aligned to the nested (file, entry)
-            // walk -- the exact contract PercolatorFdr's direct and streaming result
+            // walk -- the exact contract PercolatorTrainer's and PercolatorScorer's result
             // assembly guarantee. Distinct values per row so any misbinding surfaces.
             var results = new PercolatorResults { Entries = new List<PercolatorResult>() };
             int seq = 0;
@@ -664,7 +664,7 @@ namespace pwiz.Osprey.Test
         /// uses) build their result lists in separate loops; the write-back's
         /// correctness rests on BOTH returning results index-aligned to the flat
         /// PercolatorEntry input. This drives the REAL streaming assembler
-        /// (<see cref="PercolatorFdr.ScorePopulationAndComputeFdr"/>, the loop the
+        /// (<see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>, the loop the
         /// design cites for the streaming path) end-to-end on a small paired
         /// target/decoy fixture, then applies the index zip and the removed psm_id
         /// map to those real streaming-produced results and asserts identical Score
@@ -700,9 +700,9 @@ namespace pwiz.Osprey.Test
             // Train a model, then score the whole population through the streaming
             // assembler (this is the path the direct branch does NOT take).
             var config = new PercolatorConfig { MaxIterations = 3, FeatureInfos = featureInfos };
-            PercolatorResults trainResults = PercolatorFdr.RunPercolator(built, config);
+            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(built, config);
             PercolatorResults streamingResults =
-                PercolatorFdr.ScorePopulationAndComputeFdr(built, trainResults, config);
+                PercolatorScorer.ScorePopulationAndComputeFdr(built, trainResults, config);
 
             // The streaming assembler must return one result per entry, in order.
             Assert.AreEqual(built.Count, streamingResults.Entries.Count);
@@ -1130,7 +1130,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Issue #4355 struct-shrink S3, Stage B (the FLAT-memory win): the 1st-pass-only
         /// streaming Percolator that holds NO resident row buffer
-        /// (<see cref="PercolatorFdr.RunStreamingFirstPass"/>) must produce byte-identical
+        /// (<see cref="PercolatorScorer.RunStreamingFirstPass"/>) must produce byte-identical
         /// Score + five q-values + identity (entry_id / charge / peptide / is_decoy) to the
         /// resident projection streaming path
         /// (<see cref="PercolatorEngine.RunStreamingIntoProjection"/>) -- the byte-identity
@@ -1197,7 +1197,7 @@ namespace pwiz.Osprey.Test
                         onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence);
                 };
             var sinkStr = new CapturingSink();
-            bool abortStr = PercolatorFdr.RunStreamingFirstPass(
+            bool abortStr = PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, f => featuresStr[f], percConfig, s => { }, "First-pass",
                 sinkStr);
             Assert.IsFalse(abortStr);
@@ -1426,14 +1426,14 @@ namespace pwiz.Osprey.Test
                 var defaultCapture = new StringWriter();
                 OspreyOutput.Out = defaultCapture;
                 OspreyOutput.Verbose = false;
-                PercolatorFdr.RunPercolator(entries, config);
+                PercolatorTrainer.RunPercolator(entries, config);
                 defaultReport = defaultCapture.ToString();
 
                 // Verbose console: the table is emitted.
                 var capture = new StringWriter();
                 OspreyOutput.Out = capture;
                 OspreyOutput.Verbose = true;
-                results = PercolatorFdr.RunPercolator(entries, config);
+                results = PercolatorTrainer.RunPercolator(entries, config);
                 report = capture.ToString();
             }
             finally
@@ -1582,7 +1582,7 @@ namespace pwiz.Osprey.Test
                 1 | 0x80000000, 2 | 0x80000000, 3 | 0x80000000
             };
 
-            var folds = PercolatorFdr.CreateStratifiedFoldsByPeptide(
+            var folds = PercolatorSampling.CreateStratifiedFoldsByPeptide(
                 labels, peptides, entryIds, 3);
 
             // All charge states of PEPTIDEK (targets) should be in same fold
@@ -1616,7 +1616,7 @@ namespace pwiz.Osprey.Test
                 peptides.Add("DECOY" + i);
             }
 
-            var selected = PercolatorFdr.SubsampleByPeptideGroup(
+            var selected = PercolatorSampling.SubsampleByPeptideGroup(
                 labels.ToArray(), entryIds.ToArray(), peptides.ToArray(), 10, 42);
 
             var selectedSet = new HashSet<int>(selected);
@@ -1666,7 +1666,7 @@ namespace pwiz.Osprey.Test
             var labels = new[] { false, false, false, true, true };
             var peptides = new[] { "PEPK", "PEPK", "OTHER", "PEPK", "OTHER" };
 
-            var best = PercolatorFdr.BestPrecursorPerPeptide(indices, scores, labels, peptides);
+            var best = PercolatorSampling.BestPrecursorPerPeptide(indices, scores, labels, peptides);
 
             // Should have one entry per unique peptide string
             Assert.AreEqual(2, best.Length);
@@ -1682,7 +1682,7 @@ namespace pwiz.Osprey.Test
             var isDecoy = new[] { false, false, true, false };
             var q = new double[4];
 
-            PercolatorFdr.ComputeConservativeQvalues(scores, isDecoy, q);
+            PercolatorQValues.ComputeConservativeQvalues(scores, isDecoy, q);
 
             // FDR with +1: pos0: (0+1)/1=1.0, pos1: (0+1)/2=0.5, pos2: (1+1)/2=1.0, pos3: (1+1)/3=0.667
             // Backward pass: [0.5, 0.5, 0.667, 0.667]
@@ -1707,7 +1707,7 @@ namespace pwiz.Osprey.Test
                 1 | 0x80000000, 2 | 0x80000000, 3 | 0x80000000, 4 | 0x80000000, 5 | 0x80000000
             };
 
-            int n = PercolatorFdr.CountPassingConservative(scores, labels, entryIds, 0.50);
+            int n = PercolatorQValues.CountPassingConservative(scores, labels, entryIds, 0.50);
             Assert.AreEqual(5, n);
         }
 
@@ -2038,7 +2038,7 @@ namespace pwiz.Osprey.Test
         #region StreamingFirstPassQ Tests
 
         /// <summary>
-        /// The Stage B streaming builder (<c>PercolatorFdr.StreamingFirstPassQ</c>) must produce
+        /// The Stage B streaming builder (<c>StreamingFdr.StreamingFirstPassQ</c>) must produce
         /// experiment-precursor / experiment-peptide / PEP maps BYTE-IDENTICAL to the flat
         /// array builders when fed the same population in the same flat (file,row) order -- the
         /// invariant that lets the 1st-pass score pass drop the resident
@@ -2079,7 +2079,7 @@ namespace pwiz.Osprey.Test
             var labels = new List<bool>();
             var entryIds = new List<uint>();
             var peptides = new List<string>();
-            var streaming = new PercolatorFdr.StreamingFirstPassQ();
+            var streaming = new StreamingFdr.StreamingFirstPassQ();
             int g = 0;
             for (int f = 0; f < nFiles; f++)
             {
@@ -2100,13 +2100,13 @@ namespace pwiz.Osprey.Test
             var peptideArr = peptides.ToArray();
 
             AssertMapsEqual(
-                PercolatorFdr.ComputeExperimentPrecursorQMap(scoreArr, labelArr, entryIdArr),
+                PercolatorQValues.ComputeExperimentPrecursorQMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildExperimentPrecursorQMap(), "exp-precursor");
             AssertMapsEqual(
-                PercolatorFdr.ComputeExperimentPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr),
+                PercolatorQValues.ComputeExperimentPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr),
                 streaming.BuildExperimentPeptideQMap(), "exp-peptide");
             AssertMapsEqual(
-                PercolatorFdr.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
+                PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildPepWinnerMap(), "pep-winner");
         }
 
@@ -2775,8 +2775,8 @@ namespace pwiz.Osprey.Test
             var allBaseIds = new HashSet<uint>(stratum);
             for (uint b = 100; b < 180; b++) allBaseIds.Add(b);
 
-            var stratQ = PercolatorFdr.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
-            var fullQ = PercolatorFdr.ComputeStratifiedCompetitionQvalues(sc, lb, ids, allBaseIds);
+            var stratQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
+            var fullQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, allBaseIds);
 
             // Locate the marginal stratum target (base_id 20, not decoy).
             int marginal = -1;
@@ -2808,7 +2808,7 @@ namespace pwiz.Osprey.Test
                 uint b = ids[i] & 0x7FFFFFFFu;
                 if (b <= 20) badStratScores[i] = lb[i] ? 5.0 : 0.5;   // decoys win in-stratum
             }
-            var badQ = PercolatorFdr.ComputeStratifiedCompetitionQvalues(badStratScores, lb, ids, stratum);
+            var badQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(badStratScores, lb, ids, stratum);
             Assert.IsTrue(badQ[marginal] > 0.5, string.Format(
                 "a decoy-dominated stratum must give high q, got {0}", badQ[marginal]));
         }
@@ -2850,7 +2850,7 @@ namespace pwiz.Osprey.Test
             for (uint b = 1; b <= 20; b++) stratum.Add(b);
 
             // Resident oracle: q per observation (winner obs carry the competition q).
-            var residentQ = PercolatorFdr.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
+            var residentQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
 
             // Streaming: single file, no score override, survivors = the stratum targets.
             const string F = "f";
@@ -2858,7 +2858,7 @@ namespace pwiz.Osprey.Test
             for (uint b = 1; b <= 20; b++) survivors.Add((F, b));   // target entryId == base_id
             (uint[] eids, double[] scs) Read(string _)
                 => ((uint[])ids.Clone(), (double[])sc.Clone());
-            PercolatorFdr.ComputeFullPopulationPrecursorFdrStreaming(
+            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 new[] { F }, Read,
                 new Dictionary<(string, uint), double>(), survivors,
                 out _, out var expQ, out _, stratum);
