@@ -809,53 +809,15 @@ namespace pwiz.Skyline.Model
                 docClone.SetDocumentType();
             }
             
-            // If this document has associated results, update the results
-            // for any peptides that have changed.
-            if (!Settings.HasResults || DeferSettingsChanges)
-                return docClone.Children;
-
-            // Store indexes to previous results in a dictionary for lookup
-            var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
-            // Unless the normalization standards have changed, which require recalculating of all ratios
-            if (ReferenceEquals(Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD),
-                docClone.Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD)))
-            {
-                foreach (var nodePeptide in Molecules)
-                {
-                    if (nodePeptide != null)    // Or previous peptides were freed during command-line peak picking
-                        dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
-                }
-            }
-
-            return docClone.UpdateResultsSummaries(docClone.Children, dictPeptideIdPeptide);
-        }
-
-        /// <summary>
-        /// Update results for the changed peptides.  This needs to start
-        /// at the peptide level, because peptides have useful peak picking information
-        /// like predicted retention time, and multiple measured precursors.
-        /// </summary>
-        private IList<DocNode> UpdateResultsSummaries(IList<DocNode> children, IDictionary<int, PeptideDocNode> dictPeptideIdPeptide)
-        {
-            // Perform main processing for peptides in parallel
-            var diffResults = new SrmSettingsDiff(Settings, true);
-            var moleculeGroupPairs = GetMoleculeGroupPairs(children);
-            var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
-            ParallelEx.For(0, moleculeGroupPairs.Length, i =>
-            {
-                var pair = moleculeGroupPairs[i];
-                var nodePep = pair.NodeMolecule;
-                int index = nodePep.Peptide.GlobalIndex;
-
-                PeptideDocNode nodeExisting;
-                if (dictPeptideIdPeptide.TryGetValue(index, out nodeExisting) &&
-                        ReferenceEquals(nodeExisting, nodePep))
-                    moleculeNodes[i] = nodePep;
-                else
-                    moleculeNodes[i] = nodePep.ChangeSettings(Settings, diffResults);
-            });
-
-            return RegroupMolecules(children, moleculeNodes);
+            // The results are no longer recalculated here. Everything this pass worked out is
+            // either in the columnar results already or read back from the .skyd on demand through
+            // a MoleculeResults, so recalculating every molecule whenever the children change was
+            // work whose answers nothing kept.
+            //
+            // It was also a second pass: ChangeSettingsInternalOrThrow already calls ChangeSettings
+            // on every molecule, and then calls ChangeChildren, which brought it straight back
+            // through here to do the same thing again.
+            return docClone.Children;
         }
 
         /// <summary>
@@ -2201,7 +2163,10 @@ namespace pwiz.Skyline.Model
                 // Make sure peptide standards lists are up to date
                 Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
-                SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
+                // The children as they were read. Their results are not recalculated here: a
+                // document arrives with its columnar results, and what cannot be told without the
+                // chromatograms waits until the .skyd is loaded.
+                SetChildren(children);
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
