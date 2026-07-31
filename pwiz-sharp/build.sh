@@ -136,18 +136,6 @@ else
     BUILD_TARGET=("Tools/Commandline/MsConvert/src/MsConvert.csproj")
 fi
 
-for proj in "${BUILD_TARGET[@]}"; do
-    echo "##teamcity[progressMessage 'dotnet restore $proj']"
-    dotnet restore "$proj" "${MSBUILD_PROPS[@]}" \
-        || { echo "##teamcity[message text='dotnet restore $proj failed' status='ERROR']"; exit 1; }
-done
-
-for proj in "${BUILD_TARGET[@]}"; do
-    echo "##teamcity[progressMessage 'dotnet build $proj ($CONFIG)']"
-    dotnet build "$proj" --no-restore -nologo "${MSBUILD_PROPS[@]}" \
-        || { echo "##teamcity[message text='dotnet build $proj failed' status='ERROR']"; exit 1; }
-done
-
 # Test projects: the platform-agnostic suites, plus Thermo when vendor support
 # is on. The native-Windows vendor suites (Agilent/Bruker/Sciex/Shimadzu/
 # Waters/UIMF/Mobilion/UNIFI) and Installer.Tests are excluded by design.
@@ -162,22 +150,32 @@ TEST_TARGET=(
 )
 [ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/test/Thermo.Tests/Thermo.Tests.csproj")
 
+# The test projects have to be restored and built here too, not just the product ones.
+# `dotnet test --no-build` below does no building, and when the test assembly is missing
+# vstest reports it as a bad command-line argument rather than a missing file:
+#   The argument .../Util.Tests.dll is invalid. Please use the /help option ...
+# which reads like an argv problem and is not one.
+for proj in "${BUILD_TARGET[@]}" "${TEST_TARGET[@]}"; do
+    echo "##teamcity[progressMessage 'dotnet restore $proj']"
+    dotnet restore "$proj" "${MSBUILD_PROPS[@]}" \
+        || { echo "##teamcity[message text='dotnet restore $proj failed' status='ERROR']"; exit 1; }
+done
+
+for proj in "${BUILD_TARGET[@]}" "${TEST_TARGET[@]}"; do
+    echo "##teamcity[progressMessage 'dotnet build $proj ($CONFIG)']"
+    dotnet build "$proj" --no-restore -nologo "${MSBUILD_PROPS[@]}" \
+        || { echo "##teamcity[message text='dotnet build $proj failed' status='ERROR']"; exit 1; }
+done
+
 TC_TEST_RESULTS="$SCRIPT_DIR/TestResults"
 rm -rf "$TC_TEST_RESULTS"
 mkdir -p "$TC_TEST_RESULTS"
 
-# NOTE: deliberately no --logger:teamcity here, unlike scripts/Run-Tests-Parallel.ps1 on the
-# Windows side. TeamCity.VSTest.TestAdapter 1.0.40 (Directory.Build.targets) registers that
-# logger only on Windows; on Linux vstest fails argument parsing with "Could not find a test
-# logger ... 'teamcity'" and every suite dies before running a single test. Verified on
-# SDK 8.0.423 against a scratch MSTest project with the package restored: requesting the
-# logger fails, omitting it runs clean.
-#
-# Consequence: no per-test ##teamcity service messages on Linux (the adapter does not
-# auto-emit them either -- 0 messages observed with TEAMCITY_VERSION set). Results are still
-# written as trx under $TC_TEST_RESULTS; surfacing them in the TeamCity UI needs an XML report
-# processing feature on the build config pointing at pwiz-sharp/TestResults/*.trx.
-TC_LOGGER=()
+# Results reach the TeamCity UI by importing each trx with an importData service message,
+# rather than via --logger:teamcity. The logger from TeamCity.VSTest.TestAdapter
+# (Directory.Build.targets) resolves on the Windows agents but not here, and importData needs
+# no build-config change. Each suite gets a deterministic trx name so it can be imported by
+# path right after it runs.
 
 TESTS_FAILED=0
 FAILED_PROJECTS=""
@@ -186,12 +184,18 @@ for proj in "${TEST_TARGET[@]}"; do
     # Echo the exact argv before running. vstest reports a bad argument by printing the
     # offending token with no indication of which option it belonged to, which is not
     # enough to diagnose from a CI log alone.
+    TRX_NAME="$(basename "$proj" .csproj).trx"
     TEST_ARGS=(test "$proj" --no-build -nologo "${MSBUILD_PROPS[@]}"
-               "--results-directory:$TC_TEST_RESULTS" --logger:trx
-               "${TC_LOGGER[@]+"${TC_LOGGER[@]}"}")
+               "--results-directory:$TC_TEST_RESULTS" "--logger:trx;LogFileName=$TRX_NAME")
     printf '+ dotnet'; printf ' %q' "${TEST_ARGS[@]}"; printf '\n'
     dotnet "${TEST_ARGS[@]}"
-    if [ $? -ne 0 ]; then
+    TEST_RC=$?
+    # Hand the trx to TeamCity so per-test results show up in the UI. Done even when the run
+    # failed -- that is exactly when the individual failures matter.
+    if [ -n "${TEAMCITY_VERSION:-}" ] && [ -f "$TC_TEST_RESULTS/$TRX_NAME" ]; then
+        echo "##teamcity[importData type='vstest' path='$TC_TEST_RESULTS/$TRX_NAME']"
+    fi
+    if [ "$TEST_RC" -ne 0 ]; then
         TESTS_FAILED=1
         FAILED_PROJECTS="$FAILED_PROJECTS $(basename "$proj")"
     fi
