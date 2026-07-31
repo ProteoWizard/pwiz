@@ -125,7 +125,7 @@ public struct CVRefMZ5
         long t = H5T.create(H5T.class_t.COMPOUND, (IntPtr)Marshal.SizeOf<CVRefMZ5>());
         H5T.insert(t, "name",      Marshal.OffsetOf<CVRefMZ5>(nameof(Name)),      Mz5Types.VlenStringType);
         H5T.insert(t, "prefix",    Marshal.OffsetOf<CVRefMZ5>(nameof(Prefix)),    Mz5Types.VlenStringType);
-        H5T.insert(t, "accession", Marshal.OffsetOf<CVRefMZ5>(nameof(Accession)), H5T.NATIVE_ULONG);
+        H5T.insert(t, "accession", Marshal.OffsetOf<CVRefMZ5>(nameof(Accession)), H5T.NATIVE_UINT);
         return t;
     }
 }
@@ -146,8 +146,8 @@ public unsafe struct CVParamMZ5
         {
             long t = H5T.create(H5T.class_t.COMPOUND, (IntPtr)Marshal.SizeOf<CVParamMZ5>());
             H5T.insert(t, "value",       (IntPtr)0,                                                  valueType);
-            H5T.insert(t, "cvRefID", Marshal.OffsetOf<CVParamMZ5>(nameof(TypeCVRefID)), H5T.NATIVE_ULONG);
-            H5T.insert(t, "uRefID", Marshal.OffsetOf<CVParamMZ5>(nameof(UnitCVRefID)), H5T.NATIVE_ULONG);
+            H5T.insert(t, "cvRefID", Marshal.OffsetOf<CVParamMZ5>(nameof(TypeCVRefID)), H5T.NATIVE_UINT);
+            H5T.insert(t, "uRefID", Marshal.OffsetOf<CVParamMZ5>(nameof(UnitCVRefID)), H5T.NATIVE_UINT);
             return t;
         }
         finally
@@ -180,7 +180,7 @@ public unsafe struct UserParamMZ5
             H5T.insert(t, "name",        (IntPtr)0,                                                    nameType);
             H5T.insert(t, "value",       (IntPtr)Mz5Configuration.UserParamNameLen,                    valueType);
             H5T.insert(t, "type",        (IntPtr)(Mz5Configuration.UserParamNameLen + Mz5Configuration.UserParamValueLen), typeType);
-            H5T.insert(t, "uRefID", Marshal.OffsetOf<UserParamMZ5>(nameof(UnitCVRefID)),          H5T.NATIVE_ULONG);
+            H5T.insert(t, "uRefID", Marshal.OffsetOf<UserParamMZ5>(nameof(UnitCVRefID)),          H5T.NATIVE_UINT);
             return t;
         }
         finally
@@ -196,6 +196,13 @@ public unsafe struct UserParamMZ5
 /// whichever target table it references (ParamGroups, SourceFiles, Software,
 /// etc. — context-dependent on which dataset the row appears in).</summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
+// NOTE: every uint field below is inserted as H5T.NATIVE_UINT, never H5T.NATIVE_ULONG.
+// NATIVE_ULONG is C "unsigned long": 4 bytes on Windows (LLP64) but 8 on Linux/macOS
+// (LP64). Declaring a 4-byte uint as NATIVE_ULONG therefore happens to work on Windows
+// and makes the compound member overrun the struct everywhere else, which surfaces as
+// "H5D.read failed for '<dataset>'". The file datatype is unaffected -- HDF5 converts
+// between it and whatever memory type we declare -- so this only ever had to match the
+// C# struct.
 public struct RefMZ5
 {
     public uint RefID;
@@ -203,7 +210,7 @@ public struct RefMZ5
     public static long CreateType()
     {
         long t = H5T.create(H5T.class_t.COMPOUND, (IntPtr)Marshal.SizeOf<RefMZ5>());
-        H5T.insert(t, "refID", Marshal.OffsetOf<RefMZ5>(nameof(RefID)), H5T.NATIVE_ULONG);
+        H5T.insert(t, "refID", Marshal.OffsetOf<RefMZ5>(nameof(RefID)), H5T.NATIVE_UINT);
         return t;
     }
 
@@ -238,12 +245,12 @@ public struct ParamListMZ5
     public static long CreateType()
     {
         long t = H5T.create(H5T.class_t.COMPOUND, (IntPtr)Marshal.SizeOf<ParamListMZ5>());
-        H5T.insert(t, "cvstart",       Marshal.OffsetOf<ParamListMZ5>(nameof(CVParamStartID)),       H5T.NATIVE_ULONG);
-        H5T.insert(t, "cvend",         Marshal.OffsetOf<ParamListMZ5>(nameof(CVParamEndID)),         H5T.NATIVE_ULONG);
-        H5T.insert(t, "usrstart",     Marshal.OffsetOf<ParamListMZ5>(nameof(UserParamStartID)),     H5T.NATIVE_ULONG);
-        H5T.insert(t, "usrend",       Marshal.OffsetOf<ParamListMZ5>(nameof(UserParamEndID)),       H5T.NATIVE_ULONG);
-        H5T.insert(t, "refstart", Marshal.OffsetOf<ParamListMZ5>(nameof(RefParamGroupStartID)), H5T.NATIVE_ULONG);
-        H5T.insert(t, "refend",   Marshal.OffsetOf<ParamListMZ5>(nameof(RefParamGroupEndID)),   H5T.NATIVE_ULONG);
+        H5T.insert(t, "cvstart",       Marshal.OffsetOf<ParamListMZ5>(nameof(CVParamStartID)),       H5T.NATIVE_UINT);
+        H5T.insert(t, "cvend",         Marshal.OffsetOf<ParamListMZ5>(nameof(CVParamEndID)),         H5T.NATIVE_UINT);
+        H5T.insert(t, "usrstart",     Marshal.OffsetOf<ParamListMZ5>(nameof(UserParamStartID)),     H5T.NATIVE_UINT);
+        H5T.insert(t, "usrend",       Marshal.OffsetOf<ParamListMZ5>(nameof(UserParamEndID)),       H5T.NATIVE_UINT);
+        H5T.insert(t, "refstart", Marshal.OffsetOf<ParamListMZ5>(nameof(RefParamGroupStartID)), H5T.NATIVE_UINT);
+        H5T.insert(t, "refend",   Marshal.OffsetOf<ParamListMZ5>(nameof(RefParamGroupEndID)),   H5T.NATIVE_UINT);
         return t;
     }
 }
@@ -368,7 +375,7 @@ public struct ComponentMZ5
         {
             long t = H5T.create(H5T.class_t.COMPOUND, (IntPtr)Marshal.SizeOf<ComponentMZ5>());
             H5T.insert(t, "paramList", Marshal.OffsetOf<ComponentMZ5>(nameof(ParamList)), pl);
-            H5T.insert(t, "order",     Marshal.OffsetOf<ComponentMZ5>(nameof(Order)),     H5T.NATIVE_ULONG);
+            H5T.insert(t, "order",     Marshal.OffsetOf<ComponentMZ5>(nameof(Order)),     H5T.NATIVE_UINT);
             return t;
         }
         finally { H5T.close(pl); }
@@ -455,7 +462,7 @@ public struct ProcessingMethodMZ5
             long t = H5T.create(H5T.class_t.COMPOUND, (IntPtr)Marshal.SizeOf<ProcessingMethodMZ5>());
             H5T.insert(t, "params",     Marshal.OffsetOf<ProcessingMethodMZ5>(nameof(ParamList)),     pl);
             H5T.insert(t, "refSoftware", Marshal.OffsetOf<ProcessingMethodMZ5>(nameof(SoftwareRefID)), refT);
-            H5T.insert(t, "order",         Marshal.OffsetOf<ProcessingMethodMZ5>(nameof(Order)),         H5T.NATIVE_ULONG);
+            H5T.insert(t, "order",         Marshal.OffsetOf<ProcessingMethodMZ5>(nameof(Order)),         H5T.NATIVE_UINT);
             return t;
         }
         finally { H5T.close(refT); H5T.close(pl); }
@@ -729,7 +736,7 @@ public struct ChromatogramMZ5
             H5T.insert(t, "precursor",              Marshal.OffsetOf<ChromatogramMZ5>(nameof(Precursor)),              precT);
             H5T.insert(t, "productIsolationWindow", Marshal.OffsetOf<ChromatogramMZ5>(nameof(ProductIsolationWindow)), pl);
             H5T.insert(t, "refDataProcessing",    Marshal.OffsetOf<ChromatogramMZ5>(nameof(DataProcessingRefID)),    refT);
-            H5T.insert(t, "index",                  Marshal.OffsetOf<ChromatogramMZ5>(nameof(Index)),                  H5T.NATIVE_ULONG);
+            H5T.insert(t, "index",                  Marshal.OffsetOf<ChromatogramMZ5>(nameof(Index)),                  H5T.NATIVE_UINT);
             return t;
         }
         finally { H5T.close(refT); H5T.close(precT); H5T.close(pl); }
