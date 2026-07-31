@@ -23,17 +23,18 @@
        pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp). The dependency on the
        Waters SDK is opt-in: vendor builds pull in Waters; no-vendor builds drop the file
        and the corresponding factory dispatch entry via NO_VENDOR_SUPPORT. -->
-  <!-- Gated on $(NativeVendorsAvailable), not $(IAgreeToVendorLicenses): the lockmass
-       refiners need the Waters SDK, which is a native Windows DLL, so they are unavailable
-       on Linux even when the vendor licenses are accepted. -->
-  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+  <!-- Gated on $(IAgreeToVendorLicenses), matching Waters.csproj, NOT on
+       $(NativeVendorsAvailable). The lockmass refiners need the Waters SDK, which used to be
+       a Windows-only native DLL; MassLynx 5.0.0 ships libMassLynxRaw.so alongside it, so
+       Waters is one of the vendors that does build off-Windows and these refiners go with it. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <ProjectReference Include="..\Vendor\Waters\Waters.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
     <Compile Remove="SpectrumList_LockmassRefiner.cs" />
     <Compile Remove="ChromatogramListLockmassRefiner.cs" />
   </ItemGroup>
-  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
 
