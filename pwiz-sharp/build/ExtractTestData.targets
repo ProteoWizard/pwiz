@@ -42,7 +42,7 @@
            below still gets touched, the extraction silently never happens and the fixtures
            just aren't there. Use the system tar elsewhere. GNU tar's -k errors on existing
            files rather than skipping (the reason bsdtar is used on Windows at all), so ask
-           for --skip-old-files, which is the skip-quietly spelling. -->
+           for the skip-old-files flag instead, which is the skip-quietly spelling. -->
       <_TarExe Condition="'$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\..\libraries\bsdtar.exe</_TarExe>
       <_TarKeepArgs Condition="'$(OS)' == 'Windows_NT'">-xkf</_TarKeepArgs>
       <_TarExe Condition="'$(OS)' != 'Windows_NT'">tar</_TarExe>
@@ -56,7 +56,7 @@
       <Output TaskParameter="ExitCode" PropertyName="_TarExitCode" />
     </Exec>
     <!-- Windows bsdtar 2.7 exits 1 just for reporting skipped files, so its exit code says
-         nothing; GNU tar --skip-old-files exits 0 unless something genuinely went wrong. -->
+         nothing; GNU tar exits 0 in skip-old-files mode unless something really went wrong. -->
     <Warning Condition="'$(OS)' != 'Windows_NT' and '$(_TarExitCode)' != '0'"
              Text="Extracting $(VendorTestArchive) failed (exit $(_TarExitCode)); vendor fixtures will be missing and their tests will report Inconclusive." />
     <Touch Files="$(IntermediateOutputPath)vendor-test-data.extracted" AlwaysCreate="true" />
