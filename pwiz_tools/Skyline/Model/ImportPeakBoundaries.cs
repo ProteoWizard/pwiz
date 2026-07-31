@@ -775,25 +775,27 @@ namespace pwiz.Skyline.Model
                     foreach (var groupNode in pepNode.TransitionGroups)
                     {
                         var groupPath = new IdentityPath(pepPath, groupNode.Id);
-                        var chromInfos = groupNode.Results[i];
-                        if (chromInfos.IsEmpty)
+                        // The file and the annotations of each peak are both in the columnar
+                        // results, so nothing has to be read here.
+                        var groupResults = groupNode.AbbreviatedResults;
+                        if (groupResults == null)
                             continue;
 
-                        foreach (var groupChromInfo in chromInfos)
+                        foreach (var position in groupResults.GetPositions(i))
                         {
-                            if (groupChromInfo == null)
-                                continue;
-                            var key = new ResultsKey(groupChromInfo.FileId.GlobalIndex, groupNode.Id);
+                            var fileId = groupResults.ChromFileIds.FileIds[position].Value;
+                            var key = new ResultsKey(fileId.GlobalIndex, groupNode.Id);
                             if (!trackAdjustedResults.Contains(key))
                             {
                                 CountMissing++;
-                                var fileId = groupChromInfo.FileId;
                                 var fileInfo = set.GetFileInfo(fileId);
                                 var filePath = fileInfo.FilePath;
+                                var annotations = groupResults.GetCustomPeak(position)?.Annotations ??
+                                                  Annotations.EMPTY;
                                 // Remove annotations for defs that were imported into the document and were on this peptide prior to import
-                                var newAnnotationValues = groupChromInfo.Annotations.ListAnnotations().ToList();
+                                var newAnnotationValues = annotations.ListAnnotations().ToList();
                                 newAnnotationValues = newAnnotationValues.Where(a => !AnnotationsAdded.Contains(a.Key)).ToList();
-                                var newAnnotations = new Annotations(groupChromInfo.Annotations.Note, newAnnotationValues, groupChromInfo.Annotations.ColorIndex);
+                                var newAnnotations = new Annotations(annotations.Note, newAnnotationValues, annotations.ColorIndex);
                                 var newGroupNode = groupNode.ChangePrecursorAnnotations(fileId, newAnnotations);
                                 if (!ReferenceEquals(groupNode, newGroupNode))
                                     docNew = (SrmDocument) docNew.ReplaceChild(groupPath.Parent, newGroupNode);

@@ -299,6 +299,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         var peptideTextId = nodePep.RawTextId;
                         var replicateIndex = bestResult && nodePep.BestResult != -1 ? nodePep.BestResult : resultIndex;
+                        // Mass error is only on the peaks, so this reads the molecule's chromatograms.
+                        // Note that the enclosing while loop runs the whole document twice - once to
+                        // find the mass range and once to bin into it - so every molecule is read
+                        // twice. That is why this graph is a candidate for moving onto a Receiver.
+                        var moleculeResults = new MoleculeResults(document.Settings, nodePep);
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
                             foreach (var nodeTran in nodeGroup.Transitions)
@@ -308,12 +313,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var mz = nodeTran.Mz.Value;
                                 if (replicateIndex >= 0)
                                 {
-                                    AddChromInfo(nodeGroup, nodeTran, replicateIndex, mz, counts2D, binPeptides, binReplicates, peptideTextId);
+                                    AddChromInfo(moleculeResults, nodeGroup, nodeTran, replicateIndex, mz, counts2D, binPeptides, binReplicates, peptideTextId);
                                 }
                                 else
                                 {
-                                    for (int i = 0; i < nodeTran.Results.Count; i++)
-                                        AddChromInfo(nodeGroup, nodeTran, i, mz, counts2D, binPeptides, binReplicates, peptideTextId);
+                                    for (int i = 0; i < document.MeasuredResults.Chromatograms.Count; i++)
+                                        AddChromInfo(moleculeResults, nodeGroup, nodeTran, i, mz, counts2D, binPeptides, binReplicates, peptideTextId);
                                 }
                             }
                         }
@@ -352,14 +357,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapData = new HeatMapData(points, GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count);
             }
 
-            private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,
+            private void AddChromInfo(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
+                TransitionDocNode nodeTran, int replicateIndex,
                 double mz, int[,] counts2D,
                 Dictionary<int, HashSet<string>> binPeptides,
                 Dictionary<int, HashSet<int>> binReplicates,
                 string peptideTextId)
             {
-                var chromGroupInfos = nodeGroup.Results[replicateIndex];
-                var chromInfos = nodeTran.Results[replicateIndex];
+                var chromGroupInfos =
+                    moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex);
+                var chromInfos = moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition,
+                    replicateIndex);
                 AddChromInfo(chromGroupInfos, chromInfos, replicateIndex, mz, counts2D, binPeptides, binReplicates, peptideTextId);
             }
 

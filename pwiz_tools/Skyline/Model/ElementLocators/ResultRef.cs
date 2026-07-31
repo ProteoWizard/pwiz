@@ -212,13 +212,19 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         protected override IEnumerable<Tuple<int, TransitionChromInfo>> EnumerateChromInfos(SrmDocument document, TransitionDocNode parent)
         {
-            if (null == parent.Results)
+            // Rebuilt from the .skyd: a transition no longer keeps its chrom infos. Walking up this
+            // ref gives the precursor and then the molecule.
+            var transitionGroupDocNode = (TransitionGroupDocNode) Parent.Parent.FindNode(document);
+            var peptideDocNode = (PeptideDocNode) Parent.Parent.Parent.FindNode(document);
+            var results = new MoleculeResults(document.Settings, peptideDocNode)
+                .GetTransitionChromInfos(transitionGroupDocNode.TransitionGroup, parent.Transition);
+            if (null == results)
             {
                 yield break;
             }
-            for (int i = 0; i < parent.Results.Count; i++)
+            for (int i = 0; i < results.Count; i++)
             {
-                foreach (var chromInfo in parent.Results[i])
+                foreach (var chromInfo in results[i])
                 {
                     yield return Tuple.Create(i, chromInfo);
                 }
@@ -302,13 +308,18 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         protected override IEnumerable<Tuple<int, TransitionGroupChromInfo>> EnumerateChromInfos(SrmDocument document, TransitionGroupDocNode parent)
         {
-            if (parent.Results == null)
+            // Rebuilt from the .skyd: a precursor no longer keeps its chrom infos. The molecule is
+            // the parent of this ref's parent.
+            var peptideDocNode = (PeptideDocNode) Parent.Parent.FindNode(document);
+            var results = new MoleculeResults(document.Settings, peptideDocNode)
+                .GetTransitionGroupChromInfos(parent.TransitionGroup);
+            if (results == null)
             {
                 yield break;
             }
-            for (int i = 0; i < parent.Results.Count; i++)
+            for (int i = 0; i < results.Count; i++)
             {
-                foreach (var precursorChromInfo in parent.Results[i])
+                foreach (var precursorChromInfo in results[i])
                 {
                     yield return Tuple.Create(i, precursorChromInfo);
                 }

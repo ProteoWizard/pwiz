@@ -202,9 +202,9 @@ namespace pwiz.Skyline.Model
                     mods,
                     nodeGroup.LibInfo,
                     nodeGroup.ExplicitValues,
-                    nodeGroup.Results,
+                    null,
                     decoyNodeTranList,
-                    false);
+                    false).ChangeAbbreviatedResults(nodeGroup.AbbreviatedResults);
                 decoyNodeTranGroupList.Add(nodeGroupDecoy);
 
                 if (primaryPrecursor == null)

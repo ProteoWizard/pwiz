@@ -2192,12 +2192,15 @@ namespace pwiz.Skyline.Model
                 int transitionCount = _arrayTransitionChromInfoSets.Length;
                 ChromInfoList<TransitionGroupChromInfo> listChromInfo = default(ChromInfoList<TransitionGroupChromInfo>);
                 int iResult = _listResultCalcs.Count;
-                if (_nodeGroup.HasResults)
+                // The chrom infos the columnar results are still carrying, which is what a document
+                // whose .skyd has not been read yet has. Null once they have been converted.
+                var chromInfos = _nodeGroup.AbbreviatedResults?.ChromInfos;
+                if (chromInfos != null)
                 {
                     int iResultOld = GetOldPosition(iResult);
-                    if (iResultOld != -1 && iResultOld < _nodeGroup.Results.Count)
+                    if (iResultOld != -1 && iResultOld < chromInfos.Count)
                     {
-                        listChromInfo = _nodeGroup.Results[iResultOld];
+                        listChromInfo = chromInfos[iResultOld];
                     }
                 }
                 _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings, _nodePep,
@@ -3402,55 +3405,10 @@ namespace pwiz.Skyline.Model
             var annotations = Annotations.Merge(nodeGroupMerge.Annotations);
             if (!ReferenceEquals(annotations, Annotations))
                 result = (TransitionGroupDocNode)result.ChangeAnnotations(annotations);
-            var resultsInfo = MergeResultsUserInfo(settings, nodeGroupMerge.Results);
-            if (!ReferenceEquals(resultsInfo, Results))
-                result = result.ChangeResults(resultsInfo);
+            var resultsInfo = AbbreviatedResults?.MergeUserInfo(nodeGroupMerge.AbbreviatedResults);
+            if (!ReferenceEquals(resultsInfo, AbbreviatedResults))
+                result = result.ChangeAbbreviatedResults(resultsInfo);
             return result.UpdateResults(settings, diff, nodePep, this);
-        }
-
-        private Results<TransitionGroupChromInfo> MergeResultsUserInfo(
-            SrmSettings settings, Results<TransitionGroupChromInfo> results)
-        {
-            if (!HasResults)
-                return Results;
-
-            var dictFileIdToChromInfo = results.SelectMany(l => l)
-                                               // Merge everything that does not already exist (handled below),
-                                               // as merging only user modified causes loss of information in
-                                               // updates
-                                               //.Where(i => i.IsUserModified)
-                                               .ToDictionary(i => i.FileIndex);
-
-            var listResults = new List<ChromInfoList<TransitionGroupChromInfo>>();
-            for (int i = 0; i < results.Count; i++)
-            {
-                List<TransitionGroupChromInfo> listChromInfo = null;
-                var chromSet = settings.MeasuredResults.Chromatograms[i];
-                var chromInfoList = Results[i];
-                foreach (var fileInfo in chromSet.MSDataFileInfos)
-                {
-                    TransitionGroupChromInfo chromInfo;
-                    if (!dictFileIdToChromInfo.TryGetValue(fileInfo.FileIndex, out chromInfo))
-                        continue;
-                    if (listChromInfo == null)
-                    {
-                        listChromInfo = new List<TransitionGroupChromInfo>(chromInfoList);
-                    }
-                    int iExist = listChromInfo.IndexOf(chromInfoExist =>
-                                                       ReferenceEquals(chromInfoExist.FileId, chromInfo.FileId) &&
-                                                       chromInfoExist.OptimizationStep == chromInfo.OptimizationStep);
-                    if (iExist == -1)
-                        listChromInfo.Add(chromInfo);
-                    else if (chromInfo.IsUserModified)
-                        listChromInfo[iExist] = chromInfo;
-                }
-                if (listChromInfo != null)
-                    chromInfoList = new ChromInfoList<TransitionGroupChromInfo>(listChromInfo);
-                listResults.Add(chromInfoList);
-            }
-            if (ArrayUtil.InnerReferencesEqual<TransitionGroupChromInfo, ChromInfoList<TransitionGroupChromInfo>>(listResults, Results))
-                return Results;
-            return new Results<TransitionGroupChromInfo>(listResults);
         }
 
         #endregion
@@ -3465,7 +3423,9 @@ namespace pwiz.Skyline.Model
                         obj.PrecursorMz == PrecursorMz &&
                         Equals(obj.IsotopeDist, IsotopeDist) &&
                         Equals(obj.LibInfo, LibInfo) &&
-                        Equals(obj.Results, Results) &&
+                        // The columnar results, because Results is empty for every node and
+                        // comparing it would make any two precursors look alike.
+                        Equals(obj.AbbreviatedResults, AbbreviatedResults) &&
                         Equals(obj.CustomMolecule, CustomMolecule) &&
                         Equals(obj.ExplicitValues, ExplicitValues) &&
                         Equals(obj.PrecursorConcentration, PrecursorConcentration) &&
@@ -3488,7 +3448,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ PrecursorMz.GetHashCode();
                 result = (result*397) ^ (IsotopeDist != null ? IsotopeDist.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
-                result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
+                result = (result*397) ^ (AbbreviatedResults != null ? AbbreviatedResults.GetHashCode() : 0);
                 result = (result*397) ^ ExplicitValues.GetHashCode();
                 result = (result*397) ^ (CustomMolecule != null ? CustomMolecule.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorConcentration.GetHashCode();
@@ -3590,40 +3550,32 @@ namespace pwiz.Skyline.Model
             get { return GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
         }
 
+        /// <summary>
+        /// Whether the two precursors were scored on the same peaks, which is what peak imputation
+        /// asks in order to decide whether it has to run again.
+        /// <para>
+        /// Which candidate peak each file's original and reintegrated peak is is one of the things
+        /// the columnar results keep, so this reads nothing. It used to compare rebuilt lists of
+        /// chrom infos, which is what made it recurse without end once those stopped being kept.
+        /// </para>
+        /// </summary>
         public bool SameScoredPeaks(TransitionGroupDocNode other)
         {
-            return true;
-            if (ReferenceEquals(Results, other.Results))
+            var results = AbbreviatedResults;
+            var otherResults = other.AbbreviatedResults;
+            if (ReferenceEquals(results, otherResults))
             {
                 return true;
             }
-            return GetScoredPeaks().SequenceEqual(other.GetScoredPeaks());
-        }
 
-        /// <summary>
-        /// The peaks each replicate was scored on, as a list per replicate.
-        /// <para>
-        /// The lists are <see cref="ImmutableList{T}"/> rather than any old sequence because
-        /// <see cref="SameScoredPeaks"/> compares them with SequenceEqual, which compares the
-        /// elements - here whole lists - with the default comparer. A bare IEnumerable has no
-        /// value equality, so two freshly built sequences would never compare equal however
-        /// identical their contents, and SameScoredPeaks would answer false for every peptide
-        /// whose Results was rebuilt rather than reused.
-        /// </para>
-        /// </summary>
-        private IEnumerable<ImmutableList<(ReferenceValue<ChromFileInfoId> FileId, ScoredPeakBounds OriginalPeak, ScoredPeakBounds ReintegratedPeak)>> GetScoredPeaks()
-        {
-            var chromInfos = AbbreviatedResults?.ChromInfos;
-            if (chromInfos == null)
+            if (results == null || otherResults == null)
             {
-                yield break;
+                return false;
             }
 
-            foreach (var chromInfoList in chromInfos)
-            {
-                yield return ImmutableList.ValueOf(chromInfoList.Select(chromInfo =>
-                    (ReferenceValue.Of(chromInfo.FileId), chromInfo.OriginalPeak, chromInfo.ReintegratedPeak)));
-            }
+            return Equals(results.ChromFileIds, otherResults.ChromFileIds) &&
+                   Equals(results.OriginalPeakIndexes, otherResults.OriginalPeakIndexes) &&
+                   Equals(results.ReintegratedPeakIndexes, otherResults.ReintegratedPeakIndexes);
         }
     }
 }

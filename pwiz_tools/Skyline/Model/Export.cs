@@ -2106,6 +2106,26 @@ namespace pwiz.Skyline.Model
         public double? IntensityThresholdValue { get; set; }
         public double? IntensityThresholdMin { get; set; }
 
+        private PeptideDocNode _moleculeResultsNode;
+        private MoleculeResults _moleculeResults;
+
+        /// <summary>
+        /// The peaks of <paramref name="nodePep"/>, remembered only for as long as the export stays
+        /// on that molecule. A row gets written per transition, so without this every row of a
+        /// molecule would read its chromatograms again; and because only the current molecule is
+        /// kept, the export never holds more than one molecule's peaks.
+        /// </summary>
+        private MoleculeResults GetMoleculeResults(PeptideDocNode nodePep)
+        {
+            if (!ReferenceEquals(nodePep, _moleculeResultsNode))
+            {
+                _moleculeResultsNode = nodePep;
+                _moleculeResults = new MoleculeResults(Document.Settings, nodePep);
+            }
+
+            return _moleculeResults;
+        }
+
         protected override bool CanOptimizeWithoutEquations => true;
 
         protected override string InstrumentType => _instrumentType;
@@ -2268,9 +2288,12 @@ namespace pwiz.Skyline.Model
             var maxHeight = (double?) null;
             if (IntensityThresholdPercent.HasValue)
             {
-                if (nodeTranGroup.HasResults)
+                // Peak height is not one of the values the columnar results keep, so this reads.
+                var chromInfos = GetMoleculeResults(nodePep)
+                    .GetTransitionGroupChromInfos(nodeTranGroup.TransitionGroup);
+                if (chromInfos != null)
                 {
-                    var heights = nodeTranGroup.Results.SelectMany(chromInfoList => chromInfoList.AsList())
+                    var heights = chromInfos.SelectMany(chromInfoList => chromInfoList.AsList())
                         .Select(ci => ci.Height).Where(h => h.HasValue).ToArray();
                     if (heights.Any())
                         maxHeight = heights.Max().Value * ((IntensityThresholdPercent ?? DEFAULT_INTENSITY_THRESHOLD_PERCENT) / 100);

@@ -323,8 +323,10 @@ namespace pwiz.Skyline.Model
         private static double NormalizeToGlobalStandard(SrmDocument document, TransitionGroupDocNode transitionGroupDocNode, int replicateIndex, double area)
         {
             var chromSet = document.MeasuredResults.Chromatograms[replicateIndex];
-            var groupChromSet = transitionGroupDocNode.Results[replicateIndex];
-            var fileInfoFirst = chromSet.GetFileInfo(groupChromSet.First(c => c.OptimizationStep == 0).FileId);
+            // The columnar results hold only the peaks of optimization step zero, so the first file
+            // of the replicate is the one the old code went looking for.
+            var fileInfoFirst = chromSet.GetFileInfo(
+                transitionGroupDocNode.AbbreviatedResults.ChromFileIds.GetFileIds(replicateIndex).First());
             var globalStandard = document.Settings.CalcGlobalStandardArea(replicateIndex, fileInfoFirst);
             if (globalStandard != 0.0)
                 area /= globalStandard;

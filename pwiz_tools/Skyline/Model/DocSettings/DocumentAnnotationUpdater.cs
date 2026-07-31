@@ -233,10 +233,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     }
                 }
 
-                if (_precursorResultUpdater != null)
+                var results = precursorDocNode.AbbreviatedResults;
+                if (_precursorResultUpdater != null && results != null)
                 {
-                    var newResults = _precursorResultUpdater.Update(precursorDocNode.Results, precursor.Results);
-                    precursorDocNode = precursorDocNode.ChangeResults(newResults);
+                    var newCustomPeaks = _precursorResultUpdater.Update(results.ChromFileIds, results.CustomPeaks,
+                        precursor.Results);
+                    precursorDocNode =
+                        precursorDocNode.ChangeAbbreviatedResults(results.ChangeCustomPeaks(newCustomPeaks));
                 }
             }
 
@@ -271,10 +274,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            if (_precursorResultUpdater != null)
+            // This used to test _precursorResultUpdater, which meant a document with a calculated
+            // precursor_result annotation but no transition_result one threw here, and one with only
+            // a transition_result annotation silently skipped its transitions.
+            var results = transitionDocNode.AbbreviatedResults;
+            if (_transitionResultUpdater != null && results != null)
             {
-                var newResults = _transitionResultUpdater.Update(transitionDocNode.Results, transition.Results);
-                transitionDocNode = transitionDocNode.ChangeResults(newResults);
+                var newCustomPeaks = _transitionResultUpdater.Update(results.ChromFileIds, results.CustomPeaks,
+                    transition.Results);
+                transitionDocNode =
+                    transitionDocNode.ChangeAbbreviatedResults(results.ChangeCustomPeaks(newCustomPeaks));
             }
 
             return transitionDocNode;
@@ -301,70 +310,65 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
-        private abstract class ResultUpdater<TItem, TResult> where TItem : ChromInfo where TResult : SkylineObject
+        /// <summary>
+        /// Rewrites the annotations of the peaks of one precursor or transition.
+        /// <para>
+        /// The annotations of a peak are held on its <see cref="CustomPeak"/>, so this works on that
+        /// sparse list rather than on chrom infos, and reads no chromatograms. The
+        /// <see cref="ResultKey"/> file index counts the files of one replicate, which is what a
+        /// position in the columnar results is offset by, so the two line up directly.
+        /// </para>
+        /// </summary>
+        private class ResultAnnotationUpdater<TResult> where TResult : SkylineObject
         {
             public SkylineDataSchema SkylineDataSchema { get; set; }
             public AnnotationUpdater AnnotationUpdater { get; set; }
-            public Results<TItem> Update(Results<TItem> results, IDictionary<ResultKey, TResult> resultObjects)
+
+            public ImmutableList<CustomPeak> Update(ChromFileIds chromFileIds, ImmutableList<CustomPeak> customPeaks,
+                IDictionary<ResultKey, TResult> resultObjects)
             {
-                if (results == null)
+                if (chromFileIds == null)
                 {
-                    return null;
+                    return customPeaks;
                 }
 
-                var newChromInfos = new List<IList<TItem>>();
-                for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
+                var replicatePositions = chromFileIds.ReplicatePositions;
+                for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
                 {
                     var replicate = new Replicate(SkylineDataSchema, replicateIndex);
-                    var list = new List<TItem>();
-                    for (int fileIndex = 0; fileIndex < results[replicateIndex].Count; fileIndex++)
+                    int fileIndex = 0;
+                    foreach (var position in replicatePositions.EnumeratePositions(replicateIndex))
                     {
-                        var chromInfo = results[replicateIndex][fileIndex];
-                        var resultKey = new ResultKey(replicate, fileIndex);
+                        var resultKey = new ResultKey(replicate, fileIndex++);
                         TResult resultObject;
-                        if (resultObjects.TryGetValue(resultKey, out resultObject))
+                        if (!resultObjects.TryGetValue(resultKey, out resultObject))
                         {
-                            var newAnnotations =
-                                AnnotationUpdater.UpdateAnnotations(GetAnnotations(chromInfo), resultObject);
-                            chromInfo = ChangeAnnotations(chromInfo, newAnnotations);
+                            continue;
                         }
 
-                        list.Add(chromInfo);
+                        var customPeak = CustomPeak.FindAtPosition(customPeaks, position);
+                        var annotations = customPeak?.Annotations ?? Annotations.EMPTY;
+                        var newAnnotations = AnnotationUpdater.UpdateAnnotations(annotations, resultObject);
+                        if (Equals(annotations, newAnnotations))
+                        {
+                            continue;
+                        }
+
+                        customPeaks = CustomPeak.SetAtPosition(customPeaks, position,
+                            (customPeak ?? new CustomPeak(position)).ChangeAnnotations(newAnnotations));
                     }
-                    newChromInfos.Add(list);
                 }
 
-                return Results<TItem>.Merge(results, newChromInfos);
-            }
-
-            protected abstract Annotations GetAnnotations(TItem item);
-            protected abstract TItem ChangeAnnotations(TItem item, Annotations newAnnotations);
-        }
-
-        private class TransitionResultUpdater : ResultUpdater<TransitionChromInfo, TransitionResult>
-        {
-            protected override Annotations GetAnnotations(TransitionChromInfo item)
-            {
-                return item.Annotations;
-            }
-
-            protected override TransitionChromInfo ChangeAnnotations(TransitionChromInfo item, Annotations newAnnotations)
-            {
-                return item.ChangeAnnotations(newAnnotations);
+                return customPeaks;
             }
         }
 
-        private class PrecursorResultUpdater : ResultUpdater<TransitionGroupChromInfo, PrecursorResult>
+        private class TransitionResultUpdater : ResultAnnotationUpdater<TransitionResult>
         {
-            protected override Annotations GetAnnotations(TransitionGroupChromInfo item)
-            {
-                return item.Annotations;
-            }
+        }
 
-            protected override TransitionGroupChromInfo ChangeAnnotations(TransitionGroupChromInfo item, Annotations newAnnotations)
-            {
-                return item.ChangeAnnotations(newAnnotations);
-            }
+        private class PrecursorResultUpdater : ResultAnnotationUpdater<PrecursorResult>
+        {
         }
 
         private void CheckCancelled()

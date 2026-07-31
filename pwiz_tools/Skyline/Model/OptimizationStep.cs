@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -52,10 +53,14 @@ namespace pwiz.Skyline.Model
                                                            OptimizedMethodType methodType,
                                                            GetRegressionValue getRegressionValue)
         {
-            // Collect peak area for 
+            // Collect peak area for
             var dictOptTotals = new Dictionary<TReg, Dictionary<int, OptimizationStep<TReg>>>();
             if (settings.HasResults)
             {
+                // The optimization steps are what this is adding up, and the columnar results keep
+                // only step zero, so the peaks have to be read. One read serves every replicate and
+                // every candidate precursor, because they are all in the same molecule.
+                var moleculeResults = new MoleculeResults(settings, nodePep);
                 var chromatograms = settings.MeasuredResults.Chromatograms;
                 for (int i = 0; i < chromatograms.Count; i++)
                 {
@@ -72,13 +77,14 @@ namespace pwiz.Skyline.Model
                     {
                         TransitionGroupDocNode[] listGroups = FindCandidateGroups(nodePep, nodeGroup);
                         foreach (var nodeGroupCandidate in listGroups)
-                            AddOptimizationStepAreas(nodeGroupCandidate, i, regression, stepAreas);
+                            AddOptimizationStepAreas(moleculeResults, nodeGroupCandidate, i, regression, stepAreas);
                     }
                     else if (methodType == OptimizedMethodType.Transition)
                     {
-                        IEnumerable<TransitionDocNode> listTransitions = FindCandidateTransitions(nodePep, nodeGroup, nodeTran);
+                        var listTransitions = FindCandidateTransitions(nodePep, nodeGroup, nodeTran);
                         foreach (var nodeTranCandidate in listTransitions)
-                            AddOptimizationStepAreas(nodeTranCandidate, i, regression, stepAreas);
+                            AddOptimizationStepAreas(moleculeResults, nodeTranCandidate.Item1, nodeTranCandidate.Item2,
+                                i, regression, stepAreas);
                     }
                 }
             }
@@ -133,13 +139,19 @@ namespace pwiz.Skyline.Model
             return listCandidates.ToArray();
         }
 
-        private static IEnumerable<TransitionDocNode> FindCandidateTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+        /// <summary>
+        /// Each candidate transition paired with the precursor it belongs to, which is what a
+        /// <see cref="MoleculeResults"/> has to be told in order to give back that transition's peaks.
+        /// </summary>
+        private static IEnumerable<Tuple<TransitionGroupDocNode, TransitionDocNode>> FindCandidateTransitions(
+            PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             var candidateGroups = FindCandidateGroups(nodePep, nodeGroup);
             if (candidateGroups.Length < 2)
-                return new[] { nodeTran };
+                return new[] { Tuple.Create(nodeGroup, nodeTran) };
             Debug.Assert(ReferenceEquals(nodeGroup, candidateGroups[0]));
-            var listCandidates = new List<TransitionDocNode> { nodeTran };
+            var listCandidates = new List<Tuple<TransitionGroupDocNode, TransitionDocNode>>
+                { Tuple.Create(nodeGroup, nodeTran) };
             var transition = nodeTran.Transition;
             for (int i = 1; i < candidateGroups.Length; i++)
             {
@@ -150,7 +162,7 @@ namespace pwiz.Skyline.Model
                         transition.Ordinal == transitionCandidate.Ordinal &&
                         transition.IonType == transitionCandidate.IonType)
                     {
-                        listCandidates.Add(nodeTranCandidate);
+                        listCandidates.Add(Tuple.Create(candidateGroups[i], nodeTranCandidate));
                         break;
                     }
                 }
@@ -158,10 +170,10 @@ namespace pwiz.Skyline.Model
             return listCandidates.ToArray();
         }
 
-        private static void AddOptimizationStepAreas(TransitionGroupDocNode nodeGroup, int iResult, TReg regression,
-            IDictionary<int, OptimizationStep<TReg>> optTotals)
+        private static void AddOptimizationStepAreas(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
+            int iResult, TReg regression, IDictionary<int, OptimizationStep<TReg>> optTotals)
         {
-            var results = nodeGroup.HasResults ? nodeGroup.Results[iResult] : default(ChromInfoList<TransitionGroupChromInfo>);
+            var results = moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, iResult);
             if (results.IsEmpty)
                 return;
             foreach (var chromInfo in results)
@@ -176,10 +188,12 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static void AddOptimizationStepAreas(TransitionDocNode nodeTran, int iResult, TReg regression,
+        private static void AddOptimizationStepAreas(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTran, int iResult, TReg regression,
             IDictionary<int, OptimizationStep<TReg>> optTotals)
         {
-            var results = (nodeTran.HasResults ? nodeTran.Results[iResult] : default(ChromInfoList<TransitionChromInfo>));
+            var results = moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition,
+                iResult);
             // Skip the result set if it only has step 0, the predicted value. This happens
             // when someone mistakenly sets "Optimizing" on a data set that does not contain
             // optimization steps.

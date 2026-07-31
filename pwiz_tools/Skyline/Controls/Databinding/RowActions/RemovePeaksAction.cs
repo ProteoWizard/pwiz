@@ -234,9 +234,10 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                     }
                     foreach (TransitionGroupDocNode transitionGroup in peptideDocNode.TransitionGroups)
                     {
-                        var chromInfos = transitionGroup.Results?[resultFileKey.ReplicateIndex] ??
-                                         default(ChromInfoList<TransitionGroupChromInfo>);
-                        if (chromInfos.IsEmpty)
+                        // Only whether the precursor has any peak in the replicate, which the
+                        // columnar results answer without reading anything.
+                        var results = transitionGroup.AbbreviatedResults;
+                        if (results == null || !results.GetPositions(resultFileKey.ReplicateIndex).Any())
                         {
                             continue;
                         }

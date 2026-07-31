@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
@@ -75,9 +76,17 @@ namespace pwiz.Skyline.Model.Find
 
         public IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            return FindAll(IdentityPath.ROOT, document, progressMonitor, ref status);
+            return FindAll(IdentityPath.ROOT, document, document.Settings, null, progressMonitor, ref status);
         }
-        private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, IProgressMonitor progressMonitor, ref IProgressStatus status)
+
+        /// <summary>
+        /// <paramref name="moleculeResults"/> is made when the walk reaches a molecule and handed to
+        /// everything below it, so each molecule's chromatograms are read once and only one
+        /// molecule's peaks are held at a time. What this looks at - the optimization step of a peak,
+        /// and whatever the derived finder matches on - is not in the columnar results.
+        /// </summary>
+        private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, SrmSettings settings,
+            MoleculeResults moleculeResults, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             var results = new List<Bookmark>();
             if (progressMonitor.IsCanceled)
@@ -92,23 +101,33 @@ namespace pwiz.Skyline.Model.Find
                 {
                     return results;
                 }
+
+                if (docNode is PeptideDocNode peptideDocNode)
+                {
+                    moleculeResults = new MoleculeResults(settings, peptideDocNode);
+                }
+
                 foreach (var child in docNodeParent.Children)
                 {
-                    results.AddRange(FindAll(new IdentityPath(identityPath, child.Id), child, progressMonitor, ref status));
+                    results.AddRange(FindAll(new IdentityPath(identityPath, child.Id), child, settings,
+                        moleculeResults, progressMonitor, ref status));
                 }
                 return results;
             }
-            if (!transitionGroupDocNode.HasResults)
+
+            var groupChromInfos = moleculeResults?.GetTransitionGroupChromInfos(
+                transitionGroupDocNode.TransitionGroup);
+            if (groupChromInfos == null)
             {
                 return results;
             }
-            for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
+            for (int iReplicate = 0; iReplicate < groupChromInfos.Count; iReplicate++)
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return results;
                 }
-                var replicate = transitionGroupDocNode.Results[iReplicate];
+                var replicate = groupChromInfos[iReplicate];
                 if (replicate.IsEmpty)
                 {
                     continue;
@@ -131,11 +150,8 @@ namespace pwiz.Skyline.Model.Find
                 }
                 foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
                 {
-                    if (!transitionDocNode.HasResults || iReplicate >= transitionDocNode.Results.Count)
-                    {
-                        continue;
-                    }
-                    var transitionResults = transitionDocNode.Results[iReplicate];
+                    var transitionResults = moleculeResults.GetTransitionChromInfos(
+                        transitionGroupDocNode.TransitionGroup, transitionDocNode.Transition, iReplicate);
                     if (transitionResults.IsEmpty)
                     {
                         continue;

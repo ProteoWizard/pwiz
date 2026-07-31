@@ -146,28 +146,35 @@ namespace pwiz.Skyline.Model
             var pickedPeptides = _docCompare.Molecules.ToList();
             int nTruePeptides = truePeptides.Count;
             var chromatogramSets = DocOriginal.Settings.MeasuredResults.Chromatograms;
-            for (int i = 0; i < chromatogramSets.Count; i++)
+            // Molecules on the outside and replicates on the inside, so that each molecule of each
+            // document is read once and no more than one molecule of each is held at a time. The
+            // peak boundaries this compares are only on the peaks themselves.
+            for (int j = 0; j < nTruePeptides; j++)
             {
-                var chromSet = chromatogramSets[i];
-                var set = chromatogramSets[i];
-                for (int j = 0; j < nTruePeptides; j++)
+                var truePeptide = truePeptides[j];
+                var pickedPeptide = pickedPeptides[j];
+                // We don't care about peak picking performance for decoys
+                if (truePeptide.IsDecoy)
+                    continue;
+                // We don't care about peak picking performance for standard peptides
+                if (truePeptide.GlobalStandardType != null)
+                    continue;
+                var trueMoleculeResults = new MoleculeResults(DocOriginal.Settings, truePeptide);
+                var pickedMoleculeResults = new MoleculeResults(_docCompare.Settings, pickedPeptide);
+                var trueGroups = truePeptide.TransitionGroups.ToList();
+                var pickedGroups = pickedPeptide.TransitionGroups.ToList();
+                for (int k = 0; k < trueGroups.Count; k++)
                 {
-                    var truePeptide = truePeptides[j];
-                    var pickedPeptide = pickedPeptides[j];
-                    // We don't care about peak picking performance for decoys
-                    if (truePeptide.IsDecoy)
-                        continue;
-                    // We don't care about peak picking performance for standard peptides
-                    if (truePeptide.GlobalStandardType != null)
-                        continue;
-                    var trueGroups = truePeptide.TransitionGroups.ToList();
-                    var pickedGroups = pickedPeptide.TransitionGroups.ToList();
-                    for (int k = 0; k < trueGroups.Count; k++)
+                    var trueGroup = trueGroups[k];
+                    var pickedGroup = pickedGroups[k];
+                    for (int i = 0; i < chromatogramSets.Count; i++)
                     {
-                        var trueGroup = trueGroups[k];
-                        var pickedGroup = pickedGroups[k];
-                        var trueResults = trueGroup.Results[i];
-                        var pickedResults = pickedGroup.Results[i];
+                        var chromSet = chromatogramSets[i];
+                        var set = chromatogramSets[i];
+                        var trueResults =
+                            trueMoleculeResults.GetTransitionGroupChromInfos(trueGroup.TransitionGroup, i);
+                        var pickedResults =
+                            pickedMoleculeResults.GetTransitionGroupChromInfos(pickedGroup.TransitionGroup, i);
                         if (trueResults.IsEmpty)
                             continue;
                         int nChromInfos = trueResults.Count;

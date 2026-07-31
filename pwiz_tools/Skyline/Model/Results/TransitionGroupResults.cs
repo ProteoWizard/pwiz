@@ -290,6 +290,78 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// These results with the user's work in <paramref name="other"/> merged in: where both have
+        /// a peak for a file, the other's replaces this one's when the user set it, and where only
+        /// the other has one, it is added. Returns this when the other has nothing to contribute, so
+        /// that a document which does not change stays reference equal.
+        /// <para>
+        /// This is what merging one document's user info into another comes to now that the peaks
+        /// themselves live in the .skyd. Every column moves together, so the merge is worked out
+        /// once as a list of where each position of the answer comes from.
+        /// </para>
+        /// </summary>
+        public TransitionGroupResults MergeUserInfo(TransitionGroupResults other)
+        {
+            var sources = MergeSource.Build(ChromFileIds, other?.ChromFileIds,
+                position => GetUserSet(position) != UserSet.FALSE, out var counts);
+            if (sources == null)
+            {
+                return this;
+            }
+
+            var results = new TransitionGroupResults(
+                new ChromFileIds(ReplicatePositions.FromCounts(counts),
+                    sources.Select(source => source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
+                sources.Select(source => source.Pick(this, other).Areas[source.Position]),
+                sources.Select(source => source.Pick(this, other).RetentionTimes[source.Position]));
+            if (UserSets != null || other.UserSets != null)
+            {
+                results = results.ChangeUserSets(
+                    sources.Select(source => source.Pick(this, other).GetUserSet(source.Position)));
+            }
+
+            results = results
+                .ChangeChosenPeakIndexes(MergeIndexes(sources, other, r => r.ChosenPeakIndexes))
+                .ChangeOriginalPeakIndexes(MergeIndexes(sources, other, r => r.OriginalPeakIndexes))
+                .ChangeReintegratedPeakIndexes(MergeIndexes(sources, other, r => r.ReintegratedPeakIndexes));
+            if (QValues != null || other.QValues != null)
+            {
+                results = results.ChangeQValues(sources.Select(source =>
+                    source.Pick(this, other).GetQValue(source.Position) ?? float.NaN));
+            }
+
+            if (ZScores != null || other.ZScores != null)
+            {
+                results = results.ChangeZScores(sources.Select(source =>
+                    source.Pick(this, other).GetZScore(source.Position) ?? float.NaN));
+            }
+
+            var customPeaks = MergeSource.MergeCustomPeaks(sources,
+                source => source.Pick(this, other).GetCustomPeak(source.Position));
+            if (customPeaks != null)
+            {
+                results = results.ChangeCustomPeaks(customPeaks);
+            }
+
+            return results;
+        }
+
+        private IEnumerable<int> MergeIndexes(IList<MergeSource> sources, TransitionGroupResults other,
+            Func<TransitionGroupResults, ImmutableList<int>> getIndexes)
+        {
+            if (getIndexes(this) == null && getIndexes(other) == null)
+            {
+                return null;
+            }
+
+            return sources.Select(source =>
+            {
+                var indexes = getIndexes(source.Pick(this, other));
+                return indexes == null ? -1 : indexes[source.Position];
+            });
+        }
+
+        /// <summary>
         /// The position of one file's entry in one replicate, or -1. Callers find a position this
         /// way rather than counting, since the entries of a replicate are in no order they can
         /// rely on.
@@ -781,6 +853,67 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// The transition level counterpart of
+        /// <see cref="TransitionGroupResults.MergeUserInfo"/>, worked out the same way.
+        /// </summary>
+        public TransitionResults MergeUserInfo(TransitionResults other)
+        {
+            var sources = MergeSource.Build(ChromFileIds, other?.ChromFileIds,
+                position => other.GetUserSet(position) != UserSet.FALSE, out var counts);
+            if (sources == null)
+            {
+                return this;
+            }
+
+            var results = new TransitionResults(
+                new ChromFileIds(ReplicatePositions.FromCounts(counts),
+                    sources.Select(source =>
+                        source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
+                sources.Select(source => source.Pick(this, other).Areas[source.Position]));
+            if (UserSets != null || other.UserSets != null)
+            {
+                results = results.ChangeUserSets(
+                    sources.Select(source => source.Pick(this, other).GetUserSet(source.Position)));
+            }
+
+            if (Truncated != null || other.Truncated != null)
+            {
+                results = results.ChangeTruncated(
+                    sources.Select(source => source.Pick(this, other).GetTruncated(source.Position)));
+            }
+
+            if (EmptyPeaks != null || other.EmptyPeaks != null)
+            {
+                results = results.ChangeEmptyPeaks(
+                    sources.Select(source => source.Pick(this, other).IsEmptyPeak(source.Position)));
+            }
+
+            if (Identified != null || other.Identified != null)
+            {
+                results = results.ChangeIdentified(
+                    sources.Select(source => source.Pick(this, other).GetIdentified(source.Position)));
+            }
+
+            if (ForcedIntegration != null || other.ForcedIntegration != null)
+            {
+                results = results.ChangeForcedIntegration(sources.Select(source =>
+                {
+                    var forcedIntegration = source.Pick(this, other).ForcedIntegration;
+                    return forcedIntegration != null && forcedIntegration[source.Position];
+                }));
+            }
+
+            var customPeaks = MergeSource.MergeCustomPeaks(sources,
+                source => source.Pick(this, other).GetCustomPeak(source.Position));
+            if (customPeaks != null)
+            {
+                results = results.ChangeCustomPeaks(customPeaks);
+            }
+
+            return results;
+        }
+
+        /// <summary>
         /// The flat positions belonging to one replicate. How a caller walks a replicate without
         /// counting: the entries of one are in no order it can rely on.
         /// </summary>
@@ -840,6 +973,122 @@ namespace pwiz.Skyline.Model.Results
     /// annotations of a peak are on its <see cref="CustomPeak"/>, and a peak whose annotations all
     /// go and which has nothing else to say stops needing one at all.
     /// </summary>
+    /// <summary>
+    /// Where one position of a merged set of results comes from: the results being merged into, or
+    /// the ones being merged in, and which position of it.
+    /// <para>
+    /// Working the merge out once as a list of these and then projecting every column through it is
+    /// what keeps the columns in step, and is why the precursor and the transition level can share
+    /// the arithmetic even though their results have different columns.
+    /// </para>
+    /// </summary>
+    public class MergeSource
+    {
+        private MergeSource(bool fromOther, int position)
+        {
+            FromOther = fromOther;
+            Position = position;
+        }
+
+        public bool FromOther { get; }
+        public int Position { get; }
+
+        public T Pick<T>(T mine, T other)
+        {
+            return FromOther ? other : mine;
+        }
+
+        /// <summary>
+        /// One entry per position of the merged results, or null when <paramref name="otherFileIds"/>
+        /// has nothing the caller does not already have, which is the usual case and the one where
+        /// the caller should hand back what it was given.
+        /// <para>
+        /// <paramref name="otherIsUserSet"/> decides whether the other results win at a position both
+        /// have: the point of the merge is to keep what a user did.
+        /// </para>
+        /// </summary>
+        public static IList<MergeSource> Build(ChromFileIds fileIds, ChromFileIds otherFileIds,
+            Func<int, bool> otherIsUserSet, out IList<int> counts)
+        {
+            counts = null;
+            if (otherFileIds == null)
+            {
+                return null;
+            }
+
+            var sources = new List<MergeSource>();
+            var newCounts = new List<int>();
+            bool anyFromOther = false;
+            int replicateCount = Math.Max(fileIds.ReplicatePositions.ReplicateCount,
+                otherFileIds.ReplicatePositions.ReplicateCount);
+            for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
+            {
+                int count = 0;
+                foreach (var position in fileIds.ReplicatePositions.EnumeratePositions(replicateIndex))
+                {
+                    int otherPosition = otherFileIds.IndexOfFile(replicateIndex, fileIds.FileIds[position].Value);
+                    if (otherPosition >= 0 && otherIsUserSet(otherPosition))
+                    {
+                        sources.Add(new MergeSource(true, otherPosition));
+                        anyFromOther = true;
+                    }
+                    else
+                    {
+                        sources.Add(new MergeSource(false, position));
+                    }
+
+                    count++;
+                }
+
+                // A peak the other results have for a file these have none for.
+                foreach (var otherPosition in otherFileIds.ReplicatePositions.EnumeratePositions(replicateIndex))
+                {
+                    if (fileIds.IndexOfFile(replicateIndex, otherFileIds.FileIds[otherPosition].Value) >= 0)
+                    {
+                        continue;
+                    }
+
+                    sources.Add(new MergeSource(true, otherPosition));
+                    anyFromOther = true;
+                    count++;
+                }
+
+                newCounts.Add(count);
+            }
+
+            if (!anyFromOther)
+            {
+                return null;
+            }
+
+            counts = newCounts;
+            return sources;
+        }
+
+        /// <summary>
+        /// The custom peaks of the merged results, renumbered to their new positions, or null when
+        /// no position has one.
+        /// </summary>
+        public static ImmutableList<CustomPeak> MergeCustomPeaks(IList<MergeSource> sources,
+            Func<MergeSource, CustomPeak> getCustomPeak)
+        {
+            List<CustomPeak> customPeaks = null;
+            for (int position = 0; position < sources.Count; position++)
+            {
+                var customPeak = getCustomPeak(sources[position]);
+                if (customPeak == null)
+                {
+                    continue;
+                }
+
+                customPeaks = customPeaks ?? new List<CustomPeak>();
+                customPeaks.Add(customPeak.ChangePosition(position));
+            }
+
+            return customPeaks == null ? null : ImmutableList.ValueOf(customPeaks);
+        }
+    }
+
     public static class StripAnnotations
     {
         /// <summary>
@@ -971,6 +1220,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.Annotations = value ?? Annotations.EMPTY);
         }
 
+        public CustomPeak ChangePosition(int value)
+        {
+            return Position == value ? this : ChangeProp(ImClone(this), im => im.Position = value);
+        }
+
         public CustomPeak ChangePeakBounds(float? startTime, float? endTime, PeakIdentification identified)
         {
             return ChangeProp(ImClone(this), im =>
@@ -1000,6 +1254,45 @@ namespace pwiz.Skyline.Model.Results
         public static CustomPeak FindAtPosition(IEnumerable<CustomPeak> customPeaks, int position)
         {
             return customPeaks?.FirstOrDefault(customPeak => customPeak.Position == position);
+        }
+
+        /// <summary>
+        /// The list with the entry for <paramref name="position"/> replaced by
+        /// <paramref name="customPeak"/>, keeping the entries in position order. An entry which
+        /// holds nothing that cannot be read back from the .skyd is left out entirely.
+        /// </summary>
+        public static ImmutableList<CustomPeak> SetAtPosition(ImmutableList<CustomPeak> customPeaks, int position,
+            CustomPeak customPeak)
+        {
+            bool keep = customPeak != null && (!customPeak.Annotations.IsEmpty || customPeak.HasPeakBounds);
+            var newCustomPeaks = new List<CustomPeak>();
+            bool added = false;
+            foreach (var existing in customPeaks ?? ImmutableList<CustomPeak>.EMPTY)
+            {
+                if (existing.Position == position)
+                {
+                    continue;
+                }
+
+                if (!added && existing.Position > position)
+                {
+                    if (keep)
+                    {
+                        newCustomPeaks.Add(customPeak);
+                    }
+
+                    added = true;
+                }
+
+                newCustomPeaks.Add(existing);
+            }
+
+            if (!added && keep)
+            {
+                newCustomPeaks.Add(customPeak);
+            }
+
+            return newCustomPeaks.Count == 0 ? null : ImmutableList.ValueOf(newCustomPeaks);
         }
 
         protected bool Equals(CustomPeak other)

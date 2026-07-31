@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -352,14 +353,13 @@ namespace pwiz.Skyline.SettingsUI
 
             var arrayData = new AdductMap<CERegressionData>();
             var chromatograms = document.Settings.MeasuredResults.Chromatograms;
-            for (int i = 0; i < chromatograms.Count; i++)
+            // Molecules on the outside and replicates on the inside, so that the peaks of one
+            // molecule are read once and serve every replicate, and no more than one molecule's
+            // peaks are held at a time. The totals this adds up do not depend on the order.
+            foreach (var nodePep in document.Molecules)
             {
-                var chromSet = chromatograms[i];
-                var regression = chromSet.OptimizationFunction as CollisionEnergyRegression;
-                if (regression == null)
-                    continue;
-
-                foreach (var nodeGroup in document.MoleculeTransitionGroups)
+                MoleculeResults moleculeResults = null;
+                foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
                     var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                     if (arrayData[charge] == null)
@@ -369,7 +369,16 @@ namespace pwiz.Skyline.SettingsUI
                         arrayData[charge] = new CERegressionData(chargeRegression != null ?
                             chargeRegression.RegressionLine : null);
                     }
-                    arrayData[charge].Add(regression, nodeGroup, i);
+
+                    for (int i = 0; i < chromatograms.Count; i++)
+                    {
+                        var regression = chromatograms[i].OptimizationFunction as CollisionEnergyRegression;
+                        if (regression == null)
+                            continue;
+                        if (moleculeResults == null)
+                            moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                        arrayData[charge].Add(moleculeResults, regression, nodeGroup, i);
+                    }
                 }
             }
             return arrayData;
@@ -477,9 +486,11 @@ namespace pwiz.Skyline.SettingsUI
             return bestValue;
         }
 
-        public void Add(TReg regression, TransitionGroupDocNode nodeGroup, int iResult)
+        public void Add(MoleculeResults moleculeResults, TReg regression, TransitionGroupDocNode nodeGroup, int iResult)
         {
-            var result = nodeGroup.Results[iResult];
+            // The optimization steps are the whole point here, and only the peaks themselves have
+            // them, so this reads rather than asking the columnar results.
+            var result = moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, iResult);
             if (result.IsEmpty)
                 return;
 

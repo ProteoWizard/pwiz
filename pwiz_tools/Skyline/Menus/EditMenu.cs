@@ -885,7 +885,9 @@ namespace pwiz.Skyline.Menus
                         continue;
                     }
 
-                    var chromInfo = SkylineWindow.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
+                    var chromInfo = SkylineWindow.FindChromInfo(document,
+                        new MoleculeResults(document.Settings, peptideDocNode), transitionGroupDocNode, chromSet.Name,
+                        filePath);
                     if (chromInfo == null)
                     {
                         continue;
@@ -1561,9 +1563,10 @@ namespace pwiz.Skyline.Menus
                                 var newNode =
                                     new TransitionGroupDocNode(nodeTransGroup.TransitionGroup,
                                         nodeTransGroup.Annotations, Document.Settings, null, null,
-                                        dlg.ResultExplicitTransitionGroupValues, nodeTransGroup.Results,
+                                        dlg.ResultExplicitTransitionGroupValues, null,
                                         nodeTransGroup.Children.Cast<TransitionDocNode>().ToArray(),
-                                        nodeTransGroup.AutoManageChildren);
+                                        nodeTransGroup.AutoManageChildren)
+                                    .ChangeAbbreviatedResults(nodeTransGroup.AbbreviatedResults);
                                 if (Equals(newNode, nodeTransGroup))
                                     return doc;
 

@@ -1863,7 +1863,9 @@ namespace pwiz.Skyline
             document = document.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime.MeasuredTime, UserSet.TRUE);
 
             var activeTransitionGroup = (TransitionGroupDocNode) document.FindNode(e.GroupPath);
-            var activeChromInfo = FindChromInfo(document, activeTransitionGroup, e.NameSet, e.FilePath);
+            var moleculeResults = new MoleculeResults(document.Settings,
+                (PeptideDocNode) document.FindNode(e.GroupPath.Parent));
+            var activeChromInfo = FindChromInfo(document, moleculeResults, activeTransitionGroup, e.NameSet, e.FilePath);
 
             document = ChangePeakBounds(document, GetSynchronizedPeakBoundChanges(document,
                 new ChangedPeakBoundsEventArgs(e.GroupPath, null, e.NameSet, e.FilePath,
@@ -1876,6 +1878,9 @@ namespace pwiz.Skyline
                 return document;
             }
             var peptide = (PeptideDocNode) document.FindNode(e.GroupPath.Parent);
+            // Read once for the whole molecule. Each turn of the loop changes a different precursor,
+            // so no turn changes whether a later one has a peak in this file.
+            var peptideResults = new MoleculeResults(document.Settings, peptide);
             // See if there are any other transition groups that should have their peak bounds set to the same value
             foreach (var transitionGroup in peptide.TransitionGroups)
             {
@@ -1888,7 +1893,7 @@ namespace pwiz.Skyline
                 {
                     continue;
                 }
-                var chromInfo = FindChromInfo(document, transitionGroup, e.NameSet, e.FilePath);
+                var chromInfo = FindChromInfo(document, peptideResults, transitionGroup, e.NameSet, e.FilePath);
                 if (null == chromInfo)
                 {
                     continue;
@@ -1901,8 +1906,13 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Finds the TransitionGroupChromInfo that matches the specified ChromatogramSet name and file path.
+        /// <para>
+        /// The caller supplies the <paramref name="moleculeResults"/> because the callers which ask
+        /// this about every precursor of a molecule would otherwise read the chromatograms of that
+        /// molecule once per precursor.
+        /// </para>
         /// </summary>
-        public static TransitionGroupChromInfo FindChromInfo(SrmDocument document,
+        public static TransitionGroupChromInfo FindChromInfo(SrmDocument document, MoleculeResults moleculeResults,
             TransitionGroupDocNode transitionGroupDocNode, string nameChromatogramSet, MsDataFileUri filePath)
         {
             ChromatogramSet chromatogramSet;
@@ -1916,7 +1926,8 @@ namespace pwiz.Skyline
             {
                 return null;
             }
-            var results = transitionGroupDocNode.Results[indexSet];
+            var results =
+                moleculeResults.GetTransitionGroupChromInfos(transitionGroupDocNode.TransitionGroup, indexSet);
             if (results.IsEmpty)
             {
                 return null;
@@ -2012,11 +2023,15 @@ namespace pwiz.Skyline
             float? startTime = null;
             float? endTime = null;
 
+            var moleculeResults = new MoleculeResults(Document.Settings,
+                (PeptideDocNode) Document.FindNode(args.GroupPath.Parent));
             if (singleTransitionDisplay)
             {
                 if (transitionDocNode != null)
                 {
-                    var chromInfo = transitionDocNode.Results[indexSet].FirstOrDefault(ci => ci.OptimizationStep == 0);
+                    var chromInfo = moleculeResults
+                        .GetTransitionChromInfos(transitionGroupDocNode.TransitionGroup, transitionDocNode.Transition,
+                            indexSet).FirstOrDefault(ci => ci.OptimizationStep == 0);
                     if (chromInfo != null)
                     {
                         startTime = chromInfo.StartRetentionTime;
@@ -2026,7 +2041,9 @@ namespace pwiz.Skyline
             }
             else
             {
-                var chromInfo = transitionGroupDocNode.Results[indexSet].FirstOrDefault(ci => ci.OptimizationStep == 0);
+                var chromInfo = moleculeResults
+                    .GetTransitionGroupChromInfos(transitionGroupDocNode.TransitionGroup, indexSet)
+                    .FirstOrDefault(ci => ci.OptimizationStep == 0);
                 if (chromInfo != null)
                 {
                     startTime = chromInfo.StartRetentionTime;
@@ -2117,6 +2134,8 @@ namespace pwiz.Skyline
             foreach (var entry in peptideChanges)
             {
                 var peptide = (PeptideDocNode)document.FindNode(entry.Key);
+                // One read for this molecule, reused for every change and every precursor of it.
+                var moleculeResults = new MoleculeResults(document.Settings, peptide);
                 foreach (var change in entry.Value.Select(v => v.Value))
                 {
                     foreach (var transitionGroup in peptide.TransitionGroups)
@@ -2130,7 +2149,8 @@ namespace pwiz.Skyline
                         {
                             continue;
                         }
-                        if (null == FindChromInfo(document, transitionGroup, change.NameSet, change.FilePath))
+                        if (null == FindChromInfo(document, moleculeResults, transitionGroup, change.NameSet,
+                                change.FilePath))
                         {
                             continue;
                         }

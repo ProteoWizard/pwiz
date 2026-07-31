@@ -761,7 +761,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 DisplayTypeChrom displayType)
             {
                 var transitionGroupChromInfoDatas = TransitionGroupChromInfoData.GetTransitionGroupChromInfoDatas(
-                    _document.Settings.MeasuredResults, peptideDocNode, nodeGroup);
+                    _document.Settings, peptideDocNode, nodeGroup);
                 return MakePointPairLists(displayType, transitionGroupChromInfoDatas, IsMissingValue, CreatePointPair);
             }
 

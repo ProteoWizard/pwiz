@@ -47,7 +47,9 @@ namespace pwiz.Skyline.Model
 
             var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                 
-            if (!nodeTranGroup.HasResults || resultsIndex < 0 || resultsIndex >= nodeTranGroup.Results.Count)
+            var abbreviatedResults = nodeTranGroup.AbbreviatedResults;
+            if (abbreviatedResults == null || resultsIndex < 0 ||
+                resultsIndex >= abbreviatedResults.ChromFileIds.ReplicatePositions.ReplicateCount)
                 return;
 
             var tranGroupChromInfo = nodeTranGroup.GetChromInfo(resultsIndex, resultsFile);
@@ -442,13 +444,17 @@ namespace pwiz.Skyline.Model
                 if (activeTransitionGroup.RelativeRT != RelativeRT.Matching)
                     return doc;
 
-                var activeChromInfo = SkylineWindow.FindChromInfo(doc, activeTransitionGroup, nameSet, filePath);
                 var peptide = (PeptideDocNode) doc.FindNode(groupPath.Parent);
+                // One read for the whole molecule, since this asks about every precursor of it.
+                var moleculeResults = new MoleculeResults(doc.Settings, peptide);
+                var activeChromInfo =
+                    SkylineWindow.FindChromInfo(doc, moleculeResults, activeTransitionGroup, nameSet, filePath);
                 // See if there are any other transition groups that should have their peak bounds set to the same value
                 foreach (var tranGroup in peptide.TransitionGroups.Where(tranGroup => tranGroup.RelativeRT == RelativeRT.Matching))
                 {
                     var otherGroupPath = new IdentityPath(groupPath.Parent, tranGroup.TransitionGroup);
-                    if (Equals(groupPath, otherGroupPath) || SkylineWindow.FindChromInfo(doc, tranGroup, nameSet, filePath) == null)
+                    if (Equals(groupPath, otherGroupPath) ||
+                        SkylineWindow.FindChromInfo(doc, moleculeResults, tranGroup, nameSet, filePath) == null)
                         continue;
 
                     doc = doc.ChangePeak(otherGroupPath, nameSet, filePath, null,

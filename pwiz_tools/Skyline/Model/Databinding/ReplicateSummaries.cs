@@ -85,18 +85,18 @@ namespace pwiz.Skyline.Model.Databinding
             var dictTotalAreas = new Dictionary<IsotopeLabelType, double>();
             foreach (var nodeGroup in Document.MoleculeTransitionGroups)
             {
-                if (!nodeGroup.HasResults)
+                var results = nodeGroup.AbbreviatedResults;
+                if (results == null)
                     continue;
                 var labelType = nodeGroup.TransitionGroup.LabelType;
 
-                foreach (var chromInfo in nodeGroup.Results[replicateIndex])
+                // Every position is a peak of optimization step zero, which is the only step the
+                // old code added up.
+                foreach (var position in results.GetPositions(replicateIndex))
                 {
-                    if (chromInfo.OptimizationStep == 0)
-                    {
-                        double sumTotalArea;
-                        dictTotalAreas.TryGetValue(labelType, out sumTotalArea);
-                        dictTotalAreas[labelType] = sumTotalArea + chromInfo.Area ?? 0;
-                    }
+                    double sumTotalArea;
+                    dictTotalAreas.TryGetValue(labelType, out sumTotalArea);
+                    dictTotalAreas[labelType] = sumTotalArea + results.Areas[position];
                 }
             }
             return dictTotalAreas;

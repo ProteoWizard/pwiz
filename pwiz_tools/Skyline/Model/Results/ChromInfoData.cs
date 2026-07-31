@@ -131,10 +131,17 @@ namespace pwiz.Skyline.Model.Results
         /// Returns a list of lists of TransitionGroupChromInfoData objects for the results of a given TransitionGroupDocNode.
         /// The length of the outer list will be equal to the number of replicates in the document.
         /// </summary>
-        public static IList<ICollection<TransitionGroupChromInfoData>> GetTransitionGroupChromInfoDatas(MeasuredResults measuredResults, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode)
+        public static IList<ICollection<TransitionGroupChromInfoData>> GetTransitionGroupChromInfoDatas(SrmSettings settings, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode)
         {
             var list = new List<ICollection<TransitionGroupChromInfoData>>();
-            var transitionGroupResults = transitionGroupDocNode.Results;
+            var measuredResults = settings.MeasuredResults;
+            if (null == measuredResults)
+            {
+                return list;
+            }
+
+            var transitionGroupResults = new MoleculeResults(settings, peptideDocNode)
+                .GetTransitionGroupChromInfos(transitionGroupDocNode.TransitionGroup);
             if (null == transitionGroupResults)
             {
                 return list;

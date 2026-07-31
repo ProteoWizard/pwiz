@@ -1092,57 +1092,12 @@ namespace pwiz.Skyline.Model
             var annotations = Annotations.Merge(nodeTranMerge.Annotations);
             if (!ReferenceEquals(annotations, Annotations))
                 result = (TransitionDocNode)result.ChangeAnnotations(annotations);
-            var resultsInfo = MergeResultsUserInfo(settings, nodeTranMerge.Results);
-            if (!ReferenceEquals(resultsInfo, Results))
-                result = result.ChangeResults(resultsInfo);
+            var resultsInfo = AbbreviatedResults?.MergeUserInfo(nodeTranMerge.AbbreviatedResults);
+            if (!ReferenceEquals(resultsInfo, AbbreviatedResults))
+                result = result.ChangeAbbreviatedResults(resultsInfo);
             return result;
         }
 
-
-        private Results<TransitionChromInfo> MergeResultsUserInfo(
-            SrmSettings settings, Results<TransitionChromInfo> results)
-        {
-            if (!HasResults)
-                return Results;
-
-            var dictFileIdToChromInfo = results.SelectMany(l => l)
-                                               // Merge everything that does not already exist (handled below),
-                                               // as merging only user modified causes loss of information in
-                                               // updates
-                                               //.Where(i => i.IsUserModified)
-                                               .ToDictionary(i => i.FileIndex);
-
-            var listResults = new List<ChromInfoList<TransitionChromInfo>>();
-            for (int i = 0; i < results.Count; i++)
-            {
-                List<TransitionChromInfo> listChromInfo = null;
-                var chromSet = settings.MeasuredResults.Chromatograms[i];
-                var chromInfoList = Results[i];
-                foreach (var fileInfo in chromSet.MSDataFileInfos)
-                {
-                    TransitionChromInfo chromInfo;
-                    if (!dictFileIdToChromInfo.TryGetValue(fileInfo.FileIndex, out chromInfo))
-                        continue;
-                    if (listChromInfo == null)
-                    {
-                        listChromInfo = new List<TransitionChromInfo>(chromInfoList);
-                    }
-                    int iExist = listChromInfo.IndexOf(chromInfoExist =>
-                                                       ReferenceEquals(chromInfoExist.FileId, chromInfo.FileId) &&
-                                                       chromInfoExist.OptimizationStep == chromInfo.OptimizationStep);
-                    if (iExist == -1)
-                        listChromInfo.Add(chromInfo);
-                    else if (chromInfo.IsUserModified)
-                        listChromInfo[iExist] = chromInfo;
-                }
-                if (listChromInfo != null)
-                    chromInfoList = new ChromInfoList<TransitionChromInfo>(listChromInfo);
-                listResults.Add(chromInfoList);
-            }
-            if (ArrayUtil.InnerReferencesEqual<TransitionChromInfo, ChromInfoList<TransitionChromInfo>>(listResults, Results))
-                return Results;
-            return new Results<TransitionChromInfo>(listResults);
-        }
 
         #endregion
 

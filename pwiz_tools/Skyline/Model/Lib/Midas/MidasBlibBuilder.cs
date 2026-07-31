@@ -46,27 +46,24 @@ namespace pwiz.Skyline.Model.Lib.Midas
             var bestSpectra = new List<SpectrumMzInfo>();
             foreach (var nodePep in _doc.Peptides)
             {
-                foreach (var nodeTranGroup in nodePep.TransitionGroups.Where(nodeTranGroup => nodeTranGroup.Results != null))
+                foreach (var nodeTranGroup in nodePep.TransitionGroups.Where(nodeTranGroup => nodeTranGroup.AbbreviatedResults != null))
                 {
                     // For each precursor, export the spectrum with the highest TIC within peak boundaries
                     DbSpectrum bestSpectrum = null;
                     var bestDistance = double.MaxValue;
 
-                    foreach (var result in nodeTranGroup.Results)
+                    // Retention time is one of the values the columnar results keep, so nothing has
+                    // to be read here.
+                    var retentionTimes = nodeTranGroup.AbbreviatedResults.RetentionTimes;
+                    for (int position = 0; position < retentionTimes.Count; position++)
                     {
-                        if (result.IsEmpty)
-                            continue;
-
-                        foreach (var resultsFile in result.Where(resultsFile => resultsFile.RetentionTime.HasValue))
+                        foreach (var spectrum in _library.GetSpectraByPrecursor(null, nodeTranGroup.PrecursorMz))
                         {
-                            foreach (var spectrum in _library.GetSpectraByPrecursor(null, nodeTranGroup.PrecursorMz))
+                            var currentDistance = Math.Abs(spectrum.RetentionTime - retentionTimes[position]);
+                            if (currentDistance < bestDistance)
                             {
-                                var currentDistance = Math.Abs(spectrum.RetentionTime - resultsFile.RetentionTime.Value);
-                                if (currentDistance < bestDistance)
-                                {
-                                    bestSpectrum = spectrum;
-                                    bestDistance = currentDistance;
-                                }
+                                bestSpectrum = spectrum;
+                                bestDistance = currentDistance;
                             }
                         }
                     }

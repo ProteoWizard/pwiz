@@ -138,6 +138,10 @@ namespace pwiz.Skyline.Controls.Graphs
                             continue;
 
                         var replicateIndex = bestResult && nodePep.BestResult != -1 ? nodePep.BestResult : resultIndex;
+                        // Mass error lives only on the peaks themselves, so this molecule's
+                        // chromatograms get read. One read serves all of its transitions, and it goes
+                        // when the loop moves on to the next molecule.
+                        var moleculeResults = new MoleculeResults(document.Settings, nodePep);
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
                             foreach (var nodeTran in nodeGroup.Transitions)
@@ -146,12 +150,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                     continue;
                                 if (replicateIndex >= 0)
                                 {
-                                    AddChromInfo(nodeGroup, nodeTran, replicateIndex, dictPpmBin2ToCount, vals);
+                                    AddChromInfo(moleculeResults, nodeGroup, nodeTran, replicateIndex,
+                                        dictPpmBin2ToCount, vals);
                                 }
                                 else
                                 {
-                                    for (int i = 0; i < nodeTran.Results.Count; i++)
-                                        AddChromInfo(nodeGroup, nodeTran, i, dictPpmBin2ToCount, vals);
+                                    for (int i = 0; i < document.MeasuredResults.Chromatograms.Count; i++)
+                                        AddChromInfo(moleculeResults, nodeGroup, nodeTran, i, dictPpmBin2ToCount, vals);
                                 }
                             }
                         }
@@ -168,11 +173,14 @@ namespace pwiz.Skyline.Controls.Graphs
             public double Mean => _mean;
             public double StdDev => _stdDev;
 
-            private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,
+            private void AddChromInfo(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
+                TransitionDocNode nodeTran, int replicateIndex,
                 Dictionary<int, int> dictPpmBin2ToCount, List<double> vals)
             {
-                var chromGroupInfos = nodeGroup.Results[replicateIndex];
-                var chromInfos = nodeTran.Results[replicateIndex];
+                var chromGroupInfos =
+                    moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex);
+                var chromInfos = moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition,
+                    replicateIndex);
                 AddChromInfo(chromGroupInfos, chromInfos, dictPpmBin2ToCount, vals);
             }
 

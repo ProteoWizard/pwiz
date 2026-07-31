@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -190,16 +191,23 @@ namespace pwiz.Skyline.SettingsUI
             var regressionData = new DPRegressionData(regressionCurrent != null ?
                 regressionCurrent.RegressionLine : null);
             var chromatograms = document.Settings.MeasuredResults.Chromatograms;
-            for (int i = 0; i < chromatograms.Count; i++)
+            // Molecules on the outside and replicates on the inside, so that the peaks of one
+            // molecule are read once and serve every replicate, and no more than one molecule's
+            // peaks are held at a time. The totals this adds up do not depend on the order.
+            foreach (var nodePep in document.Molecules)
             {
-                var chromSet = chromatograms[i];
-                var regression = chromSet.OptimizationFunction as DeclusteringPotentialRegression;
-                if (regression == null)
-                    continue;
-
-                foreach (var nodeGroup in document.MoleculeTransitionGroups)
+                MoleculeResults moleculeResults = null;
+                foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
-                    regressionData.Add(regression, nodeGroup, i);
+                    for (int i = 0; i < chromatograms.Count; i++)
+                    {
+                        var regression = chromatograms[i].OptimizationFunction as DeclusteringPotentialRegression;
+                        if (regression == null)
+                            continue;
+                        if (moleculeResults == null)
+                            moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                        regressionData.Add(moleculeResults, regression, nodeGroup, i);
+                    }
                 }
             }
             return regressionData;

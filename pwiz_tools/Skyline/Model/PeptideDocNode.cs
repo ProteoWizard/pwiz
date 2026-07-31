@@ -592,69 +592,6 @@ namespace pwiz.Skyline.Model
             return (float)(totalTime / countTime);
         }
 
-        public float? GetPeakCenterTime(int i)
-        {
-            if (i == -1)
-                return AveragePeakCenterTime;
-
-            double totalTime = 0;
-            int countTime = 0;
-            foreach (var nodeGroup in TransitionGroups)
-            {
-                if (!nodeGroup.HasResults)
-                    continue;
-                var result = nodeGroup.Results[i];
-                if (result.IsEmpty)
-                    continue;
-
-                foreach (var chromInfo in result)
-                {
-                    float? centerTime = GetPeakCenterTime(chromInfo);
-                    if (!centerTime.HasValue)
-                        continue;
-
-                    totalTime += centerTime.Value;
-                    countTime++;
-                }
-            }
-            if (countTime == 0)
-                return null;
-            return (float)(totalTime / countTime);
-        }
-
-        public float? AveragePeakCenterTime
-        {
-            get { return GetPeakCenterTime((ChromFileInfoId) null); }
-        }
-
-        public float? GetPeakCenterTime(ChromFileInfoId fileId)
-        {
-            double totalTime = 0;
-            int countTime = 0;
-            foreach (var chromInfo in TransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
-            {
-                if (fileId != null && !ReferenceEquals(fileId, chromInfo.FileId))
-                    continue;
-                float? centerTime = GetPeakCenterTime(chromInfo);
-                if (!centerTime.HasValue)
-                    continue;
-
-                totalTime += centerTime.Value;
-                countTime++;
-            }
-            if (countTime == 0)
-                return null;
-            return (float)(totalTime / countTime);
-        }
-
-        private float? GetPeakCenterTime(TransitionGroupChromInfo chromInfo)
-        {
-            if (!chromInfo.StartRetentionTime.HasValue || !chromInfo.EndRetentionTime.HasValue)
-                return null;
-
-            return (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2;
-        }
-
         /// <summary>
         /// Worked out on each call rather than kept, now that <see cref="CalcBestResult"/> needs
         /// nothing but the columnar results of the children. Keeping it meant it had to be
