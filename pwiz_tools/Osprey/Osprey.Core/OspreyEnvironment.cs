@@ -308,6 +308,22 @@ namespace pwiz.Osprey.Core
         /// decoys. The frozen model avoids the two-pass retrain's over-separation.</summary>
         public const string PASS2_QVALUE_PROTEIN_COMPACT = @"protein-compact";
 
+        /// <summary>The <see cref="ExperimentAgg"/> default: each precursor/peptide keeps its
+        /// single BEST (max) observation across runs before the experiment-wide target/decoy
+        /// competition. The shipped behavior; the committed golden is byte-identical here.</summary>
+        public const string EXPERIMENT_AGG_MAX = @"max";
+
+        /// <summary>Prefix of the <see cref="ExperimentAgg"/> reproducibility mode value
+        /// OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt; (e.g. mean-best-2, mean-best-3, mean-best-4): the
+        /// experiment-wide PRECURSOR score becomes the mean of its best-N per-run scores (runs beyond
+        /// the detected count are filled with the decoy-median floor; see the OSPREY_MEANBEST2_FLOOR_*
+        /// A/B toggles), rolled up by MAX to peptide and protein. Larger N rewards detection in more
+        /// runs (drives toward the &gt;=N-run reproducibility frontier). Symmetric for decoys, so the
+        /// null stays honest -- the honest sensitivity lever for #4484 vs. the target-conditioned
+        /// transfer-compete/protein-compact. N is read from the flag value; a future command argument
+        /// may pick N intelligently from the run count.</summary>
+        public const string EXPERIMENT_AGG_MEAN_BEST_PREFIX = @"mean-best-";
+
         /// <summary>
         /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
@@ -403,6 +419,60 @@ namespace pwiz.Osprey.Core
             AllowUnfixedResident.Length > 0 &&
             !ResidentPaths.KNOWN_UNFIXED.Any(
                 t => string.Equals(t, AllowUnfixedResident, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>OSPREY_EXPERIMENT_AGG: how the 1st-pass EXPERIMENT-wide precursor/peptide
+        /// score aggregates a unit's per-run observations before the target/decoy competition.
+        /// <see cref="EXPERIMENT_AGG_MAX"/> (default, byte-identical golden) or
+        /// <see cref="EXPERIMENT_AGG_MEAN_BEST_PREFIX"/>&lt;N&gt;. Normalized for logging. Read once
+        /// at process start.</summary>
+        public static readonly string ExperimentAgg = NormalizeExperimentAgg(
+            Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
+
+        /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
+        /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default
+        /// max mode; otherwise &gt;=2. A value &lt;2 or unrecognized falls back to max.</summary>
+        public static readonly int MeanBestN = ParseMeanBestN(
+            Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
+
+        /// <summary>True when <see cref="MeanBestN"/> selects a mean(best-N) reproducibility score
+        /// (OSPREY_EXPERIMENT_AGG=mean-best-N, N&gt;=2).</summary>
+        public static readonly bool ExperimentAggMeanBest = MeanBestN >= 2;
+
+        /// <summary>OSPREY_MEANBEST2_FLOOR_MEAN: A/B toggle to use the decoy MEAN instead of the
+        /// default decoy MEDIAN as the missing-run floor for mean(best-2). Off by default.</summary>
+        public static readonly bool MeanBest2FloorMean =
+            IsSetAndNotZero(@"OSPREY_MEANBEST2_FLOOR_MEAN");
+
+        /// <summary>OSPREY_MEANBEST2_FLOOR_PCT: A/B override to use a low PERCENTILE (0-100) of the
+        /// decoy score distribution as the missing-run floor instead of the median center -- a
+        /// harder reproducibility cut. Null (unset) selects the median default (or the mean when
+        /// <see cref="MeanBest2FloorMean"/>). Read once at process start.</summary>
+        public static readonly double? MeanBest2FloorPercentile =
+            ParseDoubleOrNull(@"OSPREY_MEANBEST2_FLOOR_PCT");
+
+        // Parse N from OSPREY_EXPERIMENT_AGG=mean-best-<N>. Returns 0 (the max default) when unset,
+        // not a mean-best-<N> value, or N < 2.
+        private static int ParseMeanBestN(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return 0;
+            string v = raw.Trim().ToLowerInvariant();
+            if (!v.StartsWith(EXPERIMENT_AGG_MEAN_BEST_PREFIX, StringComparison.Ordinal))
+                return 0;
+            string tail = v.Substring(EXPERIMENT_AGG_MEAN_BEST_PREFIX.Length);
+            return int.TryParse(tail, System.Globalization.NumberStyles.Integer,
+                       System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 2
+                ? n
+                : 0;
+        }
+
+        private static string NormalizeExperimentAgg(string raw)
+        {
+            int n = ParseMeanBestN(raw);
+            return n >= 2
+                ? EXPERIMENT_AGG_MEAN_BEST_PREFIX + n.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : EXPERIMENT_AGG_MAX;
+        }
 
         private static string NormalizePass2QValue(string raw)
         {
