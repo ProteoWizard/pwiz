@@ -1442,10 +1442,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(nodeGroupAfter);
                 Assert.AreSame(nodeGroupRemove.Id, nodeGroupAfter.Id);
 
-                Assert.IsNotNull(nodeGroupRemove.Results[resultsIndex]);
-                Assert.IsTrue(nodeGroupRemove.Results[resultsIndex][0].Area.HasValue);
-                Assert.IsNotNull(nodeGroupAfter.Results[resultsIndex]);
-                Assert.IsFalse(nodeGroupAfter.Results[resultsIndex][0].Area.HasValue);
+                Assert.IsNotNull(nodeGroupRemove.EmptyResults[resultsIndex]);
+                Assert.IsTrue(nodeGroupRemove.EmptyResults[resultsIndex][0].Area.HasValue);
+                Assert.IsNotNull(nodeGroupAfter.EmptyResults[resultsIndex]);
+                Assert.IsFalse(nodeGroupAfter.EmptyResults[resultsIndex][0].Area.HasValue);
             });
         }
 

@@ -201,7 +201,7 @@ namespace pwiz.SkylineTestData.Results
             var peptideGroup = docResults.MoleculeGroups.First();
             var nodePep = peptideGroup.Molecules.First();
             var nodeGroup = nodePep.TransitionGroups.First();
-            var chromInfo = nodeGroup.Results[0].First();
+            var chromInfo = nodeGroup.EmptyResults[0].First();
             var chromatograms = docResults.Settings.MeasuredResults.Chromatograms[0];
             double width = chromInfo.EndRetentionTime.Value - chromInfo.StartRetentionTime.Value;
             var docMoved = docResults.ChangePeak(

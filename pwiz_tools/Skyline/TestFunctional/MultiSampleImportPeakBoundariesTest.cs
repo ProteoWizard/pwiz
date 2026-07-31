@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
                 {
-                    var results = transitionGroupDocNode.Results;
+                    var results = transitionGroupDocNode.EmptyResults;
                     for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
                     {
                         var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];

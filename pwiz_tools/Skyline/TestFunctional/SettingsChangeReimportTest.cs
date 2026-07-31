@@ -47,15 +47,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SettingsChangeReimportTest.sky")));
             var idPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0);
             var transitionGroup = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(idPath);
-            Assert.IsNull(transitionGroup.Results);
+            Assert.IsNull(transitionGroup.EmptyResults);
 
             // Import the file with "UseSelectiveExtraction" set to "false"
             Assert.IsFalse(SkylineWindow.Document.Settings.TransitionSettings.FullScan.UseSelectiveExtraction);
             ImportResultsFile(TestFilesDir.GetTestPath("S_1.mzML"));
             transitionGroup = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(idPath);
-            Assert.IsNotNull(transitionGroup.Results);
-            Assert.AreEqual(1, transitionGroup.Results.Count);
-            var transitionGroupChromInfo = transitionGroup.Results[0].First();
+            Assert.IsNotNull(transitionGroup.EmptyResults);
+            Assert.AreEqual(1, transitionGroup.EmptyResults.Count);
+            var transitionGroupChromInfo = transitionGroup.EmptyResults[0].First();
             // Verify the peak area is what we expect
             Assert.AreEqual(1.460189E+08f, transitionGroupChromInfo.Area.Value);
 
@@ -83,9 +83,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentChange(document);
             WaitForDocumentLoaded();
             transitionGroup = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(idPath);
-            Assert.IsNotNull(transitionGroup.Results);
-            Assert.AreEqual(1, transitionGroup.Results.Count);
-            transitionGroupChromInfo = transitionGroup.Results[0].First();
+            Assert.IsNotNull(transitionGroup.EmptyResults);
+            Assert.AreEqual(1, transitionGroup.EmptyResults.Count);
+            transitionGroupChromInfo = transitionGroup.EmptyResults[0].First();
             // Verify that the peak area is a smaller number because the chromatogram extraction was more selective
             Assert.AreEqual(119880880f, transitionGroupChromInfo.Area.Value);
         }

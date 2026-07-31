@@ -48,7 +48,7 @@ namespace TestPerf
             WaitForDocumentLoaded();
             var peptide = SkylineWindow.Document.Molecules.First();
             var precursor = peptide.TransitionGroups.First();
-            var transitionGroupChromInfo = precursor.Results[0].First();
+            var transitionGroupChromInfo = precursor.EmptyResults[0].First();
             Assert.IsTrue(transitionGroupChromInfo.Area > 0);
             var resultFileMetadata = SkylineWindow.Document.Settings.MeasuredResults.GetResultFileMetadatas().Values.First();
             foreach (var spectrum in resultFileMetadata.SpectrumMetadatas)

@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
-                            var chromInfo = nodeGroup.Results[0].FirstOrDefault();
+                            var chromInfo = nodeGroup.EmptyResults[0].FirstOrDefault();
                             if (chromInfo?.StartRetentionTime == null || chromInfo.EndRetentionTime == null)
                             {
                                 continue;

@@ -112,7 +112,7 @@ namespace TestPerf
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             document = WaitForDocumentLoaded();
 
-            var area = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.Results.First().First().AreaMs1;
+            var area = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.EmptyResults.First().First().AreaMs1;
             AssertEx.IsTrue(area > 0);
 
             if (findDriftPeaks)
@@ -151,13 +151,13 @@ namespace TestPerf
                 docFiltered = WaitForDocumentChangeLoaded(docFiltered);
 
                 // If drift filtering was engaged, peak area should be less
-                var transitionGroupChromInfo = docFiltered.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.Results.First().First();
+                var transitionGroupChromInfo = docFiltered.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.EmptyResults.First().First();
                 var areaFiltered = transitionGroupChromInfo.AreaMs1;
                 AssertEx.IsTrue(area > areaFiltered);
                 AssertEx.IsTrue(areaFiltered > 0);
             }
             document = WaitForDocumentLoaded();
-            var chromInfo = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.Results.First().First();
+            var chromInfo = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.EmptyResults.First().First();
             AssertEx.AreEqual(ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection, .01);
             AssertEx.AreEqual(drift, chromInfo.IonMobilityInfo.DriftTimeMS1, .01);
             AssertEx.AreEqual(areaExpected, (double) chromInfo.AreaMs1, .01);

@@ -233,10 +233,10 @@ namespace pwiz.SkylineTestData.Results
                             TransitionGroupDocNode nodeGroup1 = (TransitionGroupDocNode)nodePep1.Children[k];
                             TransitionGroupDocNode nodeGroup2 = (TransitionGroupDocNode)nodePep2.Children[k];
                             Assert.AreNotSame(nodeGroup1, nodeGroup2);
-                            Assert.AreEqual(nodeGroup1.Results.Count, nodeGroup2.Results.Count);
-                            for (int l = 0; l < nodeGroup1.Results.Count; l++)
-                                Assert.AreEqual(nodeGroup1.Results[l][0].PeakCountRatio,
-                                                nodeGroup2.Results[l][0].PeakCountRatio);
+                            Assert.AreEqual(nodeGroup1.EmptyResults.Count, nodeGroup2.EmptyResults.Count);
+                            for (int l = 0; l < nodeGroup1.EmptyResults.Count; l++)
+                                Assert.AreEqual(nodeGroup1.EmptyResults[l][0].PeakCountRatio,
+                                                nodeGroup2.EmptyResults[l][0].PeakCountRatio);
                             for (int l = 0; l < nodeGroup1.Children.Count; l++)
                             {
                                 TransitionDocNode nodeTran1 = (TransitionDocNode)nodeGroup1.Children[l];
@@ -347,8 +347,8 @@ namespace pwiz.SkylineTestData.Results
                     var nodePep = pair.NodePep;
                     var nodeGroup = pair.NodeGroup;
                     Assert.IsTrue(nodeGroup.HasResults, string.Format("Missing results on {0}", nodeGroup));
-                    Assert.AreEqual(2, nodeGroup.Results.Count);
-                    foreach (var result in nodeGroup.Results)
+                    Assert.AreEqual(2, nodeGroup.EmptyResults.Count);
+                    foreach (var result in nodeGroup.EmptyResults)
                         Assert.AreEqual(2, result.Count);
                     for (int i = 0; i < 2; i++)
                     {

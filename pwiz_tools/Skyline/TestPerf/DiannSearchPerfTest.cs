@@ -752,7 +752,7 @@ namespace TestPerf
             int aCount = 0, bCount = 0;
             foreach (TransitionGroupDocNode tg in peptide.TransitionGroups)
             {
-                if (tg.Results == null)
+                if (tg.EmptyResults == null)
                     continue;
                 AccumulateAreaSum(tg, aIndices, ref aSum, ref aCount);
                 AccumulateAreaSum(tg, bIndices, ref bSum, ref bCount);
@@ -768,8 +768,8 @@ namespace TestPerf
         {
             foreach (int idx in replicateIndices)
             {
-                if (idx >= tg.Results.Count) continue;
-                var infos = tg.Results[idx];
+                if (idx >= tg.EmptyResults.Count) continue;
+                var infos = tg.EmptyResults[idx];
                 if (infos.IsEmpty) continue;
                 foreach (var info in infos)
                 {

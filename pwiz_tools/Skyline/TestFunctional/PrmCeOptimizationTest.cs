@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Find(doc, expect.Seq, expect.Mz, expect.Charge, out _, out var nodeGroup);
 
-                var results = nodeGroup.Results;
+                var results = nodeGroup.EmptyResults;
                 Assert.IsNotNull(results);
                 Assert.AreEqual(replicateCount, results.Count);
                 foreach (var result in results)

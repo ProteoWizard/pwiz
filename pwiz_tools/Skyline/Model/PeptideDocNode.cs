@@ -423,27 +423,10 @@ namespace pwiz.Skyline.Model
             int groupCount = 0;
             foreach (var nodeGroup in TransitionGroups)
             {
-                int goodPeaks = 0;
-                int transitionCount = 0;
-                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                {
-                    var results = nodeTran.AbbreviatedResults;
-                    if (results == null)
-                        continue;
-                    transitionCount++;
-                    foreach (int position in results.GetPositions(i))
-                    {
-                        if (results.IsGoodPeak(position, integrateAll))
-                        {
-                            goodPeaks++;
-                            break;
-                        }
-                    }
-                }
-
-                if (transitionCount == 0)
+                var peakCountRatio = nodeGroup.GetPeakCountRatio(i, integrateAll);
+                if (!peakCountRatio.HasValue)
                     continue;
-                total += (double) goodPeaks/transitionCount;
+                total += peakCountRatio.Value;
                 groupCount++;
             }
 
@@ -1565,7 +1548,7 @@ namespace pwiz.Skyline.Model
 
                 if (nodeGroup.HasResults)
                 {
-                    int countResults = nodeGroup.Results.Count;
+                    int countResults = nodeGroup.EmptyResults.Count;
                     while (_listResultCalcs.Count < countResults)
                     {
                         var calc = new PeptideChromInfoListCalculator(Settings, _listResultCalcs.Count);
@@ -1596,9 +1579,9 @@ namespace pwiz.Skyline.Model
                     var listGroupInfoList = _listResultCalcs.ConvertAll(calc =>
                         calc.UpdateTransitionGroupUserSetMatched(nodeGroupConvert.GetSafeChromInfo(calc.ResultsIndex),
                             isMatching));
-                    var resultsGroup = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listGroupInfoList);
+                    var resultsGroup = Results<TransitionGroupChromInfo>.Merge(nodeGroup.EmptyResults, listGroupInfoList);
                     var nodeGroupNew = nodeGroup;
-                    if (!ReferenceEquals(resultsGroup, nodeGroup.Results))
+                    if (!ReferenceEquals(resultsGroup, nodeGroup.EmptyResults))
                         nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
 
                     var listTransNew = new List<DocNode>();
@@ -1701,7 +1684,7 @@ namespace pwiz.Skyline.Model
             {
                 // The chrom infos the columnar results are carrying: TransitionGroupDocNode.Results
                 // always reports empty now.
-                var chromInfos = nodeGroup.AbbreviatedResults?.ChromInfos;
+                var chromInfos = nodeGroup.AbbreviatedResults?.LegacyChromInfos;
                 if (chromInfos != null && ResultsIndex < chromInfos.Count)
                     AddChromInfoList(nodeGroup, chromInfos[ResultsIndex]);
             }

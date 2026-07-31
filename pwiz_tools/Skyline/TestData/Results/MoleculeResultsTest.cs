@@ -404,7 +404,7 @@ namespace pwiz.SkylineTestData.Results
         {
             var unconverted = TransitionResults.FromChromInfos(rebuilt);
             Assert.IsFalse(unconverted.IsConverted);
-            Assert.AreEqual(rebuilt.Sum(chromInfoList => chromInfoList.Count), unconverted.ChromInfos.Count);
+            Assert.AreEqual(rebuilt.Sum(chromInfoList => chromInfoList.Count), unconverted.LegacyChromInfos.Count);
             foreach (var chromInfo in rebuilt[0])
             {
                 Assert.AreSame(chromInfo, unconverted.FindChromInfo(chromInfo.FileId, chromInfo.OptimizationStep));

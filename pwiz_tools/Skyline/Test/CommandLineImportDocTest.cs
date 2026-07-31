@@ -195,7 +195,7 @@ namespace pwiz.SkylineTest
             foreach (var nodeGroup in docAdd.PeptideTransitionGroups)
             {
                 for (int i = 0; i < 5; i++)
-                    Assert.AreEqual(1, nodeGroup.Results[i].Count);
+                    Assert.AreEqual(1, nodeGroup.EmptyResults[i].Count);
             }
 
             // Cache should now contain results for both documents
@@ -203,4 +203,4 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(expectCacheLen, newCacheLen);        
         }
     }
-}
+}

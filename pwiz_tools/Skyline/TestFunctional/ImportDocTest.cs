@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var nodeGroup in docAdd.PeptideTransitionGroups)
             {
                 for (int i = 0; i < 5; i++)
-                    Assert.AreEqual(1, nodeGroup.Results[i].Count);
+                    Assert.AreEqual(1, nodeGroup.EmptyResults[i].Count);
             }
 
             // Cache should now contain results for both documents
@@ -262,9 +262,9 @@ namespace pwiz.SkylineTestFunctional
             stateAdd.AreEqual(docNames);
             foreach (var nodeGroup in docNames.PeptideTransitionGroups)
             {
-                Assert.AreEqual(2, nodeGroup.Results[0].Count);
-                Assert.AreEqual(2, nodeGroup.Results[1].Count);
-                Assert.AreEqual(1, nodeGroup.Results[2].Count);
+                Assert.AreEqual(2, nodeGroup.EmptyResults[0].Count);
+                Assert.AreEqual(2, nodeGroup.EmptyResults[1].Count);
+                Assert.AreEqual(1, nodeGroup.EmptyResults[2].Count);
             }
 
             // Import merging by order
@@ -310,7 +310,7 @@ namespace pwiz.SkylineTestFunctional
                 state.TransitionResults + stateOrderAdded.TransitionResults);
             foreach (var nodeGroup in docOrder.PeptideTransitionGroups)
             {
-                Assert.AreEqual(1, nodeGroup.Results[0].Count);
+                Assert.AreEqual(1, nodeGroup.EmptyResults[0].Count);
             }
 
             // Import merging by order with overflow and multiple files
@@ -358,17 +358,17 @@ namespace pwiz.SkylineTestFunctional
                             (int)(state.TransitionResults*fOld + stateAdded.TransitionResults*fAdded + stateAdded2.TransitionResults*fAdded2));
             foreach (var nodeGroup in docOrder2.PeptideTransitionGroups)
             {
-                Assert.AreEqual(3, nodeGroup.Results[0].Count);
-                Assert.AreEqual(2, nodeGroup.Results[1].Count);
-                Assert.AreEqual(1, nodeGroup.Results[2].Count);
+                Assert.AreEqual(3, nodeGroup.EmptyResults[0].Count);
+                Assert.AreEqual(2, nodeGroup.EmptyResults[1].Count);
+                Assert.AreEqual(1, nodeGroup.EmptyResults[2].Count);
 
                 // Make sure files are ordered as expected
                 Assert.AreEqual(docInitial.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath,
-                    chromatograms[0].GetFileInfo(nodeGroup.Results[0][0].FileId).FilePath);
+                    chromatograms[0].GetFileInfo(nodeGroup.EmptyResults[0][0].FileId).FilePath);
                 Assert.AreEqual(docAdded.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath,
-                    chromatograms[0].GetFileInfo(nodeGroup.Results[0][1].FileId).FilePath);
+                    chromatograms[0].GetFileInfo(nodeGroup.EmptyResults[0][1].FileId).FilePath);
                 Assert.AreEqual(docAdded2.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath,
-                    chromatograms[0].GetFileInfo(nodeGroup.Results[0][2].FileId).FilePath);
+                    chromatograms[0].GetFileInfo(nodeGroup.EmptyResults[0][2].FileId).FilePath);
             }
 
             // Now import allowing matching peptides to be merged

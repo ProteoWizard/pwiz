@@ -136,9 +136,9 @@ namespace pwiz.SkylineTestFunctional
                                 }
                                 transitions[iTransition] = transition;
                             }
-                            if (precursor.Results != null)
+                            if (precursor.EmptyResults != null)
                             {
-                                var results = precursor.Results.ToArray();
+                                var results = precursor.EmptyResults.ToArray();
                                 for (int replicateIndex = 0; replicateIndex < results.Length; replicateIndex++)
                                 {
                                     _elementCount+=results[replicateIndex].Count;

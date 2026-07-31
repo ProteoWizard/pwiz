@@ -91,7 +91,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = lightPrecursor.Results[iReplicate].First().Area.Value;
+                var expectedY = lightPrecursor.EmptyResults[iReplicate].First().Area.Value;
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
@@ -218,7 +218,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = lightPrecursor.Results[iReplicate].First().Area.Value;
+                var expectedY = lightPrecursor.EmptyResults[iReplicate].First().Area.Value;
                 double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, .01, msg);

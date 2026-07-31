@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Works out which candidate peak each of a precursor's peaks is, and gets rid of the
-        /// chrom infos which <see cref="TransitionResults.ChromInfos"/> was holding on to because
+        /// chrom infos which <see cref="TransitionResults.LegacyChromInfos"/> was holding on to because
         /// nothing yet knew. Returns the precursor unchanged when there is nothing to convert.
         /// <para>
         /// A file is converted only when the boundaries of every one of its transition peaks match
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.Results
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
                 childrenNew.Add(nodeTrans[iTran].ChangeAbbreviatedResults(
-                    everyFileRead ? transitionResults[iTran]?.ChangeChromInfos(null) : transitionResults[iTran]));
+                    everyFileRead ? transitionResults[iTran]?.ChangeLegacyChromInfos(null) : transitionResults[iTran]));
             }
 
             var groupResultsNew = groupResults.ChangeChosenPeakIndexes(chosenPeakIndexes);
@@ -345,7 +345,7 @@ namespace pwiz.Skyline.Model.Results
                 // This has to happen in the same pass that works out the peak indexes, not later:
                 // the indexes are found by matching the transitions' peak boundaries, and once the
                 // transitions are converted there are no boundaries left to match.
-                groupResultsNew = groupResultsNew.ChangeChromInfos(null);
+                groupResultsNew = groupResultsNew.ChangeLegacyChromInfos(null);
             }
 
             return (TransitionGroupDocNode) nodeGroup
@@ -751,7 +751,7 @@ namespace pwiz.Skyline.Model.Results
             var nodeTrans = nodeGroup.Transitions.ToArray();
             // What the precursor is still carrying, which is where the values this pass does not
             // work out - the annotations and the scores - are carried forward from.
-            var chromInfos = nodeGroup.AbbreviatedResults?.ChromInfos;
+            var chromInfos = nodeGroup.AbbreviatedResults?.LegacyChromInfos;
             var previousChromInfos = chromInfos != null && replicateIndex < chromInfos.Count
                 ? chromInfos[replicateIndex]
                 : default;

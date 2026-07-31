@@ -868,7 +868,7 @@ namespace pwiz.Skyline.Model
         public static Results<TransitionGroupChromInfo>ConvertTransitionGroupChromInfoLibraryInfoToSmallMolecules(TransitionGroupDocNode transitionGroupDocNode, 
             ConvertToSmallMoleculesMode mode, ConvertToSmallMoleculesChargesMode invertChargesMode)
         {
-            var chromInfos = transitionGroupDocNode.AbbreviatedResults?.ChromInfos;
+            var chromInfos = transitionGroupDocNode.AbbreviatedResults?.LegacyChromInfos;
             if (chromInfos == null)
                 return null;
             if (invertChargesMode == ConvertToSmallMoleculesChargesMode.none && mode != ConvertToSmallMoleculesMode.masses_only)

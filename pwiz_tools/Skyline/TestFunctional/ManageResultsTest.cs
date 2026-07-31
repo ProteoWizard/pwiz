@@ -445,9 +445,9 @@ namespace pwiz.SkylineTestFunctional
 
                     for (int i = 0; i < countChrom; i++)
                     {
-                        if (!ArrayUtil.EqualsDeep(nodeGroup.Results[i], nodeGroupOrig.Results[arrayIndexOld[i]]))
+                        if (!ArrayUtil.EqualsDeep(nodeGroup.EmptyResults[i], nodeGroupOrig.EmptyResults[arrayIndexOld[i]]))
                         {
-                            Assert.AreEqual(nodeGroupOrig.Results[arrayIndexOld[i]].Count, nodeGroup.Results[i].Count);
+                            Assert.AreEqual(nodeGroupOrig.EmptyResults[arrayIndexOld[i]].Count, nodeGroup.EmptyResults[i].Count);
                             Assert.Fail("Transition chromatogram information changed.");
                         }
                     }
@@ -501,4 +501,4 @@ namespace pwiz.SkylineTestFunctional
             #endregion
         }
     }
-}
+}

@@ -303,7 +303,7 @@ namespace pwiz.SkylineTestFunctional
                     var normalizationMethod = peptideDocNode.NormalizationMethod;
                     double expectedNormalizedArea = double.NaN;
                     double totalArea = peptideDocNode.TransitionGroups.Sum(tg =>
-                        FindChromInfo(tg.Results, chromFileInfo.FileId)?.Area ?? 0);
+                        FindChromInfo(tg.EmptyResults, chromFileInfo.FileId)?.Area ?? 0);
                     if (normalizationMethod == null)
                     {
                         expectedNormalizedArea = totalArea;
@@ -358,7 +358,7 @@ namespace pwiz.SkylineTestFunctional
         private double GetLabelArea(PeptideDocNode peptideDocNode, IsotopeLabelType labelType, ChromFileInfoId chromFileInfoId)
         {
             return peptideDocNode.TransitionGroups.Where(tg => Equals(labelType, tg.LabelType))
-                .Sum(tg => FindChromInfo(tg.Results, chromFileInfoId)?.Area ?? 0);
+                .Sum(tg => FindChromInfo(tg.EmptyResults, chromFileInfoId)?.Area ?? 0);
         }
 
         private double CalculateGlobalStandardArea(SrmDocument document, ChromFileInfoId chromFileInfoId)
@@ -379,7 +379,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyTotalAreas(peptide, chromFileInfoId);
                 foreach (var transitionGroup in peptide.TransitionGroups)
                 {
-                    var transitionGroupChromInfo = FindChromInfo(transitionGroup.Results, chromFileInfoId);
+                    var transitionGroupChromInfo = FindChromInfo(transitionGroup.EmptyResults, chromFileInfoId);
                     result += transitionGroupChromInfo?.Area ?? 0;
                 }
             }
@@ -462,7 +462,7 @@ namespace pwiz.SkylineTestFunctional
                         precursorTotalBackground += transitionChromInfo.BackgroundArea;
                     }
                 }
-                var precursorChromInfo = FindChromInfo(transitionGroup.Results, chromFileInfoId);
+                var precursorChromInfo = FindChromInfo(transitionGroup.EmptyResults, chromFileInfoId);
                 AssertValuesEqual(precursorTotalArea, precursorChromInfo?.Area??0);
                 AssertValuesEqual(precursorTotalBackground, precursorChromInfo?.BackgroundArea??0);
             }

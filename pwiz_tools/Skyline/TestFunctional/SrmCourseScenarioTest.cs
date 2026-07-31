@@ -246,8 +246,8 @@ namespace pwiz.SkylineTestFunctional
         {
             for (int i = 0; i < EXPECTED_REPLICATES.Length; i++)
             {
-                var peakLight = nodeGroupLight.Results[i][0];
-                var peakHeavy = nodeGroupHeavy.Results[i][0];
+                var peakLight = nodeGroupLight.EmptyResults[i][0];
+                var peakHeavy = nodeGroupHeavy.EmptyResults[i][0];
                 if (exactMatch)
                     Assert.AreEqual(peakLight.StartRetentionTime.Value, peakHeavy.StartRetentionTime.Value);
                 else
@@ -293,8 +293,8 @@ namespace pwiz.SkylineTestFunctional
             int changeCount = 0;
             for (int i = 0; i < EXPECTED_REPLICATES.Length; i++)
             {
-                var peak = nodeGroup.Results[i][0];
-                var peakNew = nodeGroupNew.Results[i][0];
+                var peak = nodeGroup.EmptyResults[i][0];
+                var peakNew = nodeGroupNew.EmptyResults[i][0];
                 if (peak.StartRetentionTime != peakNew.StartRetentionTime ||
                     peak.EndRetentionTime != peakNew.EndRetentionTime)
                 {
@@ -304,4 +304,4 @@ namespace pwiz.SkylineTestFunctional
             return changeCount;
         }
     }
-}
+}

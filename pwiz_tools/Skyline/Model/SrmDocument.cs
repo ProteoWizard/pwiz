@@ -2318,7 +2318,7 @@ namespace pwiz.Skyline.Model
                 {
                     // The columnar results, which is what a precursor keeps. Its chrom infos are
                     // whatever has not been worked out from the .skyd yet, and go when it has.
-                    ValidateChromInfo(Settings, nodeGroup.AbbreviatedResults?.ChromInfos);
+                    ValidateChromInfo(Settings, nodeGroup.AbbreviatedResults?.LegacyChromInfos);
                     foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
                     {
                         ValidateChromInfo(Settings, nodeTran.Results);

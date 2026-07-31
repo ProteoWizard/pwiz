@@ -75,7 +75,8 @@ namespace pwiz.SkylineTestUtil
 
             var selectedTreeNode = skylineWindow.SelectedNode as PeptideTreeNode;
             TransitionGroupDocNode nodeTranGroup = selectedTreeNode != null
-                ? selectedTreeNode.DocNode.TransitionGroups.First(g => !g.Results[skylineWindow.SelectedResultsIndex].IsEmpty)
+                ? selectedTreeNode.DocNode.TransitionGroups.First(g =>
+                    g.AbbreviatedResults?.GetPositions(skylineWindow.SelectedResultsIndex).Any() == true)
                 : skylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>().DocNode;
 
             var settings = skylineWindow.Document.Settings;
@@ -87,8 +88,11 @@ namespace pwiz.SkylineTestUtil
                 var chromSet = chromatograms[resultsIndex];
                 Assert.IsTrue(chromSet.FileCount == 1);
                 Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out _));
-                var rt = nodeTranGroup.Results[resultsIndex][0].RetentionTime;
-                Assert.IsTrue(rt.HasValue);
+                var results = nodeTranGroup.AbbreviatedResults;
+                int position = results.ChromFileIds.ReplicatePositions.GetStart(resultsIndex);
+                // Zero is what a peak with no retention time is stored as.
+                float? rt = results.RetentionTimes[position];
+                Assert.IsTrue(rt != 0);
                 var chromName = chromSet.Name;
                 Assert.IsTrue(expected.ContainsKey(chromName));
                 var expectedRt = expected[chromName];

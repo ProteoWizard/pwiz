@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(IsCustomIon);
             var children = new List<TransitionDocNode>();
             groupNew = groupNew ?? new TransitionGroup(parentNew ?? TransitionGroup.Peptide, TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, false, TransitionGroup.DecoyMassShift);
-            var nodeGroupTemp = new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, null, false); // Just need this for the revised isotope distribution
+            var nodeGroupTemp = new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, null, null, false); // Just need this for the revised isotope distribution, so it needs no results
             foreach (var nodeTran in Transitions)
             {
                 var transition = nodeTran.Transition;
@@ -193,7 +193,25 @@ namespace pwiz.Skyline.Model
                     moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.Results);
                 children.Add(nodeTranNew);
             }
-            return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, children.ToArray(), AutoManageChildren);
+            return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, null,
+                children.ToArray(), AutoManageChildren).CopyResultsFrom(this);
+        }
+
+        /// <summary>
+        /// This node given the results of <paramref name="nodeGroup"/>: the columnar results, and
+        /// the empty list which is all <see cref="Results"/> ever was.
+        /// <para>
+        /// Both together, because a node constructed with null results has neither, and the two
+        /// saying different things is what <see cref="HasResults"/> would then answer wrongly about.
+        /// </para>
+        /// </summary>
+        private TransitionGroupDocNode CopyResultsFrom(TransitionGroupDocNode nodeGroup)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.AbbreviatedResults = nodeGroup.AbbreviatedResults;
+                im._emptyResults = nodeGroup._emptyResults;
+            });
         }
 
         public IEnumerable<TransitionDocNode> GetMsTransitions(bool fullScanMs)
@@ -361,21 +379,17 @@ namespace pwiz.Skyline.Model
         public TransitionGroupResults AbbreviatedResults { get; private set; }
 
         /// <summary>
-        /// Always an empty list for every replicate. A precursor's results are
-        /// <see cref="AbbreviatedResults"/>, and the chrom infos they are still carrying are
-        /// <see cref="TransitionGroupResults.ChromInfos"/>.
+        /// An empty entry for each replicate of the chrom infos the precursor was built from, and
+        /// null for a precursor which was not built from any.
         /// <para>
-        /// This stays only so that code which has not been converted to read a
-        /// <see cref="MoleculeResults"/> still compiles and runs. It tells such code that the
-        /// precursor has no peaks, which is wrong but quiet: converting those readers is what
-        /// makes it right, and this property goes when the last of them has been.
+        /// Nothing reads the peaks out of this - a precursor's peaks are
+        /// <see cref="AbbreviatedResults"/>. What it still says is whether the node was made from
+        /// chrom infos at all, which is what <see cref="HasResults"/> answers and what the pass in
+        /// <see cref="PeptideDocNode"/> which works the precursor values out again from the
+        /// transitions relies on: that pass must not run on a precursor which was read from a file
+        /// and has never had chrom infos of its own.
         /// </para>
         /// </summary>
-        public Results<TransitionGroupChromInfo> Results
-        {
-            get { return _emptyResults; }
-        }
-
         private Results<TransitionGroupChromInfo> _emptyResults;
 
         /// <summary>
@@ -408,15 +422,83 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
         }
 
-        public bool HasResults { get { return Results != null; } }
+        /// <summary>
+        /// Whether the precursor was made from chrom infos. See <see cref="_emptyResults"/> for why
+        /// that is not the same question as whether it has results.
+        /// </summary>
+        public bool HasResults { get { return _emptyResults != null; } }
 
+        /// <summary>
+        /// See <see cref="_emptyResults"/>. Named for what it holds - nothing - because reading
+        /// peaks out of it is the mistake this replaced a property called Results to stop.
+        /// <para>
+        /// In Skyline itself only the pass in <see cref="PeptideDocNode"/> which works the precursor
+        /// values out again from the transitions reads this, to merge against and to know how many
+        /// replicates to expect. Every remaining use is a test which has not been moved onto a
+        /// <see cref="MoleculeResults"/> yet, and which is therefore asserting about no peaks.
+        /// </para>
+        /// </summary>
+        public Results<TransitionGroupChromInfo> EmptyResults { get { return _emptyResults; } }
+
+        /// <summary>
+        /// How many replicates the results cover, which is what Results.Count used to answer, and
+        /// zero for a precursor with no results at all.
+        /// </summary>
+        public int ResultsReplicateCount
+        {
+            get { return AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0; }
+        }
+
+        /// <summary>
+        /// Whether the precursor has no peak anywhere, which is what Results.All(r =&gt; r.IsEmpty)
+        /// used to answer.
+        /// </summary>
+        public bool HasNoPeaks
+        {
+            get { return (AbbreviatedResults?.ChromFileIds.ReplicatePositions.TotalCount ?? 0) == 0; }
+        }
+
+        /// <summary>
+        /// What fraction of the precursor's transitions have a good peak in one replicate, from the
+        /// transitions' columnar results, so this reads no chromatogram. Null when the precursor has
+        /// no transitions with results at all.
+        /// </summary>
+        public double? GetPeakCountRatio(int replicateIndex, bool integrateAll)
+        {
+            int goodPeaks = 0;
+            int transitionCount = 0;
+            foreach (TransitionDocNode nodeTran in Children)
+            {
+                var results = nodeTran.AbbreviatedResults;
+                if (results == null)
+                    continue;
+                transitionCount++;
+                foreach (int position in results.GetPositions(replicateIndex))
+                {
+                    if (results.IsGoodPeak(position, integrateAll))
+                    {
+                        goodPeaks++;
+                        break;
+                    }
+                }
+            }
+
+            return transitionCount == 0 ? (double?) null : (double) goodPeaks / transitionCount;
+        }
+
+        /// <summary>
+        /// The chrom infos the columnar results are still carrying, which is what a precursor has
+        /// before its .skyd has been read. Empty once they have been given up: a caller which needs
+        /// them after that asks a <see cref="MoleculeResults"/>, which rebuilds them.
+        /// </summary>
         public IEnumerable<TransitionGroupChromInfo> ChromInfos
         {
             get
             {
-                if (HasResults)
+                var chromInfos = AbbreviatedResults?.LegacyChromInfos;
+                if (chromInfos != null)
                 {
-                    foreach (var result in Results)
+                    foreach (var result in chromInfos)
                     {
                         if (result.IsEmpty)
                             continue;
@@ -445,9 +527,15 @@ namespace pwiz.Skyline.Model
             return GetSafeChromInfo(i.Value);
         }
 
+        /// <summary>
+        /// One replicate of <see cref="ChromInfos"/>, and empty for the same reasons.
+        /// </summary>
         public ChromInfoList<TransitionGroupChromInfo> GetSafeChromInfo(int i)
         {
-            return (HasResults && Results.Count > i ? Results[i] : default(ChromInfoList<TransitionGroupChromInfo>));
+            var chromInfos = AbbreviatedResults?.LegacyChromInfos;
+            return chromInfos != null && chromInfos.Count > i
+                ? chromInfos[i]
+                : default(ChromInfoList<TransitionGroupChromInfo>);
         }
 
         public TransitionGroupChromInfo GetChromInfo(int resultsIndex, ChromFileInfoId chromFileInfoId)
@@ -603,21 +691,34 @@ namespace pwiz.Skyline.Model
             public int? ReplicateNum { get; set; }
         }
 
+        /// <summary>
+        /// The scheduling window from the trend of the peak times across the last few replicates.
+        /// <para>
+        /// This is the one scheduling algorithm which needs the peak boundaries rather than just the
+        /// times, so it is also the only one which reads. Building the
+        /// <see cref="MoleculeResults"/> here rather than in the caller keeps that read off the
+        /// other algorithms, which are the ones an export normally uses.
+        /// </para>
+        /// </summary>
         // TODO: Test this code.
-        private ScheduleTimes GetSchedulingTrendTimes(int replicateNum)
+        private ScheduleTimes GetSchedulingTrendTimes(SrmSettings settings, PeptideDocNode nodePep, int replicateNum)
         {
             int valCount = 0;
             double valTotal = 0;
             ScheduleTimes scheduleTimes = new ScheduleTimes();
 
+            int replicateCount = ResultsReplicateCount;
             // Use 6 replicates if results have at least 6 replicates
             // otherwise use the number of Results available (at least 4)
-            double[] centerTimes = new double[ Math.Min(Results.Count, MAX_TREND_REPLICATES) ];
+            double[] centerTimes = new double[ Math.Min(replicateCount, MAX_TREND_REPLICATES) ];
             double[] replicateNums = new double[centerTimes.Length];
             double maxPeakWindowRange = 0;
-            for (int i = 0; i < Results.Count; i++)
+            var chromInfos = new MoleculeResults(settings, nodePep).GetTransitionGroupChromInfos(TransitionGroup);
+            if (chromInfos == null)
+                return null;
+            for (int i = 0; i < replicateCount && i < chromInfos.Count; i++)
             {
-                var result = Results[i];
+                var result = chromInfos[i];
                 if (result.IsEmpty)
                     continue;
 
@@ -628,12 +729,12 @@ namespace pwiz.Skyline.Model
                             !chromInfo.EndRetentionTime.HasValue)
                         return null;
                     // Make an array of the last 4 or 6 (depending on data available) center Times to use for linear regression
-                    if (i >= Results.Count - centerTimes.Length)
+                    if (i >= replicateCount - centerTimes.Length)
                     {
                         valTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;
                         valCount++;
                         // TODO: This will only work, if all of the final replicates have data.
-                        int timesIndex = i - Results.Count + centerTimes.Length;
+                        int timesIndex = i - replicateCount + centerTimes.Length;
                         centerTimes[timesIndex] = (float)(valTotal / valCount);
                         replicateNums[timesIndex] = timesIndex;
                     }
@@ -678,10 +779,10 @@ namespace pwiz.Skyline.Model
         /// scheduling peak times.
         /// </summary>
         public static ScheduleTimes GetSchedulingPeakTimes(IEnumerable<TransitionGroupDocNode> schedulingGroups,
-            SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
+            SrmDocument document, PeptideDocNode nodePep, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
         {
             var arrayScheduleTimes = schedulingGroups.Select(nodeGroup =>
-                    nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum, replicateFilter))
+                    nodeGroup.GetSchedulingPeakTimes(document, nodePep, algorithm, replicateNum, replicateFilter))
                 .Where(scheduleTimes => scheduleTimes != null)
                 .ToArray();
             if (arrayScheduleTimes.Length < 2)
@@ -701,7 +802,7 @@ namespace pwiz.Skyline.Model
                        };
         }
 
-        public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
+        public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, PeptideDocNode nodePep, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
         {
             if (!HasResults)
                 return null;
@@ -722,7 +823,7 @@ namespace pwiz.Skyline.Model
             if (!replicateNum.HasValue || algorithm == ExportSchedulingAlgorithm.Average)
             {
                 // Sum the center times for averaging
-                for (int i = 0; i < Results.Count; i++)
+                for (int i = 0; i < ResultsReplicateCount; i++)
                 {
                     var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
                     if (replicateFilter != null && !replicateFilter(chromatogramSet))
@@ -737,7 +838,7 @@ namespace pwiz.Skyline.Model
             else if (algorithm == ExportSchedulingAlgorithm.Single)
             {
                 // Try using the specified index
-                if (replicateNum.Value < Results.Count)
+                if (replicateNum.Value < ResultsReplicateCount)
                 {
                     AddSchedulingTimes(replicateNum.Value, ref valCount, ref valTotal);
                 }
@@ -753,7 +854,7 @@ namespace pwiz.Skyline.Model
                     // equally distant from the original replicate.
                     int deltaBest = int.MaxValue;
                     int deltaBestOpt = int.MaxValue;
-                    for (int i = Results.Count - 1; i >= 0; i--)
+                    for (int i = ResultsReplicateCount - 1; i >= 0; i--)
                     {
                         int deltaRep = Math.Abs(i - replicateNum.Value);
                         var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
@@ -789,7 +890,7 @@ namespace pwiz.Skyline.Model
             }
             else // Trends Option
             {
-                return GetSchedulingTrendTimes(replicateNum.Value);
+                return GetSchedulingTrendTimes(document.Settings, nodePep, replicateNum.Value);
             }
 
             // If possible return the scheduling time based on non-optimization data.
@@ -810,22 +911,27 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        /// <summary>
+        /// Adds the retention times of one replicate's peaks, which the columnar results keep, so
+        /// scheduling an export reads no chromatograms.
+        /// </summary>
         private void AddSchedulingTimes(int replicateIndex, ref int valCount, ref double valTotal)
         {
-            var result = Results[replicateIndex];
-            if (result.IsEmpty)
+            var results = AbbreviatedResults;
+            if (results == null)
                 return;
 
-            foreach (var chromInfo in Results[replicateIndex])
+            foreach (var position in results.GetPositions(replicateIndex))
             {
-//                double? schedulingTime = GetCenterTime(chromInfo);
-                double? schedulingTime = GetRetentionTime(chromInfo);
-                if (!schedulingTime.HasValue)
+                // Zero is what a peak with no retention time was stored as, and what this used to
+                // skip. No measured peak has a retention time of zero, so the two do not overlap.
+                float retentionTime = results.RetentionTimes[position];
+                if (retentionTime == 0)
                     continue;
 
-                valTotal += schedulingTime.Value;
+                valTotal += retentionTime;
                 valCount++;
-            }            
+            }
         }
 
         public static double? GetCenterTime(TransitionGroupChromInfo chromInfo)
@@ -843,9 +949,14 @@ namespace pwiz.Skyline.Model
             return chromInfo != null ? chromInfo.RetentionTime : null;
         }
 
+        /// <summary>
+        /// Averages a value over the chrom infos the columnar results are still carrying. Null once
+        /// they have been given up, the same as <see cref="ChromInfos"/> is empty then.
+        /// </summary>
         private float? GetAverageResultValue(Func<TransitionGroupChromInfo, float?> getVal)
         {
-            return HasResults ? Results.GetAverageValue(getVal) : null;
+            var chromInfos = AbbreviatedResults?.LegacyChromInfos;
+            return chromInfos?.GetAverageValue(getVal);
         }
 
         /// <summary>
@@ -863,8 +974,13 @@ namespace pwiz.Skyline.Model
             {
                 if (!Annotations.IsEmpty)
                     return true;
-                if (HasResults && Results.SelectMany(l => l)
-                                            .Contains(chromInfo => chromInfo.IsUserModified))
+                // A peak the user set says so with its UserSet, and one they annotated or gave
+                // boundaries to has a CustomPeak. Both are in the columnar results, so this reads
+                // nothing.
+                var results = AbbreviatedResults;
+                if (results != null &&
+                    (results.UserSets?.Any(userSet => userSet != UserSet.FALSE) == true ||
+                     results.CustomPeaks?.Count > 0))
                     return true;
                 return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
             }
@@ -1357,8 +1473,7 @@ namespace pwiz.Skyline.Model
                 // If no children, just use a null populated list of the right size.
                 return ChangeResults(settingsNew.MeasuredResults.EmptyTransitionGroupResults);
             }
-            if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) &&
-                (!HasResults || Results.All(r => r.IsEmpty)))
+            if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) && HasNoPeaks)
             {
                 // If nothing is loaded yet and the old settings had no results then initialize to empty results
                 return UpdateResultsToEmpty(settingsNew.MeasuredResults);
@@ -1432,7 +1547,11 @@ namespace pwiz.Skyline.Model
 
             if (iResultOld != -1)
             {
-                if (Results == null || iResultOld >= Results.Count || Results[iResultOld].IsEmpty)
+                // Whether that replicate has any peak to reuse, which the columnar results answer
+                // without reading anything.
+                var results = AbbreviatedResults;
+                if (results == null || iResultOld >= ResultsReplicateCount ||
+                    !results.GetPositions(iResultOld).Any())
                 {
                     iResultOld = -1;
                 }
@@ -1896,7 +2015,7 @@ namespace pwiz.Skyline.Model
         private TransitionGroupDocNode UpdateResultsToEmpty(MeasuredResults measuredResults)
         {
             // If the results are already empty at this level, then no need to change anything
-            if (HasResults && Results.Count == measuredResults.Chromatograms.Count && Results.All(r => r.IsEmpty))
+            if (ResultsReplicateCount == measuredResults.Chromatograms.Count && HasNoPeaks)
                 return this;
 
             // The columnar results are kept whatever the precursor has. They are no longer derived
@@ -1918,7 +2037,7 @@ namespace pwiz.Skyline.Model
             // were carrying are emptied along with the rest: keeping the old ones here would leave
             // the precursor claiming peaks the emptied results no longer have.
             if (columnarResults != null)
-                nodeResult = nodeResult.ChangeAbbreviatedResults(columnarResults.ChangeChromInfos(empty));
+                nodeResult = nodeResult.ChangeAbbreviatedResults(columnarResults.ChangeLegacyChromInfos(empty));
             return (TransitionGroupDocNode) nodeResult.ChangeChildren(childrenNew);
         }
         private IEnumerable<TransitionGroupDocNode> GetMatchingGroups(PeptideDocNode nodePep)
@@ -2194,7 +2313,7 @@ namespace pwiz.Skyline.Model
                 int iResult = _listResultCalcs.Count;
                 // The chrom infos the columnar results are still carrying, which is what a document
                 // whose .skyd has not been read yet has. Null once they have been converted.
-                var chromInfos = _nodeGroup.AbbreviatedResults?.ChromInfos;
+                var chromInfos = _nodeGroup.AbbreviatedResults?.LegacyChromInfos;
                 if (chromInfos != null)
                 {
                     int iResultOld = GetOldPosition(iResult);
@@ -2257,7 +2376,7 @@ namespace pwiz.Skyline.Model
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
                 // The chrom infos the columnar results are carrying, not nodeGroup.Results, which
                 // now always reports empty for the readers which have not been converted yet.
-                var chromInfosOld = nodeGroup.AbbreviatedResults?.ChromInfos;
+                var chromInfosOld = nodeGroup.AbbreviatedResults?.LegacyChromInfos;
                 var results = Results<TransitionGroupChromInfo>.Merge(chromInfosOld, listChromInfoLists);
 
                 var nodeGroupNew = nodeGroup;
@@ -2301,7 +2420,7 @@ namespace pwiz.Skyline.Model
             private static bool SaysTheSame(TransitionResults existing, TransitionResults calculated)
             {
                 return existing != null && existing.IsConverted &&
-                       Equals(existing, calculated.ChangeChromInfos(null));
+                       Equals(existing, calculated.ChangeLegacyChromInfos(null));
             }
 
             /// <summary>
@@ -3110,28 +3229,40 @@ namespace pwiz.Skyline.Model
             });
         }
 
+        /// <summary>
+        /// The annotations of one file's peak are on its <see cref="CustomPeak"/>, so setting them
+        /// rewrites that sparse list rather than a chrom info, and reads nothing.
+        /// </summary>
         public TransitionGroupDocNode ChangePrecursorAnnotations(ChromFileInfoId fileId, Annotations annotations)
         {
-            var groupChromInfo = ChromInfos.FirstOrDefault(info => ReferenceEquals(info.FileId, fileId));
-            if (groupChromInfo == null)
-                throw new InvalidDataException(string.Format(ModelResources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_,
-                                               fileId.GlobalIndex));
-            groupChromInfo = groupChromInfo.ChangeAnnotations(annotations);
-            return ChangeResults(Results<TransitionGroupChromInfo>.ChangeChromInfo(Results,
-                                                                                   fileId,
-                                                                                   groupChromInfo));
+            int position = GetPrecursorAnnotationPosition(fileId);
+            var results = AbbreviatedResults;
+            var customPeak = results.GetCustomPeak(position) ?? new CustomPeak(position);
+            return ChangeAbbreviatedResults(results.ChangeCustomPeaks(
+                CustomPeak.SetAtPosition(results.CustomPeaks, position, customPeak.ChangeAnnotations(annotations))));
         }
 
         public TransitionGroupDocNode AddPrecursorAnnotations(ChromFileInfoId fileId, Dictionary<string, string> annotations)
         {
-            var groupChromInfo = ChromInfos.FirstOrDefault(info => ReferenceEquals(info.FileId, fileId));
-            if (groupChromInfo == null)
-                throw new InvalidDataException(string.Format(ModelResources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_, 
-                                               fileId.GlobalIndex));
-            var groupAnnotations = groupChromInfo.Annotations;
+            var groupAnnotations = GetPrecursorAnnotations(fileId);
             foreach (var annotation in annotations)
                 groupAnnotations = groupAnnotations.ChangeAnnotation(annotation.Key, annotation.Value);
             return ChangePrecursorAnnotations(fileId, groupAnnotations);
+        }
+
+        public Annotations GetPrecursorAnnotations(ChromFileInfoId fileId)
+        {
+            return AbbreviatedResults.GetCustomPeak(GetPrecursorAnnotationPosition(fileId))?.Annotations ??
+                   Annotations.EMPTY;
+        }
+
+        private int GetPrecursorAnnotationPosition(ChromFileInfoId fileId)
+        {
+            int position = AbbreviatedResults?.ChromFileIds.IndexOfFile(fileId) ?? -1;
+            if (position < 0)
+                throw new InvalidDataException(string.Format(ModelResources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_,
+                                               fileId.GlobalIndex));
+            return position;
         }
 
         public DocNode ChangePeak(SrmSettings settings,

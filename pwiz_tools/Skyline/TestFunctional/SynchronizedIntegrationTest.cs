@@ -167,7 +167,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var chromSet = chromatograms[i];
                 Assert.AreEqual(1, chromSet.FileCount);
-                var results = doc.PeptideTransitionGroups.First(t => ReferenceEquals(t.TransitionGroup, tranGroup)).Results[i];
+                var results = doc.PeptideTransitionGroups.First(t => ReferenceEquals(t.TransitionGroup, tranGroup)).EmptyResults[i];
                 Assert.AreEqual(1, results.Count);
                 var chromInfo = results[0];
                 originalTimes[chromSet.Name] = Tuple.Create(chromInfo.StartRetentionTime.Value, chromInfo.EndRetentionTime.Value);
@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
             for (var i = 0; i < doc.MeasuredResults.Chromatograms.Count; i++)
             {
                 var name = doc.MeasuredResults.Chromatograms[i].Name;
-                var chromInfo = nodeTranGroup.Results[i][0];
+                var chromInfo = nodeTranGroup.EmptyResults[i][0];
                 var (originalStart, originalEnd) = originalTimes[name];
                 var newStart = chromInfo.StartRetentionTime;
                 var newEnd = chromInfo.EndRetentionTime;
@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
             for (var i = 0; i<doc.MeasuredResults.Chromatograms.Count; i++)
             {
                 var name = doc.MeasuredResults.Chromatograms[i].Name;
-                var chromInfo = nodeTranGroup.Results[i][0];
+                var chromInfo = nodeTranGroup.EmptyResults[i][0];
                 var (originalStart, originalEnd) = originalTimes[name];
                 var newStart = chromInfo.StartRetentionTime;
                 var newEnd = chromInfo.EndRetentionTime;

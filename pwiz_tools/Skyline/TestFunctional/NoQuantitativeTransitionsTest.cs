@@ -67,9 +67,9 @@ namespace pwiz.SkylineTestFunctional
             // are no quantitative peaks
             foreach (var transitionGroupDocNode in document.MoleculeTransitionGroups)
             {
-                for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
+                for (int iReplicate = 0; iReplicate < transitionGroupDocNode.EmptyResults.Count; iReplicate++)
                 {
-                    var transitionGroupChromInfo = transitionGroupDocNode.Results[iReplicate][0];
+                    var transitionGroupChromInfo = transitionGroupDocNode.EmptyResults[iReplicate][0];
                     var quanChromInfos = new List<TransitionChromInfo>();
                     var nonQuanChromInfos = new List<TransitionChromInfo>();
                     foreach (var t in transitionGroupDocNode.Transitions)

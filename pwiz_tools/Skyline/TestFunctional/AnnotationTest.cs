@@ -136,7 +136,7 @@ namespace pwiz.SkylineTestFunctional
             // Select the first Precursor in the SequenceTree
             var precursorTreeNode = (SrmTreeNode)SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0];
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = precursorTreeNode);
-            var chromInfo = ((TransitionGroupDocNode)precursorTreeNode.Model).Results[0][0];
+            var chromInfo = ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][0];
             Assert.IsNull(chromInfo.Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
             WaitForGraphPanesToUpdate();
             // Show the "precursorResultItems" annotation column
@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
                 resultsGrid.BeginEdit(true);
                 ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 2;
                 Assert.IsTrue(resultsGrid.EndEdit());
-                Assert.AreEqual("b", ((TransitionGroupDocNode)precursorTreeNode.Model).Results[0][0]
+                Assert.AreEqual("b", ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][0]
                     .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
             });
             cell = null;
@@ -174,17 +174,17 @@ namespace pwiz.SkylineTestFunctional
                 resultsGrid.BeginEdit(true);
                 ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 1;
                 Assert.IsTrue(resultsGrid.EndEdit());
-                Assert.AreEqual("b", ((TransitionGroupDocNode)precursorTreeNode.Model).Results[0][0]
+                Assert.AreEqual("b", ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][0]
                     .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
-                Assert.AreEqual("a", ((TransitionGroupDocNode)precursorTreeNode.Model).Results[0][1]
+                Assert.AreEqual("a", ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][1]
                     .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
             });
 
             // Assert that the annotations have their new values.
             var precursorDocNode = ((TransitionGroupDocNode)precursorTreeNode.Model);
-            Assert.AreEqual("b", precursorDocNode.Results[0][0]
+            Assert.AreEqual("b", precursorDocNode.EmptyResults[0][0]
                 .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
-            Assert.AreEqual("a", precursorDocNode.Results[0][1]
+            Assert.AreEqual("a", precursorDocNode.EmptyResults[0][1]
                 .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
 
             // Test multiselect here.
@@ -234,7 +234,7 @@ namespace pwiz.SkylineTestFunctional
                 precursorDocNode = (TransitionGroupDocNode)
                     ((TransitionGroupTreeNode)SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0]).Model;
                 // Check all annotations have the new value. 
-                foreach (TransitionGroupChromInfo info in precursorDocNode.Results[0])
+                foreach (TransitionGroupChromInfo info in precursorDocNode.EmptyResults[0])
                 {
                     Assert.IsTrue(info.Annotations.ListAnnotations().Contains(pair =>
                         Equals(pair.Value, annotationTestText)));

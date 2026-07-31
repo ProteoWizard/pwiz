@@ -86,7 +86,7 @@ namespace TestPerf
             }
             document = WaitForDocumentLoaded();
 
-            var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
+            var area = document.MoleculePrecursorPairs.First().NodeGroup.EmptyResults.First().First().AreaMs1;
             AssertEx.IsTrue(area > 0);
 
             // Locate drift peaks
@@ -128,7 +128,7 @@ namespace TestPerf
             docFiltered = WaitForDocumentChangeLoaded(docFiltered); 
 
             // If drift filtering was engaged, peak area should be less
-            var areaFiltered = docFiltered.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
+            var areaFiltered = docFiltered.MoleculePrecursorPairs.First().NodeGroup.EmptyResults.First().First().AreaMs1;
             AssertEx.IsTrue(area > areaFiltered);
             AssertEx.IsTrue(areaFiltered > 0);
 

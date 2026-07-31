@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
                 .Select(entry=>entry.NodePep.Peptide.Sequence).ToArray();
             Assert.AreNotEqual(0, precursorsWithLibInfo.Length);
             var precursorsWithQValue =
-                SkylineWindow.Document.PeptidePrecursorPairs.Where(entry => entry.NodeGroup.Results.First().First().QValue.HasValue)
+                SkylineWindow.Document.PeptidePrecursorPairs.Where(entry => entry.NodeGroup.EmptyResults.First().First().QValue.HasValue)
                 .Select(entry=>entry.NodeGroup.Peptide.Sequence).ToArray();
             CollectionAssert.AreEquivalent(precursorsWithLibInfo, precursorsWithQValue);
 
@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
             var newPrecursorsWithLibInfo = SkylineWindow.Document.PeptidePrecursorPairs.Where(entry => entry.NodeGroup.HasLibInfo)
                 .Select(entry => entry.NodePep.Peptide.Sequence).ToArray();
             var newPrecursorsWithQValue =
-                SkylineWindow.Document.PeptidePrecursorPairs.Where(entry => entry.NodeGroup.Results.First().First().QValue.HasValue)
+                SkylineWindow.Document.PeptidePrecursorPairs.Where(entry => entry.NodeGroup.EmptyResults.First().First().QValue.HasValue)
                     .Select(entry => entry.NodeGroup.Peptide.Sequence).ToArray();
             CollectionAssert.AreEqual(precursorsWithLibInfo, newPrecursorsWithLibInfo);
             Assert.AreEqual(0, newPrecursorsWithQValue.Length);

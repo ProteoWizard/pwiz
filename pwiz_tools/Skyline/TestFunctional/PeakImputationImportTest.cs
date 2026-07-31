@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
         {
             for (int i = 0; i < expectedValues.Length; i++)
             {
-                var chromInfo = transitionGroupDocNode.Results[i][0];
+                var chromInfo = transitionGroupDocNode.EmptyResults[i][0];
                 Assert.AreEqual(expectedValues[i], IsOriginalPeakBounds(chromInfo));
             }
         }

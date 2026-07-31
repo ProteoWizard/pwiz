@@ -1829,22 +1829,21 @@ namespace pwiz.SkylineTestUtil
             else if (conversionMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
                 IsTrue(convertedGroup.IsotopeDist.IsSimilar(group.IsotopeDist));
 
-            if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only && group.Results != null)
+            var results = group.AbbreviatedResults;
+            var convertedResults = convertedGroup.AbbreviatedResults;
+            if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only && results != null)
             {
                 // All we can really expect is that retention times agree - but nothing beyond that, not even the peak width
-                AreEqual(group.Results.Count, convertedGroup.Results.Count);
-                for (var i = 0; i < group.Results.Count; i++)
+                IsNotNull(convertedResults, group + " vs " + convertedGroup);
+                AreEqual(results.ChromFileIds, convertedResults.ChromFileIds, group + " vs " + convertedGroup);
+                for (var i = 0; i < results.RetentionTimes.Count; i++)
                 {
-                    AreEqual(group.Results[i].Count, convertedGroup.Results[i].Count);
-                    for (var j = 0; j < group.Results[i].Count; j++)
-                    {
-                        AreEqual(group.Results[i][j].RetentionTime, convertedGroup.Results[i][j].RetentionTime, group + " vs " + convertedGroup);
-                    }
+                    AreEqual(results.RetentionTimes[i], convertedResults.RetentionTimes[i], group + " vs " + convertedGroup);
                 }
                 return;
             }
-            if (!Equals(group.Results, convertedGroup.Results))
-                AreEqual(group.Results, convertedGroup.Results, group + " vs " + convertedGroup);
+            if (!Equals(results, convertedResults))
+                AreEqual(results, convertedResults, group + " vs " + convertedGroup);
         }
 
         private static void ConvertedSmallMoleculeIsSimilar(PeptideDocNode convertedMol, PeptideDocNode mol, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)

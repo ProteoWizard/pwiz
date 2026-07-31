@@ -540,7 +540,7 @@ namespace pwiz.SkylineTestTutorial
                 double minDotp = AsSmallMolecules ? 0.6 : 0.9; // Without retention time prediction we don't do as well
                 foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
                 {
-                    double dotp = nodeGroup.Results[0][0].LibraryDotProduct ?? 0;
+                    double dotp = nodeGroup.EmptyResults[0][0].LibraryDotProduct ?? 0;
                     Assert.IsTrue(Math.Round(dotp, 2) >= minDotp, string.Format("Library dot-product {0} found below {1}", dotp, minDotp));
                 }
             }

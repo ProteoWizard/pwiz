@@ -102,10 +102,10 @@ namespace pwiz.SkylineTestFunctional
                     var exemplaryPeakMidPoint = (exemplaryPeak.Peak.StartTime + exemplaryPeak.Peak.EndTime) / 2;
                     foreach (var transitionGroup in molecule.TransitionGroups)
                     {
-                        Assert.IsNotNull(transitionGroup.Results);
-                        Assert.AreEqual(measuredResults.Chromatograms.Count, transitionGroup.Results.Count);
+                        Assert.IsNotNull(transitionGroup.EmptyResults);
+                        Assert.AreEqual(measuredResults.Chromatograms.Count, transitionGroup.EmptyResults.Count);
                         var peakBoundsList = new List<ScoredPeakBounds>();
-                        for (int replicateIndex = 0; replicateIndex < transitionGroup.Results.Count; replicateIndex++)
+                        for (int replicateIndex = 0; replicateIndex < transitionGroup.EmptyResults.Count; replicateIndex++)
                         {
                             var message =
                                 $"{molecule.Peptide}{Transition.GetChargeIndicator(transitionGroup.PrecursorAdduct)} {measuredResults.Chromatograms[replicateIndex].Name}";

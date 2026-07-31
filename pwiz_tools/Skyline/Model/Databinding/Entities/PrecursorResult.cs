@@ -54,10 +54,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Precursor Precursor { get { return SkylineDocNode as Precursor; } }
         [Browsable(false)]
         public TransitionGroupChromInfo ChromInfo { get { return _cachedValues.GetValue(this); } }
-        public void ChangeChromInfo(EditDescription editDescription, Func<TransitionGroupChromInfo, TransitionGroupChromInfo> newChromInfo)
+        /// <summary>
+        /// Only the annotations of a peak can be edited from here, and they live on the precursor's
+        /// columnar results rather than on a chrom info, so this goes straight there and reads no
+        /// chromatogram.
+        /// </summary>
+        public void ChangeAnnotations(EditDescription editDescription, Func<Annotations, Annotations> newAnnotations)
         {
-            Precursor.ChangeDocNode(editDescription, docNode => docNode.ChangeResults(GetResultFile()
-                .ChangeChromInfo(docNode.Results, newChromInfo)));
+            var fileId = GetResultFile().ChromFileInfoId;
+            Precursor.ChangeDocNode(editDescription,
+                docNode => docNode.ChangePrecursorAnnotations(fileId,
+                    newAnnotations(docNode.GetPrecursorAnnotations(fileId))));
         }
         [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
         public double? DetectionQValue { get { return ChromInfo.QValue; } }
@@ -263,8 +270,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.Annotations.Note; } 
             set
             {
-                ChangeChromInfo(EditColumnDescription(nameof(Note), value),
-                    chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
+                ChangeAnnotations(EditColumnDescription(nameof(Note), value),
+                    annotations => annotations.ChangeNote(value));
             }
         }
 
@@ -276,8 +283,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Equals(annotationDef.Name, MProphetResultsHandler.MAnnotationName))
                 return;
 
-            ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 
-                chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
+            ChangeAnnotations(EditDescription.SetAnnotation(annotationDef, value),
+                annotations => annotations.ChangeAnnotation(annotationDef, value));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

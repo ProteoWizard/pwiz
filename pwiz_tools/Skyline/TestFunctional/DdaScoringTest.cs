@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestFunctional
                                                                  && Equals(id.RawTextId,
                                                                      molecule.ModifiedTarget.ToString());
                         });
-                        var transitionGroupChromInfo = transitionGroup.Results[replicateIndex].Single();
+                        var transitionGroupChromInfo = transitionGroup.EmptyResults[replicateIndex].Single();
                         Assert.IsNotNull(transitionGroupChromInfo.RetentionTime);
                         var peakGroup = tgFeatures.PeakGroupFeatures.Single(pg =>
                             pg.StartTime <= transitionGroupChromInfo.RetentionTime &&

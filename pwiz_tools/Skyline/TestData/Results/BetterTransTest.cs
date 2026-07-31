@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestData.Results
                     var nodeGroup = docResults.MoleculeTransitionGroups.First();
                     var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
                     double ratio = normalizedValueCalculator.GetTransitionGroupValue(normalizedValueCalculator.GetFirstRatioNormalizationMethod(), 
-                        docResults.Molecules.First(), nodeGroup, 0, nodeGroup.Results[0][0]).GetValueOrDefault();
+                        docResults.Molecules.First(), nodeGroup, 0, nodeGroup.EmptyResults[0][0]).GetValueOrDefault();
                     // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) // Can't use labels without a formula
                         Assert.AreEqual(0.008, ratio, 0.001);
@@ -94,4 +94,4 @@ namespace pwiz.SkylineTestData.Results
             }
         }
     }
-}
+}

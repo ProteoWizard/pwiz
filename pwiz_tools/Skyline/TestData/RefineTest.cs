@@ -125,10 +125,10 @@ namespace pwiz.SkylineTestData
             int missingResults = 0;
             foreach (var nodeGroup in docRefined.PeptideTransitionGroups)
             {
-                if (!nodeGroup.HasResults || nodeGroup.Results[0].IsEmpty)
+                if (!nodeGroup.HasResults || nodeGroup.EmptyResults[0].IsEmpty)
                     missingResults++;
                 else
-                    Assert.IsTrue(nodeGroup.Results[0][0].LibraryDotProduct >= dotProductThreshold);
+                    Assert.IsTrue(nodeGroup.EmptyResults[0][0].LibraryDotProduct >= dotProductThreshold);
             }
             Assert.AreNotEqual(0, missingResults);
             Assert.IsTrue(missingResults < docRefined.PeptideTransitionGroupCount);
@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestData
             Assert.AreNotEqual(docRefined.PeptideCount, docRefinedRT.PeptideCount);
             // The RT threshold should have removed all precursors without results
             Assert.IsFalse(docRefinedRT.PeptideTransitionGroups.Any(nodeGroup =>
-                !nodeGroup.HasResults || nodeGroup.Results[0].IsEmpty));
+                !nodeGroup.HasResults || nodeGroup.EmptyResults[0].IsEmpty));
             // And peak count ratio
             refineSettings.MinPeakFoundRatio = 1.0;
             var docRefinedRatio = refineSettings.Refine(document);
@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestData
             {
                 Assert.IsTrue(nodeGroup.HasResults);
                 Assert.IsTrue(nodeGroup.HasLibInfo);
-                Assert.AreEqual(1.0, nodeGroup.Results[0][0].PeakCountRatio);
+                Assert.AreEqual(1.0, nodeGroup.EmptyResults[0][0].PeakCountRatio);
             }
             Assert.AreEqual(2, docRefinedRatio.PeptideGroupCount);
             Assert.AreEqual(7, docRefinedRatio.PeptideTransitionGroupCount);
@@ -302,4 +302,4 @@ namespace pwiz.SkylineTestData
             return doc;
         }
     }
-}
+}

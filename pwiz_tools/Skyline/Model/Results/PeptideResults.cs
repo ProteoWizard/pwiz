@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
     /// Everything else a <see cref="PeptideChromInfo"/> has - the peak count ratio, the retention
     /// time, the label ratios - is aggregated from the precursors, so it is rebuilt on demand by
     /// <see cref="MoleculeResults.GetPeptideChromInfos()"/> rather than stored. That is why there is
-    /// no unconverted state here, unlike <see cref="TransitionResults.ChromInfos"/>: there is
+    /// no unconverted state here, unlike <see cref="TransitionResults.LegacyChromInfos"/>: there is
     /// nothing which has to wait for the .skyd.
     /// </para>
     /// </summary>

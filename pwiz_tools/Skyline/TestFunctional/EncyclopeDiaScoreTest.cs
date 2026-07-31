@@ -77,8 +77,8 @@ namespace pwiz.SkylineTestFunctional
             ImportResults(TestFilesDir.GetTestPath("30May2018-Lumos-DIA-ind-12mz-400to1000-HumanAD-COP-01" + ExtensionTestContext.ExtMz5), null, 30);
             WaitForDocumentLoaded();
             var scores = SkylineWindow.Document.MoleculeTransitionGroups
-                .Where(tg => null != tg.Results)
-                .SelectMany(tg => tg.Results.SelectMany(r => r.Select(chromInfo => chromInfo.QValue)))
+                .Where(tg => null != tg.EmptyResults)
+                .SelectMany(tg => tg.EmptyResults.SelectMany(r => r.Select(chromInfo => chromInfo.QValue)))
                 .Where(score => null != score)
                 .ToArray();
             Assert.AreNotEqual(0, scores.Length);

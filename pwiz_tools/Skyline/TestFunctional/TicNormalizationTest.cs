@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var peptideAnnotationPair in cvData.PeptideAnnotationPairs)
                 {
                     var values = new List<double>();
-                    var results = peptideAnnotationPair.TransitionGroup.Results;
+                    var results = peptideAnnotationPair.TransitionGroup.EmptyResults;
                     for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
                     {
                         foreach (var transitionGroupChromInfo in results[replicateIndex])

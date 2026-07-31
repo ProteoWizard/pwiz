@@ -59,7 +59,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Verify that a high energy ion mobility offset was applied for chromatogram extraction
             var peptide = doc.Molecules.First();
             var precursor = peptide.TransitionGroups.First();
-            var transitionGroupChromInfo = precursor.Results[0].First();
+            var transitionGroupChromInfo = precursor.EmptyResults[0].First();
             // Without the fix, MS1 and MSMS drift times would be identical
             AssertEx.AreEqual(22.1, transitionGroupChromInfo.IonMobilityInfo.DriftTimeMS1, .0001);
             AssertEx.AreEqual(transitionGroupChromInfo.IonMobilityInfo.DriftTimeMS1 - .2, transitionGroupChromInfo.IonMobilityInfo.DriftTimeFragment, .0001);

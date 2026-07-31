@@ -90,16 +90,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 var untriggeredTransitionGroup = (TransitionGroupDocNode) untriggeredPeptide.Children[iTransitionGroup];
                 var triggeredTransitionGroup = (TransitionGroupDocNode) triggeredPeptide.Children[iTransitionGroup];
-                Assert.IsNotNull(untriggeredTransitionGroup.Results);
-                Assert.IsNotNull(triggeredTransitionGroup.Results);
-                Assert.AreEqual(untriggeredTransitionGroup.Results.Count, triggeredTransitionGroup.Results.Count);
-                Assert.AreNotEqual(0, untriggeredTransitionGroup.Results.Count);
-                for (int iReplicate = 0; iReplicate < untriggeredTransitionGroup.Results.Count; iReplicate++)
+                Assert.IsNotNull(untriggeredTransitionGroup.EmptyResults);
+                Assert.IsNotNull(triggeredTransitionGroup.EmptyResults);
+                Assert.AreEqual(untriggeredTransitionGroup.EmptyResults.Count, triggeredTransitionGroup.EmptyResults.Count);
+                Assert.AreNotEqual(0, untriggeredTransitionGroup.EmptyResults.Count);
+                for (int iReplicate = 0; iReplicate < untriggeredTransitionGroup.EmptyResults.Count; iReplicate++)
                 {
-                    Assert.AreEqual(1, untriggeredTransitionGroup.Results[iReplicate].Count);
-                    Assert.AreEqual(1, triggeredTransitionGroup.Results[iReplicate].Count);
-                    var untriggeredChromInfo = untriggeredTransitionGroup.Results[iReplicate].First();
-                    var triggeredChromInfo = triggeredTransitionGroup.Results[iReplicate].First();
+                    Assert.AreEqual(1, untriggeredTransitionGroup.EmptyResults[iReplicate].Count);
+                    Assert.AreEqual(1, triggeredTransitionGroup.EmptyResults[iReplicate].Count);
+                    var untriggeredChromInfo = untriggeredTransitionGroup.EmptyResults[iReplicate].First();
+                    var triggeredChromInfo = triggeredTransitionGroup.EmptyResults[iReplicate].First();
                     Assert.AreNotEqual(0, untriggeredChromInfo.BackgroundArea);
                     Assert.AreEqual(0, triggeredChromInfo.BackgroundArea);
 

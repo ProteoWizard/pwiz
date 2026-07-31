@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
             double total = 0;
             foreach (var precursor in peptideDocNode.TransitionGroups)
             {
-                total += precursor.Results[replicateIndex][0].Area.GetValueOrDefault();
+                total += precursor.EmptyResults[replicateIndex][0].Area.GetValueOrDefault();
             }
 
             return total;

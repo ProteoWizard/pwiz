@@ -152,7 +152,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             int diffs = 0;
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
-                Assert.AreEqual(2, nodeGroup.Results.Count);
+                Assert.AreEqual(2, nodeGroup.EmptyResults.Count);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
                     Assume.AreEqual(2, nodeTran.Results.Count);

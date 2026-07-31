@@ -238,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
         private static void CheckTimes(IdentityPath groupPath, int file, int replicate, out double? startTime, out double? endTime)
         {
             var groupNode = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(groupPath);
-            var groupChromInfo = groupNode.Results[file][replicate];
+            var groupChromInfo = groupNode.EmptyResults[file][replicate];
             startTime = groupChromInfo.StartRetentionTime;
             endTime = groupChromInfo.EndRetentionTime;
         }

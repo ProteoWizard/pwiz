@@ -173,28 +173,19 @@ namespace pwiz.SkylineTestUtil
 
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
-                    if (nodeGroup.HasResults)
+                    // A peak per position of the columnar results, and its annotations on the
+                    // CustomPeak the position has when it has any.
+                    var groupResults = nodeGroup.AbbreviatedResults;
+                    if (groupResults != null)
                     {
-                        //                            int startSize = TransitionGroupResults;
-                        foreach (var chromInfo in nodeGroup.Results.Where(result => !result.IsEmpty)
-                            .SelectMany(info => info))
+                        TransitionGroupResults += groupResults.ChromFileIds.ReplicatePositions.TotalCount;
+                        foreach (var customPeak in (IEnumerable<CustomPeak>) groupResults.CustomPeaks ?? new CustomPeak[0])
                         {
-                            TransitionGroupResults++;
-                            if (chromInfo.Annotations.Note != null)
+                            if (customPeak.Annotations.Note != null)
                                 NoteCount++;
-                            if (chromInfo.Annotations.ListAnnotations().Length > 0)
+                            if (customPeak.Annotations.ListAnnotations().Length > 0)
                                 AnnotationCount++;
                         }
-                        //                            if (TransitionGroupResults - startSize < fileIndices.Length)
-                        //                            {
-                        //                                var listIds = fileIndices.ToList();
-                        //                                foreach (var chromInfo in nodeGroup.Results.Where(result => result != null)
-                        //                                                                           .SelectMany(info => info))
-                        //                                {
-                        //                                    listIds.Remove(chromInfo.FileIndex);
-                        //                                }
-                        //                                Console.WriteLine("{0} ({1})", nodePep.Peptide.Sequence, String.Join(", ", listIds.Select(i => i.ToString()).ToArray()));
-                        //                            }
                     }
 
                     foreach (var nodeTran in
@@ -369,11 +360,12 @@ namespace pwiz.SkylineTestUtil
             int transitionsHeavyActual = 0;
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
-            foreach (var nodeGroup in document.MoleculeTransitionGroups.Where(nodeGroup => ( nodeGroup.Results != null && !nodeGroup.Results[index].IsEmpty)))
+            // The peak count ratio comes from the transitions' columnar results now, one for the
+            // replicate rather than one per peak in it.
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
-                foreach (var chromInfo in nodeGroup.Results[index])
                 {
-                    if (chromInfo.PeakCountRatio < 0.5)
+                    if ((nodeGroup.GetPeakCountRatio(index, integrateAll) ?? 0) < 0.5)
                         continue;
 
                     if (nodeGroup.TransitionGroup.LabelType.IsLight)

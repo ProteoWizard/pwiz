@@ -68,8 +68,8 @@ namespace pwiz.SkylineTestFunctional
             var firstMolecule = SkylineWindow.Document.Molecules.First();
             foreach (var transitionGroup in firstMolecule.TransitionGroups)
             {
-                Assert.AreEqual(expectedReplicateNames.Length, transitionGroup.Results.Count);
-                foreach (var replicateResults in transitionGroup.Results)
+                Assert.AreEqual(expectedReplicateNames.Length, transitionGroup.EmptyResults.Count);
+                foreach (var replicateResults in transitionGroup.EmptyResults)
                 {
                     // For the first molecule, we expect that each transition group can only be found in one result file per replicate
                     Assert.AreEqual(1, replicateResults.Count);
@@ -80,8 +80,8 @@ namespace pwiz.SkylineTestFunctional
             for (int iTransitionGroup = 0; iTransitionGroup < secondMolecule.Children.Count; iTransitionGroup++)
             {
                 var transitionGroup = (TransitionGroupDocNode) secondMolecule.Children[iTransitionGroup];
-                Assert.AreEqual(expectedReplicateNames.Length, transitionGroup.Results.Count);
-                foreach (var replicateResults in transitionGroup.Results)
+                Assert.AreEqual(expectedReplicateNames.Length, transitionGroup.EmptyResults.Count);
+                foreach (var replicateResults in transitionGroup.EmptyResults)
                 {
                     // For the second molecule, we expect that the first two transition groups can be found in one result file,
                     // and the rest of the transition groups have chromatograms from two result files.

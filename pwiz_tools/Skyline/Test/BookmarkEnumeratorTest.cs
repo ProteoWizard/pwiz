@@ -186,7 +186,7 @@ namespace pwiz.SkylineTest
                 {
                     if (transitionGroup.HasResults)
                     {
-                        Increment(elementCounts, typeof(TransitionGroupChromInfo), transitionGroup.Results.Sum(result=>result.Count));
+                        Increment(elementCounts, typeof(TransitionGroupChromInfo), transitionGroup.EmptyResults.Sum(result=>result.Count));
                     }
 
                     foreach (var transition in transitionGroup.Transitions)

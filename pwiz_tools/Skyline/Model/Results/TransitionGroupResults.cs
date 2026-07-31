@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Results
             // Kept whatever the caller knows, because the precursor level still holds values which
             // have no home in the columnar form yet - PeakCountRatio, the ion mobility info, the dot
             // products. Dropping them waits until every reader of them goes through MoleculeResults.
-            return transitionGroupResults.ChangeChromInfos(results);
+            return transitionGroupResults.ChangeLegacyChromInfos(results);
         }
 
         /// <summary>
@@ -184,21 +184,21 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// The chrom infos which have not been worked out from the .skyd file yet. Null once they
-        /// have been. The precursor level counterpart of <see cref="TransitionResults.ChromInfos"/>,
+        /// have been. The precursor level counterpart of <see cref="TransitionResults.LegacyChromInfos"/>,
         /// and kept as a <see cref="Results{TItem}"/> rather than flattened because that is the shape
         /// every reader of <see cref="TransitionGroupDocNode.Results"/> still expects: while these
         /// are here, the node can hand them straight back.
         /// </summary>
-        public Results<TransitionGroupChromInfo> ChromInfos { get; private set; }
+        public Results<TransitionGroupChromInfo> LegacyChromInfos { get; private set; }
 
         public bool IsConverted
         {
-            get { return ChromInfos == null; }
+            get { return LegacyChromInfos == null; }
         }
 
-        public TransitionGroupResults ChangeChromInfos(Results<TransitionGroupChromInfo> value)
+        public TransitionGroupResults ChangeLegacyChromInfos(Results<TransitionGroupChromInfo> value)
         {
-            return ChangeProp(ImClone(this), im => im.ChromInfos = value);
+            return ChangeProp(ImClone(this), im => im.LegacyChromInfos = value);
         }
 
         /// <summary>
@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(ReintegratedPeakIndexes, other.ReintegratedPeakIndexes) &&
                    Equals(UserSets, other.UserSets) && Equals(QValues, other.QValues) &&
                    Equals(ZScores, other.ZScores) && Equals(CustomPeaks, other.CustomPeaks) &&
-                   Results<TransitionGroupChromInfo>.EqualsDeep(ChromInfos, other.ChromInfos);
+                   Results<TransitionGroupChromInfo>.EqualsDeep(LegacyChromInfos, other.LegacyChromInfos);
         }
 
         public override bool Equals(object obj)
@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (QValues?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ZScores?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
-                result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
         }
@@ -498,7 +498,7 @@ namespace pwiz.Skyline.Model.Results
     {
         /// <summary>
         /// Builds the columnar form from the chrom infos a document already holds, keeping the
-        /// chrom infos themselves in <see cref="ChromInfos"/>. See
+        /// chrom infos themselves in <see cref="LegacyChromInfos"/>. See
         /// <see cref="TransitionGroupResults.FromChromInfos"/>.
         /// </summary>
         public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results)
@@ -568,7 +568,7 @@ namespace pwiz.Skyline.Model.Results
                 transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
             }
 
-            return chromInfos == null ? transitionResults : transitionResults.ChangeChromInfos(chromInfos);
+            return chromInfos == null ? transitionResults : transitionResults.ChangeLegacyChromInfos(chromInfos);
         }
 
         /// <summary>
@@ -676,16 +676,16 @@ namespace pwiz.Skyline.Model.Results
         /// is available.
         /// </para>
         /// </summary>
-        public ImmutableList<TransitionChromInfo> ChromInfos { get; private set; }
+        public ImmutableList<TransitionChromInfo> LegacyChromInfos { get; private set; }
 
         public bool IsConverted
         {
-            get { return ChromInfos == null; }
+            get { return LegacyChromInfos == null; }
         }
 
-        public TransitionResults ChangeChromInfos(IEnumerable<TransitionChromInfo> value)
+        public TransitionResults ChangeLegacyChromInfos(IEnumerable<TransitionChromInfo> value)
         {
-            return ChangeProp(ImClone(this), im => im.ChromInfos = value == null ? null : ImmutableList.ValueOf(value));
+            return ChangeProp(ImClone(this), im => im.LegacyChromInfos = value == null ? null : ImmutableList.ValueOf(value));
         }
 
         /// <summary>
@@ -694,12 +694,12 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionChromInfo FindChromInfo(ChromFileInfoId fileId, int optimizationStep)
         {
-            if (ChromInfos == null)
+            if (LegacyChromInfos == null)
             {
                 return null;
             }
 
-            foreach (var chromInfo in ChromInfos)
+            foreach (var chromInfo in LegacyChromInfos)
             {
                 if (ReferenceEquals(chromInfo.FileId, fileId) && chromInfo.OptimizationStep == optimizationStep)
                 {
@@ -932,7 +932,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(EmptyPeaks, other.EmptyPeaks) && Equals(Identified, other.Identified) &&
                    Equals(ForcedIntegration, other.ForcedIntegration) &&
                    Equals(CustomPeaks, other.CustomPeaks) &&
-                   Equals(ChromInfos, other.ChromInfos);
+                   Equals(LegacyChromInfos, other.LegacyChromInfos);
         }
 
         public override bool Equals(object obj)
@@ -962,7 +962,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (Identified?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ForcedIntegration?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
-                result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
         }

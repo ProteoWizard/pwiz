@@ -66,8 +66,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
                 {
-                    Assert.IsNotNull(transitionGroupDocNode.Results);
-                    Assert.AreEqual(transitionGroupDocNode.Results.Count, measuredResults.Chromatograms.Count);
+                    Assert.IsNotNull(transitionGroupDocNode.EmptyResults);
+                    Assert.AreEqual(transitionGroupDocNode.EmptyResults.Count, measuredResults.Chromatograms.Count);
                     for (int iReplicate = 0; iReplicate < measuredResults.Chromatograms.Count; iReplicate++)
                     {
                         var chromatogramSet = measuredResults.Chromatograms[iReplicate];

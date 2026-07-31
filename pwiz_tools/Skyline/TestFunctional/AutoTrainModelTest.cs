@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test that all targets have z-scores and q-values.
                 doc = SkylineWindow.DocumentUI;
                 var precursors = doc.PeptideTransitionGroups.Where(nodeTranGroup => !nodeTranGroup.IsDecoy).ToArray();
-                var chromInfos = precursors.SelectMany(nodeTranGroup => nodeTranGroup.Results)
+                var chromInfos = precursors.SelectMany(nodeTranGroup => nodeTranGroup.EmptyResults)
                     .SelectMany(chromInfoList => chromInfoList).ToArray();
                 Assert.AreEqual(precursors.Length, chromInfos.Count(chromInfo => chromInfo.ZScore.HasValue));
                 Assert.AreEqual(precursors.Length, chromInfos.Count(chromInfo => chromInfo.QValue.HasValue));

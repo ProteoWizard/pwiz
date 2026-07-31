@@ -124,7 +124,7 @@ namespace pwiz.SkylineTestData.Results
         {
             // HasResults only checks Results != null, not Count, so guard the index access
             // explicitly before reading Results[0].
-            bool HasFirstResult(TransitionGroupDocNode tg) => tg.HasResults && tg.Results.Count > 0;
+            bool HasFirstResult(TransitionGroupDocNode tg) => tg.HasResults && tg.EmptyResults.Count > 0;
 
             var collisionGroups = importedDoc.MoleculePrecursorPairs
                 .Where(p => !p.NodePep.ModifiedTarget.ToString().Contains(PHANTOM_MARKER))
@@ -138,7 +138,7 @@ namespace pwiz.SkylineTestData.Results
             {
                 var members = collisionGroup.ToList();
                 bool anyHasData = members.Any(p => HasFirstResult(p.NodeGroup)
-                                                   && !p.NodeGroup.Results[0].IsEmpty);
+                                                   && !p.NodeGroup.EmptyResults[0].IsEmpty);
                 if (!anyHasData)
                     continue; // No data for this Q1 in the file; not a collapse.
 
@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestData.Results
                     if (!HasFirstResult(pair.NodeGroup))
                         failures.Add(string.Format("Q1 {0} ({1}): no Results[0]",
                             pair.NodeGroup.PrecursorMz, name));
-                    else if (pair.NodeGroup.Results[0].IsEmpty)
+                    else if (pair.NodeGroup.EmptyResults[0].IsEmpty)
                         failures.Add(string.Format("Q1 {0} ({1}): empty Results[0]",
                             pair.NodeGroup.PrecursorMz, name));
                 }

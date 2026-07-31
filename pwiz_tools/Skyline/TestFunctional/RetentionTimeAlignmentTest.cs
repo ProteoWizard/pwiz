@@ -73,11 +73,11 @@ namespace pwiz.SkylineTestFunctional
                 document.Peptides.First(
                     peptideDocNode => seqWithTwoIds.Equals(peptideDocNode.Peptide.Target));
             var precursorWithTwoIds = peptideWithTwoIds.TransitionGroups.First();
-            Assert.IsTrue(precursorWithOneId.Results[0][0].IsIdentified);
-            Assert.IsFalse(precursorWithOneId.Results[1][0].Identified == PeakIdentification.TRUE);
-            Assert.IsTrue(precursorWithOneId.Results[1][0].Identified == PeakIdentification.ALIGNED);
-            Assert.IsTrue(precursorWithTwoIds.Results[0][0].IsIdentified);
-            Assert.IsTrue(precursorWithTwoIds.Results[1][0].IsIdentified);
+            Assert.IsTrue(precursorWithOneId.EmptyResults[0][0].IsIdentified);
+            Assert.IsFalse(precursorWithOneId.EmptyResults[1][0].Identified == PeakIdentification.TRUE);
+            Assert.IsTrue(precursorWithOneId.EmptyResults[1][0].Identified == PeakIdentification.ALIGNED);
+            Assert.IsTrue(precursorWithTwoIds.EmptyResults[0][0].IsIdentified);
+            Assert.IsTrue(precursorWithTwoIds.EmptyResults[1][0].IsIdentified);
 
             // Verify that the generated chromatogram is of the expected length around the actual or aligned ID's
             var targets = document.Settings.GetTargets(peptideWithOneId).ToList();
