@@ -38,9 +38,15 @@ internal static class NativeMethods
 
     // ---------- base reader lifecycle ----------
 
+    /// <summary>
+    /// Opens a reader on a .raw directory. MassLynx SDK 5.0.0 added the <paramref name="userLicense"/>
+    /// parameter (MassLynxRawDefs.h:601); without a valid key every read fails with "License
+    /// invalid". <see cref="WatersRawFile.LicenseKey"/> supplies it.
+    /// </summary>
     [DllImport(MassLynxRawDll, CharSet = CharSet.Ansi, BestFitMapping = false)]
     public static extern int createRawReaderFromPath(
-        [MarshalAs(UnmanagedType.LPStr)] string path, out IntPtr reader, MassLynxBaseType type);
+        [MarshalAs(UnmanagedType.LPStr)] string path, out IntPtr reader, MassLynxBaseType type,
+        [MarshalAs(UnmanagedType.LPStr)] string userLicense);
 
     [DllImport(MassLynxRawDll)]
     public static extern int createRawReaderFromReader(IntPtr source, out IntPtr reader, MassLynxBaseType type);
@@ -57,8 +63,9 @@ internal static class NativeMethods
     [DllImport(MassLynxRawDll)]
     public static extern int releaseMemory(IntPtr block);
 
-    [DllImport(MassLynxRawDll)]
-    public static extern int getVersionInfo(out IntPtr version);
+    // NOTE: getVersionInfo was removed in MassLynx SDK 5.0.0 and is not declared here. Its
+    // nearest replacement is getLicenseInfo(userLicense, parameters) (MassLynxRawDefs.h:598),
+    // which reports SDK version alongside license state; nothing in pwiz-sharp needs either.
 
     // ---------- info reader ----------
 

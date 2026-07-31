@@ -26,8 +26,8 @@
     },
     {
       "name": "Waters",
-      "path": "pwiz_aux/msrc/utility/vendor_api_Waters.7z",
-      "prefixes": [ "MassLynxRaw", "cdt", "MassLynx" ]
+      "path": "pwiz-sharp/vendor-archives/vendor_api_Waters.7z",
+      "prefixes": [ "MassLynxRaw", "libMassLynxRaw", "MassLynx" ]
     },
     {
       "name": "Agilent",

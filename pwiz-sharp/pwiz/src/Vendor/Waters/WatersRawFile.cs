@@ -15,6 +15,25 @@ namespace Pwiz.Vendor.Waters;
 /// </remarks>
 internal sealed class WatersRawFile : IDisposable
 {
+    /// <summary>
+    /// Environment variable that overrides the bundled license key, for developers or agents
+    /// working against a different MassLynx entitlement than the one shipped in the archive.
+    /// </summary>
+    public const string LICENSE_KEY_ENV_VAR = "MASSLYNX_LICENSE_KEY";
+
+    /// <summary>Name of the key file staged next to MassLynxRaw.dll by Waters.csproj.</summary>
+    private const string LICENSE_KEY_FILE = "license.key";
+
+    private static readonly Lazy<string> _licenseKey = new(LoadLicenseKey);
+
+    /// <summary>
+    /// The user license passed to <c>createRawReaderFromPath</c>. MassLynx SDK 5.0.0 made this
+    /// mandatory -- without a valid key every read fails with "License invalid". Resolved once
+    /// per process from <see cref="LICENSE_KEY_ENV_VAR"/>, else <c>license.key</c> alongside the
+    /// managed output (where the vendor archive extraction stages it).
+    /// </summary>
+    public static string LicenseKey => _licenseKey.Value;
+
     private IntPtr _info;
     private IntPtr _scan;
     private IntPtr _chrom;
@@ -67,7 +86,7 @@ internal sealed class WatersRawFile : IDisposable
         // Open the SCAN reader first (it's the one that loads the raw); the others are
         // constructed from it via createRawReaderFromReader. Matches the constructor chain in
         // pwiz C++ RawData.
-        Check(NativeMethods.createRawReaderFromPath(rawPath, out _scan, NativeMethods.MassLynxBaseType.SCAN), "open SCAN reader");
+        Check(NativeMethods.createRawReaderFromPath(rawPath, out _scan, NativeMethods.MassLynxBaseType.SCAN, LicenseKey), "open SCAN reader");
         try
         {
             Check(NativeMethods.createRawReaderFromReader(_scan, out _info, NativeMethods.MassLynxBaseType.INFO), "open INFO reader");
@@ -890,6 +909,22 @@ internal sealed class WatersRawFile : IDisposable
             message = MarshalAndRelease(p);
         }
         throw new InvalidOperationException("MassLynx " + op + " failed (code " + code + "): " + message);
+    }
+
+    /// <summary>
+    /// Resolves the MassLynx user license once per process. Returns an empty string when no key
+    /// is available -- the SDK then fails the open with its own "License invalid" message, which
+    /// <see cref="Check"/> surfaces, so a missing key is diagnosable without a second error path.
+    /// </summary>
+    private static string LoadLicenseKey()
+    {
+        string? fromEnv = Environment.GetEnvironmentVariable(LICENSE_KEY_ENV_VAR);
+        if (!string.IsNullOrWhiteSpace(fromEnv)) return fromEnv.Trim();
+
+        // Staged next to the managed output by Waters.csproj, alongside MassLynxRaw.dll itself.
+        string keyPath = Path.Combine(AppContext.BaseDirectory, LICENSE_KEY_FILE);
+        if (!File.Exists(keyPath)) return string.Empty;
+        return File.ReadAllText(keyPath).Trim();
     }
 
     public void Dispose()
