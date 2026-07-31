@@ -214,6 +214,20 @@ namespace pwiz.Osprey.Tasks
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
+            // OSPREY_EXPERIMENT_AGG selects how the experiment-wide precursor/peptide score
+            // aggregates a unit's per-run observations. Warn on a set-but-unrecognized token
+            // (normalized to the byte-identical max default) so a typo cannot be mistaken for a
+            // mean(best-N) run - this flag exists to be A/B'd, so a silent fallback would corrupt
+            // the comparison rather than fail it. Mirrors the OSPREY_PASS2_QVALUE warning.
+            if (OspreyEnvironment.ExperimentAggUnrecognized)
+            {
+                ctx.LogWarning(string.Format(
+                    "OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
+                    "'{0}'. Recognized values: '{0}', or '{1}<N>' with N >= 2 (e.g. '{1}2').",
+                    OspreyEnvironment.EXPERIMENT_AGG_MAX,
+                    OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX));
+            }
+
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
             // its own "Running First-pass Percolator on N entries..." line from the FDR
             // engine, so the generic header would just be a redundant second

@@ -438,6 +438,17 @@ namespace pwiz.Osprey.Core
         /// (OSPREY_EXPERIMENT_AGG=mean-best-N, N&gt;=2).</summary>
         public static readonly bool ExperimentAggMeanBest = MeanBestN >= 2;
 
+        /// <summary>True when OSPREY_EXPERIMENT_AGG was set to something that is neither
+        /// <see cref="EXPERIMENT_AGG_MAX"/> nor a well-formed
+        /// <see cref="EXPERIMENT_AGG_MEAN_BEST_PREFIX"/>&lt;N&gt; with N&gt;=2, and was therefore
+        /// normalized to the max default. The consuming site logs a one-line warning, mirroring
+        /// <see cref="Pass2QValueUnrecognized"/>. This matters more here than for most flags: the
+        /// whole point of this one is A/B measurement, so a typo (mean-best-1, meanbest2) that
+        /// silently ran the DEFAULT would be recorded by the operator as a mean(best-N) result and
+        /// would corrupt the comparison rather than fail it.</summary>
+        public static readonly bool ExperimentAggUnrecognized = IsUnrecognizedExperimentAgg(
+            Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
+
         /// <summary>OSPREY_MEANBEST2_FLOOR_MEAN: A/B toggle to use the decoy MEAN instead of the
         /// default decoy MEDIAN as the missing-run floor for mean(best-2). Off by default.</summary>
         public static readonly bool MeanBest2FloorMean =
@@ -464,6 +475,17 @@ namespace pwiz.Osprey.Core
                        System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 2
                 ? n
                 : 0;
+        }
+
+        // A set-but-unusable OSPREY_EXPERIMENT_AGG: anything that is neither the max default nor a
+        // well-formed mean-best-<N> with N >= 2. Unset / whitespace is NOT unrecognized - that is
+        // simply the default. Mirrors IsUnrecognizedPass2QValue.
+        private static bool IsUnrecognizedExperimentAgg(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return false;
+            return !string.Equals(raw.Trim(), EXPERIMENT_AGG_MAX, StringComparison.OrdinalIgnoreCase) &&
+                   ParseMeanBestN(raw) == 0;
         }
 
         private static string NormalizeExperimentAgg(string raw)
