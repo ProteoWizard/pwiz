@@ -73,7 +73,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IDictionary<ResultKey, TransitionResult> MakeResults()
         {
-            return MakeChromInfoResultsMap(DocNode.Results, file => new TransitionResult(this, file));
+            // Through the molecule's MoleculeResults, the same one the precursor and the molecule
+            // use, rather than off the doc node, which no longer keeps its results.
+            return MakeChromInfoResultsMap(
+                Precursor.Peptide.GetMoleculeResults().GetTransitionChromInfos(
+                    Precursor.DocNode.TransitionGroup, DocNode.Transition),
+                file => new TransitionResult(this, file));
         }
 
         private bool IsCustomTransition()

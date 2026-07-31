@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -75,7 +76,23 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IDictionary<ResultKey, PeptideResult> MakeResults()
         {
-            return MakeChromInfoResultsMap(DocNode.Results, file => new PeptideResult(this, file));
+            return MakeChromInfoResultsMap(GetMoleculeResults().GetPeptideChromInfos(),
+                file => new PeptideResult(this, file));
+        }
+
+        /// <summary>
+        /// Everything the report rows of this molecule and its children are built from, read back
+        /// out of the .skyd rather than off the doc nodes, which no longer keep it.
+        /// <para>
+        /// One per molecule, cached for as long as the document is unchanged, because making one
+        /// reads every chromatogram of the molecule. <see cref="Precursor"/> and
+        /// <see cref="Transition"/> ask their <see cref="Peptide"/> for it rather than making their
+        /// own, so a report over a molecule reads its chromatograms once.
+        /// </para>
+        /// </summary>
+        public MoleculeResults GetMoleculeResults()
+        {
+            return _cachedValues.GetValue3(this);
         }
 
         public bool IsSmallMolecule()
@@ -558,8 +575,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private class CachedValues : CachedValues<Peptide, CalibrationCurveFitter, ImmutableList<Precursor>,
-            IDictionary<ResultKey, PeptideResult>>
+            IDictionary<ResultKey, PeptideResult>, MoleculeResults>
         {
+            protected override MoleculeResults CalculateValue3(Peptide owner)
+            {
+                return new MoleculeResults(owner.SrmDocument.Settings, owner.DocNode);
+            }
+
             protected override SrmDocument GetDocument(Peptide owner)
             {
                 return owner.SrmDocument;

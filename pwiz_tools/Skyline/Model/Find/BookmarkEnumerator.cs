@@ -433,22 +433,21 @@ namespace pwiz.Skyline.Model.Find
         /// </summary>
         private int GetReplicateCount(DocNode docNode)
         {
-            if (docNode is TransitionDocNode transitionDocNode)
+            // The document's replicate count, rather than the length of a node's chrom infos: a
+            // node which has results has one entry per replicate either way, and asking the
+            // document costs nothing now that the doc nodes no longer keep the chrom infos.
+            int ReplicateCount() => Document.Settings.MeasuredResults?.Chromatograms.Count ?? 0;
+            switch (docNode)
             {
-                return transitionDocNode.Results?.Count ?? 0;
+                case TransitionDocNode transitionDocNode:
+                    return transitionDocNode.AbbreviatedResults == null ? 0 : ReplicateCount();
+                case TransitionGroupDocNode transitionGroupDocNode:
+                    return transitionGroupDocNode.HasAbbreviatedResults ? ReplicateCount() : 0;
+                case PeptideDocNode peptideDocNode:
+                    return peptideDocNode.HasResults ? ReplicateCount() : 0;
+                default:
+                    return 0;
             }
-
-            if (docNode is TransitionGroupDocNode transitionGroupDocNode)
-            {
-                return transitionGroupDocNode.Results?.Count ?? 0;
-            }
-
-            if (docNode is PeptideDocNode peptideDocNode)
-            {
-                return peptideDocNode.Results?.Count ?? 0;
-            }
-
-            return 0;
         }
 
         private IEnumerable<ChromInfoPosition> GetChromInfoPositions(DocNode docNode, int replicateIndex)

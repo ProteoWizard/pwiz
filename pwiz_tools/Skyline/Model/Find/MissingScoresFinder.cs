@@ -92,12 +92,14 @@ namespace pwiz.Skyline.Model.Find
                 return Array.Empty<int>();
             }
 
-            // The peptide node matches if its results are missing for all files
+            // The peptide node matches if its results are missing for all files. Only the file is
+            // needed to look a score up, so the files come from the columnar results rather than
+            // from chrom infos the molecule no longer keeps.
             var missingSet = new HashSet<int>();
-            foreach (var chromInfo in nodePep.Results.SelectMany(chromInfoList => chromInfoList))
+            foreach (var fileId in nodePep.GetResultFileIds())
             {
                 bool any = false;
-                foreach (var missing in GetMissingScoreIndices(chromInfo, nodePep))
+                foreach (var missing in GetMissingScoreIndices(fileId, nodePep))
                 {
                     missingSet.Add(missing);
                     any = true;
@@ -120,7 +122,12 @@ namespace pwiz.Skyline.Model.Find
 
         private IEnumerable<int> GetMissingScoreIndices(ChromInfo chromInfo, PeptideDocNode nodePep)
         {
-            var key = new PeakTransitionGroupIdKey(nodePep.Peptide, chromInfo.FileId);
+            return GetMissingScoreIndices(chromInfo.FileId, nodePep);
+        }
+
+        private IEnumerable<int> GetMissingScoreIndices(ChromFileInfoId fileId, PeptideDocNode nodePep)
+        {
+            var key = new PeakTransitionGroupIdKey(nodePep.Peptide, fileId);
             if (!_featureDictionary.TryGetValue(key, out var listFeatures))
                 return Array.Empty<int>();
             return listFeatures.SelectMany(features => _calculatorIndices.Where(i => IsUnknownScore(features, i))).Distinct();

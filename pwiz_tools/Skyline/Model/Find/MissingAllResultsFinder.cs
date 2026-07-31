@@ -37,17 +37,19 @@ namespace pwiz.Skyline.Model.Find
 
         protected override bool IsMatch(PeptideDocNode nodePep)
         {
-            return nodePep != null && nodePep.HasResults && nodePep.Results.All(chromInfo => chromInfo.IsEmpty);
+            return nodePep != null && nodePep.HasResults && nodePep.GetReplicatesWithResults().All(has => !has);
         }
 
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup)
         {
-            return nodeGroup != null && nodeGroup.HasResults && nodeGroup.Results.All(chromInfo => chromInfo.IsEmpty);
+            return nodeGroup != null && nodeGroup.HasAbbreviatedResults &&
+                   nodeGroup.AbbreviatedResults.ChromFileIds.GetReplicatesWithResults().All(has => !has);
         }
 
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
-            return nodeTran != null && nodeTran.HasResults && nodeTran.Results.All(chromInfo => chromInfo.IsEmpty);
+            return nodeTran?.AbbreviatedResults != null &&
+                   nodeTran.AbbreviatedResults.ChromFileIds.GetReplicatesWithResults().All(has => !has);
         }
     }
 }

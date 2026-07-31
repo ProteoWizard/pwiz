@@ -349,12 +349,10 @@ namespace pwiz.Skyline.Controls.Databinding
                 return chromatogramSet.MSDataFileInfos[0].FileId;
             }
 
-            IList<ReferenceValue<ChromFileInfoId>> candidateFileIds = Array.Empty<ReferenceValue<ChromFileInfoId>>();
-            if (peptideDocNode.Results != null)
-            {
-                candidateFileIds = peptideDocNode.GetSafeChromInfo(replicateIndex)
-                    .Select(info => ReferenceValue.Of(info.FileId)).ToList();
-            }
+            // From the columnar results of the precursors, which say which files there are without
+            // any chromatogram being read.
+            IList<ReferenceValue<ChromFileInfoId>> candidateFileIds = peptideDocNode
+                .GetResultFileIds(replicateIndex).Select(ReferenceValue.Of).ToList();
 
             if (candidateFileIds.Count == 0)
             {

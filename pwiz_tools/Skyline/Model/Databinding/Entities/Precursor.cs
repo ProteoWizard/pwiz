@@ -638,7 +638,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override IDictionary<ResultKey, PrecursorResult> CalculateValue1(Precursor owner)
             {
-                return owner.MakeChromInfoResultsMap(owner.DocNode.Results, file => new PrecursorResult(owner, file));
+                // Through the molecule's MoleculeResults, so that every row of a report over this
+                // molecule comes from one read of its chromatograms rather than one per precursor.
+                return owner.MakeChromInfoResultsMap(
+                    owner.Peptide.GetMoleculeResults()
+                        .GetTransitionGroupChromInfos(owner.DocNode.TransitionGroup),
+                    file => new PrecursorResult(owner, file));
             }
         }
     }

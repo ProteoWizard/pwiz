@@ -1140,6 +1140,72 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// The files this molecule has results for, taken from the columnar results of its
+        /// precursors.
+        /// <para>
+        /// This is the cheap answer, for the callers which only need to know which files there are.
+        /// It reads no chromatogram, so it is what they should use rather than making a
+        /// <see cref="MoleculeResults"/>, which reads every chromatogram of the molecule.
+        /// </para>
+        /// </summary>
+        public IEnumerable<ChromFileInfoId> GetResultFileIds()
+        {
+            var seen = new HashSet<ReferenceValue<ChromFileInfoId>>();
+            foreach (var nodeGroup in TransitionGroups)
+            {
+                var chromFileIds = nodeGroup.AbbreviatedResults?.ChromFileIds;
+                if (chromFileIds == null)
+                    continue;
+                foreach (var fileId in chromFileIds.FileIds)
+                {
+                    if (seen.Add(fileId))
+                        yield return fileId.Value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether each replicate has any result for this molecule, one flag per replicate. A
+        /// replicate counts as having one when any of the precursors has an entry there. Cheap for
+        /// the same reason as <see cref="GetResultFileIds()"/>.
+        /// </summary>
+        public IEnumerable<bool> GetReplicatesWithResults()
+        {
+            var chromFileIdsList = TransitionGroups.Select(nodeGroup => nodeGroup.AbbreviatedResults?.ChromFileIds)
+                .Where(chromFileIds => chromFileIds != null).ToList();
+            int replicateCount = chromFileIdsList.Count == 0
+                ? 0
+                : chromFileIdsList.Max(chromFileIds => chromFileIds.ReplicatePositions.ReplicateCount);
+            for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
+            {
+                int index = replicateIndex;
+                yield return chromFileIdsList.Any(chromFileIds =>
+                    index < chromFileIds.ReplicatePositions.ReplicateCount &&
+                    chromFileIds.ReplicatePositions.GetCount(index) > 0);
+            }
+        }
+
+        /// <summary>
+        /// The files this molecule has results for in one replicate. See
+        /// <see cref="GetResultFileIds()"/>.
+        /// </summary>
+        public IEnumerable<ChromFileInfoId> GetResultFileIds(int replicateIndex)
+        {
+            var seen = new HashSet<ReferenceValue<ChromFileInfoId>>();
+            foreach (var nodeGroup in TransitionGroups)
+            {
+                var chromFileIds = nodeGroup.AbbreviatedResults?.ChromFileIds;
+                if (chromFileIds == null)
+                    continue;
+                foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
+                {
+                    if (seen.Add(ReferenceValue.Of(fileId)))
+                        yield return fileId;
+                }
+            }
+        }
+
+        /// <summary>
         /// Make sure children are preserved as much as possible.  It may not be possible
         /// to always preserve children, because the settings in the target document may
         /// not allow certain states (e.g. label types that to not exist in the target).
@@ -1473,8 +1539,12 @@ namespace pwiz.Skyline.Model
                     {
                         // Update transition ratios
                         var nodeTranConvert = nodeTran;
+                        // GetSafeChromInfo rather than indexing Results, which a document read from
+                        // a file has none of: it keeps only the columnar results until they are
+                        // converted. The group above already reads it this way.
                         var listTranInfoList = _listResultCalcs.ConvertAll(calc =>
-                            calc.UpdateTransitionUserSetMatched(nodeTranConvert.Results[calc.ResultsIndex], isMatching));
+                            calc.UpdateTransitionUserSetMatched(nodeTranConvert.GetSafeChromInfo(calc.ResultsIndex),
+                                isMatching));
                         var resultsTran = Results<TransitionChromInfo>.Merge(nodeTran.Results, listTranInfoList);
                         listTransNew.Add(ReferenceEquals(resultsTran, nodeTran.Results)
                                              ? nodeTran

@@ -50,6 +50,38 @@ namespace pwiz.Skyline.Model.Results
             return -1;
         }
 
+        /// <summary>
+        /// The files one replicate has entries for. Costs nothing beyond walking the positions,
+        /// which is what makes it the answer for callers that only need to know which files there
+        /// are rather than anything about their peaks.
+        /// </summary>
+        public IEnumerable<ChromFileInfoId> GetFileIds(int replicateIndex)
+        {
+            if (replicateIndex < 0 || replicateIndex >= ReplicatePositions.ReplicateCount)
+            {
+                yield break;
+            }
+
+            int start = ReplicatePositions.GetStart(replicateIndex);
+            int end = start + ReplicatePositions.GetCount(replicateIndex);
+            for (int position = start; position < end; position++)
+            {
+                yield return FileIds[position].Value;
+            }
+        }
+
+        /// <summary>
+        /// Whether each replicate has any entry at all, one flag per replicate. The columnar
+        /// answer to what used to be asked as ChromInfoList.IsEmpty for each replicate in turn.
+        /// </summary>
+        public IEnumerable<bool> GetReplicatesWithResults()
+        {
+            for (int replicateIndex = 0; replicateIndex < ReplicatePositions.ReplicateCount; replicateIndex++)
+            {
+                yield return ReplicatePositions.GetCount(replicateIndex) > 0;
+            }
+        }
+
         public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
         {
             int start = ReplicatePositions.GetStart(replicateIndex);
