@@ -319,6 +319,25 @@ namespace pwiz.Skyline.Model.Results
             return UserSets == null ? UserSet.FALSE : UserSets[position];
         }
 
+        /// <summary>
+        /// The flat positions belonging to one replicate. How a caller walks a replicate without
+        /// counting: the entries of one are in no order it can rely on.
+        /// </summary>
+        public IEnumerable<int> GetPositions(int replicateIndex)
+        {
+            var replicatePositions = ChromFileIds.ReplicatePositions;
+            if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
+            {
+                yield break;
+            }
+
+            int start = replicatePositions.GetStart(replicateIndex);
+            for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
+            {
+                yield return position;
+            }
+        }
+
         public float? GetQValue(int position)
         {
             return GetScore(QValues, position);
@@ -432,6 +451,7 @@ namespace pwiz.Skyline.Model.Results
             var userSets = new List<UserSet>();
             var truncated = new List<bool?>();
             var emptyPeaks = new List<bool>();
+            var identified = new List<PeakIdentification>();
             var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
             List<CustomPeak> customPeaks = null;
             foreach (var chromInfoList in results)
@@ -453,6 +473,7 @@ namespace pwiz.Skyline.Model.Results
                     userSets.Add(chromInfo.UserSet);
                     truncated.Add(chromInfo.IsTruncated);
                     emptyPeaks.Add(chromInfo.IsEmpty);
+                    identified.Add(chromInfo.Identified);
                     count++;
                 }
 
@@ -463,7 +484,8 @@ namespace pwiz.Skyline.Model.Results
                 new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
                     .ChangeUserSets(userSets)
                     .ChangeTruncated(truncated)
-                    .ChangeEmptyPeaks(emptyPeaks);
+                    .ChangeEmptyPeaks(emptyPeaks)
+                    .ChangeIdentified(identified);
             if (customPeaks != null)
             {
                 transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
@@ -541,6 +563,13 @@ namespace pwiz.Skyline.Model.Results
         public ImmutableList<bool> EmptyPeaks { get; private set; }
 
         /// <summary>
+        /// Whether each peak contains an identification. Kept per position for the same reason as
+        /// <see cref="Truncated"/>: <see cref="PeptideDocNode.BestResult"/> scores every replicate
+        /// of every molecule with it, so it must not have to read a chromatogram to get it.
+        /// </summary>
+        public ImmutableList<PeakIdentification> Identified { get; private set; }
+
+        /// <summary>
         /// The positions which have something that cannot be derived from the .skyd file.
         /// Sparse: most positions have no entry.
         /// </summary>
@@ -611,6 +640,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.EmptyPeaks = ImmutableList.ValueOf(value).MaybeConstant());
         }
 
+        public TransitionResults ChangeIdentified(IEnumerable<PeakIdentification> value)
+        {
+            return ChangeProp(ImClone(this), im => im.Identified = ImmutableList.ValueOf(value).MaybeConstant());
+        }
+
         /// <summary>
         /// Whether the peak at one position ran off the end of the chromatogram, or null when
         /// nothing worked that out. See <see cref="Truncated"/>.
@@ -626,6 +660,15 @@ namespace pwiz.Skyline.Model.Results
         public bool IsEmptyPeak(int position)
         {
             return EmptyPeaks != null && EmptyPeaks[position];
+        }
+
+        /// <summary>
+        /// Whether the peak at one position contains an identification. See
+        /// <see cref="Identified"/>.
+        /// </summary>
+        public PeakIdentification GetIdentified(int position)
+        {
+            return Identified == null ? PeakIdentification.FALSE : Identified[position];
         }
 
         /// <summary>
@@ -701,13 +744,33 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// The flat positions belonging to one replicate. How a caller walks a replicate without
+        /// counting: the entries of one are in no order it can rely on.
+        /// </summary>
+        public IEnumerable<int> GetPositions(int replicateIndex)
+        {
+            var replicatePositions = ChromFileIds.ReplicatePositions;
+            if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
+            {
+                yield break;
+            }
+
+            int start = replicatePositions.GetStart(replicateIndex);
+            for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
+            {
+                yield return position;
+            }
+        }
+
+        /// <summary>
         /// Compared by value. See <see cref="TransitionGroupResults.Equals(TransitionGroupResults)"/>.
         /// </summary>
         protected bool Equals(TransitionResults other)
         {
             return Equals(ChromFileIds, other.ChromFileIds) && Equals(Areas, other.Areas) &&
                    Equals(UserSets, other.UserSets) && Equals(Truncated, other.Truncated) &&
-                   Equals(EmptyPeaks, other.EmptyPeaks) && Equals(CustomPeaks, other.CustomPeaks) &&
+                   Equals(EmptyPeaks, other.EmptyPeaks) && Equals(Identified, other.Identified) &&
+                   Equals(CustomPeaks, other.CustomPeaks) &&
                    Equals(ChromInfos, other.ChromInfos);
         }
 
@@ -735,6 +798,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (Truncated?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (EmptyPeaks?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (Identified?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
                 return result;

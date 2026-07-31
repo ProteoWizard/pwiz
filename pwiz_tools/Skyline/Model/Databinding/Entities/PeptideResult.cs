@@ -168,20 +168,43 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public void ChangeChromInfo(EditDescription editDescription, Func<PeptideChromInfo, PeptideChromInfo> newChromInfo)
-        {
-            Peptide.ChangeDocNode(editDescription, docNode=>docNode.ChangeResults(GetResultFile().ChangeChromInfo(docNode.Results, newChromInfo)));
-        }
-
+        /// <summary>
+        /// Straight off <see cref="PeptideResults"/>, which is where a molecule keeps this. Reading
+        /// it needs no <see cref="MoleculeResults"/>, and so reads no chromatogram, which matters
+        /// because a report shows it for every row.
+        /// </summary>
         [Importable]
         public bool ExcludeFromCalibration
         {
-            get { return ChromInfo.ExcludeFromCalibration; }
+            get
+            {
+                var peptideResults = Peptide.DocNode.AbbreviatedResults;
+                int position = PeptideResultPosition(peptideResults);
+                return position >= 0 && peptideResults.GetExcludeFromCalibration(position);
+            }
             set
             {
-                ChangeChromInfo(EditColumnDescription(nameof(ExcludeFromCalibration), value),
-                    chromInfo => chromInfo.ChangeExcludeFromCalibration(value));
+                ChangePeptideResult(EditColumnDescription(nameof(ExcludeFromCalibration), value),
+                    (results, position) => results.ChangeExcludeFromCalibration(position, value));
             }
+        }
+
+        /// <summary>
+        /// Where this result's file sits in the molecule's columnar results, or -1 when it has none.
+        /// </summary>
+        private int PeptideResultPosition(PeptideResults peptideResults)
+        {
+            return peptideResults?.IndexOfFile(ResultFile.Replicate.ReplicateIndex,
+                ResultFile.ChromFileInfoId) ?? -1;
+        }
+
+        private void ChangePeptideResult(EditDescription editDescription,
+            Func<PeptideResults, int, PeptideResults> change)
+        {
+            var replicateIndex = ResultFile.Replicate.ReplicateIndex;
+            var fileId = ResultFile.ChromFileInfoId;
+            Peptide.ChangeDocNode(editDescription,
+                docNode => docNode.ChangePeptideResult(SrmDocument.Settings, replicateIndex, fileId, change));
         }
 
         public QuantificationResult GetQuantificationResult()
@@ -260,11 +283,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("ExplicitAnalyteConcentration")]
         public double? AnalyteConcentration
         {
-            get { return ChromInfo.AnalyteConcentration; }
+            get
+            {
+                var peptideResults = Peptide.DocNode.AbbreviatedResults;
+                int position = PeptideResultPosition(peptideResults);
+                return position < 0 ? null : peptideResults.GetAnalyteConcentration(position);
+            }
             set
             {
-                ChangeChromInfo(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
-                    chromInfo => chromInfo.ChangeAnalyteConcentration(value));
+                ChangePeptideResult(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
+                    (results, position) => results.ChangeAnalyteConcentration(position, value));
             }
         }
 
@@ -298,7 +326,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             protected override PeptideChromInfo CalculateValue(PeptideResult owner)
             {
-                return owner.ResultFile.FindChromInfo(owner.Peptide.DocNode.Results);
+                // The molecule level is aggregated from the precursors and no longer stored, so it
+                // comes from the MoleculeResults the Peptide holds. That one is shared with the
+                // precursor and transition rows, so a report over a molecule still reads its
+                // chromatograms once.
+                return owner.ResultFile.FindChromInfo(owner.Peptide.GetMoleculeResults().GetPeptideChromInfos());
             }
 
             public PeptideChromInfo GetChromInfo(PeptideResult owner)

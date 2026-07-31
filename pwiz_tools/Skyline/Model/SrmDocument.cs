@@ -2311,7 +2311,9 @@ namespace pwiz.Skyline.Model
         {
             foreach (PeptideDocNode nodePep in Molecules)
             {
-                ValidateChromInfo(Settings, nodePep.Results);
+                // Nothing to validate at the molecule level: its chrom infos are aggregated from
+                // the precursors and rebuilt on demand rather than stored, so there is no stored
+                // list whose length could disagree with the document's replicates.
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     ValidateChromInfo(Settings, nodeGroup.Results);

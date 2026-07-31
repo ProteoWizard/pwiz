@@ -773,7 +773,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeptideDocNode peptideDocNode, Func<PeptideChromInfoData, bool> isMissing, Func<int, ICollection<PeptideChromInfoData>, PointPair> createPeptidePointPairFunc)
             {
                 var peptideChromInfoDatas =
-                    PeptideChromInfoData.GetPeptideChromInfoDatas(_document.Settings.MeasuredResults, peptideDocNode);
+                    PeptideChromInfoData.GetPeptideChromInfoDatas(_document.Settings, peptideDocNode);
                 return MakePointPairLists(DisplayTypeChrom.all, peptideChromInfoDatas, isMissing, createPeptidePointPairFunc).First();
             }
 

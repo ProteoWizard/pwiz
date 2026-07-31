@@ -162,13 +162,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
 
             var peptideDocNode = GetPeptideQuantifier(new CalibrationPoint(replicateIndex, null)).PeptideDocNode;
-            var results = peptideDocNode.Results;
-            if (null != results && 0 <= replicateIndex && replicateIndex < results.Count)
+            // From the columnar results, which is where a molecule keeps this. No chromatogram is
+            // read for it, which matters because the calibration curve asks for every replicate.
+            var analyteConcentration =
+                peptideDocNode.AbbreviatedResults?.GetAnalyteConcentrationForReplicate(replicateIndex);
             {
-                var peptideChromInfo = results[replicateIndex].FirstOrDefault();
-                if (peptideChromInfo != null && peptideChromInfo.AnalyteConcentration.HasValue)
+                if (analyteConcentration.HasValue)
                 {
-                    return peptideChromInfo.AnalyteConcentration.Value;
+                    return analyteConcentration.Value;
                 }
             }
             double concentrationMultiplier = peptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1.0);
@@ -631,18 +632,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return false;
             }
-            var peptideResults = PeptideQuantifier.PeptideDocNode.Results;
-            if (null == peptideResults)
-            {
-                return false;
-            }
-            if (replicateIndex >= peptideResults.Count)
-            {
-                return false;
-            }
-            var peptideChromInfos = peptideResults[replicateIndex];
-            return peptideChromInfos.Any(
-                peptideChromInfo => null != peptideChromInfo && peptideChromInfo.ExcludeFromCalibration);
+            // The columnar results, for the same reason as the analyte concentration above.
+            return PeptideQuantifier.PeptideDocNode.AbbreviatedResults?.AnyExcludeFromCalibration(replicateIndex)
+                   ?? false;
         }
 
         public bool HasExternalStandards()

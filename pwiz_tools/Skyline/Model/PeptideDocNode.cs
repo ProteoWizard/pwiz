@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,7 +86,6 @@ namespace pwiz.Skyline.Model
             }
             ExplicitRetentionTime = explicitRetentionTimeInfo;
             Results = results;
-            BestResult = CalcBestResult();
 
             if (settings != null)
             {
@@ -234,7 +233,7 @@ namespace pwiz.Skyline.Model
         public StandardType GlobalStandardType { get; private set; }
 
         private Target _modifiedTarget;
-        public Target ModifiedTarget 
+        public Target ModifiedTarget
         {
             get => IsProteomic ? _modifiedTarget : Peptide.Target;
             private set => _modifiedTarget = value;
@@ -376,6 +375,20 @@ namespace pwiz.Skyline.Model
             if (Equals(AbbreviatedResults, prop))
                 return this;
             return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
+        }
+
+        /// <summary>
+        /// Records one of the two values a molecule keeps for one file, making the columnar results
+        /// first when it has none, which is how a document with neither value arrives here.
+        /// </summary>
+        public PeptideDocNode ChangePeptideResult(SrmSettings settings, int replicateIndex, ChromFileInfoId fileId,
+            Func<PeptideResults, int, PeptideResults> change)
+        {
+            var peptideResults = AbbreviatedResults ?? PeptideResults.ForMeasuredResults(settings.MeasuredResults);
+            int position = peptideResults?.IndexOfFile(replicateIndex, fileId) ?? -1;
+            if (position < 0)
+                return this;
+            return ChangeAbbreviatedResults(change(peptideResults, position));
         }
 
         public bool HasResults { get { return Results != null; } }
@@ -555,7 +568,16 @@ namespace pwiz.Skyline.Model
             return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
-        public int BestResult { get; private set; }
+        /// <summary>
+        /// Worked out on each call rather than kept, now that <see cref="CalcBestResult"/> needs
+        /// nothing but the columnar results of the children. Keeping it meant it had to be
+        /// recalculated wherever the results changed, and carried through
+        /// <see cref="Immutable.ImClone{T}"/> in the meantime, which is how a stale one gets out.
+        /// </summary>
+        public int BestResult
+        {
+            get { return CalcBestResult(); }
+        }
 
         /// <summary>
         /// Returns the index of the "best" result for a peptide.  This is currently
@@ -564,22 +586,32 @@ namespace pwiz.Skyline.Model
         /// more like picking the best peak in the import code, including factors
         /// such as peak-found-ratio and dot-product.
         /// </summary>
+        /// <summary>
+        /// Which replicate shows this molecule best, worked out entirely from the columnar results
+        /// of its precursors and transitions. Everything it needs is stored there - the z scores,
+        /// the areas and whether a peak is identified - so it reads no chromatogram, which is what
+        /// lets <see cref="BestResult"/> be worked out on demand rather than kept.
+        /// </summary>
         private int CalcBestResult()
         {
-            if (!HasResults)
+            int replicateCount = TransitionGroups
+                .Select(nodeGroup => nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0)
+                .DefaultIfEmpty(0).Max();
+            if (replicateCount == 0)
                 return -1;
 
             int iBest = -1;
             double? bestZScore = null;
             double bestArea = double.MinValue;
-            for (int i = 0; i < Results.Count; i++)
+            for (int i = 0; i < replicateCount; i++)
             {
                 var i1 = i;
-                var zScores = Children.Cast<TransitionGroupDocNode>()
-                    .Where(nodeTranGroup => nodeTranGroup.HasResults)
-                    .SelectMany(nodeTranGroup => nodeTranGroup.Results[i1])
-                    .Where(ci => ci.ZScore.HasValue)
-                    .Select(ci => ci.ZScore.Value).ToArray();
+                var zScores = TransitionGroups
+                    .Select(nodeGroup => nodeGroup.AbbreviatedResults)
+                    .Where(results => results != null)
+                    .SelectMany(results => results.GetPositions(i1).Select(results.GetZScore))
+                    .Where(zScore => zScore.HasValue)
+                    .Select(zScore => zScore.Value).ToArray();
                 var zScore = zScores.Length > 0 ? (float?) zScores.Max() : null;
 
                 if (zScore.HasValue)
@@ -605,10 +637,11 @@ namespace pwiz.Skyline.Model
                     bool isGroupIdentified = false;
                     foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                     {
-                        if (!nodeTran.HasResults)
+                        var results = nodeTran.AbbreviatedResults;
+                        if (results == null)
                             continue;
-                        var result = nodeTran.Results[i];
-                        int resultCount = result.Count;
+                        var positions = results.GetPositions(i).ToArray();
+                        int resultCount = positions.Length;
                         if (resultCount == 0)
                             continue;
                         // Use average area over all files in a replicate to avoid
@@ -617,22 +650,23 @@ namespace pwiz.Skyline.Model
                         // file per precursor per replicate.
                         double tranArea = 0;
                         double tranMeasured = 0;
-                        for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
+                        foreach (int position in positions)
                         {
-                            var chromInfo = result[iChromInfo];
-                            if (nodeTran.ParticipatesInScoring && chromInfo.Area > 0) // Don't use reporter ions in determining peak fit
+                            float area = results.Areas[position];
+                            if (nodeTran.ParticipatesInScoring && area > 0) // Don't use reporter ions in determining peak fit
                             {
-                                tranArea += chromInfo.Area;
+                                tranArea += area;
                                 tranMeasured++;
 
-                                isGroupIdentified = isGroupIdentified || chromInfo.IsIdentified;
+                                isGroupIdentified = isGroupIdentified ||
+                                                    results.GetIdentified(position) != PeakIdentification.FALSE;
                             }
                         }
                         groupArea += tranArea/resultCount;
                         groupTranMeasured += tranMeasured/resultCount;
                     }
 
-                    maxScore = Math.Max(maxScore, 
+                    maxScore = Math.Max(maxScore,
                         ChromDataPeakList.ScorePeak(groupArea, LegacyCountScoreCalc.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count), isGroupIdentified));
                 }
                 if (maxScore > bestArea)
@@ -641,7 +675,7 @@ namespace pwiz.Skyline.Model
                     bestArea = maxScore;
                 }
             }
-            return iBest;            
+            return iBest;
         }
 
         public double? InternalStandardConcentration { get; private set; }
@@ -727,7 +761,7 @@ namespace pwiz.Skyline.Model
                                                      var abbreviated = PeptideResults.FromChromInfos(prop);
                                                      if (abbreviated != null)
                                                          im.AbbreviatedResults = abbreviated;
-                                                     im.BestResult = im.CalcBestResult();
+
                                                  });
         }
 
@@ -1081,7 +1115,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                nodeResult = (PeptideDocNode) nodeResult.ChangeChildrenChecked(childrenNew);                
+                nodeResult = (PeptideDocNode) nodeResult.ChangeChildrenChecked(childrenNew);
             }
             else
             {
@@ -1137,7 +1171,7 @@ namespace pwiz.Skyline.Model
                     }
 
                     nodeResult = (PeptideDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
-                }                
+                }
             }
 
             if (diff.DiffResults || ChangedResults(nodeResult))
@@ -1266,7 +1300,7 @@ namespace pwiz.Skyline.Model
             if (peptideList && Peptide.FastaSequence != null)
             {
                 result = new PeptideDocNode(new Peptide(null, Peptide.Target.Sequence, null, null, Peptide.MissedCleavages), settings,
-                                            result.ExplicitMods, result.SourceKey, result.ExplicitRetentionTime, new TransitionGroupDocNode[0], result.AutoManageChildren); 
+                                            result.ExplicitMods, result.SourceKey, result.ExplicitRetentionTime, new TransitionGroupDocNode[0], result.AutoManageChildren);
             }
             // Create a new child list, using existing children where GlobalIndexes match.
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
@@ -1300,7 +1334,7 @@ namespace pwiz.Skyline.Model
             // Create explicit mods matching the implicit mods on this peptide for each document.
             var sourceImplicitMods = new ExplicitMods(this, source.StaticModifications, defSetStat, source.GetHeavyModifications(), defSetHeavy);
             var targetImplicitMods = new ExplicitMods(this, target.StaticModifications, defSetStat, target.GetHeavyModifications(), defSetHeavy);
-            
+
             // If modifications match, no need to create explicit modifications for the peptide.
             if (sourceImplicitMods.Equals(targetImplicitMods))
                 return this;
@@ -1324,7 +1358,7 @@ namespace pwiz.Skyline.Model
             {
                 newExplicitStaticMods = ExplicitMods.StaticModifications;
             }
-                
+
             // Drop explicit mods if matching implicit mods are found in the target document.
             IList<TypedExplicitModifications> newExplicitHeavyMods = new List<TypedExplicitModifications>();
             // For each heavy label type, add explicit mods if static mods not found in the target document.
@@ -1584,37 +1618,14 @@ namespace pwiz.Skyline.Model
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);
             }
 
-            
             private List<IList<PeptideChromInfo>> CopyChromInfoAttributes(PeptideDocNode peptideDocNode,
                 List<IList<PeptideChromInfo>> results)
             {
-                if (peptideDocNode == null || peptideDocNode.Results == null)
-                {
-                    return results;
-                }
-                Dictionary<int, Tuple<bool, double?>> peptideChromInfoAttributes = null;   // Delay allocation
-                foreach (var chromInfos in peptideDocNode.Results)
-                {
-                    if (chromInfos.IsEmpty)
-                    {
-                        continue;
-                    }
-                    foreach (var chromInfo in chromInfos)
-                    {
-                        if (chromInfo != null)
-                        {
-                            if (chromInfo.ExcludeFromCalibration || chromInfo.AnalyteConcentration.HasValue)
-                            {
-                                if (peptideChromInfoAttributes == null)
-                                {
-                                    peptideChromInfoAttributes = new Dictionary<int, Tuple<bool, double?>>();
-                                }
-                                peptideChromInfoAttributes.Add(chromInfo.FileId.GlobalIndex, Tuple.Create(chromInfo.ExcludeFromCalibration, chromInfo.AnalyteConcentration));
-                            }
-                        }
-                    }
-                }
-                if (peptideChromInfoAttributes == null)
+                // The two values a molecule keeps, carried forward from its columnar results rather
+                // than from chrom infos it no longer has. Null there means there is nothing to
+                // carry, which is the usual document.
+                var peptideResults = peptideDocNode?.AbbreviatedResults;
+                if (peptideResults == null)
                 {
                     return results;
                 }
@@ -1634,14 +1645,16 @@ namespace pwiz.Skyline.Model
                             var chromInfoAdd = chromInfo;
                             if (chromInfo != null)
                             {
-                                Tuple<bool, double?> attributes;
-                                if (peptideChromInfoAttributes.TryGetValue(chromInfoAdd.FileId.GlobalIndex,
-                                    out attributes))
+                                int position = peptideResults.IndexOfFile(replicateIndex, chromInfo.FileId);
+                                if (position >= 0)
                                 {
-                                    chromInfoAdd = chromInfoAdd.ChangeExcludeFromCalibration(attributes.Item1)
-                                        .ChangeAnalyteConcentration(attributes.Item2);
+                                    chromInfoAdd = chromInfoAdd
+                                        .ChangeExcludeFromCalibration(
+                                            peptideResults.GetExcludeFromCalibration(position))
+                                        .ChangeAnalyteConcentration(
+                                            peptideResults.GetAnalyteConcentration(position));
                                 }
-                            } 
+                            }
                             if (newChromInfoList != null)
                                 newChromInfoList.Add(chromInfoAdd);
                             else
@@ -1814,7 +1827,7 @@ namespace pwiz.Skyline.Model
                     if (listInfoNew != null)
                         listInfoNew[iInfo] = info;
                 }
-                
+
                 if (listInfoNew == null)
                     return listInfo;
                 return listInfoNew;
@@ -2219,7 +2232,7 @@ namespace pwiz.Skyline.Model
                 other.Rank.Equals(Rank) &&
                 Equals(other.Results, Results) &&
                 Equals(other.ExplicitRetentionTime, ExplicitRetentionTime) &&
-                other.BestResult == BestResult &&
+
                 Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
                 Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
                 Equals(other.NormalizationMethod, NormalizationMethod) &&
@@ -2247,7 +2260,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (Rank.HasValue ? Rank.Value : 0);
                 result = (result*397) ^ (ExplicitRetentionTime != null ? ExplicitRetentionTime.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
-                result = (result*397) ^ BestResult;
+
                 result = (result*397) ^ InternalStandardConcentration.GetHashCode();
                 result = (result*397) ^ ConcentrationMultiplier.GetHashCode();
                 result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
@@ -2309,7 +2322,6 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, obj)) return true;
             return Equals(obj as ExplicitRetentionTimeInfo);
         }
-
 
         public override int GetHashCode()
         {

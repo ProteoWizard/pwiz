@@ -80,6 +80,35 @@ namespace pwiz.Skyline.Model.Results
                 .ChangeAnalyteConcentrations(analyteConcentrations);
         }
 
+        /// <summary>
+        /// An empty set laid out to match the document's replicates and files, for a molecule which
+        /// is about to be given one of the two values it can keep and has none yet. Built from the
+        /// measured results rather than from any chrom infos, so it reads nothing.
+        /// </summary>
+        public static PeptideResults ForMeasuredResults(MeasuredResults measuredResults)
+        {
+            if (measuredResults == null)
+            {
+                return null;
+            }
+
+            var fileIds = new List<ChromFileInfoId>();
+            var counts = new List<int>();
+            foreach (var chromatogramSet in measuredResults.Chromatograms)
+            {
+                int count = 0;
+                foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    fileIds.Add(fileInfo.FileId);
+                    count++;
+                }
+
+                counts.Add(count);
+            }
+
+            return new PeptideResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds));
+        }
+
         public PeptideResults(ChromFileIds chromFileIds)
         {
             ChromFileIds = chromFileIds;
@@ -128,6 +157,89 @@ namespace pwiz.Skyline.Model.Results
         public double? GetAnalyteConcentration(int position)
         {
             return AnalyteConcentrations?[position];
+        }
+
+        /// <summary>
+        /// Whether the user left a replicate out of the calibration curve, asked of the replicate
+        /// rather than of one of its files.
+        /// <para>
+        /// The entries here are per file, because that is what
+        /// <see cref="PeptideDocNode.PeptideChromInfoListCalculator"/> produces - one
+        /// <see cref="PeptideChromInfo"/> per file, keyed on FileIndex. Both of these values
+        /// describe the sample rather than an injection of it, though, so the callers which matter
+        /// ask at the replicate level, and a replicate counts as excluded when any of its files is.
+        /// </para>
+        /// </summary>
+        public bool AnyExcludeFromCalibration(int replicateIndex)
+        {
+            foreach (int position in GetPositions(replicateIndex))
+            {
+                if (GetExcludeFromCalibration(position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// The first concentration entered for any file of a replicate, or null.
+        /// See <see cref="AnyExcludeFromCalibration"/>.
+        /// </summary>
+        public double? GetAnalyteConcentrationForReplicate(int replicateIndex)
+        {
+            foreach (int position in GetPositions(replicateIndex))
+            {
+                var concentration = GetAnalyteConcentration(position);
+                if (concentration.HasValue)
+                {
+                    return concentration;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Sets the value at one position, starting the list from the default when there is none
+        /// yet, which is how the usual document arrives here.
+        /// </summary>
+        public PeptideResults ChangeExcludeFromCalibration(int position, bool value)
+        {
+            return ChangeExcludeFromCalibration(SetAt(ExcludeFromCalibration, position, value, false));
+        }
+
+        public PeptideResults ChangeAnalyteConcentration(int position, double? value)
+        {
+            return ChangeAnalyteConcentrations(SetAt(AnalyteConcentrations, position, value, null));
+        }
+
+        private IEnumerable<T> SetAt<T>(ImmutableList<T> values, int position, T value, T defaultValue)
+        {
+            var list = new T[ChromFileIds.FileIds.Count];
+            for (int i = 0; i < list.Length; i++)
+            {
+                list[i] = values == null ? defaultValue : values[i];
+            }
+
+            list[position] = value;
+            return list;
+        }
+
+        private IEnumerable<int> GetPositions(int replicateIndex)
+        {
+            var replicatePositions = ChromFileIds.ReplicatePositions;
+            if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
+            {
+                yield break;
+            }
+
+            int start = replicatePositions.GetStart(replicateIndex);
+            for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
+            {
+                yield return position;
+            }
         }
 
         /// <summary>

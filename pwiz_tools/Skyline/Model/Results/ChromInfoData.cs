@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Results
@@ -178,10 +179,21 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public static IList<ICollection<PeptideChromInfoData>> GetPeptideChromInfoDatas(MeasuredResults measuredResults, PeptideDocNode peptideDocNode)
+        /// <summary>
+        /// Takes the settings rather than the measured results because the molecule level chrom
+        /// infos are not stored any more: they are aggregated from the precursors and rebuilt from
+        /// the .skyd through a <see cref="MoleculeResults"/>, which needs the whole settings.
+        /// </summary>
+        public static IList<ICollection<PeptideChromInfoData>> GetPeptideChromInfoDatas(SrmSettings settings, PeptideDocNode peptideDocNode)
         {
             var list = new List<ICollection<PeptideChromInfoData>>();
-            var peptideResults = peptideDocNode.Results;
+            var measuredResults = settings.MeasuredResults;
+            if (null == measuredResults)
+            {
+                return list;
+            }
+
+            var peptideResults = new MoleculeResults(settings, peptideDocNode).GetPeptideChromInfos();
             if (null == peptideResults)
             {
                 return list;

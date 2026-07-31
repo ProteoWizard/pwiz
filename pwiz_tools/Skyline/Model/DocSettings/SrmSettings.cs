@@ -780,8 +780,9 @@ namespace pwiz.Skyline.Model.DocSettings
                         continue;
                     if (!ReferenceEquals(nodePep.Id, nodePepOrig.Id) ||
                         !Equals(nodePep.GlobalStandardType, nodePepOrig.GlobalStandardType) ||
-                        // Need the new version, if the results have changed, or ratios will not be valid
-                        !ReferenceEquals(nodePep.Results, nodePepOrig.Results))
+                        // Need the new version, if the results have changed, or ratios will not be
+                        // valid. The columnar results, since Results no longer changes with them.
+                        !ReferenceEquals(nodePep.AbbreviatedResults, nodePepOrig.AbbreviatedResults))
                     {
                         return true;
                     }
