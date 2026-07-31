@@ -167,14 +167,24 @@ rm -rf "$TC_TEST_RESULTS"
 mkdir -p "$TC_TEST_RESULTS"
 
 TC_LOGGER=()
-[ -n "${TEAMCITY_VERSION:-}" ] && TC_LOGGER=(--logger teamcity)
+# Colon form to match scripts/Run-Tests-Parallel.ps1, which is the invocation proven to work
+# on the Windows agents. NOTE: the teamcity logger comes from TeamCity's own .NET integration
+# on the agent -- nothing in this repo references TeamCity.VSTest.TestAdapter -- so whether it
+# resolves is an agent property, not a repo one.
+[ -n "${TEAMCITY_VERSION:-}" ] && TC_LOGGER=(--logger:teamcity)
 
 TESTS_FAILED=0
 FAILED_PROJECTS=""
 for proj in "${TEST_TARGET[@]}"; do
     echo "##teamcity[progressMessage 'dotnet test $proj ($CONFIG)']"
-    dotnet test "$proj" --no-build -nologo "${MSBUILD_PROPS[@]}" \
-        --results-directory "$TC_TEST_RESULTS" --logger "trx" "${TC_LOGGER[@]+"${TC_LOGGER[@]}"}"
+    # Echo the exact argv before running. vstest reports a bad argument by printing the
+    # offending token with no indication of which option it belonged to, which is not
+    # enough to diagnose from a CI log alone.
+    TEST_ARGS=(test "$proj" --no-build -nologo "${MSBUILD_PROPS[@]}"
+               "--results-directory:$TC_TEST_RESULTS" --logger:trx
+               "${TC_LOGGER[@]+"${TC_LOGGER[@]}"}")
+    printf '+ dotnet'; printf ' %q' "${TEST_ARGS[@]}"; printf '\n'
+    dotnet "${TEST_ARGS[@]}"
     if [ $? -ne 0 ]; then
         TESTS_FAILED=1
         FAILED_PROJECTS="$FAILED_PROJECTS $(basename "$proj")"
