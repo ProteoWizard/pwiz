@@ -58,7 +58,7 @@ namespace pwiz.Osprey.Test
                 allowUnfixedResident: null, useFdrProjection: true));
 
             // HPC reconciled-input merge trips the fat pool: guarded (armed), and the message is
-            // actionable -- it names the token the operator would set, not just a symptom.
+            // actionable - it names the token the operator would set, not just a symptom.
             var hpc = new OspreyConfig { ExpectReconciledInput = true };
             string hpcErr = PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: null, useFdrProjection: true);
@@ -69,7 +69,7 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: ResidentPaths.HPC_MERGE, useFdrProjection: true));
             // OSPREY_FDR_PROJECTION=0 (the A/B byte-identity oracle) is NOT an automatic
-            // exemption any more -- it is its own token. Unnamed it is refused like anything
+            // exemption any more - it is its own token. Unnamed it is refused like anything
             // else, which closes the last route to a resident pool nobody had to ask for.
             Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: null, useFdrProjection: false));
@@ -85,16 +85,25 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: ResidentPaths.FDRBENCH_PASS1, useFdrProjection: true));
 
-            // Capitalization does not defeat it -- the error names the exact token to set, so
+            // Capitalization does not defeat it - the error names the exact token to set, so
             // rejecting the operator's own value for case would read as the guard ignoring them.
             Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpc, needsResidentPool: true,
                 allowUnfixedResident: ResidentPaths.HPC_MERGE.ToUpperInvariant(),
                 useFdrProjection: true));
 
             // Each user-reachable trigger names its own token so the failure is diagnosable:
+            // mdiag arms the pool only in COMBINATION with a full resume, so the caller passes
+            // that conjunction in. Testing config.ModelDiagnostics alone inside the trigger would
+            // make mdiag an unconditional catch-all that absorbed any future arming condition -
+            // and hand it the one token CI already exports (regression.ps1 mode 2).
             var mdiag = new OspreyConfig { ModelDiagnostics = true };
-            StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(mdiag, true, null, true),
+            StringAssert.Contains(
+                PerFileScoringTask.ResidentPoolGuardError(mdiag, true, null, true,
+                    mdiagFullResume: true),
                 ResidentPaths.MDIAG_FULL_RESUME);
+            // --model-diagnostics WITHOUT the full resume is not a known path: refused outright.
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(mdiag, true,
+                ResidentPaths.MDIAG_FULL_RESUME, true, mdiagFullResume: false));
 
             var fdrbench1 = new OspreyConfig { OutputFdrBench = "bench.tsv", FdrBenchPass = 1 };
             StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, true, null, true),
@@ -104,7 +113,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(simple, true, null, true),
                 ResidentPaths.NON_PERCOLATOR_FDR);
 
-            // A resident path with NO token is refused unconditionally -- no value admits it.
+            // A resident path with NO token is refused unconditionally - no value admits it.
             // This is the ratchet: when something we streamed goes resident again, as transfer
             // did, it cannot be waved through. It has to be fixed, or deliberately listed.
             // (lean is the default config: Percolator, no fdrbench, no mdiag, not a merge.)
@@ -118,12 +127,15 @@ namespace pwiz.Osprey.Test
             // never GROW. Asserting the WHOLE set rather than membership is the point: an
             // addition then shows up in review as the ratchet running backwards, instead of
             // as an environment variable somebody set months ago and nobody re-examined.
+            // LITERALS, not the constants: comparing the constants to themselves would pin
+            // membership and order but not the text, and the text is what regression.ps1 mode 2
+            // hard-codes. Renaming a value would otherwise compile, pass here, and only surface
+            // hours later when the expensive gate reaches mode 2 and Osprey throws.
             CollectionAssert.AreEqual(
                 new[]
                 {
-                    ResidentPaths.HPC_MERGE, ResidentPaths.FDRBENCH_PASS1,
-                    ResidentPaths.MDIAG_FULL_RESUME, ResidentPaths.NON_PERCOLATOR_FDR,
-                    ResidentPaths.PROJECTION_OFF
+                    "hpc-merge", "fdrbench-pass1", "mdiag-full-resume", "non-percolator-fdr",
+                    "projection-off"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
 

@@ -644,9 +644,9 @@ namespace pwiz.Osprey.Tasks
             // so the fat pool is never on the row-count scaling path. The full elimination (stream
             // the batch report from the sidecar+parquet too) is a documented follow-up.
             // See TODO-20260720_osprey_pass2_per_run_qvalue.
-            bool needsResidentPool = NeedsResidentPool(config) ||
-                                     (config.ModelDiagnostics && FirstPassSidecarsPresent(config));
-            GuardResidentPool(config, needsResidentPool);
+            bool mdiagFullResume = config.ModelDiagnostics && FirstPassSidecarsPresent(config);
+            bool needsResidentPool = NeedsResidentPool(config) || mdiagFullResume;
+            GuardResidentPool(config, needsResidentPool, mdiagFullResume);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -1415,7 +1415,9 @@ namespace pwiz.Osprey.Tasks
         /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstJoin's rehydrate before it
         /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
         /// silently post-compaction one), OSPREY_FDR_PROJECTION=0, a non-Percolator
-        /// FdrMethod, --fdrbench-pass 1, and OSPREY_PASS2_QVALUE=transfer. The
+        /// FdrMethod, and --fdrbench-pass 1. OSPREY_PASS2_QVALUE=transfer is NOT among them:
+        /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
+        /// own on-disk sidecar. The
         /// --task SecondPassFDR merge is NOT among them: it sets ExpectReconciledInput, which
         /// <c>--task</c> selection makes mutually exclusive with <c>NoJoin</c>, so term 2's
         /// NoJoin clause already excludes it.
@@ -1926,10 +1928,12 @@ namespace pwiz.Osprey.Tasks
         /// <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident implementation
         /// outright and so must be named like any other.
         /// </summary>
-        private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
+        private static void GuardResidentPool(
+            OspreyConfig config, bool needsResidentPool, bool mdiagFullResume = false)
         {
             string error = ResidentPoolGuardError(config, needsResidentPool,
-                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection);
+                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection,
+                mdiagFullResume);
             if (error != null)
                 throw new InvalidOperationException(error);
         }
@@ -1950,11 +1954,18 @@ namespace pwiz.Osprey.Tasks
         /// distinguish, and is how transfer regressed unnoticed.</para>
         /// </summary>
         internal static string ResidentPoolGuardError(
-            OspreyConfig config, bool needsResidentPool, string allowUnfixedResident, bool useFdrProjection)
+            OspreyConfig config, bool needsResidentPool, string allowUnfixedResident,
+            bool useFdrProjection, bool mdiagFullResume = false)
         {
             if (!needsResidentPool)
                 return null;
-            string trigger = ResidentPoolTrigger(config, useFdrProjection);
+            string trigger = ResidentPoolTrigger(config, useFdrProjection, mdiagFullResume);
+            // Membership in the committed list is what makes it the high-water mark rather than
+            // documentation: a token the trigger chain invents but the list does not carry is
+            // refused here, so re-admitting a path really does require editing the list (and
+            // failing its pinning test), not just adding a branch above.
+            if (trigger != null && !ResidentPaths.KNOWN_UNFIXED.Contains(trigger))
+                trigger = null;
             if (trigger == null)
             {
                 return
@@ -1968,28 +1979,41 @@ namespace pwiz.Osprey.Tasks
             // read as the guard ignoring what the operator just did.
             if (string.Equals(trigger, allowUnfixedResident, StringComparison.OrdinalIgnoreCase))
                 return null;
+            // Name the offending value when one was supplied, so a typo or a shell-quoted token
+            // does not produce the identical message the unset case produces.
+            string supplied = string.IsNullOrEmpty(allowUnfixedResident)
+                ? string.Empty
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}', which does " +
+                                @"not name this path.", allowUnfixedResident);
             return string.Format(
                 @"This run takes the '{0}' RESIDENT first-pass pool path, which holds every entry " +
                 @"in memory and grows O(files) - it does not scale to large file counts and can " +
                 @"exhaust memory. Set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to accept it and proceed " +
-                @"(intended for local testing / small runs); otherwise this path is unavailable.",
-                trigger);
+                @"(intended for local testing / small runs); otherwise this path is unavailable.{1}",
+                trigger, supplied);
         }
 
         /// <summary>
         /// The <see cref="ResidentPaths"/> token for the known-unfixed resident path this config
-        /// takes, or <c>null</c> when it needs the resident pool for a reason NOT on that list.
-        /// Order is most-specific-first and mirrors <see cref="PreCompactionPoolReason"/>.
-        /// <c>--model-diagnostics</c> is last because it only forces the pool in combination with
-        /// a full resume (the caller's <c>FirstPassSidecarsPresent</c> conjunction).
+        /// takes, or <c>null</c> when it needs the resident pool for a reason NOT on that list -
+        /// which the caller refuses outright, since reaching that state means something we
+        /// believed bounded is resident again.
         ///
-        /// <para><c>OSPREY_FDR_PROJECTION=0</c> is checked FIRST and deliberately outranks the
-        /// config-driven reasons: it selects the legacy implementation for the WHOLE run, so it
-        /// is the honest description of why the run is resident even when another trigger also
-        /// applies. Naming it is therefore coarse by design - but it is now named, where it used
-        /// to bypass the guard silently.</para>
+        /// <para>Order here is BEHAVIORAL, unlike <see cref="PreCompactionPoolReason"/> where only
+        /// the reported string depends on it: this decides which token the operator must set, so
+        /// a config matching two triggers is attributable to exactly one.
+        /// <c>OSPREY_FDR_PROJECTION=0</c> is checked FIRST and deliberately outranks the
+        /// config-driven reasons, because it selects the legacy implementation for the WHOLE run
+        /// and is therefore the honest description even when another trigger also applies.</para>
+        ///
+        /// <para><paramref name="mdiagFullResume"/> is passed in rather than read off
+        /// <paramref name="config"/>: <c>--model-diagnostics</c> forces the pool only in
+        /// combination with a full resume, and testing <c>config.ModelDiagnostics</c> alone here
+        /// would make mdiag an unconditional catch-all that silently absorbed any FUTURE arming
+        /// condition - handing it a token CI already exports.</para>
         /// </summary>
-        private static string ResidentPoolTrigger(OspreyConfig config, bool useFdrProjection)
+        private static string ResidentPoolTrigger(
+            OspreyConfig config, bool useFdrProjection, bool mdiagFullResume)
         {
             if (!useFdrProjection)
                 return ResidentPaths.PROJECTION_OFF;
@@ -1999,7 +2023,7 @@ namespace pwiz.Osprey.Tasks
                 return ResidentPaths.NON_PERCOLATOR_FDR;
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
                 return ResidentPaths.FDRBENCH_PASS1;
-            if (config.ModelDiagnostics)
+            if (mdiagFullResume)
                 return ResidentPaths.MDIAG_FULL_RESUME;
             return null;
         }

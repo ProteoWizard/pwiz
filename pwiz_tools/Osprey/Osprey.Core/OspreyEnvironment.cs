@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -316,11 +317,16 @@ namespace pwiz.Osprey.Core
         ///     a target/decoy null on the reconciled + compacted pool. Preserves the
         ///     always-on Rust 2nd pass. Compaction has already stripped most decoys from
         ///     that pool, so the null is decoy-depleted and the retrained q anti-conservative.
-        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: score each reconciled peak with the FROZEN
-        ///     1st-pass model and read its q from the FULL pre-compaction 1st-pass
-        ///     score-&gt;q table (co-monotonic confidence transfer; Rost 2016 TRIC). No
+        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
+        ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
+        ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
+        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time. No
         ///     retrain, no reduced-pool null. Restores calibration while keeping the
         ///     re-scoring ID gain.
+        ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
+        ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
+        ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
+        ///     <c>ResidentPaths</c>.
         /// Unset or unrecognized normalizes to the parity-preserving default. Read once at
         /// process start. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
         ///
@@ -384,6 +390,19 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string AllowUnfixedResident =
             (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
+
+        /// <summary>
+        /// True when <see cref="AllowUnfixedResident"/> was set to something that is not a legal
+        /// token, so the guard can say "that value is not a known path" instead of printing the
+        /// same message it prints when the variable is unset. Without this, a typo
+        /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
+        /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
+        /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
+        /// </summary>
+        public static readonly bool AllowUnfixedResidentUnrecognized =
+            AllowUnfixedResident.Length > 0 &&
+            !ResidentPaths.KNOWN_UNFIXED.Any(
+                t => string.Equals(t, AllowUnfixedResident, StringComparison.OrdinalIgnoreCase));
 
         private static string NormalizePass2QValue(string raw)
         {

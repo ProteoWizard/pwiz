@@ -49,13 +49,13 @@ namespace pwiz.Osprey.Core
         /// The HPC reconciled-input merge (<c>--task SecondPassFDR</c>), which loads every
         /// worker's entries to reconcile them. Tracked by issue #4486.
         /// </summary>
-        public const string HPC_MERGE = @"hpc-merge";
+        public static readonly string HPC_MERGE = @"hpc-merge";
 
         /// <summary>
         /// <c>--fdrbench-pass 1</c>, which reads the full pre-compaction first-pass pool
         /// (decoys + entrapment, with scores) - exactly what the projection path drops.
         /// </summary>
-        public const string FDRBENCH_PASS1 = @"fdrbench-pass1";
+        public static readonly string FDRBENCH_PASS1 = @"fdrbench-pass1";
 
         /// <summary>
         /// <c>--model-diagnostics</c> on a FULL resume, where the 1st-pass sidecars are already
@@ -64,14 +64,14 @@ namespace pwiz.Osprey.Core
         /// scale case was streamed by #4420, and a verified fix for this remainder is parked on
         /// the closed #4437 branch.
         /// </summary>
-        public const string MDIAG_FULL_RESUME = @"mdiag-full-resume";
+        public static readonly string MDIAG_FULL_RESUME = @"mdiag-full-resume";
 
         /// <summary>
         /// A non-Percolator <c>FdrMethod</c> (Simple / Mokapot), which does not use the
         /// projection framework at all. By design rather than unfinished work, but it still
         /// takes the resident path and so must be named to be allowed.
         /// </summary>
-        public const string NON_PERCOLATOR_FDR = @"non-percolator-fdr";
+        public static readonly string NON_PERCOLATOR_FDR = @"non-percolator-fdr";
 
         /// <summary>
         /// <c>OSPREY_FDR_PROJECTION=0</c>: the operator explicitly forced the legacy
@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Core
         /// legacy path itself does, which needs #4507 (FDRBench pass 1) and #4505 (mdiag full
         /// resume) first.</para>
         /// </summary>
-        public const string PROJECTION_OFF = @"projection-off";
+        public static readonly string PROJECTION_OFF = @"projection-off";
 
         /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
