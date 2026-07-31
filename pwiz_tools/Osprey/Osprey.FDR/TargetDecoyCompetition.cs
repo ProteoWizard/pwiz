@@ -363,7 +363,10 @@ namespace pwiz.Osprey.FDR
             {
                 uint baseId = entryIds[idx] & PercolatorEntry.BASE_ID_MASK;
                 var dict = labels[idx] ? decoys : targets;
-                if (labels[idx])
+                // NaN is dropped from the floor sample, matching StreamingDecoyFloor.Add: a NaN in
+                // this list would give List.Sort an inconsistent comparer and an undefined order,
+                // so the median read out of it would be arbitrary.
+                if (labels[idx] && !double.IsNaN(scores[idx]))
                     decoyScores.Add(scores[idx]);
                 if (dict.TryGetValue(baseId, out MeanBestNAcc acc))
                 {
@@ -413,6 +416,16 @@ namespace pwiz.Osprey.FDR
 
             public void Add(double score, int n)
             {
+                // A NaN would be permanent: `_top[i] > score` is false for NaN so it lands in the
+                // highest slot and breaks the ascending invariant, `score > _top[0]` is false
+                // against NaN so it can never be evicted, and AggregateScore then returns NaN for
+                // EVERY row of this base_id - which loses the competition silently (a NaN fails
+                // `tScore > decoyEntry.Value`) and can strand a whole peptide in
+                // AccumulatePeptideReps. The MAX aggregation this replaces was structurally immune,
+                // so the guard is new surface, not an inherited gap. Dropping the observation
+                // matches what max did with it: nothing.
+                if (double.IsNaN(score))
+                    return;
                 Count++;
                 if (_len < n)
                 {

@@ -2143,7 +2143,11 @@ namespace pwiz.Osprey.Test
         private static void AssertStreamingMeanBestNMatchesResident(int n)
         {
             var rng = new Random(20260728 + n);
-            const int nFiles = 4;
+            // nFiles MUST exceed the largest N under test. At nFiles == 4 the N=4 case computed
+            // nObs = 4 + rng.Next(1) == 4 for every group, so _len filled straight to N and the
+            // `score > _top[0]` eviction branch -- the actual top-N algorithm -- never executed:
+            // the test degenerated to "mean of all four observations" while appearing to cover N=4.
+            const int nFiles = 6;
             const int nBaseIds = 50;
             var perFile = new List<(uint EntryId, bool IsDecoy, double Score, string Peptide)>[nFiles];
             for (int f = 0; f < nFiles; f++)
@@ -2193,6 +2197,15 @@ namespace pwiz.Osprey.Test
             AssertMapsEqual(
                 ResidentMeanBestNPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr, n),
                 streaming.BuildExperimentPeptideQMap(), "mbN exp-peptide");
+
+            // PEP must still be the RAW-max map, untouched by the aggregation. That invariant
+            // rests entirely on the mean-best-N block in Add() sitting AFTER the _precTargets /
+            // _precDecoys update and ending in an unconditional return -- hoisting it would leave
+            // both dictionaries empty and silently give every row PEP = 1.0. Asserting it against
+            // the flat builder is what makes that a tested contract rather than a comment.
+            AssertMapsEqual(
+                PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
+                streaming.BuildPepWinnerMap(), "mbN pep-winner (must stay raw-max)");
         }
 
         /// <summary>

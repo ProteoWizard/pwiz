@@ -716,8 +716,18 @@ namespace pwiz.Osprey.FDR
         /// <see cref="ComputeExperimentPrecursorQvalues"/> wrapper simply expands this map,
         /// so the two share the SAME competition + conservative-q math and cannot drift.
         /// </summary>
+        /// <summary>
+        /// <c>applyExperimentAgg</c> is false on the 2nd pass. OSPREY_EXPERIMENT_AGG is a
+        /// FIRST-pass score by definition (see its docs), and two of its premises break on the
+        /// post-reconciliation survivor pool: gap-fill rows are appended there, so a group's
+        /// observation count is inflated by fabricated detections and "runs detected" starts
+        /// counting non-independent evidence - inverting the reproducibility metric the whole
+        /// feature rests on - and the decoy floor would be estimated from the small,
+        /// compaction-enriched survivor decoy set instead of the full null. Without this gate the
+        /// shared primitive silently re-aggregated at pass 2.
+        /// </summary>
         internal static Dictionary<uint, double> ComputeExperimentPrecursorQMap(
-            double[] scores, bool[] labels, uint[] entryIds)
+            double[] scores, bool[] labels, uint[] entryIds, bool applyExperimentAgg = true)
         {
             int n = scores.Length;
             int[] wi;
@@ -725,7 +735,7 @@ namespace pwiz.Osprey.FDR
             bool[] wd;
             using (var progress = QProgress(@"Experiment precursor q-values", n, n))
             {
-                if (OspreyEnvironment.ExperimentAggMeanBest)
+                if (applyExperimentAgg && OspreyEnvironment.ExperimentAggMeanBest)
                 {
                     var aggScore = TargetDecoyCompetition.ComputeBaseIdMeanBestN(
                         scores, labels, entryIds, OspreyEnvironment.MeanBestN);
@@ -779,8 +789,12 @@ namespace pwiz.Osprey.FDR
         /// expands this map, so both share the SAME best-per-peptide + competition +
         /// conservative-q math and cannot drift.
         /// </summary>
+        /// <summary><c>applyExperimentAgg</c> is false on the 2nd pass; see
+        /// <see cref="ComputeExperimentPrecursorQMap"/> for why the aggregation is first-pass
+        /// only.</summary>
         internal static Dictionary<string, double> ComputeExperimentPeptideQMap(
-            double[] scores, bool[] labels, uint[] entryIds, string[] peptides)
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
+            bool applyExperimentAgg = true)
         {
             int n = scores.Length;
 
@@ -789,7 +803,7 @@ namespace pwiz.Osprey.FDR
             // per-row mean-best-2 array for the raw scores turns BestPrecursorPerPeptide's
             // max-over-observations into exactly that (every observation of a base_id carries the
             // same precursor score). Default (max) is byte-identical: effScores == scores.
-            double[] effScores = OspreyEnvironment.ExperimentAggMeanBest
+            double[] effScores = applyExperimentAgg && OspreyEnvironment.ExperimentAggMeanBest
                 ? TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, OspreyEnvironment.MeanBestN)
                 : scores;
 

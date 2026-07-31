@@ -646,11 +646,18 @@ namespace pwiz.Osprey.FDR
 
                 private readonly long[] _bins = new long[BIN_COUNT];
                 private long _underflow;
+                private long _overflow;
                 private long _count;
                 private double _sum;
 
                 public void Add(double score)
                 {
+                    // NaN first: every NaN comparison below is false, so it would reach the cast
+                    // and produce int.MinValue on net472 (throwing on _bins[-2147483648] mid-Stage
+                    // 5) or 0 on net8.0 (silently counting it as a score of RANGE_MIN). Drop it,
+                    // matching ComputeFloorFromDecoyScores, which filters NaN before sorting.
+                    if (double.IsNaN(score))
+                        return;
                     _count++;
                     _sum += score;
                     if (score < RANGE_MIN)
@@ -659,8 +666,16 @@ namespace pwiz.Osprey.FDR
                         return;
                     }
                     if (score >= RANGE_MAX)
-                        return; // Overflow: above any central quantile, so it only shifts the tail.
+                    {
+                        // Counted, not binned. It MUST still be counted here, because the quantile
+                        // rank is taken over _count: dropping it silently shifted every quantile
+                        // toward the low end.
+                        _overflow++;
+                        return;
+                    }
                     int bin = (int)((score - RANGE_MIN) / BIN_WIDTH);
+                    if (bin < 0)
+                        bin = 0;
                     if (bin >= BIN_COUNT)
                         bin = BIN_COUNT - 1;
                     _bins[bin]++;
@@ -688,7 +703,13 @@ namespace pwiz.Osprey.FDR
                     double rank = pct / 100.0 * (_count - 1);
                     double cum = _underflow;
                     if (rank < cum)
-                        return RANGE_MIN;
+                        throw new InvalidOperationException(string.Format(
+                            "mean(best-N) decoy floor: the requested {0}th percentile falls below " +
+                            "the histogram's representable range ({1}). {2} of {3} decoy scores " +
+                            "underflowed. The floor would be silently clamped and every " +
+                            "under-detected precursor mis-scored, so refusing rather than " +
+                            "returning a wrong floor.",
+                            pct, RANGE_MIN, _underflow, _count));
                     for (int b = 0; b < BIN_COUNT; b++)
                     {
                         long c = _bins[b];
@@ -701,7 +722,16 @@ namespace pwiz.Osprey.FDR
                         }
                         cum += c;
                     }
-                    return RANGE_MAX;
+                    // Falling off the end means the quantile lies in the overflow region. Returning
+                    // RANGE_MAX here would hand back a floor ABOVE every real score, turning the
+                    // intended demotion of under-detected units into a promotion - the one failure
+                    // mode of this estimator that inverts the feature's meaning. Refuse instead.
+                    throw new InvalidOperationException(string.Format(
+                        "mean(best-N) decoy floor: the requested {0}th percentile falls above the " +
+                        "histogram's representable range ({1}). {2} of {3} decoy scores " +
+                        "overflowed. A floor above every real score would PROMOTE under-detected " +
+                        "precursors instead of demoting them, so refusing rather than returning it.",
+                        pct, RANGE_MAX, _overflow, _count));
                 }
             }
 

@@ -22,6 +22,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 
 namespace pwiz.Osprey.Test
@@ -38,6 +39,33 @@ namespace pwiz.Osprey.Test
     {
         private const uint DECOY_BIT = 0x80000000;
         private const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        private bool _savedFloorMean;
+        private double? _savedFloorPercentile;
+
+        /// <summary>
+        /// Pin the missing-run floor to its default (decoy MEDIAN) for the duration of each test.
+        /// Every assertion below is an exact floor-dependent value, and the floor toggles are read
+        /// from the process environment at type load -- so on the machine actually running a floor
+        /// A/B sweep (OSPREY_MEANBEST2_FLOOR_MEAN=1 exported) these tests would compute
+        /// mean(-3,-1,0) = -1.3333 where they assert a median of -1, and fail for reasons that
+        /// have nothing to do with the code under test.
+        /// </summary>
+        [TestInitialize]
+        public void PinFloorToMedian()
+        {
+            _savedFloorMean = OspreyEnvironment.MeanBest2FloorMean;
+            _savedFloorPercentile = OspreyEnvironment.MeanBest2FloorPercentile;
+            OspreyEnvironment.MeanBest2FloorMean = false;
+            OspreyEnvironment.MeanBest2FloorPercentile = null;
+        }
+
+        [TestCleanup]
+        public void RestoreFloor()
+        {
+            OspreyEnvironment.MeanBest2FloorMean = _savedFloorMean;
+            OspreyEnvironment.MeanBest2FloorPercentile = _savedFloorPercentile;
+        }
 
         /// <summary>
         /// A >=2-run precursor scores mean(top-2); a 1-run precursor scores mean(score, floor)
@@ -87,6 +115,77 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(-5.0 / 3.0, agg[6], 1e-12, @"base10 decoy 1-run = mean(-3, -1, -1)");
             Assert.AreEqual(-1.0, agg[7], 1e-12, @"base20 decoy 1-run = mean(-1, -1, -1)");
             Assert.AreEqual(-2.0 / 3.0, agg[8], 1e-12, @"base30 decoy 1-run = mean(0, -1, -1)");
+        }
+
+        /// <summary>
+        /// The top-N EVICTION branch, with hand-computed values. A group larger than N must keep
+        /// the N HIGHEST scores and discard the rest; the interesting failure is discarding the
+        /// wrong element (dropping the largest, or an off-by-one in the shift loop).
+        ///
+        /// This is the only oracle for that branch. The streaming-vs-resident parity tests cannot
+        /// cover it: both sides call the same <c>MeanBestNAcc</c>, so a wrong-element eviction
+        /// produces the same wrong aggregate on both and the comparison still passes. Scores are
+        /// fed in a deliberately awkward order (ascending, descending and interleaved across the
+        /// three base_ids) so a buffer that only happens to work on sorted input fails here.
+        /// </summary>
+        [TestMethod]
+        public void TestMeanBestNEvictsSmallest()
+        {
+            // base10 ascending {1,2,3,4,5}, base20 descending {9,7,5,3,1}, base30 interleaved
+            // {2,8,4,6}. Decoys {-3,-1,0} -> median floor -1, and every target group is larger
+            // than N so no floor is used on the target side.
+            var scores = new[]
+            {
+                1.0, 2.0, 3.0, 4.0, 5.0,
+                9.0, 7.0, 5.0, 3.0, 1.0,
+                2.0, 8.0, 4.0, 6.0,
+                -3.0, -1.0, 0.0
+            };
+            var labels = new[]
+            {
+                false, false, false, false, false,
+                false, false, false, false, false,
+                false, false, false, false,
+                true, true, true
+            };
+            var entryIds = new uint[]
+            {
+                10, 10, 10, 10, 10,
+                20, 20, 20, 20, 20,
+                30, 30, 30, 30,
+                10 | DECOY_BIT, 20 | DECOY_BIT, 30 | DECOY_BIT
+            };
+
+            var n2 = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, 2);
+            Assert.AreEqual(4.5, n2[0], 1e-12, @"base10 top-2 of {1,2,3,4,5} = mean(5,4)");
+            Assert.AreEqual(8.0, n2[5], 1e-12, @"base20 top-2 of {9,7,5,3,1} = mean(9,7)");
+            Assert.AreEqual(7.0, n2[10], 1e-12, @"base30 top-2 of {2,8,4,6} = mean(8,6)");
+
+            var n3 = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, 3);
+            Assert.AreEqual(4.0, n3[0], 1e-12, @"base10 top-3 of {1,2,3,4,5} = mean(5,4,3)");
+            Assert.AreEqual(7.0, n3[5], 1e-12, @"base20 top-3 of {9,7,5,3,1} = mean(9,7,5)");
+            Assert.AreEqual(6.0, n3[10], 1e-12, @"base30 top-3 of {2,8,4,6} = mean(8,6,4)");
+        }
+
+        /// <summary>
+        /// A NaN observation must not poison the accumulator. Unlike the MAX aggregation this
+        /// replaced -- where a NaN simply lost every comparison -- a NaN admitted into the top-N
+        /// buffer breaks the ascending invariant, can never be evicted (<c>score &gt; _top[0]</c>
+        /// is false against NaN), and makes every row of that base_id aggregate to NaN, which then
+        /// loses its target/decoy competition silently. The guard drops it, so the remaining real
+        /// observations decide the aggregate.
+        /// </summary>
+        [TestMethod]
+        public void TestMeanBestNIgnoresNaN()
+        {
+            var scores = new[] { 5.0, double.NaN, 7.0, -3.0, -1.0, 0.0 };
+            var labels = new[] { false, false, false, true, true, true };
+            var entryIds = new uint[] { 10, 10, 10, 10 | DECOY_BIT, 20 | DECOY_BIT, 30 | DECOY_BIT };
+
+            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, 2);
+
+            Assert.IsFalse(double.IsNaN(agg[0]), @"NaN must not propagate into the aggregate");
+            Assert.AreEqual(6.0, agg[0], 1e-12, @"base10 = mean(7,5), the NaN dropped entirely");
         }
 
         /// <summary>

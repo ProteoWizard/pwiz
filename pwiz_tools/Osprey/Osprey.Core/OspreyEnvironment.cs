@@ -450,16 +450,31 @@ namespace pwiz.Osprey.Core
             Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
 
         /// <summary>OSPREY_MEANBEST2_FLOOR_MEAN: A/B toggle to use the decoy MEAN instead of the
-        /// default decoy MEDIAN as the missing-run floor for mean(best-2). Off by default.</summary>
-        public static readonly bool MeanBest2FloorMean =
+        /// default decoy MEDIAN as the missing-run floor. Off by default. Applies at every N
+        /// despite the MEANBEST2 name, which predates the best-2 -> best-N generalization.
+        /// TAKES PRECEDENCE over <see cref="MeanBest2FloorPercentile"/>; setting both is a
+        /// configuration error and is refused rather than silently resolved.
+        /// A settable property (not a readonly field) so unit tests can pin the floor instead of
+        /// inheriting whatever the operator exported for a floor sweep - the aggregation tests
+        /// assert exact floor-dependent values, so an ambient variable would fail them.</summary>
+        public static bool MeanBest2FloorMean { get; set; } =
             IsSetAndNotZero(@"OSPREY_MEANBEST2_FLOOR_MEAN");
 
         /// <summary>OSPREY_MEANBEST2_FLOOR_PCT: A/B override to use a low PERCENTILE (0-100) of the
-        /// decoy score distribution as the missing-run floor instead of the median center -- a
-        /// harder reproducibility cut. Null (unset) selects the median default (or the mean when
-        /// <see cref="MeanBest2FloorMean"/>). Read once at process start.</summary>
-        public static readonly double? MeanBest2FloorPercentile =
+        /// decoy score distribution as the missing-run floor instead of the median center - a
+        /// harder reproducibility cut. Null (unset) selects the median default. Applies at every N
+        /// (see the MEANBEST2 naming note above). Settable for the same test reason.</summary>
+        public static double? MeanBest2FloorPercentile { get; set; } =
             ParseDoubleOrNull(@"OSPREY_MEANBEST2_FLOOR_PCT");
+
+        /// <summary>True when BOTH floor overrides are set. They are not composable -
+        /// <see cref="MeanBest2FloorMean"/> would silently win and the percentile would never be
+        /// consulted, so an operator sweeping OSPREY_MEANBEST2_FLOOR_PCT with a stale
+        /// OSPREY_MEANBEST2_FLOOR_MEAN=1 still exported would log a percentile arm while measuring
+        /// the mean. The consuming site refuses the combination.</summary>
+        public static readonly bool MeanBestFloorOverspecified =
+            IsSetAndNotZero(@"OSPREY_MEANBEST2_FLOOR_MEAN") &&
+            ParseDoubleOrNull(@"OSPREY_MEANBEST2_FLOOR_PCT").HasValue;
 
         // Parse N from OSPREY_EXPERIMENT_AGG=mean-best-<N>. Returns 0 (the max default) when unset,
         // not a mean-best-<N> value, or N < 2.

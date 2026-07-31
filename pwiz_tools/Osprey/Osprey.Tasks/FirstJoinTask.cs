@@ -184,8 +184,18 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
+            // OSPREY_EXPERIMENT_AGG changes this task's OWN output (the experiment-wide precursor
+            // and peptide q maps), so it has to invalidate the cache. Without it, re-running an A/B
+            // arm in an output directory that already holds the other arm's results makes
+            // TaskValiditySidecar.IsValid return true, the driver skips Run entirely - taking the
+            // unrecognized-value warning with it, since that lives inside Run - and the previous
+            // mode's q is silently reused and recorded as the new arm's measurement. The flag is
+            // read from a process-wide static rather than the config, which is why it is not
+            // already covered by SearchIdentity; promoting it to a real command argument would
+            // subsume this line.
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + @";expagg=" + OspreyEnvironment.ExperimentAgg;
         }
 
         public override bool Run(PipelineContext ctx)
@@ -219,6 +229,14 @@ namespace pwiz.Osprey.Tasks
             // (normalized to the byte-identical max default) so a typo cannot be mistaken for a
             // mean(best-N) run - this flag exists to be A/B'd, so a silent fallback would corrupt
             // the comparison rather than fail it. Mirrors the OSPREY_PASS2_QVALUE warning.
+            if (OspreyEnvironment.MeanBestFloorOverspecified)
+            {
+                throw new InvalidOperationException(
+                    "OSPREY_MEANBEST2_FLOOR_MEAN and OSPREY_MEANBEST2_FLOOR_PCT are both set. " +
+                    "They are not composable: FLOOR_MEAN wins and the percentile is never " +
+                    "consulted, so a sweep would record a percentile arm while measuring the " +
+                    "decoy mean. Set exactly one.");
+            }
             if (OspreyEnvironment.ExperimentAggUnrecognized)
             {
                 ctx.LogWarning(string.Format(

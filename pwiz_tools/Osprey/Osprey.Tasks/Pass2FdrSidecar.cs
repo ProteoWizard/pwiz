@@ -602,6 +602,27 @@ namespace pwiz.Osprey.Tasks
                 return (eids, scs);
             }
 
+            // This competition reduces per base_id by MAX. Under protein-compact the reported
+            // experiment q column is then assembled from TWO sources -- on-stratum survivors get
+            // the value computed here, while off-stratum survivors keep their 1st-pass q (the
+            // `continue` below). With OSPREY_EXPERIMENT_AGG=mean-best-N that 1st-pass q is a
+            // mean(best-N) score, so the single reported column would silently mix two
+            // aggregation schemes and no consumer could tell which row used which. Refuse rather
+            // than emit it: a number a user would reasonably trust and cannot audit is worse than
+            // an error. The other frozen modes rewrite every survivor from one source, so they
+            // stay consistent (max-aggregated) and are allowed.
+            if (proteinCompact && OspreyEnvironment.ExperimentAggMeanBest)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "OSPREY_PASS2_QVALUE={0} cannot be combined with OSPREY_EXPERIMENT_AGG={1}. " +
+                    "protein-compact reports on-stratum precursors with a 2nd-pass max-aggregated " +
+                    "q and off-stratum precursors with their 1st-pass q, which under mean(best-N) " +
+                    "is a different statistic -- one column, two aggregations, no way to tell them " +
+                    "apart. Use OSPREY_PASS2_QVALUE=transfer (carries the 1st-pass mean(best-N) q " +
+                    "through unchanged) for a mean(best-N) arm.",
+                    OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, OspreyEnvironment.ExperimentAgg));
+            }
+
             StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 fileKeys, ReadFile, survivorScore, survivors,
                 out var runQ, out var expQ, out var pep, stratumBaseIds);

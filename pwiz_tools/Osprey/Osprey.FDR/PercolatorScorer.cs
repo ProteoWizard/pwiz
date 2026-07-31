@@ -271,7 +271,8 @@ namespace pwiz.Osprey.FDR
             PercolatorResults trainResults, PercolatorConfig config,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             IFdrOutputSink sink,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            bool applyExperimentAgg = true)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -422,9 +423,11 @@ namespace pwiz.Osprey.FDR
                     nonEmptyFiles++;
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByBaseId = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(finalScores, labels, entryIds);
+                ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
+                    finalScores, labels, entryIds, applyExperimentAgg);
             Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
+                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
+                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
 
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
