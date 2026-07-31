@@ -33,8 +33,8 @@ namespace pwiz.SkylineTestData.Results
 {
     /// <summary>
     /// A document written without the chrom infos has to come back with its columnar results
-    /// intact, because those are all it has: the areas, the retention times, which candidate peak
-    /// each peak is, and the boundaries of the ones which are not candidate peaks.
+    /// intact, because those are all it has: the transition areas, the precursor peak times, which
+    /// candidate peak each peak is, and the boundaries of the ones which are not candidate peaks.
     /// </summary>
     [TestClass]
     public class ColumnarResultsSerializationTest : AbstractUnitTest
@@ -106,10 +106,12 @@ namespace pwiz.SkylineTestData.Results
                         var actualResults = actual.Current.AbbreviatedResults;
                         Assert.AreEqual(expectedResults.ChromFileIds.ReplicatePositions,
                             actualResults.ChromFileIds.ReplicatePositions);
-                        CollectionAssert.AreEqual(expectedResults.Areas.ToArray(),
-                            actualResults.Areas.ToArray(), @"areas");
                         CollectionAssert.AreEqual(expectedResults.RetentionTimes.ToArray(),
                             actualResults.RetentionTimes.ToArray(), @"retention times");
+                        CollectionAssert.AreEqual(expectedResults.StartTimes.ToArray(),
+                            actualResults.StartTimes.ToArray(), @"start times");
+                        CollectionAssert.AreEqual(expectedResults.EndTimes.ToArray(),
+                            actualResults.EndTimes.ToArray(), @"end times");
                         CollectionAssert.AreEqual(expectedResults.ChosenPeakIndexes?.ToArray(),
                             actualResults.ChosenPeakIndexes?.ToArray(), @"chosen peak indexes");
                         CollectionAssert.AreEqual(expectedResults.QValues?.ToArray(),
@@ -122,7 +124,7 @@ namespace pwiz.SkylineTestData.Results
                             actualResults.CustomPeaks?.ToArray(), @"custom peaks");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
-                        for (int position = 0; position < expectedResults.Areas.Count; position++)
+                        for (int position = 0; position < expectedResults.RetentionTimes.Count; position++)
                         {
                             if (expectedResults.GetChosenPeakIndex(position).HasValue)
                             {

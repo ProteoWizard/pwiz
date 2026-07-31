@@ -1669,8 +1669,9 @@ namespace pwiz.Skyline.Model.Serialization
             out SharedTransitionAreas sharedTransitionAreas)
         {
             var areasByPosition = new List<float[]>();
-            var areas = new List<float>();
             var retentionTimes = new List<float>();
+            var startTimes = new List<float>();
+            var endTimes = new List<float>();
             var chosenPeakIndexes = new List<int>();
             var qValues = new List<float>();
             var zScores = new List<float>();
@@ -1678,20 +1679,21 @@ namespace pwiz.Skyline.Model.Serialization
             List<CustomPeak> customPeaks = null;
             var chromFileIds = ReadColumnarResults(reader, (r, position) =>
             {
-                areas.Add(r.GetFloatAttribute(ATTR.area));
                 retentionTimes.Add(r.GetFloatAttribute(ATTR.retention_time));
+                startTimes.Add(r.GetNullableFloatAttribute(ATTR.start_time) ?? 0);
+                endTimes.Add(r.GetNullableFloatAttribute(ATTR.end_time) ?? 0);
                 chosenPeakIndexes.Add(r.GetNullableIntAttribute(ATTR.peak_index) ?? -1);
                 qValues.Add(r.GetNullableFloatAttribute(ATTR.qvalue) ?? float.NaN);
                 zScores.Add(r.GetNullableFloatAttribute(ATTR.zscore) ?? float.NaN);
                 userSets.Add(ReadUserSet(r));
                 areasByPosition.Add(ReadTransitionAreas(r));
                 CustomPeak.Collect(ref customPeaks,
-                    ReadCustomPeak(r, position, AnnotationDef.AnnotationTarget.precursor_result));
+                    ReadCustomPeak(r, position, AnnotationDef.AnnotationTarget.precursor_result, false));
             });
             sharedTransitionAreas = areasByPosition.Any(positionAreas => positionAreas != null)
                 ? new SharedTransitionAreas(chromFileIds, areasByPosition)
                 : null;
-            var groupResults = new TransitionGroupResults(chromFileIds, areas, retentionTimes)
+            var groupResults = new TransitionGroupResults(chromFileIds, retentionTimes, startTimes, endTimes)
                 .ChangeChosenPeakIndexes(chosenPeakIndexes)
                 .ChangeUserSets(userSets)
                 .ChangeQValues(qValues)
@@ -1735,11 +1737,17 @@ namespace pwiz.Skyline.Model.Serialization
                 XmlUtil.EnumCase.upper);
         }
 
+        /// <summary>
+        /// <paramref name="readPeakBounds"/> is false at the precursor level, where the start and
+        /// end times on the element are the peak's own boundaries rather than ones a user set. Only
+        /// a transition keeps boundaries on its custom peak; a precursor's custom peak is nothing
+        /// but annotations.
+        /// </summary>
         private CustomPeak ReadCustomPeak(XmlReader reader, int position,
-            AnnotationDef.AnnotationTarget annotationTarget)
+            AnnotationDef.AnnotationTarget annotationTarget, bool readPeakBounds = true)
         {
-            float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
-            float? endTime = reader.GetNullableFloatAttribute(ATTR.end_time);
+            float? startTime = readPeakBounds ? reader.GetNullableFloatAttribute(ATTR.start_time) : null;
+            float? endTime = readPeakBounds ? reader.GetNullableFloatAttribute(ATTR.end_time) : null;
             var identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
                 PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
             var annotations = Annotations.EMPTY;

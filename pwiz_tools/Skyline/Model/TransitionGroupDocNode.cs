@@ -459,6 +459,37 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// The precursor's peak area in one replicate, summed from its transitions' columnar
+        /// results, so this reads no chromatogram. Null when none of its transitions has a peak
+        /// there.
+        /// <para>
+        /// Not a stored value: a precursor's area is by definition the sum of its transitions', and
+        /// one stored number could not answer what callers ask of it. <paramref name="transitions"/>
+        /// is how a caller sums only part of it - the MS1 area and the MS2 area being the usual two.
+        /// </para>
+        /// </summary>
+        public double? GetArea(int replicateIndex, Func<TransitionDocNode, bool> transitions = null)
+        {
+            double area = 0;
+            bool anyPeak = false;
+            foreach (TransitionDocNode nodeTran in Children)
+            {
+                if (transitions != null && !transitions(nodeTran))
+                    continue;
+                var results = nodeTran.AbbreviatedResults;
+                if (results == null)
+                    continue;
+                foreach (var position in results.GetPositions(replicateIndex))
+                {
+                    area += results.Areas[position];
+                    anyPeak = true;
+                }
+            }
+
+            return anyPeak ? (double?) area : null;
+        }
+
+        /// <summary>
         /// What fraction of the precursor's transitions have a good peak in one replicate, from the
         /// transitions' columnar results, so this reads no chromatogram. Null when the precursor has
         /// no transitions with results at all.
@@ -693,54 +724,43 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// The scheduling window from the trend of the peak times across the last few replicates.
-        /// <para>
-        /// This is the one scheduling algorithm which needs the peak boundaries rather than just the
-        /// times, so it is also the only one which reads. Building the
-        /// <see cref="MoleculeResults"/> here rather than in the caller keeps that read off the
-        /// other algorithms, which are the ones an export normally uses.
-        /// </para>
+        /// The boundaries it needs are in the columnar results, so this reads no chromatogram.
         /// </summary>
         // TODO: Test this code.
-        private ScheduleTimes GetSchedulingTrendTimes(SrmSettings settings, PeptideDocNode nodePep, int replicateNum)
+        private ScheduleTimes GetSchedulingTrendTimes(int replicateNum)
         {
             int valCount = 0;
             double valTotal = 0;
             ScheduleTimes scheduleTimes = new ScheduleTimes();
 
+            var results = AbbreviatedResults;
+            if (results == null)
+                return null;
             int replicateCount = ResultsReplicateCount;
             // Use 6 replicates if results have at least 6 replicates
             // otherwise use the number of Results available (at least 4)
             double[] centerTimes = new double[ Math.Min(replicateCount, MAX_TREND_REPLICATES) ];
             double[] replicateNums = new double[centerTimes.Length];
             double maxPeakWindowRange = 0;
-            var chromInfos = new MoleculeResults(settings, nodePep).GetTransitionGroupChromInfos(TransitionGroup);
-            if (chromInfos == null)
-                return null;
-            for (int i = 0; i < replicateCount && i < chromInfos.Count; i++)
+            for (int i = 0; i < replicateCount; i++)
             {
-                var result = chromInfos[i];
-                if (result.IsEmpty)
-                    continue;
-
-                foreach (var chromInfo in result)
+                foreach (int position in results.GetPositions(i))
                 {
-                    if (chromInfo == null ||
-                            !chromInfo.StartRetentionTime.HasValue ||
-                            !chromInfo.EndRetentionTime.HasValue)
+                    float? startTime = results.GetStartTime(position);
+                    float? endTime = results.GetEndTime(position);
+                    if (!startTime.HasValue || !endTime.HasValue)
                         return null;
                     // Make an array of the last 4 or 6 (depending on data available) center Times to use for linear regression
                     if (i >= replicateCount - centerTimes.Length)
                     {
-                        valTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;
+                        valTotal += (startTime.Value + endTime.Value) / 2.0;
                         valCount++;
                         // TODO: This will only work, if all of the final replicates have data.
                         int timesIndex = i - replicateCount + centerTimes.Length;
                         centerTimes[timesIndex] = (float)(valTotal / valCount);
                         replicateNums[timesIndex] = timesIndex;
                     }
-                    maxPeakWindowRange = Math.Max(maxPeakWindowRange,
-                                                  chromInfo.EndRetentionTime.Value -
-                                                  chromInfo.StartRetentionTime.Value);
+                    maxPeakWindowRange = Math.Max(maxPeakWindowRange, endTime.Value - startTime.Value);
                 }
             }
             Statistics statCenterTimes = new Statistics(centerTimes);
@@ -779,10 +799,10 @@ namespace pwiz.Skyline.Model
         /// scheduling peak times.
         /// </summary>
         public static ScheduleTimes GetSchedulingPeakTimes(IEnumerable<TransitionGroupDocNode> schedulingGroups,
-            SrmDocument document, PeptideDocNode nodePep, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
+            SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
         {
             var arrayScheduleTimes = schedulingGroups.Select(nodeGroup =>
-                    nodeGroup.GetSchedulingPeakTimes(document, nodePep, algorithm, replicateNum, replicateFilter))
+                    nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum, replicateFilter))
                 .Where(scheduleTimes => scheduleTimes != null)
                 .ToArray();
             if (arrayScheduleTimes.Length < 2)
@@ -802,7 +822,7 @@ namespace pwiz.Skyline.Model
                        };
         }
 
-        public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, PeptideDocNode nodePep, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
+        public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
         {
             if (!HasResults)
                 return null;
@@ -890,7 +910,7 @@ namespace pwiz.Skyline.Model
             }
             else // Trends Option
             {
-                return GetSchedulingTrendTimes(document.Settings, nodePep, replicateNum.Value);
+                return GetSchedulingTrendTimes(replicateNum.Value);
             }
 
             // If possible return the scheduling time based on non-optimization data.

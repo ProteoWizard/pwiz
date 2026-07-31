@@ -443,7 +443,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (useMeasured)
             {
                 var schedulingGroups = GetSchedulingGroups(nodePep, nodeGroup);
-                var peakTime = TransitionGroupDocNode.GetSchedulingPeakTimes(schedulingGroups, document, nodePep, algorithm, replicateNum, replicateFilter);
+                var peakTime = TransitionGroupDocNode.GetSchedulingPeakTimes(schedulingGroups, document, algorithm, replicateNum, replicateFilter);
                 if (peakTime != null)
                     predictedRT = peakTime.CenterTime;
                 if (predictedRT.HasValue)
@@ -456,7 +456,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (!ReferenceEquals(nodeGroup, nodeGroupOther))
                         {
-                            peakTime = nodeGroupOther.GetSchedulingPeakTimes(document, nodePep, algorithm, replicateNum, replicateFilter);
+                            peakTime = nodeGroupOther.GetSchedulingPeakTimes(document, algorithm, replicateNum, replicateFilter);
                             if (peakTime != null)
                                 predictedRT = peakTime.CenterTime;
 

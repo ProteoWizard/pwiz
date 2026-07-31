@@ -2023,12 +2023,14 @@ namespace pwiz.Skyline
             float? startTime = null;
             float? endTime = null;
 
-            var moleculeResults = new MoleculeResults(Document.Settings,
-                (PeptideDocNode) Document.FindNode(args.GroupPath.Parent));
             if (singleTransitionDisplay)
             {
                 if (transitionDocNode != null)
                 {
+                    // A transition's boundaries are not in the columnar results unless the user set
+                    // them, so this one reads.
+                    var moleculeResults = new MoleculeResults(Document.Settings,
+                        (PeptideDocNode) Document.FindNode(args.GroupPath.Parent));
                     var chromInfo = moleculeResults
                         .GetTransitionChromInfos(transitionGroupDocNode.TransitionGroup, transitionDocNode.Transition,
                             indexSet).FirstOrDefault(ci => ci.OptimizationStep == 0);
@@ -2041,13 +2043,14 @@ namespace pwiz.Skyline
             }
             else
             {
-                var chromInfo = moleculeResults
-                    .GetTransitionGroupChromInfos(transitionGroupDocNode.TransitionGroup, indexSet)
-                    .FirstOrDefault(ci => ci.OptimizationStep == 0);
-                if (chromInfo != null)
+                // The precursor's boundaries are in its columnar results. Every position there is a
+                // peak of optimization step zero, which is the one this wants.
+                var results = transitionGroupDocNode.AbbreviatedResults;
+                int position = results?.GetPositions(indexSet).Select(p => (int?) p).FirstOrDefault() ?? -1;
+                if (position >= 0)
                 {
-                    startTime = chromInfo.StartRetentionTime;
-                    endTime = chromInfo.EndRetentionTime;
+                    startTime = results.GetStartTime(position);
+                    endTime = results.GetEndTime(position);
                 }
             }
 

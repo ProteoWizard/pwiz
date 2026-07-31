@@ -54,7 +54,12 @@ namespace pwiz.Skyline.Controls.Graphs
             if (NodeGroups.Count <= maxPeaks)
                 return;
 
-            var statHeights = new Statistics(NodeGroups.Select(nodeGroup => GetArea(nodeGroup, chromIndex))
+            // Ranked by peak area rather than by peak height, which is what this used to use. Height
+            // is not one of the values the columnar results keep, and reading it would mean reading
+            // a chromatogram for every precursor, which is the work this method exists to avoid. The
+            // two order a set of peaks almost the same way, and this only decides what a crowded
+            // graph leaves out.
+            var statHeights = new Statistics(NodeGroups.Select(nodeGroup => nodeGroup.GetArea(chromIndex))
                 .Where(area => area.HasValue).Select(area => area.Value));
             if (statHeights.Length <= maxPeaks)
                 return;
@@ -69,7 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int i = 0; i < NodeGroups.Count; i++)
                 {
                     var nodeGroup = NodeGroups[i];
-                    if ((GetArea(nodeGroup, chromIndex) ?? 0) < minHeight)
+                    if ((nodeGroup.GetArea(chromIndex) ?? 0) < minHeight)
                         continue;
                     nodePeps.Add(NodePeps[i]);
                     nodeGroups.Add(nodeGroup);
@@ -84,26 +89,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        /// <summary>
-        /// How big the precursor's peak in one replicate is, or null when it has no peak there.
-        /// <para>
-        /// This ranks the precursors so that only the biggest <c>maxPeaks</c> of them get drawn, and
-        /// it used to rank them by peak height. Height is not one of the values the columnar results
-        /// keep, and reading it would mean reading a chromatogram for every precursor, which is the
-        /// work this method exists to avoid. Area stands in for it: the two order a set of peaks
-        /// almost the same way, and this only decides what a crowded graph leaves out.
-        /// </para>
-        /// </summary>
-        private double? GetArea(TransitionGroupDocNode nodeGroup, int replicateIndex)
-        {
-            var results = nodeGroup.AbbreviatedResults;
-            if (results == null || replicateIndex >= results.ChromFileIds.ReplicatePositions.ReplicateCount)
-                return null;
-            double? area = null;
-            foreach (var position in results.GetPositions(replicateIndex))
-                area = Math.Max(area ?? 0, results.Areas[position]);
-            return area;
-        }
 
         /// <summary>
         /// Returns the peptides that are explicitly or implictly selected in the tree view.

@@ -1083,13 +1083,17 @@ namespace pwiz.Skyline.Model.Serialization
             _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
             WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar, (w, position) =>
             {
-                w.WriteAttribute(ATTR.area, results.Areas[position]);
+                // No area: a precursor's is the sum of its transitions', which are written below it.
                 w.WriteAttribute(ATTR.retention_time, results.RetentionTimes[position]);
+                // Nullable rather than the generic default-value overload, which formats with
+                // ToString() and so loses digits a float needs to come back the same.
+                w.WriteAttributeNullable(ATTR.start_time, results.GetStartTime(position));
+                w.WriteAttributeNullable(ATTR.end_time, results.GetEndTime(position));
                 w.WriteAttributeNullable(ATTR.peak_index, results.GetChosenPeakIndex(position));
                 w.WriteAttributeNullable(ATTR.qvalue, results.GetQValue(position));
                 w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
                 w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
-                WriteCustomPeak(w, results.GetCustomPeak(position));
+                WriteCustomPeak(w, results.GetCustomPeak(position), false);
                 var areas = sharedAreas[position];
                 if (areas != null)
                 {
@@ -1193,14 +1197,19 @@ namespace pwiz.Skyline.Model.Serialization
         /// The boundaries of a peak which is not one of the candidate peaks, and the annotations.
         /// Both are things the .skyd cannot give back.
         /// </summary>
-        private static void WriteCustomPeak(XmlWriter writer, CustomPeak customPeak)
+        /// <summary>
+        /// <paramref name="writePeakBounds"/> is false at the precursor level, where the element
+        /// already carries the peak's own start and end times. A precursor's custom peak is nothing
+        /// but annotations, so there is nothing there to collide with them.
+        /// </summary>
+        private static void WriteCustomPeak(XmlWriter writer, CustomPeak customPeak, bool writePeakBounds = true)
         {
             if (customPeak == null)
             {
                 return;
             }
 
-            if (customPeak.HasPeakBounds)
+            if (writePeakBounds && customPeak.HasPeakBounds)
             {
                 writer.WriteAttribute(ATTR.start_time, customPeak.StartTime.Value);
                 writer.WriteAttribute(ATTR.end_time, customPeak.EndTime.Value);
