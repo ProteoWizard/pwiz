@@ -165,11 +165,11 @@ namespace pwiz.SkylineTestUtil
             //                Console.WriteLine("--->");
             foreach (PeptideDocNode nodePep in document.Peptides)
             {
-                if (nodePep.HasResults)
-                {
-                    PeptideResults += nodePep.Results.Where(result => !result.IsEmpty)
-                        .SelectMany(info => info).Count();
-                }
+                // The files a molecule has results for, from the precursors' columnar results: the
+                // molecule level chrom infos are not stored any more.
+                PeptideResults += Enumerable
+                    .Range(0, document.Settings.MeasuredResults?.Chromatograms.Count ?? 0)
+                    .Sum(replicateIndex => nodePep.GetResultFileIds(replicateIndex).Count());
 
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
@@ -357,9 +357,13 @@ namespace pwiz.SkylineTestUtil
                 TextUtil.LineSeparate(document.Settings.MeasuredResults.Chromatograms.Select(c => c.Name))));
             int peptidesActual = 0;
 
-            foreach (var nodePep in document.Molecules.Where(nodePep => (nodePep.Results != null && !nodePep.Results[index].IsEmpty)))
+            // The peak count ratio comes from the precursors' columnar results now, and one
+            // molecule has one of them per replicate rather than one per file.
+            bool integrateAll = document.Settings.TransitionSettings.Integration.IsIntegrateAll;
+            foreach (var nodePep in document.Molecules)
             {
-                peptidesActual += nodePep.Results[index].Sum(chromInfo => chromInfo.PeakCountRatio >= 0.5 ? 1 : 0);
+                if (nodePep.GetPeakCountRatio(index, integrateAll) >= 0.5)
+                    peptidesActual++;
             }
             int transitionsActual = 0;
             int transitionsHeavyActual = 0;

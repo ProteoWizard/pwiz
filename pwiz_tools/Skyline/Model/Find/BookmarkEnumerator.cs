@@ -21,6 +21,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Find
@@ -280,8 +281,9 @@ namespace pwiz.Skyline.Model.Find
                 }
                 else if (node is PeptideDocNode peptideDocNode)
                 {
-                    currentChromInfo = peptideDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
-                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId));
+                    currentChromInfo = GetPeptideChromInfos(peptideDocNode, bookmark.ReplicateIndex.Value)
+                        .FirstOrDefault(chromInfo =>
+                            ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId));
                 }
             }
 
@@ -473,11 +475,26 @@ namespace pwiz.Skyline.Model.Find
 
             if (docNode is PeptideDocNode peptideDocNode)
             {
-                return MakeChromInfoPositions(peptideDocNode.GetSafeChromInfo(replicateIndex),
-                    chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, 0));
+                return GetPeptideChromInfos(peptideDocNode, replicateIndex)
+                    .Select(chromInfo => new ChromInfoPosition(
+                        new ResultPosition(chromatogramSet, chromInfo.FileId, 0), chromInfo))
+                    .ToArray();
             }
 
             return Array.Empty<ChromInfoPosition>();
+        }
+
+        /// <summary>
+        /// Stand-in chrom infos for a molecule, whose real ones are no longer stored. Find uses
+        /// only the file of one - a molecule has no annotations of its own, which is why
+        /// <see cref="FindPredicate"/> returns none for it - so carrying the file is enough, and
+        /// asking the precursors for it reads no chromatogram.
+        /// </summary>
+        private static IEnumerable<PeptideChromInfo> GetPeptideChromInfos(PeptideDocNode peptideDocNode,
+            int replicateIndex)
+        {
+            return peptideDocNode.GetResultFileIds(replicateIndex).Select(fileId =>
+                new PeptideChromInfo(fileId, 0, null, ImmutableList<PeptideLabelRatio>.EMPTY));
         }
 
         private IEnumerable<ChromInfoPosition> MakeChromInfoPositions<T>(ChromInfoList<T> chromInfoList,

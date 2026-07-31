@@ -121,10 +121,10 @@ namespace pwiz.SkylineTestData.Results
 
                     // now drill down for specific values
                     int nPeptides = 0;
-                    foreach (var nodePep in document.Molecules.Where(nodePep => !nodePep.Results[0].IsEmpty))
+                    foreach (var nodePep in document.Molecules)
                     {
                         // expecting just one peptide result in this small data set
-                        if (nodePep.Results[0].Any(chromInfo => chromInfo.PeakCountRatio > 0))
+                        if (nodePep.GetPeakCountRatio(0, false) > 0)
                         {
                             Assert.AreEqual(0.25205, 
                                 (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.ModifiedTarget);

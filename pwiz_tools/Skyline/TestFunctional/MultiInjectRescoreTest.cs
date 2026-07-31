@@ -56,12 +56,12 @@ namespace pwiz.SkylineTestFunctional
                 if (peptideDocNode.GlobalStandardType == null)
                 {
                     // The ordinary peptides are expected to have chromatograms for both files
-                    Assert.AreEqual(2, peptideDocNode.Results[0].Count);
+                    Assert.AreEqual(2, peptideDocNode.GetResultFileIds(0).Count());
                 }
                 else
                 {
                     // The iRT peptides are expected to be missing chromatograms for one of the files
-                    Assert.AreEqual(1, peptideDocNode.Results[0].Count);
+                    Assert.AreEqual(1, peptideDocNode.GetResultFileIds(0).Count());
                 }
             }
 

@@ -157,10 +157,10 @@ namespace pwiz.SkylineTestData.Results
 
                 // now drill down for specific values
                 int nPeptides = 0;
-                foreach (var nodePep in document.Molecules.Where(nodePep => !nodePep.Results[0].IsEmpty))
+                foreach (var nodePep in document.Molecules)
                 {
                     // expecting just one peptide result in this small data set
-                    if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
+                    if (nodePep.GetPeakCountRatio(0, false) > 0)
                     {
                         AssertEx.AreEqual(21.94865, (double)nodePep.GetMeasuredRetentionTime(0), .0001, testModeStr + " RT");
                         AssertEx.AreEqual(1.0, (double)nodePep.GetPeakCountRatio(0, false), 0.0001, testModeStr + "peak count ration");

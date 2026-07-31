@@ -1620,12 +1620,10 @@ namespace pwiz.Skyline.Model
 
             public PeptideDocNode UpdateResults(PeptideDocNode nodePeptide)
             {
-                var listChromInfoList = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList(TransitionGroupCount));
-                listChromInfoList = CopyChromInfoAttributes(nodePeptide, listChromInfoList);
-                var results = Results<PeptideChromInfo>.Merge(nodePeptide.Results, listChromInfoList);
-                if (!ReferenceEquals(results, nodePeptide.Results))
-                    nodePeptide = nodePeptide.ChangeResults(results);
-
+                // The molecule level chrom infos are not worked out here any more. Everything they
+                // held is either aggregated from the precursors on demand through a
+                // MoleculeResults, or - for the two values nothing can work out - already in
+                // PeptideResults, which nothing in this pass changes.
                 var listGroupsNew = new List<DocNode>();
                 foreach (TransitionGroupDocNode nodeGroup in nodePeptide.Children)
                 {
