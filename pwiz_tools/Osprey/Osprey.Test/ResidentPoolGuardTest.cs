@@ -31,13 +31,19 @@ namespace pwiz.Osprey.Test
     /// <summary>
     /// Unit tests for the resident first-pass pool guard
     /// (<see cref="PerFileScoringTask.ResidentPoolGuardError"/>): a run that would take the
-    /// O(files) resident pool must fail fast with an actionable error naming the trigger,
-    /// UNLESS the operator explicitly accepted unbounded memory
-    /// (OSPREY_ALLOW_UNBOUNDED_MEMORY, or OSPREY_FDR_PROJECTION=0 which forces the resident
-    /// A/B-oracle path). So no user reaches an O(files) memory path by accident.
-    /// Also pins the trigger set that arms it
-    /// (<see cref="PerFileScoringTask.NeedsResidentPool(OspreyConfig, bool)"/>), since a
-    /// wrongly-added trigger is what re-broke 82-file OSPREY_PASS2_QVALUE=transfer runs.
+    /// O(files) resident pool must fail fast with an actionable error, UNLESS the operator
+    /// named THAT path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT=&lt;token&gt;</c>. Naming a
+    /// different path does not help, and a path absent from
+    /// <see cref="ResidentPaths.KNOWN_UNFIXED"/> is refused whatever the variable says - so no
+    /// user reaches an O(files) memory path by accident, and no single value re-opens all of
+    /// them the way the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c> did.
+    /// <c>OSPREY_FDR_PROJECTION=0</c> is included: it requests the legacy resident
+    /// implementation outright, so it is the <see cref="ResidentPaths.PROJECTION_OFF"/> token
+    /// rather than an automatic exemption.
+    /// Also pins the trigger set that arms the guard
+    /// (<see cref="PerFileScoringTask.NeedsResidentPool(OspreyConfig, bool)"/>) and the
+    /// contents of the token list itself, since a wrongly-added trigger is what re-broke
+    /// 82-file OSPREY_PASS2_QVALUE=transfer runs.
     /// </summary>
     [TestClass]
     public class ResidentPoolGuardTest
