@@ -36,7 +36,7 @@
        ILogManager must come from the SAME OFX.Core.Contracts.dll instance OFX
        sees in the wiff2 ALC, not from a copy that travelled through Sciex's
        deps.json. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <ProjectReference Include="..\Sciex.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <Private>false</Private>
@@ -52,12 +52,13 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Without IAgreeToVendorLicenses the SDK isn't extracted, so the OFX.Core.Contracts
+  <!-- Without $(NativeVendorsAvailable) (IAgreeToVendorLicenses AND Windows; this SDK is
+       Windows-only) the SDK isn't extracted, so the OFX.Core.Contracts
        reference can't resolve. Skip LogManager.cs in that mode — the project still
        produces an empty OFX.Logging.dll, but no consumer references it (the
        ProjectReference entries in Sciex.Tests / MsConvert are conditional too) so the
        empty dll just sits in the output unused. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <Compile Remove="LogManager.cs" />
   </ItemGroup>
 

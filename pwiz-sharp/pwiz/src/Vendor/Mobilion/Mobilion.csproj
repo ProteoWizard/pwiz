@@ -10,12 +10,14 @@
 
     <!-- Vendor archive -> $(MobilionAssembliesDir) flow follows the Bruker / Sciex
          pattern: extract on every build (idempotent), gated behind
-         IAgreeToVendorLicenses. The shim and Reader_Mobilion compile without the
+         $(NativeVendorsAvailable) (IAgreeToVendorLicenses AND Windows; the shim is a
+         Windows .vcxproj built by VS MSBuild). The shim and Reader_Mobilion compile without the
          SDK, but Read() throws VendorSupportNotEnabledException in NO_VENDOR mode. -->
     <MobilionArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Mobilion.7z</MobilionArchive>
     <MobilionAssembliesDir>$(PwizVendorAssembliesPath)\Mobilion</MobilionAssembliesDir>
     <MobilionShimDir>$(MSBuildThisFileDirectory)MobilionShim</MobilionShimDir>
-    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
+         7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,10 +27,10 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <!-- Without the SDK we can't link the shim, so the data + reader paths
          compile out and only Identify() works. -->
     <Compile Remove="MobilionData.cs" />
@@ -40,7 +42,7 @@
 
   <!-- 1. Extract MBI_SDK.dll + headers + import library out of the encrypted 7z. -->
   <Target Name="ExtractMobilionAssemblies"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="BuildMobilionShim;ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(MobilionArchive)"
           Outputs="$(MobilionAssembliesDir)\MBI_SDK.dll;$(MobilionAssembliesDir)\MBIFile.h">
@@ -64,7 +66,7 @@
        (msconvert-sharp, tests) get it alongside MBI_SDK.dll for runtime
        P/Invoke. -->
   <Target Name="LocateVisualStudioMSBuild"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true' and '$(VsMSBuildExe)' == ''">
+          Condition="'$(NativeVendorsAvailable)' == 'true' and '$(VsMSBuildExe)' == ''">
     <!-- vswhere.exe lives in the (x86) Program Files even on x64 machines (Installer is a
          shared 32-bit component). $(ProgramFiles) on Win32 dotnet inherits the bitness of
          the parent process, so we hardcode the path to keep things deterministic. -->
@@ -77,7 +79,7 @@
   </Target>
 
   <Target Name="BuildMobilionShim"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           DependsOnTargets="ExtractMobilionAssemblies;LocateVisualStudioMSBuild"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(MobilionShimDir)\MobilionShim.cpp;$(MobilionShimDir)\MobilionShim.h;$(MobilionAssembliesDir)\MBI_SDK.lib"
@@ -85,7 +87,7 @@
     <Exec Command="&quot;$(VsMSBuildExe)&quot; &quot;$(MobilionShimDir)\MobilionShim.vcxproj&quot; /p:Configuration=$(Configuration) /p:Platform=x64 /nologo /verbosity:minimal" />
   </Target>
 
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <Content Include="$(MobilionAssembliesDir)\MBI_SDK.dll">
       <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

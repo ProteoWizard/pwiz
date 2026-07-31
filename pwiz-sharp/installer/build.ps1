@@ -4,7 +4,7 @@ Build the pwiz-sharp installer (Inno Setup).
 
 .DESCRIPTION
 End-to-end packaging pipeline:
-  1. Refresh-VendorPins.ps1 — bake the current vendor SDK commit pins into
+  1. build/VendorPinsGenerator — bake the current vendor SDK commit pins into
      VendorSdkPins.generated.cs (no-op if pins haven't changed).
   2. dotnet build Tools/MsConvertGUI/src/MsConvertGUI.csproj -c Release
      (transitively builds MsConvert, vendor projects, etc.)
@@ -54,14 +54,17 @@ $cacheDir       = Join-Path $installerDir "cache"
 if (-not (Test-Path $outDir))   { New-Item -ItemType Directory $outDir   | Out-Null }
 if (-not (Test-Path $cacheDir)) { New-Item -ItemType Directory $cacheDir | Out-Null }
 
-# Dot-source the vendor table from Refresh-VendorPins.ps1 (single source of truth).
-. (Join-Path $installerDir "Refresh-VendorPins.ps1")
-$vendorSdkPrefixes = $Vendors | ForEach-Object { $_.Prefixes } | Sort-Object -Unique
+# Read the vendor table from build/vendor-sdk-pins.json (single source of truth, shared
+# with build/VendorPinsGenerator).
+$pinsJson = Join-Path $pwizSharp "build/vendor-sdk-pins.json"
+$vendorSdkPrefixes = (Get-Content -Raw $pinsJson | ConvertFrom-Json).vendors |
+    ForEach-Object { $_.prefixes } | Sort-Object -Unique
 
 # 1. Refresh vendor SDK pins.
-Write-Host "==> Refresh-VendorPins" -ForegroundColor Cyan
-pwsh -File (Join-Path $installerDir "Refresh-VendorPins.ps1")
-if ($LASTEXITCODE -ne 0) { throw "Refresh-VendorPins failed (exit $LASTEXITCODE)" }
+Write-Host "==> VendorPinsGenerator" -ForegroundColor Cyan
+$pinsGenProj = Join-Path $pwizSharp "build/VendorPinsGenerator/VendorPinsGenerator.csproj"
+dotnet run --project $pinsGenProj -c Release -- (Split-Path -Parent $pwizSharp)
+if ($LASTEXITCODE -ne 0) { throw "VendorPinsGenerator failed (exit $LASTEXITCODE)" }
 
 # 2. Build MSConvertGUI + SeeMS Release. MSConvertGUI's chain produces
 #    msconvert.exe + MSConvertGUI-sharp.exe + all Pwiz.* DLLs. SeeMS is a

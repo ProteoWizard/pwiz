@@ -30,30 +30,33 @@
        default BCL — without the package the DAD/UV chromatogram + spectrum reads fail with
        "Could not load file or assembly 'System.Configuration.ConfigurationManager'". Same
        reason Sciex.csproj references this package. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+  <!-- Without $(NativeVendorsAvailable) (-p:IAgreeToVendorLicenses=true AND Windows; this SDK
+       is Windows-only), the encrypted vendor archive is not extracted
        and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Agilent
        compile without the SDK and throw from Read() while keeping Identify() working. The
        SDK-only files (AgilentRawData / SpectrumList_Agilent) reference Agilent.MassSpectrometry.*
        directly, so they must be excluded from compilation in that mode. -->
-  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <Compile Remove="AgilentRawData.cs" />
     <Compile Remove="SpectrumList_Agilent.cs" />
   </ItemGroup>
 
   <Target Name="ExtractAgilentAssemblies"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(AgilentArchive)"
           Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
     <MakeDir Directories="$(AgilentAssembliesDir)" />
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; vendor_api\Agilent\x64\*.dll vendor_api\Agilent\x64\*.config" StandardOutputImportance="low" />
+    <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
+         '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; &quot;vendor_api/Agilent/x64/*.dll&quot; &quot;vendor_api/Agilent/x64/*.config&quot;" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout so the references below are stable. -->
     <ItemGroup>
       <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.dll" />
@@ -83,7 +86,7 @@
     <AgilentPatcherProj>$(PwizSharpRoot)build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
   </PropertyGroup>
   <Target Name="PatchAgilentBeginInvoke"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           AfterTargets="ExtractAgilentAssemblies"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths">
     <Message Importance="high" Text="Cecil-patching Agilent SDK (BaseDataAccess.dll, BaseCommon.dll) to remove BeginInvoke/EndInvoke." />
@@ -99,7 +102,7 @@
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
        plain .NET assemblies, not COM interop wrappers. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <Reference Include="MassSpecDataReader">
       <HintPath>$(AgilentAssembliesDir)\MassSpecDataReader.dll</HintPath>
       <Private>true</Private>
@@ -132,7 +135,7 @@
        runtime dependency (loaded by CalibrationMgr for TOF calibration, never referenced by
        pwiz-sharp's C#), so an explicit Content item keeps it in the output independent of
        reference-trimming decisions. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <Content Include="$(AgilentAssembliesDir)\agtsampleinforw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>agtsampleinforw.dll</Link>
@@ -161,7 +164,7 @@
        have the redist installed, which masked it.
        Microsoft supports app-local deployment of the VC runtime, and pwiz already vendors these
        DLLs, so copy them next to BaseTof.dll instead of requiring a machine-wide install. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <Content Include="$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC120.CRT\x64\msvcr120.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msvcr120.dll</Link>

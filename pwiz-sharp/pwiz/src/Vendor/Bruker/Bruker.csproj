@@ -12,7 +12,8 @@
       -->
     <BrukerArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
     <BrukerAssembliesDir>$(PwizVendorAssembliesPath)\Bruker</BrukerAssembliesDir>
-    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
+         7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,21 +23,24 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
-  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+  <!-- Without $(NativeVendorsAvailable) (-p:IAgreeToVendorLicenses=true AND Windows; this SDK
+       is Windows-only), the encrypted vendor archive is not extracted
        and the native DLL Content entries below are dropped. NO_VENDOR_SUPPORT compiles
        Reader_Bruker without the P/Invoke surface so Read() throws but Identify() still works. -->
-  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
 
   <Target Name="ExtractBrukerAssemblies"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(BrukerArchive)"
           Outputs="$(BrukerAssembliesDir)\timsdata.dll;$(BrukerAssembliesDir)\baf2sql_c.dll">
     <MakeDir Directories="$(BrukerAssembliesDir)" />
     <!-- timsdata.dll is the TDF/TSF reader; baf2sql_c.dll is the SQL-cached BAF reader. -->
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; vendor_api\Bruker\x64\timsdata.dll vendor_api\Bruker\x64\baf2sql_c.dll" StandardOutputImportance="low" />
+    <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
+         '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/x64/timsdata.dll&quot; &quot;vendor_api/Bruker/x64/baf2sql_c.dll&quot;" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout. -->
     <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\timsdata.dll;$(BrukerAssembliesDir)\vendor_api\Bruker\x64\baf2sql_c.dll"
           DestinationFolder="$(BrukerAssembliesDir)"
@@ -47,7 +51,7 @@
     Copy the native DLLs into the build output directory so DllImport can find them at runtime.
     Content files keep them out of the managed assembly metadata.
     -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <Content Include="$(BrukerAssembliesDir)\timsdata.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>timsdata.dll</Link>

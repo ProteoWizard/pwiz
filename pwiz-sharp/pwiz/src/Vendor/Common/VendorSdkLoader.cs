@@ -20,7 +20,7 @@ namespace Pwiz.Vendor.Common;
 /// returns the loaded <see cref="Assembly"/>. Subsequent loads of any DLL in the same
 /// archive hit the cache.</para>
 /// <para>Pins come from <see cref="VendorSdkPins.All"/> — a generated array baked into
-/// this assembly at installer-build time by <c>installer/Refresh-VendorPins.ps1</c>.
+/// this assembly at installer-build time by <c>build/VendorPinsGenerator</c>.
 /// Each pin's URL contains its commit SHA, so GitHub serves byte-immutable content
 /// forever; the recorded SHA-256 is defense-in-depth.</para>
 /// <para>Cache: per-user at <c>%LOCALAPPDATA%\ProteoWizard\vendor\&lt;Vendor&gt;-&lt;ShortSha&gt;\</c>.

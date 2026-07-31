@@ -23,22 +23,23 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
-  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+  <!-- Without $(NativeVendorsAvailable) (-p:IAgreeToVendorLicenses=true AND Windows; this SDK
+       is Windows-only), the encrypted vendor archive is not extracted
        and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Shimadzu
        compile without the SDK and throw from Read() while keeping Identify() working. The
        SDK-only files reference Shimadzu.LabSolutions.IO.* directly, so they must be excluded
        from compilation in that mode. -->
-  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <Compile Remove="ShimadzuRawData.cs" />
     <Compile Remove="SpectrumList_Shimadzu.cs" />
     <Compile Remove="ChromatogramList_Shimadzu.cs" />
   </ItemGroup>
 
   <Target Name="ExtractShimadzuAssemblies"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(ShimadzuArchive)"
           Outputs="$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll">
@@ -62,7 +63,7 @@
        transitive dependencies (Shimadzu.GMNT.*, Shimadzu.SQCL.*, GCMSProtoCS, QTFLProtoCS,
        Google.Protobuf, etc.) get copied as Content below so they're next to the managed
        output for runtime resolution. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <Reference Include="Shimadzu.LabSolutions.IO.IoModule">
       <HintPath>$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll</HintPath>
       <Private>true</Private>
@@ -89,7 +90,7 @@
        and the items are added before MSBuild assembles the @(ContentWithTargetPath) collection
        that feeds CopyFilesToOutputDirectory + cross-project Content propagation. -->
   <Target Name="CollectShimadzuRuntime"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           DependsOnTargets="ExtractShimadzuAssemblies"
           BeforeTargets="AssignTargetPaths">
     <ItemGroup>

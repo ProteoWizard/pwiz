@@ -46,15 +46,16 @@
          the SDK is using inside that ALC. -->
   </ItemGroup>
 
-  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+  <!-- Without $(NativeVendorsAvailable) (-p:IAgreeToVendorLicenses=true AND Windows; this SDK
+       is Windows-only), the encrypted vendor archive is not extracted
        and the SDK <Reference> + <Content> entries below are dropped. NO_VENDOR_SUPPORT lets
        Reader_Sciex compile without the SDK and throw from Read() while keeping Identify() working.
        The SDK-only files reference Clearcore2 / SCIEX.Apis.Data.v1 directly, so they must be
        excluded from compilation in that mode. -->
-  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <Compile Remove="AbstractWiffFile.cs" />
     <Compile Remove="WiffFile.cs" />
     <Compile Remove="SpectrumList_Sciex.cs" />
@@ -67,7 +68,7 @@
        System.Configuration.ConfigurationManager, which isn't part of the .NET 8 BCL by default
        but is shipped as a NuGet package. Without it, GetBasePeakChromatogram and other paths
        throw TypeInitializationException at runtime. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <!-- System.ServiceModel.Primitives + System.ServiceModel.dll on disk are needed by the
          bundled Clearcore2.RFLight.SampleDataProvider's WCF-style configuration paths during
@@ -77,7 +78,7 @@
   </ItemGroup>
 
   <Target Name="ExtractSciexAssemblies"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(SciexArchive)"
           Outputs="$(SciexAssembliesDir)/Clearcore2.Data.AnalystDataProvider.dll;$(SciexAssembliesDir)/SQLite.Interop.dll">
@@ -97,7 +98,7 @@
 
   <!-- Reference the Clearcore2 + Wiff assemblies. CopyLocal=true so they land next to the
        managed output and the dependent assemblies resolve at runtime via Default load context. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <Reference Include="Clearcore2.Data.AnalystDataProvider"><HintPath>$(SciexAssembliesDir)/Clearcore2.Data.AnalystDataProvider.dll</HintPath><Private>true</Private></Reference>
     <Reference Include="Clearcore2.Data"><HintPath>$(SciexAssembliesDir)/Clearcore2.Data.dll</HintPath><Private>true</Private></Reference>
     <Reference Include="Clearcore2.Data.Client"><HintPath>$(SciexAssembliesDir)/Clearcore2.Data.Client.dll</HintPath><Private>true</Private></Reference>
@@ -114,7 +115,7 @@
 
 <!-- Runtime dependencies: indirect Clearcore2 + Sciex assemblies must land next to the output
        so the SDK's late-bound type loads succeed. -->
-  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
     <_SciexRuntime Include="$(SciexAssembliesDir)/Clearcore2.Compression.dll" />
     <!-- Clearcore2.Data + Client + CommonInterfaces + RawXYProcessing are also <Reference>
          entries above; listing them as Content too forces them into the consumer's bin even

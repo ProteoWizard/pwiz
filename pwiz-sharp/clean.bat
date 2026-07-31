@@ -68,7 +68,7 @@ for /d /r "%SCRIPT_DIR%\examples" %%d in (build) do (
     if exist "%%d" rmdir /s /q "%%d" 2>nul
 )
 
-REM # Vendor SDK pins are regenerated on every build (Refresh-VendorPins.ps1
+REM # Vendor SDK pins are regenerated on every build (build/VendorPinsGenerator
 REM # is invoked as a pre-CoreCompile target in Vendor.Common.csproj).
 if exist pwiz\src\Vendor\Common\VendorSdkPins.generated.cs (
     del /q pwiz\src\Vendor\Common\VendorSdkPins.generated.cs

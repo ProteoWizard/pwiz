@@ -28,6 +28,11 @@
          installer outputs, MascotShim CMake tree, example_data fixtures, etc. -->
     <PwizSharpRoot>$(MSBuildThisFileDirectory)</PwizSharpRoot>
 
+    <!-- .. — the outer pwiz repo root (the git checkout that contains both pwiz-sharp/
+         and the cpp tree). Needed by tools that resolve repo-relative paths spanning
+         both, e.g. build/VendorPinsGenerator reading pwiz_aux/... and pwiz-sharp/... -->
+    <PwizRepoRoot>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..'))</PwizRepoRoot>
+
     <!-- ../pwiz — the cpp pwiz source tree (sibling of pwiz-sharp/ inside the
          outer pwiz repo). Holds vendor test fixtures (data/vendor_readers/...),
          the cpp BiblioSpec sources we port from, the cpp Skyline tools, etc. -->

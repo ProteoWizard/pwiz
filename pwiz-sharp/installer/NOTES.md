@@ -93,8 +93,9 @@ pwiz-sharp/installer/
 ├── Setup.iss              ← one Inno script; the source of truth
 ├── build.ps1              ← orchestrator: refresh pins → dotnet build →
 │                            stage → cache runtime → 2× ISCC → write sidecar
-├── Refresh-VendorPins.ps1 ← vendor SDK pin generator (content-addressed
-│                            from the 7z archives; called by build.ps1)
+│                            (the pin generator now lives in
+│                            build/VendorPinsGenerator, a net8.0 tool so it
+│                            also runs on Linux agents with no pwsh)
 ├── Ensure-InnoSetup.ps1   ← idempotent winget-bootstrap of ISCC.exe;
 │                            no-op if Inno Setup is already installed
 ├── cache/                 ← .NET 8 runtime EXE (~56 MB, .gitignored)
@@ -220,7 +221,7 @@ What the installer DOES ship for vendor support:
   vendor archives on demand.
 - `VendorSdkPins.generated.cs` (compiled into `Pwiz.Vendor.Common.dll`) - a
   table of `(vendor, version, sha256, download URL)` tuples regenerated on
-  every build by `Refresh-VendorPins.ps1` from the 7z archives in the
+  every build by `build/VendorPinsGenerator` from the 7z archives in the
   source tree.
 - `7za.exe` - the unpacker `VendorSdkLoader` shells out to for extraction.
 
@@ -247,7 +248,7 @@ Trade-offs to be aware of:
   reads fail until the SDK has been fetched at least once. Subsequent calls
   hit the cache and work offline.
 - **The pin table is the authority.** Bumping a vendor SDK means dropping a
-  new 7z archive into the source tree and re-running `Refresh-VendorPins.ps1`
+  new 7z archive into the source tree and re-running `build/VendorPinsGenerator`
   (build.ps1 calls it automatically). The new pin ships in the next installer
   build; users running a previous installer keep fetching their pinned
   version, so vendor-side breaking changes can't silently affect production
