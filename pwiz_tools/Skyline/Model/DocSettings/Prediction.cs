@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (nodeGroupPrevious == null)
                             return true;
                         if (!ReferenceEquals(nodeGroup.Id, nodeGroupPrevious.Id) ||
-                            !ReferenceEquals(nodeGroup.Results, nodeGroupPrevious.Results))
+                            !ReferenceEquals(nodeGroup.AbbreviatedResults, nodeGroupPrevious.AbbreviatedResults))
                             return true;
                     }
                     return enumPrevious.MoveNext();

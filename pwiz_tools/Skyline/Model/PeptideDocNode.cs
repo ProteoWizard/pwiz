@@ -1537,7 +1537,7 @@ namespace pwiz.Skyline.Model
                     return true;
 
                 // or if the results for any child have changed
-                if (!ReferenceEquals(nodeGroup.Results, nodeGroup2.Results))
+                if (!ReferenceEquals(nodeGroup.AbbreviatedResults, nodeGroup2.AbbreviatedResults))
                     return true;
 
                 iChild++;

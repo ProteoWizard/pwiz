@@ -356,7 +356,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override TransitionGroupChromInfo CalculateValue(PrecursorResult owner)
             {
-                return owner.GetResultFile().FindChromInfo(owner.Precursor.DocNode.Results);
+                // Through the molecule.s MoleculeResults, the one the report rows share.
+                return owner.GetResultFile().FindChromInfo(owner.Precursor.Peptide.GetMoleculeResults()
+                    .GetTransitionGroupChromInfos(owner.Precursor.DocNode.TransitionGroup));
             }
 
             protected override PrecursorQuantificationResult CalculateValue1(PrecursorResult owner)
@@ -395,7 +397,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var chromatogramInfos = new List<ChromatogramInfo>();
             foreach (var transitionDocNode in Precursor.DocNode.Transitions)
             {
-                var transitionChromInfo = GetResultFile().FindChromInfo(transitionDocNode.Results);
+                var transitionChromInfo = GetResultFile().FindChromInfo(
+                    Precursor.Peptide.GetMoleculeResults().GetTransitionChromInfos(
+                        Precursor.DocNode.TransitionGroup, transitionDocNode.Transition));
                 if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
                 {
                     continue;

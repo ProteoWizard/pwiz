@@ -749,8 +749,11 @@ namespace pwiz.Skyline.Model.Results
             List<FileStepCorrelation> correlations)
         {
             var nodeTrans = nodeGroup.Transitions.ToArray();
-            var previousChromInfos = nodeGroup.Results != null && replicateIndex < nodeGroup.Results.Count
-                ? nodeGroup.Results[replicateIndex]
+            // What the precursor is still carrying, which is where the values this pass does not
+            // work out - the annotations and the scores - are carried forward from.
+            var chromInfos = nodeGroup.AbbreviatedResults?.ChromInfos;
+            var previousChromInfos = chromInfos != null && replicateIndex < chromInfos.Count
+                ? chromInfos[replicateIndex]
                 : default;
             var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
                 PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos);

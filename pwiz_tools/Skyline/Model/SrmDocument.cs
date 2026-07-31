@@ -2316,7 +2316,9 @@ namespace pwiz.Skyline.Model
                 // list whose length could disagree with the document's replicates.
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
-                    ValidateChromInfo(Settings, nodeGroup.Results);
+                    // The columnar results, which is what a precursor keeps. Its chrom infos are
+                    // whatever has not been worked out from the .skyd yet, and go when it has.
+                    ValidateChromInfo(Settings, nodeGroup.AbbreviatedResults?.ChromInfos);
                     foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
                     {
                         ValidateChromInfo(Settings, nodeTran.Results);

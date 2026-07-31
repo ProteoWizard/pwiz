@@ -85,26 +85,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var entries = new List<KeyValuePair<double, double>>();
             foreach (var transitionGroupDocNode in transitionGroups)
             {
-                if (transitionGroupDocNode.Results == null)
+                // The scores come from the peak scoring model, so the columnar results keep them and
+                // no chromatogram has to be read for this.
+                var results = transitionGroupDocNode.AbbreviatedResults;
+                if (results == null)
                 {
                     continue;
                 }
 
-                foreach (var chromInfoList in transitionGroupDocNode.Results)
+                for (int position = 0; position < results.ChromFileIds.FileIds.Count; position++)
                 {
-                    foreach (var chromInfo in chromInfoList)
+                    var qValue = results.GetQValue(position);
+                    var zScore = results.GetZScore(position);
+                    if (results.GetUserSet(position) == UserSet.TRUE || !qValue.HasValue || !zScore.HasValue)
                     {
-                        if (chromInfo.UserSet == UserSet.TRUE || !chromInfo.QValue.HasValue || !chromInfo.ZScore.HasValue)
-                        {
-                            continue;
-                        }
-
-                        if (!uniqueScores.Add(chromInfo.ZScore.Value))
-                        {
-                            continue;
-                        }
-                        entries.Add(new KeyValuePair<double, double>(chromInfo.ZScore.Value, chromInfo.QValue.Value));
+                        continue;
                     }
+
+                    if (!uniqueScores.Add(zScore.Value))
+                    {
+                        continue;
+                    }
+                    entries.Add(new KeyValuePair<double, double>(zScore.Value, qValue.Value));
                 }
             }
 

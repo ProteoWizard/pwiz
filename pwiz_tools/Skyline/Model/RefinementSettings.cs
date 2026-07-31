@@ -868,15 +868,16 @@ namespace pwiz.Skyline.Model
         public static Results<TransitionGroupChromInfo>ConvertTransitionGroupChromInfoLibraryInfoToSmallMolecules(TransitionGroupDocNode transitionGroupDocNode, 
             ConvertToSmallMoleculesMode mode, ConvertToSmallMoleculesChargesMode invertChargesMode)
         {
-            if (transitionGroupDocNode.Results == null)
+            var chromInfos = transitionGroupDocNode.AbbreviatedResults?.ChromInfos;
+            if (chromInfos == null)
                 return null;
             if (invertChargesMode == ConvertToSmallMoleculesChargesMode.none && mode != ConvertToSmallMoleculesMode.masses_only)
             {
-                return transitionGroupDocNode.Results;
+                return chromInfos;
             }
             // No libraries for small molecules without IDs, or when inverting polarity in conversion (too much bother adjusting mz in libs), so lose the dotp
             var listResultsNew = new List<ChromInfoList<TransitionGroupChromInfo>>();
-            foreach (var info in transitionGroupDocNode.Results)
+            foreach (var info in chromInfos)
             {
                 var infoNew = new List<TransitionGroupChromInfo>();
                 foreach (var result in info)
