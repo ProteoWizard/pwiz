@@ -102,9 +102,16 @@ namespace pwiz.Skyline.Model.Results
             {
                 transitionGroupResults = transitionGroupResults.ChangeChosenPeakIndexes(chosenPeakIndexes);
             }
-            return customPeaks == null
-                ? transitionGroupResults
-                : transitionGroupResults.ChangeCustomPeaks(customPeaks);
+
+            if (customPeaks != null)
+            {
+                transitionGroupResults = transitionGroupResults.ChangeCustomPeaks(customPeaks);
+            }
+
+            // Kept whatever the caller knows, because the precursor level still holds values which
+            // have no home in the columnar form yet - PeakCountRatio, the ion mobility info, the dot
+            // products. Dropping them waits until every reader of them goes through MoleculeResults.
+            return transitionGroupResults.ChangeChromInfos(results);
         }
 
         /// <summary>
@@ -174,6 +181,25 @@ namespace pwiz.Skyline.Model.Results
         /// Sparse: most positions have no entry.
         /// </summary>
         public ImmutableList<CustomPeak> CustomPeaks { get; private set; }
+
+        /// <summary>
+        /// The chrom infos which have not been worked out from the .skyd file yet. Null once they
+        /// have been. The precursor level counterpart of <see cref="TransitionResults.ChromInfos"/>,
+        /// and kept as a <see cref="Results{TItem}"/> rather than flattened because that is the shape
+        /// every reader of <see cref="TransitionGroupDocNode.Results"/> still expects: while these
+        /// are here, the node can hand them straight back.
+        /// </summary>
+        public Results<TransitionGroupChromInfo> ChromInfos { get; private set; }
+
+        public bool IsConverted
+        {
+            get { return ChromInfos == null; }
+        }
+
+        public TransitionGroupResults ChangeChromInfos(Results<TransitionGroupChromInfo> value)
+        {
+            return ChangeProp(ImClone(this), im => im.ChromInfos = value);
+        }
 
         /// <summary>
         /// These take an <see cref="IEnumerable{T}"/> rather than an
@@ -327,7 +353,8 @@ namespace pwiz.Skyline.Model.Results
                    Equals(OriginalPeakIndexes, other.OriginalPeakIndexes) &&
                    Equals(ReintegratedPeakIndexes, other.ReintegratedPeakIndexes) &&
                    Equals(UserSets, other.UserSets) && Equals(QValues, other.QValues) &&
-                   Equals(ZScores, other.ZScores) && Equals(CustomPeaks, other.CustomPeaks);
+                   Equals(ZScores, other.ZScores) && Equals(CustomPeaks, other.CustomPeaks) &&
+                   Results<TransitionGroupChromInfo>.EqualsDeep(ChromInfos, other.ChromInfos);
         }
 
         public override bool Equals(object obj)
@@ -359,6 +386,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (QValues?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ZScores?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
         }

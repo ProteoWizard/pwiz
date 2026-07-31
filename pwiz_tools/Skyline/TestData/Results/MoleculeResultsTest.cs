@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestData.Results
                 {
                     foreach (var nodeGroup in nodePep.TransitionGroups)
                     {
-                        var chromInfo = nodeGroup.Results[0].FirstOrDefault();
+                        var chromInfo = nodeGroup.AbbreviatedResults?.ChromInfos?[0].FirstOrDefault();
                         if (chromInfo?.StartRetentionTime == null || chromInfo.EndRetentionTime == null)
                         {
                             continue;
@@ -212,13 +212,13 @@ namespace pwiz.SkylineTestData.Results
                 return 0;
             }
 
-            var results = moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition);
+            var results = moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition);
             Assert.IsNotNull(results);
 
             // Asking again has to give back what was worked out the first time, rather than
             // reading and rebuilding it all over.
             Assert.AreSame(results,
-                moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition));
+                moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition));
 
             CheckFromChromInfos(nodeTran, results);
 
@@ -269,16 +269,17 @@ namespace pwiz.SkylineTestData.Results
         /// </summary>
         private static int CountChosenPeakIndexes(TransitionGroupDocNode nodeGroup)
         {
-            if (!nodeGroup.HasResults)
+            var results = nodeGroup.AbbreviatedResults;
+            var chromInfos = results?.ChromInfos;
+            if (chromInfos == null)
             {
                 return 0;
             }
 
-            var results = nodeGroup.AbbreviatedResults;
             int count = 0;
-            for (int replicateIndex = 0; replicateIndex < nodeGroup.Results.Count; replicateIndex++)
+            for (int replicateIndex = 0; replicateIndex < chromInfos.Count; replicateIndex++)
             {
-                foreach (var chromInfo in nodeGroup.Results[replicateIndex])
+                foreach (var chromInfo in chromInfos[replicateIndex])
                 {
                     int position = results.IndexOfFile(replicateIndex, chromInfo.FileId);
                     if (position >= 0 && results.GetChosenPeakIndex(position).HasValue)
@@ -302,7 +303,7 @@ namespace pwiz.SkylineTestData.Results
                 return 0;
             }
 
-            var results = moleculeResults.GetPeptideResults();
+            var results = moleculeResults.GetPeptideChromInfos();
             Assert.IsNotNull(results);
             Assert.AreEqual(nodePep.Results.Count, results.Count);
 
@@ -340,20 +341,23 @@ namespace pwiz.SkylineTestData.Results
         private static int CheckTransitionGroup(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
             ref int originalPeaksChecked)
         {
-            if (!nodeGroup.HasResults)
+            // The chrom infos the columnar results are carrying, which is where a precursor's
+            // unconverted results live now. TransitionGroupDocNode.Results always reports empty.
+            var expectedChromInfos = nodeGroup.AbbreviatedResults?.ChromInfos;
+            if (expectedChromInfos == null)
             {
                 return 0;
             }
 
-            var results = moleculeResults.GetTransitionGroupResults(nodeGroup.TransitionGroup);
+            var results = moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup);
             Assert.IsNotNull(results);
-            Assert.AreEqual(nodeGroup.Results.Count, results.Count);
-            Assert.AreSame(results, moleculeResults.GetTransitionGroupResults(nodeGroup.TransitionGroup));
+            Assert.AreEqual(expectedChromInfos.Count, results.Count);
+            Assert.AreSame(results, moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup));
 
             int groupsChecked = 0;
-            for (int replicateIndex = 0; replicateIndex < nodeGroup.Results.Count; replicateIndex++)
+            for (int replicateIndex = 0; replicateIndex < expectedChromInfos.Count; replicateIndex++)
             {
-                var expectedList = nodeGroup.Results[replicateIndex];
+                var expectedList = expectedChromInfos[replicateIndex];
                 var actualList = results[replicateIndex];
                 Assert.AreEqual(expectedList.Count, actualList.Count);
 

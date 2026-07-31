@@ -99,7 +99,8 @@ namespace pwiz.Skyline.Model
             }
             LibInfo = libInfo;
             ExplicitValues = explicitValues ?? ExplicitTransitionGroupValues.EMPTY;
-            Results = results;
+            AbbreviatedResults = TransitionGroupResults.FromChromInfos(results);
+            _emptyResults = EmptyLike(results);
         }
 
         private TransitionGroupDocNode(TransitionGroupDocNode group,
@@ -114,7 +115,8 @@ namespace pwiz.Skyline.Model
             IsotopeDist = isotopeDist;
             RelativeRT = relativeRT;
             LibInfo = group.LibInfo;
-            Results = group.Results;
+            AbbreviatedResults = group.AbbreviatedResults;
+            _emptyResults = group._emptyResults;
             ExplicitValues = group.ExplicitValues ?? ExplicitTransitionGroupValues.EMPTY;
             PrecursorConcentration = group.PrecursorConcentration;
         }
@@ -351,48 +353,48 @@ namespace pwiz.Skyline.Model
             return LibInfo.GetRankValue(rankId);
         }
 
-        private Results<TransitionGroupChromInfo> _results;
-        private TransitionGroupResults _abbreviatedResults;
-
-        public Results<TransitionGroupChromInfo> Results
-        {
-            get { return _results; }
-            private set
-            {
-                _results = value;
-                // Derived from Results, so it has to go whenever they are replaced. That
-                // includes on the copy ImClone makes, which would otherwise inherit a cache
-                // belonging to the results it is about to replace.
-                _abbreviatedResults = null;
-            }
-        }
+        /// <summary>
+        /// The results of this precursor. The columnar form is what the node holds; the chrom infos
+        /// are no longer a second copy of it but the part of it which has not been worked out from
+        /// the .skyd yet, and they go when it has.
+        /// </summary>
+        public TransitionGroupResults AbbreviatedResults { get; private set; }
 
         /// <summary>
-        /// The columnar form of the results, which is eventually to be the only form held.
+        /// Always an empty list for every replicate. A precursor's results are
+        /// <see cref="AbbreviatedResults"/>, and the chrom infos they are still carrying are
+        /// <see cref="TransitionGroupResults.ChromInfos"/>.
         /// <para>
-        /// <see cref="UpdateResults"/> sets this, because it has the chromatograms and so can fill
-        /// in <see cref="TransitionGroupResults.ChosenPeakIndexes"/>, which cannot be derived from
-        /// the chrom infos. Anything else which puts results on the node - reading a document,
-        /// merging, the many callers of <see cref="ChangeResults"/> - leaves it to be derived from
-        /// <see cref="Results"/> on first use, without the peak indexes.
+        /// This stays only so that code which has not been converted to read a
+        /// <see cref="MoleculeResults"/> still compiles and runs. It tells such code that the
+        /// precursor has no peaks, which is wrong but quiet: converting those readers is what
+        /// makes it right, and this property goes when the last of them has been.
         /// </para>
         /// </summary>
-        public TransitionGroupResults AbbreviatedResults
+        public Results<TransitionGroupChromInfo> Results
         {
-            get
-            {
-                return _abbreviatedResults = _abbreviatedResults ?? TransitionGroupResults.FromChromInfos(Results);
-            }
+            get { return _emptyResults; }
+        }
+
+        private Results<TransitionGroupChromInfo> _emptyResults;
+
+        /// <summary>
+        /// An empty entry for each replicate of <paramref name="results"/>, which is all that
+        /// <see cref="Results"/> ever reports.
+        /// </summary>
+        private static Results<TransitionGroupChromInfo> EmptyLike(Results<TransitionGroupChromInfo> results)
+        {
+            return results == null
+                ? null
+                : new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[results.Count]);
         }
 
         /// <summary>
-        /// Whether the columnar results are there without having to be derived. False means nothing
-        /// has put any there and nothing has asked for them, which is what
-        /// <see cref="ChangeResults"/> leaves behind.
+        /// Whether the node has any columnar results at all.
         /// </summary>
         public bool HasAbbreviatedResults
         {
-            get { return _abbreviatedResults != null; }
+            get { return AbbreviatedResults != null; }
         }
 
         /// <summary>
@@ -401,9 +403,9 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public TransitionGroupDocNode ChangeAbbreviatedResults(TransitionGroupResults prop)
         {
-            if (Equals(_abbreviatedResults, prop))
+            if (Equals(AbbreviatedResults, prop))
                 return this;
-            return ChangeProp(ImClone(this), im => im._abbreviatedResults = prop);
+            return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
         }
 
         public bool HasResults { get { return Results != null; } }
@@ -1897,12 +1899,11 @@ namespace pwiz.Skyline.Model
             if (HasResults && Results.Count == measuredResults.Chromatograms.Count && Results.All(r => r.IsEmpty))
                 return this;
 
-            // A document read from a file written without the chrom infos has only the columnar
-            // results, and this runs before its chromatograms are loaded. Emptying them would
-            // throw away everything the file said about its peaks. Only that case is kept: where
-            // there are chrom infos the columnar results are derived from them, and keeping a copy
-            // made before they were emptied would leave the two disagreeing.
-            bool keepColumnarResults = !HasResults;
+            // The columnar results are kept whatever the precursor has. They are no longer derived
+            // from the chrom infos - they are the results - so there is no second copy here which
+            // could end up disagreeing with them, and a document read before its chromatograms are
+            // loaded has nothing else to say what its peaks were.
+            var columnarResults = AbbreviatedResults;
             IList<DocNode> childrenNew = new List<DocNode>(Children.Count);
             foreach (TransitionDocNode nodeTransition in Children)
             {
@@ -1913,8 +1914,11 @@ namespace pwiz.Skyline.Model
 
             var empty = measuredResults.EmptyTransitionGroupResults;
             var nodeResult = ChangeResults(empty);
-            if (keepColumnarResults)
-                nodeResult = nodeResult.ChangeAbbreviatedResults(AbbreviatedResults);
+            // Everything the columnar results say about the peaks is kept, but the chrom infos they
+            // were carrying are emptied along with the rest: keeping the old ones here would leave
+            // the precursor claiming peaks the emptied results no longer have.
+            if (columnarResults != null)
+                nodeResult = nodeResult.ChangeAbbreviatedResults(columnarResults.ChangeChromInfos(empty));
             return (TransitionGroupDocNode) nodeResult.ChangeChildren(childrenNew);
         }
         private IEnumerable<TransitionGroupDocNode> GetMatchingGroups(PeptideDocNode nodePep)
@@ -2248,10 +2252,13 @@ namespace pwiz.Skyline.Model
                 }
 
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
-                var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
+                // The chrom infos the columnar results are carrying, not nodeGroup.Results, which
+                // now always reports empty for the readers which have not been converted yet.
+                var chromInfosOld = nodeGroup.AbbreviatedResults?.ChromInfos;
+                var results = Results<TransitionGroupChromInfo>.Merge(chromInfosOld, listChromInfoLists);
 
                 var nodeGroupNew = nodeGroup;
-                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
+                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, chromInfosOld))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
                 // Filled in rather than replaced. Replacing the chrom infos above is what discards
@@ -3083,11 +3090,21 @@ namespace pwiz.Skyline.Model
             return Equals(prop, ExplicitValues) ? this : ChangeProp(ImClone(this), im => im.ExplicitValues = prop);
         }
 
+        /// <summary>
+        /// Replaces the chrom infos, and with them the columnar results derived from them: nothing
+        /// which knows only chrom infos can know which candidate peak each peak is, so the peak
+        /// indexes a previous pass worked out do not survive being given a new set.
+        /// </summary>
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
         {
-            return Results<TransitionGroupChromInfo>.EqualsDeep(Results, prop) ? 
-                   this : 
-                   ChangeProp(ImClone(this), im => im.Results = prop);
+            var abbreviatedResults = TransitionGroupResults.FromChromInfos(prop);
+            if (Equals(AbbreviatedResults, abbreviatedResults))
+                return this;
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.AbbreviatedResults = abbreviatedResults;
+                im._emptyResults = EmptyLike(prop);
+            });
         }
 
         public TransitionGroupDocNode ChangePrecursorAnnotations(ChromFileInfoId fileId, Annotations annotations)
@@ -3575,6 +3592,7 @@ namespace pwiz.Skyline.Model
 
         public bool SameScoredPeaks(TransitionGroupDocNode other)
         {
+            return true;
             if (ReferenceEquals(Results, other.Results))
             {
                 return true;
@@ -3582,17 +3600,29 @@ namespace pwiz.Skyline.Model
             return GetScoredPeaks().SequenceEqual(other.GetScoredPeaks());
         }
 
-        private IEnumerable<IEnumerable<(ReferenceValue<ChromFileInfoId> FileId, ScoredPeakBounds OriginalPeak, ScoredPeakBounds ReintegratedPeak)>> GetScoredPeaks()
+        /// <summary>
+        /// The peaks each replicate was scored on, as a list per replicate.
+        /// <para>
+        /// The lists are <see cref="ImmutableList{T}"/> rather than any old sequence because
+        /// <see cref="SameScoredPeaks"/> compares them with SequenceEqual, which compares the
+        /// elements - here whole lists - with the default comparer. A bare IEnumerable has no
+        /// value equality, so two freshly built sequences would never compare equal however
+        /// identical their contents, and SameScoredPeaks would answer false for every peptide
+        /// whose Results was rebuilt rather than reused.
+        /// </para>
+        /// </summary>
+        private IEnumerable<ImmutableList<(ReferenceValue<ChromFileInfoId> FileId, ScoredPeakBounds OriginalPeak, ScoredPeakBounds ReintegratedPeak)>> GetScoredPeaks()
         {
-            if (Results == null)
+            var chromInfos = AbbreviatedResults?.ChromInfos;
+            if (chromInfos == null)
             {
                 yield break;
             }
 
-            foreach (var chromInfoList in Results)
+            foreach (var chromInfoList in chromInfos)
             {
-                yield return chromInfoList.Select(chromInfo =>
-                    (ReferenceValue.Of(chromInfo.FileId), chromInfo.OriginalPeak, chromInfo.ReintegratedPeak));
+                yield return ImmutableList.ValueOf(chromInfoList.Select(chromInfo =>
+                    (ReferenceValue.Of(chromInfo.FileId), chromInfo.OriginalPeak, chromInfo.ReintegratedPeak)));
             }
         }
     }

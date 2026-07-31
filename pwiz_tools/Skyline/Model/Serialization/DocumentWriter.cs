@@ -1118,7 +1118,7 @@ namespace pwiz.Skyline.Model.Serialization
             var childrenNew = new List<DocNode>(nodeGroup.TransitionCount);
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                var results = _moleculeResults.GetTransitionResults(nodeGroup.TransitionGroup, nodeTran.Transition);
+                var results = _moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition);
                 childrenNew.Add(results == null ? nodeTran : nodeTran.ChangeResults(results));
             }
 

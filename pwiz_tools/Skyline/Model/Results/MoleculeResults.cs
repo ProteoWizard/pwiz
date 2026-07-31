@@ -96,9 +96,16 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The complete transition level results, rebuilt from the chromatogram cache.
+        /// The complete transition level results, rebuilt from the chromatogram cache. This is what
+        /// a caller uses instead of <see cref="TransitionDocNode.Results"/>, which always reports
+        /// empty now.
+        /// <para>
+        /// Named for what it returns rather than "results", which at every level here now means the
+        /// columnar form: <see cref="TransitionResults"/> is a class of its own, and a
+        /// GetTransitionResults would read as returning one.
+        /// </para>
         /// </summary>
-        public Results<TransitionChromInfo> GetTransitionResults(TransitionGroup transitionGroup,
+        public Results<TransitionChromInfo> GetTransitionChromInfos(TransitionGroup transitionGroup,
             Transition transition)
         {
             var groupResults = GetGroupResults(transitionGroup);
@@ -114,7 +121,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromInfoList<TransitionChromInfo> GetTransitionChromInfos(TransitionGroup transitionGroup,
             Transition transition, int replicateIndex)
         {
-            var results = GetTransitionResults(transitionGroup, transition);
+            var results = GetTransitionChromInfos(transitionGroup, transition);
             if (results == null || replicateIndex < 0 || replicateIndex >= results.Count)
             {
                 return default;
@@ -125,9 +132,10 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// The complete precursor level results, aggregated from the transition level values the
-        /// same way <see cref="TransitionGroupDocNode.ChangeResults"/> aggregates them.
+        /// same way <see cref="TransitionGroupDocNode.ChangeResults"/> aggregates them. This is what
+        /// a caller uses instead of <see cref="TransitionGroupDocNode.Results"/>.
         /// </summary>
-        public Results<TransitionGroupChromInfo> GetTransitionGroupResults(TransitionGroup transitionGroup)
+        public Results<TransitionGroupChromInfo> GetTransitionGroupChromInfos(TransitionGroup transitionGroup)
         {
             return GetGroupResults(transitionGroup)?.ChromInfos;
         }
@@ -135,7 +143,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromInfoList<TransitionGroupChromInfo> GetTransitionGroupChromInfos(TransitionGroup transitionGroup,
             int replicateIndex)
         {
-            var results = GetTransitionGroupResults(transitionGroup);
+            var results = GetTransitionGroupChromInfos(transitionGroup);
             if (results == null || replicateIndex < 0 || replicateIndex >= results.Count)
             {
                 return default;
@@ -204,9 +212,10 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// The complete molecule level results, aggregated from the precursor level values the
-        /// same way <see cref="PeptideDocNode.ChangeSettings"/> aggregates them.
+        /// same way <see cref="PeptideDocNode.ChangeSettings"/> aggregates them. This is what a
+        /// caller uses instead of <see cref="PeptideDocNode.Results"/>.
         /// </summary>
-        public Results<PeptideChromInfo> GetPeptideResults()
+        public Results<PeptideChromInfo> GetPeptideChromInfos()
         {
             if (ReplicateCount == 0)
             {

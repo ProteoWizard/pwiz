@@ -155,7 +155,7 @@ namespace pwiz.SkylineTestData.Results
                 var firstGroup = firstPep.TransitionGroups.First();
                 var firstTran = firstGroup.Transitions.First();
                 var restored = new MoleculeResults(docResults.Settings, firstPep)
-                    .GetTransitionResults(firstGroup.TransitionGroup, firstTran.Transition);
+                    .GetTransitionChromInfos(firstGroup.TransitionGroup, firstTran.Transition);
                 Assert.IsNotNull(restored, @"MoleculeResults gave nothing back for the first transition");
                 Assert.AreNotEqual(0, restored.Sum(chromInfoList => chromInfoList.Count),
                     @"MoleculeResults gave no chrom infos for the first transition");

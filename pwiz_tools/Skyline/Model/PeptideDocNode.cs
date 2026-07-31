@@ -1583,7 +1583,11 @@ namespace pwiz.Skyline.Model
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup)
             {
-                AddChromInfoList(nodeGroup, nodeGroup.Results[ResultsIndex]);
+                // The chrom infos the columnar results are carrying: TransitionGroupDocNode.Results
+                // always reports empty now.
+                var chromInfos = nodeGroup.AbbreviatedResults?.ChromInfos;
+                if (chromInfos != null && ResultsIndex < chromInfos.Count)
+                    AddChromInfoList(nodeGroup, chromInfos[ResultsIndex]);
             }
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup,
