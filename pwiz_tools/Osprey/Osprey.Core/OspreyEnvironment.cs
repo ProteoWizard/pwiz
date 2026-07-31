@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -316,11 +317,16 @@ namespace pwiz.Osprey.Core
         ///     a target/decoy null on the reconciled + compacted pool. Preserves the
         ///     always-on Rust 2nd pass. Compaction has already stripped most decoys from
         ///     that pool, so the null is decoy-depleted and the retrained q anti-conservative.
-        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: score each reconciled peak with the FROZEN
-        ///     1st-pass model and read its q from the FULL pre-compaction 1st-pass
-        ///     score-&gt;q table (co-monotonic confidence transfer; Rost 2016 TRIC). No
+        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
+        ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
+        ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
+        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time. No
         ///     retrain, no reduced-pool null. Restores calibration while keeping the
         ///     re-scoring ID gain.
+        ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
+        ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
+        ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
+        ///     <c>ResidentPaths</c>.
         /// Unset or unrecognized normalizes to the parity-preserving default. Read once at
         /// process start. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
         ///
@@ -365,18 +371,38 @@ namespace pwiz.Osprey.Core
             IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
 
         /// <summary>
-        /// OSPREY_ALLOW_UNBOUNDED_MEMORY: opt in to the RESIDENT first-pass pool paths, which
-        /// hold every entry resident and grow O(files) so they do not scale to large file
-        /// counts. DEFAULT OFF: with this unset, a run that would take such a path fails fast
-        /// with an error naming the trigger, rather than silently exhausting memory -- so no
-        /// user reaches an O(files) memory path by accident. Set to a non-zero value ONLY for
-        /// our own testing (A/B byte-identity oracles, small runs, HPC test harnesses). The
-        /// existing <see cref="UseFdrProjection"/>=false (OSPREY_FDR_PROJECTION=0) switch is
-        /// itself an explicit resident-path opt-in and is honored the same way. Read once at
-        /// process start. See ai/todos/active/TODO-20260720_osprey_pass2_per_run_qvalue.md.
+        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the ONE known-unfixed resident path this run may
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=mdiag-full-resume</c>. Legal values are
+        /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
+        /// that is not on that list, is refused no matter what this is set to.
+        ///
+        /// This REPLACES the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c>, which granted
+        /// amnesty to every trigger at once. That is not a hypothetical failure: it let
+        /// <c>OSPREY_PASS2_QVALUE=transfer</c> silently regress back onto the resident pool for
+        /// ten days (#4438 removed the forcing, a #4446 merge artifact restored it), because
+        /// developers simply set the boolean and a re-broken memory bound looked like normal
+        /// operating procedure. A named token cannot do that: an unlisted path errors even with
+        /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
+        /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
+        ///
+        /// Read once at process start. Intended for local testing; CI names its token explicitly
+        /// (regression.ps1 mode 2), so what CI depends on is visible rather than ambient.
         /// </summary>
-        public static readonly bool AllowUnboundedMemory =
-            IsSetAndNotZero(@"OSPREY_ALLOW_UNBOUNDED_MEMORY");
+        public static readonly string AllowUnfixedResident =
+            (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
+
+        /// <summary>
+        /// True when <see cref="AllowUnfixedResident"/> was set to something that is not a legal
+        /// token, so the guard can say "that value is not a known path" instead of printing the
+        /// same message it prints when the variable is unset. Without this, a typo
+        /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
+        /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
+        /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
+        /// </summary>
+        public static readonly bool AllowUnfixedResidentUnrecognized =
+            AllowUnfixedResident.Length > 0 &&
+            !ResidentPaths.KNOWN_UNFIXED.Any(
+                t => string.Equals(t, AllowUnfixedResident, StringComparison.OrdinalIgnoreCase));
 
         private static string NormalizePass2QValue(string raw)
         {

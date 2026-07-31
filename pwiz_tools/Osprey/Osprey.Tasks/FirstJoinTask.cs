@@ -286,8 +286,7 @@ namespace pwiz.Osprey.Tasks
             // streamed report is byte-identical to the resident build, and it stays off the
             // default output path.
             bool needsResidentFirstPassPool =
-                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                OspreyEnvironment.Pass2TransferQ;
+                !string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1;
             // NOTE: transfer-compete does NOT force the resident pool -- it only needs the
             // trained 1st-pass MODEL (not the full-population score->q table), which the
             // streaming projection path publishes cheaply via captureModel below. Forcing
