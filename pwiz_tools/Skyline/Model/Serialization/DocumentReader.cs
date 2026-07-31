@@ -1660,15 +1660,7 @@ namespace pwiz.Skyline.Model.Serialization
 
         private static float[] ReadTransitionAreas(XmlReader reader)
         {
-            string strAreas = reader.GetAttribute(ATTR.transition_areas);
-            if (strAreas == null)
-            {
-                return null;
-            }
-
-            return strAreas.Split(' ')
-                .Select(strArea => float.Parse(strArea, System.Globalization.CultureInfo.InvariantCulture))
-                .ToArray();
+            return reader.GetFloatsAttribute(ATTR.transition_areas);
         }
 
         private static UserSet ReadUserSet(XmlReader reader)

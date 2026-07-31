@@ -1077,7 +1077,8 @@ namespace pwiz.Skyline.Model.Serialization
         private void WriteTransitionGroupResults(XmlWriter writer, TransitionGroupDocNode nodeGroup)
         {
             var results = nodeGroup.AbbreviatedResults;
-            _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(nodeGroup, results);
+            var sharedAreas = GetSharedTransitionAreas(nodeGroup, results);
+            _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
             WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar, (w, position) =>
             {
                 w.WriteAttribute(ATTR.area, results.Areas[position]);
@@ -1087,11 +1088,10 @@ namespace pwiz.Skyline.Model.Serialization
                 w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
                 WriteUserSet(w, results.GetUserSet(position));
                 WriteCustomPeak(w, results.GetCustomPeak(position));
-                var areas = GetSharedTransitionAreas(nodeGroup, results.ChromFileIds.FileIds[position]);
+                var areas = sharedAreas[position];
                 if (areas != null)
                 {
-                    w.WriteAttributeString(ATTR.transition_areas, string.Join(@" ",
-                        areas.Select(area => area.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture))));
+                    w.WriteFloatsAttribute(ATTR.transition_areas, areas);
                 }
             });
         }
@@ -1126,27 +1126,57 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// The areas of every transition of a precursor in one file, or null when any of them has
-        /// something else to say: no peak there at all, a user set peak, annotations, or boundaries
-        /// which are not a candidate peak's. Then they each need an element of their own.
+        /// The areas of every transition of a precursor, at each of the precursor's positions, or
+        /// null at a position where any transition has something else to say: no peak there at all,
+        /// a user set peak, annotations, or boundaries which are not a candidate peak's. Then they
+        /// each need an element of their own.
+        /// <para>
+        /// Worked out once for the whole precursor. Doing it a position at a time, and looking up
+        /// each transition's entry across all of its positions, is quadratic in the number of
+        /// replicates, which is enough to make saving a large document look like a hang.
+        /// </para>
         /// </summary>
-        private static float[] GetSharedTransitionAreas(TransitionGroupDocNode nodeGroup, ChromFileInfoId fileId)
+        private static float[][] GetSharedTransitionAreas(TransitionGroupDocNode nodeGroup,
+            TransitionGroupResults results)
         {
-            var areas = new float[nodeGroup.TransitionCount];
-            for (int iTran = 0; iTran < areas.Length; iTran++)
+            if (results == null)
             {
-                var results = ((TransitionDocNode) nodeGroup.Children[iTran]).AbbreviatedResults;
-                int position = results?.ChromFileIds.IndexOfFile(fileId) ?? -1;
-                if (position < 0 || results.GetUserSet(position) != UserSet.FALSE ||
-                    results.GetCustomPeak(position) != null)
-                {
-                    return null;
-                }
-
-                areas[iTran] = results.Areas[position];
+                return null;
             }
 
-            return areas;
+            var transitionResults = nodeGroup.Transitions.Select(nodeTran => nodeTran.AbbreviatedResults).ToArray();
+            var replicatePositions = results.ChromFileIds.ReplicatePositions;
+            var areasByPosition = new float[results.ChromFileIds.FileIds.Count][];
+            for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+            {
+                int position = replicatePositions.GetStart(replicateIndex);
+                for (int end = position + replicatePositions.GetCount(replicateIndex); position < end; position++)
+                {
+                    var fileId = results.ChromFileIds.FileIds[position].Value;
+                    var areas = new float[transitionResults.Length];
+                    for (int iTran = 0; iTran < transitionResults.Length; iTran++)
+                    {
+                        var transitionResult = transitionResults[iTran];
+
+                        // Scoped to the replicate, which is the entry or two belonging to it,
+                        // rather than to every position the transition has.
+                        int transitionPosition = transitionResult?.IndexOfFile(replicateIndex, fileId) ?? -1;
+                        if (transitionPosition < 0 ||
+                            transitionResult.GetUserSet(transitionPosition) != UserSet.FALSE ||
+                            transitionResult.GetCustomPeak(transitionPosition) != null)
+                        {
+                            areas = null;
+                            break;
+                        }
+
+                        areas[iTran] = transitionResult.Areas[transitionPosition];
+                    }
+
+                    areasByPosition[position] = areas;
+                }
+            }
+
+            return areasByPosition;
         }
 
         /// <summary>
@@ -1154,7 +1184,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// nothing to say beyond those areas can be left out altogether.
         /// </summary>
         private static HashSet<ReferenceValue<ChromFileInfoId>> GetSharedTransitionAreaFiles(
-            TransitionGroupDocNode nodeGroup, TransitionGroupResults results)
+            TransitionGroupResults results, float[][] sharedAreas)
         {
             if (results == null)
             {
@@ -1162,11 +1192,11 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             var fileIds = new HashSet<ReferenceValue<ChromFileInfoId>>();
-            foreach (var fileId in results.ChromFileIds.FileIds)
+            for (int position = 0; position < sharedAreas.Length; position++)
             {
-                if (GetSharedTransitionAreas(nodeGroup, fileId) != null)
+                if (sharedAreas[position] != null)
                 {
-                    fileIds.Add(fileId);
+                    fileIds.Add(results.ChromFileIds.FileIds[position]);
                 }
             }
 

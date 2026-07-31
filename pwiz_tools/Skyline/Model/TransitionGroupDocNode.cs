@@ -2279,6 +2279,22 @@ namespace pwiz.Skyline.Model
             }
 
             /// <summary>
+            /// Whether what a transition already has says the same as what this pass worked out.
+            /// <para>
+            /// The two are never equal outright: what is already there has been converted, having
+            /// had its candidate peaks worked out, while what comes out of the chrom infos still
+            /// carries them. Replacing one with the other would make every pass convert the whole
+            /// molecule again, reading all of its chromatograms, which is enough to make loading a
+            /// large document look like a hang.
+            /// </para>
+            /// </summary>
+            private static bool SaysTheSame(TransitionResults existing, TransitionResults calculated)
+            {
+                return existing != null && existing.IsConverted &&
+                       Equals(existing, calculated.ChangeChromInfos(null));
+            }
+
+            /// <summary>
             /// The columnar results are what a transition keeps. The chrom infos are calculated
             /// here, used to make them, and then let go: everything about them is either in the
             /// columnar results or can be read back from the .skyd.
@@ -2295,7 +2311,7 @@ namespace pwiz.Skyline.Model
                 // chromatogram - because none is loaded yet - has nothing to say, and must not
                 // replace what a document was read with.
                 var abbreviatedResults = TransitionResults.FromChromInfos(results);
-                if (abbreviatedResults?.Areas.Count > 0)
+                if (abbreviatedResults?.Areas.Count > 0 && !SaysTheSame(nodeTran.AbbreviatedResults, abbreviatedResults))
                     nodeTran = nodeTran.ChangeAbbreviatedResults(abbreviatedResults);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);

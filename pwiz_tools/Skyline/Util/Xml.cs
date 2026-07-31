@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -416,6 +417,23 @@ namespace pwiz.Skyline.Util
             writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// Writes a list of numbers separated by spaces, which is what an xs:list of xs:double
+        /// looks like. Read back with <see cref="GetFloatsAttribute"/>.
+        /// <para>
+        /// Named apart from <see cref="WriteAttribute{TAttr}(XmlWriter,string,TAttr)"/> rather than
+        /// overloading it. An array is an exact match for that one's type parameter and would bind
+        /// to it ahead of any overload taking <see cref="IEnumerable{T}"/>, writing the result of
+        /// ToString - "System.Single[]" - with nothing to say it had gone wrong until the document
+        /// failed to parse.
+        /// </para>
+        /// </summary>
+        public static void WriteFloatsAttribute(this XmlWriter writer, string name, IEnumerable<float> values)
+        {
+            writer.WriteAttributeString(name, string.Join(@" ",
+                values.Select(value => value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture))));
+        }
+
         public static void WriteElement<TChild>(this XmlWriter writer, TChild child)
             where TChild : IXmlSerializable
         {
@@ -706,6 +724,23 @@ namespace pwiz.Skyline.Util
         public static float GetFloatAttribute(this XmlReader reader, string name, float defaultValue)
         {
             return reader.GetNullableFloatAttribute(name) ?? defaultValue;
+        }
+
+        /// <summary>
+        /// The values of an attribute holding a list of numbers separated by spaces, or null when
+        /// the attribute is not there. See <see cref="WriteAttribute(XmlWriter,string,IEnumerable{float})"/>.
+        /// </summary>
+        public static float[] GetFloatsAttribute(this XmlReader reader, string name)
+        {
+            string value = reader.GetAttribute(name);
+            if (value == null)
+            {
+                return null;
+            }
+
+            return value.Split(' ')
+                .Select(part => float.Parse(part, CultureInfo.InvariantCulture))
+                .ToArray();
         }
 
         public enum EnumCase { unkown, lower, upper }
