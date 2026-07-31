@@ -480,40 +480,76 @@ namespace pwiz.Skyline.Model
             return GetMeasuredRetentionTime(fileId);
         }
 
+        /// <summary>
+        /// The retention time of one replicate, averaged over the precursors which measured one.
+        /// This is the same average the molecule level calculator made, taken from the precursors'
+        /// columnar results rather than from chrom infos a molecule no longer keeps, so it reads no
+        /// chromatogram.
+        /// </summary>
         public float? GetMeasuredRetentionTime(int i)
         {
             if (i == -1)
                 return AverageMeasuredRetentionTime;
 
-            var result = GetSafeChromInfo(i);
-            if (result.IsEmpty)
-                return null;
-            return result.GetAverageValue(chromInfo => chromInfo.RetentionTime.HasValue
-                                             ? chromInfo.RetentionTime.Value
-                                             : (float?)null);
+            return AverageRetentionTime(GetMeasuredRetentionTimes(i));
         }
 
         public float? AverageMeasuredRetentionTime
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.RetentionTime.HasValue
-                                             ? chromInfo.RetentionTime.Value
-                                             : (float?)null);
+                return AverageRetentionTime(Enumerable
+                    .Range(0, TransitionGroups.Select(nodeGroup =>
+                            nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0)
+                        .DefaultIfEmpty(0).Max())
+                    .SelectMany(GetMeasuredRetentionTimes));
             }
+        }
+
+        /// <summary>
+        /// Every retention time the precursors measured in one replicate. A precursor with no peak
+        /// there records a zero, which is not a measurement and so is left out.
+        /// </summary>
+        private IEnumerable<float> GetMeasuredRetentionTimes(int replicateIndex)
+        {
+            foreach (var nodeGroup in TransitionGroups)
+            {
+                var results = nodeGroup.AbbreviatedResults;
+                if (results == null)
+                    continue;
+                foreach (int position in results.GetPositions(replicateIndex))
+                {
+                    float retentionTime = results.RetentionTimes[position];
+                    if (retentionTime != 0)
+                        yield return retentionTime;
+                }
+            }
+        }
+
+        private static float? AverageRetentionTime(IEnumerable<float> retentionTimes)
+        {
+            double total = 0;
+            int count = 0;
+            foreach (float retentionTime in retentionTimes)
+            {
+                total += retentionTime;
+                count++;
+            }
+
+            return count == 0 ? (float?) null : (float) (total/count);
         }
 
         public float? PercentileMeasuredRetentionTime
         {
             get
             {
-                if (Results == null)
-                    return null;
-                var statTimes = new Statistics(
-                    from result in Results
-                    from chromInfo in result.Where(chromInfo => !Equals(chromInfo, default(PeptideChromInfo)))
-                    where chromInfo.RetentionTime.HasValue
-                    select (double)chromInfo.RetentionTime.Value);
+                // Every retention time the precursors measured, from their columnar results.
+                var statTimes = new Statistics(Enumerable
+                    .Range(0, TransitionGroups.Select(nodeGroup =>
+                            nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0)
+                        .DefaultIfEmpty(0).Max())
+                    .SelectMany(GetMeasuredRetentionTimes)
+                    .Select(retentionTime => (double) retentionTime));
                 return statTimes.Length > 0
                     ? (float?)statTimes.Percentile(IrtStandard.GetSpectrumTimePercentile(ModifiedTarget))
                     : null;
@@ -1544,25 +1580,28 @@ namespace pwiz.Skyline.Model
             return GetLabel(this, resultsText);
         }
 
+        /// <summary>
+        /// From the columnar results, which is where this lives now. See
+        /// <see cref="PeptideResults.AnyExcludeFromCalibration"/> for why it is asked of the
+        /// replicate rather than of one of its files.
+        /// </summary>
         public bool IsExcludeFromCalibration(int replicateIndex)
         {
-            if (Results == null || replicateIndex < 0 || replicateIndex >= Results.Count)
-            {
-                return false;
-            }
-            var chromInfos = Results[replicateIndex];
-            if (chromInfos.IsEmpty)
-            {
-                return false;
-            }
-            return chromInfos.Any(peptideChromInfo => peptideChromInfo != null && peptideChromInfo.ExcludeFromCalibration);
+            return AbbreviatedResults?.AnyExcludeFromCalibration(replicateIndex) ?? false;
         }
 
-        public PeptideDocNode ChangeExcludeFromCalibration(int replicateIndex, bool excluded)
+        /// <summary>
+        /// Takes the settings because the columnar results have to be made when the molecule has
+        /// none, which is the usual case: nothing is kept for a document that excludes no replicate.
+        /// </summary>
+        public PeptideDocNode ChangeExcludeFromCalibration(SrmSettings settings, int replicateIndex, bool excluded)
         {
-            var newChromInfos = new ChromInfoList<PeptideChromInfo>(Results[replicateIndex]
-                .Select(peptideChromInfo => peptideChromInfo.ChangeExcludeFromCalibration(excluded)));
-            return ChangeResults(Results.ChangeAt(replicateIndex, newChromInfos));
+            var peptideResults = AbbreviatedResults ?? PeptideResults.ForMeasuredResults(settings.MeasuredResults);
+            if (peptideResults == null)
+                return this;
+            foreach (int position in peptideResults.GetPositions(replicateIndex))
+                peptideResults = peptideResults.ChangeExcludeFromCalibration(position, excluded);
+            return ChangeAbbreviatedResults(peptideResults);
         }
 
         public bool HasPrecursorConcentrations

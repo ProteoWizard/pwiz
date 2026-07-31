@@ -227,7 +227,10 @@ namespace pwiz.Skyline.Model.Results
             return list;
         }
 
-        private IEnumerable<int> GetPositions(int replicateIndex)
+        /// <summary>
+        /// The flat positions belonging to one replicate.
+        /// </summary>
+        public IEnumerable<int> GetPositions(int replicateIndex)
         {
             var replicatePositions = ChromFileIds.ReplicatePositions;
             if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
