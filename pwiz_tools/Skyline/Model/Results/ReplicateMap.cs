@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return Enumerable.Range(ReplicatePositions.GetStart(index), ReplicatePositions.GetCount(index))
+                return ReplicatePositions.EnumeratePositions(index)
                     .Select(i => Items[i]);
             }
         }

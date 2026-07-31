@@ -371,10 +371,9 @@ namespace pwiz.SkylineTestData.Results
                     moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex);
                 Assert.AreEqual(actualList.Count, oneReplicate.Count);
 
-                int start = replicatePositions.GetStart(replicateIndex);
-                for (int i = 0; i < actualList.Count; i++)
+                int i = 0;
+                foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
                 {
-                    int position = start + i;
                     var rebuilt = actualList[i];
                     AssertGroupValuesEqual(rebuilt, oneReplicate[i]);
                     Assert.AreSame(columnar.ChromFileIds.FileIds[position].Value, rebuilt.FileId);
@@ -386,6 +385,7 @@ namespace pwiz.SkylineTestData.Results
                         originalPeaksChecked++;
                     }
 
+                    i++;
                     groupsChecked++;
                 }
             }

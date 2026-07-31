@@ -305,8 +305,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                int start = replicatePositions.GetStart(replicateIndex);
-                for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
+                foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
                 {
                     var fileId = groupResults.ChromFileIds.FileIds[position].Value;
                     var chromGroupInfo = FindChromatogramGroupInfo(nodeGroup, replicateIndex, fileId);

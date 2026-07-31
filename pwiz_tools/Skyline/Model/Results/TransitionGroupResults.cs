@@ -325,17 +325,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<int> GetPositions(int replicateIndex)
         {
-            var replicatePositions = ChromFileIds.ReplicatePositions;
-            if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
-            {
-                yield break;
-            }
-
-            int start = replicatePositions.GetStart(replicateIndex);
-            for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
-            {
-                yield return position;
-            }
+            return ChromFileIds.ReplicatePositions.EnumeratePositions(replicateIndex);
         }
 
         public float? GetQValue(int position)
@@ -712,14 +702,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int replicateIndex)
         {
-            var replicatePositions = ChromFileIds.ReplicatePositions;
-            if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
-            {
-                yield break;
-            }
-
-            int start = replicatePositions.GetStart(replicateIndex);
-            for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
+            foreach (int position in ChromFileIds.ReplicatePositions.EnumeratePositions(replicateIndex))
             {
                 yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, Areas[position],
                     GetTruncated(position), IsEmptyPeak(position));
@@ -780,17 +763,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<int> GetPositions(int replicateIndex)
         {
-            var replicatePositions = ChromFileIds.ReplicatePositions;
-            if (replicateIndex < 0 || replicateIndex >= replicatePositions.ReplicateCount)
-            {
-                yield break;
-            }
-
-            int start = replicatePositions.GetStart(replicateIndex);
-            for (int position = start; position < start + replicatePositions.GetCount(replicateIndex); position++)
-            {
-                yield return position;
-            }
+            return ChromFileIds.ReplicatePositions.EnumeratePositions(replicateIndex);
         }
 
         /// <summary>

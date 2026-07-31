@@ -1025,28 +1025,21 @@ namespace pwiz.Skyline.Model.Serialization
         private void WriteColumnarResults(XmlWriter writer, ChromFileIds chromFileIds, string start,
             Action<XmlWriter, int> writePeak)
         {
-            if (chromFileIds == null)
+            var replicatePositions = chromFileIds?.ReplicatePositions;
+            if (replicatePositions == null || replicatePositions.TotalCount == 0)
             {
                 return;
             }
 
             var chromatograms = Settings.MeasuredResults.Chromatograms;
-            bool started = false;
-            var replicatePositions = chromFileIds.ReplicatePositions;
+            writer.WriteStartElement(start);
             for (int replicateIndex = 0;
                  replicateIndex < Math.Min(replicatePositions.ReplicateCount, chromatograms.Count);
                  replicateIndex++)
             {
                 var chromatogramSet = chromatograms[replicateIndex];
-                int position = replicatePositions.GetStart(replicateIndex);
-                for (int end = position + replicatePositions.GetCount(replicateIndex); position < end; position++)
+                foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
                 {
-                    if (!started)
-                    {
-                        writer.WriteStartElement(start);
-                        started = true;
-                    }
-
                     writer.WriteStartElement(EL.columnar_peak);
                     writer.WriteAttribute(ATTR.replicate, chromatogramSet.Name);
                     if (chromatogramSet.FileCount > 1)
@@ -1060,8 +1053,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            if (started)
-                writer.WriteEndElement();
+            writer.WriteEndElement();
         }
 
         private void WriteTransitionResults(XmlWriter writer, TransitionResults results)
@@ -1149,8 +1141,7 @@ namespace pwiz.Skyline.Model.Serialization
             var areasByPosition = new float[results.ChromFileIds.FileIds.Count][];
             for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
             {
-                int position = replicatePositions.GetStart(replicateIndex);
-                for (int end = position + replicatePositions.GetCount(replicateIndex); position < end; position++)
+                foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
                 {
                     var fileId = results.ChromFileIds.FileIds[position].Value;
                     var areas = new float[transitionResults.Length];

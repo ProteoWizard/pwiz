@@ -80,6 +80,21 @@ namespace pwiz.Skyline.Model.Results
             return _replicateEndPositions[replicateIndex] - GetStart(replicateIndex);
         }
 
+        /// <summary>
+        /// The positions in the flat list belonging to one replicate. This is how a caller walks a
+        /// replicate: nothing should be counting its way from the start and the end, and putting the
+        /// arithmetic here means no caller has to remember that
+        /// <see cref="Enumerable.Range(int,int)"/> takes a count rather than an end.
+        /// <para>
+        /// Empty for a replicate index which does not exist, the way <see cref="GetCount"/> is
+        /// zero for one, so callers do not have to range check first.
+        /// </para>
+        /// </summary>
+        public IEnumerable<int> EnumeratePositions(int replicateIndex)
+        {
+            return Enumerable.Range(GetStart(replicateIndex), GetCount(replicateIndex));
+        }
+
         public ReplicatePositions ChangeCountAt(int index, int newCount)
         {
             if (newCount == GetCount(index))
