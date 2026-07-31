@@ -293,7 +293,10 @@ namespace pwiz.SkylineTestFunctional
                         .SelectMany(c => c.MSDataFileInfos)
                         .FirstOrDefault(fileInfo => resultFileRef.Matches(fileInfo.FilePath));
                     Assert.IsNotNull(chromFileInfo);
-                    var peptideChromInfo = FindChromInfo(peptideDocNode.Results, chromFileInfo.FileId);
+                    // Rebuilt from the .skyd: a molecule no longer keeps its chrom infos.
+                    var peptideChromInfo = FindChromInfo(
+                        new MoleculeResults(document.Settings, peptideDocNode).GetPeptideChromInfos(),
+                        chromFileInfo.FileId);
                     var ratioToGlobalStandard = (double?) row.Cells[colRatioLightToGlobalStandard.Index].Value;
                     var normalizedArea = (AnnotatedDouble)row.Cells[colNormalizedArea.Index].Value;
                     var normalizationMethod = peptideDocNode.NormalizationMethod;
@@ -384,9 +387,10 @@ namespace pwiz.SkylineTestFunctional
 
         private static IEnumerable<ChromFileInfoId> GetAllChromFileInfoIds(SrmDocument document)
         {
-            var all = document.Molecules.SelectMany(peptideDocNode=>GetChromFileInfoIds(peptideDocNode.Results)
-                .Concat(peptideDocNode.TransitionGroups.SelectMany(tg => GetChromFileInfoIds(tg.Results)
-                    .Concat(tg.Transitions.SelectMany(t => GetChromFileInfoIds(t.Results))))));
+            // From the columnar results, which is where the files are recorded now. A molecule's
+            // files are the union of its precursors', and a precursor's are its transitions', so
+            // asking the molecule covers all three levels.
+            var all = document.Molecules.SelectMany(peptideDocNode => peptideDocNode.GetResultFileIds());
             return all.Distinct((IEqualityComparer<ChromFileInfoId>)ReferenceValue.EQUALITY_COMPARER);
         }
 

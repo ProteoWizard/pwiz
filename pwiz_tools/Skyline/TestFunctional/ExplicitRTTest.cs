@@ -128,7 +128,10 @@ namespace pwiz.SkylineTestFunctional
                 var nResults = 0;
                 foreach (var nodePep in document.Molecules)
                 {
-                    foreach (var results in nodePep.Results)
+                    // Rebuilt from the .skyd: a molecule no longer keeps its chrom infos.
+                    var peptideChromInfos =
+                        new MoleculeResults(document.Settings, nodePep).GetPeptideChromInfos();
+                    foreach (var results in peptideChromInfos)
                     {
                         foreach (var result in results)
                         {

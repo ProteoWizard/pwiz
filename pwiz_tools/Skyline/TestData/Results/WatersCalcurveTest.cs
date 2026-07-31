@@ -165,14 +165,19 @@ namespace pwiz.SkylineTestData.Results
                     // Check results calculations for peptides and groups
                     foreach (var nodePep in docResults.Peptides)
                     {
-                        Assert.AreEqual(len, nodePep.Results.Count);
+                        // Both levels are rebuilt from the .skyd now rather than held on the nodes.
+                        var moleculeResults = new MoleculeResults(docResults.Settings, nodePep);
+                        var peptideChromInfos = moleculeResults.GetPeptideChromInfos();
+                        Assert.AreEqual(len, peptideChromInfos.Count);
                         Assert.IsTrue(nodePep.HasResults);
-                        var chromInfo = nodePep.Results[len - 1][0];
+                        var chromInfo = peptideChromInfos[len - 1][0];
                         Assert.AreEqual(1, nodePep.Children.Count);
                         var nodeGroup = (TransitionGroupDocNode)nodePep.Children[0];
-                        Assert.IsTrue(nodeGroup.HasResults);
-                        Assert.AreEqual(len, nodeGroup.Results.Count);
-                        var chromInfoGroup = nodeGroup.Results[len - 1][0];
+                        Assert.IsTrue(nodeGroup.HasAbbreviatedResults);
+                        var groupChromInfos =
+                            moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup);
+                        Assert.AreEqual(len, groupChromInfos.Count);
+                        var chromInfoGroup = groupChromInfos[len - 1][0];
                         Assert.IsTrue(chromInfoGroup.PeakCountRatio >= 0.5);
                         Assert.IsTrue(chromInfoGroup.RetentionTime.HasValue);
                         Assert.IsTrue(chromInfoGroup.Area.HasValue && chromInfoGroup.Area > 290);

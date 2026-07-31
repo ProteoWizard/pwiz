@@ -25,6 +25,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -125,12 +126,15 @@ namespace TestPerf
 
         private bool AnyMissingResults(PeptideDocNode peptideDocNode)
         {
-            if (peptideDocNode.Results == null)
+            // Rebuilt from the .skyd: a molecule no longer keeps its chrom infos.
+            var peptideChromInfos =
+                new MoleculeResults(SkylineWindow.Document.Settings, peptideDocNode).GetPeptideChromInfos();
+            if (peptideChromInfos == null)
             {
                 return true;
             }
 
-            if (peptideDocNode.Results.Any(chromInfoList => chromInfoList.ElementAtOrDefault(0)?.RetentionTime == null))
+            if (peptideChromInfos.Any(chromInfoList => chromInfoList.ElementAtOrDefault(0)?.RetentionTime == null))
             {
                 return true;
             }
