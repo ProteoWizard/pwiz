@@ -609,15 +609,30 @@ namespace pwiz.Osprey.Tasks
             //    file's scalars are resident at a time; the cross-file state is bounded by the
             //    number of distinct precursors, not the total observation count -- so peak memory
             //    is flat in file count (the 32/64 GB many-file target).
-            (uint[] entryIds, double[] scores) ReadFile(string fileKey)
+            Dictionary<(string, uint), double> runQ, expQ, pep;
+            // The streaming competition reads one file's scalars per call and is otherwise silent;
+            // at 163 files that was a 9.6 min gap immediately after the line above announced it.
+            // readFileScalars is invoked exactly once per file (StreamingFdr.cs:180, single pass),
+            // so counting calls here is an honest per-file progress signal without threading a
+            // callback through the FDR layer.
+            using (var progress = new ProgressReporter(
+                string.Format("{0}: streaming full-population competition across {1} file(s)",
+                    mode, fileKeys.Count),
+                fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
-                return (eids, scs);
-            }
+                long nRead = 0;
 
-            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
-                fileKeys, ReadFile, survivorScore, survivors,
-                out var runQ, out var expQ, out var pep, stratumBaseIds);
+                (uint[] entryIds, double[] scores) ReadFile(string fileKey)
+                {
+                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                    progress.Report(++nRead);
+                    return (eids, scs);
+                }
+
+                StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                    fileKeys, ReadFile, survivorScore, survivors,
+                    out runQ, out expQ, out pep, stratumBaseIds);
+            }
 
             // 4. Map the recomputed q/PEP back onto the reported survivor entries. Under
             //    protein-compact, an OFF-stratum survivor got q=1.0 from the (constrained)
