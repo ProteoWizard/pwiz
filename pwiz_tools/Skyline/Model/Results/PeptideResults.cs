@@ -158,14 +158,11 @@ namespace pwiz.Skyline.Model.Results
                 int count = 0;
                 if (i == replicateIndex)
                 {
-                    if (!Equals(value, defaultValue))
+                    foreach (var fileId in fileIds)
                     {
-                        foreach (var fileId in fileIds)
-                        {
-                            newFileIds.Add(fileId);
-                            values.Add(value);
-                            count++;
-                        }
+                        newFileIds.Add(fileId);
+                        values.Add(value);
+                        count++;
                     }
                 }
                 else if (map != null && i < map.Count)
@@ -186,8 +183,11 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
+            // The entries carried over from the other replicates already say something, so this only
+            // drops the ones just written - which is what setting the default back has to do.
             return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), newFileIds),
-                ImmutableList.ValueOf(values).MaybeConstant());
+                    ImmutableList.ValueOf(values).MaybeConstant())
+                .WithoutDefault(defaultValue);
         }
 
         /// <summary>

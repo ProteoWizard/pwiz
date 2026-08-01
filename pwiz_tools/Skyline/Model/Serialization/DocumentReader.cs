@@ -1412,22 +1412,14 @@ namespace pwiz.Skyline.Model.Serialization
                 analyteConcentrations.AddRange(concentrationByReplicate[replicateIndex]);
             }
 
-            // Two independent maps, each of them null when nothing was set anywhere: a value which
-            // was never set has no entry rather than an entry holding the default.
+            // Two independent maps, each keeping only the files something was set for, and null when
+            // that is none of them.
             var chromFileIds = new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
-            var results = new PeptideResults();
-            if (excludeFromCalibration.Any(exclude => exclude))
-            {
-                results = results.ChangeExcludeFromCalibration(
-                    new ChromFileIdMap<bool>(chromFileIds, excludeFromCalibration));
-            }
-
-            if (analyteConcentrations.Any(concentration => concentration.HasValue))
-            {
-                results = results.ChangeAnalyteConcentrations(
-                    new ChromFileIdMap<double?>(chromFileIds, analyteConcentrations));
-            }
-
+            var results = new PeptideResults()
+                .ChangeExcludeFromCalibration(
+                    new ChromFileIdMap<bool>(chromFileIds, excludeFromCalibration).WithoutDefault())
+                .ChangeAnalyteConcentrations(
+                    new ChromFileIdMap<double?>(chromFileIds, analyteConcentrations).WithoutDefault());
             return results.IsEmpty ? null : results;
         }
 

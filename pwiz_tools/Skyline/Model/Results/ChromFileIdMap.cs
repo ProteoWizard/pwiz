@@ -196,5 +196,101 @@ namespace pwiz.Skyline.Model.Results
                 return (ChromFileIds.GetHashCode() * 397) ^ FlatValues.GetHashCode();
             }
         }
+
+        public ChromFileIdMap<T> WithFileIds(ChromFileIds chromFileIds, T defaultValue = default)
+        {
+            if (Equals(ChromFileIds, chromFileIds))
+            {
+                return this;
+            }
+
+            var newValues = new List<T>(chromFileIds.ReplicatePositions.TotalCount);
+            for (int replicateIndex = 0; replicateIndex < chromFileIds.ReplicatePositions.ReplicateCount; replicateIndex++)
+            {
+                foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
+                {
+                    if (TryGetValue(replicateIndex, fileId, out var value))
+                    {
+                        newValues.Add(value);
+                    }
+                    else
+                    {
+                        newValues.Add(defaultValue);
+                    }
+                }
+            }
+
+            return new ChromFileIdMap<T>(chromFileIds, newValues);
+        }
+
+        /// <summary>
+        /// Returns a new ChromFileIdMap with the entries removed that were equal to <paramref name="defaultValue"/>,
+        /// or null when that removes all of them - which is how a value nobody has set is stored.
+        /// <para>
+        /// Returns this when there was nothing to remove, so a map which does not change stays
+        /// reference equal.
+        /// </para>
+        /// <para>
+        /// This is what makes a map sparse: an entry earns its place by saying something. The
+        /// entries which survive keep the file they belong to, so the positions of the result are
+        /// not the positions of this map, and nothing may carry one across.
+        /// </para>
+        /// <para>
+        /// The default is worth passing explicitly for an enum whose "nothing set" value is not the
+        /// zero one: <see cref="Results.UserSet.FALSE"/> is one rather than zero, so leaving it out
+        /// would remove the peaks a user did set and keep the rest.
+        /// </para>
+        /// </summary>
+        public ChromFileIdMap<T> WithoutDefault(T defaultValue = default)
+        {
+            var comparer = EqualityComparer<T>.Default;
+            if (!FlatValues.Any(value => comparer.Equals(value, defaultValue)))
+            {
+                return this;
+            }
+
+            var counts = new List<int>(Count);
+            var fileIds = new List<ChromFileInfoId>();
+            var values = new List<T>();
+            for (int replicateIndex = 0; replicateIndex < Count; replicateIndex++)
+            {
+                int count = 0;
+                foreach (int position in ReplicatePositions[replicateIndex])
+                {
+                    var value = FlatValues[position];
+                    if (comparer.Equals(value, defaultValue))
+                    {
+                        continue;
+                    }
+
+                    fileIds.Add(ChromFileIds.FileIds[position].Value);
+                    values.Add(value);
+                    count++;
+                }
+
+                counts.Add(count);
+            }
+
+            if (values.Count == 0)
+            {
+                return null;
+            }
+
+            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+                ImmutableList.ValueOf(values).MaybeConstant());
+        }
+    }
+
+    public static class ChromFileIdMaps
+    {
+        public static ChromFileIdMap<T?> ToNullables<T>(this ChromFileIdMap<T> map) where T : struct
+        {
+            return new ChromFileIdMap<T?>(map.ChromFileIds, map.FlatValues.Cast<T?>().Nullables());
+        }
+
+        public static ChromFileIdMap<T> FromNullables<T>(this ChromFileIdMap<T?> map, T defaultValue) where T : struct
+        {
+            return new ChromFileIdMap<T>(map.ChromFileIds, map.FlatValues.Select(value => value ?? defaultValue));
+        }
     }
 }
