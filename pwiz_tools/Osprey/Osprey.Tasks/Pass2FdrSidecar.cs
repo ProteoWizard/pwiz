@@ -537,7 +537,7 @@ namespace pwiz.Osprey.Tasks
                 long nDone = 0;
                 foreach (var kvp in perFileEntries)
                 {
-                    progress.Report(nDone++);
+                    progress.Report(++nDone);
                     if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
                         continue;
                     string effectiveParquetPath =
@@ -616,7 +616,7 @@ namespace pwiz.Osprey.Tasks
             // so counting calls here is an honest per-file progress signal without threading a
             // callback through the FDR layer.
             using (var progress = new ProgressReporter(
-                string.Format("{0}: streaming full-population competition across {1} file(s)",
+                string.Format("{0}: reading per-file scalars for the streamed competition ({1} file(s))",
                     mode, fileKeys.Count),
                 fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {

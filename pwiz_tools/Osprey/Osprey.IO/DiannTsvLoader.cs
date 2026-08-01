@@ -60,13 +60,21 @@ namespace pwiz.Osprey.IO
             // LibraryLoader's "Loading spectral library from ..." and the interning summary.
             // Byte progress needs the stream, so it is wired here rather than in ParseReader,
             // which stays a plain TextReader entry point for tests. Mirrors MzmlReader.
+            // bufferSize 1 disables FileStream's own buffering: StreamReader below asks in 1 MB
+            // blocks, so a second buffer underneath would copy every byte twice (and a 16 MB one
+            // would sit on the LOH for the whole parse, including for the ~200-byte TSVs the unit
+            // tests load). The reader's buffer is what must be large - at the BCL default of 1 KB
+            // this issues a ProgressStream.Read, and therefore a locking Report, once per KB:
+            // ~13.6M calls on the 13 GB entrapment library to print about a dozen lines.
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
-                FileShare.Read, 16 * 1024 * 1024))
+                FileShare.Read, 1))
             using (var progress = new ProgressReporter(
                 string.Format("Parsing {0}", Path.GetFileName(path)), stream.Length, string.Empty,
                 ProgressReporter.IO_INTERVAL_SECONDS))
             using (var progressStream = new ProgressStream(stream, progress))
-            using (var reader = new StreamReader(progressStream))
+            // leaveOpen so ownership of progressStream is explicit rather than resting on
+            // ProgressStream declining to override Dispose (see MzmlReader's single-close note).
+            using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
             {
                 return ParseReader(reader, logInfo);
             }
