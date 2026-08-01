@@ -481,7 +481,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 foreach (var position in results.GetPositions(replicateIndex))
                 {
-                    area += results.Peaks.Values[position].Area;
+                    area += results.Peaks.FlatValues[position].Area;
                     anyPeak = true;
                 }
             }
@@ -945,7 +945,7 @@ namespace pwiz.Skyline.Model
             {
                 // Zero is what a peak with no retention time was stored as, and what this used to
                 // skip. No measured peak has a retention time of zero, so the two do not overlap.
-                float retentionTime = results.Peaks.Values[position].RetentionTime;
+                float retentionTime = results.Peaks.FlatValues[position].RetentionTime;
                 if (retentionTime == 0)
                     continue;
 
@@ -999,8 +999,8 @@ namespace pwiz.Skyline.Model
                 // nothing.
                 var results = AbbreviatedResults;
                 if (results != null &&
-                    (results.UserSets?.Values.Any(userSet => userSet != UserSet.FALSE) == true ||
-                     results.Annotations?.Values.Any(a => !a.IsEmpty) == true))
+                    (results.UserSets?.FlatValues.Any(userSet => userSet != UserSet.FALSE) == true ||
+                     results.Annotations?.FlatValues.Any(a => !a.IsEmpty) == true))
                     return true;
                 return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
             }
@@ -2460,7 +2460,7 @@ namespace pwiz.Skyline.Model
                 // chromatogram - because none is loaded yet - has nothing to say, and must not
                 // replace what a document was read with.
                 var abbreviatedResults = TransitionResults.FromChromInfos(results);
-                if (abbreviatedResults?.Peaks.Values.Count > 0 && !SaysTheSame(nodeTran.AbbreviatedResults, abbreviatedResults))
+                if (abbreviatedResults?.Peaks.FlatValues.Count > 0 && !SaysTheSame(nodeTran.AbbreviatedResults, abbreviatedResults))
                     nodeTran = nodeTran.ChangeAbbreviatedResults(abbreviatedResults);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
@@ -3257,7 +3257,7 @@ namespace pwiz.Skyline.Model
         {
             int position = GetPrecursorAnnotationPosition(fileId);
             var results = AbbreviatedResults;
-            var newAnnotations = results.Annotations.Values.ToList();
+            var newAnnotations = results.Annotations.FlatValues.ToList();
             newAnnotations[position] = annotations ?? Annotations.EMPTY;
             return ChangeAbbreviatedResults(results.ChangeAnnotations(newAnnotations));
         }

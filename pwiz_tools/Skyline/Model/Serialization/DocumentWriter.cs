@@ -1070,7 +1070,7 @@ namespace pwiz.Skyline.Model.Serialization
         {
             WriteColumnarResults(writer, results?.ChromFileIds, EL.transition_results_columnar, (w, position) =>
             {
-                w.WriteAttribute(ATTR.area, results.Peaks.Values[position].Area);
+                w.WriteAttribute(ATTR.area, results.Peaks.FlatValues[position].Area);
                 w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
                 WriteCustomPeak(w, results.GetCustomPeak(position));
             });
@@ -1084,7 +1084,7 @@ namespace pwiz.Skyline.Model.Serialization
             WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar, (w, position) =>
             {
                 // No area: a precursor's is the sum of its transitions', which are written below it.
-                w.WriteAttribute(ATTR.retention_time, results.Peaks.Values[position].RetentionTime);
+                w.WriteAttribute(ATTR.retention_time, results.Peaks.FlatValues[position].RetentionTime);
                 // Nullable rather than the generic default-value overload, which formats with
                 // ToString() and so loses digits a float needs to come back the same.
                 w.WriteAttributeNullable(ATTR.start_time, results.GetStartTime(position));

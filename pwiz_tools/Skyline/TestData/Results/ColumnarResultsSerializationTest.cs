@@ -89,13 +89,13 @@ namespace pwiz.SkylineTestData.Results
                         // empty, identified, forced integration - is deliberately not written,
                         // because it is worked out again from the .skyd when that is read.
                         CollectionAssert.AreEqual(
-                            expectedResults.Peaks.Values.Select(peak => peak.Area).ToArray(),
-                            actualResults.Peaks.Values.Select(peak => peak.Area).ToArray(), @"areas");
+                            expectedResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(),
+                            actualResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(), @"areas");
                         CollectionAssert.AreEqual(
-                            expectedResults.Peaks.Values.Select(peak => peak.UserSet).ToArray(),
-                            actualResults.Peaks.Values.Select(peak => peak.UserSet).ToArray(), @"user sets");
-                        CollectionAssert.AreEqual(expectedResults.CustomPeaks?.Values.ToArray(),
-                            actualResults.CustomPeaks?.Values.ToArray(), @"custom peaks");
+                            expectedResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(),
+                            actualResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(), @"user sets");
+                        CollectionAssert.AreEqual(expectedResults.CustomPeaks?.FlatValues.ToArray(),
+                            actualResults.CustomPeaks?.FlatValues.ToArray(), @"custom peaks");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
                         transitionsChecked++;
@@ -113,19 +113,19 @@ namespace pwiz.SkylineTestData.Results
                             actualResults.ChromFileIds.ReplicatePositions);
                         // One struct per peak now, so this compares the times and the chosen index
                         // together rather than as four lists.
-                        CollectionAssert.AreEqual(expectedResults.Peaks.Values.ToArray(),
-                            actualResults.Peaks.Values.ToArray(), @"peaks");
-                        CollectionAssert.AreEqual(expectedResults.QValues?.Values.ToArray(),
-                            actualResults.QValues?.Values.ToArray(), @"q values");
-                        CollectionAssert.AreEqual(expectedResults.ZScores?.Values.ToArray(),
-                            actualResults.ZScores?.Values.ToArray(), @"z scores");
-                        CollectionAssert.AreEqual(expectedResults.UserSets?.Values.ToArray(),
-                            actualResults.UserSets?.Values.ToArray(), @"user sets");
-                        CollectionAssert.AreEqual(expectedResults.Annotations?.Values.ToArray(),
-                            actualResults.Annotations?.Values.ToArray(), @"annotations");
+                        CollectionAssert.AreEqual(expectedResults.Peaks.FlatValues.ToArray(),
+                            actualResults.Peaks.FlatValues.ToArray(), @"peaks");
+                        CollectionAssert.AreEqual(expectedResults.QValues?.FlatValues.ToArray(),
+                            actualResults.QValues?.FlatValues.ToArray(), @"q values");
+                        CollectionAssert.AreEqual(expectedResults.ZScores?.FlatValues.ToArray(),
+                            actualResults.ZScores?.FlatValues.ToArray(), @"z scores");
+                        CollectionAssert.AreEqual(expectedResults.UserSets?.FlatValues.ToArray(),
+                            actualResults.UserSets?.FlatValues.ToArray(), @"user sets");
+                        CollectionAssert.AreEqual(expectedResults.Annotations?.FlatValues.ToArray(),
+                            actualResults.Annotations?.FlatValues.ToArray(), @"annotations");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
-                        for (int position = 0; position < expectedResults.Peaks.Values.Count; position++)
+                        for (int position = 0; position < expectedResults.Peaks.FlatValues.Count; position++)
                         {
                             if (expectedResults.GetChosenPeakIndex(position).HasValue)
                             {
@@ -176,10 +176,10 @@ namespace pwiz.SkylineTestData.Results
                     {
                         var expectedAreas = expected.Current.AbbreviatedResults.Peaks;
                         var actualAreas = actual.Current.AbbreviatedResults.Peaks;
-                        CollectionAssert.AreEqual(expectedAreas.Values.Select(peak => peak.Area).ToArray(), actualAreas.Values.Select(peak => peak.Area).ToArray(),
-                            string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.Values.Count,
-                                actualAreas.Values.Count));
-                        sharedAreasChecked += expectedAreas.Values.Count;
+                        CollectionAssert.AreEqual(expectedAreas.FlatValues.Select(peak => peak.Area).ToArray(), actualAreas.FlatValues.Select(peak => peak.Area).ToArray(),
+                            string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.FlatValues.Count,
+                                actualAreas.FlatValues.Count));
+                        sharedAreasChecked += expectedAreas.FlatValues.Count;
                     }
                 }
 
@@ -220,12 +220,12 @@ namespace pwiz.SkylineTestData.Results
             var expectedResults = docMoved.MoleculeTransitions.First().AbbreviatedResults;
             var actualResults = docRoundTrip.MoleculeTransitions.First().AbbreviatedResults;
             // The area and the user set are what the format carries. See above.
-            CollectionAssert.AreEqual(expectedResults.Peaks.Values.Select(peak => peak.Area).ToArray(),
-                actualResults.Peaks.Values.Select(peak => peak.Area).ToArray(), @"areas");
-            CollectionAssert.AreEqual(expectedResults.Peaks.Values.Select(peak => peak.UserSet).ToArray(),
-                actualResults.Peaks.Values.Select(peak => peak.UserSet).ToArray(), @"user sets");
-            CollectionAssert.AreEqual(expectedResults.CustomPeaks?.Values.ToArray(),
-                actualResults.CustomPeaks?.Values.ToArray(), @"custom peaks");
+            CollectionAssert.AreEqual(expectedResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(),
+                actualResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(), @"areas");
+            CollectionAssert.AreEqual(expectedResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(),
+                actualResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(), @"user sets");
+            CollectionAssert.AreEqual(expectedResults.CustomPeaks?.FlatValues.ToArray(),
+                actualResults.CustomPeaks?.FlatValues.ToArray(), @"custom peaks");
             Assert.IsNotNull(actualResults.CustomPeaks);
         }
 

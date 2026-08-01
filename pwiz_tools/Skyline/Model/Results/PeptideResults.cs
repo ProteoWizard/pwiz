@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -38,118 +40,66 @@ namespace pwiz.Skyline.Model.Results
     public class PeptideResults : Immutable
     {
         /// <summary>
-        /// An empty set laid out to match the document's replicates and files, for a molecule which
-        /// is about to be given one of the two values it can keep and has none yet. Built from the
-        /// measured results rather than from any chrom infos, so it reads nothing.
-        /// </summary>
-        public static PeptideResults ForMeasuredResults(MeasuredResults measuredResults)
-        {
-            if (measuredResults == null)
-            {
-                return null;
-            }
-
-            var fileIds = new List<ChromFileInfoId>();
-            var counts = new List<int>();
-            foreach (var chromatogramSet in measuredResults.Chromatograms)
-            {
-                int count = 0;
-                foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
-                {
-                    fileIds.Add(fileInfo.FileId);
-                    count++;
-                }
-
-                counts.Add(count);
-            }
-
-            return new PeptideResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds));
-        }
-
-        public PeptideResults(ChromFileIds chromFileIds)
-        {
-            ChromFileIds = chromFileIds;
-        }
-
-        public ChromFileIds ChromFileIds { get; private set; }
-
-        /// <summary>
-        /// Whether the user left each replicate out of the calibration curve. Almost always all
-        /// false, which is why this goes through
-        /// <see cref="ImmutableListFactory.MaybeConstant{T}"/>.
+        /// Whether the user left a replicate out of the calibration curve. Almost always nothing at
+        /// all: only the files a value was actually set for have an entry, so a document which
+        /// excludes no replicate keeps a null map rather than a list of falses.
         /// </summary>
         public ChromFileIdMap<bool> ExcludeFromCalibration { get; private set; }
 
         /// <summary>
-        /// The concentration the user entered for each replicate, or null where they entered none.
+        /// The concentration the user entered, for the files they entered one for. Null where they
+        /// entered none, and a null map when they entered none anywhere.
         /// </summary>
         public ChromFileIdMap<double?> AnalyteConcentrations { get; private set; }
 
         /// <summary>
-        /// A map over the same positions as <see cref="ChromFileIds"/>, with the values stored
-        /// through <see cref="ImmutableListFactory.MaybeConstant{T}"/> so that a column saying the
-        /// same thing everywhere costs one entry.
+        /// Whether there is nothing here at all, which is what a molecule with neither value has and
+        /// what the callers store as no results rather than as an empty object.
         /// </summary>
-        private ChromFileIdMap<TValue> MakeMap<TValue>(IEnumerable<TValue> values)
+        public bool IsEmpty
         {
-            return values == null
-                ? null
-                : new ChromFileIdMap<TValue>(ChromFileIds, ImmutableList.ValueOf(values).MaybeConstant());
+            get { return ExcludeFromCalibration == null && AnalyteConcentrations == null; }
         }
 
-        public PeptideResults ChangeExcludeFromCalibration(IEnumerable<bool> value)
+        public PeptideResults ChangeExcludeFromCalibration(ChromFileIdMap<bool> value)
         {
-            return ChangeProp(ImClone(this),
-                im => im.ExcludeFromCalibration = MakeMap(value));
+            return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = value);
         }
 
-        public PeptideResults ChangeAnalyteConcentrations(IEnumerable<double?> value)
+        public PeptideResults ChangeAnalyteConcentrations(ChromFileIdMap<double?> value)
         {
-            return ChangeProp(ImClone(this),
-                im => im.AnalyteConcentrations = MakeMap(value));
+            return ChangeProp(ImClone(this), im => im.AnalyteConcentrations = value);
         }
 
-        /// <summary>
-        /// The position of one file's entry in one replicate, or -1. See
-        /// <see cref="TransitionGroupResults.IndexOfFile"/>.
-        /// </summary>
-        public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
+        public bool GetExcludeFromCalibration(int replicateIndex, ChromFileInfoId fileId)
         {
-            return ChromFileIds.IndexOfFile(replicateIndex, fileId);
+            return ExcludeFromCalibration?.TryGetValue(replicateIndex, fileId, out var value) == true && value;
         }
 
-        public bool GetExcludeFromCalibration(int position)
+        public double? GetAnalyteConcentration(int replicateIndex, ChromFileInfoId fileId)
         {
-            return ExcludeFromCalibration != null && ExcludeFromCalibration.Values[position];
-        }
+            if (AnalyteConcentrations?.TryGetValue(replicateIndex, fileId, out var value) == true)
+            {
+                return value;
+            }
 
-        public double? GetAnalyteConcentration(int position)
-        {
-            return AnalyteConcentrations?.Values[position];
+            return null;
         }
 
         /// <summary>
         /// Whether the user left a replicate out of the calibration curve, asked of the replicate
         /// rather than of one of its files.
         /// <para>
-        /// The entries here are per file, because that is what
+        /// The entries are per file, because that is what
         /// <see cref="PeptideDocNode.PeptideChromInfoListCalculator"/> produces - one
-        /// <see cref="PeptideChromInfo"/> per file, keyed on FileIndex. Both of these values
-        /// describe the sample rather than an injection of it, though, so the callers which matter
-        /// ask at the replicate level, and a replicate counts as excluded when any of its files is.
+        /// <see cref="PeptideChromInfo"/> per file. Both of these values describe the sample rather
+        /// than an injection of it, though, so the callers which matter ask at the replicate level,
+        /// and a replicate counts as excluded when any of its files is.
         /// </para>
         /// </summary>
         public bool AnyExcludeFromCalibration(int replicateIndex)
         {
-            foreach (int position in GetPositions(replicateIndex))
-            {
-                if (GetExcludeFromCalibration(position))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return GetReplicateValues(ExcludeFromCalibration, replicateIndex).Contains(true);
         }
 
         /// <summary>
@@ -158,50 +108,86 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public double? GetAnalyteConcentrationForReplicate(int replicateIndex)
         {
-            foreach (int position in GetPositions(replicateIndex))
+            return GetReplicateValues(AnalyteConcentrations, replicateIndex)
+                .FirstOrDefault(concentration => concentration.HasValue);
+        }
+
+        private static IEnumerable<T> GetReplicateValues<T>(ChromFileIdMap<T> map, int replicateIndex)
+        {
+            if (map == null || replicateIndex < 0 || replicateIndex >= map.Count)
             {
-                var concentration = GetAnalyteConcentration(position);
-                if (concentration.HasValue)
+                return Array.Empty<T>();
+            }
+
+            return map.Values[replicateIndex];
+        }
+
+        /// <summary>
+        /// The same value for every file of one replicate, which is how the user sets it: the
+        /// calibration curve and the analyte concentration describe the sample, not an injection
+        /// of it.
+        /// </summary>
+        public PeptideResults ChangeExcludeFromCalibration(int replicateCount, int replicateIndex,
+            IEnumerable<ChromFileInfoId> fileIds, bool value)
+        {
+            return ChangeExcludeFromCalibration(SetReplicate(ExcludeFromCalibration, replicateCount, replicateIndex,
+                fileIds, value, false));
+        }
+
+        public PeptideResults ChangeAnalyteConcentration(int replicateCount, int replicateIndex,
+            IEnumerable<ChromFileInfoId> fileIds, double? value)
+        {
+            return ChangeAnalyteConcentrations(SetReplicate(AnalyteConcentrations, replicateCount, replicateIndex,
+                fileIds, value, null));
+        }
+
+        /// <summary>
+        /// The map with one replicate's files given <paramref name="value"/> and every other
+        /// replicate left as it was. Setting <paramref name="defaultValue"/> removes the entries
+        /// instead of storing it, so a value set and then unset leaves nothing behind, and a map
+        /// with no entries left is null.
+        /// </summary>
+        private static ChromFileIdMap<T> SetReplicate<T>(ChromFileIdMap<T> map, int replicateCount,
+            int replicateIndex, IEnumerable<ChromFileInfoId> fileIds, T value, T defaultValue)
+        {
+            var counts = new List<int>();
+            var newFileIds = new List<ChromFileInfoId>();
+            var values = new List<T>();
+            for (int i = 0; i < replicateCount; i++)
+            {
+                int count = 0;
+                if (i == replicateIndex)
                 {
-                    return concentration;
+                    if (!Equals(value, defaultValue))
+                    {
+                        foreach (var fileId in fileIds)
+                        {
+                            newFileIds.Add(fileId);
+                            values.Add(value);
+                            count++;
+                        }
+                    }
                 }
+                else if (map != null && i < map.Count)
+                {
+                    foreach (var entry in map[i])
+                    {
+                        newFileIds.Add(entry.Key);
+                        values.Add(entry.Value);
+                        count++;
+                    }
+                }
+
+                counts.Add(count);
             }
 
-            return null;
-        }
-
-        /// <summary>
-        /// Sets the value at one position, starting the list from the default when there is none
-        /// yet, which is how the usual document arrives here.
-        /// </summary>
-        public PeptideResults ChangeExcludeFromCalibration(int position, bool value)
-        {
-            return ChangeExcludeFromCalibration(SetAt(ExcludeFromCalibration, position, value, false));
-        }
-
-        public PeptideResults ChangeAnalyteConcentration(int position, double? value)
-        {
-            return ChangeAnalyteConcentrations(SetAt(AnalyteConcentrations, position, value, null));
-        }
-
-        private IEnumerable<T> SetAt<T>(ChromFileIdMap<T> map, int position, T value, T defaultValue)
-        {
-            var list = new T[ChromFileIds.FileIds.Count];
-            for (int i = 0; i < list.Length; i++)
+            if (newFileIds.Count == 0)
             {
-                list[i] = map == null ? defaultValue : map.Values[i];
+                return null;
             }
 
-            list[position] = value;
-            return list;
-        }
-
-        /// <summary>
-        /// The flat positions belonging to one replicate.
-        /// </summary>
-        public IEnumerable<int> GetPositions(int replicateIndex)
-        {
-            return ChromFileIds.ReplicatePositions[replicateIndex];
+            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), newFileIds),
+                ImmutableList.ValueOf(values).MaybeConstant());
         }
 
         /// <summary>
@@ -210,8 +196,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         protected bool Equals(PeptideResults other)
         {
-            return Equals(ChromFileIds, other.ChromFileIds) &&
-                   Equals(ExcludeFromCalibration, other.ExcludeFromCalibration) &&
+            return Equals(ExcludeFromCalibration, other.ExcludeFromCalibration) &&
                    Equals(AnalyteConcentrations, other.AnalyteConcentrations);
         }
 
@@ -234,8 +219,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                int result = ChromFileIds.GetHashCode();
-                result = (result * 397) ^ (ExcludeFromCalibration?.GetHashCode() ?? 0);
+                int result = ExcludeFromCalibration?.GetHashCode() ?? 0;
                 result = (result * 397) ^ (AnalyteConcentrations?.GetHashCode() ?? 0);
                 return result;
             }

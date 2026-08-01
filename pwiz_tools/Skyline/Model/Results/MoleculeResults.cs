@@ -452,7 +452,7 @@ namespace pwiz.Skyline.Model.Results
                 return ImmutableList<ChromatogramGroupInfo>.EMPTY;
             }
 
-            return _chromatogramGroupInfos[groupIndex][replicateIndex];
+            return _chromatogramGroupInfos[groupIndex].Values[replicateIndex];
         }
 
         private TransitionGroupDocNode FindTransitionGroup(TransitionGroup transitionGroup)
@@ -479,15 +479,11 @@ namespace pwiz.Skyline.Model.Results
 
             return chromInfos.Select(chromInfo =>
             {
-                int position = peptideResults.IndexOfFile(replicateIndex, chromInfo.FileId);
-                if (position < 0)
-                {
-                    return chromInfo;
-                }
-
                 return chromInfo
-                    .ChangeExcludeFromCalibration(peptideResults.GetExcludeFromCalibration(position))
-                    .ChangeAnalyteConcentration(peptideResults.GetAnalyteConcentration(position));
+                    .ChangeExcludeFromCalibration(
+                        peptideResults.GetExcludeFromCalibration(replicateIndex, chromInfo.FileId))
+                    .ChangeAnalyteConcentration(
+                        peptideResults.GetAnalyteConcentration(replicateIndex, chromInfo.FileId));
             }).ToArray();
         }
 
@@ -646,7 +642,7 @@ namespace pwiz.Skyline.Model.Results
                 bool matchesEvery = true;
                 for (int i = 0; i < eligible.Length && matchesEvery; i++)
                 {
-                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Peaks.Values[positions[eligible[i]]].Area;
+                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Peaks.FlatValues[positions[eligible[i]]].Area;
                     matchesEvery = chromatograms[i] != null && peakIndex < chromatograms[i].NumPeaks &&
                                    chromatograms[i].GetPeak(peakIndex).Area == area;
                 }

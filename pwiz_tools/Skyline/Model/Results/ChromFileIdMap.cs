@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,27 +26,33 @@ using pwiz.Common.Collections;
 namespace pwiz.Skyline.Model.Results
 {
     /// <summary>
-    /// One value for each position of a <see cref="Results.ChromFileIds"/>, which is to say one for
-    /// each file of each replicate. Indexing by replicate gives that replicate's values, the way
-    /// indexing a <see cref="ReplicatePositions"/> gives its positions.
+    /// A value for each file of each replicate: a map from a <see cref="ChromFileInfoId"/> to a
+    /// value, laid out by the positions of a <see cref="Results.ChromFileIds"/>. Indexing by
+    /// replicate gives that replicate's entries, and <see cref="Keys"/> and <see cref="Values"/>
+    /// give the files and the values on their own, both as a list per replicate.
     /// <para>
     /// A replicate and a file identify a value on their own, unless optimization steps are involved:
     /// all the steps of one file share a position, because nothing kept this way can differ between
     /// them.
     /// </para>
     /// <para>
-    /// Each value of a peak is its own map rather than one map of a compound object, so that a
-    /// column which is the same everywhere - almost every document's user sets, for instance -
-    /// collapses to a single entry on its own. Combining some of them into one object would cost
-    /// fewer indirections per read, and is worth doing if reading them ever shows up.
+    /// A map need not have an entry for every file of a replicate. The molecule level values are
+    /// stored only where they were set, and a molecule of a multi injection replicate is usually
+    /// found in one of that replicate's files rather than all of them.
+    /// </para>
+    /// <para>
+    /// The values every peak has are one map of a struct - <see cref="PrecursorPeak"/>,
+    /// <see cref="TransitionPeak"/> - so that a peak costs one object and one indirection rather
+    /// than one of each per value. The values only some peaks have get a map each, so that one
+    /// which says the same thing everywhere collapses to a single entry.
     /// </para>
     /// </summary>
-    public class ChromFileIdMap<T> : IReadOnlyList<IEnumerable<T>>
+    public class ChromFileIdMap<T> : IReadOnlyList<IEnumerable<KeyValuePair<ChromFileInfoId, T>>>
     {
         public ChromFileIdMap(ChromFileIds chromFileIds, IEnumerable<T> values)
         {
             ChromFileIds = chromFileIds;
-            Values = ImmutableList.ValueOf(values);
+            FlatValues = ImmutableList.ValueOf(values);
         }
 
         /// <summary>
@@ -58,7 +65,46 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromFileIds ChromFileIds { get; private set; }
-        public ImmutableList<T> Values { get; private set; }
+        public ImmutableList<T> FlatValues { get; private set; }
+
+        public IList<IList<ChromFileInfoId>> Keys
+        {
+            get
+            {
+                return ReadOnlyList.Create(Count, GetKeys);
+            }
+        }
+        private IList<ChromFileInfoId> GetKeys(int replicateIndex)
+        {
+            int count = ChromFileIds.ReplicatePositions.GetCount(replicateIndex);
+            if (count == 0)
+            {
+                return Array.Empty<ChromFileInfoId>();
+            }
+            int start = ChromFileIds.ReplicatePositions.GetStart(replicateIndex);
+            return ReadOnlyList.Create(count, i => ChromFileIds.FileIds[start + i].Value);
+        }
+
+
+        public IList<IList<T>> Values
+        {
+            get
+            {
+                return ReadOnlyList.Create(Count, GetValues);
+            }
+        }
+
+        private IList<T> GetValues(int replicateIndex)
+        {
+            int count = ChromFileIds.ReplicatePositions.GetCount(replicateIndex);
+            if (count == 0)
+            {
+                return Array.Empty<T>();
+            }
+
+            int start = ChromFileIds.ReplicatePositions.GetStart(replicateIndex);
+            return ReadOnlyList.Create(count, i => FlatValues[start + i]);
+        }
 
         public ReplicatePositions ReplicatePositions
         {
@@ -67,16 +113,20 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// How many replicates, which is what this is a list of. The number of values is
-        /// <see cref="ImmutableList{T}.Count"/> on <see cref="Values"/>.
+        /// <see cref="ImmutableList{T}.Count"/> on <see cref="FlatValues"/>.
         /// </summary>
         public int Count
         {
             get { return ReplicatePositions.ReplicateCount; }
         }
 
-        public IEnumerable<T> this[int replicateIndex]
+        public IEnumerable<KeyValuePair<ChromFileInfoId, T>> this[int replicateIndex]
         {
-            get { return ReplicatePositions[replicateIndex].Select(position => Values[position]); }
+            get
+            {
+                return ReplicatePositions[replicateIndex].Select(position =>
+                    new KeyValuePair<ChromFileInfoId, T>(ChromFileIds.FileIds[position].Value, FlatValues[position]));
+            }
         }
 
         /// <summary>
@@ -87,7 +137,7 @@ namespace pwiz.Skyline.Model.Results
         /// the <see cref="Results.ChromFileIds"/> it came from, and two maps only share positions
         /// when they were built over the same one - which the maps of a single
         /// <see cref="TransitionResults"/> are, and which a precursor's and its transitions' are
-        /// not. Code which does hold a position of this map reaches <see cref="Values"/> directly,
+        /// not. Code which does hold a position of this map reaches <see cref="FlatValues"/> directly,
         /// where indexing by position is what it plainly looks like.
         /// </para>
         /// </summary>
@@ -100,11 +150,11 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            value = Values[position];
+            value = FlatValues[position];
             return true;
         }
 
-        public IEnumerator<IEnumerable<T>> GetEnumerator()
+        public IEnumerator<IEnumerable<KeyValuePair<ChromFileInfoId, T>>> GetEnumerator()
         {
             return Enumerable.Range(0, Count).Select(replicateIndex => this[replicateIndex]).GetEnumerator();
         }
@@ -116,7 +166,7 @@ namespace pwiz.Skyline.Model.Results
 
         protected bool Equals(ChromFileIdMap<T> other)
         {
-            return Equals(ChromFileIds, other.ChromFileIds) && Equals(Values, other.Values);
+            return Equals(ChromFileIds, other.ChromFileIds) && Equals(FlatValues, other.FlatValues);
         }
 
         public override bool Equals(object obj)
@@ -143,7 +193,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                return (ChromFileIds.GetHashCode() * 397) ^ Values.GetHashCode();
+                return (ChromFileIds.GetHashCode() * 397) ^ FlatValues.GetHashCode();
             }
         }
     }

@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
                     // Retention time is one of the values the columnar results keep, so nothing has
                     // to be read here.
-                    var peaks = nodeTranGroup.AbbreviatedResults.Peaks.Values;
+                    var peaks = nodeTranGroup.AbbreviatedResults.Peaks.FlatValues;
                     for (int position = 0; position < peaks.Count; position++)
                     {
                         foreach (var spectrum in _library.GetSpectraByPrecursor(null, nodeTranGroup.PrecursorMz))

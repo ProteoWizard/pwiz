@@ -379,14 +379,29 @@ namespace pwiz.Skyline.Model
         /// Records one of the two values a molecule keeps for one file, making the columnar results
         /// first when it has none, which is how a document with neither value arrives here.
         /// </summary>
-        public PeptideDocNode ChangePeptideResult(SrmSettings settings, int replicateIndex, ChromFileInfoId fileId,
-            Func<PeptideResults, int, PeptideResults> change)
+        /// <summary>
+        /// Applies a change to this molecule's results for the files of one replicate, which is the
+        /// unit the two values it keeps describe: they are properties of the sample rather than of
+        /// an injection of it.
+        /// <para>
+        /// The files are this molecule's own, which for a multi injection replicate is usually one
+        /// of the replicate's files rather than all of them - a molecule is normally found in only
+        /// one injection. That is why they come from the precursors rather than from the
+        /// chromatogram set.
+        /// </para>
+        /// </summary>
+        public PeptideDocNode ChangePeptideResult(SrmSettings settings, int replicateIndex,
+            Func<PeptideResults, int, int, IEnumerable<ChromFileInfoId>, PeptideResults> change)
         {
-            var peptideResults = AbbreviatedResults ?? PeptideResults.ForMeasuredResults(settings.MeasuredResults);
-            int position = peptideResults?.IndexOfFile(replicateIndex, fileId) ?? -1;
-            if (position < 0)
+            var measuredResults = settings.MeasuredResults;
+            if (measuredResults == null)
                 return this;
-            return ChangeAbbreviatedResults(change(peptideResults, position));
+            var fileIds = GetResultFileIds(replicateIndex).ToArray();
+            if (fileIds.Length == 0)
+                return this;
+            var peptideResults = change(AbbreviatedResults ?? new PeptideResults(),
+                measuredResults.Chromatograms.Count, replicateIndex, fileIds);
+            return ChangeAbbreviatedResults(peptideResults.IsEmpty ? null : peptideResults);
         }
 
         /// <summary>
@@ -522,7 +537,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 foreach (int position in results.GetPositions(replicateIndex))
                 {
-                    float retentionTime = results.Peaks.Values[position].RetentionTime;
+                    float retentionTime = results.Peaks.FlatValues[position].RetentionTime;
                     if (retentionTime != 0)
                         yield return retentionTime;
                 }
@@ -659,7 +674,7 @@ namespace pwiz.Skyline.Model
                         double tranMeasured = 0;
                         foreach (int position in positions)
                         {
-                            float area = results.Peaks.Values[position].Area;
+                            float area = results.Peaks.FlatValues[position].Area;
                             if (nodeTran.ParticipatesInScoring && area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += area;
@@ -1503,12 +1518,9 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public PeptideDocNode ChangeExcludeFromCalibration(SrmSettings settings, int replicateIndex, bool excluded)
         {
-            var peptideResults = AbbreviatedResults ?? PeptideResults.ForMeasuredResults(settings.MeasuredResults);
-            if (peptideResults == null)
-                return this;
-            foreach (int position in peptideResults.GetPositions(replicateIndex))
-                peptideResults = peptideResults.ChangeExcludeFromCalibration(position, excluded);
-            return ChangeAbbreviatedResults(peptideResults);
+            return ChangePeptideResult(settings, replicateIndex,
+                (results, replicateCount, index, fileIds) =>
+                    results.ChangeExcludeFromCalibration(replicateCount, index, fileIds, excluded));
         }
 
         public bool HasPrecursorConcentrations
@@ -1632,15 +1644,11 @@ namespace pwiz.Skyline.Model
                             var chromInfoAdd = chromInfo;
                             if (chromInfo != null)
                             {
-                                int position = peptideResults.IndexOfFile(replicateIndex, chromInfo.FileId);
-                                if (position >= 0)
-                                {
-                                    chromInfoAdd = chromInfoAdd
-                                        .ChangeExcludeFromCalibration(
-                                            peptideResults.GetExcludeFromCalibration(position))
-                                        .ChangeAnalyteConcentration(
-                                            peptideResults.GetAnalyteConcentration(position));
-                                }
+                                chromInfoAdd = chromInfoAdd
+                                    .ChangeExcludeFromCalibration(peptideResults.GetExcludeFromCalibration(
+                                        replicateIndex, chromInfo.FileId))
+                                    .ChangeAnalyteConcentration(peptideResults.GetAnalyteConcentration(
+                                        replicateIndex, chromInfo.FileId));
                             }
                             if (newChromInfoList != null)
                                 newChromInfoList.Add(chromInfoAdd);
@@ -2207,7 +2215,7 @@ namespace pwiz.Skyline.Model
             // From the columnar results, which record the reintegrated peak as an index into the
             // candidate peaks. A position which has none holds a negative index.
             return TransitionGroups.Any(tg =>
-                tg.AbbreviatedResults?.ReintegratedPeakIndexes?.Values.Any(index => index >= 0) ?? false);
+                tg.AbbreviatedResults?.ReintegratedPeakIndexes?.FlatValues.Any(index => index >= 0) ?? false);
         }
 
         #region object overrides

@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model.Results
 
         private int? GetPeakIndexOrChosen(ChromFileIdMap<int> indexes, int position)
         {
-            int index = indexes?.Values[position] ?? PrecursorPeak.NO_PEAK_INDEX;
+            int index = indexes?.FlatValues[position] ?? PrecursorPeak.NO_PEAK_INDEX;
             return index < 0 ? GetChosenPeakIndex(position) : index;
         }
 
@@ -398,7 +398,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var indexes = value?.ToArray();
             return ChangeProp(ImClone(this), im => im.Peaks = new ChromFileIdMap<PrecursorPeak>(ChromFileIds,
-                Peaks.Values.Select((peak, position) =>
+                Peaks.FlatValues.Select((peak, position) =>
                     peak.ChangeChosenPeakIndex(indexes == null ? PrecursorPeak.NO_PEAK_INDEX : indexes[position]))));
         }
 
@@ -483,8 +483,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionGroupResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
         {
-            var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations?.Values);
-            if (ReferenceEquals(newAnnotations, Annotations?.Values))
+            var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations?.FlatValues);
+            if (ReferenceEquals(newAnnotations, Annotations?.FlatValues))
                 return this;
             return ChangeAnnotations(newAnnotations);
         }
@@ -512,7 +512,7 @@ namespace pwiz.Skyline.Model.Results
             var results = new TransitionGroupResults(
                 new ChromFileIds(ReplicatePositions.FromCounts(counts),
                     sources.Select(source => source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
-                sources.Select(source => source.Pick(this, other).Peaks.Values[source.Position]));
+                sources.Select(source => source.Pick(this, other).Peaks.FlatValues[source.Position]));
             if (UserSets != null || other.UserSets != null)
             {
                 results = results.ChangeUserSets(
@@ -582,18 +582,18 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int? GetChosenPeakIndex(int position)
         {
-            int chosenPeakIndex = Peaks.Values[position].ChosenPeakIndex;
+            int chosenPeakIndex = Peaks.FlatValues[position].ChosenPeakIndex;
             return chosenPeakIndex < 0 ? (int?) null : chosenPeakIndex;
         }
 
         public Annotations GetAnnotations(int position)
         {
-            return Annotations == null ? Model.Annotations.EMPTY : Annotations.Values[position];
+            return Annotations == null ? Model.Annotations.EMPTY : Annotations.FlatValues[position];
         }
 
         public UserSet GetUserSet(int position)
         {
-            return UserSets == null ? UserSet.FALSE : UserSets.Values[position];
+            return UserSets == null ? UserSet.FALSE : UserSets.FlatValues[position];
         }
 
         /// <summary>
@@ -611,17 +611,17 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public float? GetRetentionTime(int position)
         {
-            return NullIfZero(Peaks.Values[position].RetentionTime);
+            return NullIfZero(Peaks.FlatValues[position].RetentionTime);
         }
 
         public float? GetStartTime(int position)
         {
-            return NullIfZero(Peaks.Values[position].StartTime);
+            return NullIfZero(Peaks.FlatValues[position].StartTime);
         }
 
         public float? GetEndTime(int position)
         {
-            return NullIfZero(Peaks.Values[position].EndTime);
+            return NullIfZero(Peaks.FlatValues[position].EndTime);
         }
 
         private static float? NullIfZero(float time)
@@ -631,12 +631,12 @@ namespace pwiz.Skyline.Model.Results
 
         public float? GetQValue(int position)
         {
-            return GetScore(QValues?.Values, position);
+            return GetScore(QValues?.FlatValues, position);
         }
 
         public float? GetZScore(int position)
         {
-            return GetScore(ZScores?.Values, position);
+            return GetScore(ZScores?.FlatValues, position);
         }
 
         private static float? GetScore(ImmutableList<float> scores, int position)
@@ -891,7 +891,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool? GetTruncated(int position)
         {
-            return Peaks.Values[position].IsTruncated;
+            return Peaks.FlatValues[position].IsTruncated;
         }
 
         /// <summary>
@@ -899,7 +899,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsEmptyPeak(int position)
         {
-            return Peaks.Values[position].IsEmpty;
+            return Peaks.FlatValues[position].IsEmpty;
         }
 
         /// <summary>
@@ -908,7 +908,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public PeakIdentification GetIdentified(int position)
         {
-            return Peaks.Values[position].Identified;
+            return Peaks.FlatValues[position].Identified;
         }
 
         /// <summary>
@@ -918,7 +918,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsGoodPeak(int position, bool integrateAll)
         {
-            return Peaks.Values[position].IsGoodPeak(integrateAll);
+            return Peaks.FlatValues[position].IsGoodPeak(integrateAll);
         }
 
         /// <summary>
@@ -933,7 +933,7 @@ namespace pwiz.Skyline.Model.Results
         {
             foreach (int position in ChromFileIds.ReplicatePositions[replicateIndex])
             {
-                var peak = Peaks.Values[position];
+                var peak = Peaks.FlatValues[position];
                 yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, peak.Area,
                     peak.IsTruncated, peak.IsEmpty);
             }
@@ -949,8 +949,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
         {
-            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks?.Values);
-            if (ReferenceEquals(newCustomPeaks, CustomPeaks?.Values))
+            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks?.FlatValues);
+            if (ReferenceEquals(newCustomPeaks, CustomPeaks?.FlatValues))
                 return this;
             return ChangeCustomPeaks(newCustomPeaks);
         }
@@ -966,7 +966,7 @@ namespace pwiz.Skyline.Model.Results
             var newCustomPeak = (GetCustomPeak(position) ?? new CustomPeak())
                 .ChangePeakBounds(startTime, endTime, identified);
             return ChangeCustomPeaks(
-                CustomPeak.SetAtPosition(CustomPeaks?.Values, Peaks.Values.Count, position, newCustomPeak));
+                CustomPeak.SetAtPosition(CustomPeaks?.FlatValues, Peaks.FlatValues.Count, position, newCustomPeak));
         }
 
         /// <summary>
@@ -993,18 +993,18 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            area = Peaks.Values[position].Area;
+            area = Peaks.FlatValues[position].Area;
             return true;
         }
 
         public CustomPeak GetCustomPeak(int position)
         {
-            return CustomPeaks?.Values[position];
+            return CustomPeaks?.FlatValues[position];
         }
 
         public UserSet GetUserSet(int position)
         {
-            return Peaks.Values[position].UserSet;
+            return Peaks.FlatValues[position].UserSet;
         }
 
         /// <summary>
@@ -1024,7 +1024,7 @@ namespace pwiz.Skyline.Model.Results
                 new ChromFileIds(ReplicatePositions.FromCounts(counts),
                     sources.Select(source =>
                         source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
-                sources.Select(source => source.Pick(this, other).Peaks.Values[source.Position]));
+                sources.Select(source => source.Pick(this, other).Peaks.FlatValues[source.Position]));
             var customPeaks = MergeSource.MergeCustomPeaks(sources,
                 source => source.Pick(this, other).GetCustomPeak(source.Position));
             if (customPeaks != null)

@@ -1836,9 +1836,9 @@ namespace pwiz.SkylineTestUtil
                 // All we can really expect is that retention times agree - but nothing beyond that, not even the peak width
                 IsNotNull(convertedResults, group + " vs " + convertedGroup);
                 AreEqual(results.ChromFileIds, convertedResults.ChromFileIds, group + " vs " + convertedGroup);
-                for (var i = 0; i < results.Peaks.Values.Count; i++)
+                for (var i = 0; i < results.Peaks.FlatValues.Count; i++)
                 {
-                    AreEqual(results.Peaks.Values[i].RetentionTime, convertedResults.Peaks.Values[i].RetentionTime,
+                    AreEqual(results.Peaks.FlatValues[i].RetentionTime, convertedResults.Peaks.FlatValues[i].RetentionTime,
                         group + " vs " + convertedGroup);
                 }
                 return;

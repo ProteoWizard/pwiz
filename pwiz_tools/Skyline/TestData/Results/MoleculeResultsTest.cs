@@ -248,7 +248,7 @@ namespace pwiz.SkylineTestData.Results
 
                     int position = abbreviated.IndexOfFile(replicateIndex, chromInfo.FileId);
                     Assert.AreNotEqual(-1, position);
-                    Assert.AreEqual(abbreviated.Peaks.Values[position].Area, chromInfo.Area);
+                    Assert.AreEqual(abbreviated.Peaks.FlatValues[position].Area, chromInfo.Area);
                     Assert.AreEqual(abbreviated.GetUserSet(position), chromInfo.UserSet);
 
                     var customPeak = abbreviated.GetCustomPeak(position);
@@ -377,9 +377,9 @@ namespace pwiz.SkylineTestData.Results
                     var rebuilt = actualList[i];
                     AssertGroupValuesEqual(rebuilt, oneReplicate[i]);
                     Assert.AreSame(columnar.ChromFileIds.FileIds[position].Value, rebuilt.FileId);
-                    Assert.AreEqual(columnar.Peaks.Values[position].RetentionTime, rebuilt.RetentionTime ?? 0, 1e-3);
-                    Assert.AreEqual(columnar.Peaks.Values[position].StartTime, rebuilt.StartRetentionTime ?? 0, 1e-3);
-                    Assert.AreEqual(columnar.Peaks.Values[position].EndTime, rebuilt.EndRetentionTime ?? 0, 1e-3);
+                    Assert.AreEqual(columnar.Peaks.FlatValues[position].RetentionTime, rebuilt.RetentionTime ?? 0, 1e-3);
+                    Assert.AreEqual(columnar.Peaks.FlatValues[position].StartTime, rebuilt.StartRetentionTime ?? 0, 1e-3);
+                    Assert.AreEqual(columnar.Peaks.FlatValues[position].EndTime, rebuilt.EndRetentionTime ?? 0, 1e-3);
                     Assert.AreEqual(columnar.GetQValue(position), rebuilt.QValue);
                     if (rebuilt.OriginalPeak != null)
                     {

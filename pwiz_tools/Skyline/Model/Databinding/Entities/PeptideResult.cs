@@ -178,33 +178,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var peptideResults = Peptide.DocNode.AbbreviatedResults;
-                int position = PeptideResultPosition(peptideResults);
-                return position >= 0 && peptideResults.GetExcludeFromCalibration(position);
+                // Null for any molecule which excludes no replicate and has no concentrations,
+                // which is most of them.
+                return Peptide.DocNode.AbbreviatedResults?.GetExcludeFromCalibration(
+                    ResultFile.Replicate.ReplicateIndex, ResultFile.ChromFileInfoId) ?? false;
             }
             set
             {
                 ChangePeptideResult(EditColumnDescription(nameof(ExcludeFromCalibration), value),
-                    (results, position) => results.ChangeExcludeFromCalibration(position, value));
+                    (results, replicateCount, replicateIndex, fileIds) =>
+                        results.ChangeExcludeFromCalibration(replicateCount, replicateIndex, fileIds, value));
             }
         }
 
-        /// <summary>
-        /// Where this result's file sits in the molecule's columnar results, or -1 when it has none.
-        /// </summary>
-        private int PeptideResultPosition(PeptideResults peptideResults)
-        {
-            return peptideResults?.IndexOfFile(ResultFile.Replicate.ReplicateIndex,
-                ResultFile.ChromFileInfoId) ?? -1;
-        }
-
         private void ChangePeptideResult(EditDescription editDescription,
-            Func<PeptideResults, int, PeptideResults> change)
+            Func<PeptideResults, int, int, IEnumerable<ChromFileInfoId>, PeptideResults> change)
         {
             var replicateIndex = ResultFile.Replicate.ReplicateIndex;
-            var fileId = ResultFile.ChromFileInfoId;
             Peptide.ChangeDocNode(editDescription,
-                docNode => docNode.ChangePeptideResult(SrmDocument.Settings, replicateIndex, fileId, change));
+                docNode => docNode.ChangePeptideResult(SrmDocument.Settings, replicateIndex, change));
         }
 
         public QuantificationResult GetQuantificationResult()
@@ -285,14 +277,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var peptideResults = Peptide.DocNode.AbbreviatedResults;
-                int position = PeptideResultPosition(peptideResults);
-                return position < 0 ? null : peptideResults.GetAnalyteConcentration(position);
+                return Peptide.DocNode.AbbreviatedResults?.GetAnalyteConcentration(
+                    ResultFile.Replicate.ReplicateIndex, ResultFile.ChromFileInfoId);
             }
             set
             {
                 ChangePeptideResult(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
-                    (results, position) => results.ChangeAnalyteConcentration(position, value));
+                    (results, replicateCount, replicateIndex, fileIds) =>
+                        results.ChangeAnalyteConcentration(replicateCount, replicateIndex, fileIds, value));
             }
         }
 
