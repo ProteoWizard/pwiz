@@ -764,12 +764,20 @@ namespace pwiz.Osprey.FDR
             return baseIdExpQ;
         }
 
+        /// <summary>
+        /// Full-length (O(n) per-row) expansion of <see cref="ComputeExperimentPrecursorQMap"/>,
+        /// used by the RESIDENT score pass. <c>applyExperimentAgg</c> must be threaded through
+        /// from the pass label exactly as the projection path does: the two paths are each
+        /// other's byte-identity oracle (<c>Pass2FdrSidecar</c> compares them), so a wrapper
+        /// that always aggregates while the projection gates on the first pass makes them
+        /// DISAGREE under OSPREY_EXPERIMENT_AGG.
+        /// </summary>
         internal static double[] ComputeExperimentPrecursorQvalues(
-            double[] scores, bool[] labels, uint[] entryIds)
+            double[] scores, bool[] labels, uint[] entryIds, bool applyExperimentAgg = true)
         {
             int n = scores.Length;
             var qvalues = new double[n];
-            var baseIdExpQ = ComputeExperimentPrecursorQMap(scores, labels, entryIds);
+            var baseIdExpQ = ComputeExperimentPrecursorQMap(scores, labels, entryIds, applyExperimentAgg);
             for (int i = 0; i < n; i++)
             {
                 double qv;
@@ -843,12 +851,20 @@ namespace pwiz.Osprey.FDR
             return peptideQvalue;
         }
 
+        /// <summary>
+        /// Full-length (O(n) per-row) expansion of <see cref="ComputeExperimentPeptideQMap"/>,
+        /// used by the RESIDENT score pass; see
+        /// <see cref="ComputeExperimentPrecursorQvalues"/> for why
+        /// <c>applyExperimentAgg</c> must be threaded through rather than defaulted.
+        /// </summary>
         internal static double[] ComputeExperimentPeptideQvalues(
-            double[] scores, bool[] labels, uint[] entryIds, string[] peptides)
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
+            bool applyExperimentAgg = true)
         {
             int n = scores.Length;
             var qvalues = new double[n];
-            var peptideQvalue = ComputeExperimentPeptideQMap(scores, labels, entryIds, peptides);
+            var peptideQvalue = ComputeExperimentPeptideQMap(
+                scores, labels, entryIds, peptides, applyExperimentAgg);
             for (int i = 0; i < n; i++)
             {
                 double qv;

@@ -583,7 +583,8 @@ namespace pwiz.Osprey.FDR
                     "{0}: applying FROZEN 1st-pass model to all {1} entries (no retrain) + " +
                     "target-decoy competition for q/PEP.", passLabel, n));
                 return PercolatorScorer.ScorePopulationAndComputeFdr(
-                    percEntries, frozenModel, percConfig, loadFileFeatures);
+                    percEntries, frozenModel, percConfig, loadFileFeatures,
+                    applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
             }
 
             // Pull labels / entry IDs / peptides into flat arrays for the
@@ -675,8 +676,12 @@ namespace pwiz.Osprey.FDR
             // 4. Apply averaged model to ALL entries and compute q-values. The
             //    score pass reloads features one file at a time via loadFileFeatures
             //    (issue #4355 Phase 4), keeping only the scalar scores resident.
+            //    applyExperimentAgg mirrors RunStreamingIntoProjection's gate exactly -
+            //    the resident and projection passes are each other's byte-identity
+            //    oracle, so OSPREY_EXPERIMENT_AGG must engage on the same pass in both.
             return PercolatorScorer.ScorePopulationAndComputeFdr(
-                percEntries, trainResults, percConfig, loadFileFeatures);
+                percEntries, trainResults, percConfig, loadFileFeatures,
+                applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
         }
 
         /// <summary>

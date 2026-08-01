@@ -179,8 +179,13 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
+            // Stage 6 rescore + reconciliation gate on the experiment precursor q-value, which
+            // the experiment-wide aggregation changes, so the reconciled parquets this task
+            // writes differ across arms and must be invalidated alongside FirstJoinTask's Stage-5
+            // outputs. Same shared suffix, so the two cannot disagree.
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + OspreyEnvironment.ExperimentAggValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)

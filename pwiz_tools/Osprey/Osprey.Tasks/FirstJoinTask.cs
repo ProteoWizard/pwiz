@@ -193,22 +193,14 @@ namespace pwiz.Osprey.Tasks
             // read from a process-wide static rather than the config, which is why it is not
             // already covered by SearchIdentity; promoting it to a real command argument would
             // subsume this line.
-            string key = base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
-            // ONLY when the aggregation is actually engaged. NormalizeExperimentAgg returns the
-            // constant "max" when the variable is unset, so appending unconditionally would change
-            // every DEFAULT run's key and invalidate every output directory produced before this
-            // change - re-running Stage 5 FDR, protein FDR and compaction (hours at 82 files) to
-            // reproduce byte-identical output. The floor toggles belong here too: they feed the
-            // aggregate written into this task's own Pass1Path output, so a floor sweep in one
-            // directory would otherwise reuse the previous arm's q as the new arm's measurement.
-            if (!OspreyEnvironment.ExperimentAggMeanBest)
-                return key;
-            return key
-                + @";expagg=" + OspreyEnvironment.ExperimentAgg
-                + @";floormean=" + OspreyEnvironment.MeanBest2FloorMean
-                + @";floorpct=" + (OspreyEnvironment.MeanBest2FloorPercentile?.ToString(
-                    System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
+            // The aggregation suffix (empty unless engaged) is built by the ONE shared helper the
+            // downstream tasks also use, so the three keys cannot drift apart. The floor toggles
+            // are part of it: they feed the aggregate written into this task's own Pass1Path
+            // output, so a floor sweep in one directory would otherwise reuse the previous arm's
+            // q as the new arm's measurement.
+            return base.ValidityKey(ctx)
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + OspreyEnvironment.ExperimentAggValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)
@@ -237,30 +229,17 @@ namespace pwiz.Osprey.Tasks
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
-            // OSPREY_EXPERIMENT_AGG selects how the experiment-wide precursor/peptide score
-            // aggregates a unit's per-run observations. Warn on a set-but-unrecognized token
-            // (normalized to the byte-identical max default) so a typo cannot be mistaken for a
-            // mean(best-N) run - this flag exists to be A/B'd, so a silent fallback would corrupt
-            // the comparison rather than fail it. Mirrors the OSPREY_PASS2_QVALUE warning.
-            // Only when the aggregation is engaged: with OSPREY_EXPERIMENT_AGG unset the floor is
-            // never consulted, so refusing a default run over two variables it does not read
-            // would break the ordinary pipeline for an operator who simply left a sweep exported.
-            if (OspreyEnvironment.ExperimentAggMeanBest && OspreyEnvironment.MeanBestFloorOverspecified)
-            {
-                throw new InvalidOperationException(
-                    "OSPREY_MEANBEST2_FLOOR_MEAN and OSPREY_MEANBEST2_FLOOR_PCT are both set. " +
-                    "They are not composable: FLOOR_MEAN wins and the percentile is never " +
-                    "consulted, so a sweep would record a percentile arm while measuring the " +
-                    "decoy mean. Set exactly one.");
-            }
-            if (OspreyEnvironment.ExperimentAggUnrecognized)
-            {
-                ctx.LogWarning(string.Format(
-                    "OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
-                    "'{0}'. Recognized values: '{0}', or '{1}<N>' with N >= 2 (e.g. '{1}2').",
-                    OspreyEnvironment.EXPERIMENT_AGG_MAX,
-                    OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX));
-            }
+            // OSPREY_EXPERIMENT_AGG family, re-checked at the CONSUMING site against the join's
+            // real file count. Program.ValidateArgs already ran the identical check at startup
+            // from the command line, which is where an operator wants the message; this second
+            // call covers the cases where the two counts can differ (an --input-scores directory
+            // that expanded differently, a rehydrated boundary set) and is the check that is
+            // actually adjacent to the aggregation. Same helper, so the two cannot drift.
+            // Every check inside is gated on the aggregation being engaged, so a default run
+            // that merely inherited a stale sweep variable is untouched.
+            string aggError = OspreyEnvironment.ValidateExperimentAggSettings(perFileEntries.Count);
+            if (aggError != null)
+                throw new InvalidOperationException(aggError);
 
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
             // its own "Running First-pass Percolator on N entries..." line from the FDR
@@ -1052,7 +1031,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     try
                     {
-                        if (FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), firstPassModel.Results))
+                        if (FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key),
+                                firstPassModel.Results, firstPassModel.ExperimentAgg))
                             modelWrites++;
                     }
                     catch (Exception ex)
@@ -1563,7 +1543,14 @@ namespace pwiz.Osprey.Tasks
                 captureModel = results =>
                 {
                     if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
-                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                    {
+                        // Stamp the arm THIS pass ran under; the 2nd pass may be another process.
+                        ctx.Publish(new FirstPassPercolatorModel
+                        {
+                            Results = results,
+                            ExperimentAgg = OspreyEnvironment.ExperimentAgg
+                        });
+                    }
                 };
             }
 
@@ -1854,7 +1841,14 @@ namespace pwiz.Osprey.Tasks
                 captureModel = results =>
                 {
                     if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
-                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                    {
+                        // Stamp the arm THIS pass ran under; the 2nd pass may be another process.
+                        ctx.Publish(new FirstPassPercolatorModel
+                        {
+                            Results = results,
+                            ExperimentAgg = OspreyEnvironment.ExperimentAgg
+                        });
+                    }
                 };
             }
 

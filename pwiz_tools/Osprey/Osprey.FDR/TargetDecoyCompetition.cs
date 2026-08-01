@@ -339,19 +339,28 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Per-row reproducibility score for the experiment-wide competitions when
-        /// OSPREY_EXPERIMENT_AGG=mean-best-2: every row receives its (base_id, target/decoy)
-        /// group's MEAN of best-2 per-run scores -- the mean of the group's two highest member
-        /// scores, or mean(single score, decoy floor) for a single-run group. Stage-4 dedup
-        /// guarantees at most one entry per base_id per file, so a group's members ARE its per-run
-        /// scores and the top-2 are the top-2 distinct runs (the invariant behind nRunsDetected ==
-        /// observation count). Because every row of a group gets the SAME value, feeding this array
-        /// to the existing max-based experiment competition (<see cref="CompeteAll"/> -- the
-        /// max-per-base_id reduction becomes a no-op) and the
+        /// OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: every row receives its (base_id, target/decoy)
+        /// group's MEAN of best-N per-run scores -- the mean of the group's N highest member
+        /// scores, with each of the (N - k) undetected runs of a k-run group (k &lt; N)
+        /// contributing the decoy floor. Stage-4 dedup guarantees at most one entry per base_id
+        /// per file, so a group's members ARE its per-run scores and the top-N are the top-N
+        /// distinct runs (the invariant behind nRunsDetected == observation count).
+        ///
+        /// Because every row of a group gets the SAME value, feeding this array to the existing
+        /// max-based experiment competition (<see cref="CompeteAll"/> -- the max-per-base_id
+        /// reduction becomes a no-op) and the
         /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> roll-up yields precursor =
-        /// mean-best-2 and peptide = max over its precursors, with decoys treated identically so the
-        /// null stays honest. A single-file run -- every group at one member -- is a uniform
-        /// monotonic transform x -&gt; (x + floor)/2, so ranking and every q are unchanged from the
-        /// max path.
+        /// mean(best-N) and peptide = max over its precursors, with decoys treated identically so
+        /// the null stays honest. The roll-up stops at PEPTIDE: protein FDR ranks groups by the
+        /// max RAW per-peptide SVM score (<c>ProteinFdr.CollectBestPeptideScores</c>), which never
+        /// reads this aggregate, so mean(best-N) reaches protein-level results only indirectly,
+        /// through which peptides clear the experiment-q gate.
+        ///
+        /// A single-file run -- every group at one member -- is the uniform monotonic transform
+        /// x -&gt; (x + (N - 1) * floor) / N, so ranking and every q are unchanged from the max
+        /// path. The same holds for any N at or above the largest observation count, which is why
+        /// N above the run count is refused rather than silently accepted
+        /// (<see cref="OspreyEnvironment.ValidateExperimentAggSettings"/>).
         /// </summary>
         internal static double[] ComputeBaseIdMeanBestN(double[] scores, bool[] labels, uint[] entryIds, int bestN)
         {
@@ -491,8 +500,14 @@ namespace pwiz.Osprey.FDR
         /// decision boundary and would drag a missing unit UP toward detection).
         /// OSPREY_MEANBEST2_FLOOR_MEAN switches to the decoy mean; OSPREY_MEANBEST2_FLOOR_PCT to a
         /// low decoy percentile (a harder reproducibility cut). Returns 0 only when there are no
-        /// decoys. Sorts <paramref name="decoyScores"/> in place.</summary>
-        private static double ComputeFloorFromDecoyScores(List<double> decoyScores)
+        /// decoys. Sorts <paramref name="decoyScores"/> in place.
+        ///
+        /// Internal (not private) so the parity test can compare it DIRECTLY against its bounded
+        /// streaming twin (<c>StreamingFdr.StreamingFirstPassQ.ComputeDecoyFloor</c>). The two are
+        /// different estimators of the same statistic - an exact sorted quantile versus a
+        /// fixed-width histogram - so they can never be asserted equal through the q-values alone,
+        /// and the difference was previously untestable at any level.</summary>
+        internal static double ComputeFloorFromDecoyScores(List<double> decoyScores)
         {
             if (decoyScores.Count == 0)
                 return 0.0;

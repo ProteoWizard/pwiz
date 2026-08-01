@@ -64,7 +64,8 @@ namespace pwiz.Osprey.FDR
             IList<PercolatorEntry> entries,
             PercolatorResults trainResults,
             PercolatorConfig config,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            bool applyExperimentAgg = true)
         {
             int n = entries.Count;
             if (n == 0)
@@ -211,7 +212,7 @@ namespace pwiz.Osprey.FDR
             StreamingFdr.ComputeStreamingCompetitionQvalues(
                 finalScores, labels, entryIds, peptides, fileNames,
                 out peps, out runPrecursorQvalues, out runPeptideQvalues,
-                out expPrecursorQvalues, out expPeptideQvalues);
+                out expPrecursorQvalues, out expPeptideQvalues, applyExperimentAgg);
 
             var results = new List<PercolatorResult>(n);
             for (int i = 0; i < n; i++)

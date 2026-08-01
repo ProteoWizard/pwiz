@@ -37,6 +37,12 @@ The frozen modes below avoid retraining on the depleted pool.
 | `transfer-compete` | no (frozen model) | fresh full-population target-decoy competition | precursor |
 | `protein-compact` | no (frozen model) | competition constrained to the protein stratum | precursor |
 
+**Interaction with `OSPREY_EXPERIMENT_AGG`**: after a first pass run under the
+experimental `mean-best-<N>` aggregation, `transfer-compete` and `protein-compact` are
+**refused** - both would rewrite the reported experiment q from a MAX-aggregated
+competition. `transfer` is the compatible mode. See
+[Experiment-wide aggregation](07-fdr-control.md#experiment-wide-aggregation-osprey_experiment_agg).
+
 ### `percolator` (default)
 
 Retrains the second-pass Percolator SVM and recomputes a target/decoy null on the

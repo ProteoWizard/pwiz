@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -42,6 +42,7 @@ namespace pwiz.Osprey.Test
 
         private bool _savedFloorMean;
         private double? _savedFloorPercentile;
+        private int _savedMeanBestN;
 
         /// <summary>
         /// Pin the missing-run floor to its default (decoy MEDIAN) for the duration of each test.
@@ -56,8 +57,10 @@ namespace pwiz.Osprey.Test
         {
             _savedFloorMean = OspreyEnvironment.MeanBest2FloorMean;
             _savedFloorPercentile = OspreyEnvironment.MeanBest2FloorPercentile;
+            _savedMeanBestN = OspreyEnvironment.MeanBestN;
             OspreyEnvironment.MeanBest2FloorMean = false;
             OspreyEnvironment.MeanBest2FloorPercentile = null;
+            OspreyEnvironment.MeanBestN = 0;
         }
 
         [TestCleanup]
@@ -65,6 +68,7 @@ namespace pwiz.Osprey.Test
         {
             OspreyEnvironment.MeanBest2FloorMean = _savedFloorMean;
             OspreyEnvironment.MeanBest2FloorPercentile = _savedFloorPercentile;
+            OspreyEnvironment.MeanBestN = _savedMeanBestN;
         }
 
         /// <summary>
@@ -274,6 +278,198 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(wdMax[i], wdMb2[i], @"winner target/decoy at rank " + i);
                 Assert.AreEqual(entryIds[wiMax[i]] & BASE_ID_MASK, entryIds[wiMb2[i]] & BASE_ID_MASK,
                     @"winner base_id at rank " + i);
+            }
+        }
+
+        /// <summary>
+        /// The experiment-q wrappers must be pure expansions of the bounded maps they document
+        /// themselves as expanding, for EITHER value of <c>applyExperimentAgg</c>.
+        ///
+        /// This is the invariant that broke silently. The bounded maps gained the pass gate while
+        /// the full-length wrappers did not even take the parameter, so under mean(best-N) the
+        /// RESIDENT 2nd pass kept re-aggregating while the PROJECTION 2nd pass did not - and those
+        /// two paths are each other's byte-identity oracle. A per-row disagreement between a
+        /// wrapper and its own map is exactly the shape of that defect, and nothing asserted it.
+        /// </summary>
+        [TestMethod]
+        public void TestExperimentQWrappersExpandTheirMaps()
+        {
+            // The fixture must make the aggregation change the target/decoy INTERLEAVING, not just
+            // the scores: conservative q is a function of the target/decoy SEQUENCE down the
+            // ranked list, so an aggregation that reorders units without crossing a target past a
+            // decoy leaves every q identical and would make this test vacuous (the first attempt
+            // here did exactly that).
+            //
+            // Decoy sample {-5,-5,-5, 1,1,1, -3} -> median floor -3. With N = 3:
+            //   t10  2 runs at 4.0 -> (4+4-3)/3   =  1.667   raw max 4.0
+            //   t20  1 run  at 5.0 -> (5-3-3)/3   = -0.333   raw max 5.0
+            //   d20  3 runs at 1.0 -> (1+1+1)/3   =  1.0     raw max 1.0
+            //   d30  1 run  at -3  -> (-3-3-3)/3  = -3.0     raw max -3.0
+            //   d10  3 runs at -5  -> -5.0                   raw max -5.0
+            // raw-max order  T(5) T(4) D(1) D(-3) D(-5)  ->  T,T,D,D,D
+            // aggregated     T(1.667) D(1.0) T(-0.333) ...  ->  T,D,T,D,D
+            // The single-run target crosses below a decoy - the reproducibility demotion - so the
+            // two arms genuinely produce different q.
+            var scores = new[] { 4.0, 4.0, 5.0, -5.0, -5.0, -5.0, 1.0, 1.0, 1.0, -3.0 };
+            var labels = new[] { false, false, false, true, true, true, true, true, true, true };
+            var entryIds = new uint[]
+            {
+                10, 10, 20,
+                10 | DECOY_BIT, 10 | DECOY_BIT, 10 | DECOY_BIT,
+                20 | DECOY_BIT, 20 | DECOY_BIT, 20 | DECOY_BIT,
+                30 | DECOY_BIT
+            };
+            var peptides = new[]
+            {
+                "PEPA", "PEPA", "PEPB",
+                "DECA", "DECA", "DECA",
+                "DECB", "DECB", "DECB",
+                "DECC"
+            };
+
+            // Aggregation ON (the 1st-pass arm) and OFF (the 2nd pass), each checked against its
+            // own map. With MeanBestN pinned to 3 the ON case genuinely aggregates, so the two
+            // cases are different statistics and neither assertion is vacuous.
+            OspreyEnvironment.MeanBestN = 3;
+            Assert.IsTrue(OspreyEnvironment.ExperimentAggMeanBest, @"fixture must have the arm engaged");
+            AssertWrappersMatchMaps(scores, labels, entryIds, peptides, true);
+            AssertWrappersMatchMaps(scores, labels, entryIds, peptides, false);
+
+            // ON and OFF must actually DIFFER on this fixture, or the two calls above would agree
+            // no matter how the gate were wired and the test would prove nothing.
+            var on = PercolatorQValues.ComputeExperimentPrecursorQvalues(
+                scores, labels, entryIds, applyExperimentAgg: true);
+            var off = PercolatorQValues.ComputeExperimentPrecursorQvalues(
+                scores, labels, entryIds, applyExperimentAgg: false);
+            bool differs = false;
+            for (int i = 0; i < on.Length && !differs; i++)
+                differs = on[i] != off[i];
+            Assert.IsTrue(differs,
+                @"fixture must separate the aggregated and raw-max arms, else the gate is untested");
+        }
+
+        /// <summary>
+        /// The OSPREY_EXPERIMENT_AGG family validates itself before any I/O, and every check stays
+        /// silent on the DEFAULT path - an operator who merely left a floor sweep exported must
+        /// still be able to run an ordinary analysis.
+        /// </summary>
+        [TestMethod]
+        public void TestExperimentAggSettingsValidation()
+        {
+            // Default (aggregation off): every setting is ignored, including combinations that
+            // would be refused when engaged. This is the default-path guarantee.
+            OspreyEnvironment.MeanBestN = 0;
+            OspreyEnvironment.MeanBest2FloorMean = true;
+            OspreyEnvironment.MeanBest2FloorPercentile = 500.0;
+            Assert.IsNull(OspreyEnvironment.ValidateExperimentAggSettings(4),
+                @"default path must not be refused over variables it never reads");
+
+            // Both floor overrides set: not composable, refused.
+            OspreyEnvironment.MeanBestN = 2;
+            Assert.IsNotNull(OspreyEnvironment.ValidateExperimentAggSettings(4),
+                @"both floor overrides set must be refused");
+
+            // Percentile outside [0, 100].
+            OspreyEnvironment.MeanBest2FloorMean = false;
+            OspreyEnvironment.MeanBest2FloorPercentile = 500.0;
+            Assert.IsNotNull(OspreyEnvironment.ValidateExperimentAggSettings(4),
+                @"percentile above 100 must be refused");
+            OspreyEnvironment.MeanBest2FloorPercentile = -1.0;
+            Assert.IsNotNull(OspreyEnvironment.ValidateExperimentAggSettings(4),
+                @"negative percentile must be refused");
+            OspreyEnvironment.MeanBest2FloorPercentile = double.NaN;
+            Assert.IsNotNull(OspreyEnvironment.ValidateExperimentAggSettings(4),
+                @"NaN percentile must be refused");
+            OspreyEnvironment.MeanBest2FloorPercentile = 0.0;
+            Assert.IsNull(OspreyEnvironment.ValidateExperimentAggSettings(4), @"0 is a valid percentile");
+            OspreyEnvironment.MeanBest2FloorPercentile = 100.0;
+            Assert.IsNull(OspreyEnvironment.ValidateExperimentAggSettings(4), @"100 is a valid percentile");
+            OspreyEnvironment.MeanBest2FloorPercentile = null;
+
+            // N versus the run count. N > files leaves every unit floor-filled, which saturates
+            // the statistic: the ranking is identical for every N at or above the largest
+            // observation count, so the arm would be recorded as distinct while measuring the same
+            // thing. N == files is the legitimate "detected in every run" frontier.
+            OspreyEnvironment.MeanBestN = 4;
+            Assert.IsNull(OspreyEnvironment.ValidateExperimentAggSettings(4), @"N == file count is allowed");
+            Assert.IsNull(OspreyEnvironment.ValidateExperimentAggSettings(9), @"N < file count is allowed");
+            Assert.IsNotNull(OspreyEnvironment.ValidateExperimentAggSettings(3),
+                @"N greater than the file count must be refused");
+            Assert.IsNull(OspreyEnvironment.ValidateExperimentAggSettings(0),
+                @"an unknown file count (a per-file HPC worker) must not be refused");
+        }
+
+        /// <summary>
+        /// Every run states which aggregation it used, and flipping the arm changes the cache
+        /// validity suffix - while the DEFAULT arm's suffix stays EMPTY.
+        ///
+        /// The empty-when-default half is not cosmetic: emitting the normalized "max" spelling
+        /// unconditionally changed every default run's key and invalidated every output directory
+        /// produced before the suffix existed, costing hours of recompute to reproduce
+        /// byte-identical output. The byte-identity gate could not see it, because that gate always
+        /// starts from fresh directories.
+        /// </summary>
+        [TestMethod]
+        public void TestExperimentAggIsReportedAndKeyed()
+        {
+            OspreyEnvironment.MeanBestN = 0;
+            StringAssert.Contains(OspreyEnvironment.DescribeExperimentAgg(),
+                OspreyEnvironment.EXPERIMENT_AGG_MAX);
+            Assert.AreEqual(string.Empty, OspreyEnvironment.ExperimentAggValidityKeySuffix(),
+                @"the default arm must add nothing to the validity key");
+            Assert.IsFalse(OspreyEnvironment.IsMeanBestArm(OspreyEnvironment.ExperimentAgg));
+
+            OspreyEnvironment.MeanBestN = 3;
+            Assert.AreEqual(@"mean-best-3", OspreyEnvironment.ExperimentAgg,
+                @"the normalized arm must track the N actually in use");
+            Assert.IsTrue(OspreyEnvironment.IsMeanBestArm(OspreyEnvironment.ExperimentAgg));
+            StringAssert.Contains(OspreyEnvironment.DescribeExperimentAgg(), OspreyEnvironment.ExperimentAgg);
+            string keyMedian = OspreyEnvironment.ExperimentAggValidityKeySuffix();
+            StringAssert.Contains(keyMedian, OspreyEnvironment.ExperimentAgg);
+
+            // The floor arm is part of the identity of a run's output, so it must move the key too
+            // - a floor sweep in one output directory would otherwise reuse the previous arm's q
+            // as the new arm's measurement.
+            OspreyEnvironment.MeanBest2FloorMean = true;
+            Assert.AreNotEqual(keyMedian, OspreyEnvironment.ExperimentAggValidityKeySuffix(),
+                @"the decoy-mean floor must change the validity key");
+            OspreyEnvironment.MeanBest2FloorMean = false;
+            OspreyEnvironment.MeanBest2FloorPercentile = 5.0;
+            Assert.AreNotEqual(keyMedian, OspreyEnvironment.ExperimentAggValidityKeySuffix(),
+                @"a percentile floor must change the validity key");
+
+            // A different N is a different statistic, so it must key differently too.
+            OspreyEnvironment.MeanBest2FloorPercentile = null;
+            OspreyEnvironment.MeanBestN = 4;
+            Assert.AreNotEqual(keyMedian, OspreyEnvironment.ExperimentAggValidityKeySuffix(),
+                @"a different N must change the validity key");
+        }
+
+        private static void AssertWrappersMatchMaps(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides, bool applyExperimentAgg)
+        {
+            string which = applyExperimentAgg ? @"agg-on" : @"agg-off";
+
+            var precMap = PercolatorQValues.ComputeExperimentPrecursorQMap(
+                scores, labels, entryIds, applyExperimentAgg);
+            var precRows = PercolatorQValues.ComputeExperimentPrecursorQvalues(
+                scores, labels, entryIds, applyExperimentAgg);
+            for (int i = 0; i < scores.Length; i++)
+            {
+                double expected = precMap.TryGetValue(entryIds[i] & BASE_ID_MASK, out double q) ? q : 1.0;
+                Assert.AreEqual(expected, precRows[i], 0.0,
+                    string.Format(@"{0}: precursor wrapper row {1} must equal its map entry", which, i));
+            }
+
+            var peptMap = PercolatorQValues.ComputeExperimentPeptideQMap(
+                scores, labels, entryIds, peptides, applyExperimentAgg);
+            var peptRows = PercolatorQValues.ComputeExperimentPeptideQvalues(
+                scores, labels, entryIds, peptides, applyExperimentAgg);
+            for (int i = 0; i < scores.Length; i++)
+            {
+                double expected = peptMap.TryGetValue(peptides[i], out double q) ? q : 1.0;
+                Assert.AreEqual(expected, peptRows[i], 0.0,
+                    string.Format(@"{0}: peptide wrapper row {1} must equal its map entry", which, i));
             }
         }
     }

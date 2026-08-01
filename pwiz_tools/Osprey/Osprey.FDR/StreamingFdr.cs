@@ -65,13 +65,21 @@ namespace pwiz.Osprey.FDR
         /// The five outputs are returned as parallel arrays (index-aligned to the
         /// inputs); the caller either packs them into <see cref="PercolatorResult"/>s
         /// or writes them straight onto the projection rows.
+        ///
+        /// <paramref name="applyExperimentAgg"/> is false on the 2nd pass, mirroring the
+        /// projection score pass
+        /// (<see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/>); see
+        /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/> for why
+        /// OSPREY_EXPERIMENT_AGG is a first-pass score by definition. The two score passes are
+        /// each other's byte-identity oracle, so this flag must be threaded from the same
+        /// pass label on both.
         /// </summary>
         internal static void ComputeStreamingCompetitionQvalues(
             double[] finalScores, bool[] labels, uint[] entryIds,
             string[] peptides, string[] fileNames,
             out double[] peps, out double[] runPrecursorQvalues,
             out double[] runPeptideQvalues, out double[] expPrecursorQvalues,
-            out double[] expPeptideQvalues)
+            out double[] expPeptideQvalues, bool applyExperimentAgg = true)
         {
             int n = finalScores.Length;
 
@@ -104,9 +112,9 @@ namespace pwiz.Osprey.FDR
             else
             {
                 expPrecursorQvalues = PercolatorQValues.ComputeExperimentPrecursorQvalues(
-                    finalScores, labels, entryIds);
+                    finalScores, labels, entryIds, applyExperimentAgg);
                 expPeptideQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
-                    finalScores, labels, entryIds, peptides);
+                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
             }
 
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
@@ -526,6 +534,27 @@ namespace pwiz.Osprey.FDR
                 return map;
             }
 
+            /// <summary>The missing-run floor this builder would apply, or 0 outside mean(best-N)
+            /// mode. Exposed so the parity test can hold the bounded histogram estimator directly
+            /// against the resident sorted-quantile one
+            /// (<see cref="TargetDecoyCompetition.ComputeFloorFromDecoyScores"/>): they are
+            /// deliberately different estimators of the same statistic, agreeing only to about the
+            /// histogram bin width, and that bound is not observable through the q-values (q comes
+            /// from the competition RANKING, which a sub-bin shift normally leaves untouched).
+            /// </summary>
+            internal double ComputeDecoyFloor()
+            {
+                return _floor?.ComputeFloor() ?? 0.0;
+            }
+
+            /// <summary>The bin width of the streaming floor histogram - the bound within which
+            /// <see cref="ComputeDecoyFloor"/> is expected to track the resident estimator, and the
+            /// documented magnitude of this approximation.</summary>
+            internal static double FloorBinWidth
+            {
+                get { return StreamingDecoyFloor.BIN_WIDTH; }
+            }
+
             /// <summary>Reduce a per-base_id top-N accumulator dict to the <c>base_id -&gt;
             /// (min-ordinal, mean(best-N) score)</c> best map the target/decoy competition consumes.
             /// The stored ordinal is each base_id's earliest row (MinG), matching the resident
@@ -642,13 +671,19 @@ namespace pwiz.Osprey.FDR
                 private const double RANGE_MIN = -100.0;
                 private const double RANGE_MAX = 100.0;
                 private const int BIN_COUNT = 200000; // Bin width 0.001 over [-100, 100].
-                private const double BIN_WIDTH = (RANGE_MAX - RANGE_MIN) / BIN_COUNT;
+                internal const double BIN_WIDTH = (RANGE_MAX - RANGE_MIN) / BIN_COUNT;
 
                 private readonly long[] _bins = new long[BIN_COUNT];
                 private long _underflow;
-                private long _overflow;
                 private long _count;
                 private double _sum;
+                // Smallest / largest ADMITTED score. The resident twin's PercentileOfSorted
+                // answers every out-of-histogram case with sorted[0] or sorted[Count-1] -- always
+                // a real observed score. Keeping the two extremes lets this estimator return the
+                // same kind of value instead of a range constant, which is what makes the two
+                // paths agree in the tails (see PercentileFromHistogram).
+                private double _min = double.MaxValue;
+                private double _max = double.MinValue;
 
                 public void Add(double score)
                 {
@@ -667,6 +702,10 @@ namespace pwiz.Osprey.FDR
                         return;
                     _count++;
                     _sum += score;
+                    if (score < _min)
+                        _min = score;
+                    if (score > _max)
+                        _max = score;
                     if (score < RANGE_MIN)
                     {
                         _underflow++;
@@ -674,10 +713,11 @@ namespace pwiz.Osprey.FDR
                     }
                     if (score >= RANGE_MAX)
                     {
-                        // Counted, not binned. It MUST still be counted here, because the quantile
-                        // rank is taken over _count: dropping it silently shifted every quantile
-                        // toward the low end.
-                        _overflow++;
+                        // Counted (in _count and _max above), not binned. It MUST still be counted,
+                        // because the quantile rank is taken over _count: dropping it silently
+                        // shifted every quantile toward the low end. A quantile that lands in this
+                        // region makes the bin walk fall off the end, which PercentileFromHistogram
+                        // answers with _max -- a real observed score.
                         return;
                     }
                     int bin = (int)((score - RANGE_MIN) / BIN_WIDTH);
@@ -701,22 +741,43 @@ namespace pwiz.Osprey.FDR
                 // Linear-interpolated quantile at rank = pct/100 * (count - 1), matching
                 // PercentileOfSorted's rank convention but computed from bin cumulative counts
                 // (uniform interpolation within the straddling bin).
+                //
+                // Every degenerate case MIRRORS the resident TargetDecoyCompetition.
+                // PercentileOfSorted rather than diverging from it, because the two estimators are
+                // supposed to be the same statistic computed two ways. Two rules follow, and both
+                // were previously broken:
+                //
+                //  * The answer is always a real OBSERVED score, never a range constant. The
+                //    earlier pct >= 100 arm returned RANGE_MAX (+100), a floor ABOVE every real
+                //    score, which inverts the feature: under-detected units would be PROMOTED
+                //    instead of demoted. _max cannot do that, and it is exactly what
+                //    PercentileOfSorted's sorted[Count-1] returns.
+                //  * Nothing here throws. The resident twin clamps or short-circuits in each of
+                //    these cases (its Count == 1 early return, its two boundary returns), so a
+                //    throw would abort a multi-hour run at the very end of Stage 5 on input the
+                //    other path handles - and would still leave the two paths disagreeing.
+                //
+                // The percentile RANGE itself is validated once at startup
+                // (OspreyEnvironment.ValidateExperimentAggSettings), which is where an operator
+                // error belongs; by the time execution reaches here pct is known to be in [0,100].
+                // Tail answers are coarser than the resident interpolation between two neighbours,
+                // which is the same deliberate bin-width approximation this estimator already
+                // documents - bounded by the observed range, and never sign-inverting.
                 private double PercentileFromHistogram(double pct)
                 {
-                    if (pct <= 0.0)
-                        return RANGE_MIN;
+                    // Count == 1 short-circuits FIRST, mirroring PercentileOfSorted: with one
+                    // observation every percentile is that observation (and rank below is 0).
+                    if (_count == 1 || pct <= 0.0)
+                        return _min;
                     if (pct >= 100.0)
-                        return RANGE_MAX;
+                        return _max;
                     double rank = pct / 100.0 * (_count - 1);
                     double cum = _underflow;
+                    // The quantile lies among the scores below RANGE_MIN, which the histogram
+                    // counted but did not bin. _min is the smallest of them - the same end of the
+                    // distribution PercentileOfSorted would return from its sorted[0] side.
                     if (rank < cum)
-                        throw new InvalidOperationException(string.Format(
-                            "mean(best-N) decoy floor: the requested {0}th percentile falls below " +
-                            "the histogram's representable range ({1}). {2} of {3} decoy scores " +
-                            "underflowed. The floor would be silently clamped and every " +
-                            "under-detected precursor mis-scored, so refusing rather than " +
-                            "returning a wrong floor.",
-                            pct, RANGE_MIN, _underflow, _count));
+                        return _min;
                     for (int b = 0; b < BIN_COUNT; b++)
                     {
                         long c = _bins[b];
@@ -729,16 +790,10 @@ namespace pwiz.Osprey.FDR
                         }
                         cum += c;
                     }
-                    // Falling off the end means the quantile lies in the overflow region. Returning
-                    // RANGE_MAX here would hand back a floor ABOVE every real score, turning the
-                    // intended demotion of under-detected units into a promotion - the one failure
-                    // mode of this estimator that inverts the feature's meaning. Refuse instead.
-                    throw new InvalidOperationException(string.Format(
-                        "mean(best-N) decoy floor: the requested {0}th percentile falls above the " +
-                        "histogram's representable range ({1}). {2} of {3} decoy scores " +
-                        "overflowed. A floor above every real score would PROMOTE under-detected " +
-                        "precursors instead of demoting them, so refusing rather than returning it.",
-                        pct, RANGE_MAX, _overflow, _count));
+                    // Falling off the end means the quantile lies in the overflow region (scores
+                    // at or above RANGE_MAX, counted but unbinned). _max is the largest observed
+                    // decoy score, so the floor stays inside the data.
+                    return _max;
                 }
             }
 
