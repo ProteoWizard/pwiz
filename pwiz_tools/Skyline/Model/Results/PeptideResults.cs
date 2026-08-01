@@ -78,23 +78,35 @@ namespace pwiz.Skyline.Model.Results
         /// false, which is why this goes through
         /// <see cref="ImmutableListFactory.MaybeConstant{T}"/>.
         /// </summary>
-        public ImmutableList<bool> ExcludeFromCalibration { get; private set; }
+        public ChromFileIdMap<bool> ExcludeFromCalibration { get; private set; }
 
         /// <summary>
         /// The concentration the user entered for each replicate, or null where they entered none.
         /// </summary>
-        public ImmutableList<double?> AnalyteConcentrations { get; private set; }
+        public ChromFileIdMap<double?> AnalyteConcentrations { get; private set; }
+
+        /// <summary>
+        /// A map over the same positions as <see cref="ChromFileIds"/>, with the values stored
+        /// through <see cref="ImmutableListFactory.MaybeConstant{T}"/> so that a column saying the
+        /// same thing everywhere costs one entry.
+        /// </summary>
+        private ChromFileIdMap<TValue> MakeMap<TValue>(IEnumerable<TValue> values)
+        {
+            return values == null
+                ? null
+                : new ChromFileIdMap<TValue>(ChromFileIds, ImmutableList.ValueOf(values).MaybeConstant());
+        }
 
         public PeptideResults ChangeExcludeFromCalibration(IEnumerable<bool> value)
         {
             return ChangeProp(ImClone(this),
-                im => im.ExcludeFromCalibration = ImmutableList.ValueOf(value).MaybeConstant());
+                im => im.ExcludeFromCalibration = MakeMap(value));
         }
 
         public PeptideResults ChangeAnalyteConcentrations(IEnumerable<double?> value)
         {
             return ChangeProp(ImClone(this),
-                im => im.AnalyteConcentrations = ImmutableList.ValueOf(value).MaybeConstant());
+                im => im.AnalyteConcentrations = MakeMap(value));
         }
 
         /// <summary>
@@ -108,12 +120,12 @@ namespace pwiz.Skyline.Model.Results
 
         public bool GetExcludeFromCalibration(int position)
         {
-            return ExcludeFromCalibration != null && ExcludeFromCalibration[position];
+            return ExcludeFromCalibration != null && ExcludeFromCalibration.Values[position];
         }
 
         public double? GetAnalyteConcentration(int position)
         {
-            return AnalyteConcentrations?[position];
+            return AnalyteConcentrations?.Values[position];
         }
 
         /// <summary>
@@ -172,12 +184,12 @@ namespace pwiz.Skyline.Model.Results
             return ChangeAnalyteConcentrations(SetAt(AnalyteConcentrations, position, value, null));
         }
 
-        private IEnumerable<T> SetAt<T>(ImmutableList<T> values, int position, T value, T defaultValue)
+        private IEnumerable<T> SetAt<T>(ChromFileIdMap<T> map, int position, T value, T defaultValue)
         {
             var list = new T[ChromFileIds.FileIds.Count];
             for (int i = 0; i < list.Length; i++)
             {
-                list[i] = values == null ? defaultValue : values[i];
+                list[i] = map == null ? defaultValue : map.Values[i];
             }
 
             list[position] = value;
