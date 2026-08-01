@@ -120,8 +120,8 @@ namespace pwiz.SkylineTestData.Results
                             actualResults.ZScores?.ToArray(), @"z scores");
                         CollectionAssert.AreEqual(expectedResults.UserSets?.ToArray(),
                             actualResults.UserSets?.ToArray(), @"user sets");
-                        CollectionAssert.AreEqual(expectedResults.CustomPeaks?.ToArray(),
-                            actualResults.CustomPeaks?.ToArray(), @"custom peaks");
+                        CollectionAssert.AreEqual(expectedResults.Annotations?.ToArray(),
+                            actualResults.Annotations?.ToArray(), @"annotations");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
                         for (int position = 0; position < expectedResults.RetentionTimes.Count; position++)

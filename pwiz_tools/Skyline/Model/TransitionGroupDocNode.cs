@@ -1000,7 +1000,7 @@ namespace pwiz.Skyline.Model
                 var results = AbbreviatedResults;
                 if (results != null &&
                     (results.UserSets?.Any(userSet => userSet != UserSet.FALSE) == true ||
-                     results.CustomPeaks?.Count > 0))
+                     results.Annotations?.Any(a => !a.IsEmpty) == true))
                     return true;
                 return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
             }
@@ -3257,9 +3257,9 @@ namespace pwiz.Skyline.Model
         {
             int position = GetPrecursorAnnotationPosition(fileId);
             var results = AbbreviatedResults;
-            var customPeak = results.GetCustomPeak(position) ?? new CustomPeak(position);
-            return ChangeAbbreviatedResults(results.ChangeCustomPeaks(
-                CustomPeak.SetAtPosition(results.CustomPeaks, position, customPeak.ChangeAnnotations(annotations))));
+            var newAnnotations = results.Annotations.ToList();
+            newAnnotations[position] = annotations ?? Annotations.EMPTY;
+            return ChangeAbbreviatedResults(results.ChangeAnnotations(newAnnotations));
         }
 
         public TransitionGroupDocNode AddPrecursorAnnotations(ChromFileInfoId fileId, Dictionary<string, string> annotations)
@@ -3272,8 +3272,7 @@ namespace pwiz.Skyline.Model
 
         public Annotations GetPrecursorAnnotations(ChromFileInfoId fileId)
         {
-            return AbbreviatedResults.GetCustomPeak(GetPrecursorAnnotationPosition(fileId))?.Annotations ??
-                   Annotations.EMPTY;
+            return AbbreviatedResults.GetAnnotations(GetPrecursorAnnotationPosition(fileId));
         }
 
         private int GetPrecursorAnnotationPosition(ChromFileInfoId fileId)

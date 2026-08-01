@@ -236,10 +236,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 var results = precursorDocNode.AbbreviatedResults;
                 if (_precursorResultUpdater != null && results != null)
                 {
-                    var newCustomPeaks = _precursorResultUpdater.Update(results.ChromFileIds, results.CustomPeaks,
-                        precursor.Results);
+                    var newAnnotations = results.Annotations.ToList();
+                    _precursorResultUpdater.Update(results.ChromFileIds, precursor.Results,
+                        position => newAnnotations[position],
+                        (position, annotations) => newAnnotations[position] = annotations);
                     precursorDocNode =
-                        precursorDocNode.ChangeAbbreviatedResults(results.ChangeCustomPeaks(newCustomPeaks));
+                        precursorDocNode.ChangeAbbreviatedResults(results.ChangeAnnotations(newAnnotations));
                 }
             }
 
@@ -280,10 +282,18 @@ namespace pwiz.Skyline.Model.DocSettings
             var results = transitionDocNode.AbbreviatedResults;
             if (_transitionResultUpdater != null && results != null)
             {
-                var newCustomPeaks = _transitionResultUpdater.Update(results.ChromFileIds, results.CustomPeaks,
-                    transition.Results);
-                transitionDocNode =
-                    transitionDocNode.ChangeAbbreviatedResults(results.ChangeCustomPeaks(newCustomPeaks));
+                var newCustomPeaks = results.CustomPeaks?.ToList() ??
+                                     Enumerable.Repeat((CustomPeak) null, results.Areas.Count).ToList();
+                _transitionResultUpdater.Update(results.ChromFileIds, transition.Results,
+                    position => newCustomPeaks[position]?.Annotations ?? Annotations.EMPTY,
+                    (position, annotations) =>
+                    {
+                        var customPeak = (newCustomPeaks[position] ?? new CustomPeak())
+                            .ChangeAnnotations(annotations);
+                        newCustomPeaks[position] = customPeak.IsEmpty ? null : customPeak;
+                    });
+                transitionDocNode = transitionDocNode.ChangeAbbreviatedResults(results.ChangeCustomPeaks(
+                    newCustomPeaks.All(customPeak => customPeak == null) ? null : newCustomPeaks));
             }
 
             return transitionDocNode;
@@ -313,10 +323,11 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Rewrites the annotations of the peaks of one precursor or transition.
         /// <para>
-        /// The annotations of a peak are held on its <see cref="CustomPeak"/>, so this works on that
-        /// sparse list rather than on chrom infos, and reads no chromatograms. The
-        /// <see cref="ResultKey"/> file index counts the files of one replicate, which is what a
-        /// position in the columnar results is offset by, so the two line up directly.
+        /// The annotations are in the columnar results, so this reads no chromatograms. Where they
+        /// sit differs between the two levels - a precursor keeps a list of them and a transition
+        /// keeps them on its custom peaks - so the caller supplies the reading and the writing and
+        /// this walks the positions. The <see cref="ResultKey"/> file index counts the files of one
+        /// replicate, which is what a position is offset by, so the two line up directly.
         /// </para>
         /// </summary>
         private class ResultAnnotationUpdater<TResult> where TResult : SkylineObject
@@ -324,12 +335,12 @@ namespace pwiz.Skyline.Model.DocSettings
             public SkylineDataSchema SkylineDataSchema { get; set; }
             public AnnotationUpdater AnnotationUpdater { get; set; }
 
-            public ImmutableList<CustomPeak> Update(ChromFileIds chromFileIds, ImmutableList<CustomPeak> customPeaks,
-                IDictionary<ResultKey, TResult> resultObjects)
+            public void Update(ChromFileIds chromFileIds, IDictionary<ResultKey, TResult> resultObjects,
+                Func<int, Annotations> getAnnotations, Action<int, Annotations> setAnnotations)
             {
                 if (chromFileIds == null)
                 {
-                    return customPeaks;
+                    return;
                 }
 
                 var replicatePositions = chromFileIds.ReplicatePositions;
@@ -346,20 +357,14 @@ namespace pwiz.Skyline.Model.DocSettings
                             continue;
                         }
 
-                        var customPeak = CustomPeak.FindAtPosition(customPeaks, position);
-                        var annotations = customPeak?.Annotations ?? Annotations.EMPTY;
+                        var annotations = getAnnotations(position);
                         var newAnnotations = AnnotationUpdater.UpdateAnnotations(annotations, resultObject);
-                        if (Equals(annotations, newAnnotations))
+                        if (!Equals(annotations, newAnnotations))
                         {
-                            continue;
+                            setAnnotations(position, newAnnotations);
                         }
-
-                        customPeaks = CustomPeak.SetAtPosition(customPeaks, position,
-                            (customPeak ?? new CustomPeak(position)).ChangeAnnotations(newAnnotations));
                     }
                 }
-
-                return customPeaks;
             }
         }
 

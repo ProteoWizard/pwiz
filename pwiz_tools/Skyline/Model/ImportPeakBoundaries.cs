@@ -790,8 +790,7 @@ namespace pwiz.Skyline.Model
                                 CountMissing++;
                                 var fileInfo = set.GetFileInfo(fileId);
                                 var filePath = fileInfo.FilePath;
-                                var annotations = groupResults.GetCustomPeak(position)?.Annotations ??
-                                                  Annotations.EMPTY;
+                                var annotations = groupResults.GetAnnotations(position);
                                 // Remove annotations for defs that were imported into the document and were on this peptide prior to import
                                 var newAnnotationValues = annotations.ListAnnotations().ToList();
                                 newAnnotationValues = newAnnotationValues.Where(a => !AnnotationsAdded.Contains(a.Key)).ToList();

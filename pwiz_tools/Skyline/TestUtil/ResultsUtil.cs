@@ -179,11 +179,13 @@ namespace pwiz.SkylineTestUtil
                     if (groupResults != null)
                     {
                         TransitionGroupResults += groupResults.ChromFileIds.ReplicatePositions.TotalCount;
-                        foreach (var customPeak in (IEnumerable<CustomPeak>) groupResults.CustomPeaks ?? new CustomPeak[0])
+                        foreach (var position in Enumerable.Range(0,
+                                     groupResults.ChromFileIds.ReplicatePositions.TotalCount))
                         {
-                            if (customPeak.Annotations.Note != null)
+                            var annotations = groupResults.GetAnnotations(position);
+                            if (annotations.Note != null)
                                 NoteCount++;
-                            if (customPeak.Annotations.ListAnnotations().Length > 0)
+                            if (annotations.ListAnnotations().Length > 0)
                                 AnnotationCount++;
                         }
                     }

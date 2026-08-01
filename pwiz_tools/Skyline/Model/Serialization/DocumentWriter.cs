@@ -1093,12 +1093,15 @@ namespace pwiz.Skyline.Model.Serialization
                 w.WriteAttributeNullable(ATTR.qvalue, results.GetQValue(position));
                 w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
                 w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
-                WriteCustomPeak(w, results.GetCustomPeak(position), false);
                 var areas = sharedAreas[position];
                 if (areas != null)
                 {
                     w.WriteFloatsAttribute(ATTR.transition_areas, areas);
                 }
+
+                // Last, because these are child elements and an XmlWriter takes no more attributes
+                // once an element has content.
+                WriteAnnotations(w, results.GetAnnotations(position));
             });
         }
 
