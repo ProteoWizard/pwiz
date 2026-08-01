@@ -945,7 +945,7 @@ namespace pwiz.Skyline.Model
             {
                 // Zero is what a peak with no retention time was stored as, and what this used to
                 // skip. No measured peak has a retention time of zero, so the two do not overlap.
-                float retentionTime = results.RetentionTimes[position];
+                float retentionTime = results.Peaks.Values[position].RetentionTime;
                 if (retentionTime == 0)
                     continue;
 

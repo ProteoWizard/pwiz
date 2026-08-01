@@ -26,6 +26,80 @@ using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results
 {
+    /// <summary>
+    /// Where one precursor peak is, and which of the candidate peaks in the .skyd it is.
+    /// <para>
+    /// These four go together because every peak has all four. Held as one
+    /// <see cref="ChromFileIdMap{T}"/> of this rather than four maps of one value each, which is
+    /// the same bytes per peak but one object and one indirection instead of four. The values only
+    /// some peaks have - the scores, the annotations, whether a user set it - stay a map each,
+    /// where being absent or uniform collapses to nothing.
+    /// </para>
+    /// </summary>
+    public struct PrecursorPeak
+    {
+        /// <summary>
+        /// What <see cref="ChosenPeakIndex"/> says when nothing has worked out which candidate peak
+        /// this is, which is what the paths that put results on a node without reading a
+        /// chromatogram leave behind.
+        /// </summary>
+        public const int NO_PEAK_INDEX = -1;
+
+        public PrecursorPeak(float retentionTime, float startTime, float endTime, int chosenPeakIndex)
+        {
+            RetentionTime = retentionTime;
+            StartTime = startTime;
+            EndTime = endTime;
+            ChosenPeakIndex = chosenPeakIndex;
+        }
+
+        /// <summary>
+        /// The apex, and the boundaries the peak was integrated between. Zero means there is no
+        /// value, the way NaN does for the scores: no measured peak is at time zero, so the two do
+        /// not overlap, and this keeps a time to four bytes rather than the eight a nullable float
+        /// would take.
+        /// </summary>
+        public float RetentionTime { get; private set; }
+        public float StartTime { get; private set; }
+        public float EndTime { get; private set; }
+
+        /// <summary>
+        /// Which of the candidate peaks in the .skyd this is, or <see cref="NO_PEAK_INDEX"/>. One
+        /// index covers every transition of the precursor: a transition whose peak is a different
+        /// one has boundaries the user set, and so a <see cref="CustomPeak"/> of its own.
+        /// </summary>
+        public int ChosenPeakIndex { get; private set; }
+
+        public PrecursorPeak ChangeChosenPeakIndex(int value)
+        {
+            var peak = this;
+            peak.ChosenPeakIndex = value;
+            return peak;
+        }
+
+        public bool Equals(PrecursorPeak other)
+        {
+            return RetentionTime.Equals(other.RetentionTime) && StartTime.Equals(other.StartTime) &&
+                   EndTime.Equals(other.EndTime) && ChosenPeakIndex == other.ChosenPeakIndex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is PrecursorPeak other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = RetentionTime.GetHashCode();
+                result = (result * 397) ^ StartTime.GetHashCode();
+                result = (result * 397) ^ EndTime.GetHashCode();
+                result = (result * 397) ^ ChosenPeakIndex;
+                return result;
+            }
+        }
+    }
 
     public class TransitionGroupResults : Immutable
     {
@@ -61,13 +135,10 @@ namespace pwiz.Skyline.Model.Results
 
             var fileIds = new List<ChromFileInfoId>();
             var counts = new List<int>();
-            var retentionTimes = new List<float>();
-            var startTimes = new List<float>();
-            var endTimes = new List<float>();
+            var peaks = new List<PrecursorPeak>();
             var userSets = new List<UserSet>();
             var qValues = new List<float>();
             var zScores = new List<float>();
-            var chosenPeakIndexes = getChosenPeakIndex == null ? null : new List<int>();
             var annotations = new List<Annotations>();
             for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
             {
@@ -81,13 +152,13 @@ namespace pwiz.Skyline.Model.Results
 
                     annotations.Add(chromInfo.Annotations ?? Model.Annotations.EMPTY);
                     fileIds.Add(chromInfo.FileId);
-                    retentionTimes.Add(chromInfo.RetentionTime ?? 0);
-                    startTimes.Add(chromInfo.StartRetentionTime ?? 0);
-                    endTimes.Add(chromInfo.EndRetentionTime ?? 0);
+                    peaks.Add(new PrecursorPeak(chromInfo.RetentionTime ?? 0,
+                        chromInfo.StartRetentionTime ?? 0, chromInfo.EndRetentionTime ?? 0,
+                        getChosenPeakIndex?.Invoke(replicateIndex, chromInfo.FileId) ??
+                        PrecursorPeak.NO_PEAK_INDEX));
                     userSets.Add(chromInfo.UserSet);
                     qValues.Add(chromInfo.QValue ?? float.NaN);
                     zScores.Add(chromInfo.ZScore ?? float.NaN);
-                    chosenPeakIndexes?.Add(getChosenPeakIndex(replicateIndex, chromInfo.FileId));
                     count++;
                 }
 
@@ -95,16 +166,11 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var transitionGroupResults =
-                new TransitionGroupResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
-                        retentionTimes, startTimes, endTimes)
+                new TransitionGroupResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), peaks)
                     .ChangeUserSets(userSets)
                     .ChangeQValues(qValues)
                     .ChangeZScores(zScores)
                     .ChangeAnnotations(annotations);
-            if (chosenPeakIndexes != null)
-            {
-                transitionGroupResults = transitionGroupResults.ChangeChosenPeakIndexes(chosenPeakIndexes);
-            }
 
             // Kept whatever the caller knows, because the precursor level still holds values which
             // have no home in the columnar form yet - PeakCountRatio, the ion mobility info, the dot
@@ -112,23 +178,16 @@ namespace pwiz.Skyline.Model.Results
             return transitionGroupResults.ChangeLegacyChromInfos(results);
         }
 
-        public TransitionGroupResults(ChromFileIds fileIds, IEnumerable<float> retentionTimes,
-            IEnumerable<float> startTimes, IEnumerable<float> endTimes)
+        public TransitionGroupResults(ChromFileIds fileIds, IEnumerable<PrecursorPeak> peaks)
         {
-            ChromFileIds = fileIds;
-            RetentionTimes = retentionTimes.ToImmutable();
-            StartTimes = startTimes.ToImmutable();
-            EndTimes = endTimes.ToImmutable();
+            Peaks = new ChromFileIdMap<PrecursorPeak>(fileIds, peaks);
         }
-        public ChromFileIds ChromFileIds { get; private set; }
 
         /// <summary>
-        /// Where each peak is: its apex, and the boundaries it was integrated between.
-        /// <para>
-        /// Zero means there is no value, the way NaN does for <see cref="QValues"/>. No measured
-        /// peak is at time zero, so the two do not overlap, and this keeps a time to four bytes
-        /// rather than the eight a nullable float would take.
-        /// </para>
+        /// Where each peak is and which candidate peak it is. Every peak has all of that, so it is
+        /// one map of a struct rather than a map per value: the same bytes, but one object and one
+        /// indirection per peak instead of four. This is also the map the positions come from,
+        /// since it is the one which is always there.
         /// <para>
         /// There is deliberately no Areas here. A precursor's area is the sum of its transitions'
         /// areas, which <see cref="TransitionResults.Areas"/> already holds, and storing one number
@@ -136,22 +195,21 @@ namespace pwiz.Skyline.Model.Results
         /// area are different sums over different transitions.
         /// </para>
         /// </summary>
-        public ImmutableList<float> RetentionTimes { get; private set; }
-        public ImmutableList<float> StartTimes { get; private set; }
-        public ImmutableList<float> EndTimes { get; private set; }
-        /// <summary>
-        /// The peak currently chosen at each position.
-        /// </summary>
-        public ImmutableList<int> ChosenPeakIndexes { get; private set; }
+        public ChromFileIdMap<PrecursorPeak> Peaks { get; private set; }
+
+        public ChromFileIds ChromFileIds
+        {
+            get { return Peaks.ChromFileIds; }
+        }
 
         /// <summary>
         /// The peak Skyline originally picked, and the peak reintegration chose. Both are
         /// kept for the parts which need to know where a peak came from rather than only
         /// where it is now - retention time alignment and peak imputation.
         /// <para>
-        /// In many documents all three of these lists hold the same indexes, so an incoming
-        /// list which equals one already here is stored as the same instance rather than as
-        /// a second copy.
+        /// These two often hold the same indexes, so an incoming list which equals the other one
+        /// is stored as that same instance rather than as a second copy. The chosen peak index
+        /// used to share with them as well, before it moved into <see cref="PrecursorPeak"/>.
         /// </para>
         /// </summary>
         public ImmutableList<int> OriginalPeakIndexes { get; private set; }
@@ -216,9 +274,16 @@ namespace pwiz.Skyline.Model.Results
         /// Passing an <see cref="ImmutableList{T}"/> makes that a no-op, on the assumption
         /// that it has already been optimized.
         /// </summary>
+        /// <summary>
+        /// The peaks with their chosen indexes replaced. Null puts back the negative index which
+        /// means "not known", which is what a caller who has not read a chromatogram leaves behind.
+        /// </summary>
         public TransitionGroupResults ChangeChosenPeakIndexes(IEnumerable<int> value)
         {
-            return ChangeProp(ImClone(this), im => im.ChosenPeakIndexes = im.ShareEqualIndexes(value?.ToImmutable()));
+            var indexes = value?.ToArray();
+            return ChangeProp(ImClone(this), im => im.Peaks = new ChromFileIdMap<PrecursorPeak>(ChromFileIds,
+                Peaks.Values.Select((peak, position) =>
+                    peak.ChangeChosenPeakIndex(indexes == null ? PrecursorPeak.NO_PEAK_INDEX : indexes[position]))));
         }
 
         public TransitionGroupResults ChangeOriginalPeakIndexes(IEnumerable<int> value)
@@ -244,11 +309,6 @@ namespace pwiz.Skyline.Model.Results
             if (value == null)
             {
                 return null;
-            }
-
-            if (Equals(value, ChosenPeakIndexes))
-            {
-                return ChosenPeakIndexes;
             }
 
             if (Equals(value, OriginalPeakIndexes))
@@ -319,9 +379,7 @@ namespace pwiz.Skyline.Model.Results
             var results = new TransitionGroupResults(
                 new ChromFileIds(ReplicatePositions.FromCounts(counts),
                     sources.Select(source => source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
-                sources.Select(source => source.Pick(this, other).RetentionTimes[source.Position]),
-                sources.Select(source => source.Pick(this, other).StartTimes[source.Position]),
-                sources.Select(source => source.Pick(this, other).EndTimes[source.Position]));
+                sources.Select(source => source.Pick(this, other).Peaks.Values[source.Position]));
             if (UserSets != null || other.UserSets != null)
             {
                 results = results.ChangeUserSets(
@@ -329,7 +387,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             results = results
-                .ChangeChosenPeakIndexes(MergeIndexes(sources, other, r => r.ChosenPeakIndexes))
                 .ChangeOriginalPeakIndexes(MergeIndexes(sources, other, r => r.OriginalPeakIndexes))
                 .ChangeReintegratedPeakIndexes(MergeIndexes(sources, other, r => r.ReintegratedPeakIndexes));
             if (QValues != null || other.QValues != null)
@@ -386,12 +443,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int? GetChosenPeakIndex(int position)
         {
-            if (ChosenPeakIndexes == null)
-            {
-                return null;
-            }
-
-            int chosenPeakIndex = ChosenPeakIndexes[position];
+            int chosenPeakIndex = Peaks.Values[position].ChosenPeakIndex;
             return chosenPeakIndex < 0 ? (int?) null : chosenPeakIndex;
         }
 
@@ -420,27 +472,21 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public float? GetRetentionTime(int position)
         {
-            return GetTime(RetentionTimes, position);
+            return NullIfZero(Peaks.Values[position].RetentionTime);
         }
 
         public float? GetStartTime(int position)
         {
-            return GetTime(StartTimes, position);
+            return NullIfZero(Peaks.Values[position].StartTime);
         }
 
         public float? GetEndTime(int position)
         {
-            return GetTime(EndTimes, position);
+            return NullIfZero(Peaks.Values[position].EndTime);
         }
 
-        private static float? GetTime(ImmutableList<float> times, int position)
+        private static float? NullIfZero(float time)
         {
-            if (times == null)
-            {
-                return null;
-            }
-
-            float time = times[position];
             return time == 0 ? (float?) null : time;
         }
 
@@ -472,9 +518,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         protected bool Equals(TransitionGroupResults other)
         {
-            return Equals(ChromFileIds, other.ChromFileIds) && Equals(StartTimes, other.StartTimes) && Equals(EndTimes, other.EndTimes) &&
-                   Equals(RetentionTimes, other.RetentionTimes) &&
-                   Equals(ChosenPeakIndexes, other.ChosenPeakIndexes) &&
+            // No ChromFileIds of its own: Peaks carries it and is always there.
+            return Equals(Peaks, other.Peaks) &&
                    Equals(OriginalPeakIndexes, other.OriginalPeakIndexes) &&
                    Equals(ReintegratedPeakIndexes, other.ReintegratedPeakIndexes) &&
                    Equals(UserSets, other.UserSets) && Equals(QValues, other.QValues) &&
@@ -501,11 +546,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                int result = ChromFileIds.GetHashCode();
-                result = (result * 397) ^ StartTimes.GetHashCode();
-                result = (result * 397) ^ EndTimes.GetHashCode();
-                result = (result * 397) ^ RetentionTimes.GetHashCode();
-                result = (result * 397) ^ (ChosenPeakIndexes?.GetHashCode() ?? 0);
+                int result = Peaks.GetHashCode();
                 result = (result * 397) ^ (OriginalPeakIndexes?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ReintegratedPeakIndexes?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);

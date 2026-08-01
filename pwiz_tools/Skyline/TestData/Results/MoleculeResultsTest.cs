@@ -377,9 +377,9 @@ namespace pwiz.SkylineTestData.Results
                     var rebuilt = actualList[i];
                     AssertGroupValuesEqual(rebuilt, oneReplicate[i]);
                     Assert.AreSame(columnar.ChromFileIds.FileIds[position].Value, rebuilt.FileId);
-                    Assert.AreEqual(columnar.RetentionTimes[position], rebuilt.RetentionTime ?? 0, 1e-3);
-                    Assert.AreEqual(columnar.StartTimes[position], rebuilt.StartRetentionTime ?? 0, 1e-3);
-                    Assert.AreEqual(columnar.EndTimes[position], rebuilt.EndRetentionTime ?? 0, 1e-3);
+                    Assert.AreEqual(columnar.Peaks.Values[position].RetentionTime, rebuilt.RetentionTime ?? 0, 1e-3);
+                    Assert.AreEqual(columnar.Peaks.Values[position].StartTime, rebuilt.StartRetentionTime ?? 0, 1e-3);
+                    Assert.AreEqual(columnar.Peaks.Values[position].EndTime, rebuilt.EndRetentionTime ?? 0, 1e-3);
                     Assert.AreEqual(columnar.GetQValue(position), rebuilt.QValue);
                     if (rebuilt.OriginalPeak != null)
                     {

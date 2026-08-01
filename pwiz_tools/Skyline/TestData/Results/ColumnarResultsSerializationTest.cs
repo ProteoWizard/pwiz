@@ -106,14 +106,10 @@ namespace pwiz.SkylineTestData.Results
                         var actualResults = actual.Current.AbbreviatedResults;
                         Assert.AreEqual(expectedResults.ChromFileIds.ReplicatePositions,
                             actualResults.ChromFileIds.ReplicatePositions);
-                        CollectionAssert.AreEqual(expectedResults.RetentionTimes.ToArray(),
-                            actualResults.RetentionTimes.ToArray(), @"retention times");
-                        CollectionAssert.AreEqual(expectedResults.StartTimes.ToArray(),
-                            actualResults.StartTimes.ToArray(), @"start times");
-                        CollectionAssert.AreEqual(expectedResults.EndTimes.ToArray(),
-                            actualResults.EndTimes.ToArray(), @"end times");
-                        CollectionAssert.AreEqual(expectedResults.ChosenPeakIndexes?.ToArray(),
-                            actualResults.ChosenPeakIndexes?.ToArray(), @"chosen peak indexes");
+                        // One struct per peak now, so this compares the times and the chosen index
+                        // together rather than as four lists.
+                        CollectionAssert.AreEqual(expectedResults.Peaks.Values.ToArray(),
+                            actualResults.Peaks.Values.ToArray(), @"peaks");
                         CollectionAssert.AreEqual(expectedResults.QValues?.ToArray(),
                             actualResults.QValues?.ToArray(), @"q values");
                         CollectionAssert.AreEqual(expectedResults.ZScores?.ToArray(),
@@ -124,7 +120,7 @@ namespace pwiz.SkylineTestData.Results
                             actualResults.Annotations?.ToArray(), @"annotations");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
-                        for (int position = 0; position < expectedResults.RetentionTimes.Count; position++)
+                        for (int position = 0; position < expectedResults.Peaks.Values.Count; position++)
                         {
                             if (expectedResults.GetChosenPeakIndex(position).HasValue)
                             {

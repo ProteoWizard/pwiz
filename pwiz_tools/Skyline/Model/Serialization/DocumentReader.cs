@@ -1670,20 +1670,17 @@ namespace pwiz.Skyline.Model.Serialization
             out SharedTransitionAreas sharedTransitionAreas)
         {
             var areasByPosition = new List<float[]>();
-            var retentionTimes = new List<float>();
-            var startTimes = new List<float>();
-            var endTimes = new List<float>();
-            var chosenPeakIndexes = new List<int>();
+            var peaks = new List<PrecursorPeak>();
             var qValues = new List<float>();
             var zScores = new List<float>();
             var userSets = new List<UserSet>();
             var annotations = new List<Annotations>();
             var chromFileIds = ReadColumnarResults(reader, (r, position) =>
             {
-                retentionTimes.Add(r.GetFloatAttribute(ATTR.retention_time));
-                startTimes.Add(r.GetNullableFloatAttribute(ATTR.start_time) ?? 0);
-                endTimes.Add(r.GetNullableFloatAttribute(ATTR.end_time) ?? 0);
-                chosenPeakIndexes.Add(r.GetNullableIntAttribute(ATTR.peak_index) ?? -1);
+                peaks.Add(new PrecursorPeak(r.GetFloatAttribute(ATTR.retention_time),
+                    r.GetNullableFloatAttribute(ATTR.start_time) ?? 0,
+                    r.GetNullableFloatAttribute(ATTR.end_time) ?? 0,
+                    r.GetNullableIntAttribute(ATTR.peak_index) ?? PrecursorPeak.NO_PEAK_INDEX));
                 qValues.Add(r.GetNullableFloatAttribute(ATTR.qvalue) ?? float.NaN);
                 zScores.Add(r.GetNullableFloatAttribute(ATTR.zscore) ?? float.NaN);
                 userSets.Add(ReadUserSet(r));
@@ -1693,8 +1690,7 @@ namespace pwiz.Skyline.Model.Serialization
             sharedTransitionAreas = areasByPosition.Any(positionAreas => positionAreas != null)
                 ? new SharedTransitionAreas(chromFileIds, areasByPosition)
                 : null;
-            return new TransitionGroupResults(chromFileIds, retentionTimes, startTimes, endTimes)
-                .ChangeChosenPeakIndexes(chosenPeakIndexes)
+            return new TransitionGroupResults(chromFileIds, peaks)
                 .ChangeUserSets(userSets)
                 .ChangeQValues(qValues)
                 .ChangeZScores(zScores)

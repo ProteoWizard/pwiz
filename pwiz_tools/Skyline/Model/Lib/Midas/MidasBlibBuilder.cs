@@ -54,12 +54,12 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
                     // Retention time is one of the values the columnar results keep, so nothing has
                     // to be read here.
-                    var retentionTimes = nodeTranGroup.AbbreviatedResults.RetentionTimes;
-                    for (int position = 0; position < retentionTimes.Count; position++)
+                    var peaks = nodeTranGroup.AbbreviatedResults.Peaks.Values;
+                    for (int position = 0; position < peaks.Count; position++)
                     {
                         foreach (var spectrum in _library.GetSpectraByPrecursor(null, nodeTranGroup.PrecursorMz))
                         {
-                            var currentDistance = Math.Abs(spectrum.RetentionTime - retentionTimes[position]);
+                            var currentDistance = Math.Abs(spectrum.RetentionTime - peaks[position].RetentionTime);
                             if (currentDistance < bestDistance)
                             {
                                 bestSpectrum = spectrum;

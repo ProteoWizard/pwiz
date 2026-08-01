@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestUtil
                 var results = nodeTranGroup.AbbreviatedResults;
                 int position = results.ChromFileIds.ReplicatePositions.GetStart(resultsIndex);
                 // Zero is what a peak with no retention time is stored as.
-                float? rt = results.RetentionTimes[position];
+                float? rt = results.Peaks.Values[position].RetentionTime;
                 Assert.IsTrue(rt != 0);
                 var chromName = chromSet.Name;
                 Assert.IsTrue(expected.ContainsKey(chromName));

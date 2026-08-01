@@ -522,7 +522,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 foreach (int position in results.GetPositions(replicateIndex))
                 {
-                    float retentionTime = results.RetentionTimes[position];
+                    float retentionTime = results.Peaks.Values[position].RetentionTime;
                     if (retentionTime != 0)
                         yield return retentionTime;
                 }
