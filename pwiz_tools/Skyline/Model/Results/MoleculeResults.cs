@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            int chosenPeakIndex = GetChosenPeakIndex(nodeGroup, replicateIndex, fileId, optStepChromatograms);
+            int chosenPeakIndex = GetChosenPeakIndex(nodeGroup, replicateIndex, fileId, chromGroupInfo);
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
                 if (optStepChromatograms[iTran].IsEmpty)
@@ -592,7 +592,7 @@ namespace pwiz.Skyline.Model.Results
         /// boundaries the user set instead, and so a <see cref="CustomPeak"/> of its own.
         /// </summary>
         private int GetChosenPeakIndex(TransitionGroupDocNode nodeGroup, int replicateIndex, ChromFileInfoId fileId,
-            OptStepChromatograms[] optStepChromatograms)
+            ChromatogramGroupInfo chromGroupInfo)
         {
             var results = nodeGroup.AbbreviatedResults;
             int? chosenPeakIndex = results?.FindChosenPeakIndex(replicateIndex, fileId);
@@ -601,12 +601,12 @@ namespace pwiz.Skyline.Model.Results
                 return chosenPeakIndex.Value;
             }
 
-            return SearchForChosenPeakIndex(results, replicateIndex, fileId, optStepChromatograms);
+            return SearchForChosenPeakIndex(results, replicateIndex, fileId, chromGroupInfo);
         }
 
         /// <summary>
         /// Works out which candidate peak was chosen while the document does not carry
-        /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> yet: the one with the precursor's
+        /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> yet: the one with the precursors
         /// boundaries.
         /// <para>
         /// The boundaries identify it on their own. Integrating a chromatogram between the same two
@@ -616,7 +616,7 @@ namespace pwiz.Skyline.Model.Results
         /// </para>
         /// </summary>
         private static int SearchForChosenPeakIndex(TransitionGroupResults results, int replicateIndex,
-            ChromFileInfoId fileId, OptStepChromatograms[] optStepChromatograms)
+            ChromFileInfoId fileId, ChromatogramGroupInfo chromGroupInfo)
         {
             if (results == null || !results.Peaks.TryGetValue(replicateIndex, fileId, out var precursorPeak))
             {
@@ -629,32 +629,8 @@ namespace pwiz.Skyline.Model.Results
                 return -1;
             }
 
-            // The candidate peak groups line up across the transitions, so the first transition with
-            // a chromatogram answers for all of them.
-            foreach (var optStepChromatogram in optStepChromatograms)
-            {
-                var chromatogramInfo = optStepChromatogram.GetChromatogramForStep(0);
-                if (chromatogramInfo == null)
-                {
-                    continue;
-                }
-
-                for (int peakIndex = 0; peakIndex < chromatogramInfo.NumPeaks; peakIndex++)
-                {
-                    var candidate = chromatogramInfo.GetPeak(peakIndex);
-                    if (candidate.StartTime == precursorPeak.StartTime &&
-                        candidate.EndTime == precursorPeak.EndTime)
-                    {
-                        return peakIndex;
-                    }
-                }
-
-                return -1;
-            }
-
-            return -1;
+            return chromGroupInfo.FindPeakIndex(precursorPeak.StartTime, precursorPeak.EndTime);
         }
-
         private ChromPeak GetChromPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
             int replicateIndex, ChromFileInfoId fileId, int step, ChromatogramInfo chromatogramInfo, int peakIndex,
             CustomPeak customPeak)

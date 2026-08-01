@@ -2401,6 +2401,40 @@ namespace pwiz.Skyline.Model.Results
                 transitionIndex => peaks[transitionIndex * _groupHeaderInfo.NumPeaks + peakIndex]);
         }
 
+        /// <summary>
+        /// The index of the peak group with these boundaries, or -1 when no peak group has them.
+        /// <para>
+        /// Every peak in a peak group was integrated between the group's boundaries, so the first
+        /// transition answers for the whole group. Only an empty peak, whose end time is zero,
+        /// makes it necessary to look at the next transition.
+        /// </para>
+        /// </summary>
+        public int FindPeakIndex(float startTime, float endTime)
+        {
+            var peaks = ReadPeaks();
+            int numPeaks = _groupHeaderInfo.NumPeaks;
+            for (int peakIndex = 0; peakIndex < numPeaks; peakIndex++)
+            {
+                for (int transitionIndex = 0; transitionIndex < _groupHeaderInfo.NumTransitions; transitionIndex++)
+                {
+                    var peak = peaks[transitionIndex * numPeaks + peakIndex];
+                    if (peak.EndTime == 0)
+                    {
+                        continue;
+                    }
+
+                    if (peak.StartTime == startTime && peak.EndTime == endTime)
+                    {
+                        return peakIndex;
+                    }
+
+                    break;
+                }
+            }
+
+            return -1;
+        }
+
         public ChromatogramInfo GetTransitionInfo(int index)
         {
             return GetTransitionInfo(index, TransformChrom.interpolated);
