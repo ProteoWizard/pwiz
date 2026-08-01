@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Pin the missing-run floor to its default (decoy MEDIAN) for the duration of each test.
         /// Every assertion below is an exact floor-dependent value, and the floor toggles are read
-        /// from the process environment at type load -- so on the machine actually running a floor
+        /// from the process environment at type load - so on the machine actually running a floor
         /// A/B sweep (OSPREY_MEANBEST2_FLOOR_MEAN=1 exported) these tests would compute
         /// mean(-3,-1,0) = -1.3333 where they assert a median of -1, and fail for reasons that
         /// have nothing to do with the code under test.
@@ -173,7 +173,7 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A NaN observation must not poison the accumulator. Unlike the MAX aggregation this
-        /// replaced -- where a NaN simply lost every comparison -- a NaN admitted into the top-N
+        /// replaced - where a NaN simply lost every comparison - a NaN admitted into the top-N
         /// buffer breaks the ascending invariant, can never be evicted (<c>score &gt; _top[0]</c>
         /// is false against NaN), and makes every row of that base_id aggregate to NaN, which then
         /// loses its target/decoy competition silently. The guard drops it, so the remaining real
@@ -202,7 +202,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// An infinite score is excluded for a reason NaN alone does not cover: AggregateScore's
         /// missing-run term is <c>(n - _len) * floor</c>, which for a FULLY detected group is
-        /// <c>0.0 * floor</c> -- and 0*Infinity is NaN. So one infinite value admitted anywhere
+        /// <c>0.0 * floor</c> - and 0*Infinity is NaN. So one infinite value admitted anywhere
         /// would poison every base_id in the experiment through the shared floor, not just its own.
         /// </summary>
         [TestMethod]

@@ -340,14 +340,14 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Per-row reproducibility score for the experiment-wide competitions when
         /// OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: every row receives its (base_id, target/decoy)
-        /// group's MEAN of best-N per-run scores -- the mean of the group's N highest member
+        /// group's MEAN of best-N per-run scores - the mean of the group's N highest member
         /// scores, with each of the (N - k) undetected runs of a k-run group (k &lt; N)
         /// contributing the decoy floor. Stage-4 dedup guarantees at most one entry per base_id
         /// per file, so a group's members ARE its per-run scores and the top-N are the top-N
         /// distinct runs (the invariant behind nRunsDetected == observation count).
         ///
         /// Because every row of a group gets the SAME value, feeding this array to the existing
-        /// max-based experiment competition (<see cref="CompeteAll"/> -- the max-per-base_id
+        /// max-based experiment competition (<see cref="CompeteAll"/> - the max-per-base_id
         /// reduction becomes a no-op) and the
         /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> roll-up yields precursor =
         /// mean(best-N) and peptide = max over its precursors, with decoys treated identically so
@@ -356,7 +356,7 @@ namespace pwiz.Osprey.FDR
         /// reads this aggregate, so mean(best-N) reaches protein-level results only indirectly,
         /// through which peptides clear the experiment-q gate.
         ///
-        /// A single-file run -- every group at one member -- is the uniform monotonic transform
+        /// A single-file run - every group at one member - is the uniform monotonic transform
         /// x -&gt; (x + (N - 1) * floor) / N, so ranking and every q are unchanged from the max
         /// path. The same holds for any N at or above the largest observation count, which is why
         /// N above the run count is refused rather than silently accepted

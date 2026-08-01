@@ -678,7 +678,7 @@ namespace pwiz.Osprey.FDR
                 private long _count;
                 private double _sum;
                 // Smallest / largest ADMITTED score. The resident twin's PercentileOfSorted
-                // answers every out-of-histogram case with sorted[0] or sorted[Count-1] -- always
+                // answers every out-of-histogram case with sorted[0] or sorted[Count-1] - always
                 // a real observed score. Keeping the two extremes lets this estimator return the
                 // same kind of value instead of a range constant, which is what makes the two
                 // paths agree in the tails (see PercentileFromHistogram).
@@ -717,7 +717,7 @@ namespace pwiz.Osprey.FDR
                         // because the quantile rank is taken over _count: dropping it silently
                         // shifted every quantile toward the low end. A quantile that lands in this
                         // region makes the bin walk fall off the end, which PercentileFromHistogram
-                        // answers with _max -- a real observed score.
+                        // answers with _max - a real observed score.
                         return;
                     }
                     int bin = (int)((score - RANGE_MIN) / BIN_WIDTH);

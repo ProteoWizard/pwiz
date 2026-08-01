@@ -1088,7 +1088,7 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode4 (warm re-run all cached): PASS")
         } else {
             $overallFail = $true
-            Write-Problem-Tc "$name mode4 (warm re-run all cached): FAIL -- $($m4.Issues.Count) issue(s)"
+            Write-Problem-Tc "$name mode4 (warm re-run all cached): FAIL - $($m4.Issues.Count) issue(s)"
             $m4.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode4 (warm re-run all cached): FAIL ($($m4.Issues.Count) issues)")
         }
@@ -1150,7 +1150,7 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode2 (resume cache hits): PASS")
         } else {
             $overallFail = $true
-            Write-Problem-Tc "$name mode2 (resume cache hits): FAIL -- $($m2cache.Issues.Count) issue(s)"
+            Write-Problem-Tc "$name mode2 (resume cache hits): FAIL - $($m2cache.Issues.Count) issue(s)"
             $m2cache.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode2 (resume cache hits): FAIL ($($m2cache.Issues.Count) issues)")
         }

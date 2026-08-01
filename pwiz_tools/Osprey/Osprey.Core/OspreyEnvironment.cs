@@ -321,7 +321,7 @@ namespace pwiz.Osprey.Core
         /// max RAW per-peptide SVM score and never reads this aggregate, so mean(best-N) reaches
         /// protein results only through which peptides clear the experiment-q gate. Larger N rewards
         /// detection in more runs (drives toward the &gt;=N-run reproducibility frontier). Symmetric
-        /// for decoys, so the null stays honest -- the honest sensitivity lever for #4484 vs. the
+        /// for decoys, so the null stays honest - the honest sensitivity lever for #4484 vs. the
         /// target-conditioned transfer-compete/protein-compact. N is read from the flag value and
         /// bounded by <see cref="MEAN_BEST_N_MAX"/>; a future command argument may pick N
         /// intelligently from the run count.</summary>
@@ -520,8 +520,10 @@ namespace pwiz.Osprey.Core
         public static string DescribeExperimentAgg()
         {
             if (!ExperimentAggMeanBest)
+            {
                 return string.Format(@"Experiment aggregation: {0} (default - best observation per unit)",
                     EXPERIMENT_AGG_MAX);
+            }
             return string.Format(
                 @"Experiment aggregation: {0} ACTIVE - experiment-wide precursor score is the mean " +
                 @"of its best {1} per-run scores; missing-run floor = {2}",
@@ -626,8 +628,10 @@ namespace pwiz.Osprey.Core
                 return @"decoy MEAN (OSPREY_MEANBEST2_FLOOR_MEAN)";
             double? pct = MeanBest2FloorPercentile;
             if (pct.HasValue)
+            {
                 return string.Format(@"decoy {0} percentile (OSPREY_MEANBEST2_FLOOR_PCT)",
                     pct.Value.ToString(@"0.###", System.Globalization.CultureInfo.InvariantCulture));
+            }
             return @"decoy MEDIAN (default)";
         }
 

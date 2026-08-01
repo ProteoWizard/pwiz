@@ -795,7 +795,13 @@ namespace pwiz.Osprey.FDR
             // buffer, reduced into the best-of-runs clamp floors (issue #4390). The score is
             // recomputed per row (bias first, then the averaged-weight dot product in feature order)
             // -- byte-for-byte the resident score loop, only without the O(n) finalScores array.
-            var streamingQ = new StreamingFdr.StreamingFirstPassQ(OspreyEnvironment.MeanBestN);
+            // Gate the aggregation on the pass label, exactly as the resident and projection score
+            // passes do. This method has one caller and it passes FIRST_PASS_LABEL, so today the
+            // gate is a no-op - but an ungated read of MeanBestN here is the identical shape of the
+            // defect that let the 2nd pass re-aggregate on the other two paths, and a future
+            // second-pass caller would reintroduce it silently.
+            var streamingQ = new StreamingFdr.StreamingFirstPassQ(
+                passLabel == PercolatorEngine.FIRST_PASS_LABEL ? OspreyEnvironment.MeanBestN : 0);
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);

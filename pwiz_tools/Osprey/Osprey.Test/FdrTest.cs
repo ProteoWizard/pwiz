@@ -2187,7 +2187,7 @@ namespace pwiz.Osprey.Test
             var rng = new Random(20260728 + n);
             // nFiles MUST exceed the largest N under test. At nFiles == 4 the N=4 case computed
             // nObs = 4 + rng.Next(1) == 4 for every group, so _len filled straight to N and the
-            // `score > _top[0]` eviction branch -- the actual top-N algorithm -- never executed:
+            // `score > _top[0]` eviction branch - the actual top-N algorithm - never executed:
             // the test degenerated to "mean of all four observations" while appearing to cover N=4.
             const int nFiles = 6;
             const int nBaseIds = 50;
@@ -2242,7 +2242,7 @@ namespace pwiz.Osprey.Test
 
             // PEP must still be the RAW-max map, untouched by the aggregation. That invariant
             // rests entirely on the mean-best-N block in Add() sitting AFTER the _precTargets /
-            // _precDecoys update and ending in an unconditional return -- hoisting it would leave
+            // _precDecoys update and ending in an unconditional return - hoisting it would leave
             // both dictionaries empty and silently give every row PEP = 1.0. Asserting it against
             // the flat builder is what makes that a tested contract rather than a comment.
             AssertMapsEqual(
@@ -2349,7 +2349,7 @@ namespace pwiz.Osprey.Test
             var rows = new List<(int G, uint EntryId, bool IsDecoy, double Score, string Peptide)>();
             int g = 0;
 
-            // Targets: group i is seen in (i % (N - 1)) + 1 runs -- ALWAYS strictly fewer than N,
+            // Targets: group i is seen in (i % (N - 1)) + 1 runs - ALWAYS strictly fewer than N,
             // so (n - _len) >= 1 and the floor term is live for every unit, at a MIX of floor
             // weights (1..N-1 missing runs). Scores are spaced 1.0 apart, ~1000x the floor
             // disagreement, so the differing weights still cannot reorder them.
@@ -2441,7 +2441,7 @@ namespace pwiz.Osprey.Test
             minCrossable = Math.Min(minCrossable, MinGapAcross(targetAggs, decoyAggs));
             Assert.IsTrue(minCrossable > 10 * floorDelta, string.Format(
                 "N={0}: the closest reorderable aggregate pair is only {1:R} apart against a " +
-                "{2:R} floor difference -- the exact map equality asserted below would be testing " +
+                "{2:R} floor difference - the exact map equality asserted below would be testing " +
                 "luck rather than the floor path. Re-space the fixture scores.",
                 n, minCrossable, floorDelta));
 
@@ -2454,6 +2454,134 @@ namespace pwiz.Osprey.Test
                 ResidentMeanBestNPeptideQMap(scores, labels, entryIds, peptides, n),
                 streaming.BuildExperimentPeptideQMap(),
                 string.Format("mbN floor-path exp-peptide (N={0})", n));
+        }
+
+        /// <summary>
+        /// The pass gate itself, end to end through the <see cref="FdrEntry"/> overload of
+        /// <c>PercolatorEngine.RunPercolatorFdr</c>: a SECOND-pass run must produce exactly the
+        /// experiment q-values it would produce with the aggregation switched off entirely, and a
+        /// FIRST-pass run must not.
+        ///
+        /// This is the level BOTH regressions lived at, and nothing tested it. The bounded q maps
+        /// got the pass gate while the full-length wrappers did not even take the parameter, so the
+        /// resident 2nd pass kept re-aggregating; the map/wrapper test one level below cannot see
+        /// that, because it drives the parameter directly instead of deriving it from the pass
+        /// label. Here the label is the only input that changes.
+        ///
+        /// Value-free by construction: it compares three runs of the same fixture rather than
+        /// predicting any q, so it does not depend on the SVM's output - only on the gate. The
+        /// second assertion is what keeps the first honest; without it a gate that never engaged
+        /// would satisfy "second pass equals flag-off" trivially.
+        /// </summary>
+        [TestMethod]
+        public void TestSecondPassIgnoresExperimentAggregation()
+        {
+            const int nFeat = 3;
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", false),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
+
+            // MeanBestN is pinned to 0 by this class's [TestInitialize]; the cleanup restores it.
+            double[] flagOff = RunAndCollectExperimentQ(nFeat, featureInfos, 0, "First-pass");
+            double[] secondPass = RunAndCollectExperimentQ(nFeat, featureInfos, 3, "Second-pass");
+            double[] firstPass = RunAndCollectExperimentQ(nFeat, featureInfos, 3, "First-pass");
+
+            Assert.AreEqual(flagOff.Length, secondPass.Length, @"row count");
+            for (int i = 0; i < flagOff.Length; i++)
+            {
+                Assert.AreEqual(flagOff[i], secondPass[i], 0.0, string.Format(
+                    "row {0}: a Second-pass run must not aggregate, so its experiment q must equal " +
+                    "the aggregation-off value exactly", i));
+            }
+
+            bool firstPassDiffers = false;
+            for (int i = 0; i < flagOff.Length && !firstPassDiffers; i++)
+                firstPassDiffers = flagOff[i] != firstPass[i];
+            Assert.IsTrue(firstPassDiffers,
+                @"the First-pass run must actually aggregate on this fixture, or the gate is untested");
+        }
+
+        // One RunPercolatorFdr pass over a fresh fixture at the given aggregation and pass label,
+        // returning the experiment-precursor q of every row in buffer order. A fresh fixture per
+        // call because RunPercolatorFdr scores the stubs IN PLACE.
+        private static double[] RunAndCollectExperimentQ(
+            int nFeat, OspreyFeatureInfo[] featureInfos, int meanBestN, string passLabel)
+        {
+            OspreyEnvironment.MeanBestN = meanBestN;
+            var stubs = BuildPassGateFixture(nFeat);
+            PercolatorEngine.RunPercolatorFdr(
+                stubs, new OspreyConfig(), featureInfos, s => { }, out _, null, passLabel);
+            var q = new List<double>();
+            foreach (var kvp in stubs)
+            {
+                foreach (var e in kvp.Value)
+                    q.Add(e.ExperimentPrecursorQvalue);
+            }
+            return q.ToArray();
+        }
+
+        /// <summary>
+        /// A population where mean(best-N) provably changes the reported q, which the shared
+        /// multi-observation fixture does NOT: there every score is monotone in the same parameter,
+        /// so mean-best and max yield the identical target/decoy SEQUENCE down the ranked list -
+        /// and conservative q is a function of that sequence alone. Aggregating changed every score
+        /// and not one q-value.
+        ///
+        /// Here a target has to CROSS a decoy. Four populations arrange that:
+        /// robust targets (N observations, highest features) stay put; SPARSE targets have ONE
+        /// observation, so mean-best-3 replaces two thirds of their score with the decoy floor;
+        /// HIGH decoys sit just below the sparse targets with a full N observations, so they do not
+        /// move; and a bulk of LOW decoys drags the decoy median - the floor - far below both. The
+        /// sparse target then lands beneath the high decoy it outranked under max. The crossing
+        /// condition is <c>T - D &lt; (N - 1) * (D - floor)</c>, and this fixture leaves an order of
+        /// magnitude of slack in it, so it does not depend on exactly what the SVM produces.
+        /// Features are resident, so no per-file loader is needed.
+        /// </summary>
+        private static List<KeyValuePair<string, List<FdrEntry>>> BuildPassGateFixture(int nFeat)
+        {
+            var file0 = new List<FdrEntry>();
+            var file1 = new List<FdrEntry>();
+            uint scan = 0;
+
+            // Observations alternate between the two files so the experiment competition does not
+            // take its single-file shortcut.
+            void Add(uint entryId, bool isDecoy, string peptide, double level, int nObs)
+            {
+                for (int k = 0; k < nObs; k++)
+                {
+                    var feats = new double[nFeat];
+                    for (int j = 0; j < nFeat; j++)
+                        feats[j] = level + k * 0.01 + j * 0.05;
+                    (k % 2 == 0 ? file0 : file1).Add(new FdrEntry
+                    {
+                        EntryId = entryId,
+                        ModifiedSequence = peptide,
+                        Charge = 2,
+                        ScanNumber = ++scan,
+                        IsDecoy = isDecoy,
+                        CoelutionSum = feats[0],
+                        Features = feats
+                    });
+                }
+            }
+
+            for (int p = 0; p < 20; p++)
+                Add((uint)(p + 1), false, "PEP" + p, 5.0 + p * 0.02, 3);          // robust targets
+            for (int p = 20; p < 26; p++)
+                Add((uint)(p + 1), false, "PEP" + p, 4.60 + (p - 20) * 0.02, 1);  // sparse targets
+            for (int p = 20; p < 26; p++)
+                Add((uint)(p + 1) | 0x80000000u, true, "DEC" + p, 4.40 + (p - 20) * 0.02, 3);
+            for (int p = 0; p < 20; p++)
+                Add((uint)(p + 1) | 0x80000000u, true, "DECLOW" + p, 0.5 + p * 0.02, 3);
+
+            return new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>("file0", file0),
+                new KeyValuePair<string, List<FdrEntry>>("file1", file1)
+            };
         }
 
         // Smallest non-zero distance between a value in one list and a value in the other. Equal

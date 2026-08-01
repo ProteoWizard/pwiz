@@ -108,7 +108,6 @@ namespace pwiz.Osprey.Tasks
                 if (model != null)
                     return model;
             }
-            experimentAgg = null;
             return null;
         }
 
