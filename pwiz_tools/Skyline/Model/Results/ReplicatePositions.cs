@@ -119,6 +119,11 @@ namespace pwiz.Skyline.Model.Results
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// The same positions with one replicate holding a different number of them. Grows to reach
+        /// <paramref name="index"/> when it is past the end, the new replicates before it holding
+        /// none.
+        /// </summary>
         public ReplicatePositions ChangeCountAt(int index, int newCount)
         {
             if (newCount == GetCount(index))
@@ -126,8 +131,11 @@ namespace pwiz.Skyline.Model.Results
                 return this;
             }
 
-            return FromCounts(Enumerable.Range(0, index).Select(GetCount).Append(newCount)
-                .Concat(Enumerable.Range(index + 1, ReplicateCount - index - 1)));
+            // The counts of the other replicates, not their indexes, which is what the tail of this
+            // used to concatenate. Nothing called it, so it never showed.
+            int replicateCount = index < ReplicateCount ? ReplicateCount : index + 1;
+            return FromCounts(Enumerable.Range(0, replicateCount)
+                .Select(i => i == index ? newCount : GetCount(i)));
         }
 
         private bool Equals(ReplicatePositions other)

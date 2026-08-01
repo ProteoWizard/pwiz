@@ -49,13 +49,6 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromFileIdMap<T> : IReadOnlyList<IEnumerable<KeyValuePair<ChromFileInfoId, T>>>
     {
-        /// <summary>
-        /// A map holding nothing, which is what a value nobody has set is. Used instead of null, so
-        /// that a caller can ask any map for any file without checking first and get the same
-        /// answer - nothing there - either way.
-        /// </summary>
-        public static readonly ChromFileIdMap<T> EMPTY = new ChromFileIdMap<T>(ChromFileIds.EMPTY, new T[0]);
-
         public ChromFileIdMap(ChromFileIds chromFileIds, IEnumerable<T> values)
         {
             ChromFileIds = chromFileIds;
@@ -125,15 +118,6 @@ namespace pwiz.Skyline.Model.Results
         public int Count
         {
             get { return ReplicatePositions.ReplicateCount; }
-        }
-
-        /// <summary>
-        /// Whether the map holds no value at all. Not the same as having no replicates: a map can
-        /// cover every replicate and have an entry in none of them.
-        /// </summary>
-        public bool IsEmpty
-        {
-            get { return FlatValues.Count == 0; }
         }
 
         public IEnumerable<KeyValuePair<ChromFileInfoId, T>> this[int replicateIndex]
@@ -241,7 +225,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Returns a new ChromFileIdMap with the entries removed that were equal to <paramref name="defaultValue"/>,
-        /// or <see cref="EMPTY"/> when that removes all of them.
+        /// or null when that removes all of them - which is how a value nobody has set is stored.
         /// <para>
         /// Returns this when there was nothing to remove, so a map which does not change stays
         /// reference equal.
@@ -289,7 +273,78 @@ namespace pwiz.Skyline.Model.Results
 
             if (values.Count == 0)
             {
-                return EMPTY;
+                return null;
+            }
+
+            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+                ImmutableList.ValueOf(values).MaybeConstant());
+        }
+
+        /// <summary>
+        /// The map without the entry for one file of one replicate, or this when there is no such
+        /// entry. Null when it was the last entry, which is how a map holding nothing is stored.
+        /// </summary>
+        public ChromFileIdMap<T> Remove(int replicateIndex, ChromFileInfoId fileId)
+        {
+            var newChromFileIds = ChromFileIds.Remove(replicateIndex, fileId);
+            if (ReferenceEquals(newChromFileIds, ChromFileIds))
+            {
+                return this;
+            }
+
+            if (newChromFileIds.ReplicatePositions.TotalCount == 0)
+            {
+                return null;
+            }
+
+            // The same positions the files were kept from, so the two stay lined up.
+            return new ChromFileIdMap<T>(newChromFileIds,
+                ImmutableList.ValueOf(ChromFileIds.PositionsWithout(replicateIndex, fileId)
+                    .Select(position => FlatValues[position])).MaybeConstant());
+        }
+
+        /// <summary>
+        /// Replaces or adds the entry for a particular file in a particular replicate. A file the
+        /// replicate has no entry for is added at the end of its entries, and a replicate past the
+        /// end grows the map to reach it.
+        /// </summary>
+        public ChromFileIdMap<T> Set(int replicateIndex, ChromFileInfoId fileId, T value)
+        {
+            int position = ChromFileIds.IndexOfFile(replicateIndex, fileId);
+            if (position >= 0)
+            {
+                if (EqualityComparer<T>.Default.Equals(FlatValues[position], value))
+                {
+                    return this;
+                }
+
+                var replaced = FlatValues.ToArray();
+                replaced[position] = value;
+                return new ChromFileIdMap<T>(ChromFileIds, ImmutableList.ValueOf(replaced).MaybeConstant());
+            }
+
+            int replicateCount = replicateIndex < Count ? Count : replicateIndex + 1;
+            var counts = new List<int>(replicateCount);
+            var fileIds = new List<ChromFileInfoId>(FlatValues.Count + 1);
+            var values = new List<T>(FlatValues.Count + 1);
+            for (int i = 0; i < replicateCount; i++)
+            {
+                int count = 0;
+                foreach (int p in ReplicatePositions[i])
+                {
+                    fileIds.Add(ChromFileIds.FileIds[p].Value);
+                    values.Add(FlatValues[p]);
+                    count++;
+                }
+
+                if (i == replicateIndex)
+                {
+                    fileIds.Add(fileId);
+                    values.Add(value);
+                    count++;
+                }
+
+                counts.Add(count);
             }
 
             return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),

@@ -275,14 +275,6 @@ namespace pwiz.Skyline.Model.Results
         public TransitionGroupResults(ChromFileIds fileIds, IEnumerable<PrecursorPeak> peaks)
         {
             Peaks = new ChromFileIdMap<PrecursorPeak>(fileIds, peaks);
-            // The sparse values start out holding nothing rather than being null, so that a reader
-            // can ask any of them about any file without checking which ones are there.
-            OriginalPeakIndexes = ChromFileIdMap<int>.EMPTY;
-            ReintegratedPeakIndexes = ChromFileIdMap<int>.EMPTY;
-            UserSets = ChromFileIdMap<UserSet>.EMPTY;
-            QValues = ChromFileIdMap<float>.EMPTY;
-            ZScores = ChromFileIdMap<float>.EMPTY;
-            Annotations = ChromFileIdMap<Annotations>.EMPTY;
         }
 
         /// <summary>
@@ -335,7 +327,7 @@ namespace pwiz.Skyline.Model.Results
 
         private int? GetPeakIndexOrChosen(ChromFileIdMap<int> indexes, int position)
         {
-            int index = indexes.IsEmpty ? PrecursorPeak.NO_PEAK_INDEX : indexes.FlatValues[position];
+            int index = indexes?.FlatValues[position] ?? PrecursorPeak.NO_PEAK_INDEX;
             return index < 0 ? GetChosenPeakIndex(position) : index;
         }
 
@@ -491,8 +483,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionGroupResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
         {
-            var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations.FlatValues);
-            if (ReferenceEquals(newAnnotations, Annotations.FlatValues))
+            var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations?.FlatValues);
+            if (ReferenceEquals(newAnnotations, Annotations?.FlatValues))
                 return this;
             return ChangeAnnotations(newAnnotations);
         }
@@ -521,7 +513,7 @@ namespace pwiz.Skyline.Model.Results
                 new ChromFileIds(ReplicatePositions.FromCounts(counts),
                     sources.Select(source => source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
                 sources.Select(source => source.Pick(this, other).Peaks.FlatValues[source.Position]));
-            if (!UserSets.IsEmpty || !other.UserSets.IsEmpty)
+            if (UserSets != null || other.UserSets != null)
             {
                 results = results.ChangeUserSets(
                     sources.Select(source => source.Pick(this, other).GetUserSet(source.Position)));
@@ -532,13 +524,13 @@ namespace pwiz.Skyline.Model.Results
                     (r, position) => r.GetOriginalPeakIndex(position)))
                 .ChangeReintegratedPeakIndexes(MergeIndexes(sources, other, r => r.ReintegratedPeakIndexes,
                     (r, position) => r.GetReintegratedPeakIndex(position)));
-            if (!QValues.IsEmpty || !other.QValues.IsEmpty)
+            if (QValues != null || other.QValues != null)
             {
                 results = results.ChangeQValues(sources.Select(source =>
                     source.Pick(this, other).GetQValue(source.Position) ?? float.NaN));
             }
 
-            if (!ZScores.IsEmpty || !other.ZScores.IsEmpty)
+            if (ZScores != null || other.ZScores != null)
             {
                 results = results.ChangeZScores(sources.Select(source =>
                     source.Pick(this, other).GetZScore(source.Position) ?? float.NaN));
@@ -558,7 +550,7 @@ namespace pwiz.Skyline.Model.Results
             Func<TransitionGroupResults, ChromFileIdMap<int>> getIndexes,
             Func<TransitionGroupResults, int, int?> getIndex)
         {
-            if (getIndexes(this).IsEmpty && getIndexes(other).IsEmpty)
+            if (getIndexes(this) == null && getIndexes(other) == null)
             {
                 return null;
             }
@@ -596,12 +588,12 @@ namespace pwiz.Skyline.Model.Results
 
         public Annotations GetAnnotations(int position)
         {
-            return Annotations.IsEmpty ? Model.Annotations.EMPTY : Annotations.FlatValues[position];
+            return Annotations == null ? Model.Annotations.EMPTY : Annotations.FlatValues[position];
         }
 
         public UserSet GetUserSet(int position)
         {
-            return UserSets.IsEmpty ? UserSet.FALSE : UserSets.FlatValues[position];
+            return UserSets == null ? UserSet.FALSE : UserSets.FlatValues[position];
         }
 
         /// <summary>
@@ -639,22 +631,22 @@ namespace pwiz.Skyline.Model.Results
 
         public float? GetQValue(int position)
         {
-            return GetScore(QValues, position);
+            return GetScore(QValues?.FlatValues, position);
         }
 
         public float? GetZScore(int position)
         {
-            return GetScore(ZScores, position);
+            return GetScore(ZScores?.FlatValues, position);
         }
 
-        private static float? GetScore(ChromFileIdMap<float> scores, int position)
+        private static float? GetScore(ImmutableList<float> scores, int position)
         {
-            if (scores.IsEmpty)
+            if (scores == null)
             {
                 return null;
             }
 
-            var score = scores.FlatValues[position];
+            var score = scores[position];
             return float.IsNaN(score) ? (float?) null : score;
         }
 
@@ -694,12 +686,12 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = Peaks.GetHashCode();
-                result = (result * 397) ^ OriginalPeakIndexes.GetHashCode();
-                result = (result * 397) ^ ReintegratedPeakIndexes.GetHashCode();
-                result = (result * 397) ^ UserSets.GetHashCode();
-                result = (result * 397) ^ QValues.GetHashCode();
-                result = (result * 397) ^ ZScores.GetHashCode();
-                result = (result * 397) ^ Annotations.GetHashCode();
+                result = (result * 397) ^ (OriginalPeakIndexes?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ReintegratedPeakIndexes?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (QValues?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ZScores?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (Annotations?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
@@ -816,7 +808,6 @@ namespace pwiz.Skyline.Model.Results
         public TransitionResults(ChromFileIds chromFileIds, IEnumerable<TransitionPeak> peaks)
         {
             Peaks = new ChromFileIdMap<TransitionPeak>(chromFileIds, peaks);
-            CustomPeaks = ChromFileIdMap<CustomPeak>.EMPTY;
         }
 
         /// <summary>
@@ -950,9 +941,7 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
         {
-            return ChangeProp(ImClone(this), im => im.CustomPeaks = value == null
-                ? ChromFileIdMap<CustomPeak>.EMPTY
-                : new ChromFileIdMap<CustomPeak>(ChromFileIds, value).WithoutDefault());
+            return ChangeProp(ImClone(this), im => im.CustomPeaks = value == null ? null : new ChromFileIdMap<CustomPeak>(ChromFileIds, value));
         }
 
         /// <summary>
@@ -960,8 +949,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
         {
-            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks.FlatValues);
-            if (ReferenceEquals(newCustomPeaks, CustomPeaks.FlatValues))
+            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks?.FlatValues);
+            if (ReferenceEquals(newCustomPeaks, CustomPeaks?.FlatValues))
                 return this;
             return ChangeCustomPeaks(newCustomPeaks);
         }
@@ -977,7 +966,7 @@ namespace pwiz.Skyline.Model.Results
             var newCustomPeak = (GetCustomPeak(position) ?? new CustomPeak())
                 .ChangePeakBounds(startTime, endTime, identified);
             return ChangeCustomPeaks(
-                CustomPeak.SetAtPosition(CustomPeaks.FlatValues, Peaks.FlatValues.Count, position, newCustomPeak));
+                CustomPeak.SetAtPosition(CustomPeaks?.FlatValues, Peaks.FlatValues.Count, position, newCustomPeak));
         }
 
         /// <summary>
@@ -1010,7 +999,7 @@ namespace pwiz.Skyline.Model.Results
 
         public CustomPeak GetCustomPeak(int position)
         {
-            return CustomPeaks.IsEmpty ? null : CustomPeaks.FlatValues[position];
+            return CustomPeaks?.FlatValues[position];
         }
 
         public UserSet GetUserSet(int position)
@@ -1086,7 +1075,7 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = Peaks.GetHashCode();
-                result = (result * 397) ^ CustomPeaks.GetHashCode();
+                result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                 return result;
             }

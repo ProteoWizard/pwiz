@@ -39,14 +39,6 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class PeptideResults : Immutable
     {
-        public PeptideResults()
-        {
-            // Holding nothing rather than null, so that a reader can ask either of them about any
-            // file without checking which one is there.
-            ExcludeFromCalibration = ChromFileIdMap<bool>.EMPTY;
-            AnalyteConcentrations = ChromFileIdMap<double?>.EMPTY;
-        }
-
         /// <summary>
         /// Whether the user left a replicate out of the calibration curve. Almost always nothing at
         /// all: only the files a value was actually set for have an entry, so a document which
@@ -66,7 +58,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsEmpty
         {
-            get { return ExcludeFromCalibration.IsEmpty && AnalyteConcentrations.IsEmpty; }
+            get { return ExcludeFromCalibration == null && AnalyteConcentrations == null; }
         }
 
         public PeptideResults ChangeExcludeFromCalibration(ChromFileIdMap<bool> value)
@@ -81,12 +73,12 @@ namespace pwiz.Skyline.Model.Results
 
         public bool GetExcludeFromCalibration(int replicateIndex, ChromFileInfoId fileId)
         {
-            return ExcludeFromCalibration.TryGetValue(replicateIndex, fileId, out var value) && value;
+            return ExcludeFromCalibration?.TryGetValue(replicateIndex, fileId, out var value) == true && value;
         }
 
         public double? GetAnalyteConcentration(int replicateIndex, ChromFileInfoId fileId)
         {
-            if (AnalyteConcentrations.TryGetValue(replicateIndex, fileId, out var value))
+            if (AnalyteConcentrations?.TryGetValue(replicateIndex, fileId, out var value) == true)
             {
                 return value;
             }
@@ -122,7 +114,7 @@ namespace pwiz.Skyline.Model.Results
 
         private static IEnumerable<T> GetReplicateValues<T>(ChromFileIdMap<T> map, int replicateIndex)
         {
-            if (replicateIndex < 0 || replicateIndex >= map.Count)
+            if (map == null || replicateIndex < 0 || replicateIndex >= map.Count)
             {
                 return Array.Empty<T>();
             }
@@ -173,7 +165,7 @@ namespace pwiz.Skyline.Model.Results
                         count++;
                     }
                 }
-                else if (i < map.Count)
+                else if (map != null && i < map.Count)
                 {
                     foreach (var entry in map[i])
                     {
@@ -188,7 +180,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (newFileIds.Count == 0)
             {
-                return ChromFileIdMap<T>.EMPTY;
+                return null;
             }
 
             // The entries carried over from the other replicates already say something, so this only
@@ -227,8 +219,8 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                int result = ExcludeFromCalibration.GetHashCode();
-                result = (result * 397) ^ AnalyteConcentrations.GetHashCode();
+                int result = ExcludeFromCalibration?.GetHashCode() ?? 0;
+                result = (result * 397) ^ (AnalyteConcentrations?.GetHashCode() ?? 0);
                 return result;
             }
         }

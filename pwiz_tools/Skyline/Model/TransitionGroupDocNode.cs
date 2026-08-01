@@ -999,8 +999,8 @@ namespace pwiz.Skyline.Model
                 // nothing.
                 var results = AbbreviatedResults;
                 if (results != null &&
-                    (results.UserSets.FlatValues.Any(userSet => userSet != UserSet.FALSE) ||
-                     results.Annotations.FlatValues.Any(a => !a.IsEmpty)))
+                    (results.UserSets?.FlatValues.Any(userSet => userSet != UserSet.FALSE) == true ||
+                     results.Annotations?.FlatValues.Any(a => !a.IsEmpty) == true))
                     return true;
                 return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
             }

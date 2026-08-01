@@ -216,6 +216,7 @@
     <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
+    <Compile Include="ChromFileIdMapTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CodeInspectionTest.cs" />

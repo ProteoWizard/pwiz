@@ -15,12 +15,6 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromFileIds : Immutable
     {
-        /// <summary>
-        /// No replicates and so no files, which is what a map holding nothing is laid out by.
-        /// </summary>
-        public static readonly ChromFileIds EMPTY =
-            new ChromFileIds(ReplicatePositions.FromCounts(new int[0]), new ChromFileInfoId[0]);
-
         public ChromFileIds(ReplicatePositions replicatePositions, IEnumerable<ChromFileInfoId> fileIds)
         {
             ReplicatePositions = replicatePositions;
@@ -121,6 +115,41 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 return (ReplicatePositions.GetHashCode() * 397) ^ FileIds.GetHashCode();
+            }
+        }
+
+        /// <summary>
+        /// The same layout without one file of one replicate, or this when that replicate has no
+        /// entry for the file.
+        /// </summary>
+        public ChromFileIds Remove(int replicateIndex, ChromFileInfoId fileId)
+        {
+            int newCount = ReplicatePositions[replicateIndex].Count(i => !ReferenceEquals(FileIds[i].Value, fileId));
+            if (newCount == ReplicatePositions.GetCount(replicateIndex))
+            {
+                return this;
+            }
+
+            return new ChromFileIds(ReplicatePositions.ChangeCountAt(replicateIndex, newCount),
+                PositionsWithout(replicateIndex, fileId).Select(position => FileIds[position].Value));
+        }
+
+        /// <summary>
+        /// Every position except the one holding a file of a replicate, in order.
+        /// <see cref="ChromFileIdMap{T}.Remove"/> walks the same ones, so that the values it keeps
+        /// stay lined up with the files this keeps.
+        /// </summary>
+        internal IEnumerable<int> PositionsWithout(int replicateIndex, ChromFileInfoId fileId)
+        {
+            for (int i = 0; i < ReplicatePositions.ReplicateCount; i++)
+            {
+                foreach (int position in ReplicatePositions[i])
+                {
+                    if (i != replicateIndex || !ReferenceEquals(FileIds[position].Value, fileId))
+                    {
+                        yield return position;
+                    }
+                }
             }
         }
     }
