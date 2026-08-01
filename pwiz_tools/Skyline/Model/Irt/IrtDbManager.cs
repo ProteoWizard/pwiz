@@ -22,7 +22,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
@@ -272,8 +271,7 @@ namespace pwiz.Skyline.Model.Irt
                 double score = dictSeqToScore[seqToPeptide.Key];
                 listPepCorr.Add(new TimeScorePair(time.Value, score));
 
-                foreach (var fileId in nodePep.GetResultFileIds()?.GetFileIds() ??
-                             Enumerable.Empty<ChromFileInfoId>())
+                foreach (var fileId in nodePep.GetResultFileIds().GetFileIds())
                 {
                     IList<TimeScorePair> listTimeScores;
                     if (!dictFileIdToCorr.TryGetValue(fileId.GlobalIndex, out listTimeScores))

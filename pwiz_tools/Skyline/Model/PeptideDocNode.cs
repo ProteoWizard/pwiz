@@ -1191,23 +1191,12 @@ namespace pwiz.Skyline.Model
         /// </para>
         /// </summary>
         /// <returns>
-        /// Null when no precursor has results, which is a molecule with none.
+        /// <see cref="ChromFileIds.Empty"/> when no precursor has results, which is a molecule with
+        /// none. Never null, so a caller can ask it for a replicate's files without checking.
         /// </returns>
         public ChromFileIds GetResultFileIds()
         {
-            ChromFileIds chromFileIds = null;
-            foreach (var nodeGroup in TransitionGroups)
-            {
-                var groupFileIds = nodeGroup.AbbreviatedResults?.ChromFileIds;
-                if (groupFileIds == null)
-                    continue;
-                // The precursors of a molecule nearly always share one interned layout, and Union
-                // hands back the one it was given when there is nothing to add, so the usual
-                // molecule does no work here at all.
-                chromFileIds = chromFileIds?.Union(groupFileIds) ?? groupFileIds;
-            }
-
-            return chromFileIds;
+            return ChromFileIds.UnionAll(TransitionGroups.Select(tg => tg.AbbreviatedResults?.ChromFileIds));
         }
 
         /// <summary>
@@ -1237,7 +1226,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public IEnumerable<ChromFileInfoId> GetResultFileIds(int replicateIndex)
         {
-            return GetResultFileIds()?.GetFileIds(replicateIndex) ?? Enumerable.Empty<ChromFileInfoId>();
+            return GetResultFileIds().GetFileIds(replicateIndex);
         }
 
         /// <summary>

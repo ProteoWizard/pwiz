@@ -15,6 +15,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromFileIds : Immutable
     {
+        public static readonly ChromFileIds Empty = new ChromFileIds(Results.ReplicatePositions.FromCounts(ImmutableList.Empty<int>()), Enumerable.Empty<ChromFileInfoId>());
         public ChromFileIds(ReplicatePositions replicatePositions, IEnumerable<ChromFileInfoId> fileIds)
         {
             ReplicatePositions = replicatePositions;
@@ -134,42 +135,33 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public ChromFileIds Union(ChromFileIds other)
         {
-            if (other == null || ReferenceEquals(this, other))
+            return UnionAll(new[] { this, other });
+        }
+
+        public static ChromFileIds UnionAll(IEnumerable<ChromFileIds> chromFileIds)
+        {
+            var list = chromFileIds.Where(fileIds => null != fileIds && fileIds.ReplicatePositions.Count > 0).Distinct().ToList();
+            if (list.Count == 0)
             {
-                return this;
+                return Empty;
             }
 
-            int replicateCount = ReplicatePositions.ReplicateCount;
-            if (other.ReplicatePositions.ReplicateCount > replicateCount)
+            if (list.Count == 1)
             {
-                replicateCount = other.ReplicatePositions.ReplicateCount;
+                return list[0];
             }
 
-            bool changed = replicateCount != ReplicatePositions.ReplicateCount;
-            var counts = new List<int>(replicateCount);
-            var fileIds = new List<ChromFileInfoId>();
-            var seen = new HashSet<ReferenceValue<ChromFileInfoId>>();
+            int replicateCount = list.Max(fileIds => fileIds.ReplicatePositions.ReplicateCount);
+            var allFileIds = new List<List<ChromFileInfoId>>(replicateCount);
             for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
             {
-                seen.Clear();
-                int count = 0;
-                foreach (var fileId in GetFileIds(replicateIndex).Concat(other.GetFileIds(replicateIndex)))
-                {
-                    if (!seen.Add(fileId))
-                    {
-                        continue;
-                    }
-
-                    fileIds.Add(fileId);
-                    count++;
-                }
-
-                // Ours all went in first, so a replicate whose count did not grow gained nothing.
-                changed = changed || count != ReplicatePositions.GetCount(replicateIndex);
-                counts.Add(count);
+                var replicateFileIds = list.SelectMany(fileIds => fileIds.GetFileIds(replicateIndex))
+                    .Distinct<ChromFileInfoId>(ReferenceValue.EQUALITY_COMPARER).ToList();
+                allFileIds.Add(replicateFileIds);
             }
 
-            return changed ? new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds) : this;
+            var result = new ChromFileIds(ReplicatePositions.FromCounts(allFileIds.Select(row=>row.Count)), allFileIds.SelectMany(row=>row));
+            return list.FirstOrDefault(result.Equals) ?? result;
         }
 
         /// <summary>
