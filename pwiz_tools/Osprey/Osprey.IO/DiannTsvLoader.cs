@@ -68,15 +68,21 @@ namespace pwiz.Osprey.IO
             // ~13.6M calls on the 13 GB entrapment library to print about a dozen lines.
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                 FileShare.Read, 1))
-            using (var progress = new ProgressReporter(
-                string.Format("Parsing {0}", Path.GetFileName(path)), stream.Length, string.Empty,
-                ProgressReporter.IO_INTERVAL_SECONDS))
-            using (var progressStream = new ProgressStream(stream, progress))
-            // leaveOpen so ownership of progressStream is explicit rather than resting on
-            // ProgressStream declining to override Dispose (see MzmlReader's single-close note).
-            using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
             {
-                return ParseReader(reader, logInfo);
+                // NOT a using: this reporter measures the READ, which finishes partway through
+                // ParseReader. Disposing it with the stack would force its 100% out after phase 2
+                // and after the interning summary - a completion line for a phase that ended
+                // minutes earlier. ParseReader disposes it when the stream is exhausted.
+                var readProgress = new ProgressReporter(
+                    string.Format("Parsing {0}", Path.GetFileName(path)), stream.Length,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                using (var progressStream = new ProgressStream(stream, readProgress))
+                // leaveOpen so ownership of progressStream is explicit rather than resting on
+                // ProgressStream declining to override Dispose (see MzmlReader's single-close note).
+                using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
+                {
+                    return ParseReader(reader, logInfo, readProgress);
+                }
             }
         }
 
@@ -84,6 +90,17 @@ namespace pwiz.Osprey.IO
         /// Parse library entries from a text reader (for testability).
         /// </summary>
         public List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo = null)
+        {
+            return ParseReader(reader, logInfo, null);
+        }
+
+        /// <summary>
+        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but disposes
+        /// <paramref name="readProgress"/> when the READ finishes rather than when the caller's
+        /// scope ends - the row loop below is only the first half of this method.
+        /// </summary>
+        private List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo,
+            IDisposable readProgress)
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
@@ -105,6 +122,8 @@ namespace pwiz.Osprey.IO
                 string[] fields = line.Split('\t');
                 ParseRow(fields, cols, rowNum, precursorMap);
             }
+            // Stream exhausted: the byte progress is complete and must say so HERE.
+            readProgress?.Dispose();
 
             // Convert to LibraryEntry list. Intern the repeated strings
             // (sequences, modification names, protein / gene accessions) as the
@@ -115,8 +134,17 @@ namespace pwiz.Osprey.IO
             var interner = new LibraryStringInterner();
             uint id = 0;
 
+            // Phase 2. The byte progress above ends when the stream is exhausted, so without this
+            // the console sat at 100% through the whole materialization pass. Constructed rather
+            // than `using`d so the loop needs no re-indent and so an exception here does not print
+            // a completed-looking 100% while unwinding.
+            var progress = new ProgressReporter(@"Building library entries", precursorMap.Count,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            long nBuilt = 0;
+
             foreach (var data in precursorMap.Values)
             {
+                progress.Report(++nBuilt);
                 if (data.Fragments.Count < _minFragments)
                     continue;
 
@@ -141,6 +169,7 @@ namespace pwiz.Osprey.IO
                 id++;
             }
 
+            progress.Dispose();
             interner.LogSummary(logInfo);
             return entries;
         }

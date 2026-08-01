@@ -84,8 +84,16 @@ namespace pwiz.Osprey.IO
                     WriteString(w, libraryHash ?? string.Empty);
                     w.Write((ulong)entries.Count);
 
+                    // The cold path's tail: multi-GB of BinaryWriter output over every entry,
+                    // silent until "Saved library cache" appears. Guarded so the ~12 round-trip
+                    // unit tests and the regression's staged copies stay quiet.
+                    var progress = new ProgressReporter(@"Writing library cache", entries.Count,
+                            string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                    long nWritten = 0;
+
                     foreach (var entry in entries)
                     {
+                        progress.Report(++nWritten);
                         w.Write(entry.Id);
                         WriteString(w, entry.Sequence);
                         WriteString(w, entry.ModifiedSequence);
@@ -144,6 +152,7 @@ namespace pwiz.Osprey.IO
                             WriteString(w, gn);
                     }
 
+                    progress.Dispose();
                     w.Flush();
                 }
                 saver.Commit();
