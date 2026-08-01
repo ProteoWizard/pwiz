@@ -55,6 +55,14 @@ namespace pwiz.Skyline.Model.Results
         /// which is what makes it the answer for callers that only need to know which files there
         /// are rather than anything about their peaks.
         /// </summary>
+        /// <summary>
+        /// Every file, in position order. A file belongs to one replicate, so none appears twice.
+        /// </summary>
+        public IEnumerable<ChromFileInfoId> GetFileIds()
+        {
+            return FileIds.Select(fileId => fileId.Value);
+        }
+
         public IEnumerable<ChromFileInfoId> GetFileIds(int replicateIndex)
         {
             return ReplicatePositions[replicateIndex].Select(position => FileIds[position].Value);
@@ -116,6 +124,52 @@ namespace pwiz.Skyline.Model.Results
             {
                 return (ReplicatePositions.GetHashCode() * 397) ^ FileIds.GetHashCode();
             }
+        }
+
+        /// <summary>
+        /// The files of both, replicate by replicate, this one's first. Returns this when
+        /// <paramref name="other"/> has no file it does not already have, so a layout which does not
+        /// change stays reference equal - which is what makes a union across many precursors sharing
+        /// one layout cost nothing.
+        /// </summary>
+        public ChromFileIds Union(ChromFileIds other)
+        {
+            if (other == null || ReferenceEquals(this, other))
+            {
+                return this;
+            }
+
+            int replicateCount = ReplicatePositions.ReplicateCount;
+            if (other.ReplicatePositions.ReplicateCount > replicateCount)
+            {
+                replicateCount = other.ReplicatePositions.ReplicateCount;
+            }
+
+            bool changed = replicateCount != ReplicatePositions.ReplicateCount;
+            var counts = new List<int>(replicateCount);
+            var fileIds = new List<ChromFileInfoId>();
+            var seen = new HashSet<ReferenceValue<ChromFileInfoId>>();
+            for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
+            {
+                seen.Clear();
+                int count = 0;
+                foreach (var fileId in GetFileIds(replicateIndex).Concat(other.GetFileIds(replicateIndex)))
+                {
+                    if (!seen.Add(fileId))
+                    {
+                        continue;
+                    }
+
+                    fileIds.Add(fileId);
+                    count++;
+                }
+
+                // Ours all went in first, so a replicate whose count did not grow gained nothing.
+                changed = changed || count != ReplicatePositions.GetCount(replicateIndex);
+                counts.Add(count);
+            }
+
+            return changed ? new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds) : this;
         }
 
         /// <summary>

@@ -391,7 +391,7 @@ namespace pwiz.SkylineTestFunctional
             // From the columnar results, which is where the files are recorded now. A molecule's
             // files are the union of its precursors', and a precursor's are its transitions', so
             // asking the molecule covers all three levels.
-            var all = document.Molecules.SelectMany(peptideDocNode => peptideDocNode.GetResultFileIds());
+            var all = document.Molecules.SelectMany(peptideDocNode => peptideDocNode.GetResultFileIds().GetFileIds());
             return all.Distinct((IEqualityComparer<ChromFileInfoId>)ReferenceValue.EQUALITY_COMPARER);
         }
 

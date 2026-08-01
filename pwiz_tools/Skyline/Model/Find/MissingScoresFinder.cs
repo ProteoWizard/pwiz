@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.Find
             // needed to look a score up, so the files come from the columnar results rather than
             // from chrom infos the molecule no longer keeps.
             var missingSet = new HashSet<int>();
-            foreach (var fileId in nodePep.GetResultFileIds())
+            foreach (var fileId in nodePep.GetResultFileIds()?.GetFileIds() ?? Enumerable.Empty<ChromFileInfoId>())
             {
                 bool any = false;
                 foreach (var missing in GetMissingScoreIndices(fileId, nodePep))

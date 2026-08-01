@@ -140,6 +140,35 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, grown.Remove(2, fileIds[1]).Normalize().Count);
         }
 
+        [TestMethod]
+        public void TestChromFileIdsUnion()
+        {
+            var fileIds = MakeFileIds(4);
+            // Two replicates, the first with one file and the second with two.
+            var left = MakeFileIdList(new[] { 1, 2 }, new[] { fileIds[0], fileIds[1], fileIds[2] });
+
+            // Nothing to add gives the same instance back, which is what makes a union across the
+            // precursors of the usual molecule - all sharing one layout - cost nothing.
+            Assert.AreSame(left, left.Union(left));
+            Assert.AreSame(left, left.Union(MakeFileIdList(new[] { 1 }, new[] { fileIds[0] })));
+            Assert.AreSame(left, left.Union(null));
+
+            // A file the other has in a replicate goes after the ones already there.
+            var union = left.Union(MakeFileIdList(new[] { 2, 1 }, new[] { fileIds[0], fileIds[3], fileIds[2] }));
+            CollectionAssert.AreEqual(new[] { fileIds[0], fileIds[3] }, union.GetFileIds(0).ToArray());
+            CollectionAssert.AreEqual(new[] { fileIds[1], fileIds[2] }, union.GetFileIds(1).ToArray());
+
+            // The same file in a different replicate is a different entry: a union is per replicate.
+            var moved = left.Union(MakeFileIdList(new[] { 0, 0, 1 }, new[] { fileIds[0] }));
+            Assert.AreEqual(3, moved.ReplicatePositions.ReplicateCount);
+            CollectionAssert.AreEqual(new[] { fileIds[0] }, moved.GetFileIds(2).ToArray());
+        }
+
+        private static ChromFileIds MakeFileIdList(IEnumerable<int> counts, IEnumerable<ChromFileInfoId> fileIds)
+        {
+            return new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
+        }
+
         private static ChromFileInfoId[] MakeFileIds(int count)
         {
             return Enumerable.Range(0, count).Select(i => new ChromFileInfoId()).ToArray();

@@ -1190,20 +1190,24 @@ namespace pwiz.Skyline.Model
         /// <see cref="MoleculeResults"/>, which reads every chromatogram of the molecule.
         /// </para>
         /// </summary>
-        public IEnumerable<ChromFileInfoId> GetResultFileIds()
+        /// <returns>
+        /// Null when no precursor has results, which is a molecule with none.
+        /// </returns>
+        public ChromFileIds GetResultFileIds()
         {
-            var seen = new HashSet<ReferenceValue<ChromFileInfoId>>();
+            ChromFileIds chromFileIds = null;
             foreach (var nodeGroup in TransitionGroups)
             {
-                var chromFileIds = nodeGroup.AbbreviatedResults?.ChromFileIds;
-                if (chromFileIds == null)
+                var groupFileIds = nodeGroup.AbbreviatedResults?.ChromFileIds;
+                if (groupFileIds == null)
                     continue;
-                foreach (var fileId in chromFileIds.FileIds)
-                {
-                    if (seen.Add(fileId))
-                        yield return fileId.Value;
-                }
+                // The precursors of a molecule nearly always share one interned layout, and Union
+                // hands back the one it was given when there is nothing to add, so the usual
+                // molecule does no work here at all.
+                chromFileIds = chromFileIds?.Union(groupFileIds) ?? groupFileIds;
             }
+
+            return chromFileIds;
         }
 
         /// <summary>
@@ -1233,18 +1237,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public IEnumerable<ChromFileInfoId> GetResultFileIds(int replicateIndex)
         {
-            var seen = new HashSet<ReferenceValue<ChromFileInfoId>>();
-            foreach (var nodeGroup in TransitionGroups)
-            {
-                var chromFileIds = nodeGroup.AbbreviatedResults?.ChromFileIds;
-                if (chromFileIds == null)
-                    continue;
-                foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
-                {
-                    if (seen.Add(ReferenceValue.Of(fileId)))
-                        yield return fileId;
-                }
-            }
+            return GetResultFileIds()?.GetFileIds(replicateIndex) ?? Enumerable.Empty<ChromFileInfoId>();
         }
 
         /// <summary>
