@@ -644,9 +644,9 @@ namespace pwiz.Osprey.Tasks
             // so the fat pool is never on the row-count scaling path. The full elimination (stream
             // the batch report from the sidecar+parquet too) is a documented follow-up.
             // See TODO-20260720_osprey_pass2_per_run_qvalue.
-            bool needsResidentPool = NeedsResidentPool(config) ||
-                                     (config.ModelDiagnostics && FirstPassSidecarsPresent(config));
-            GuardResidentPool(config, needsResidentPool);
+            bool mdiagFullResume = config.ModelDiagnostics && FirstPassSidecarsPresent(config);
+            bool needsResidentPool = NeedsResidentPool(config) || mdiagFullResume;
+            GuardResidentPool(config, needsResidentPool, mdiagFullResume);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -1415,7 +1415,9 @@ namespace pwiz.Osprey.Tasks
         /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstJoin's rehydrate before it
         /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
         /// silently post-compaction one), OSPREY_FDR_PROJECTION=0, a non-Percolator
-        /// FdrMethod, --fdrbench-pass 1, and OSPREY_PASS2_QVALUE=transfer. The
+        /// FdrMethod, and --fdrbench-pass 1. OSPREY_PASS2_QVALUE=transfer is NOT among them:
+        /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
+        /// own on-disk sidecar. The
         /// --task SecondPassFDR merge is NOT among them: it sets ExpectReconciledInput, which
         /// <c>--task</c> selection makes mutually exclusive with <c>NoJoin</c>, so term 2's
         /// NoJoin clause already excludes it.
@@ -1471,8 +1473,10 @@ namespace pwiz.Osprey.Tasks
                 return @"OSPREY_DUMP_PERCOLATOR";
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
                 return @"--fdrbench-pass 1";
-            if (OspreyEnvironment.Pass2TransferQ)
-                return @"OSPREY_PASS2_QVALUE=transfer";
+            // OSPREY_PASS2_QVALUE=transfer is deliberately NOT a reason here, and must not
+            // become one again: the per-run-only redesign maps each adjusted peak through
+            // that file's own 1st-pass (score -> run q) sidecar, one file at a time, so it
+            // needs no pre-compaction pool. See NeedsResidentPool.
             if (!config.FdrMethod.UsesPercolatorFramework())
                 return @"A non-Percolator FDR method";
             if (!OspreyEnvironment.UseFdrProjection)
@@ -1863,11 +1867,29 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static bool NeedsResidentPool(OspreyConfig config)
         {
+            return NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection);
+        }
+
+        /// <summary>
+        /// Pure core of <see cref="NeedsResidentPool(OspreyConfig)"/> (the env static is passed
+        /// in so it is unit testable), and the single definition of the trigger set.
+        /// <c>OSPREY_PASS2_QVALUE=transfer</c> is NOT a trigger and must not become one again:
+        /// #4438 removed it when the per-run-only redesign dropped the full pre-compaction
+        /// score-&gt;q table, and a #4446 merge artifact silently restored it, re-breaking
+        /// 82-file transfer runs on <see cref="GuardResidentPool"/> with the memory bounding
+        /// #4438 had shipped. Deliberately reads no <see cref="OspreyEnvironment"/> state other
+        /// than the passed-in projection switch: the trigger set is then enumerable, and
+        /// <c>ResidentPoolGuardTest</c> pins it. Note the test cannot by itself catch a
+        /// re-added env read (the var is unset in a test process), so a pass-2 mode arriving
+        /// in this list is a review-caught error - it contradicts #4438's invariant that
+        /// transfer resolves run q per file, from data already on disk.
+        /// </summary>
+        internal static bool NeedsResidentPool(OspreyConfig config, bool useFdrProjection)
+        {
             return config.ExpectReconciledInput ||
-                   !OspreyEnvironment.UseFdrProjection ||
+                   !useFdrProjection ||
                    !config.FdrMethod.UsesPercolatorFramework() ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                   OspreyEnvironment.Pass2TransferQ;
+                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
         }
 
         /// <summary>
@@ -1898,18 +1920,20 @@ namespace pwiz.Osprey.Tasks
         /// Fail fast when a run would build the RESIDENT first-pass pool -- an O(files) memory
         /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstJoin.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
-        /// operator explicitly accepted unbounded memory (<c>OSPREY_ALLOW_UNBOUNDED_MEMORY</c>, or
-        /// the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch which is itself an explicit resident
-        /// opt-in), throw with the trigger named so the failure is actionable rather than an opaque
-        /// OOM at scale. Triggers: the HPC reconciled-input merge, <c>--fdrbench-pass 1</c>, a
-        /// non-Percolator FdrMethod, and <c>--model-diagnostics</c> on a full resume. Streaming the
-        /// remaining resident paths is tracked in
-        /// <c>TODO-osprey_stage6_rescored_buffer_streaming.md</c>.
+        /// operator named THIS path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c>, throw with the token
+        /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: the
+        /// HPC reconciled-input merge (#4486), <c>--fdrbench-pass 1</c> (#4507), a non-Percolator
+        /// FdrMethod, <c>--model-diagnostics</c> on a full resume (#4505 - the scale case was
+        /// streamed by #4420; only the full-resume batch report remains), and
+        /// <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident implementation
+        /// outright and so must be named like any other.
         /// </summary>
-        private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
+        private static void GuardResidentPool(
+            OspreyConfig config, bool needsResidentPool, bool mdiagFullResume = false)
         {
             string error = ResidentPoolGuardError(config, needsResidentPool,
-                OspreyEnvironment.AllowUnboundedMemory, OspreyEnvironment.UseFdrProjection);
+                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection,
+                mdiagFullResume);
             if (error != null)
                 throw new InvalidOperationException(error);
         }
@@ -1917,26 +1941,91 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Pure core of <see cref="GuardResidentPool"/> (env statics passed in so it is unit
         /// testable): returns the actionable error message when the run would take the resident
-        /// first-pass pool without an explicit unbounded-memory opt-in, or <c>null</c> when the
-        /// pool is not needed or the operator opted in. <paramref name="useFdrProjection"/> == false
-        /// is the <c>OSPREY_FDR_PROJECTION=0</c> A/B-oracle switch, itself an explicit resident opt-in.
+        /// first-pass pool, or <c>null</c> when the pool is not needed or this exact path was
+        /// named. <paramref name="useFdrProjection"/> == false is the <c>OSPREY_FDR_PROJECTION=0</c>
+        /// A/B-oracle switch, which is no longer an automatic exemption: it is its own token, so
+        /// forcing the legacy implementation is stated rather than inferred.
+        ///
+        /// <para>The allowance is a TOKEN, not a boolean, and it must match the path this run
+        /// actually takes. A resident path with no token in <see cref="ResidentPaths.KNOWN_UNFIXED"/>
+        /// is refused unconditionally - no environment variable can admit it - because reaching
+        /// here off the known list means something we believed bounded became resident again.
+        /// That is the case the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c> could not
+        /// distinguish, and is how transfer regressed unnoticed.</para>
         /// </summary>
         internal static string ResidentPoolGuardError(
-            OspreyConfig config, bool needsResidentPool, bool allowUnbounded, bool useFdrProjection)
+            OspreyConfig config, bool needsResidentPool, string allowUnfixedResident,
+            bool useFdrProjection, bool mdiagFullResume = false)
         {
-            if (!needsResidentPool || allowUnbounded || !useFdrProjection)
+            if (!needsResidentPool)
                 return null;
-            string trigger =
-                config.ExpectReconciledInput ? @"the reconciled-input merge (HPC --task SecondPassFDR)"
-                : !config.FdrMethod.UsesPercolatorFramework() ? string.Format(@"{0} FDR (non-Percolator)", config.FdrMethod)
-                : (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ? @"--fdrbench-pass 1"
-                : config.ModelDiagnostics ? @"--model-diagnostics on a full resume"
-                : @"this configuration";
+            string trigger = ResidentPoolTrigger(config, useFdrProjection, mdiagFullResume);
+            // Membership in the committed list is what makes it the high-water mark rather than
+            // documentation: a token the trigger chain invents but the list does not carry is
+            // refused here, so re-admitting a path really does require editing the list (and
+            // failing its pinning test), not just adding a branch above.
+            if (trigger != null && !ResidentPaths.KNOWN_UNFIXED.Contains(trigger))
+                trigger = null;
+            if (trigger == null)
+            {
+                return
+                    @"This configuration requires the RESIDENT first-pass pool, which holds every " +
+                    @"entry in memory and grows O(files), but it is not one of the paths known to " +
+                    @"be unfixed. Something that was streamed is resident again - fix that rather " +
+                    @"than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this path.";
+            }
+            // Case-insensitive to match how the rest of the CLI parses tokens (ParseFdrBenchPass):
+            // the error names the exact token to set, so rejecting it for capitalization would
+            // read as the guard ignoring what the operator just did.
+            if (string.Equals(trigger, allowUnfixedResident, StringComparison.OrdinalIgnoreCase))
+                return null;
+            // Name the offending value when one was supplied, so a typo or a shell-quoted token
+            // does not produce the identical message the unset case produces.
+            string supplied = string.IsNullOrEmpty(allowUnfixedResident)
+                ? string.Empty
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}', which does " +
+                                @"not name this path.", allowUnfixedResident);
             return string.Format(
-                @"{0} requires the RESIDENT first-pass pool, which holds every entry in memory and " +
-                @"grows O(files) -- it does not scale to large file counts and can exhaust memory. " +
-                @"Set OSPREY_ALLOW_UNBOUNDED_MEMORY=1 to accept unbounded memory and proceed " +
-                @"(intended for testing / small runs); otherwise this path is unavailable.", trigger);
+                @"This run takes the '{0}' RESIDENT first-pass pool path, which holds every entry " +
+                @"in memory and grows O(files) - it does not scale to large file counts and can " +
+                @"exhaust memory. Set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to accept it and proceed " +
+                @"(intended for local testing / small runs); otherwise this path is unavailable.{1}",
+                trigger, supplied);
+        }
+
+        /// <summary>
+        /// The <see cref="ResidentPaths"/> token for the known-unfixed resident path this config
+        /// takes, or <c>null</c> when it needs the resident pool for a reason NOT on that list -
+        /// which the caller refuses outright, since reaching that state means something we
+        /// believed bounded is resident again.
+        ///
+        /// <para>Order here is BEHAVIORAL, unlike <see cref="PreCompactionPoolReason"/> where only
+        /// the reported string depends on it: this decides which token the operator must set, so
+        /// a config matching two triggers is attributable to exactly one.
+        /// <c>OSPREY_FDR_PROJECTION=0</c> is checked FIRST and deliberately outranks the
+        /// config-driven reasons, because it selects the legacy implementation for the WHOLE run
+        /// and is therefore the honest description even when another trigger also applies.</para>
+        ///
+        /// <para><paramref name="mdiagFullResume"/> is passed in rather than read off
+        /// <paramref name="config"/>: <c>--model-diagnostics</c> forces the pool only in
+        /// combination with a full resume, and testing <c>config.ModelDiagnostics</c> alone here
+        /// would make mdiag an unconditional catch-all that silently absorbed any FUTURE arming
+        /// condition - handing it a token CI already exports.</para>
+        /// </summary>
+        private static string ResidentPoolTrigger(
+            OspreyConfig config, bool useFdrProjection, bool mdiagFullResume)
+        {
+            if (!useFdrProjection)
+                return ResidentPaths.PROJECTION_OFF;
+            if (config.ExpectReconciledInput)
+                return ResidentPaths.HPC_MERGE;
+            if (!config.FdrMethod.UsesPercolatorFramework())
+                return ResidentPaths.NON_PERCOLATOR_FDR;
+            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
+                return ResidentPaths.FDRBENCH_PASS1;
+            if (mdiagFullResume)
+                return ResidentPaths.MDIAG_FULL_RESUME;
+            return null;
         }
 
         /// <summary>

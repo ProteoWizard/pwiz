@@ -911,18 +911,22 @@ foreach ($name in $selected) {
         #
         # This is NOT the scale case. --model-diagnostics over --input-scores streams the
         # report off ModelDiagnosticsData.Accumulator one file at a time and needs no opt-in
-        # at any file count -- that is the 82-file path this PR bounds. What remains is the
-        # full-resume batch report, tracked separately; the fix is to feed the same
-        # accumulator during the resume's per-file load and report from it.
+        # at any file count. What remains is the full-resume batch report, tracked in #4505;
+        # the fix is to feed the same accumulator during the resume's per-file load and
+        # report from it, and it is already written and verified on the closed #4437 branch.
         #
         # mode 3 above deliberately has NO opt-in: its old one wrapped the entire HPC chain
         # and would mask a guard regression on any --input-scores worker.
-        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
+        # Names the ONE path it needs, so what CI depends on is visible rather than ambient.
+        # The former blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 would also have waved through any
+        # OTHER resident path this leg happened to take - which is how a transfer regression
+        # rode along unnoticed. An unlisted path now fails here even with this set.
+        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = 'mdiag-full-resume'
         try {
             $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
                 -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
         } finally {
-            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
+            Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
         }
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
