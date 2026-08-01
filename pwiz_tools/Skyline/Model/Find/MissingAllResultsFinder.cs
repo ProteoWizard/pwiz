@@ -35,21 +35,23 @@ namespace pwiz.Skyline.Model.Find
             get { return FindResources.MissingAllResultsFinder_DisplayName_Missing_all_results; }
         }
 
+        // Missing everywhere is a total of no peaks at all, which the positions say directly. There
+        // is no need to work out which replicates have one and then find that none of them does -
+        // that is what MissingAnyResultsFinder needs, and this does not.
         protected override bool IsMatch(PeptideDocNode nodePep)
         {
-            return nodePep != null && nodePep.HasResults && nodePep.GetReplicatesWithResults().All(has => !has);
+            return nodePep != null && nodePep.HasResults && nodePep.TransitionGroups.All(g => g.HasNoPeaks);
         }
 
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup)
         {
-            return nodeGroup != null && nodeGroup.HasAbbreviatedResults &&
-                   nodeGroup.AbbreviatedResults.ChromFileIds.GetReplicatesWithResults().All(has => !has);
+            return nodeGroup != null && nodeGroup.HasAbbreviatedResults && nodeGroup.HasNoPeaks;
         }
 
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             return nodeTran?.AbbreviatedResults != null &&
-                   nodeTran.AbbreviatedResults.ChromFileIds.GetReplicatesWithResults().All(has => !has);
+                   nodeTran.AbbreviatedResults.ChromFileIds.ReplicatePositions.TotalCount == 0;
         }
     }
 }
