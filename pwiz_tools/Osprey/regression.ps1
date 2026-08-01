@@ -34,6 +34,18 @@
               is never touched); per-stage parquet/sidecar bisection of a red gate
               lives in ai/scripts/Osprey/Compare (Compare-Stage7-Rehydration-
               Strict-CSharp.ps1).
+      mode 4  warm re-run cache-hit assertion - re-runs the IDENTICAL command a
+              second time into the already-populated straight-through dir with
+              NOTHING invalidated, and asserts that every canonical task reports a
+              cache hit, that no per-file recompute line appears, and that the blib
+              is byte-identical. Output comparison ALONE is blind to a
+              cache-invalidation regression: a re-run that ignores every cache and
+              recomputes the whole pipeline from spectra emits exactly the same
+              output as one that resumes, so modes 1-3 stay green through a totally
+              broken warm resume. Mode 2 does re-run in place, but it invalidates
+              Stage 5 first, so it never exercises the all-cached case; it now
+              carries the same skip assertion for the tasks its invalidation leaves
+              valid. See Test-TaskCacheHits for the driver log lines both key on.
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -64,6 +76,12 @@
 
 .PARAMETER SkipResume
     Skip the mode-2 resume self-consistency leg (mode 1 only).
+
+.PARAMETER SkipWarmRerun
+    Skip the mode-4 warm re-run cache-hit leg. The overnight gate leaves it on: it
+    is the only leg that can see a cache-invalidation regression, and a fully
+    cached re-run costs seconds because it runs no task at all. This switch exists
+    for the same fast-local-iteration reason as -SkipHpcChain.
 
 .PARAMETER SkipHpcChain
     Skip the mode-3 HPC 4-task worker-chain leg. The overnight gate leaves it on
@@ -117,6 +135,7 @@ param(
     [string]$Dataset = 'All',
     [switch]$CreateGolden,
     [switch]$SkipResume,
+    [switch]$SkipWarmRerun,
     [switch]$SkipHpcChain,
     [string]$DownloadsPath,
     [int]$Threads = 16,
@@ -556,6 +575,133 @@ function Compare-DirFingerprint {
 # that can drift. Mirrors the proven repro from
 # TODO-20260605_ospreysharp_resume_reconciled_rt.
 
+# --- Warm-rerun cache assertions (modes 2 and 4) ------------------------------
+# Comparing output can never establish that a re-run RESUMED. A run that ignores
+# every cache and recomputes the whole pipeline from spectra emits byte-identical
+# output, so every leg here stays green through a total cache-invalidation
+# regression - which has now happened twice. The only evidence of a cache hit is
+# the driver's own log, so these helpers read it.
+#
+# The canonical four-task pipeline, in execution order. These are the
+# OspreyTask.Name values (AnalysisPipeline.CanonicalPipeline): the same tokens
+# Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
+# [TASK] log lines and the .<Name>.osprey.task validity sidecars.
+$pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
+
+# The driver's own per-task markers: the cache-hit skip at the top of the task
+# loop (AnalysisPipeline.CanRehydrate arm) and RunTask's start line. An included
+# task emits exactly one of the two, so a task showing NEITHER is classified
+# 'absent' and fails the assertion. That is deliberate. If this wording ever drifts
+# from the C#, the leg goes red and names the token it could not find, rather than
+# degrading into the silent pass that is the whole failure mode being closed here.
+$taskSkipMarker = ':skipping (outputs valid)'
+$taskRunMarker  = ':starting'
+
+# The expensive per-file recompute lines: Stage 1-4 reading spectra
+# (PerFileScoringTask) and Stage 6 rescoring (PerFileRescoreTask). Matched
+# case-SENSITIVELY below, because 'Re-scoring file ' would otherwise also satisfy a
+# 'Scoring file ' probe under PowerShell's default case-insensitive comparison and
+# a re-run that redid every Stage 1-4 file would look clean.
+$coldScoreMarker   = 'Scoring file '
+$coldRescoreMarker = 'Re-scoring file '
+
+function Get-TaskCacheMap {
+    <#
+    Classify every canonical task in one run log as 'skipped' (cache hit), 'ran'
+    (recomputed), or 'absent' (neither marker present). Osprey runs here with
+    --timestamp --memstamp, so every line carries a prefix and the markers are
+    matched ANYWHERE in the line. String.Contains is ordinal and case-sensitive,
+    which is what the marker comments above rely on. The trailing ':' in each
+    marker is what keeps PerFileScoring from matching PerFileRescoring.
+    #>
+    param([string[]]$Lines)
+    $map = [ordered]@{}
+    foreach ($t in $pipelineTaskNames) {
+        $skipText = "[TASK] $t$taskSkipMarker"
+        $runText  = "[TASK] $t$taskRunMarker"
+        $skipped = $false
+        $ran     = $false
+        foreach ($line in $Lines) {
+            if ($line.Contains($skipText)) { $skipped = $true }
+            elseif ($line.Contains($runText)) { $ran = $true }
+        }
+        $map[$t] = if ($skipped -and $ran) { 'skipped+ran' }
+                   elseif ($skipped) { 'skipped' }
+                   elseif ($ran) { 'ran' }
+                   else { 'absent' }
+    }
+    return $map
+}
+
+function Test-TaskCacheHits {
+    <#
+    Assert that a re-run into an already-populated work dir actually resumed.
+
+    -ExpectSkipped names the tasks whose outputs the leg left valid on disk: each
+    must report a cache hit. -ExpectRan names the tasks the leg deliberately
+    invalidated: each must recompute, which is what proves the invalidation still
+    bites (a cache hit there would make the leg vacuous). -NoColdScoring and
+    -NoColdRescoring additionally require that the matching per-file recompute
+    lines are absent, so a task-level cache hit cannot hide per-file work.
+
+    Returns the { Pass; Issues } shape the blib and diagnostics comparators use, so
+    a caller reports it exactly like any other leg.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$LogPath,
+        [string[]]$ExpectSkipped = @(),
+        [string[]]$ExpectRan = @(),
+        [switch]$NoColdScoring,
+        [switch]$NoColdRescoring
+    )
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) {
+        $issues.Add("run log not found: $LogPath")
+        return @{ Pass = $false; Issues = $issues }
+    }
+    $logName = Split-Path -Leaf $LogPath
+    $lines = @(Get-Content -LiteralPath $LogPath)
+    $map = Get-TaskCacheMap -Lines $lines
+    foreach ($t in $ExpectSkipped) {
+        if ($map[$t] -eq 'skipped') { continue }
+        # Extra parens around each concatenation: -f binds TIGHTER than +, so without
+        # them only the LAST fragment is formatted and the placeholders in the earlier
+        # fragments survive verbatim into the failure message.
+        if ($map[$t] -eq 'absent') {
+            # Neither marker present. Either the task was not included in this run, or
+            # the C# log wording drifted from the tokens above. Say so rather than
+            # reporting it as a recompute, because the fix is different.
+            $issues.Add((("{0}: task {1} logged NEITHER '{2}' nor '{3}' - it was not " +
+                "included in this run, or the driver's log wording has drifted from " +
+                "AnalysisPipeline.cs and this assertion is no longer reading anything") -f
+                $logName, $t, $taskSkipMarker, $taskRunMarker))
+        } else {
+            $issues.Add((("{0}: task {1} is '{2}', expected 'skipped' - no '[TASK] {1}{3}' " +
+                "line, so the re-run recomputed a task whose cached outputs were valid") -f
+                $logName, $t, $map[$t], $taskSkipMarker))
+        }
+    }
+    foreach ($t in $ExpectRan) {
+        if ($map[$t] -ne 'ran') {
+            $issues.Add((("{0}: task {1} is '{2}', expected 'ran' - this leg invalidated its " +
+                "outputs, so anything else means the invalidation no longer bites and the " +
+                "leg proves nothing") -f $logName, $t, $map[$t]))
+        }
+    }
+    $coldChecks = @()
+    if ($NoColdScoring)   { $coldChecks += $coldScoreMarker }
+    if ($NoColdRescoring) { $coldChecks += $coldRescoreMarker }
+    foreach ($marker in $coldChecks) {
+        $hits = @($lines | Where-Object { $_.Contains($marker) })
+        if ($hits.Count -gt 0) {
+            $issues.Add((("{0}: {1} per-file recompute line(s) containing '{2}' - the re-run " +
+                "redid work it already had cached; first: {3}") -f
+                $logName, $hits.Count, $marker, $hits[0].Trim()))
+        }
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+}
+
 # --- mode 3: HPC 4-task worker chain ------------------------------------------
 # Low-level runner for a single --task phase: CWD = its own scratch dir so the
 # task's CWD-relative outputs (parquets, sidecars, blib) land there, mirroring a
@@ -895,6 +1041,59 @@ foreach ($name in $selected) {
         }
     }
 
+    # ---- mode 4: warm re-run cache-hit assertion ----
+    # The gate's structural blind spot, closed. Modes 1 and 3 compare output produced
+    # in FRESH dirs, and mode 2 invalidates Stage 5 before it re-runs, so no leg here
+    # ever exercised the all-cached path and no leg asserted that anything was skipped
+    # at all. Comparing output cannot do it: a re-run that ignores every cache and
+    # recomputes from spectra emits a byte-identical blib, which is exactly how a
+    # broken warm resume passed a fully green gate.
+    #
+    # Placed BEFORE mode 2, which invalidates $straightDir in place. This leg needs the
+    # pristine post-straight-through state, where every task's outputs sit on disk
+    # under a valid sidecar, so re-running the IDENTICAL command must be a no-op. It is
+    # nearly free on a healthy build (measured 35 ms on Stellar against a ~4 min
+    # straight-through leg): a fully cached run checks its sidecars and exits without
+    # reading spectra or even loading the library.
+    if (-not $SkipWarmRerun) {
+        Write-Progress-Tc "${name}: warm re-run cache hits (mode 4)"
+        $warmBefore = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
+        # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, for mode 3's reason: a healthy warm
+        # re-run runs NO task, so it can reach no resident path, and pre-setting the
+        # opt-in could only mask the regression this leg exists to catch.
+        $rWarm = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest
+        $warmAfter = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
+        Write-Host ("  warm re-run wall {0:N1}s (a fully cached run does no work)" -f $rWarm.Wall.TotalSeconds)
+        $m4 = Test-TaskCacheHits -LogPath $rWarm.Log -ExpectSkipped $pipelineTaskNames `
+            -NoColdScoring -NoColdRescoring
+        # Byte identity on top of the cache assertion. A fully cached run never rewrites
+        # the blib, so this normally hashes an untouched file; it is here to catch a
+        # partial regression that re-runs the merge node and writes a DIFFERENT blib
+        # while the upstream tasks still report cache hits.
+        #
+        # A raw sha256 is legitimate ONLY under this leg's nothing-was-rewritten
+        # premise. Do not copy it to mode 2: a genuine recompute produces a
+        # semantically identical blib that is NOT byte-identical (measured on Stellar,
+        # cold vs resume differ in the file bytes while comparing equal at 1e-9), which
+        # is why every other leg goes through Compare-BlibFull. Here, a rewritten blib
+        # necessarily means SecondPassFDR ran, which the skip assertion above already
+        # catches, so this can only add signal, never a false red.
+        if ($warmAfter -ne $warmBefore) {
+            $m4.Issues.Add((("output.blib is not byte-identical across the warm re-run: " +
+                "sha256 {0} -> {1}") -f $warmBefore.Substring(0, 16), $warmAfter.Substring(0, 16)))
+            $m4.Pass = $false
+        }
+        if ($m4.Pass) {
+            $summaryLines.Add("$name mode4 (warm re-run all cached): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode4 (warm re-run all cached): FAIL -- $($m4.Issues.Count) issue(s)"
+            $m4.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode4 (warm re-run all cached): FAIL ($($m4.Issues.Count) issues)")
+        }
+    }
+
     # ---- mode 2: resume vs straight-through self-consistency ----
     if (-not $SkipResume) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
@@ -930,6 +1129,32 @@ foreach ($name in $selected) {
         }
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
+
+        # The resume run has to have RESUMED, and this is the only place that can say
+        # so. The blib compare below passes just as happily on a re-run that ignored
+        # every cache and recomputed the whole pipeline from spectra, so on its own it
+        # cannot tell a working warm resume from a completely broken one.
+        #
+        # Invoke-ResumeInvalidation deletes only the Stage 5 join sidecars, the blib,
+        # and the blib's own sidecar. So PerFileScoring's per-file parquets and
+        # PerFileRescoring's reconciled parquets stay valid and must report cache hits,
+        # while FirstPassFDR and SecondPassFDR lost their sidecars and must recompute.
+        # Asserting the ran side too is what keeps the leg from going vacuous: if the
+        # invalidation ever stopped biting, every task would skip and the "resume"
+        # would be comparing the straight-through blib against itself.
+        $m2cache = Test-TaskCacheHits -LogPath $rResume.Log `
+            -ExpectSkipped @('PerFileScoring', 'PerFileRescoring') `
+            -ExpectRan @('FirstPassFDR', 'SecondPassFDR') `
+            -NoColdScoring -NoColdRescoring
+        if ($m2cache.Pass) {
+            $summaryLines.Add("$name mode2 (resume cache hits): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode2 (resume cache hits): FAIL -- $($m2cache.Issues.Count) issue(s)"
+            $m2cache.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode2 (resume cache hits): FAIL ($($m2cache.Issues.Count) issues)")
+        }
+
         $m2 = Compare-BlibFull -BlibExpected $coldBlib -BlibActual $resumeBlib -Tolerance $Tolerance
         if ($m2.Pass) {
             $summaryLines.Add("$name mode2 (resume==straight): PASS")

@@ -448,9 +448,26 @@ estimators are the same statistic computed two ways. The resident path
 list and interpolates between two observed values. The memory-bounded streaming path
 (`StreamingFdr.StreamingDecoyFloor`) accumulates a fixed-width histogram (200000 bins
 over [-100, 100], **bin width 1e-3**) and interpolates uniformly inside the straddling
-bin. The two floors can therefore differ by about the bin width. The `FLOOR_MEAN`
-branch is an exact running sum on both paths and does not drift, and the floor only
-affects units detected in fewer than N runs.
+bin.
+
+The two floors agree to within **bin width + the local spacing of the decoy scores
+around the quantile**, which is the bound
+`FdrTest.TestStreamingMeanBestNFloorPathMatchesResident` asserts. The spacing term is
+not slack: where the decoys are sparser than the bins the streaming estimator cannot
+reach across the gap to the next observation, so the disagreement is set by the DATA
+SPACING rather than by the bin width, and on a deliberately sparse fixture it exceeds
+the bin width by roughly 18x. In production the decoy count is in the millions over a
+narrow score range - several per bin - so the spacing term vanishes and the bound does
+collapse to about the bin width.
+
+Neither estimator can return a value outside the observed decoy range: the streaming
+path answers every out-of-histogram case with the smallest or largest score it
+actually saw, mirroring what the resident path's sorted-list lookup would return. That
+matters because a floor ABOVE every real score would invert the feature, PROMOTING
+under-detected units instead of demoting them.
+
+The `FLOOR_MEAN` branch is an exact running sum on both paths and does not drift, and
+the floor only affects units detected in fewer than N runs.
 
 ### First pass only, and the second-pass interaction
 
