@@ -1420,7 +1420,7 @@ namespace pwiz.Skyline.Model.Serialization
                     new ChromFileIdMap<bool>(chromFileIds, excludeFromCalibration).WithoutDefault())
                 .ChangeAnalyteConcentrations(
                     new ChromFileIdMap<double?>(chromFileIds, analyteConcentrations).WithoutDefault());
-            return results.IsEmpty ? null : results;
+            return results.NullIfEmpty();
         }
 
         /// <summary>

@@ -56,9 +56,13 @@ namespace pwiz.Skyline.Model.Results
         /// Whether there is nothing here at all, which is what a molecule with neither value has and
         /// what the callers store as no results rather than as an empty object.
         /// </summary>
-        public bool IsEmpty
+        /// <summary>
+        /// Null when neither value is set anywhere, which is what a molecule with nothing to keep
+        /// stores rather than an object holding two nulls.
+        /// </summary>
+        public PeptideResults NullIfEmpty()
         {
-            get { return ExcludeFromCalibration == null && AnalyteConcentrations == null; }
+            return ExcludeFromCalibration == null && AnalyteConcentrations == null ? null : this;
         }
 
         public PeptideResults ChangeExcludeFromCalibration(ChromFileIdMap<bool> value)
@@ -120,74 +124,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return map.Values[replicateIndex];
-        }
-
-        /// <summary>
-        /// The same value for every file of one replicate, which is how the user sets it: the
-        /// calibration curve and the analyte concentration describe the sample, not an injection
-        /// of it.
-        /// </summary>
-        public PeptideResults ChangeExcludeFromCalibration(int replicateCount, int replicateIndex,
-            IEnumerable<ChromFileInfoId> fileIds, bool value)
-        {
-            return ChangeExcludeFromCalibration(SetReplicate(ExcludeFromCalibration, replicateCount, replicateIndex,
-                fileIds, value, false));
-        }
-
-        public PeptideResults ChangeAnalyteConcentration(int replicateCount, int replicateIndex,
-            IEnumerable<ChromFileInfoId> fileIds, double? value)
-        {
-            return ChangeAnalyteConcentrations(SetReplicate(AnalyteConcentrations, replicateCount, replicateIndex,
-                fileIds, value, null));
-        }
-
-        /// <summary>
-        /// The map with one replicate's files given <paramref name="value"/> and every other
-        /// replicate left as it was. Setting <paramref name="defaultValue"/> removes the entries
-        /// instead of storing it, so a value set and then unset leaves nothing behind, and a map
-        /// with no entries left is null.
-        /// </summary>
-        private static ChromFileIdMap<T> SetReplicate<T>(ChromFileIdMap<T> map, int replicateCount,
-            int replicateIndex, IEnumerable<ChromFileInfoId> fileIds, T value, T defaultValue)
-        {
-            var counts = new List<int>();
-            var newFileIds = new List<ChromFileInfoId>();
-            var values = new List<T>();
-            for (int i = 0; i < replicateCount; i++)
-            {
-                int count = 0;
-                if (i == replicateIndex)
-                {
-                    foreach (var fileId in fileIds)
-                    {
-                        newFileIds.Add(fileId);
-                        values.Add(value);
-                        count++;
-                    }
-                }
-                else if (map != null && i < map.Count)
-                {
-                    foreach (var entry in map[i])
-                    {
-                        newFileIds.Add(entry.Key);
-                        values.Add(entry.Value);
-                        count++;
-                    }
-                }
-
-                counts.Add(count);
-            }
-
-            if (newFileIds.Count == 0)
-            {
-                return null;
-            }
-
-            // The entries carried over from the other replicates already say something, so this only
-            // drops the ones just written - which is what setting the default back has to do.
-            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), newFileIds),
-                    ImmutableList.ValueOf(values).MaybeConstant())
-                .WithoutDefault(defaultValue);
         }
 
         /// <summary>

@@ -375,34 +375,6 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
         }
 
-        /// <summary>
-        /// Records one of the two values a molecule keeps for one file, making the columnar results
-        /// first when it has none, which is how a document with neither value arrives here.
-        /// </summary>
-        /// <summary>
-        /// Applies a change to this molecule's results for the files of one replicate, which is the
-        /// unit the two values it keeps describe: they are properties of the sample rather than of
-        /// an injection of it.
-        /// <para>
-        /// The files are this molecule's own, which for a multi injection replicate is usually one
-        /// of the replicate's files rather than all of them - a molecule is normally found in only
-        /// one injection. That is why they come from the precursors rather than from the
-        /// chromatogram set.
-        /// </para>
-        /// </summary>
-        public PeptideDocNode ChangePeptideResult(SrmSettings settings, int replicateIndex,
-            Func<PeptideResults, int, int, IEnumerable<ChromFileInfoId>, PeptideResults> change)
-        {
-            var measuredResults = settings.MeasuredResults;
-            if (measuredResults == null)
-                return this;
-            var fileIds = GetResultFileIds(replicateIndex).ToArray();
-            if (fileIds.Length == 0)
-                return this;
-            var peptideResults = change(AbbreviatedResults ?? new PeptideResults(),
-                measuredResults.Chromatograms.Count, replicateIndex, fileIds);
-            return ChangeAbbreviatedResults(peptideResults.IsEmpty ? null : peptideResults);
-        }
 
         /// <summary>
         /// Whether this molecule has measured results, asked of its precursors. It cannot be asked
@@ -1516,11 +1488,31 @@ namespace pwiz.Skyline.Model
         /// Takes the settings because the columnar results have to be made when the molecule has
         /// none, which is the usual case: nothing is kept for a document that excludes no replicate.
         /// </summary>
+        /// <summary>
+        /// Leaves a replicate out of the calibration curve, or puts it back. Applies to every file
+        /// this molecule was found in for that replicate: excluding describes the sample, not an
+        /// injection of it.
+        /// <para>
+        /// The files are the molecule's own rather than the chromatogram set's. For a multi
+        /// injection replicate a molecule is normally found in one of the files, so
+        /// <see cref="GetResultFileIds(int)"/> - the union across its precursors - is what the
+        /// entries are keyed by.
+        /// </para>
+        /// </summary>
         public PeptideDocNode ChangeExcludeFromCalibration(SrmSettings settings, int replicateIndex, bool excluded)
         {
-            return ChangePeptideResult(settings, replicateIndex,
-                (results, replicateCount, index, fileIds) =>
-                    results.ChangeExcludeFromCalibration(replicateCount, index, fileIds, excluded));
+            if (settings.MeasuredResults == null)
+                return this;
+            var results = AbbreviatedResults ?? new PeptideResults();
+            var map = results.ExcludeFromCalibration;
+            foreach (var fileId in GetResultFileIds(replicateIndex))
+            {
+                map = excluded
+                    ? (map ?? ChromFileIdMap<bool>.Empty).Set(replicateIndex, fileId, true)
+                    : map?.Remove(replicateIndex, fileId);
+            }
+
+            return ChangeAbbreviatedResults(results.ChangeExcludeFromCalibration(map).NullIfEmpty());
         }
 
         public bool HasPrecursorConcentrations

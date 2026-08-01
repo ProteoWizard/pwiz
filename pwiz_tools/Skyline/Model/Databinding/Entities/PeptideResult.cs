@@ -185,18 +185,36 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangePeptideResult(EditColumnDescription(nameof(ExcludeFromCalibration), value),
-                    (results, replicateCount, replicateIndex, fileIds) =>
-                        results.ChangeExcludeFromCalibration(replicateCount, replicateIndex, fileIds, value));
+                ChangePeptideResults(EditColumnDescription(nameof(ExcludeFromCalibration), value),
+                    results => results.ChangeExcludeFromCalibration(
+                        SetOrRemove(results.ExcludeFromCalibration, value, false)));
             }
         }
 
-        private void ChangePeptideResult(EditDescription editDescription,
-            Func<PeptideResults, int, int, IEnumerable<ChromFileInfoId>, PeptideResults> change)
+        /// <summary>
+        /// Applies a change to the molecule's columnar results, storing nothing when what comes back
+        /// has nothing to keep.
+        /// </summary>
+        private void ChangePeptideResults(EditDescription editDescription,
+            Func<PeptideResults, PeptideResults> change)
         {
-            var replicateIndex = ResultFile.Replicate.ReplicateIndex;
-            Peptide.ChangeDocNode(editDescription,
-                docNode => docNode.ChangePeptideResult(SrmDocument.Settings, replicateIndex, change));
+            Peptide.ChangeDocNode(editDescription, docNode => docNode.ChangeAbbreviatedResults(
+                change(docNode.AbbreviatedResults ?? new PeptideResults()).NullIfEmpty()));
+        }
+
+        /// <summary>
+        /// The map with this row's file given a value, or without its entry when the value is the
+        /// one which means nothing was set. A row is one replicate and one file, so this touches
+        /// only that file - unlike excluding a whole replicate from the calibration curve.
+        /// </summary>
+        private ChromFileIdMap<TValue> SetOrRemove<TValue>(ChromFileIdMap<TValue> map, TValue value,
+            TValue defaultValue)
+        {
+            int replicateIndex = ResultFile.Replicate.ReplicateIndex;
+            var fileId = ResultFile.ChromFileInfoId;
+            return Equals(value, defaultValue)
+                ? map?.Remove(replicateIndex, fileId)
+                : (map ?? ChromFileIdMap<TValue>.Empty).Set(replicateIndex, fileId, value);
         }
 
         public QuantificationResult GetQuantificationResult()
@@ -282,9 +300,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                ChangePeptideResult(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
-                    (results, replicateCount, replicateIndex, fileIds) =>
-                        results.ChangeAnalyteConcentration(replicateCount, replicateIndex, fileIds, value));
+                ChangePeptideResults(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
+                    results => results.ChangeAnalyteConcentrations(
+                        SetOrRemove(results.AnalyteConcentrations, value, null)));
             }
         }
 

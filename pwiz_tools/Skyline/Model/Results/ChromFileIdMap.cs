@@ -49,6 +49,21 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromFileIdMap<T> : IReadOnlyList<IEnumerable<KeyValuePair<ChromFileInfoId, T>>>
     {
+        /// <summary>
+        /// A map over no replicates at all, for reaching past a null with <c>??</c>. A map holding
+        /// nothing is stored as null rather than as this: over N replicates it would be N zero
+        /// counts, which is not the same <see cref="ReplicatePositions"/> as no replicates, so the
+        /// two would be unequal while meaning the same thing.
+        /// </summary>
+        public static readonly ChromFileIdMap<T> Empty = new ChromFileIdMap<T>(
+            new ChromFileIds(ReplicatePositions.FromCounts(new int[0]), new ChromFileInfoId[0]), new T[0]);
+
+        /// <summary>
+        /// The values are stored as they are given. A caller which is going to hold the map for a
+        /// long time reduces them itself - through
+        /// <see cref="ImmutableListFactory.MaybeConstant{T}"/>, say - because a map is often an
+        /// intermediate value which would not repay the work.
+        /// </summary>
         public ChromFileIdMap(ChromFileIds chromFileIds, IEnumerable<T> values)
         {
             ChromFileIds = chromFileIds;
@@ -277,7 +292,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
-                ImmutableList.ValueOf(values).MaybeConstant());
+                values);
         }
 
         /// <summary>
@@ -299,8 +314,7 @@ namespace pwiz.Skyline.Model.Results
 
             // The same positions the files were kept from, so the two stay lined up.
             return new ChromFileIdMap<T>(newChromFileIds,
-                ImmutableList.ValueOf(ChromFileIds.PositionsWithout(replicateIndex, fileId)
-                    .Select(position => FlatValues[position])).MaybeConstant());
+                ChromFileIds.PositionsWithout(replicateIndex, fileId).Select(position => FlatValues[position]));
         }
 
         /// <summary>
@@ -320,7 +334,7 @@ namespace pwiz.Skyline.Model.Results
 
                 var replaced = FlatValues.ToArray();
                 replaced[position] = value;
-                return new ChromFileIdMap<T>(ChromFileIds, ImmutableList.ValueOf(replaced).MaybeConstant());
+                return new ChromFileIdMap<T>(ChromFileIds, replaced);
             }
 
             int replicateCount = replicateIndex < Count ? Count : replicateIndex + 1;
@@ -348,7 +362,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
-                ImmutableList.ValueOf(values).MaybeConstant());
+                values);
         }
     }
 
