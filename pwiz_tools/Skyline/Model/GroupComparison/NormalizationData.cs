@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransitionGroup(Parameters parameters, TransitionGroupDocNode transitionGroup)
         {
             var transitionsByMsLevel = transitionGroup.Transitions
-                .Where(transition => null != transition.AbbreviatedResults)
+                .Where(transition => null != transitionGroup.GetTransitionResults(transition))
                 .GroupBy(transition => transition.IsMs1);
             return transitionsByMsLevel.SelectMany(msLevelGroup =>
             {
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             // The columnar results, which hold optimization step zero only, so there is no step to
             // skip past and no chromatogram to read.
-            var results = transition.AbbreviatedResults;
+            var results = transitionGroup.GetTransitionResults(transition);
             if (results == null)
             {
                 yield break;

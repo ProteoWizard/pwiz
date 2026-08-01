@@ -69,13 +69,13 @@ namespace pwiz.SkylineTestData.Results
                 int transitionsChecked = 0;
                 int precursorsChecked = 0;
                 int chosenPeakIndexesChecked = 0;
-                using (var expected = docResults.MoleculeTransitions.GetEnumerator())
-                using (var actual = docRoundTrip.MoleculeTransitions.GetEnumerator())
+                using (var expected = ResultsUtil.EnumerateTransitionResults(docResults).GetEnumerator())
+                using (var actual = ResultsUtil.EnumerateTransitionResults(docRoundTrip).GetEnumerator())
                 {
                     while (expected.MoveNext() && actual.MoveNext())
                     {
-                        var expectedResults = expected.Current.AbbreviatedResults;
-                        var actualResults = actual.Current.AbbreviatedResults;
+                        var expectedResults = expected.Current;
+                        var actualResults = actual.Current;
                         Assert.AreEqual(expectedResults.ChromFileIds.ReplicatePositions,
                             actualResults.ChromFileIds.ReplicatePositions,
                             string.Format(@"replicate positions: expected {0} replicates {1} total, actual {2} replicates {3} total",
@@ -169,13 +169,13 @@ namespace pwiz.SkylineTestData.Results
                 // Reading them back turns them into the columnar results, which is what a document
                 // read the old way now keeps, and the areas have to be the ones written.
                 int sharedAreasChecked = 0;
-                using (var expected = docResults.MoleculeTransitions.GetEnumerator())
-                using (var actual = docShared.MoleculeTransitions.GetEnumerator())
+                using (var expected = ResultsUtil.EnumerateTransitionResults(docResults).GetEnumerator())
+                using (var actual = ResultsUtil.EnumerateTransitionResults(docShared).GetEnumerator())
                 {
                     while (expected.MoveNext() && actual.MoveNext())
                     {
-                        var expectedAreas = expected.Current.AbbreviatedResults.Peaks;
-                        var actualAreas = actual.Current.AbbreviatedResults.Peaks;
+                        var expectedAreas = expected.Current.Peaks;
+                        var actualAreas = actual.Current.Peaks;
                         CollectionAssert.AreEqual(expectedAreas.FlatValues.Select(peak => peak.Area).ToArray(), actualAreas.FlatValues.Select(peak => peak.Area).ToArray(),
                             string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.FlatValues.Count,
                                 actualAreas.FlatValues.Count));
@@ -217,8 +217,8 @@ namespace pwiz.SkylineTestData.Results
             var docRoundTrip = RoundTrip(docMoved, false, out string compactXml);
             StringAssert.Contains(compactXml, @"transition_results_columnar");
 
-            var expectedResults = docMoved.MoleculeTransitions.First().AbbreviatedResults;
-            var actualResults = docRoundTrip.MoleculeTransitions.First().AbbreviatedResults;
+            var expectedResults = ResultsUtil.EnumerateTransitionResults(docMoved).First();
+            var actualResults = ResultsUtil.EnumerateTransitionResults(docRoundTrip).First();
             // The area and the user set are what the format carries. See above.
             CollectionAssert.AreEqual(expectedResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(),
                 actualResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(), @"areas");

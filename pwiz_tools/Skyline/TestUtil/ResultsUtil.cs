@@ -38,6 +38,22 @@ namespace pwiz.SkylineTestUtil
 {
     public static class ResultsUtil
     {
+        /// <summary>
+        /// Every transition's columnar results, in document order. A transition's results belong to
+        /// its precursor now, so this is what a test which used to walk MoleculeTransitions and ask
+        /// each node for them does instead.
+        /// </summary>
+        public static IEnumerable<TransitionResults> EnumerateTransitionResults(SrmDocument document)
+        {
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            {
+                for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
+                {
+                    yield return nodeGroup.GetTransitionResults(iTran);
+                }
+            }
+        }
+
         public static SrmDocument DeserializeDocument(string path)
         {
             try

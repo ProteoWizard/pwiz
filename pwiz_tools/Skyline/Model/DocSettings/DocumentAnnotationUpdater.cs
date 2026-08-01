@@ -257,6 +257,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 precursorDocNode = (TransitionGroupDocNode)precursorDocNode.ChangeChildren(newChildren);
             }
 
+            if (_transitionResultUpdater != null)
+            {
+                precursorDocNode = UpdateTransitionResults(identityPath, precursorDocNode);
+            }
+
             return precursorDocNode;
         }
 
@@ -276,12 +281,33 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            // This used to test _precursorResultUpdater, which meant a document with a calculated
-            // precursor_result annotation but no transition_result one threw here, and one with only
-            // a transition_result annotation silently skipped its transitions.
-            var results = transitionDocNode.AbbreviatedResults;
-            if (_transitionResultUpdater != null && results != null)
+            return transitionDocNode;
+        }
+
+        /// <summary>
+        /// The precursor with its transitions' peak annotations updated. Done here rather than in
+        /// <see cref="UpdateTransition"/> because a transition's results belong to its precursor.
+        /// <para>
+        /// This used to test _precursorResultUpdater, which meant a document with a calculated
+        /// precursor_result annotation but no transition_result one threw here, and one with only
+        /// a transition_result annotation silently skipped its transitions.
+        /// </para>
+        /// </summary>
+        private TransitionGroupDocNode UpdateTransitionResults(IdentityPath parent,
+            TransitionGroupDocNode precursorDocNode)
+        {
+            for (int iTran = 0; iTran < precursorDocNode.Children.Count; iTran++)
             {
+                var results = precursorDocNode.GetTransitionResults(iTran);
+                if (results == null)
+                {
+                    continue;
+                }
+
+                CheckCancelled();
+                var nodeTran = (TransitionDocNode) precursorDocNode.Children[iTran];
+                var transition = new Databinding.Entities.Transition(SkylineDataSchema,
+                    new IdentityPath(parent, nodeTran.Transition));
                 var newCustomPeaks = results.CustomPeaks?.FlatValues.ToList() ??
                                      Enumerable.Repeat((CustomPeak) null, results.Peaks.FlatValues.Count).ToList();
                 _transitionResultUpdater.Update(results.ChromFileIds, transition.Results,
@@ -292,11 +318,11 @@ namespace pwiz.Skyline.Model.DocSettings
                             .ChangeAnnotations(annotations);
                         newCustomPeaks[position] = customPeak.IsEmpty ? null : customPeak;
                     });
-                transitionDocNode = transitionDocNode.ChangeAbbreviatedResults(results.ChangeCustomPeaks(
+                precursorDocNode = precursorDocNode.ChangeTransitionResults(iTran, results.ChangeCustomPeaks(
                     newCustomPeaks.All(customPeak => customPeak == null) ? null : newCustomPeaks));
             }
 
-            return transitionDocNode;
+            return precursorDocNode;
         }
 
         private class AnnotationUpdater

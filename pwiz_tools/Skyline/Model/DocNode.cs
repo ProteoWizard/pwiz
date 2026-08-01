@@ -235,15 +235,8 @@ namespace pwiz.Skyline.Model
                         results.StripAnnotationValues(annotationNamesToKeep));
                 }
             }
-            if (newDocNode is TransitionDocNode transitionDocNode)
-            {
-                var results = transitionDocNode.AbbreviatedResults;
-                if (results != null)
-                {
-                    newDocNode = transitionDocNode.ChangeAbbreviatedResults(
-                        results.StripAnnotationValues(annotationNamesToKeep));
-                }
-            }
+            // No transition case: a transition's peak annotations belong to its precursor now, and
+            // TransitionGroupResults.StripAnnotationValues strips them with its own.
             return newDocNode;
         }
 

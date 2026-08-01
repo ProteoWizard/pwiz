@@ -853,10 +853,10 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 // Left out when the precursor already carries these areas and there is nothing
                 // else here to say.
-                if (nodeTransition.AbbreviatedResults != null &&
-                    !IsCoveredBySharedTransitionAreas(nodeTransition.AbbreviatedResults))
+                var transitionResults = nodeGroup.GetTransitionResults(nodeTransition);
+                if (transitionResults != null && !IsCoveredBySharedTransitionAreas(transitionResults))
                 {
-                    WriteTransitionResults(writer, nodeTransition.AbbreviatedResults);
+                    WriteTransitionResults(writer, transitionResults);
                 }
             }
             else
@@ -1124,7 +1124,8 @@ namespace pwiz.Skyline.Model.Serialization
                 return null;
             }
 
-            var transitionResults = nodeGroup.Transitions.Select(nodeTran => nodeTran.AbbreviatedResults).ToArray();
+            var transitionResults = Enumerable.Range(0, nodeGroup.Children.Count)
+                .Select(iTran => results.GetTransitionResults(iTran)).ToArray();
             var replicatePositions = results.ChromFileIds.ReplicatePositions;
             var areasByPosition = new float[results.ChromFileIds.FileIds.Count][];
             for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)

@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             TransitionGroupDocNode transitionGroup, TransitionDocNode transition,
             bool treatMissingAsZero)
         {
-            var chromInfo = GetTransitionPeak(transition, replicateIndex);
+            var chromInfo = GetTransitionPeak(transitionGroup, transition, replicateIndex);
             if (null == chromInfo)
             {
                 return null;
@@ -369,9 +369,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         /// From the columnar results, which hold optimization step zero only, so there is no step
         /// to skip past. Nothing here reads a chromatogram.
         /// </summary>
-        private static QuantifiablePeak GetTransitionPeak(TransitionDocNode transitionDocNode, int replicateIndex)
+        private static QuantifiablePeak GetTransitionPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode transitionDocNode, int replicateIndex)
         {
-            return transitionDocNode.AbbreviatedResults?.GetQuantifiablePeaks(replicateIndex).FirstOrDefault();
+            return nodeGroup.GetTransitionResults(transitionDocNode)?.GetQuantifiablePeaks(replicateIndex).FirstOrDefault();
         }
 
         private Dictionary<PeptideDocNode.TransitionKey, QuantifiablePeak> GetTransitionsToNormalizeAgainst(
@@ -395,7 +395,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         continue;
                     }
-                    var chromInfo = GetTransitionPeak(transition, replicateIndex);
+                    var chromInfo = GetTransitionPeak(transitionGroup, transition, replicateIndex);
                     if (null != chromInfo && !chromInfo.IsEmpty)
                     {
                         result[GetRatioTransitionKey(transitionGroup, transition)] = chromInfo;

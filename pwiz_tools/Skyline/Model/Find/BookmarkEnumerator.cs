@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model.Find
 
         private bool MoveToLastResult(DocNode node, IdentityPath identityPath)
         {
-            for (int replicateIndex = GetReplicateCount(node) - 1; replicateIndex >= 0; replicateIndex--)
+            for (int replicateIndex = GetReplicateCount(node, identityPath) - 1; replicateIndex >= 0; replicateIndex--)
             {
                 var chromInfoPosition = GetChromInfoPositions(node, replicateIndex).LastOrDefault();
                 if (chromInfoPosition.ResultPosition != null)
@@ -433,7 +433,7 @@ namespace pwiz.Skyline.Model.Find
         /// One could imagine wanting Bookmark's to be able to represent ChromatogramSet's, but
         /// that is not supported yet.
         /// </summary>
-        private int GetReplicateCount(DocNode docNode)
+        private int GetReplicateCount(DocNode docNode, IdentityPath identityPath)
         {
             // The document's replicate count, rather than the length of a node's chrom infos: a
             // node which has results has one entry per replicate either way, and asking the
@@ -442,7 +442,10 @@ namespace pwiz.Skyline.Model.Find
             switch (docNode)
             {
                 case TransitionDocNode transitionDocNode:
-                    return transitionDocNode.AbbreviatedResults == null ? 0 : ReplicateCount();
+                    // A transition's results belong to its precursor, so the parent is what says
+                    // whether it has any.
+                    var nodeGroup = Document.FindNode(identityPath.Parent) as TransitionGroupDocNode;
+                    return nodeGroup?.GetTransitionResults(transitionDocNode) == null ? 0 : ReplicateCount();
                 case TransitionGroupDocNode transitionGroupDocNode:
                     return transitionGroupDocNode.HasAbbreviatedResults ? ReplicateCount() : 0;
                 case PeptideDocNode peptideDocNode:

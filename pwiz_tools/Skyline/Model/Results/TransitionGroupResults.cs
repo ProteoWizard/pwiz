@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -278,6 +279,13 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// A precursor with no peaks of its own, which is what a precursor whose transitions have
+        /// results but which has none itself starts from.
+        /// </summary>
+        public static readonly TransitionGroupResults Empty =
+            new TransitionGroupResults(ChromFileIds.Empty, new PrecursorPeak[0]);
+
+        /// <summary>
         /// Where each peak is and which candidate peak it is. Every peak has all of that, so it is
         /// one map of a struct rather than a map per value: the same bytes, but one object and one
         /// indirection per peak instead of four. This is also the map the positions come from,
@@ -294,6 +302,67 @@ namespace pwiz.Skyline.Model.Results
         public ChromFileIds ChromFileIds
         {
             get { return Peaks.ChromFileIds; }
+        }
+
+        /// <summary>
+        /// The results of the precursor's transitions, one entry per transition, in the order of
+        /// <see cref="TransitionGroupDocNode.Children"/>. Null when no transition has any, and a
+        /// null entry for a transition which has none.
+        /// <para>
+        /// These live here rather than on <see cref="TransitionDocNode"/> so that everything a
+        /// precursor and its transitions repeat - the files, the replicate layout, the flags which
+        /// are the same all the way down - can be stored once. The .sky file already writes the
+        /// transition areas once per precursor; holding them per node was where that sharing got
+        /// undone.
+        /// </para>
+        /// <para>
+        /// Positional, so it only means anything alongside the precursor it came from.
+        /// <see cref="TransitionGroupDocNode.OnChangingChildren"/> keeps it in step with the
+        /// children, which is the only reason a caller can trust the index.
+        /// </para>
+        /// </summary>
+        public ImmutableList<TransitionResults> Transitions { get; private set; }
+
+        public TransitionGroupResults ChangeTransitions(IEnumerable<TransitionResults> value)
+        {
+            var transitions = value == null ? null : ImmutableList.ValueOf(value);
+            if (transitions != null && transitions.All(results => results == null))
+            {
+                transitions = null;
+            }
+
+            return ChangeProp(ImClone(this), im => im.Transitions = transitions);
+        }
+
+        /// <summary>
+        /// The results of one transition, or null when it has none. Takes the index of the
+        /// transition among the precursor's children, which is the only thing these are in the
+        /// order of.
+        /// </summary>
+        public TransitionResults GetTransitionResults(int transitionIndex)
+        {
+            if (Transitions == null || transitionIndex < 0 || transitionIndex >= Transitions.Count)
+            {
+                return null;
+            }
+
+            return Transitions[transitionIndex];
+        }
+
+        /// <summary>
+        /// These results with one transition's replaced. Returns this when it is already the same,
+        /// so that a document which does not change stays reference equal.
+        /// </summary>
+        public TransitionGroupResults ChangeTransitionResults(int transitionIndex, TransitionResults value)
+        {
+            if (Equals(GetTransitionResults(transitionIndex), value))
+            {
+                return this;
+            }
+
+            int count = Math.Max(Transitions?.Count ?? 0, transitionIndex + 1);
+            return ChangeTransitions(Enumerable.Range(0, count)
+                .Select(i => i == transitionIndex ? value : GetTransitionResults(i)));
         }
 
         /// <summary>
@@ -483,10 +552,21 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionGroupResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
         {
+            var results = this;
             var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations?.FlatValues);
-            if (ReferenceEquals(newAnnotations, Annotations?.FlatValues))
-                return this;
-            return ChangeAnnotations(newAnnotations);
+            if (!ReferenceEquals(newAnnotations, Annotations?.FlatValues))
+                results = ChangeAnnotations(newAnnotations);
+
+            // The transitions' peak annotations too, since a precursor owns them now.
+            if (Transitions != null)
+            {
+                var newTransitions = Transitions
+                    .Select(transition => transition?.StripAnnotationValues(annotationNamesToKeep)).ToArray();
+                if (!ArrayUtil.ReferencesEqual(newTransitions, Transitions))
+                    results = results.ChangeTransitions(newTransitions);
+            }
+
+            return results;
         }
 
         /// <summary>
@@ -692,6 +772,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // No ChromFileIds of its own: Peaks carries it and is always there.
             return Equals(Peaks, other.Peaks) &&
+                   Equals(Transitions, other.Transitions) &&
                    Equals(OriginalPeakIndexes, other.OriginalPeakIndexes) &&
                    Equals(ReintegratedPeakIndexes, other.ReintegratedPeakIndexes) &&
                    Equals(UserSets, other.UserSets) && Equals(QValues, other.QValues) &&
@@ -719,6 +800,7 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = Peaks.GetHashCode();
+                result = (result * 397) ^ (Transitions?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (OriginalPeakIndexes?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ReintegratedPeakIndexes?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);

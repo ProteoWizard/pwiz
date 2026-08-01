@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestData.Results
         private static int CheckTransition(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
             TransitionDocNode nodeTran, ref int reintegrated)
         {
-            var abbreviated = nodeTran.AbbreviatedResults;
+            var abbreviated = nodeGroup.GetTransitionResults(nodeTran);
             if (abbreviated == null)
             {
                 return 0;
@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreSame(results,
                 moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition));
 
-            CheckFromChromInfos(nodeTran, results);
+            CheckFromChromInfos(abbreviated, nodeTran, results);
 
             int positionsChecked = 0;
             for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
@@ -400,7 +400,7 @@ namespace pwiz.SkylineTestData.Results
         /// works from chrom infos <see cref="MoleculeResults"/> rebuilt rather than from any the
         /// document holds.
         /// </summary>
-        private static void CheckFromChromInfos(TransitionDocNode nodeTran,
+        private static void CheckFromChromInfos(TransitionResults abbreviated, TransitionDocNode nodeTran,
             Results<TransitionChromInfo> rebuilt)
         {
             var unconverted = TransitionResults.FromChromInfos(rebuilt);
@@ -413,11 +413,13 @@ namespace pwiz.SkylineTestData.Results
 
             // What the document keeps has been converted: which candidate peak each peak is has
             // been worked out, so the chrom infos are not needed any more.
-            Assert.IsTrue(nodeTran.AbbreviatedResults.IsConverted);
+            Assert.IsTrue(abbreviated.IsConverted);
 
-            // Not derived from the chrom infos, so replacing those leaves them alone.
+            // Not derived from the chrom infos, so replacing those leaves them alone. Structural
+            // now that the columnar results belong to the precursor: clearing a transition node's
+            // chrom infos cannot reach them.
             var cleared = (TransitionDocNode) nodeTran.ChangeResults(null);
-            Assert.AreSame(nodeTran.AbbreviatedResults, cleared.AbbreviatedResults);
+            Assert.AreSame(nodeTran.Transition, cleared.Transition);
         }
 
         private static void AssertGroupValuesEqual(TransitionGroupChromInfo expected,

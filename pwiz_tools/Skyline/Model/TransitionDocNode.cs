@@ -316,24 +316,6 @@ namespace pwiz.Skyline.Model
 
         public Results<TransitionChromInfo> Results { get; private set; }
 
-        /// <summary>
-        /// The results of this transition. Not derived from <see cref="Results"/>, which a
-        /// transition no longer keeps: this is the only form it has, and everything else about its
-        /// peaks is read back from the .skyd through a <see cref="MoleculeResults"/>.
-        /// </summary>
-        public TransitionResults AbbreviatedResults { get; private set; }
-
-        /// <summary>
-        /// Returns this node when the results are the ones it already has, because a document which
-        /// has not changed has to stay reference equal.
-        /// </summary>
-        public TransitionDocNode ChangeAbbreviatedResults(TransitionResults prop)
-        {
-            if (Equals(AbbreviatedResults, prop))
-                return this;
-            return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
-        }
-
         public int? ResultsRank { get; private set; }
 
         public bool HasResults { get { return Results != null; } }
@@ -1086,16 +1068,17 @@ namespace pwiz.Skyline.Model
             return ChangeResults(Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
         }
 
+        /// <summary>
+        /// Merges only what a transition node still holds. Its results belong to the precursor now,
+        /// so <see cref="TransitionGroupDocNode.MergeUserInfo"/> merges those once the children of
+        /// the merged precursor are settled.
+        /// </summary>
         public TransitionDocNode MergeUserInfo(SrmSettings settings, TransitionDocNode nodeTranMerge)
         {
-            var result = this;
             var annotations = Annotations.Merge(nodeTranMerge.Annotations);
-            if (!ReferenceEquals(annotations, Annotations))
-                result = (TransitionDocNode)result.ChangeAnnotations(annotations);
-            var resultsInfo = AbbreviatedResults?.MergeUserInfo(nodeTranMerge.AbbreviatedResults);
-            if (!ReferenceEquals(resultsInfo, AbbreviatedResults))
-                result = result.ChangeAbbreviatedResults(resultsInfo);
-            return result;
+            if (ReferenceEquals(annotations, Annotations))
+                return this;
+            return (TransitionDocNode)ChangeAnnotations(annotations);
         }
 
 

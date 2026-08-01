@@ -122,9 +122,8 @@ namespace pwiz.SkylineTestFunctional
         private static List<string> GetPeaks(SrmDocument document)
         {
             var peaks = new List<string>();
-            foreach (var nodeTran in document.MoleculeTransitions)
+            foreach (var results in ResultsUtil.EnumerateTransitionResults(document))
             {
-                var results = nodeTran.AbbreviatedResults;
                 if (results == null)
                 {
                     continue;

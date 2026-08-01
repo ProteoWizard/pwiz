@@ -423,6 +423,124 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// The results of one of this precursor's transitions, or null when it has none.
+        /// <para>
+        /// A transition's results are only reachable through the precursor which owns them, so that
+        /// the transitions of one precursor can share what they have in common. See
+        /// <see cref="TransitionGroupResults.Transitions"/>.
+        /// </para>
+        /// </summary>
+        public TransitionResults GetTransitionResults(TransitionDocNode nodeTran)
+        {
+            return AbbreviatedResults?.GetTransitionResults(IndexOfTransition(nodeTran));
+        }
+
+        public TransitionResults GetTransitionResults(int transitionIndex)
+        {
+            return AbbreviatedResults?.GetTransitionResults(transitionIndex);
+        }
+
+        /// <summary>
+        /// This precursor with one transition's results replaced. Returns this node when they are
+        /// already the same.
+        /// </summary>
+        public TransitionGroupDocNode ChangeTransitionResults(TransitionDocNode nodeTran, TransitionResults results)
+        {
+            int transitionIndex = IndexOfTransition(nodeTran);
+            if (transitionIndex < 0)
+            {
+                return this;
+            }
+
+            return ChangeTransitionResults(transitionIndex, results);
+        }
+
+        public TransitionGroupDocNode ChangeTransitionResults(int transitionIndex, TransitionResults results)
+        {
+            var abbreviatedResults = AbbreviatedResults;
+            if (abbreviatedResults == null)
+            {
+                if (results == null)
+                {
+                    return this;
+                }
+
+                // A precursor whose own results were never worked out can still be told what its
+                // transitions found, which is what reading a document one node at a time does.
+                abbreviatedResults = TransitionGroupResults.Empty;
+            }
+
+            return ChangeAbbreviatedResults(abbreviatedResults.ChangeTransitionResults(transitionIndex, results));
+        }
+
+        /// <summary>
+        /// Where a transition sits among this precursor's children, which is the index its results
+        /// are stored under, or -1 when it is not one of them.
+        /// </summary>
+        public int IndexOfTransition(TransitionDocNode nodeTran)
+        {
+            for (int i = 0; i < Children.Count; i++)
+            {
+                if (ReferenceEquals(Children[i].Id, nodeTran.Id))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Keeps <see cref="TransitionGroupResults.Transitions"/> lined up with the children, which
+        /// is what lets a caller trust a transition index at all. Every path which adds, removes or
+        /// reorders a precursor's transitions comes through here.
+        /// <para>
+        /// Transitions are matched by <see cref="Identity"/>, which a node keeps through being
+        /// changed, so a transition which moved takes its results with it and one which was added
+        /// starts with none.
+        /// </para>
+        /// </summary>
+        protected override IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)
+        {
+            var childrenNew = clone.Children;
+            if (ReferenceEquals(clone, this) || AbbreviatedResults?.Transitions == null)
+            {
+                return childrenNew;
+            }
+
+            var transitions = AbbreviatedResults.Transitions;
+            // The common case is a child changed in place, where every identity is still where it
+            // was. Reference comparing them is much cheaper than building the map below.
+            if (childrenNew.Count == Children.Count)
+            {
+                bool sameOrder = true;
+                for (int i = 0; i < childrenNew.Count && sameOrder; i++)
+                {
+                    sameOrder = ReferenceEquals(childrenNew[i].Id, Children[i].Id);
+                }
+
+                if (sameOrder)
+                {
+                    return childrenNew;
+                }
+            }
+
+            var resultsByTransition = new Dictionary<int, TransitionResults>();
+            for (int i = 0; i < Children.Count && i < transitions.Count; i++)
+            {
+                if (transitions[i] != null)
+                {
+                    resultsByTransition[Children[i].Id.GlobalIndex] = transitions[i];
+                }
+            }
+
+            var nodeGroupClone = (TransitionGroupDocNode) clone;
+            nodeGroupClone.AbbreviatedResults = AbbreviatedResults.ChangeTransitions(childrenNew.Select(child =>
+                resultsByTransition.TryGetValue(child.Id.GlobalIndex, out var results) ? results : null));
+            return childrenNew;
+        }
+
+        /// <summary>
         /// Whether the precursor was made from chrom infos. See <see cref="_emptyResults"/> for why
         /// that is not the same question as whether it has results.
         /// </summary>
@@ -472,11 +590,11 @@ namespace pwiz.Skyline.Model
         {
             double area = 0;
             bool anyPeak = false;
-            foreach (TransitionDocNode nodeTran in Children)
+            for (int iTran = 0; iTran < Children.Count; iTran++)
             {
-                if (transitions != null && !transitions(nodeTran))
+                if (transitions != null && !transitions((TransitionDocNode) Children[iTran]))
                     continue;
-                var results = nodeTran.AbbreviatedResults;
+                var results = GetTransitionResults(iTran);
                 if (results == null)
                     continue;
                 foreach (var position in results.GetPositions(replicateIndex))
@@ -498,9 +616,9 @@ namespace pwiz.Skyline.Model
         {
             int goodPeaks = 0;
             int transitionCount = 0;
-            foreach (TransitionDocNode nodeTran in Children)
+            for (int iTran = 0; iTran < Children.Count; iTran++)
             {
-                var results = nodeTran.AbbreviatedResults;
+                var results = GetTransitionResults(iTran);
                 if (results == null)
                     continue;
                 transitionCount++;
@@ -2387,10 +2505,12 @@ namespace pwiz.Skyline.Model
 
                 // Update nodes with new results as necessary
                 IList<DocNode> childrenNew = new List<DocNode>();
+                var transitionResults = new TransitionResults[nodeGroup.Children.Count];
                 for (int iTran = 0, len = nodeGroup.Children.Count; iTran < len; iTran++)
                 {
                     var nodeTran = (TransitionDocNode)nodeGroup.Children[iTran];
-                    childrenNew.Add(UpdateTransitionNode(nodeTran, iTran));
+                    childrenNew.Add(UpdateTransitionNode(nodeTran, iTran, nodeGroup.GetTransitionResults(iTran),
+                        out transitionResults[iTran]));
                 }
 
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
@@ -2412,6 +2532,15 @@ namespace pwiz.Skyline.Model
                     nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(TransitionGroupResults.FromChromInfos(results));
 
                 nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
+
+                // After the children, because the two have to agree on which transition each index
+                // stands for, and the children are what says so.
+                if (nodeGroupNew.AbbreviatedResults != null)
+                    nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(
+                        nodeGroupNew.AbbreviatedResults.ChangeTransitions(transitionResults));
+                else if (transitionResults.Any(results => results != null))
+                    nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(
+                        TransitionGroupResults.Empty.ChangeTransitions(transitionResults));
 
                 // The chrom infos the columnar results are still holding on to can only be got rid
                 // of by looking at the candidate peaks in the .skyd, which is what MoleculeResults
@@ -2448,7 +2577,8 @@ namespace pwiz.Skyline.Model
             /// here, used to make them, and then let go: everything about them is either in the
             /// columnar results or can be read back from the .skyd.
             /// </summary>
-            private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran)
+            private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran,
+                TransitionResults existingResults, out TransitionResults resultsNew)
             {
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
                 var results = Results<TransitionChromInfo>.Merge(null, chromInfoSet.ChromInfoLists);
@@ -2460,8 +2590,10 @@ namespace pwiz.Skyline.Model
                 // chromatogram - because none is loaded yet - has nothing to say, and must not
                 // replace what a document was read with.
                 var abbreviatedResults = TransitionResults.FromChromInfos(results);
-                if (abbreviatedResults?.Peaks.FlatValues.Count > 0 && !SaysTheSame(nodeTran.AbbreviatedResults, abbreviatedResults))
-                    nodeTran = nodeTran.ChangeAbbreviatedResults(abbreviatedResults);
+                resultsNew = abbreviatedResults?.Peaks.FlatValues.Count > 0 &&
+                             !SaysTheSame(existingResults, abbreviatedResults)
+                    ? abbreviatedResults
+                    : existingResults;
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
                 return nodeTran;
@@ -3558,7 +3690,53 @@ namespace pwiz.Skyline.Model
             var resultsInfo = AbbreviatedResults?.MergeUserInfo(nodeGroupMerge.AbbreviatedResults);
             if (!ReferenceEquals(resultsInfo, AbbreviatedResults))
                 result = result.ChangeAbbreviatedResults(resultsInfo);
+            result = result.MergeTransitionResults(this, nodeGroupMerge);
             return result.UpdateResults(settings, diff, nodePep, this);
+        }
+
+        /// <summary>
+        /// The merged precursor with each of its transitions' results merged from whichever of the
+        /// two precursors had them. Done here rather than on the transition nodes because the
+        /// results belong to the precursor, and only once the merged children are settled is it
+        /// known which transition each index stands for.
+        /// </summary>
+        private TransitionGroupDocNode MergeTransitionResults(TransitionGroupDocNode nodeGroup,
+            TransitionGroupDocNode nodeGroupMerge)
+        {
+            if (nodeGroup.AbbreviatedResults?.Transitions == null &&
+                nodeGroupMerge.AbbreviatedResults?.Transitions == null)
+            {
+                return this;
+            }
+
+            var resultsByKey = new Dictionary<TransitionLossKey, TransitionResults>();
+            for (int i = 0; i < nodeGroupMerge.Children.Count; i++)
+            {
+                var results = nodeGroupMerge.GetTransitionResults(i);
+                if (results != null)
+                {
+                    var nodeTran = (TransitionDocNode) nodeGroupMerge.Children[i];
+                    resultsByKey[nodeTran.Key(nodeGroupMerge)] = results;
+                }
+            }
+
+            var result = this;
+            for (int i = 0; i < Children.Count; i++)
+            {
+                var nodeTran = (TransitionDocNode) Children[i];
+                if (!resultsByKey.TryGetValue(nodeTran.Key(this), out var resultsMerge))
+                {
+                    continue;
+                }
+
+                // The results this transition already carries are the ones the merge remapped onto
+                // it, so they came from nodeGroup and are the side which wins where both have a peak.
+                var results = result.GetTransitionResults(i);
+                result = result.ChangeTransitionResults(i,
+                    results == null ? resultsMerge : results.MergeUserInfo(resultsMerge));
+            }
+
+            return result;
         }
 
         #endregion

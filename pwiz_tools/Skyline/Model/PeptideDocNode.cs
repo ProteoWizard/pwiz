@@ -629,9 +629,10 @@ namespace pwiz.Skyline.Model
                     double groupArea = 0;
                     double groupTranMeasured = 0;
                     bool isGroupIdentified = false;
-                    foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                    for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
                     {
-                        var results = nodeTran.AbbreviatedResults;
+                        var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
+                        var results = nodeGroup.GetTransitionResults(iTran);
                         if (results == null)
                             continue;
                         var positions = results.GetPositions(i).ToArray();
