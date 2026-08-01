@@ -543,9 +543,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private static float? FindQValue(TransitionGroupDocNode transitionGroup, int replicateIndex,
             ChromFileInfoId chromFileInfoId)
         {
-            var results = transitionGroup.AbbreviatedResults;
-            int position = results?.IndexOfFile(replicateIndex, chromFileInfoId) ?? -1;
-            return position < 0 ? null : results.GetQValue(position);
+            return transitionGroup.AbbreviatedResults?.FindQValue(replicateIndex, chromFileInfoId);
         }
     }
 }

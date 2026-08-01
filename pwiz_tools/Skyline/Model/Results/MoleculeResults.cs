@@ -428,12 +428,8 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                int position = transitionResults[iTran].ChromFileIds.IndexOfFile(fileId);
-                if (position >= 0)
-                {
-                    transitionResults[iTran] = transitionResults[iTran].ChangeCustomPeakBounds(position,
-                        chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.Identified);
-                }
+                transitionResults[iTran] = transitionResults[iTran].ChangeCustomPeakBounds(fileId,
+                    chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.Identified);
             }
         }
 
@@ -547,21 +543,25 @@ namespace pwiz.Skyline.Model.Results
             // has its own set of candidate peaks.
             var optStepChromatograms = new OptStepChromatograms[nodeTrans.Length];
             var customPeaks = new CustomPeak[nodeTrans.Length];
-            var positions = new int[nodeTrans.Length];
+            // Each transition's own peak for this file, or null when it has none there. The values
+            // rather than positions in them: a position of one transition's results means nothing
+            // in another's, and these are read alongside each other.
+            var transitionPeaks = new TransitionPeak?[nodeTrans.Length];
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
                 optStepChromatograms[iTran] = chromGroupInfo.GetAllTransitionInfo(nodeTrans[iTran], MzMatchTolerance,
                     chromatograms.OptimizationFunction, TransformChrom.interpolated);
 
-                // One entry per file, holding the values of optimization step zero, found by file
-                // rather than by counting.
+                // The entry holding the values of optimization step zero, found by file.
                 var results = nodeTrans[iTran].AbbreviatedResults;
-                positions[iTran] = results?.IndexOfFile(replicateIndex, fileId) ?? -1;
-                customPeaks[iTran] = positions[iTran] < 0 ? null : results.GetCustomPeak(positions[iTran]);
+                if (results != null && results.Peaks.TryGetValue(replicateIndex, fileId, out var transitionPeak))
+                {
+                    transitionPeaks[iTran] = transitionPeak;
+                    results.CustomPeaks?.TryGetValue(replicateIndex, fileId, out customPeaks[iTran]);
+                }
             }
 
-            int chosenPeakIndex = GetChosenPeakIndex(nodeGroup, replicateIndex, fileId, nodeTrans,
-                optStepChromatograms, customPeaks, positions);
+            int chosenPeakIndex = GetChosenPeakIndex(nodeGroup, replicateIndex, fileId, optStepChromatograms);
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
                 if (optStepChromatograms[iTran].IsEmpty)
@@ -569,9 +569,8 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var results = nodeTrans[iTran].AbbreviatedResults;
                 var annotations = customPeaks[iTran]?.Annotations ?? Annotations.EMPTY;
-                var userSet = positions[iTran] < 0 ? UserSet.FALSE : results.GetUserSet(positions[iTran]);
+                var userSet = transitionPeaks[iTran]?.UserSet ?? UserSet.FALSE;
                 int stepCount = optStepChromatograms[iTran].StepCount;
                 for (int step = -stepCount; step <= stepCount; step++)
                 {
@@ -593,64 +592,64 @@ namespace pwiz.Skyline.Model.Results
         /// boundaries the user set instead, and so a <see cref="CustomPeak"/> of its own.
         /// </summary>
         private int GetChosenPeakIndex(TransitionGroupDocNode nodeGroup, int replicateIndex, ChromFileInfoId fileId,
-            TransitionDocNode[] nodeTrans, OptStepChromatograms[] optStepChromatograms, CustomPeak[] customPeaks,
-            int[] positions)
+            OptStepChromatograms[] optStepChromatograms)
         {
             var results = nodeGroup.AbbreviatedResults;
-            int position = results?.IndexOfFile(replicateIndex, fileId) ?? -1;
-            if (position >= 0)
+            int? chosenPeakIndex = results?.FindChosenPeakIndex(replicateIndex, fileId);
+            if (chosenPeakIndex.HasValue)
             {
-                int? chosenPeakIndex = results.GetChosenPeakIndex(position);
-                if (chosenPeakIndex.HasValue)
-                {
-                    return chosenPeakIndex.Value;
-                }
+                return chosenPeakIndex.Value;
             }
 
-            return SearchForChosenPeakIndex(nodeTrans, optStepChromatograms, customPeaks, positions);
+            return SearchForChosenPeakIndex(results, replicateIndex, fileId, optStepChromatograms);
         }
 
         /// <summary>
         /// Works out which candidate peak was chosen while the document does not carry
-        /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> yet.
+        /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> yet: the one with the precursor's
+        /// boundaries.
         /// <para>
-        /// The area is the only thing about the chosen peak the columnar results keep, so the index
-        /// is the one whose area matches at every transition of the precursor. One transition is
-        /// not enough on its own: a transition with little or no signal has an area which several
-        /// of the candidate peaks could produce, and a zero area peak inside a chosen peak group is
-        /// ordinary. Together they pin it down.
+        /// The boundaries identify it on their own. Integrating a chromatogram between the same two
+        /// times cannot give a different peak, so there is nothing to gain by checking the area as
+        /// well. A peak whose boundaries the user set is not one of the candidates, and matches
+        /// none of them, which is the right answer for it.
         /// </para>
         /// </summary>
-        private static int SearchForChosenPeakIndex(TransitionDocNode[] nodeTrans,
-            OptStepChromatograms[] optStepChromatograms, CustomPeak[] customPeaks, int[] positions)
+        private static int SearchForChosenPeakIndex(TransitionGroupResults results, int replicateIndex,
+            ChromFileInfoId fileId, OptStepChromatograms[] optStepChromatograms)
         {
-            // A peak the user set is not one of the candidate peaks, so it says nothing about which
-            // one was chosen.
-            var eligible = Enumerable.Range(0, nodeTrans.Length).Where(iTran =>
-                !optStepChromatograms[iTran].IsEmpty && positions[iTran] >= 0 &&
-                customPeaks[iTran]?.HasPeakBounds != true).ToArray();
-            if (eligible.Length == 0)
+            if (results == null || !results.Peaks.TryGetValue(replicateIndex, fileId, out var precursorPeak))
             {
                 return -1;
             }
 
-            var chromatograms = eligible
-                .Select(iTran => optStepChromatograms[iTran].GetChromatogramForStep(0)).ToArray();
-            int numPeaks = chromatograms.Max(chromatogramInfo => chromatogramInfo?.NumPeaks ?? 0);
-            for (int peakIndex = 0; peakIndex < numPeaks; peakIndex++)
+            // Zero at both ends is a peak with no boundaries worked out, which matches nothing.
+            if (precursorPeak.StartTime == 0 && precursorPeak.EndTime == 0)
             {
-                bool matchesEvery = true;
-                for (int i = 0; i < eligible.Length && matchesEvery; i++)
+                return -1;
+            }
+
+            // The candidate peak groups line up across the transitions, so the first transition with
+            // a chromatogram answers for all of them.
+            foreach (var optStepChromatogram in optStepChromatograms)
+            {
+                var chromatogramInfo = optStepChromatogram.GetChromatogramForStep(0);
+                if (chromatogramInfo == null)
                 {
-                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Peaks.FlatValues[positions[eligible[i]]].Area;
-                    matchesEvery = chromatograms[i] != null && peakIndex < chromatograms[i].NumPeaks &&
-                                   chromatograms[i].GetPeak(peakIndex).Area == area;
+                    continue;
                 }
 
-                if (matchesEvery)
+                for (int peakIndex = 0; peakIndex < chromatogramInfo.NumPeaks; peakIndex++)
                 {
-                    return peakIndex;
+                    var candidate = chromatogramInfo.GetPeak(peakIndex);
+                    if (candidate.StartTime == precursorPeak.StartTime &&
+                        candidate.EndTime == precursorPeak.EndTime)
+                    {
+                        return peakIndex;
+                    }
                 }
+
+                return -1;
             }
 
             return -1;

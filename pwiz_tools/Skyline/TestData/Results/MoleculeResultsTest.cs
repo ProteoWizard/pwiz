@@ -246,12 +246,12 @@ namespace pwiz.SkylineTestData.Results
                         continue;
                     }
 
-                    int position = abbreviated.IndexOfFile(replicateIndex, chromInfo.FileId);
-                    Assert.AreNotEqual(-1, position);
-                    Assert.AreEqual(abbreviated.Peaks.FlatValues[position].Area, chromInfo.Area);
-                    Assert.AreEqual(abbreviated.GetUserSet(position), chromInfo.UserSet);
+                    Assert.IsTrue(abbreviated.Peaks.TryGetValue(replicateIndex, chromInfo.FileId, out var peak));
+                    Assert.AreEqual(peak.Area, chromInfo.Area);
+                    Assert.AreEqual(peak.UserSet, chromInfo.UserSet);
 
-                    var customPeak = abbreviated.GetCustomPeak(position);
+                    CustomPeak customPeak = null;
+                    abbreviated.CustomPeaks?.TryGetValue(replicateIndex, chromInfo.FileId, out customPeak);
                     if (customPeak?.HasPeakBounds == true)
                     {
                         // Reproduced by integrating between them rather than by finding a

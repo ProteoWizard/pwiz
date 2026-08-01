@@ -560,13 +560,46 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The position of one file's entry in one replicate, or -1. Callers find a position this
-        /// way rather than counting, since the entries of a replicate are in no order they can
-        /// rely on.
+        /// Which candidate peak one file of one replicate is on, or null when there is no peak there
+        /// or nothing has worked out which one it is. This is how a caller which has a file rather
+        /// than a position of these results asks: a position means nothing away from the map it
+        /// came from.
         /// </summary>
-        public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
+        public int? FindChosenPeakIndex(int replicateIndex, ChromFileInfoId fileId)
         {
-            return ChromFileIds.IndexOfFile(replicateIndex, fileId);
+            if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak))
+            {
+                return null;
+            }
+
+            return peak.ChosenPeakIndex < 0 ? (int?) null : peak.ChosenPeakIndex;
+        }
+
+        /// <summary>
+        /// The q value of one file of one replicate, or null when there is none. See
+        /// <see cref="FindChosenPeakIndex"/>.
+        /// </summary>
+        public float? FindQValue(int replicateIndex, ChromFileInfoId fileId)
+        {
+            if (!QValues.TryGetValue(replicateIndex, fileId, out float qValue))
+            {
+                return null;
+            }
+
+            return float.IsNaN(qValue) ? (float?) null : qValue;
+        }
+
+        /// <summary>
+        /// The annotations of one file of one replicate. See <see cref="FindChosenPeakIndex"/>.
+        /// </summary>
+        public Annotations FindAnnotations(int replicateIndex, ChromFileInfoId fileId)
+        {
+            if (!Annotations.TryGetValue(replicateIndex, fileId, out var annotations))
+            {
+                return Model.Annotations.EMPTY;
+            }
+
+            return annotations;
         }
 
         /// <summary>
@@ -971,11 +1004,23 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// The position of one file's entry in one replicate, or -1. See
-        /// <see cref="TransitionGroupResults.IndexOfFile"/>.
+        /// the positions of these results, which is where it means something.
         /// </summary>
-        public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
+        private int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
         {
             return ChromFileIds.IndexOfFile(replicateIndex, fileId);
+        }
+
+        /// <summary>
+        /// Records the boundaries of one file's peak, found by file. A file belongs to one
+        /// replicate, so it says which peak it is on its own, and the caller never holds a position
+        /// of these results.
+        /// </summary>
+        public TransitionResults ChangeCustomPeakBounds(ChromFileInfoId fileId, float startTime, float endTime,
+            PeakIdentification identified)
+        {
+            int position = ChromFileIds.IndexOfFile(fileId);
+            return position < 0 ? this : ChangeCustomPeakBounds(position, startTime, endTime, identified);
         }
 
         /// <summary>
