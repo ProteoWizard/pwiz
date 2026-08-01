@@ -481,7 +481,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 foreach (var position in results.GetPositions(replicateIndex))
                 {
-                    area += results.Areas.Values[position];
+                    area += results.Peaks.Values[position].Area;
                     anyPeak = true;
                 }
             }
@@ -2460,7 +2460,7 @@ namespace pwiz.Skyline.Model
                 // chromatogram - because none is loaded yet - has nothing to say, and must not
                 // replace what a document was read with.
                 var abbreviatedResults = TransitionResults.FromChromInfos(results);
-                if (abbreviatedResults?.Areas.Count > 0 && !SaysTheSame(nodeTran.AbbreviatedResults, abbreviatedResults))
+                if (abbreviatedResults?.Peaks.Values.Count > 0 && !SaysTheSame(nodeTran.AbbreviatedResults, abbreviatedResults))
                     nodeTran = nodeTran.ChangeAbbreviatedResults(abbreviatedResults);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);

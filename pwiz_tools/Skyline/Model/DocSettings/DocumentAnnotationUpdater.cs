@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (_transitionResultUpdater != null && results != null)
             {
                 var newCustomPeaks = results.CustomPeaks?.Values.ToList() ??
-                                     Enumerable.Repeat((CustomPeak) null, results.Areas.Values.Count).ToList();
+                                     Enumerable.Repeat((CustomPeak) null, results.Peaks.Values.Count).ToList();
                 _transitionResultUpdater.Update(results.ChromFileIds, transition.Results,
                     position => newCustomPeaks[position]?.Annotations ?? Annotations.EMPTY,
                     (position, annotations) =>

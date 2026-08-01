@@ -1070,7 +1070,7 @@ namespace pwiz.Skyline.Model.Serialization
         {
             WriteColumnarResults(writer, results?.ChromFileIds, EL.transition_results_columnar, (w, position) =>
             {
-                w.WriteAttribute(ATTR.area, results.Areas.Values[position]);
+                w.WriteAttribute(ATTR.area, results.Peaks.Values[position].Area);
                 w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
                 WriteCustomPeak(w, results.GetCustomPeak(position));
             });

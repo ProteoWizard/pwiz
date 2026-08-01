@@ -101,6 +101,100 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    /// <summary>
+    /// Everything one transition peak has: its area, and the flags which have to be answered over
+    /// the whole document without reading a chromatogram - quantification asks for
+    /// <see cref="IsTruncated"/> and <see cref="IsEmpty"/>, the peak count ratio for
+    /// <see cref="IsForcedIntegration"/>, and <see cref="PeptideDocNode.BestResult"/> for
+    /// <see cref="Identified"/>.
+    /// <para>
+    /// Twelve bytes: the area, two byte-wide enums, the three-state truncated flag and two bools,
+    /// padded. The flags are separate fields for now; packing them into one would take it to eight.
+    /// </para>
+    /// </summary>
+    public struct TransitionPeak
+    {
+        public TransitionPeak(float area, UserSet userSet, bool? isTruncated, bool isEmpty,
+            PeakIdentification identified, bool isForcedIntegration)
+        {
+            Area = area;
+            UserSet = userSet;
+            IsTruncated = isTruncated;
+            IsEmpty = isEmpty;
+            Identified = identified;
+            IsForcedIntegration = isForcedIntegration;
+        }
+
+        public float Area { get; private set; }
+
+        /// <summary>
+        /// Almost always <see cref="Results.UserSet.FALSE"/>.
+        /// </summary>
+        public UserSet UserSet { get; private set; }
+
+        /// <summary>
+        /// Whether the peak ran off the end of the chromatogram. Three states, as on
+        /// <see cref="TransitionChromInfo.IsTruncated"/>: null means nothing worked it out.
+        /// </summary>
+        public bool? IsTruncated { get; private set; }
+
+        /// <summary>
+        /// No peak at all, which is not the same as a peak whose area is zero: quantification
+        /// counts the first as missing and the second as measured, and <see cref="Area"/> is zero
+        /// either way.
+        /// </summary>
+        public bool IsEmpty { get; private set; }
+
+        public PeakIdentification Identified { get; private set; }
+
+        /// <summary>
+        /// Integrated only because integration was forced, which
+        /// <see cref="TransitionChromInfo.IsGoodPeak"/> excludes from the peak count.
+        /// </summary>
+        public bool IsForcedIntegration { get; private set; }
+
+        /// <summary>
+        /// Whether this counts towards the peak count ratio. See
+        /// <see cref="TransitionChromInfo.IsGoodPeak"/>, which decides the same thing from a chrom
+        /// info.
+        /// </summary>
+        public bool IsGoodPeak(bool integrateAll)
+        {
+            if (IsEmpty || !(Area > 0))
+            {
+                return false;
+            }
+
+            return integrateAll || !IsForcedIntegration;
+        }
+
+        public bool Equals(TransitionPeak other)
+        {
+            return Area.Equals(other.Area) && UserSet == other.UserSet &&
+                   IsTruncated == other.IsTruncated && IsEmpty == other.IsEmpty &&
+                   Identified == other.Identified && IsForcedIntegration == other.IsForcedIntegration;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TransitionPeak other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = Area.GetHashCode();
+                result = (result * 397) ^ (int) UserSet;
+                result = (result * 397) ^ IsTruncated.GetHashCode();
+                result = (result * 397) ^ IsEmpty.GetHashCode();
+                result = (result * 397) ^ (int) Identified;
+                result = (result * 397) ^ IsForcedIntegration.GetHashCode();
+                return result;
+            }
+        }
+    }
+
     public class TransitionGroupResults : Immutable
     {
         /// <summary>
@@ -207,13 +301,35 @@ namespace pwiz.Skyline.Model.Results
         /// kept for the parts which need to know where a peak came from rather than only
         /// where it is now - retention time alignment and peak imputation.
         /// <para>
-        /// These two often hold the same indexes, so an incoming list which equals the other one
-        /// is stored as that same instance rather than as a second copy. The chosen peak index
-        /// used to share with them as well, before it moved into <see cref="PrecursorPeak"/>.
+        /// A missing entry - <see cref="PrecursorPeak.NO_PEAK_INDEX"/> at a position, or a null map
+        /// altogether - means the same peak as <see cref="PrecursorPeak.ChosenPeakIndex"/>, which is
+        /// what nearly every position says. Read them with <see cref="GetOriginalPeakIndex"/> and
+        /// <see cref="GetReintegratedPeakIndex"/> rather than indexing, which would give the
+        /// sentinel instead of the peak.
         /// </para>
         /// </summary>
-        public ImmutableList<int> OriginalPeakIndexes { get; private set; }
-        public ImmutableList<int> ReintegratedPeakIndexes { get; private set; }
+        public ChromFileIdMap<int> OriginalPeakIndexes { get; private set; }
+        public ChromFileIdMap<int> ReintegratedPeakIndexes { get; private set; }
+
+        /// <summary>
+        /// Which candidate peak Skyline originally picked at one position, which is the chosen peak
+        /// unless something moved it. Null when neither is known.
+        /// </summary>
+        public int? GetOriginalPeakIndex(int position)
+        {
+            return GetPeakIndexOrChosen(OriginalPeakIndexes, position);
+        }
+
+        public int? GetReintegratedPeakIndex(int position)
+        {
+            return GetPeakIndexOrChosen(ReintegratedPeakIndexes, position);
+        }
+
+        private int? GetPeakIndexOrChosen(ChromFileIdMap<int> indexes, int position)
+        {
+            int index = indexes?.Values[position] ?? PrecursorPeak.NO_PEAK_INDEX;
+            return index < 0 ? GetChosenPeakIndex(position) : index;
+        }
 
         /// <summary>
         /// Almost always all <see cref="UserSet.FALSE"/>, which is why this gets stored
@@ -288,40 +404,39 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionGroupResults ChangeOriginalPeakIndexes(IEnumerable<int> value)
         {
-            return ChangeProp(ImClone(this),
-                im => im.OriginalPeakIndexes = im.ShareEqualIndexes(value?.ToImmutable()));
+            return ChangeProp(ImClone(this), im => im.OriginalPeakIndexes = MakePeakIndexMap(value));
         }
 
         public TransitionGroupResults ChangeReintegratedPeakIndexes(IEnumerable<int> value)
         {
-            return ChangeProp(ImClone(this),
-                im => im.ReintegratedPeakIndexes = im.ShareEqualIndexes(value?.ToImmutable()));
+            return ChangeProp(ImClone(this), im => im.ReintegratedPeakIndexes = MakePeakIndexMap(value));
         }
 
         /// <summary>
-        /// Returns whichever of the peak index lists already here holds the same indexes as
-        /// <paramref name="value"/>, so that the common case of the chosen, original and
-        /// reintegrated peaks all being the same costs one list instead of three.
-        /// <see cref="ImmutableList{T}"/> compares by contents, which is what makes this work.
+        /// A map holding only the indexes which differ from the chosen peak, the rest being
+        /// <see cref="PrecursorPeak.NO_PEAK_INDEX"/>, and null when none of them differs - which is
+        /// nearly every document, since a peak Skyline picked and never had moved is all three.
+        /// <para>
+        /// The values go through <see cref="ImmutableListFactory.ToImmutable{T}"/> so that a
+        /// document whose peaks were picked normally, with around ten candidates, stores each index
+        /// in a byte.
+        /// </para>
         /// </summary>
-        private ImmutableList<int> ShareEqualIndexes(ImmutableList<int> value)
+        private ChromFileIdMap<int> MakePeakIndexMap(IEnumerable<int> value)
         {
             if (value == null)
             {
                 return null;
             }
 
-            if (Equals(value, OriginalPeakIndexes))
+            var indexes = value.Select((index, position) =>
+                index == GetChosenPeakIndex(position) ? PrecursorPeak.NO_PEAK_INDEX : index).ToArray();
+            if (indexes.All(index => index == PrecursorPeak.NO_PEAK_INDEX))
             {
-                return OriginalPeakIndexes;
+                return null;
             }
 
-            if (Equals(value, ReintegratedPeakIndexes))
-            {
-                return ReintegratedPeakIndexes;
-            }
-
-            return value;
+            return new ChromFileIdMap<int>(ChromFileIds, indexes.ToImmutable());
         }
 
         public TransitionGroupResults ChangeQValues(IEnumerable<float> value)
@@ -387,8 +502,10 @@ namespace pwiz.Skyline.Model.Results
             }
 
             results = results
-                .ChangeOriginalPeakIndexes(MergeIndexes(sources, other, r => r.OriginalPeakIndexes))
-                .ChangeReintegratedPeakIndexes(MergeIndexes(sources, other, r => r.ReintegratedPeakIndexes));
+                .ChangeOriginalPeakIndexes(MergeIndexes(sources, other, r => r.OriginalPeakIndexes,
+                    (r, position) => r.GetOriginalPeakIndex(position)))
+                .ChangeReintegratedPeakIndexes(MergeIndexes(sources, other, r => r.ReintegratedPeakIndexes,
+                    (r, position) => r.GetReintegratedPeakIndex(position)));
             if (QValues != null || other.QValues != null)
             {
                 results = results.ChangeQValues(sources.Select(source =>
@@ -405,8 +522,15 @@ namespace pwiz.Skyline.Model.Results
                 sources.Select(source => source.Pick(this, other).GetAnnotations(source.Position)));
         }
 
+        /// <summary>
+        /// The merged indexes, read through <paramref name="getIndex"/> so that a position where
+        /// the map says nothing gives back the chosen peak rather than the sentinel. What
+        /// <see cref="MakePeakIndexMap"/> stores is worked out again against the merged chosen
+        /// peaks, which are not the same as either side's.
+        /// </summary>
         private IEnumerable<int> MergeIndexes(IList<MergeSource> sources, TransitionGroupResults other,
-            Func<TransitionGroupResults, ImmutableList<int>> getIndexes)
+            Func<TransitionGroupResults, ChromFileIdMap<int>> getIndexes,
+            Func<TransitionGroupResults, int, int?> getIndex)
         {
             if (getIndexes(this) == null && getIndexes(other) == null)
             {
@@ -414,10 +538,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return sources.Select(source =>
-            {
-                var indexes = getIndexes(source.Pick(this, other));
-                return indexes == null ? -1 : indexes[source.Position];
-            });
+                getIndex(source.Pick(this, other), source.Position) ?? PrecursorPeak.NO_PEAK_INDEX);
         }
 
         /// <summary>
@@ -595,12 +716,7 @@ namespace pwiz.Skyline.Model.Results
 
             var fileIds = new List<ChromFileInfoId>();
             var counts = new List<int>();
-            var areas = new List<float>();
-            var userSets = new List<UserSet>();
-            var truncated = new List<bool?>();
-            var emptyPeaks = new List<bool>();
-            var identified = new List<PeakIdentification>();
-            var forcedIntegration = new List<bool>();
+            var peaks = new List<TransitionPeak>();
             var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
             var customPeaks = new List<CustomPeak>();
             foreach (var chromInfoList in results)
@@ -618,12 +734,8 @@ namespace pwiz.Skyline.Model.Results
 
                     customPeaks.Add(MakeCustomPeak(chromInfo));
                     fileIds.Add(chromInfo.FileId);
-                    areas.Add(chromInfo.Area);
-                    userSets.Add(chromInfo.UserSet);
-                    truncated.Add(chromInfo.IsTruncated);
-                    emptyPeaks.Add(chromInfo.IsEmpty);
-                    identified.Add(chromInfo.Identified);
-                    forcedIntegration.Add(chromInfo.IsForcedIntegration);
+                    peaks.Add(new TransitionPeak(chromInfo.Area, chromInfo.UserSet, chromInfo.IsTruncated,
+                        chromInfo.IsEmpty, chromInfo.Identified, chromInfo.IsForcedIntegration));
                     count++;
                 }
 
@@ -631,12 +743,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var transitionResults =
-                new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
-                    .ChangeUserSets(userSets)
-                    .ChangeTruncated(truncated)
-                    .ChangeEmptyPeaks(emptyPeaks)
-                    .ChangeIdentified(identified)
-                    .ChangeForcedIntegration(forcedIntegration);
+                new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), peaks);
             // Null rather than a list of nothing but nulls, which is what nearly every document has.
             if (customPeaks.Any(customPeak => customPeak != null))
             {
@@ -680,80 +787,27 @@ namespace pwiz.Skyline.Model.Results
             return customPeak;
         }
 
-        public TransitionResults(ChromFileIds chromFileIds, IEnumerable<float> areas)
+        public TransitionResults(ChromFileIds chromFileIds, IEnumerable<TransitionPeak> peaks)
         {
-            Areas = new ChromFileIdMap<float>(chromFileIds, areas);
+            Peaks = new ChromFileIdMap<TransitionPeak>(chromFileIds, peaks);
         }
 
         /// <summary>
-        /// The area of each peak. Every value of a peak is its own map over the same
-        /// <see cref="Results.ChromFileIds"/>, and this is the one which is always there, so it is
-        /// also where the positions come from.
+        /// Everything every peak has: its area, and the handful of flags quantification and the
+        /// peak count ratio ask for over the whole document. One map of a struct rather than a map
+        /// per value, and the map the positions come from since it is always there.
         /// </summary>
-        public ChromFileIdMap<float> Areas { get; private set; }
+        public ChromFileIdMap<TransitionPeak> Peaks { get; private set; }
 
         public ChromFileIds ChromFileIds
         {
-            get { return Areas.ChromFileIds; }
+            get { return Peaks.ChromFileIds; }
         }
 
         /// <summary>
-        /// A map over the same positions as <see cref="Areas"/>, with the values stored through
-        /// <see cref="ImmutableListFactory.MaybeConstant{T}"/> so that a column saying the same
-        /// thing everywhere costs one entry. Null values give a null map, which is what a column
-        /// nothing has worked out looks like.
-        /// </summary>
-        private ChromFileIdMap<TValue> MakeMap<TValue>(IEnumerable<TValue> values)
-        {
-            return values == null
-                ? null
-                : new ChromFileIdMap<TValue>(ChromFileIds, ImmutableList.ValueOf(values).MaybeConstant());
-        }
-
-        /// <summary>
-        /// Almost always all <see cref="UserSet.FALSE"/>, which is why the values get stored
-        /// through <see cref="ImmutableListFactory.MaybeConstant{T}"/>.
-        /// </summary>
-        public ChromFileIdMap<UserSet> UserSets { get; private set; }
-
-        /// <summary>
-        /// Whether the peak at each position ran off the end of the chromatogram. Three states,
-        /// as on <see cref="TransitionChromInfo.IsTruncated"/>: null means nothing was worked out.
-        /// <para>
-        /// Kept per position rather than only for the peaks whose boundaries the user set, unlike
-        /// the other things which could be read back from the .skyd, because quantification asks
-        /// for it over the whole document and must not have to read a chromatogram to get it.
-        /// Nearly always uniform, so it collapses to a constant list.
-        /// </para>
-        /// </summary>
-        public ChromFileIdMap<bool?> Truncated { get; private set; }
-
-        /// <summary>
-        /// Whether each position has no peak at all, which is not the same as a peak whose area is
-        /// zero: quantification counts the first as missing and the second as measured. This is
-        /// what <see cref="TransitionChromInfo.IsEmpty"/> says, and it cannot be told from
-        /// <see cref="Areas"/>, which is zero either way.
-        /// </summary>
-        public ChromFileIdMap<bool> EmptyPeaks { get; private set; }
-
-        /// <summary>
-        /// Whether each peak contains an identification. Kept per position for the same reason as
-        /// <see cref="Truncated"/>: <see cref="PeptideDocNode.BestResult"/> scores every replicate
-        /// of every molecule with it, so it must not have to read a chromatogram to get it.
-        /// </summary>
-        public ChromFileIdMap<PeakIdentification> Identified { get; private set; }
-
-        /// <summary>
-        /// Whether each peak was integrated only because integration was forced, which
-        /// <see cref="TransitionChromInfo.IsGoodPeak"/> excludes from the peak count. Kept for the
-        /// same reason as <see cref="Identified"/>: the peak count ratio is shown for every
-        /// molecule in the tree, and must not cost a chromatogram read.
-        /// </summary>
-        public ChromFileIdMap<bool> ForcedIntegration { get; private set; }
-
-        /// <summary>
-        /// The positions which have something that cannot be derived from the .skyd file.
-        /// Sparse: most positions have no entry.
+        /// One entry per position, null where a peak has nothing which cannot be derived from the
+        /// .skyd file. Null altogether when no position has anything, which is nearly every
+        /// document.
         /// </summary>
         public ChromFileIdMap<CustomPeak> CustomPeaks { get; private set; }
 
@@ -807,29 +861,10 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public TransitionResults ChangeUserSets(IEnumerable<UserSet> value)
+        public TransitionResults ChangePeaks(IEnumerable<TransitionPeak> value)
         {
-            return ChangeProp(ImClone(this), im => im.UserSets = MakeMap(value));
-        }
-
-        public TransitionResults ChangeTruncated(IEnumerable<bool?> value)
-        {
-            return ChangeProp(ImClone(this), im => im.Truncated = MakeMap(value));
-        }
-
-        public TransitionResults ChangeEmptyPeaks(IEnumerable<bool> value)
-        {
-            return ChangeProp(ImClone(this), im => im.EmptyPeaks = MakeMap(value));
-        }
-
-        public TransitionResults ChangeIdentified(IEnumerable<PeakIdentification> value)
-        {
-            return ChangeProp(ImClone(this), im => im.Identified = MakeMap(value));
-        }
-
-        public TransitionResults ChangeForcedIntegration(IEnumerable<bool> value)
-        {
-            return ChangeProp(ImClone(this), im => im.ForcedIntegration = MakeMap(value));
+            return ChangeProp(ImClone(this),
+                im => im.Peaks = new ChromFileIdMap<TransitionPeak>(ChromFileIds, value));
         }
 
         /// <summary>
@@ -838,7 +873,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool? GetTruncated(int position)
         {
-            return Truncated == null ? null : Truncated.Values[position];
+            return Peaks.Values[position].IsTruncated;
         }
 
         /// <summary>
@@ -846,7 +881,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsEmptyPeak(int position)
         {
-            return EmptyPeaks != null && EmptyPeaks.Values[position];
+            return Peaks.Values[position].IsEmpty;
         }
 
         /// <summary>
@@ -855,7 +890,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public PeakIdentification GetIdentified(int position)
         {
-            return Identified == null ? PeakIdentification.FALSE : Identified.Values[position];
+            return Peaks.Values[position].Identified;
         }
 
         /// <summary>
@@ -865,12 +900,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsGoodPeak(int position, bool integrateAll)
         {
-            if (IsEmptyPeak(position) || !(Areas.Values[position] > 0))
-            {
-                return false;
-            }
-
-            return integrateAll || ForcedIntegration == null || !ForcedIntegration.Values[position];
+            return Peaks.Values[position].IsGoodPeak(integrateAll);
         }
 
         /// <summary>
@@ -885,8 +915,9 @@ namespace pwiz.Skyline.Model.Results
         {
             foreach (int position in ChromFileIds.ReplicatePositions[replicateIndex])
             {
-                yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, Areas.Values[position],
-                    GetTruncated(position), IsEmptyPeak(position));
+                var peak = Peaks.Values[position];
+                yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, peak.Area,
+                    peak.IsTruncated, peak.IsEmpty);
             }
         }
 
@@ -917,7 +948,7 @@ namespace pwiz.Skyline.Model.Results
             var newCustomPeak = (GetCustomPeak(position) ?? new CustomPeak())
                 .ChangePeakBounds(startTime, endTime, identified);
             return ChangeCustomPeaks(
-                CustomPeak.SetAtPosition(CustomPeaks?.Values, Areas.Values.Count, position, newCustomPeak));
+                CustomPeak.SetAtPosition(CustomPeaks?.Values, Peaks.Values.Count, position, newCustomPeak));
         }
 
         /// <summary>
@@ -944,7 +975,7 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            area = Areas.Values[position];
+            area = Peaks.Values[position].Area;
             return true;
         }
 
@@ -955,7 +986,7 @@ namespace pwiz.Skyline.Model.Results
 
         public UserSet GetUserSet(int position)
         {
-            return UserSets == null ? UserSet.FALSE : UserSets.Values[position];
+            return Peaks.Values[position].UserSet;
         }
 
         /// <summary>
@@ -975,40 +1006,7 @@ namespace pwiz.Skyline.Model.Results
                 new ChromFileIds(ReplicatePositions.FromCounts(counts),
                     sources.Select(source =>
                         source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
-                sources.Select(source => source.Pick(this, other).Areas.Values[source.Position]));
-            if (UserSets != null || other.UserSets != null)
-            {
-                results = results.ChangeUserSets(
-                    sources.Select(source => source.Pick(this, other).GetUserSet(source.Position)));
-            }
-
-            if (Truncated != null || other.Truncated != null)
-            {
-                results = results.ChangeTruncated(
-                    sources.Select(source => source.Pick(this, other).GetTruncated(source.Position)));
-            }
-
-            if (EmptyPeaks != null || other.EmptyPeaks != null)
-            {
-                results = results.ChangeEmptyPeaks(
-                    sources.Select(source => source.Pick(this, other).IsEmptyPeak(source.Position)));
-            }
-
-            if (Identified != null || other.Identified != null)
-            {
-                results = results.ChangeIdentified(
-                    sources.Select(source => source.Pick(this, other).GetIdentified(source.Position)));
-            }
-
-            if (ForcedIntegration != null || other.ForcedIntegration != null)
-            {
-                results = results.ChangeForcedIntegration(sources.Select(source =>
-                {
-                    var forcedIntegration = source.Pick(this, other).ForcedIntegration;
-                    return forcedIntegration != null && forcedIntegration.Values[source.Position];
-                }));
-            }
-
+                sources.Select(source => source.Pick(this, other).Peaks.Values[source.Position]));
             var customPeaks = MergeSource.MergeCustomPeaks(sources,
                 source => source.Pick(this, other).GetCustomPeak(source.Position));
             if (customPeaks != null)
@@ -1033,11 +1031,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         protected bool Equals(TransitionResults other)
         {
-            // No ChromFileIds of its own: every map carries it, and Areas is always there.
-            return Equals(Areas, other.Areas) &&
-                   Equals(UserSets, other.UserSets) && Equals(Truncated, other.Truncated) &&
-                   Equals(EmptyPeaks, other.EmptyPeaks) && Equals(Identified, other.Identified) &&
-                   Equals(ForcedIntegration, other.ForcedIntegration) &&
+            // No ChromFileIds of its own: every map carries it, and Peaks is always there.
+            return Equals(Peaks, other.Peaks) &&
                    Equals(CustomPeaks, other.CustomPeaks) &&
                    Equals(LegacyChromInfos, other.LegacyChromInfos);
         }
@@ -1061,12 +1056,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                int result = Areas.GetHashCode();
-                result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
-                result = (result * 397) ^ (Truncated?.GetHashCode() ?? 0);
-                result = (result * 397) ^ (EmptyPeaks?.GetHashCode() ?? 0);
-                result = (result * 397) ^ (Identified?.GetHashCode() ?? 0);
-                result = (result * 397) ^ (ForcedIntegration?.GetHashCode() ?? 0);
+                int result = Peaks.GetHashCode();
                 result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                 return result;

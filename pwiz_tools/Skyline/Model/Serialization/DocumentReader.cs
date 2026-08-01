@@ -1596,16 +1596,17 @@ namespace pwiz.Skyline.Model.Serialization
 
         private TransitionResults ReadColumnarTransitionResults(XmlReader reader)
         {
-            var areas = new List<float>();
-            var userSets = new List<UserSet>();
+            var peaks = new List<TransitionPeak>();
             var customPeaks = new List<CustomPeak>();
             var chromFileIds = ReadColumnarResults(reader, (r, position) =>
             {
-                areas.Add(r.GetFloatAttribute(ATTR.area));
-                userSets.Add(ReadUserSet(r));
+                // Only the area and the user set are written. Everything else about a transition
+                // peak is worked out again from the .skyd, and until then reads as not known.
+                peaks.Add(new TransitionPeak(r.GetFloatAttribute(ATTR.area), ReadUserSet(r), null, false,
+                    PeakIdentification.FALSE, false));
                 customPeaks.Add(ReadCustomPeak(r, AnnotationDef.AnnotationTarget.transition_result));
             });
-            var transitionResults = new TransitionResults(chromFileIds, areas).ChangeUserSets(userSets);
+            var transitionResults = new TransitionResults(chromFileIds, peaks);
             return customPeaks.All(customPeak => customPeak == null)
                 ? transitionResults
                 : transitionResults.ChangeCustomPeaks(customPeaks);
@@ -1661,8 +1662,9 @@ namespace pwiz.Skyline.Model.Serialization
 
                 // A transition is only left out when nothing was set on it, so its user sets are
                 // all FALSE, which is what a written out one would have said.
-                return new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), areas)
-                    .ChangeUserSets(Enumerable.Repeat(UserSet.FALSE, areas.Count));
+                return new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+                    areas.Select(area =>
+                        new TransitionPeak(area, UserSet.FALSE, null, false, PeakIdentification.FALSE, false)));
             }
         }
 

@@ -130,10 +130,10 @@ namespace pwiz.SkylineTestFunctional
                     continue;
                 }
 
-                for (int position = 0; position < results.Areas.Count; position++)
+                for (int position = 0; position < results.Peaks.Values.Count; position++)
                 {
                     var customPeak = results.GetCustomPeak(position);
-                    peaks.Add(string.Format(@"{0} {1} {2} {3}", results.Areas.Values[position],
+                    peaks.Add(string.Format(@"{0} {1} {2} {3}", results.Peaks.Values[position].Area,
                         results.GetUserSet(position), customPeak?.StartTime, customPeak?.EndTime));
                 }
             }

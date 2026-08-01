@@ -646,7 +646,7 @@ namespace pwiz.Skyline.Model.Results
                 bool matchesEvery = true;
                 for (int i = 0; i < eligible.Length && matchesEvery; i++)
                 {
-                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Areas.Values[positions[eligible[i]]];
+                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Peaks.Values[positions[eligible[i]]].Area;
                     matchesEvery = chromatograms[i] != null && peakIndex < chromatograms[i].NumPeaks &&
                                    chromatograms[i].GetPeak(peakIndex).Area == area;
                 }

@@ -659,7 +659,7 @@ namespace pwiz.Skyline.Model
                         double tranMeasured = 0;
                         foreach (int position in positions)
                         {
-                            float area = results.Areas.Values[position];
+                            float area = results.Peaks.Values[position].Area;
                             if (nodeTran.ParticipatesInScoring && area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += area;
@@ -2207,7 +2207,7 @@ namespace pwiz.Skyline.Model
             // From the columnar results, which record the reintegrated peak as an index into the
             // candidate peaks. A position which has none holds a negative index.
             return TransitionGroups.Any(tg =>
-                tg.AbbreviatedResults?.ReintegratedPeakIndexes?.Any(index => index >= 0) ?? false);
+                tg.AbbreviatedResults?.ReintegratedPeakIndexes?.Values.Any(index => index >= 0) ?? false);
         }
 
         #region object overrides
