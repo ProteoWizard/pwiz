@@ -248,7 +248,7 @@ namespace pwiz.SkylineTestData.Results
 
                     int position = abbreviated.IndexOfFile(replicateIndex, chromInfo.FileId);
                     Assert.AreNotEqual(-1, position);
-                    Assert.AreEqual(abbreviated.Areas[position], chromInfo.Area);
+                    Assert.AreEqual(abbreviated.Areas.Values[position], chromInfo.Area);
                     Assert.AreEqual(abbreviated.GetUserSet(position), chromInfo.UserSet);
 
                     var customPeak = abbreviated.GetCustomPeak(position);

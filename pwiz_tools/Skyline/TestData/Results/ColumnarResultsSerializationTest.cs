@@ -85,12 +85,12 @@ namespace pwiz.SkylineTestData.Results
                                 actualResults.ChromFileIds.ReplicatePositions.TotalCount));
                         Assert.AreEqual(expectedResults.ChromFileIds.FileIds.Count,
                             actualResults.ChromFileIds.FileIds.Count, @"file count");
-                        CollectionAssert.AreEqual(expectedResults.Areas.ToArray(),
-                            actualResults.Areas.ToArray(), @"areas");
-                        CollectionAssert.AreEqual(expectedResults.UserSets?.ToArray(),
-                            actualResults.UserSets?.ToArray(), @"user sets");
-                        CollectionAssert.AreEqual(expectedResults.CustomPeaks?.ToArray(),
-                            actualResults.CustomPeaks?.ToArray(), @"custom peaks");
+                        CollectionAssert.AreEqual(expectedResults.Areas.Values.ToArray(),
+                            actualResults.Areas.Values.ToArray(), @"areas");
+                        CollectionAssert.AreEqual(expectedResults.UserSets?.Values.ToArray(),
+                            actualResults.UserSets?.Values.ToArray(), @"user sets");
+                        CollectionAssert.AreEqual(expectedResults.CustomPeaks?.Values.ToArray(),
+                            actualResults.CustomPeaks?.Values.ToArray(), @"custom peaks");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
                         transitionsChecked++;
@@ -175,10 +175,10 @@ namespace pwiz.SkylineTestData.Results
                     {
                         var expectedAreas = expected.Current.AbbreviatedResults.Areas;
                         var actualAreas = actual.Current.AbbreviatedResults.Areas;
-                        CollectionAssert.AreEqual(expectedAreas.ToArray(), actualAreas.ToArray(),
-                            string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.Count,
-                                actualAreas.Count));
-                        sharedAreasChecked += expectedAreas.Count;
+                        CollectionAssert.AreEqual(expectedAreas.Values.ToArray(), actualAreas.Values.ToArray(),
+                            string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.Values.Count,
+                                actualAreas.Values.Count));
+                        sharedAreasChecked += expectedAreas.Values.Count;
                     }
                 }
 
@@ -218,11 +218,11 @@ namespace pwiz.SkylineTestData.Results
 
             var expectedResults = docMoved.MoleculeTransitions.First().AbbreviatedResults;
             var actualResults = docRoundTrip.MoleculeTransitions.First().AbbreviatedResults;
-            CollectionAssert.AreEqual(expectedResults.Areas.ToArray(), actualResults.Areas.ToArray(), @"areas");
-            CollectionAssert.AreEqual(expectedResults.UserSets.ToArray(), actualResults.UserSets.ToArray(),
-                @"user sets");
-            CollectionAssert.AreEqual(expectedResults.CustomPeaks?.ToArray(), actualResults.CustomPeaks?.ToArray(),
-                @"custom peaks");
+            CollectionAssert.AreEqual(expectedResults.Areas.Values.ToArray(), actualResults.Areas.Values.ToArray(), @"areas");
+            CollectionAssert.AreEqual(expectedResults.UserSets.Values.ToArray(),
+                actualResults.UserSets.Values.ToArray(), @"user sets");
+            CollectionAssert.AreEqual(expectedResults.CustomPeaks?.Values.ToArray(),
+                actualResults.CustomPeaks?.Values.ToArray(), @"custom peaks");
             Assert.IsNotNull(actualResults.CustomPeaks);
         }
 

@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Results
         /// One entry per transition group, in the order the doc node's children are in, since
         /// <see cref="DocNodeParent.FindNodeIndex(Identity)"/> makes that a fast lookup.
         /// </summary>
-        private ImmutableList<ReplicateMap<ChromatogramGroupInfo>> _chromatogramGroupInfos;
+        private ImmutableList<ChromFileIdMap<ChromatogramGroupInfo>> _chromatogramGroupInfos;
 
         private readonly Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator> _integrators =
             new Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator>();
@@ -646,7 +646,7 @@ namespace pwiz.Skyline.Model.Results
                 bool matchesEvery = true;
                 for (int i = 0; i < eligible.Length && matchesEvery; i++)
                 {
-                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Areas[positions[eligible[i]]];
+                    float area = nodeTrans[eligible[i]].AbbreviatedResults.Areas.Values[positions[eligible[i]]];
                     matchesEvery = chromatograms[i] != null && peakIndex < chromatograms[i].NumPeaks &&
                                    chromatograms[i].GetPeak(peakIndex).Area == area;
                 }
@@ -938,22 +938,38 @@ namespace pwiz.Skyline.Model.Results
             var measuredResults = Settings.MeasuredResults;
             _chromatogramGroupInfos = ImmutableList.ValueOf(PeptideDocNode.TransitionGroups.Select(nodeGroup =>
                 measuredResults == null
-                    ? ReplicateMap<ChromatogramGroupInfo>.EMPTY
+                    ? EmptyChromatogramGroupInfos()
                     : ReadTransitionGroup(measuredResults, nodeGroup)));
             _groupResults = new GroupResults[_chromatogramGroupInfos.Count];
         }
 
-        private ReplicateMap<ChromatogramGroupInfo> ReadTransitionGroup(MeasuredResults measuredResults,
+        private ChromFileIdMap<ChromatogramGroupInfo> ReadTransitionGroup(MeasuredResults measuredResults,
             TransitionGroupDocNode nodeGroup)
         {
             var chromatogramGroupInfos = new List<IList<ChromatogramGroupInfo>>();
+            var fileIds = new List<ChromFileInfoId>();
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
-                chromatogramGroupInfos.Add(ReadReplicate(measuredResults,
-                    measuredResults.Chromatograms[replicateIndex], nodeGroup));
+                var chromatograms = measuredResults.Chromatograms[replicateIndex];
+                var replicateGroupInfos = ReadReplicate(measuredResults, chromatograms, nodeGroup);
+                chromatogramGroupInfos.Add(replicateGroupInfos);
+                // One group info per file - ReadReplicate makes sure of that - so the files of the
+                // replicate are what its positions are keyed by.
+                fileIds.AddRange(replicateGroupInfos.Select(groupInfo => chromatograms.FindFile(groupInfo.FilePath)));
             }
 
-            return new ReplicateMap<ChromatogramGroupInfo>(chromatogramGroupInfos);
+            return new ChromFileIdMap<ChromatogramGroupInfo>(chromatogramGroupInfos, fileIds);
+        }
+
+        /// <summary>
+        /// What a molecule with no measured results has for each of its precursors: no replicates
+        /// and so no group infos.
+        /// </summary>
+        private static ChromFileIdMap<ChromatogramGroupInfo> EmptyChromatogramGroupInfos()
+        {
+            return new ChromFileIdMap<ChromatogramGroupInfo>(
+                new ChromFileIds(ReplicatePositions.FromCounts(new int[0]), new ChromFileInfoId[0]),
+                new ChromatogramGroupInfo[0]);
         }
 
         private IList<ChromatogramGroupInfo> ReadReplicate(MeasuredResults measuredResults,

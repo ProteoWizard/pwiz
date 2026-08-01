@@ -659,7 +659,7 @@ namespace pwiz.Skyline.Model
                         double tranMeasured = 0;
                         foreach (int position in positions)
                         {
-                            float area = results.Areas[position];
+                            float area = results.Areas.Values[position];
                             if (nodeTran.ParticipatesInScoring && area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += area;

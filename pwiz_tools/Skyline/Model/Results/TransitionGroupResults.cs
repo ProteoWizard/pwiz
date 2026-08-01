@@ -641,17 +641,39 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionResults(ChromFileIds chromFileIds, IEnumerable<float> areas)
         {
-            ChromFileIds = chromFileIds;
-            Areas = areas.ToImmutable();
+            Areas = new ChromFileIdMap<float>(chromFileIds, areas);
         }
-        public ChromFileIds ChromFileIds { get; private set; }
-        public ImmutableList<float> Areas { get; private set; }
 
         /// <summary>
-        /// Almost always all <see cref="UserSet.FALSE"/>, which is why this gets stored
+        /// The area of each peak. Every value of a peak is its own map over the same
+        /// <see cref="Results.ChromFileIds"/>, and this is the one which is always there, so it is
+        /// also where the positions come from.
+        /// </summary>
+        public ChromFileIdMap<float> Areas { get; private set; }
+
+        public ChromFileIds ChromFileIds
+        {
+            get { return Areas.ChromFileIds; }
+        }
+
+        /// <summary>
+        /// A map over the same positions as <see cref="Areas"/>, with the values stored through
+        /// <see cref="ImmutableListFactory.MaybeConstant{T}"/> so that a column saying the same
+        /// thing everywhere costs one entry. Null values give a null map, which is what a column
+        /// nothing has worked out looks like.
+        /// </summary>
+        private ChromFileIdMap<TValue> MakeMap<TValue>(IEnumerable<TValue> values)
+        {
+            return values == null
+                ? null
+                : new ChromFileIdMap<TValue>(ChromFileIds, ImmutableList.ValueOf(values).MaybeConstant());
+        }
+
+        /// <summary>
+        /// Almost always all <see cref="UserSet.FALSE"/>, which is why the values get stored
         /// through <see cref="ImmutableListFactory.MaybeConstant{T}"/>.
         /// </summary>
-        public ImmutableList<UserSet> UserSets { get; private set; }
+        public ChromFileIdMap<UserSet> UserSets { get; private set; }
 
         /// <summary>
         /// Whether the peak at each position ran off the end of the chromatogram. Three states,
@@ -663,7 +685,7 @@ namespace pwiz.Skyline.Model.Results
         /// Nearly always uniform, so it collapses to a constant list.
         /// </para>
         /// </summary>
-        public ImmutableList<bool?> Truncated { get; private set; }
+        public ChromFileIdMap<bool?> Truncated { get; private set; }
 
         /// <summary>
         /// Whether each position has no peak at all, which is not the same as a peak whose area is
@@ -671,14 +693,14 @@ namespace pwiz.Skyline.Model.Results
         /// what <see cref="TransitionChromInfo.IsEmpty"/> says, and it cannot be told from
         /// <see cref="Areas"/>, which is zero either way.
         /// </summary>
-        public ImmutableList<bool> EmptyPeaks { get; private set; }
+        public ChromFileIdMap<bool> EmptyPeaks { get; private set; }
 
         /// <summary>
         /// Whether each peak contains an identification. Kept per position for the same reason as
         /// <see cref="Truncated"/>: <see cref="PeptideDocNode.BestResult"/> scores every replicate
         /// of every molecule with it, so it must not have to read a chromatogram to get it.
         /// </summary>
-        public ImmutableList<PeakIdentification> Identified { get; private set; }
+        public ChromFileIdMap<PeakIdentification> Identified { get; private set; }
 
         /// <summary>
         /// Whether each peak was integrated only because integration was forced, which
@@ -686,13 +708,13 @@ namespace pwiz.Skyline.Model.Results
         /// same reason as <see cref="Identified"/>: the peak count ratio is shown for every
         /// molecule in the tree, and must not cost a chromatogram read.
         /// </summary>
-        public ImmutableList<bool> ForcedIntegration { get; private set; }
+        public ChromFileIdMap<bool> ForcedIntegration { get; private set; }
 
         /// <summary>
         /// The positions which have something that cannot be derived from the .skyd file.
         /// Sparse: most positions have no entry.
         /// </summary>
-        public ImmutableList<CustomPeak> CustomPeaks { get; private set; }
+        public ChromFileIdMap<CustomPeak> CustomPeaks { get; private set; }
 
         /// <summary>
         /// The chrom infos which have not been worked out from the .skyd file yet, each knowing its
@@ -746,27 +768,27 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionResults ChangeUserSets(IEnumerable<UserSet> value)
         {
-            return ChangeProp(ImClone(this), im => im.UserSets = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.UserSets = MakeMap(value));
         }
 
         public TransitionResults ChangeTruncated(IEnumerable<bool?> value)
         {
-            return ChangeProp(ImClone(this), im => im.Truncated = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.Truncated = MakeMap(value));
         }
 
         public TransitionResults ChangeEmptyPeaks(IEnumerable<bool> value)
         {
-            return ChangeProp(ImClone(this), im => im.EmptyPeaks = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.EmptyPeaks = MakeMap(value));
         }
 
         public TransitionResults ChangeIdentified(IEnumerable<PeakIdentification> value)
         {
-            return ChangeProp(ImClone(this), im => im.Identified = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.Identified = MakeMap(value));
         }
 
         public TransitionResults ChangeForcedIntegration(IEnumerable<bool> value)
         {
-            return ChangeProp(ImClone(this), im => im.ForcedIntegration = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.ForcedIntegration = MakeMap(value));
         }
 
         /// <summary>
@@ -775,7 +797,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool? GetTruncated(int position)
         {
-            return Truncated?[position];
+            return Truncated == null ? null : Truncated.Values[position];
         }
 
         /// <summary>
@@ -783,7 +805,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsEmptyPeak(int position)
         {
-            return EmptyPeaks != null && EmptyPeaks[position];
+            return EmptyPeaks != null && EmptyPeaks.Values[position];
         }
 
         /// <summary>
@@ -792,7 +814,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public PeakIdentification GetIdentified(int position)
         {
-            return Identified == null ? PeakIdentification.FALSE : Identified[position];
+            return Identified == null ? PeakIdentification.FALSE : Identified.Values[position];
         }
 
         /// <summary>
@@ -802,12 +824,12 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsGoodPeak(int position, bool integrateAll)
         {
-            if (IsEmptyPeak(position) || !(Areas[position] > 0))
+            if (IsEmptyPeak(position) || !(Areas.Values[position] > 0))
             {
                 return false;
             }
 
-            return integrateAll || ForcedIntegration == null || !ForcedIntegration[position];
+            return integrateAll || ForcedIntegration == null || !ForcedIntegration.Values[position];
         }
 
         /// <summary>
@@ -822,14 +844,14 @@ namespace pwiz.Skyline.Model.Results
         {
             foreach (int position in ChromFileIds.ReplicatePositions[replicateIndex])
             {
-                yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, Areas[position],
+                yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, Areas.Values[position],
                     GetTruncated(position), IsEmptyPeak(position));
             }
         }
 
         public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
         {
-            return ChangeProp(ImClone(this), im => im.CustomPeaks = ImmutableList.ValueOf(value));
+            return ChangeProp(ImClone(this), im => im.CustomPeaks = value == null ? null : new ChromFileIdMap<CustomPeak>(ChromFileIds, value));
         }
 
         /// <summary>
@@ -837,8 +859,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
         {
-            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks);
-            if (ReferenceEquals(newCustomPeaks, CustomPeaks))
+            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks?.Values);
+            if (ReferenceEquals(newCustomPeaks, CustomPeaks?.Values))
                 return this;
             return ChangeCustomPeaks(newCustomPeaks);
         }
@@ -854,7 +876,7 @@ namespace pwiz.Skyline.Model.Results
             var newCustomPeak = (GetCustomPeak(position) ?? new CustomPeak())
                 .ChangePeakBounds(startTime, endTime, identified);
             return ChangeCustomPeaks(
-                CustomPeak.SetAtPosition(CustomPeaks, Areas.Count, position, newCustomPeak));
+                CustomPeak.SetAtPosition(CustomPeaks?.Values, Areas.Values.Count, position, newCustomPeak));
         }
 
         /// <summary>
@@ -868,12 +890,12 @@ namespace pwiz.Skyline.Model.Results
 
         public CustomPeak GetCustomPeak(int position)
         {
-            return CustomPeaks?[position];
+            return CustomPeaks?.Values[position];
         }
 
         public UserSet GetUserSet(int position)
         {
-            return UserSets == null ? UserSet.FALSE : UserSets[position];
+            return UserSets == null ? UserSet.FALSE : UserSets.Values[position];
         }
 
         /// <summary>
@@ -893,7 +915,7 @@ namespace pwiz.Skyline.Model.Results
                 new ChromFileIds(ReplicatePositions.FromCounts(counts),
                     sources.Select(source =>
                         source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
-                sources.Select(source => source.Pick(this, other).Areas[source.Position]));
+                sources.Select(source => source.Pick(this, other).Areas.Values[source.Position]));
             if (UserSets != null || other.UserSets != null)
             {
                 results = results.ChangeUserSets(
@@ -923,7 +945,7 @@ namespace pwiz.Skyline.Model.Results
                 results = results.ChangeForcedIntegration(sources.Select(source =>
                 {
                     var forcedIntegration = source.Pick(this, other).ForcedIntegration;
-                    return forcedIntegration != null && forcedIntegration[source.Position];
+                    return forcedIntegration != null && forcedIntegration.Values[source.Position];
                 }));
             }
 
@@ -951,7 +973,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         protected bool Equals(TransitionResults other)
         {
-            return Equals(ChromFileIds, other.ChromFileIds) && Equals(Areas, other.Areas) &&
+            // No ChromFileIds of its own: every map carries it, and Areas is always there.
+            return Equals(Areas, other.Areas) &&
                    Equals(UserSets, other.UserSets) && Equals(Truncated, other.Truncated) &&
                    Equals(EmptyPeaks, other.EmptyPeaks) && Equals(Identified, other.Identified) &&
                    Equals(ForcedIntegration, other.ForcedIntegration) &&
@@ -978,8 +1001,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                int result = ChromFileIds.GetHashCode();
-                result = (result * 397) ^ Areas.GetHashCode();
+                int result = Areas.GetHashCode();
                 result = (result * 397) ^ (UserSets?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (Truncated?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (EmptyPeaks?.GetHashCode() ?? 0);

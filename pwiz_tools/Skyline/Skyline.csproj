@@ -627,8 +627,8 @@
     <Compile Include="Model\Databinding\DsvReportExporter.cs" />
     <Compile Include="Model\Databinding\ColumnResolver.cs" />
     <Compile Include="Model\Results\ChromFileIds.cs" />
+    <Compile Include="Model\Results\ChromFileIdMap.cs" />
     <Compile Include="Model\Results\PeptideResults.cs" />
-    <Compile Include="Model\Results\ReplicateMap.cs" />
     <Compile Include="Model\Results\TransitionGroupResults.cs" />
     <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />

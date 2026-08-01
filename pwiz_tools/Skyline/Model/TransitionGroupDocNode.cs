@@ -481,7 +481,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 foreach (var position in results.GetPositions(replicateIndex))
                 {
-                    area += results.Areas[position];
+                    area += results.Areas.Values[position];
                     anyPeak = true;
                 }
             }
