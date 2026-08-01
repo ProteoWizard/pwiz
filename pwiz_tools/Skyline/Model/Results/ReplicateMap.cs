@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return ReplicatePositions.EnumeratePositions(index)
+                return ReplicatePositions[index]
                     .Select(i => Items[i]);
             }
         }

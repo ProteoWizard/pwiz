@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     var replicate = new Replicate(SkylineDataSchema, replicateIndex);
                     int fileIndex = 0;
-                    foreach (var position in replicatePositions.EnumeratePositions(replicateIndex))
+                    foreach (var position in replicatePositions[replicateIndex])
                     {
                         var resultKey = new ResultKey(replicate, fileIndex++);
                         TResult resultObject;

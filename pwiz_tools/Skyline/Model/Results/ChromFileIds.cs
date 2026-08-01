@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<ChromFileInfoId> GetFileIds(int replicateIndex)
         {
-            return ReplicatePositions.EnumeratePositions(replicateIndex).Select(position => FileIds[position].Value);
+            return ReplicatePositions[replicateIndex].Select(position => FileIds[position].Value);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
         {
-            foreach (int position in ReplicatePositions.EnumeratePositions(replicateIndex))
+            foreach (int position in ReplicatePositions[replicateIndex])
             {
                 if (ReferenceEquals(FileIds[position].Value, fileId))
                 {

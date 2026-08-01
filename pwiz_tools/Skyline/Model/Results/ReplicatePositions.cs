@@ -1,10 +1,15 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class ReplicatePositions
+    /// <summary>
+    /// A list of replicates, each of which is the positions belonging to it, so that walking a
+    /// replicate is <c>replicatePositions[replicateIndex]</c>.
+    /// </summary>
+    public sealed class ReplicatePositions : IReadOnlyList<IEnumerable<int>>
     {
         private ImmutableList<int> _replicateEndPositions;
 
@@ -90,9 +95,28 @@ namespace pwiz.Skyline.Model.Results
         /// zero for one, so callers do not have to range check first.
         /// </para>
         /// </summary>
-        public IEnumerable<int> EnumeratePositions(int replicateIndex)
+        public IEnumerable<int> this[int replicateIndex]
         {
-            return Enumerable.Range(GetStart(replicateIndex), GetCount(replicateIndex));
+            get { return Enumerable.Range(GetStart(replicateIndex), GetCount(replicateIndex)); }
+        }
+
+        /// <summary>
+        /// How many replicates, which is what this is a list of. Not to be confused with
+        /// <see cref="TotalCount"/>, which is how many positions they hold between them.
+        /// </summary>
+        public int Count
+        {
+            get { return ReplicateCount; }
+        }
+
+        public IEnumerator<IEnumerable<int>> GetEnumerator()
+        {
+            return Enumerable.Range(0, ReplicateCount).Select(i => this[i]).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         public ReplicatePositions ChangeCountAt(int index, int newCount)

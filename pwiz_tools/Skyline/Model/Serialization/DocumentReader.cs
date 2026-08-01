@@ -1639,7 +1639,7 @@ namespace pwiz.Skyline.Model.Serialization
                 for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
                 {
                     int count = 0;
-                    foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
+                    foreach (int position in replicatePositions[replicateIndex])
                     {
                         if (AreasByPosition[position] == null)
                         {

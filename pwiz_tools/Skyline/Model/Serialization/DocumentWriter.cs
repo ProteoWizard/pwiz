@@ -1048,7 +1048,7 @@ namespace pwiz.Skyline.Model.Serialization
                  replicateIndex++)
             {
                 var chromatogramSet = chromatograms[replicateIndex];
-                foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
+                foreach (int position in replicatePositions[replicateIndex])
                 {
                     writer.WriteStartElement(EL.columnar_peak);
                     writer.WriteAttribute(ATTR.replicate, chromatogramSet.Name);
@@ -1129,7 +1129,7 @@ namespace pwiz.Skyline.Model.Serialization
             var areasByPosition = new float[results.ChromFileIds.FileIds.Count][];
             for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
             {
-                foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
+                foreach (int position in replicatePositions[replicateIndex])
                 {
                     var fileId = results.ChromFileIds.FileIds[position].Value;
                     var areas = new float[transitionResults.Length];

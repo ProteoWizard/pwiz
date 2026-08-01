@@ -411,7 +411,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<int> GetPositions(int replicateIndex)
         {
-            return ChromFileIds.ReplicatePositions.EnumeratePositions(replicateIndex);
+            return ChromFileIds.ReplicatePositions[replicateIndex];
         }
 
         /// <summary>
@@ -820,7 +820,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int replicateIndex)
         {
-            foreach (int position in ChromFileIds.ReplicatePositions.EnumeratePositions(replicateIndex))
+            foreach (int position in ChromFileIds.ReplicatePositions[replicateIndex])
             {
                 yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, Areas[position],
                     GetTruncated(position), IsEmptyPeak(position));
@@ -943,7 +943,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<int> GetPositions(int replicateIndex)
         {
-            return ChromFileIds.ReplicatePositions.EnumeratePositions(replicateIndex);
+            return ChromFileIds.ReplicatePositions[replicateIndex];
         }
 
         /// <summary>
@@ -1048,7 +1048,7 @@ namespace pwiz.Skyline.Model.Results
             for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
             {
                 int count = 0;
-                foreach (var position in fileIds.ReplicatePositions.EnumeratePositions(replicateIndex))
+                foreach (var position in fileIds.ReplicatePositions[replicateIndex])
                 {
                     int otherPosition = otherFileIds.IndexOfFile(replicateIndex, fileIds.FileIds[position].Value);
                     if (otherPosition >= 0 && otherIsUserSet(otherPosition))
@@ -1065,7 +1065,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // A peak the other results have for a file these have none for.
-                foreach (var otherPosition in otherFileIds.ReplicatePositions.EnumeratePositions(replicateIndex))
+                foreach (var otherPosition in otherFileIds.ReplicatePositions[replicateIndex])
                 {
                     if (fileIds.IndexOfFile(replicateIndex, otherFileIds.FileIds[otherPosition].Value) >= 0)
                     {

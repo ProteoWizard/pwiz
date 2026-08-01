@@ -372,7 +372,7 @@ namespace pwiz.SkylineTestData.Results
                 Assert.AreEqual(actualList.Count, oneReplicate.Count);
 
                 int i = 0;
-                foreach (int position in replicatePositions.EnumeratePositions(replicateIndex))
+                foreach (int position in replicatePositions[replicateIndex])
                 {
                     var rebuilt = actualList[i];
                     AssertGroupValuesEqual(rebuilt, oneReplicate[i]);

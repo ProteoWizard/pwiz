@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<int> GetPositions(int replicateIndex)
         {
-            return ChromFileIds.ReplicatePositions.EnumeratePositions(replicateIndex);
+            return ChromFileIds.ReplicatePositions[replicateIndex];
         }
 
         /// <summary>
