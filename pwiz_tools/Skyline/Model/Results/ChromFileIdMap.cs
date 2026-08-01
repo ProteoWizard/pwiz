@@ -104,11 +104,6 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
-        {
-            return ChromFileIds.IndexOfFile(replicateIndex, fileId);
-        }
-
         public IEnumerator<IEnumerable<T>> GetEnumerator()
         {
             return Enumerable.Range(0, Count).Select(replicateIndex => this[replicateIndex]).GetEnumerator();

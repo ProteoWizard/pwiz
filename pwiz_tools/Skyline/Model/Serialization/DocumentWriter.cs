@@ -1137,14 +1137,9 @@ namespace pwiz.Skyline.Model.Serialization
                     {
                         var transitionResult = transitionResults[iTran];
 
-                        // Looked up by file rather than by position: this position is the
-                        // precursor's, and a transition's positions are its own. Scoped to the
-                        // replicate, which is the entry or two belonging to it.
-                        int transitionPosition = transitionResult?.IndexOfFile(replicateIndex, fileId) ?? -1;
-                        if (transitionPosition < 0 ||
-                            transitionResult.GetUserSet(transitionPosition) != UserSet.FALSE ||
-                            transitionResult.GetCustomPeak(transitionPosition) != null ||
-                            !transitionResult.Areas.TryGetValue(replicateIndex, fileId, out float area))
+                        // Asked by file rather than by position: the position in hand is the
+                        // precursor's, and a transition's positions are its own.
+                        if (transitionResult?.TryGetPlainArea(replicateIndex, fileId, out float area) != true)
                         {
                             areas = null;
                             break;

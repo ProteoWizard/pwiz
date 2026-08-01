@@ -888,6 +888,25 @@ namespace pwiz.Skyline.Model.Results
             return ChromFileIds.IndexOfFile(replicateIndex, fileId);
         }
 
+        /// <summary>
+        /// Whether one file of one replicate has a peak here, and if so its area and whether
+        /// anything about it was the user's. Answered together so that a caller working across
+        /// objects - a precursor's positions are not its transitions' - never has to hold a
+        /// position of this one.
+        /// </summary>
+        public bool TryGetPlainArea(int replicateIndex, ChromFileInfoId fileId, out float area)
+        {
+            area = 0;
+            int position = ChromFileIds.IndexOfFile(replicateIndex, fileId);
+            if (position < 0 || GetUserSet(position) != UserSet.FALSE || GetCustomPeak(position) != null)
+            {
+                return false;
+            }
+
+            area = Areas.Values[position];
+            return true;
+        }
+
         public CustomPeak GetCustomPeak(int position)
         {
             return CustomPeaks?.Values[position];
