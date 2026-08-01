@@ -138,6 +138,34 @@ namespace pwiz.Skyline.Model.Results
                 .Select(i => i == index ? newCount : GetCount(i)));
         }
 
+        /// <summary>
+        /// The same positions without the replicates at the end which hold none, or null when that
+        /// leaves no positions at all.
+        /// <para>
+        /// Only the ones at the end go. A replicate with no positions in the middle is saying that
+        /// the replicate is there and has nothing, which the ones after it depend on to be at the
+        /// right index.
+        /// </para>
+        /// </summary>
+        public ReplicatePositions Normalize()
+        {
+            if (TotalCount == 0)
+            {
+                return null;
+            }
+
+            // Terminates because something is somewhere: TotalCount is not zero.
+            int replicateCount = ReplicateCount;
+            while (GetCount(replicateCount - 1) == 0)
+            {
+                replicateCount--;
+            }
+
+            return replicateCount == ReplicateCount
+                ? this
+                : FromCounts(Enumerable.Range(0, replicateCount).Select(GetCount));
+        }
+
         private bool Equals(ReplicatePositions other)
         {
             return _replicateEndPositions.Equals(other._replicateEndPositions);

@@ -296,6 +296,31 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// The map without the replicates at the end which have no entry, or null when it has no
+        /// entry at all. A caller which wants a map either way follows this with <c>?? Empty</c>.
+        /// <para>
+        /// Trailing empty replicates are what <see cref="Set"/> leaves behind when it grows a map to
+        /// reach a later replicate, and what <see cref="Remove"/> leaves when it takes the last
+        /// entry of the last replicate. Two maps holding the same entries but disagreeing about how
+        /// many replicates come after them are not equal, so anything which compares maps, or keeps
+        /// one for a long time, wants them normalized first.
+        /// </para>
+        /// </summary>
+        public ChromFileIdMap<T> Normalize()
+        {
+            var chromFileIds = ChromFileIds.Normalize();
+            if (chromFileIds == null)
+            {
+                return null;
+            }
+
+            // The values do not change: the replicates which go had none.
+            return ReferenceEquals(chromFileIds, ChromFileIds)
+                ? this
+                : new ChromFileIdMap<T>(chromFileIds, FlatValues);
+        }
+
+        /// <summary>
         /// The map without the entry for one file of one replicate, or this when there is no such
         /// entry. Null when it was the last entry, which is how a map holding nothing is stored.
         /// </summary>

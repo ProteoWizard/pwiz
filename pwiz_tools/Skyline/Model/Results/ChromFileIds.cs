@@ -119,6 +119,24 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// The same layout without the replicates at the end which have no file, or null when it
+        /// has no file at all. See <see cref="ReplicatePositions.Normalize"/>.
+        /// </summary>
+        public ChromFileIds Normalize()
+        {
+            var replicatePositions = ReplicatePositions.Normalize();
+            if (replicatePositions == null)
+            {
+                return null;
+            }
+
+            // The files do not change: the replicates which go had none.
+            return ReferenceEquals(replicatePositions, ReplicatePositions)
+                ? this
+                : new ChromFileIds(replicatePositions, FileIds.Select(fileId => fileId.Value));
+        }
+
+        /// <summary>
         /// The same layout without one file of one replicate, or this when that replicate has no
         /// entry for the file.
         /// </summary>

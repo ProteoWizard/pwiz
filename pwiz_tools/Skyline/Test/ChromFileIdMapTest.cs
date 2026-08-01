@@ -109,6 +109,37 @@ namespace pwiz.SkylineTest
                 .WithoutDefault(7));
         }
 
+        [TestMethod]
+        public void TestChromFileIdMapNormalize()
+        {
+            var fileIds = MakeFileIds(3);
+
+            // The replicates at the end which have nothing go, and the values are untouched.
+            var trailing = MakeMap(new[] { 1, 0, 1, 0, 0 }, new[] { fileIds[0], fileIds[1] }, new[] { 10, 11 });
+            var normalized = trailing.Normalize();
+            Assert.AreEqual(3, normalized.Count);
+            CollectionAssert.AreEqual(new[] { 10, 11 }, normalized.FlatValues.ToArray());
+
+            // A replicate in the middle with nothing stays: the ones after it are at an index which
+            // depends on it being there.
+            Assert.AreEqual(0, normalized.Values[1].Count);
+            CollectionAssert.AreEqual(new[] { 11 }, normalized.Values[2].ToArray());
+
+            // Nothing to drop gives the same instance back.
+            Assert.AreSame(normalized, normalized.Normalize());
+
+            // A map with no entry anywhere is nothing, however many replicates it covers.
+            Assert.IsNull(MakeMap(new[] { 0, 0 }, new ChromFileInfoId[0], new int[0]).Normalize());
+
+            // What Set leaves behind when it grows a map to reach a later replicate, and what
+            // Remove leaves when it takes the last entry of the last replicate.
+            var grown = MakeMap(new[] { 1 }, new[] { fileIds[0] }, new[] { 10 })
+                .Set(2, fileIds[1], 12);
+            Assert.AreEqual(3, grown.Count);
+            Assert.AreSame(grown, grown.Normalize());
+            Assert.AreEqual(1, grown.Remove(2, fileIds[1]).Normalize().Count);
+        }
+
         private static ChromFileInfoId[] MakeFileIds(int count)
         {
             return Enumerable.Range(0, count).Select(i => new ChromFileInfoId()).ToArray();
