@@ -115,14 +115,14 @@ namespace pwiz.SkylineTestData.Results
                         // together rather than as four lists.
                         CollectionAssert.AreEqual(expectedResults.Peaks.Values.ToArray(),
                             actualResults.Peaks.Values.ToArray(), @"peaks");
-                        CollectionAssert.AreEqual(expectedResults.QValues?.ToArray(),
-                            actualResults.QValues?.ToArray(), @"q values");
-                        CollectionAssert.AreEqual(expectedResults.ZScores?.ToArray(),
-                            actualResults.ZScores?.ToArray(), @"z scores");
-                        CollectionAssert.AreEqual(expectedResults.UserSets?.ToArray(),
-                            actualResults.UserSets?.ToArray(), @"user sets");
-                        CollectionAssert.AreEqual(expectedResults.Annotations?.ToArray(),
-                            actualResults.Annotations?.ToArray(), @"annotations");
+                        CollectionAssert.AreEqual(expectedResults.QValues?.Values.ToArray(),
+                            actualResults.QValues?.Values.ToArray(), @"q values");
+                        CollectionAssert.AreEqual(expectedResults.ZScores?.Values.ToArray(),
+                            actualResults.ZScores?.Values.ToArray(), @"z scores");
+                        CollectionAssert.AreEqual(expectedResults.UserSets?.Values.ToArray(),
+                            actualResults.UserSets?.Values.ToArray(), @"user sets");
+                        CollectionAssert.AreEqual(expectedResults.Annotations?.Values.ToArray(),
+                            actualResults.Annotations?.Values.ToArray(), @"annotations");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
                         for (int position = 0; position < expectedResults.Peaks.Values.Count; position++)

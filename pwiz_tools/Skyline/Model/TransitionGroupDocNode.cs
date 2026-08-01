@@ -999,8 +999,8 @@ namespace pwiz.Skyline.Model
                 // nothing.
                 var results = AbbreviatedResults;
                 if (results != null &&
-                    (results.UserSets?.Any(userSet => userSet != UserSet.FALSE) == true ||
-                     results.Annotations?.Any(a => !a.IsEmpty) == true))
+                    (results.UserSets?.Values.Any(userSet => userSet != UserSet.FALSE) == true ||
+                     results.Annotations?.Values.Any(a => !a.IsEmpty) == true))
                     return true;
                 return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
             }
@@ -3257,7 +3257,7 @@ namespace pwiz.Skyline.Model
         {
             int position = GetPrecursorAnnotationPosition(fileId);
             var results = AbbreviatedResults;
-            var newAnnotations = results.Annotations.ToList();
+            var newAnnotations = results.Annotations.Values.ToList();
             newAnnotations[position] = annotations ?? Annotations.EMPTY;
             return ChangeAbbreviatedResults(results.ChangeAnnotations(newAnnotations));
         }

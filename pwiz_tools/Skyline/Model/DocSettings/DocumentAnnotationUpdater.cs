@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var results = precursorDocNode.AbbreviatedResults;
                 if (_precursorResultUpdater != null && results != null)
                 {
-                    var newAnnotations = results.Annotations.ToList();
+                    var newAnnotations = results.Annotations.Values.ToList();
                     _precursorResultUpdater.Update(results.ChromFileIds, precursor.Results,
                         position => newAnnotations[position],
                         (position, annotations) => newAnnotations[position] = annotations);

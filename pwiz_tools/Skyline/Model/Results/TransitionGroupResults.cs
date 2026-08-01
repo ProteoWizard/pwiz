@@ -335,7 +335,7 @@ namespace pwiz.Skyline.Model.Results
         /// Almost always all <see cref="UserSet.FALSE"/>, which is why this gets stored
         /// through <see cref="ImmutableListFactory.MaybeConstant{T}"/>.
         /// </summary>
-        public ImmutableList<UserSet> UserSets { get; private set; }
+        public ChromFileIdMap<UserSet> UserSets { get; private set; }
 
         /// <summary>
         /// Scores which come from the peak scoring model and so cannot be derived from the
@@ -347,8 +347,8 @@ namespace pwiz.Skyline.Model.Results
         /// collapse to a constant list.
         /// </para>
         /// </summary>
-        public ImmutableList<float> QValues { get; private set; }
-        public ImmutableList<float> ZScores { get; private set; }
+        public ChromFileIdMap<float> QValues { get; private set; }
+        public ChromFileIdMap<float> ZScores { get; private set; }
 
         /// <summary>
         /// One entry per position, Annotations.EMPTY where a peak has none, which is nearly always.
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.Results
         /// every position.
         /// </para>
         /// </summary>
-        public ImmutableList<Annotations> Annotations { get; private set; }
+        public ChromFileIdMap<Annotations> Annotations { get; private set; }
 
         /// <summary>
         /// The chrom infos which have not been worked out from the .skyd file yet. Null once they
@@ -439,24 +439,42 @@ namespace pwiz.Skyline.Model.Results
             return new ChromFileIdMap<int>(ChromFileIds, indexes.ToImmutable());
         }
 
+        /// <summary>
+        /// A map over the same positions as <see cref="Peaks"/>, with the values stored through
+        /// <see cref="ImmutableListFactory.MaybeConstant{T}"/> so that one of these which says the
+        /// same thing everywhere - a document with no scoring model, or no annotations, or no peak
+        /// a user set - costs one entry rather than one for every position. Null values give a null
+        /// map, which is what a value nothing has worked out looks like.
+        /// <para>
+        /// These are the sparse values, each its own map. The values every peak has are in
+        /// <see cref="PrecursorPeak"/> instead, where being uniform would save nothing.
+        /// </para>
+        /// </summary>
+        private ChromFileIdMap<TValue> MakeMap<TValue>(IEnumerable<TValue> value)
+        {
+            return value == null
+                ? null
+                : new ChromFileIdMap<TValue>(ChromFileIds, ImmutableList.ValueOf(value).MaybeConstant());
+        }
+
         public TransitionGroupResults ChangeQValues(IEnumerable<float> value)
         {
-            return ChangeProp(ImClone(this), im => im.QValues = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.QValues = MakeMap(value));
         }
 
         public TransitionGroupResults ChangeZScores(IEnumerable<float> value)
         {
-            return ChangeProp(ImClone(this), im => im.ZScores = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.ZScores = MakeMap(value));
         }
 
         public TransitionGroupResults ChangeUserSets(IEnumerable<UserSet> value)
         {
-            return ChangeProp(ImClone(this), im => im.UserSets = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.UserSets = MakeMap(value));
         }
 
         public TransitionGroupResults ChangeAnnotations(IEnumerable<Annotations> value)
         {
-            return ChangeProp(ImClone(this), im => im.Annotations = ImmutableList.ValueOf(value).MaybeConstant());
+            return ChangeProp(ImClone(this), im => im.Annotations = MakeMap(value));
         }
 
         /// <summary>
@@ -465,8 +483,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TransitionGroupResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
         {
-            var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations);
-            if (ReferenceEquals(newAnnotations, Annotations))
+            var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations?.Values);
+            if (ReferenceEquals(newAnnotations, Annotations?.Values))
                 return this;
             return ChangeAnnotations(newAnnotations);
         }
@@ -570,12 +588,12 @@ namespace pwiz.Skyline.Model.Results
 
         public Annotations GetAnnotations(int position)
         {
-            return Annotations == null ? Model.Annotations.EMPTY : Annotations[position];
+            return Annotations == null ? Model.Annotations.EMPTY : Annotations.Values[position];
         }
 
         public UserSet GetUserSet(int position)
         {
-            return UserSets == null ? UserSet.FALSE : UserSets[position];
+            return UserSets == null ? UserSet.FALSE : UserSets.Values[position];
         }
 
         /// <summary>
@@ -613,12 +631,12 @@ namespace pwiz.Skyline.Model.Results
 
         public float? GetQValue(int position)
         {
-            return GetScore(QValues, position);
+            return GetScore(QValues?.Values, position);
         }
 
         public float? GetZScore(int position)
         {
-            return GetScore(ZScores, position);
+            return GetScore(ZScores?.Values, position);
         }
 
         private static float? GetScore(ImmutableList<float> scores, int position)
