@@ -524,34 +524,47 @@ namespace pwiz.Osprey.Tasks
             //    MapFeaturesByIdentity key), so each survivor's score is byte-identical to the
             //    old resident path. Keyed by (file, entry_id); entry_id is unique per file.
             var survivorScore = new Dictionary<(string, uint), double>();
-            foreach (var kvp in perFileEntries)
+            // Announce BEFORE the loop, not after it. This reads one reconciled parquet per file
+            // and on a 163-file Astral set that is ~212 GB off disk - measured at 34.9 min with
+            // no console output at all, because the summary line below is only reached once the
+            // loop finishes. A silent phase that long is indistinguishable from a hang, and it
+            // was read as one during the first 163-file run.
+            using (var progress = new ProgressReporter(
+                string.Format("{0}: reloading frozen-model features from {1} file(s)",
+                    mode, perFileEntries.Count),
+                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
-                    continue;
-                string effectiveParquetPath =
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
-                Dictionary<(uint, byte, uint), double[]> featByIdentity;
-                try
+                long nDone = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "{0}: failed to reload PIN features from {1}: {2}",
-                        mode, effectiveParquetPath, ex.Message));
-                    continue;
-                }
-                foreach (var e in kvp.Value)
-                {
-                    if (featByIdentity.TryGetValue(
-                            (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
-                        feats != null && feats.Length == nFeatures)
+                    progress.Report(nDone++);
+                    if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
+                        continue;
+                    string effectiveParquetPath =
+                        ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
+                    Dictionary<(uint, byte, uint), double[]> featByIdentity;
+                    try
                     {
-                        survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
+                        featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
                     }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "{0}: failed to reload PIN features from {1}: {2}",
+                            mode, effectiveParquetPath, ex.Message));
+                        continue;
+                    }
+                    foreach (var e in kvp.Value)
+                    {
+                        if (featByIdentity.TryGetValue(
+                                (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
+                            feats != null && feats.Length == nFeatures)
+                        {
+                            survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
+                        }
+                    }
+                    // featByIdentity released here (one file resident at a time).
                 }
-                // featByIdentity released here (one file resident at a time).
             }
 
             // 2. Reported survivors to emit (every post-reconciliation entry) + per-file scalar
