@@ -652,11 +652,18 @@ namespace pwiz.Osprey.FDR
 
                 public void Add(double score)
                 {
-                    // NaN first: every NaN comparison below is false, so it would reach the cast
-                    // and produce int.MinValue on net472 (throwing on _bins[-2147483648] mid-Stage
-                    // 5) or 0 on net8.0 (silently counting it as a score of RANGE_MIN). Drop it,
-                    // matching ComputeFloorFromDecoyScores, which filters NaN before sorting.
-                    if (double.IsNaN(score))
+                    // Reject non-finite BEFORE _count/_sum, matching the resident floor sample.
+                    // NaN: every NaN comparison below is false, so it would reach the cast and
+                    // produce int.MinValue on net472 (throwing on _bins[-2147483648] mid-Stage 5)
+                    // or 0 on net8.0 (silently counting it as a score of RANGE_MIN). Infinity:
+                    // the range checks below would route it to the overflow bucket correctly, but
+                    // it would already have entered _sum - and the MEAN branch of ComputeFloor
+                    // returns _sum / _count, so a single infinite decoy score makes the floor
+                    // infinite. AggregateScore's (n - _len) * floor is then 0 * Infinity == NaN for
+                    // even a FULLY detected group, poisoning every base_id through the shared
+                    // floor. Counting it and excluding it from the histogram would also make the
+                    // quantile rank disagree with the bins.
+                    if (!TargetDecoyCompetition.MeanBestNAcc.IsUsable(score))
                         return;
                     _count++;
                     _sum += score;

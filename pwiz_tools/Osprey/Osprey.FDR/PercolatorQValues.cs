@@ -715,8 +715,7 @@ namespace pwiz.Osprey.FDR
         /// (issue #4355 Part B, bounded q-value reconstruction). The full-length
         /// <see cref="ComputeExperimentPrecursorQvalues"/> wrapper simply expands this map,
         /// so the two share the SAME competition + conservative-q math and cannot drift.
-        /// </summary>
-        /// <summary>
+        ///
         /// <c>applyExperimentAgg</c> is false on the 2nd pass. OSPREY_EXPERIMENT_AGG is a
         /// FIRST-pass score by definition (see its docs), and two of its premises break on the
         /// post-reconciliation survivor pool: gap-fill rows are appended there, so a group's
@@ -788,10 +787,10 @@ namespace pwiz.Osprey.FDR
         /// Part B). The full-length <see cref="ComputeExperimentPeptideQvalues"/> wrapper
         /// expands this map, so both share the SAME best-per-peptide + competition +
         /// conservative-q math and cannot drift.
+        ///
+        /// <c>applyExperimentAgg</c> is false on the 2nd pass; see
+        /// <see cref="ComputeExperimentPrecursorQMap"/> for why the aggregation is first-pass only.
         /// </summary>
-        /// <summary><c>applyExperimentAgg</c> is false on the 2nd pass; see
-        /// <see cref="ComputeExperimentPrecursorQMap"/> for why the aggregation is first-pass
-        /// only.</summary>
         internal static Dictionary<string, double> ComputeExperimentPeptideQMap(
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
             bool applyExperimentAgg = true)

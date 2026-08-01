@@ -216,6 +216,37 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// An infinite DECOY score must not reach the floor SAMPLE either. This is a distinct hole
+        /// from the accumulator guard above: the floor is one global scalar, so with
+        /// OSPREY_MEANBEST2_FLOOR_MEAN the mean of the decoy sample goes infinite and then
+        /// AggregateScore's <c>(n - _len) * floor</c> is 0*Infinity == NaN for EVERY base_id,
+        /// including fully-detected target groups that never saw a bad value themselves. Exercises
+        /// the mean branch specifically, since the median/percentile branches route an infinity to
+        /// the out-of-range bucket instead.
+        /// </summary>
+        [TestMethod]
+        public void TestMeanBestNFloorSampleIgnoresInfinity()
+        {
+            OspreyEnvironment.MeanBest2FloorMean = true; // Restored by RestoreFloor.
+
+            // base10 is fully detected (2 of 2) and base20 is single-run, so base20 uses the floor.
+            // One decoy score is infinite; without the guard it makes the mean floor infinite and
+            // NaNs BOTH groups.
+            var scores = new[] { 5.0, 7.0, 4.0, -3.0, double.PositiveInfinity, -1.0 };
+            var labels = new[] { false, false, false, true, true, true };
+            var entryIds = new uint[]
+                { 10, 10, 20, 10 | DECOY_BIT, 20 | DECOY_BIT, 30 | DECOY_BIT };
+
+            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, 2);
+
+            foreach (double a in agg)
+                Assert.IsFalse(double.IsNaN(a), @"an infinite decoy score must not NaN the floor");
+            Assert.AreEqual(6.0, agg[0], 1e-12, @"fully-detected group is unaffected by the floor");
+            // Floor = mean of the finite decoys (-3, -1) = -2; base20 = (4 + -2)/2 = 1.
+            Assert.AreEqual(1.0, agg[2], 1e-12, @"single-run group uses the finite-only decoy mean");
+        }
+
+        /// <summary>
         /// A single-run experiment (every base_id at one member) makes the aggregation a uniform
         /// monotonic transform x -> (x + floor)/2, so competing on the aggregated scores produces
         /// the SAME ranked winner sequence (base_id + target/decoy) as competing on the raw scores.

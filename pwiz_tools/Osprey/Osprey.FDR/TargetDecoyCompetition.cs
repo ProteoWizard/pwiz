@@ -363,10 +363,15 @@ namespace pwiz.Osprey.FDR
             {
                 uint baseId = entryIds[idx] & PercolatorEntry.BASE_ID_MASK;
                 var dict = labels[idx] ? decoys : targets;
-                // NaN is dropped from the floor sample, matching StreamingDecoyFloor.Add: a NaN in
-                // this list would give List.Sort an inconsistent comparer and an undefined order,
-                // so the median read out of it would be arbitrary.
-                if (labels[idx] && !double.IsNaN(scores[idx]))
+                // Non-finite scores are dropped from the floor SAMPLE, matching both
+                // StreamingDecoyFloor.Add and MeanBestNAcc's own admission rule. NaN would give
+                // List.Sort an inconsistent comparer and an undefined order, so the median read
+                // out of it would be arbitrary. Infinity is worse than that: it only has to reach
+                // the MEAN branch below to make the floor infinite, and AggregateScore's
+                // (n - _len) * floor term is then 0 * Infinity == NaN for a FULLY detected group -
+                // so one infinite decoy score would poison every base_id in the experiment through
+                // the shared floor, not just its own group.
+                if (labels[idx] && MeanBestNAcc.IsUsable(scores[idx]))
                     decoyScores.Add(scores[idx]);
                 if (dict.TryGetValue(baseId, out MeanBestNAcc acc))
                 {
@@ -413,7 +418,7 @@ namespace pwiz.Osprey.FDR
             /// even for a FULLY detected group, so a single bad value would poison the entire
             /// experiment rather than one base_id. Spelled out rather than double.IsFinite because
             /// net472 does not have it.</summary>
-            private static bool IsUsable(double score)
+            internal static bool IsUsable(double score)
             {
                 return !double.IsNaN(score) && !double.IsInfinity(score);
             }
