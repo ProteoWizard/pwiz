@@ -15,6 +15,12 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromFileIds : Immutable
     {
+        /// <summary>
+        /// No replicates and so no files, which is what a map holding nothing is laid out by.
+        /// </summary>
+        public static readonly ChromFileIds EMPTY =
+            new ChromFileIds(ReplicatePositions.FromCounts(new int[0]), new ChromFileInfoId[0]);
+
         public ChromFileIds(ReplicatePositions replicatePositions, IEnumerable<ChromFileInfoId> fileIds)
         {
             ReplicatePositions = replicatePositions;

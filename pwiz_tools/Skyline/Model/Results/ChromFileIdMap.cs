@@ -49,6 +49,13 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromFileIdMap<T> : IReadOnlyList<IEnumerable<KeyValuePair<ChromFileInfoId, T>>>
     {
+        /// <summary>
+        /// A map holding nothing, which is what a value nobody has set is. Used instead of null, so
+        /// that a caller can ask any map for any file without checking first and get the same
+        /// answer - nothing there - either way.
+        /// </summary>
+        public static readonly ChromFileIdMap<T> EMPTY = new ChromFileIdMap<T>(ChromFileIds.EMPTY, new T[0]);
+
         public ChromFileIdMap(ChromFileIds chromFileIds, IEnumerable<T> values)
         {
             ChromFileIds = chromFileIds;
@@ -118,6 +125,15 @@ namespace pwiz.Skyline.Model.Results
         public int Count
         {
             get { return ReplicatePositions.ReplicateCount; }
+        }
+
+        /// <summary>
+        /// Whether the map holds no value at all. Not the same as having no replicates: a map can
+        /// cover every replicate and have an entry in none of them.
+        /// </summary>
+        public bool IsEmpty
+        {
+            get { return FlatValues.Count == 0; }
         }
 
         public IEnumerable<KeyValuePair<ChromFileInfoId, T>> this[int replicateIndex]
@@ -225,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Returns a new ChromFileIdMap with the entries removed that were equal to <paramref name="defaultValue"/>,
-        /// or null when that removes all of them - which is how a value nobody has set is stored.
+        /// or <see cref="EMPTY"/> when that removes all of them.
         /// <para>
         /// Returns this when there was nothing to remove, so a map which does not change stays
         /// reference equal.
@@ -273,7 +289,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (values.Count == 0)
             {
-                return null;
+                return EMPTY;
             }
 
             return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),

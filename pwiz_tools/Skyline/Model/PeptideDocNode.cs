@@ -2215,7 +2215,7 @@ namespace pwiz.Skyline.Model
             // From the columnar results, which record the reintegrated peak as an index into the
             // candidate peaks. A position which has none holds a negative index.
             return TransitionGroups.Any(tg =>
-                tg.AbbreviatedResults?.ReintegratedPeakIndexes?.FlatValues.Any(index => index >= 0) ?? false);
+                tg.AbbreviatedResults?.ReintegratedPeakIndexes.FlatValues.Any(index => index >= 0) ?? false);
         }
 
         #region object overrides
