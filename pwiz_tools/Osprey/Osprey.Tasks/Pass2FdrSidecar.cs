@@ -108,11 +108,17 @@ namespace pwiz.Osprey.Tasks
                                     OspreyEnvironment.Pass2TransferCompete;
             if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
-                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths, out string pass1Agg);
                 if (reloaded != null)
                 {
-                    ctx.Publish(new FirstPassPercolatorModel { Results = reloaded });
-                    ctx.LogInfo(@"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass.");
+                    // pass1Agg is what the TRAINING process ran under (null on a sidecar written
+                    // before the field existed). This node's own OSPREY_EXPERIMENT_AGG says
+                    // nothing about it, so carry the recorded value rather than re-reading.
+                    ctx.Publish(new FirstPassPercolatorModel { Results = reloaded, ExperimentAgg = pass1Agg });
+                    ctx.LogInfo(string.Format(
+                        @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
+                        @"experiment aggregation: {0}).",
+                        pass1Agg ?? @"not recorded"));
                 }
             }
 
@@ -493,6 +499,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PercolatorResults frozenModel,
+            string pass1ExperimentAgg,
             HashSet<uint> stratumBaseIds = null)
         {
             // stratumBaseIds == null -> transfer-compete (full-population competition).
@@ -605,6 +612,62 @@ namespace pwiz.Osprey.Tasks
                 proteinCompact ? ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"
                                : ", full-population null"));
 
+            // This competition reduces per base_id by MAX, and BOTH modes that reach it then
+            // overwrite the reported experiment q from that reduction. Neither is compatible with
+            // a mean(best-N) 1st pass, in two different ways:
+            //
+            //   protein-compact assembles the reported column from TWO sources - on-stratum
+            //   survivors get the max-aggregated value computed here, off-stratum survivors keep
+            //   their 1st-pass mean(best-N) q (the `continue` in the map-back below). One column,
+            //   two aggregations, and no way for a consumer to tell which row used which.
+            //
+            //   transfer-compete rewrites EVERY survivor, so its column is at least internally
+            //   consistent - but it is consistently MAX, silently discarding the mean(best-N)
+            //   statistic the operator asked for and reporting a reproducibility-weighted run as
+            //   an ordinary one. Uniformly wrong is not better than mixed here, because the run
+            //   is indistinguishable from a max run in its own output.
+            //
+            // Refuse both rather than emit either: a number a user would reasonably trust and
+            // cannot audit is worse than an error. Making the streamed competition itself
+            // aggregate-aware is the real fix and is deliberately NOT folded in - it depends on
+            // the gap-fill run-count exclusion, which is its own design (issue #4511).
+            //
+            // Gated on the arm the FIRST PASS recorded, not on this process's environment: a
+            // --task SecondPassFDR merge node reloads the frozen model from disk and never
+            // trained pass 1, so its own OSPREY_EXPERIMENT_AGG is unrelated to the q-values it is
+            // about to rewrite. Reading the live process was wrong in both directions - unset on
+            // the merge node emitted a mixed column with no refusal, and a stale exported
+            // variable aborted a consistent run.
+            // A sidecar written before the arm was recorded reports null. Null means UNKNOWN, not
+            // "max", so fall back to this process's variable and SAY SO - an inferred answer the
+            // operator can see beats a silent one, and it is exactly the pre-provenance behavior
+            // for exactly the artifacts that predate provenance.
+            bool armRecorded = pass1ExperimentAgg != null;
+            string pass1Arm = armRecorded ? pass1ExperimentAgg : OspreyEnvironment.ExperimentAgg;
+            if (OspreyEnvironment.IsMeanBestArm(pass1Arm))
+            {
+                throw new InvalidOperationException(string.Format(
+                    "OSPREY_PASS2_QVALUE={0} cannot be combined with a 1st pass run under " +
+                    "OSPREY_EXPERIMENT_AGG={1}{2}. This mode recomputes the reported experiment q " +
+                    "from a MAX-aggregated competition, which {3}. Use OSPREY_PASS2_QVALUE={4}, " +
+                    "which carries the 1st-pass mean(best-N) q through unchanged, for a " +
+                    "mean(best-N) arm.",
+                    proteinCompact
+                        ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
+                        : OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
+                    pass1Arm,
+                    armRecorded
+                        ? " (recorded in the 1st-pass model sidecar)"
+                        : " (INFERRED from this process's environment - the 1st-pass model sidecar " +
+                          "predates arm recording and does not say which arm trained it)",
+                    proteinCompact
+                        ? "would leave on-stratum precursors max-aggregated and off-stratum " +
+                          "precursors on their 1st-pass mean(best-N) q - one column, two statistics"
+                        : "would replace every precursor's mean(best-N) q with a max q, making the " +
+                          "run indistinguishable from a default run in its own output",
+                    OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            }
+
             // 3. Streamed full-population competition + run/experiment precursor q + PEP. Only one
             //    file's scalars are resident at a time; the cross-file state is bounded by the
             //    number of distinct precursors, not the total observation count -- so peak memory
@@ -700,7 +763,8 @@ namespace pwiz.Osprey.Tasks
                         stratum = pcStratum.BaseIds;
                 }
                 if (haveInputs && ComputePass2TransferCompeteFull(
-                        ctx, perFileEntries, perFileParquetPaths, config, frozen.Results, stratum))
+                        ctx, perFileEntries, perFileParquetPaths, config, frozen.Results,
+                        frozen.ExperimentAgg, stratum))
                 {
                     // Frozen recompute streamed the score pass + wrote q/PEP onto the
                     // survivors; the resident full-feature reload below is skipped.

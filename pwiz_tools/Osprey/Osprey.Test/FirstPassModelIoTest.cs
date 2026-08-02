@@ -82,11 +82,17 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model), @"SVM model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3"),
+                    @"SVM model should persist");
                 Assert.IsTrue(File.Exists(path), @"sidecar should exist after Save");
 
-                var reloaded = FirstPassModelIO.Load(path);
+                var reloaded = FirstPassModelIO.Load(path, out string reloadedAgg);
                 Assert.IsNotNull(reloaded, @"reloaded model should not be null");
+
+                // Pass-1 provenance survives the round trip. This is what lets a --task
+                // SecondPassFDR merge node - which never trained pass 1 - gate on the arm that
+                // actually produced the q-values instead of on its own environment.
+                Assert.AreEqual(@"mean-best-3", reloadedAgg, @"recorded pass-1 aggregation arm");
 
                 // Structural bit-parity.
                 Assert.AreEqual(model.Standardizer.NumFeatures, reloaded.Standardizer.NumFeatures, @"NumFeatures");
@@ -137,9 +143,10 @@ namespace pwiz.Osprey.Test
                 {
                     Standardizer = FeatureStandardizer.FromMeansStds(new[] { 0.0, 1.0 }, new[] { 1.0, 1.0 }),
                 };
-                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights), @"model without linear weights should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, @"max"),
+                    @"model without linear weights should not persist");
                 Assert.IsFalse(File.Exists(path), @"no sidecar should be written when Save declines");
-                Assert.IsFalse(FirstPassModelIO.Save(path, null), @"null model should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, null, @"max"), @"null model should not persist");
             }
             finally
             {
@@ -154,7 +161,9 @@ namespace pwiz.Osprey.Test
             // Absent sidecar -> null (the caller then fails fast exactly as before persistence).
             string missing = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_missing_" + Guid.NewGuid().ToString(@"N") + @".json");
-            Assert.IsNull(FirstPassModelIO.Load(missing), @"missing sidecar should load as null");
+            Assert.IsNull(FirstPassModelIO.Load(missing, out string missingAgg),
+                @"missing sidecar should load as null");
+            Assert.IsNull(missingAgg, @"no arm can be reported when nothing loaded");
         }
 
         [TestMethod]
@@ -180,6 +189,18 @@ namespace pwiz.Osprey.Test
             AssertLoadsNull(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0, 0.0] }", @"bias/fold count mismatch");
+
+            // A sidecar written BEFORE the arm was recorded must still load - the field was added
+            // without bumping SchemaVersion precisely so pre-existing sidecars stay readable, and
+            // a merge node that could not read one would hard fail-fast instead of degrading.
+            // The arm then reports null, which the caller must treat as UNKNOWN, not as "max".
+            AssertLoadsWithArm(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", null, @"pre-provenance sidecar");
+            AssertLoadsWithArm(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""ExperimentAgg"": ""mean-best-2"" }",
+                @"mean-best-2", @"sidecar with a recorded arm");
         }
 
         private static void AssertLoadsNull(string json, string what)
@@ -189,7 +210,24 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, json);
-                Assert.IsNull(FirstPassModelIO.Load(path), what + @" should load as null");
+                Assert.IsNull(FirstPassModelIO.Load(path, out _), what + @" should load as null");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+
+        private static void AssertLoadsWithArm(string json, string expectedArm, string what)
+        {
+            string path = Path.Combine(Path.GetTempPath(),
+                @"osprey_model_arm_" + Guid.NewGuid().ToString(@"N") + @".json");
+            try
+            {
+                File.WriteAllText(path, json);
+                Assert.IsNotNull(FirstPassModelIO.Load(path, out string arm), what + @" should load");
+                Assert.AreEqual(expectedArm, arm, what + @" arm");
             }
             finally
             {

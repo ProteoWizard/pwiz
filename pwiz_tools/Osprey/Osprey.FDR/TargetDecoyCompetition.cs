@@ -339,19 +339,28 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Per-row reproducibility score for the experiment-wide competitions when
-        /// OSPREY_EXPERIMENT_AGG=mean-best-2: every row receives its (base_id, target/decoy)
-        /// group's MEAN of best-2 per-run scores -- the mean of the group's two highest member
-        /// scores, or mean(single score, decoy floor) for a single-run group. Stage-4 dedup
-        /// guarantees at most one entry per base_id per file, so a group's members ARE its per-run
-        /// scores and the top-2 are the top-2 distinct runs (the invariant behind nRunsDetected ==
-        /// observation count). Because every row of a group gets the SAME value, feeding this array
-        /// to the existing max-based experiment competition (<see cref="CompeteAll"/> -- the
-        /// max-per-base_id reduction becomes a no-op) and the
+        /// OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: every row receives its (base_id, target/decoy)
+        /// group's MEAN of best-N per-run scores - the mean of the group's N highest member
+        /// scores, with each of the (N - k) undetected runs of a k-run group (k &lt; N)
+        /// contributing the decoy floor. Stage-4 dedup guarantees at most one entry per base_id
+        /// per file, so a group's members ARE its per-run scores and the top-N are the top-N
+        /// distinct runs (the invariant behind nRunsDetected == observation count).
+        ///
+        /// Because every row of a group gets the SAME value, feeding this array to the existing
+        /// max-based experiment competition (<see cref="CompeteAll"/> - the max-per-base_id
+        /// reduction becomes a no-op) and the
         /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> roll-up yields precursor =
-        /// mean-best-2 and peptide = max over its precursors, with decoys treated identically so the
-        /// null stays honest. A single-file run -- every group at one member -- is a uniform
-        /// monotonic transform x -&gt; (x + floor)/2, so ranking and every q are unchanged from the
-        /// max path.
+        /// mean(best-N) and peptide = max over its precursors, with decoys treated identically so
+        /// the null stays honest. The roll-up stops at PEPTIDE: protein FDR ranks groups by the
+        /// max RAW per-peptide SVM score (<c>ProteinFdr.CollectBestPeptideScores</c>), which never
+        /// reads this aggregate, so mean(best-N) reaches protein-level results only indirectly,
+        /// through which peptides clear the experiment-q gate.
+        ///
+        /// A single-file run - every group at one member - is the uniform monotonic transform
+        /// x -&gt; (x + (N - 1) * floor) / N, so ranking and every q are unchanged from the max
+        /// path. The same holds for any N at or above the largest observation count, which is why
+        /// N above the run count is refused rather than silently accepted
+        /// (<see cref="OspreyEnvironment.ValidateExperimentAggSettings"/>).
         /// </summary>
         internal static double[] ComputeBaseIdMeanBestN(double[] scores, bool[] labels, uint[] entryIds, int bestN)
         {
@@ -363,7 +372,15 @@ namespace pwiz.Osprey.FDR
             {
                 uint baseId = entryIds[idx] & PercolatorEntry.BASE_ID_MASK;
                 var dict = labels[idx] ? decoys : targets;
-                if (labels[idx])
+                // Non-finite scores are dropped from the floor SAMPLE, matching both
+                // StreamingDecoyFloor.Add and MeanBestNAcc's own admission rule. NaN would give
+                // List.Sort an inconsistent comparer and an undefined order, so the median read
+                // out of it would be arbitrary. Infinity is worse than that: it only has to reach
+                // the MEAN branch below to make the floor infinite, and AggregateScore's
+                // (n - _len) * floor term is then 0 * Infinity == NaN for a FULLY detected group -
+                // so one infinite decoy score would poison every base_id in the experiment through
+                // the shared floor, not just its own group.
+                if (labels[idx] && MeanBestNAcc.IsUsable(scores[idx]))
                     decoyScores.Add(scores[idx]);
                 if (dict.TryGetValue(baseId, out MeanBestNAcc acc))
                 {
@@ -404,15 +421,42 @@ namespace pwiz.Osprey.FDR
             private int _len;      // slots used == min(Count, N)
             public int Count;      // total observations seen
 
+            /// <summary>True for a score this accumulator will admit. NaN and +/-Infinity are both
+            /// excluded: a NaN can never be evicted (every comparison against it is false) and an
+            /// infinite floor makes AggregateScore's <c>(n - _len) * floor</c> term 0*Inf = NaN
+            /// even for a FULLY detected group, so a single bad value would poison the entire
+            /// experiment rather than one base_id. Spelled out rather than double.IsFinite because
+            /// net472 does not have it.</summary>
+            internal static bool IsUsable(double score)
+            {
+                return !double.IsNaN(score) && !double.IsInfinity(score);
+            }
+
             public static MeanBestNAcc First(double score, int n)
             {
+                // An unusable FIRST observation must not seed the buffer - it would occupy _top[0]
+                // permanently for exactly the reasons Add guards against. Seeding empty is correct
+                // and not a special case: AggregateScore over _len == 0 is (n * floor) / n, the
+                // floor, which is what "this unit has no valid observations" should score.
                 var top = new double[n];
+                if (!IsUsable(score))
+                    return new MeanBestNAcc { _top = top, _len = 0, Count = 0 };
                 top[0] = score;
                 return new MeanBestNAcc { _top = top, _len = 1, Count = 1 };
             }
 
             public void Add(double score, int n)
             {
+                // A NaN would be permanent: `_top[i] > score` is false for NaN so it lands in the
+                // highest slot and breaks the ascending invariant, `score > _top[0]` is false
+                // against NaN so it can never be evicted, and AggregateScore then returns NaN for
+                // EVERY row of this base_id - which loses the competition silently (a NaN fails
+                // `tScore > decoyEntry.Value`) and can strand a whole peptide in
+                // AccumulatePeptideReps. The MAX aggregation this replaces was structurally immune,
+                // so the guard is new surface, not an inherited gap. Dropping the observation
+                // matches what max did with it: nothing.
+                if (!IsUsable(score))
+                    return;
                 Count++;
                 if (_len < n)
                 {
@@ -456,8 +500,14 @@ namespace pwiz.Osprey.FDR
         /// decision boundary and would drag a missing unit UP toward detection).
         /// OSPREY_MEANBEST2_FLOOR_MEAN switches to the decoy mean; OSPREY_MEANBEST2_FLOOR_PCT to a
         /// low decoy percentile (a harder reproducibility cut). Returns 0 only when there are no
-        /// decoys. Sorts <paramref name="decoyScores"/> in place.</summary>
-        private static double ComputeFloorFromDecoyScores(List<double> decoyScores)
+        /// decoys. Sorts <paramref name="decoyScores"/> in place.
+        ///
+        /// Internal (not private) so the parity test can compare it DIRECTLY against its bounded
+        /// streaming twin (<c>StreamingFdr.StreamingFirstPassQ.ComputeDecoyFloor</c>). The two are
+        /// different estimators of the same statistic - an exact sorted quantile versus a
+        /// fixed-width histogram - so they can never be asserted equal through the q-values alone,
+        /// and the difference was previously untestable at any level.</summary>
+        internal static double ComputeFloorFromDecoyScores(List<double> decoyScores)
         {
             if (decoyScores.Count == 0)
                 return 0.0;
