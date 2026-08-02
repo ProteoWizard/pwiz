@@ -812,6 +812,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Everything drawn from here on is of this document, however many times the container
             // changes its own while the drawing happens.
             SetDocument(_documentContainer.DocumentUI);
+            PruneMoleculeResults();
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
             GraphHelper.FormatFontSize(graphControl.GraphPane,Settings.Default.ChromatogramFontSize);
@@ -2865,10 +2866,36 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// Drops what was read for any molecule which is no longer charted. One of these holds
+        /// every chromatogram it read, so a molecule which was selected once and has not been
+        /// since is the most expensive thing this graph can go on holding.
+        /// <para>
+        /// A selection at any level counts: selecting a protein charts all of its molecules, so
+        /// each selected node is expanded to the molecules under it.
+        /// </para>
+        /// </summary>
+        private void PruneMoleculeResults()
+        {
+            if (_moleculeResultsByPeptide == null)
+            {
+                return;
+            }
+
+            var document = Document;
+            var moleculePaths = new HashSet<IdentityPath>(_stateProvider.SelectedNodes.OfType<SrmTreeNode>()
+                .SelectMany(node => document.EnumeratePathsAtLevel(node.Path, SrmDocument.Level.Molecules)));
+            foreach (var peptidePath in _moleculeResultsByPeptide.Keys
+                         .Where(path => !moleculePaths.Contains(path)).ToArray())
+            {
+                _moleculeResultsByPeptide.Remove(peptidePath);
+            }
+        }
+
+        /// <summary>
         /// One per molecule, since making one reads all of its chromatograms and the charted
         /// precursors of one molecule share it. Thrown away when the document changes, because a
         /// <see cref="MoleculeResults"/> holds the chromatograms it read and the doc node it read
-        /// them for.
+        /// them for, and pruned by <see cref="PruneMoleculeResults"/> as the selection moves.
         /// </summary>
         private MoleculeResults GetMoleculeResults(IdentityPath peptidePath)
         {
