@@ -285,8 +285,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public IEnumerable<SpectrumSourceFileDetails> GetDataFileDetails()
         {
-            var detailsByFileId = new Dictionary<int, SpectrumSourceFileDetails>();
-            var scoreTypesByFileId = new Dictionary<int, HashSet<string>>();
+            var detailsByFileIndex = new SpectrumSourceFileDetails[_librarySourceFiles.Length];
+            var scoreTypesByFileIndex = new HashSet<string>[_librarySourceFiles.Length];
             Dictionary<string, ScoreType> scoreTypesByName = new Dictionary<string, ScoreType>();
             try
             {
@@ -304,51 +304,44 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Ignore
             }
-            foreach (var spectrumSourceFile in _librarySourceFiles)
+            for (int fileIndex = 0; fileIndex < _librarySourceFiles.Length; fileIndex++)
             {
-                detailsByFileId.Add(spectrumSourceFile.Id, new SpectrumSourceFileDetails(spectrumSourceFile.FilePath, spectrumSourceFile.IdFilePath, spectrumSourceFile.WorkflowType));
-                scoreTypesByFileId.Add(spectrumSourceFile.Id, new HashSet<string>());
+                var spectrumSourceFile = _librarySourceFiles[fileIndex];
+                detailsByFileIndex[fileIndex] = new SpectrumSourceFileDetails(spectrumSourceFile.FilePath, spectrumSourceFile.IdFilePath, spectrumSourceFile.WorkflowType);
+                scoreTypesByFileIndex[fileIndex] = new HashSet<string>();
             }
 
             if (_libraryEntries != null)
             {
                 foreach (var entry in _libraryEntries)
                 {
-                    if (entry.SpectrumSourceId.HasValue)
+                    int? bestFileIndex = entry.SpectrumSourceIndex;
+                    if (bestFileIndex.HasValue)
                     {
-                        if (detailsByFileId.TryGetValue(entry.SpectrumSourceId.Value, out var bestDetails))
-                        {
-                            bestDetails.BestSpectrum++;
-                            scoreTypesByFileId[entry.SpectrumSourceId.Value].Add(entry.ScoreType);
-                        }
+                        detailsByFileIndex[bestFileIndex.Value].BestSpectrum++;
+                        scoreTypesByFileIndex[bestFileIndex.Value].Add(entry.ScoreType);
                     }
 
-                    foreach (var indexTimes in entry.RetentionTimesByFileIndex.GetTimesByFileIndex())
+                    var retentionTimes = entry.RetentionTimesByFileIndex;
+                    for (int fileIndex = 0; fileIndex < retentionTimes.FileCount; fileIndex++)
                     {
-                        if (indexTimes.Key < _librarySourceFiles.Length &&
-                            detailsByFileId.TryGetValue(_librarySourceFiles[indexTimes.Key].Id, out var details))
-                        {
-                            details.MatchedSpectrum += indexTimes.Value.Count;
-                        }
+                        detailsByFileIndex[fileIndex].MatchedSpectrum += retentionTimes.GetTimeCount(fileIndex);
                     }
                 }
             }
 
-            foreach (var file in _librarySourceFiles)
+            for (int fileIndex = 0; fileIndex < _librarySourceFiles.Length; fileIndex++)
             {
-                if (scoreTypesByFileId.TryGetValue(file.Id, out var scoreTypes))
+                foreach (var scoreTypeName in scoreTypesByFileIndex[fileIndex])
                 {
-                    foreach (var scoreTypeName in scoreTypes)
+                    if (scoreTypeName != null && scoreTypesByName.TryGetValue(scoreTypeName, out var scoreType))
                     {
-                        if (scoreTypeName != null && scoreTypesByName.TryGetValue(scoreTypeName, out var scoreType))
-                        {
-                            detailsByFileId[file.Id].ScoreThresholds.Add(scoreType, file.CutoffScore);
-                        }
+                        detailsByFileIndex[fileIndex].ScoreThresholds.Add(scoreType, _librarySourceFiles[fileIndex].CutoffScore);
                     }
                 }
             }
 
-            return _librarySourceFiles.Select(file => detailsByFileId[file.Id]);
+            return detailsByFileIndex;
         }
 
         /// <summary>
@@ -708,6 +701,7 @@ namespace pwiz.Skyline.Model.Lib
 
             var setLibKeys = new HashSet<LibKey>(rows);
             var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
+            var fileIndexesById = FileIndexesById(librarySourceFiles);
 
             int threadCount = ParallelEx.GetThreadCount(4);
             int rowsRead = 0;
@@ -734,7 +728,11 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     proteinsBySpectraID.TryGetValue(row.id, out var protein);
-                    int? fileId = row.fileId;
+                    int? fileIndex = null;
+                    if (row.fileId.HasValue && fileIndexesById.TryGetValue(row.fileId.Value, out int iFile))
+                    {
+                        fileIndex = iFile;
+                    }
 
                     string sequence = row.peptideModSeq;
                     int charge = row.precursorCharge;
@@ -822,7 +820,7 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
 
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, row.id, fileId, protein,
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, row.id, fileIndex, protein,
                                 scoreName == null ? null : score, scoreName));
                         }
                     }
@@ -841,7 +839,7 @@ namespace pwiz.Skyline.Model.Lib
                 status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_, blibFilePath));
                 var retentionTimeReader = new RetentionTimeReader(FilePath, schemaVer)
                 {
-                    FileIndexesById = FileIndexesById(librarySourceFiles)
+                    FileIndexesById = fileIndexesById
                 };
                 retentionTimeReader.ReadAllRows(loader, ref status, rows);
                 if (loader.IsCanceled)
@@ -2416,15 +2414,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var entry in grouping)
                 {
-                    foreach (var fileTimes in entry.RetentionTimesByFileIndex.GetTimesByFileIndex())
-                    {
-                        if (minTimes[fileTimes.Key] == double.MaxValue)
-                        {
-                            fileIndexesWithTimes.Add(fileTimes.Key);
-                        }
-
-                        minTimes[fileTimes.Key] = Math.Min(minTimes[fileTimes.Key], fileTimes.Value.Min());
-                    }
+                    entry.RetentionTimesByFileIndex.LowerMinTimes(minTimes, fileIndexesWithTimes);
                 }
 
                 foreach (int fileIndex in fileIndexesWithTimes)
@@ -2473,10 +2463,7 @@ namespace pwiz.Skyline.Model.Lib
 
             foreach (var entry in EntriesMatching(targets))
             {
-                foreach (var fileTimes in entry.RetentionTimesByFileIndex.GetTimesByFileIndex())
-                {
-                    result[fileTimes.Key].AddRange(fileTimes.Value.Select(time => (double) time));
-                }
+                entry.RetentionTimesByFileIndex.AppendTimesTo(result);
             }
 
             return result;
@@ -2577,6 +2564,20 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
+        /// One more than the highest file index which has any times, which is never more than the
+        /// number of entries in <see cref="LibraryFiles"/>.
+        /// </summary>
+        public int FileCount
+        {
+            get { return TimesByFileIndex.Count; }
+        }
+
+        public int GetTimeCount(int fileIndex)
+        {
+            return TimesByFileIndex.ReplicatePositions.GetCount(fileIndex);
+        }
+
+        /// <summary>
         /// Returns the earliest time in a file, or null if it has none.
         /// </summary>
         public double? GetMinTime(int fileIndex)
@@ -2591,11 +2592,57 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// Returns the times of each file which has any, skipping the files which have none.
+        /// Appends the times of each file to the list at the same index of
+        /// <paramref name="timesByFileIndex"/>, which must have at least <see cref="FileCount"/>
+        /// entries.
         /// </summary>
-        public IEnumerable<KeyValuePair<int, IList<float>>> GetTimesByFileIndex()
+        public void AppendTimesTo(IList<List<double>> timesByFileIndex)
         {
-            return TimesByFileIndex.GetNonEmptyEntries();
+            var times = TimesByFileIndex;
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
+            {
+                int start = times.ReplicatePositions.GetStart(fileIndex);
+                int end = start + times.ReplicatePositions.GetCount(fileIndex);
+                if (start == end)
+                {
+                    continue;
+                }
+
+                var fileTimes = timesByFileIndex[fileIndex];
+                for (int i = start; i < end; i++)
+                {
+                    fileTimes.Add(times.FlatValues[i]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Lowers the value at each file's index of <paramref name="minTimeByFileIndex"/> to that
+        /// file's earliest time, when that is earlier. Every file index whose value moves down
+        /// from double.MaxValue is added to <paramref name="fileIndexesLowered"/>, so that a
+        /// caller accumulating across spectra can find the values which changed without walking
+        /// the whole array.
+        /// </summary>
+        public void LowerMinTimes(IList<double> minTimeByFileIndex, IList<int> fileIndexesLowered)
+        {
+            var times = TimesByFileIndex;
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
+            {
+                int start = times.ReplicatePositions.GetStart(fileIndex);
+                int end = start + times.ReplicatePositions.GetCount(fileIndex);
+                for (int i = start; i < end; i++)
+                {
+                    if (times.FlatValues[i] < minTimeByFileIndex[fileIndex])
+                    {
+                        if (minTimeByFileIndex[fileIndex] == double.MaxValue)
+                        {
+                            fileIndexesLowered.Add(fileIndex);
+                        }
+
+                        minTimeByFileIndex[fileIndex] = times.FlatValues[i];
+                    }
+                }
+            }
         }
 
         public void Write(Stream stream)
@@ -2689,14 +2736,14 @@ namespace pwiz.Skyline.Model.Lib
 
     public class BiblioLiteSpectrumInfo : Immutable, ICachedSpectrumInfo
     {
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceId, string protein, 
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceIndex, string protein,
             double? score = null, string scoreType = null)
         {
             Key = key;
             Copies = copies;
             NumPeaks = numPeaks;
             Id = id;
-            SpectrumSourceId = spectrumSourceId;
+            SpectrumSourceIndex = spectrumSourceIndex;
             Protein = protein;
             PeakBoundariesByFileId = ExplicitPeakBoundsDict<int>.EMPTY;
             Score = score;
@@ -2707,7 +2754,12 @@ namespace pwiz.Skyline.Model.Lib
         public int Copies { get; }
         public int NumPeaks { get; }
         public int Id { get; }
-        public int? SpectrumSourceId { get; }
+        /// <summary>
+        /// The index in <see cref="LibraryFiles"/> of the file which the best spectrum came from,
+        /// or null when it is not known. Note that this is not the file's id in the library
+        /// database.
+        /// </summary>
+        public int? SpectrumSourceIndex { get; }
         public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
         public IndexedRetentionTimes RetentionTimesByFileIndex { get; private set; }
         public IndexedIonMobilities IonMobilitiesByFileIndex { get; private set; }

@@ -561,11 +561,13 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 }).ToArray();
                         lock(listLibrary)
                         {
+                            // The file's index in LibraryFiles is not known until the library is
+                            // loaded back from the file which is being written here.
                             listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key,
                                 dbRefSpectrum.Copies,
                                 dbRefSpectrum.NumPeaks,
                                 (int)(dbRefSpectrum.Id ?? 0),
-                                (int?)dbRefSpectrum.FileId,
+                                null,
                                 spectrum.Protein));
                             listIonMobilitiesByFileId.Add(ionMobilitiesByFileId);
                             proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
@@ -904,7 +906,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
                                                 refSpectra.NumPeaks,
                                                 (int) (refSpectra.Id ?? 0),
-                                                (int?) refSpectra.FileId,
+                                                null,
                                                 proteinName));
                                     }
 
@@ -954,7 +956,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             refSpectra.Copies,
                                             refSpectra.NumPeaks,
                                             (int)(refSpectra.Id ?? 0),
-                                            (int?)refSpectra.FileId,
+                                            null,
                                             proteinName));
 
                                     // Save entries in the redundant library.
