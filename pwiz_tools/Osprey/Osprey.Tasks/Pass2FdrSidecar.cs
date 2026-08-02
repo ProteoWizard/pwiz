@@ -75,15 +75,8 @@ namespace pwiz.Osprey.Tasks
             FeatureContributions pass2Contributions = null;
 
             // OSPREY_PASS2_QVALUE selects how this 2nd pass assigns reported q-values.
-            // Log the active mode once so a run's provenance is in the log; warn on an
-            // unrecognized token (normalized to the parity-preserving percolator default).
-            if (OspreyEnvironment.Pass2QValueUnrecognized)
-            {
-                ctx.LogWarning(string.Format(
-                    "OSPREY_PASS2_QVALUE was set to an unrecognized value; using the default " +
-                    "'{0}'. Recognized modes: '{0}', '{1}'.",
-                    OspreyEnvironment.PASS2_QVALUE_PERCOLATOR, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
-            }
+            // Log the active mode once so a run's provenance is in the log. An unrecognized
+            // token never reaches here: Program aborts at startup.
             if (OspreyEnvironment.Pass2TransferQ)
             {
                 ctx.LogInfo(string.Format(
@@ -99,26 +92,37 @@ namespace pwiz.Osprey.Tasks
             // publish so the frozen dispatch below finds it instead of fail-fasting. No-op
             // when the model is already present, the mode is the default retrain, or the
             // sidecar is absent (the existing fail-fast then applies).
-            // protein-compact is intentionally NOT here: it also needs the
-            // ProteinCompactStratum, which is not yet persisted to the merge node
-            // (follow-up). Reloading only the model would log a misleading "reloaded"
-            // success and still fail-fast on the missing stratum. transfer /
-            // transfer-compete need the model alone.
+            // protein-compact needs the ProteinCompactStratum too; it rides in the same
+            // sidecar, so one reload serves all three frozen modes.
             bool wantsFrozenModel = OspreyEnvironment.Pass2TransferQ ||
-                                    OspreyEnvironment.Pass2TransferCompete;
+                                    OspreyEnvironment.Pass2TransferCompete ||
+                                    OspreyEnvironment.Pass2ProteinCompact;
             if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
-                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths, out string pass1Agg);
+                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
                 if (reloaded != null)
                 {
-                    // pass1Agg is what the TRAINING process ran under (null on a sidecar written
-                    // before the field existed). This node's own OSPREY_EXPERIMENT_AGG says
-                    // nothing about it, so carry the recorded value rather than re-reading.
-                    ctx.Publish(new FirstPassPercolatorModel { Results = reloaded, ExperimentAgg = pass1Agg });
+                    // ExperimentAgg is what the TRAINING process ran under (null on a sidecar
+                    // written before the field existed). This node's own OSPREY_EXPERIMENT_AGG
+                    // says nothing about it, so carry the recorded value rather than re-reading.
+                    ctx.Publish(new FirstPassPercolatorModel
+                        { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg });
                     ctx.LogInfo(string.Format(
                         @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
                         @"experiment aggregation: {0}).",
-                        pass1Agg ?? @"not recorded"));
+                        reloaded.ExperimentAgg ?? @"not recorded"));
+
+                    // Only publish a stratum the sidecar actually carried. Leaving it absent
+                    // keeps the existing fail-fast, which is the honest outcome: an empty
+                    // stratum would silently constrain the competition to nothing.
+                    if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
+                        !ctx.TryGet<ProteinCompactStratum>(out _))
+                    {
+                        ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
+                        ctx.LogInfo(string.Format(
+                            @"Reloaded the persisted protein-compact stratum ({0} base ids).",
+                            reloaded.StratumBaseIds.Count));
+                    }
                 }
             }
 

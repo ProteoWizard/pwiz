@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.ML;
 using pwiz.Osprey.Tasks;
@@ -82,17 +83,34 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3"),
+                // Deliberately unsorted, and deliberately not the insertion order a HashSet
+                // would enumerate: the stratum must survive as a SET, and the artifact must
+                // be written in a stable order regardless of how it was built.
+                var stratum = new HashSet<uint> { 900, 3, 47, 1, 12345 };
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3", stratum),
                     @"SVM model should persist");
                 Assert.IsTrue(File.Exists(path), @"sidecar should exist after Save");
 
-                var reloaded = FirstPassModelIO.Load(path, out string reloadedAgg);
+                var sidecar = FirstPassModelIO.Load(path);
+                Assert.IsNotNull(sidecar, @"reloaded sidecar should not be null");
+                var reloaded = sidecar.Model;
                 Assert.IsNotNull(reloaded, @"reloaded model should not be null");
 
                 // Pass-1 provenance survives the round trip. This is what lets a --task
                 // SecondPassFDR merge node - which never trained pass 1 - gate on the arm that
                 // actually produced the q-values instead of on its own environment.
-                Assert.AreEqual(@"mean-best-3", reloadedAgg, @"recorded pass-1 aggregation arm");
+                Assert.AreEqual(@"mean-best-3", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
+
+                // The protein-compact stratum rides in the same sidecar, and a merge node
+                // cannot rebuild it, so a lossy round trip would silently constrain the
+                // pass-2 competition to the wrong population.
+                Assert.IsNotNull(sidecar.StratumBaseIds, @"stratum should survive the round trip");
+                Assert.IsTrue(stratum.SetEquals(sidecar.StratumBaseIds), @"stratum base ids");
+
+                // The written order is sorted, not the set's enumeration order, so the
+                // artifact is diffable and safe to compare byte-wise between runs.
+                CollectionAssert.AreEqual(new[] { 1u, 3u, 47u, 900u, 12345u },
+                    ReadStratumInFileOrder(path), @"stratum written ascending");
 
                 // Structural bit-parity.
                 Assert.AreEqual(model.Standardizer.NumFeatures, reloaded.Standardizer.NumFeatures, @"NumFeatures");
@@ -161,9 +179,7 @@ namespace pwiz.Osprey.Test
             // Absent sidecar -> null (the caller then fails fast exactly as before persistence).
             string missing = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_missing_" + Guid.NewGuid().ToString(@"N") + @".json");
-            Assert.IsNull(FirstPassModelIO.Load(missing, out string missingAgg),
-                @"missing sidecar should load as null");
-            Assert.IsNull(missingAgg, @"no arm can be reported when nothing loaded");
+            Assert.IsNull(FirstPassModelIO.Load(missing), @"missing sidecar should load as null");
         }
 
         [TestMethod]
@@ -201,6 +217,22 @@ namespace pwiz.Osprey.Test
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""ExperimentAgg"": ""mean-best-2"" }",
                 @"mean-best-2", @"sidecar with a recorded arm");
+
+            // Same argument for the stratum: it was added to the same schema version, so a
+            // sidecar written before it exists must load with a null stratum rather than fail.
+            // A merge node then keeps the protein-compact fail-fast, which is correct - an
+            // EMPTY stratum would instead constrain the pass-2 competition to nothing.
+            AssertLoadsWithStratum(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", null, @"pre-stratum sidecar");
+            AssertLoadsWithStratum(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""StratumBaseIds"": [] }",
+                null, @"sidecar with an empty stratum");
+            AssertLoadsWithStratum(
+                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
+                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""StratumBaseIds"": [4, 9] }",
+                new[] { 4u, 9u }, @"sidecar with a stratum");
         }
 
         private static void AssertLoadsNull(string json, string what)
@@ -210,7 +242,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, json);
-                Assert.IsNull(FirstPassModelIO.Load(path, out _), what + @" should load as null");
+                Assert.IsNull(FirstPassModelIO.Load(path), what + @" should load as null");
             }
             finally
             {
@@ -226,14 +258,52 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, json);
-                Assert.IsNotNull(FirstPassModelIO.Load(path, out string arm), what + @" should load");
-                Assert.AreEqual(expectedArm, arm, what + @" arm");
+                var sidecar = FirstPassModelIO.Load(path);
+                Assert.IsNotNull(sidecar, what + @" should load");
+                Assert.AreEqual(expectedArm, sidecar.ExperimentAgg, what + @" arm");
             }
             finally
             {
                 if (File.Exists(path))
                     File.Delete(path);
             }
+        }
+
+        private static void AssertLoadsWithStratum(string json, uint[] expectedBaseIds, string what)
+        {
+            string path = Path.Combine(Path.GetTempPath(),
+                @"osprey_model_stratum_" + Guid.NewGuid().ToString(@"N") + @".json");
+            try
+            {
+                File.WriteAllText(path, json);
+                var sidecar = FirstPassModelIO.Load(path);
+                Assert.IsNotNull(sidecar, what + @" should load");
+                if (expectedBaseIds == null)
+                {
+                    Assert.IsNull(sidecar.StratumBaseIds, what + @" should carry no stratum");
+                    return;
+                }
+                Assert.IsNotNull(sidecar.StratumBaseIds, what + @" should carry a stratum");
+                Assert.IsTrue(new HashSet<uint>(expectedBaseIds).SetEquals(sidecar.StratumBaseIds),
+                    what + @" base ids");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+
+        /// <summary>The StratumBaseIds array as it appears in the written JSON, so the test can
+        /// assert the on-disk ORDER rather than the set it reloads into.</summary>
+        private static List<uint> ReadStratumInFileOrder(string path)
+        {
+            var ids = new List<uint>();
+            var array = (JArray) JObject.Parse(File.ReadAllText(path))[@"StratumBaseIds"];
+            Assert.IsNotNull(array, @"sidecar should carry StratumBaseIds");
+            foreach (var token in array)
+                ids.Add((uint) token);
+            return ids;
         }
     }
 }

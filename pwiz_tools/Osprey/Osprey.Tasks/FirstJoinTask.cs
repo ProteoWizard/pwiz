@@ -1037,13 +1037,21 @@ namespace pwiz.Osprey.Tasks
             // sidecar is absent). Save() is a no-op for the GBDT / degenerate model.
             if (ctx.TryGet<FirstPassPercolatorModel>(out var firstPassModel) && firstPassModel.Results != null)
             {
+                // protein-compact needs the stratum as well as the model, and the merge node
+                // cannot rebuild it (that takes the full library plus the 1st-pass detected
+                // peptides). It rides in the same sidecar, so it reaches the merge node by the
+                // relay that already carries the model. Null under every other mode.
+                HashSet<uint> stratumBaseIds = null;
+                if (ctx.TryGet<ProteinCompactStratum>(out var stratum))
+                    stratumBaseIds = stratum?.BaseIds;
+
                 int modelWrites = 0;
                 foreach (var kvp in perFileParquetPaths)
                 {
                     try
                     {
                         if (FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key),
-                                firstPassModel.Results, firstPassModel.ExperimentAgg))
+                                firstPassModel.Results, firstPassModel.ExperimentAgg, stratumBaseIds))
                             modelWrites++;
                     }
                     catch (Exception ex)

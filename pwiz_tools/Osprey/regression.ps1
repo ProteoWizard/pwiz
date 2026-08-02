@@ -858,10 +858,10 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
         # Ship the persisted 1st-pass model so the merge node can run the frozen 2nd-pass
-        # modes (transfer / transfer-compete) without re-training. Written by the
-        # FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
-        # deleted by now). Present for the SVM/percolator framework, so guard with
-        # Test-Path. (protein-compact additionally needs the protein stratum, not yet persisted.)
+        # modes (transfer / transfer-compete / protein-compact) without re-training. Written
+        # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
+        # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
+        # protein-compact's stratum rides inside this same sidecar, so it needs no second hop.
         $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
         $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
