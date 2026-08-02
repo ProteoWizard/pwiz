@@ -132,6 +132,7 @@ namespace pwiz.Skyline.Model.Lib
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
+        private bool _anyRedundantSpectra;
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
@@ -845,6 +846,7 @@ namespace pwiz.Skyline.Model.Lib
                     loader.UpdateProgress(status.Cancel());
                     return false;
                 }
+                _anyRedundantSpectra = retentionTimeReader.AnyRedundantSpectra;
                 var retentionTimesBySpectraId = retentionTimeReader.GetRetentionTimes();
                 var driftTimesBySpectraId = retentionTimeReader.GetIonMobilities();
                 var peakBoundsBySpectraId = retentionTimeReader.GetExplicitPeakBounds();
@@ -1568,25 +1570,34 @@ namespace pwiz.Skyline.Model.Lib
         {
             // No redundant spectra before schema version 1
             if (SchemaVersion == 0)
-                return new SpectrumInfoLibrary[0];
+                return Array.Empty<SpectrumInfoLibrary>();
             int i = FindEntry(key);
             if (i == -1)
-                return new SpectrumInfoLibrary[0];
+                return Array.Empty<SpectrumInfoLibrary>();
 
-            var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
+            // Only bother with the RetentionTimes table if it can lead to a redundant spectrum.
+            // It has no index on RefSpectraID, so querying it means a full table scan, and for
+            // libraries which never went through BlibFilter that table can be enormous.
+            var useRetentionTimesTable = _anyRedundantSpectra;
             var info = _libraryEntries[i];
             var protein = info.Protein;
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
-                select.CommandText = hasRetentionTimesTable
-                    ? @"SELECT * " +
-                      @"FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
-                      @"WHERE t.[RefSpectraID] = ?":
-                    @"SELECT * " +
-                    @"FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " +
-                    @"WHERE t.[id] = ?";
-                if (hasRetentionTimesTable && redundancy == LibraryRedundancy.best)
-                    select.CommandText += @" AND t.[bestSpectrum] = 1";
+                if (useRetentionTimesTable)
+                {
+                    select.CommandText = @"SELECT * " +
+                                         @"FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
+                                         @"WHERE t.[RefSpectraID] = ?";
+                    if (redundancy == LibraryRedundancy.best)
+                        select.CommandText += @" AND t.[bestSpectrum] = 1";
+
+                }
+                else
+                {
+                    select.CommandText = @"SELECT * " +
+                                         @"FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " +
+                                         @"WHERE t.[id] = ?";
+                }
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
 
@@ -1634,7 +1645,7 @@ namespace pwiz.Skyline.Model.Lib
                         string filePath = reader.GetString(iFilePath);
                         int redundantId = iRedundantId < 0 ? -1 : reader.GetInt32(iRedundantId);
                         var retentionTime = UtilDB.GetNullableDouble(reader, iRetentionTime);
-                        bool isBest = !hasRetentionTimesTable || reader.GetInt16(iBestSpectrum) != 0;
+                        bool isBest = !useRetentionTimesTable || reader.GetInt16(iBestSpectrum) != 0;
 
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;
                         if (hasGeneralIonMobility)
@@ -2070,6 +2081,7 @@ namespace pwiz.Skyline.Model.Lib
         class RetentionTimeRow
         {
             public int? RefSpectraID { get; set; }
+            public int? RedundantRefSpectraID { get; set; }
             public int? SpectrumSourceID { get; set; }
             public double? retentionTime { get; set; }
             public double? driftTimeMsec { get; set; }
@@ -2109,6 +2121,14 @@ namespace pwiz.Skyline.Model.Lib
                 _dbPath = dbPath;
                 _schemaVer = schemaVer;
             }
+
+            /// <summary>
+            /// True if any row pointed at a spectrum in the redundant library. Libraries which were
+            /// built without going through BlibFilter (e.g. DIA-NN) always store zero here, which
+            /// means there is nothing a redundant spectrum could ever be loaded from.
+            /// This is only ever set to true, so the reader threads need no synchronization.
+            /// </summary>
+            public bool AnyRedundantSpectra { get; private set; }
 
             // ReSharper disable InconsistentlySynchronizedField
             public Dictionary<int, IndexedRetentionTimes> GetRetentionTimes()
@@ -2184,6 +2204,11 @@ namespace pwiz.Skyline.Model.Lib
                 var explicitPeakBounds = new List<KeyValuePair<int, ExplicitPeakBounds>>();
                 foreach (var row in rows)
                 {
+                    if (row.RedundantRefSpectraID.GetValueOrDefault() != 0)
+                    {
+                        AnyRedundantSpectra = true;
+                    }
+
                     int? fileId = row.SpectrumSourceID;
                     if (!fileId.HasValue)
                     {
