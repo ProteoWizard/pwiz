@@ -19,7 +19,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -353,12 +352,15 @@ namespace pwiz.Skyline.Model.Results
                     return;
                 }
 
-                int completed = Interlocked.Increment(ref completedCount);
+                // Counted inside the lock so that the count and the update it produces cannot be
+                // separated, which is what would let two threads report out of order.
                 lock (statusLock)
                 {
-                    // 99 rather than 100: the load this is part of is not finished until its own
+                    // The count before this molecule, which is never the total, so the percentage
+                    // never reaches 100. The load this is part of is not finished until its own
                     // Complete() call, which is what takes it the rest of the way.
-                    var statusNew = status.ChangePercentComplete(completed * 99 / molecules.Length);
+                    var statusNew = status.ChangePercentComplete(completedCount * 100 / molecules.Length);
+                    completedCount++;
                     if (statusNew.PercentComplete != status.PercentComplete)
                     {
                         status = statusNew;
