@@ -498,11 +498,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     }
                     _librarySourceFiles = sampleFiles.ToArray();
                     _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
-                    var fileIndexesById = new Dictionary<int, int>(_librarySourceFiles.Length);
-                    for (int fileIndex = _librarySourceFiles.Length - 1; fileIndex >= 0; fileIndex--)
-                    {
-                        fileIndexesById[_librarySourceFiles[fileIndex].Id] = fileIndex;
-                    }
+                    var fileIndexesById = FileIndexesById();
 
                     var rtQuery = session.CreateQuery(@"SELECT Precursor.Id, SampleFile.Id, RetentionTime FROM PrecursorRetentionTime");
                     var rtDictionary = new Dictionary<int, List<KeyValuePair<int, double>>>(); // PrecursorId -> [SampleFileIndex -> RetentionTime]
@@ -697,6 +693,21 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 return new List<SpectrumPeakAnnotation>{SpectrumPeakAnnotation.Create(ion, null)};
             }
             return null;
+        }
+
+        /// <summary>
+        /// Returns the index that each sample file has in <see cref="LibraryFiles"/>, keyed by the
+        /// file's id in the library database. Retention times are stored by index rather than id.
+        /// </summary>
+        private Dictionary<int, int> FileIndexesById()
+        {
+            var fileIndexesById = new Dictionary<int, int>(_librarySourceFiles.Length);
+            for (int fileIndex = _librarySourceFiles.Length - 1; fileIndex >= 0; fileIndex--)
+            {
+                fileIndexesById[_librarySourceFiles[fileIndex].Id] = fileIndex;
+            }
+
+            return fileIndexesById;
         }
 
         private bool LoadFromCache(ILoadMonitor loadMonitor, ProgressStatus status)
@@ -914,9 +925,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         private class Serializer
         {
             // Version 5 adds small molecule and ion mobility information
-            // Version 6 stores retention times by file index instead of by file id
-            private const int CURRENT_VERSION = 6;
-            private const int MIN_READABLE_VERSION = 6;
+            private const int CURRENT_VERSION = 5;
+            private const int MIN_READABLE_VERSION = 5;
 
             private readonly ChromatogramLibrary _library;
             private readonly Stream _stream;
@@ -944,10 +954,13 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             private void WriteEntries()
             {
                 _locationEntries = _stream.Position;
+                // The entries hold retention times by file index, but write them by file id, so
+                // that the cache format does not depend on the order of the sample files.
+                var fileIds = _library._librarySourceFiles.Select(file => file.Id).ToArray();
                 PrimitiveArrays.WriteOneValue(_stream, _library._libraryEntries.Length);
                 foreach (var entry in _library._libraryEntries)
                 {
-                    entry.Write(_stream);
+                    entry.Write(_stream, fileIds);
                 }
                 PrimitiveArrays.WriteOneValue(_stream, _library._libraryIrts.Length);
                 foreach (var entry in _library._libraryIrts)
@@ -958,12 +971,13 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             private void ReadEntries()
             {
                 var valueCache = new ValueCache();
+                var fileIndexesById = _library.FileIndexesById();
                 _stream.Seek(_locationEntries, SeekOrigin.Begin);
                 int entryCount = PrimitiveArrays.ReadOneValue<int>(_stream);
                 var entries = new ChromLibSpectrumInfo[entryCount];
                 for (int i = 0; i < entryCount; i++)
                 {
-                    entries[i] = ChromLibSpectrumInfo.Read(valueCache, _stream);
+                    entries[i] = ChromLibSpectrumInfo.Read(valueCache, _stream, fileIndexesById);
                 }
                 _library.SetLibraryEntries(entries);
                 int irtCount = PrimitiveArrays.ReadOneValue<int>(_stream);

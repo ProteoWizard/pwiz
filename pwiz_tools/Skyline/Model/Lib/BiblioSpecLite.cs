@@ -2645,28 +2645,73 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public void Write(Stream stream)
+        /// <summary>
+        /// Writes the times of each file, identified by its database id rather than by its index,
+        /// so that the format does not change when the file list does.
+        /// </summary>
+        /// <param name="fileIds">The database id of each file, in file index order.</param>
+        public void Write(Stream stream, IList<int> fileIds)
         {
-            var timesByFileIndex = TimesByFileIndex;
-            PrimitiveArrays.WriteOneValue(stream, timesByFileIndex.Count);
-            if (timesByFileIndex.Count == 0)
+            var times = TimesByFileIndex;
+            int fileCount = 0;
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
             {
-                return;
+                if (times.ReplicatePositions.GetCount(fileIndex) > 0)
+                {
+                    fileCount++;
+                }
             }
-            PrimitiveArrays.Write(stream, timesByFileIndex.GetCounts().ToArray());
-            PrimitiveArrays.Write(stream, timesByFileIndex.FlatValues.ToArray());
+
+            PrimitiveArrays.WriteOneValue(stream, fileCount);
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
+            {
+                int count = times.ReplicatePositions.GetCount(fileIndex);
+                if (count == 0)
+                {
+                    continue;
+                }
+
+                int start = times.ReplicatePositions.GetStart(fileIndex);
+                var fileTimes = new float[count];
+                for (int i = 0; i < count; i++)
+                {
+                    fileTimes[i] = times.FlatValues[start + i];
+                }
+
+                PrimitiveArrays.WriteOneValue(stream, fileIds[fileIndex]);
+                PrimitiveArrays.WriteOneValue(stream, count);
+                PrimitiveArrays.Write(stream, fileTimes);
+            }
         }
 
-        public static IndexedRetentionTimes Read(Stream stream)
+        /// <param name="fileIndexesById">The file index of each database file id. Times of files
+        /// which are not in here are dropped.</param>
+        public static IndexedRetentionTimes Read(Stream stream, IDictionary<int, int> fileIndexesById)
         {
-            int fileIndexCount = PrimitiveArrays.ReadOneValue<int>(stream);
-            if (0 == fileIndexCount)
+            int fileCount = PrimitiveArrays.ReadOneValue<int>(stream);
+            if (0 == fileCount)
             {
                 return default;
             }
-            var counts = PrimitiveArrays.Read<int>(stream, fileIndexCount);
-            var times = PrimitiveArrays.Read<float>(stream, counts.Sum());
-            return new IndexedRetentionTimes(IndexedMultiArray<float>.FromCounts(counts, times));
+
+            var timesByFileIndex = new List<KeyValuePair<int, float>>();
+            for (int i = 0; i < fileCount; i++)
+            {
+                int fileId = PrimitiveArrays.ReadOneValue<int>(stream);
+                int timeCount = PrimitiveArrays.ReadOneValue<int>(stream);
+                var times = PrimitiveArrays.Read<float>(stream, timeCount);
+                if (!fileIndexesById.TryGetValue(fileId, out int fileIndex))
+                {
+                    continue;
+                }
+
+                foreach (var time in times)
+                {
+                    timesByFileIndex.Add(new KeyValuePair<int, float>(fileIndex, time));
+                }
+            }
+
+            return new IndexedRetentionTimes(timesByFileIndex.ToIndexedMultiArray());
         }
 
         public IndexedRetentionTimes MergeWith(params IndexedRetentionTimes[] other)
