@@ -1702,17 +1702,12 @@ namespace pwiz.Skyline.Model
 
             if (canUseOldResults)
             {
+                // From the columnar results rather than the transition nodes, which no longer keep
+                // a copy of the chrom infos of their own.
                 for (int iTran = 0; iTran < Children.Count; iTran++)
                 {
-                    var nodeTran = (TransitionDocNode)Children[iTran];
-                    var results = nodeTran.HasResults ? nodeTran.Results[iResultOld] : default(ChromInfoList<TransitionChromInfo>);
-                    if (results.IsEmpty)
-                        resultsCalc.AddTransitionChromInfo(iTran, null);
-                    else
-                    {
-                        resultsCalc.AddTransitionChromInfo(iTran, results
-                            .Where(chromInfo => chromatograms.IndexOfId(chromInfo.FileId) >= 0).ToList());
-                    }
+                    resultsCalc.AddTransitionChromInfo(iTran,
+                        AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, chromatograms));
                 }
 
                 return;
@@ -1747,19 +1742,8 @@ namespace pwiz.Skyline.Model
 
                 for (int iTran = 0; iTran < Children.Count; iTran++)
                 {
-                    var nodeTran = (TransitionDocNode)Children[iTran];
-                    var results = default(ChromInfoList<TransitionChromInfo>);
-                    if (useOldResults)
-                    {
-                        if (nodeTran.HasResults && nodeTran.Results.Count > iResultOld)
-                        {
-                            results = nodeTran.Results[iResultOld];
-                        }
-                    }
-                    if (results.IsEmpty)
-                        resultsCalc.AddTransitionChromInfo(iTran, null);
-                    else
-                        resultsCalc.AddTransitionChromInfo(iTran, results.ToList());
+                    resultsCalc.AddTransitionChromInfo(iTran,
+                        useOldResults ? AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, chromatograms) : null);
                 }
 
                 return;

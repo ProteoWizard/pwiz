@@ -1930,8 +1930,10 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto));
-                    resultsList.Add(null);
+                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods,
+                        isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto,
+                        out var chromInfos));
+                    resultsList.Add(chromInfos == null ? null : new TransitionResultsData(chromInfos));
                 }
             }
             else

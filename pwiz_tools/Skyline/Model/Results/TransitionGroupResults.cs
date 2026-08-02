@@ -512,6 +512,31 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// One transition's unconverted chrom infos for a single replicate, or null when it has
+        /// none there. Every optimization step, which is what a results calculation needs.
+        /// <para>
+        /// The chrom infos know their file rather than their replicate, so the replicate is given
+        /// as the chromatogram set whose files they would have to be among. This is how a results
+        /// pass which is not going to read the .skyd - because nothing it cares about changed, or
+        /// because the chromatograms are not loaded yet - gets back what the document already
+        /// knows, without a transition node having to keep a second copy of it.
+        /// </para>
+        /// </summary>
+        public IList<TransitionChromInfo> GetTransitionLegacyChromInfos(int transitionIndex,
+            ChromatogramSet chromatograms)
+        {
+            var legacyChromInfos = GetTransitionResults(transitionIndex)?.LegacyChromInfos;
+            if (legacyChromInfos == null)
+            {
+                return null;
+            }
+
+            var chromInfos = legacyChromInfos
+                .Where(chromInfo => chromatograms.IndexOfId(chromInfo.FileId) >= 0).ToList();
+            return chromInfos.Count == 0 ? null : chromInfos;
+        }
+
+        /// <summary>
         /// How many unconverted chrom infos one transition's results are still carrying, which is
         /// every optimization step of every file. Zero once they have been worked out.
         /// </summary>

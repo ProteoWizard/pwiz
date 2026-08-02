@@ -756,7 +756,8 @@ namespace pwiz.Skyline.Model
         public static TransitionDocNode FromTransitionProto(AnnotationScrubber scrubber, SrmSettings settings,
             TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues,
             CrosslinkBuilder crosslinkBuilder,
-            SkylineDocumentProto.Types.Transition transitionProto)
+            SkylineDocumentProto.Types.Transition transitionProto,
+            out Results<TransitionChromInfo> chromInfos)
         {
             IonType ionType = DataValues.FromIonType(transitionProto.FragmentType);
             MeasuredIon measuredIon = null;
@@ -831,7 +832,9 @@ namespace pwiz.Skyline.Model
                 libInfo = new TransitionLibInfo(transitionProto.LibInfo.Rank, transitionProto.LibInfo.Intensity);
             }
             var annotations = scrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionProto.Annotations), AnnotationDef.AnnotationTarget.transition);
-            var results = TransitionChromInfo.FromProtoTransitionResults(scrubber, settings, transitionProto.Results);
+            // Handed back for the precursor to keep in its columnar results rather than put on the
+            // node, which no longer holds any.
+            chromInfos = TransitionChromInfo.FromProtoTransitionResults(scrubber, settings, transitionProto.Results);
             var explicitTransitionValues = pre422ExplicitTransitionValues ?? ExplicitTransitionValues.Create(
                 transitionProto.ExplicitCollisionEnergy,
                 transitionProto.ExplicitIonMobilityHighEnergyOffset,
@@ -868,12 +871,12 @@ namespace pwiz.Skyline.Model
                 }
                 var complexFragmentIon = new NeutralFragmentIon(parts, losses);
                 var chargedIon = new ComplexFragmentIon(transition, complexFragmentIon, mods);
-                transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+                transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, null);
             }
             else
             {
                 var mass = settings.GetFragmentMass(group, mods, transition, isotopeDist);
-                transitionDocNode = new TransitionDocNode(transition, annotations, losses, mass, transitionQuantInfo, explicitTransitionValues, results);
+                transitionDocNode = new TransitionDocNode(transition, annotations, losses, mass, transitionQuantInfo, explicitTransitionValues, null);
             }
 
             return transitionDocNode;
