@@ -66,30 +66,6 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
-        public void TestChromFileIdMapRemove()
-        {
-            var fileIds = MakeFileIds(4);
-            var map = MakeMap(new[] { 2, 1 }, new[] { fileIds[0], fileIds[1], fileIds[2] },
-                new[] { 10, 11, 12 });
-
-            var removed = map.Remove(0, fileIds[0]);
-            CollectionAssert.AreEqual(new[] { 11, 12 }, removed.FlatValues.ToArray());
-            CollectionAssert.AreEqual(new[] { 11 }, removed.Values[0].ToArray());
-            // The replicate which was not touched still has its own file and value.
-            CollectionAssert.AreEqual(new[] { 12 }, removed.Values[1].ToArray());
-            CollectionAssert.AreEqual(new[] { fileIds[2] }, removed.Keys[1].ToArray());
-
-            // A file the replicate does not have, and the same file in the wrong replicate, both
-            // leave the map alone.
-            Assert.AreSame(map, map.Remove(0, fileIds[3]));
-            Assert.AreSame(map, map.Remove(1, fileIds[0]));
-
-            // Removing the last entry leaves nothing, which is stored as no map at all.
-            var single = MakeMap(new[] { 1 }, new[] { fileIds[0] }, new[] { 10 });
-            Assert.IsNull(single.Remove(0, fileIds[0]));
-        }
-
-        [TestMethod]
         public void TestChromFileIdMapWithoutDefault()
         {
             var fileIds = MakeFileIds(4);
@@ -137,7 +113,6 @@ namespace pwiz.SkylineTest
                 .Set(2, fileIds[1], 12);
             Assert.AreEqual(3, grown.Count);
             Assert.AreSame(grown, grown.Normalize());
-            Assert.AreEqual(1, grown.Remove(2, fileIds[1]).Normalize().Count);
         }
 
         [TestMethod]

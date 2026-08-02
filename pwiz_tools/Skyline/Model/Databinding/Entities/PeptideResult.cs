@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ChangePeptideResults(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
                     results => results.ChangeAnalyteConcentrations(results.AnalyteConcentrations.ToNullables().Set(
-                            ResultFile.Replicate.ReplicateIndex, ResultFile.ChromFileInfoId, value).WithoutDefault()
+                            ResultFile.Replicate.ReplicateIndex, ResultFile.ChromFileInfoId, value).WithoutDefaultOrEmpty()
                         .FromNullables()));
             }
         }

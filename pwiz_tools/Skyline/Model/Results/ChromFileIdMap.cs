@@ -21,6 +21,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results
@@ -256,6 +257,7 @@ namespace pwiz.Skyline.Model.Results
         /// would remove the peaks a user did set and keep the rest.
         /// </para>
         /// </summary>
+        [CanBeNull]
         public ChromFileIdMap<T> WithoutDefault(T defaultValue = default)
         {
             var comparer = EqualityComparer<T>.Default;
@@ -291,7 +293,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts).Normalize(), fileIds),
                 values);
         }
 
@@ -321,28 +323,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The map without the entry for one file of one replicate, or this when there is no such
-        /// entry. Null when it was the last entry, which is how a map holding nothing is stored.
-        /// </summary>
-        public ChromFileIdMap<T> Remove(int replicateIndex, ChromFileInfoId fileId)
-        {
-            var newChromFileIds = ChromFileIds.Remove(replicateIndex, fileId);
-            if (ReferenceEquals(newChromFileIds, ChromFileIds))
-            {
-                return this;
-            }
-
-            if (newChromFileIds.ReplicatePositions.TotalCount == 0)
-            {
-                return null;
-            }
-
-            // The same positions the files were kept from, so the two stay lined up.
-            return new ChromFileIdMap<T>(newChromFileIds,
-                ChromFileIds.PositionsWithout(replicateIndex, fileId).Select(position => FlatValues[position]));
-        }
-
-        /// <summary>
         /// Replaces or adds the entry for a particular file in a particular replicate. A file the
         /// replicate has no entry for is added at the end of its entries, and a replicate past the
         /// end grows the map to reach it.
@@ -357,37 +337,20 @@ namespace pwiz.Skyline.Model.Results
                     return this;
                 }
 
-                var replaced = FlatValues.ToArray();
-                replaced[position] = value;
-                return new ChromFileIdMap<T>(ChromFileIds, replaced);
+                return new ChromFileIdMap<T>(ChromFileIds, FlatValues.ReplaceAt(position, value));
             }
 
-            int replicateCount = replicateIndex < Count ? Count : replicateIndex + 1;
-            var counts = new List<int>(replicateCount);
-            var fileIds = new List<ChromFileInfoId>(FlatValues.Count + 1);
-            var values = new List<T>(FlatValues.Count + 1);
-            for (int i = 0; i < replicateCount; i++)
-            {
-                int count = 0;
-                foreach (int p in ReplicatePositions[i])
-                {
-                    fileIds.Add(ChromFileIds.FileIds[p].Value);
-                    values.Add(FlatValues[p]);
-                    count++;
-                }
+            int insertIndex = ReplicatePositions.GetStart(replicateIndex + 1);
+            var newFileIds = ChromFileIds.FileIds.Select(file => file.Value).ToList();
+            newFileIds.Insert(insertIndex, fileId);
+            var newValues = FlatValues.ToList();
+            newValues.Insert(insertIndex, value);
 
-                if (i == replicateIndex)
-                {
-                    fileIds.Add(fileId);
-                    values.Add(value);
-                    count++;
-                }
-
-                counts.Add(count);
-            }
-
-            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
-                values);
+            var newCounts = Enumerable
+                .Range(0, Math.Max(replicateIndex + 1, ChromFileIds.ReplicatePositions.ReplicateCount))
+                .Select(ChromFileIds.ReplicatePositions.GetCount).ToArray();
+            newCounts[replicateIndex]++;
+            return new ChromFileIdMap<T>(new ChromFileIds(ReplicatePositions.FromCounts(newCounts), newFileIds), newValues);
         }
     }
 
@@ -401,6 +364,18 @@ namespace pwiz.Skyline.Model.Results
         public static ChromFileIdMap<T> FromNullables<T>(this ChromFileIdMap<T?> map, T defaultValue = default) where T : struct
         {
             return new ChromFileIdMap<T>(map.ChromFileIds, map.FlatValues.Select(value => value ?? defaultValue));
+        }
+
+        [NotNull]
+        public static ChromFileIdMap<T> NormalizeOrEmpty<T>([CanBeNull] this ChromFileIdMap<T> map)
+        {
+            return map?.Normalize() ?? ChromFileIdMap<T>.Empty;
+        }
+
+        [NotNull]
+        public static ChromFileIdMap<T> WithoutDefaultOrEmpty<T>([CanBeNull] this ChromFileIdMap<T> map, T defaultValue = default)
+        {
+            return map?.WithoutDefault()?.Normalize() ?? ChromFileIdMap<T>.Empty;
         }
     }
 }

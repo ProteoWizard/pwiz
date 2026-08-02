@@ -72,12 +72,12 @@ namespace pwiz.Skyline.Model.Results
 
         public PeptideResults ChangeExcludeFromCalibration(ChromFileIdMap<bool> value)
         {
-            return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = value.WithoutDefault());
+            return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = value.WithoutDefaultOrEmpty());
         }
 
         public PeptideResults ChangeAnalyteConcentrations(ChromFileIdMap<double> value)
         {
-            return ChangeProp(ImClone(this), im => im.AnalyteConcentrations = value);
+            return ChangeProp(ImClone(this), im => im.AnalyteConcentrations = value.NormalizeOrEmpty());
         }
 
         public PeptideResults ChangeAnalyteConcentrations(ChromFileIdMap<double?> value)
