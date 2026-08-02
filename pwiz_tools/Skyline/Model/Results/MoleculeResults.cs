@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 
@@ -306,13 +307,30 @@ namespace pwiz.Skyline.Model.Results
                 return document;
             }
 
-            var moleculeGroupsNew = new List<DocNode>();
-            foreach (PeptideGroupDocNode nodeMoleculeGroup in document.MoleculeGroups)
+            // Flattened first, so that the unit of work handed to a thread is one molecule rather
+            // than one group: a group can hold a single molecule, which would leave most of them
+            // idle.
+            var moleculeGroups = document.MoleculeGroups.ToArray();
+            var molecules = moleculeGroups.SelectMany(nodeMoleculeGroup => nodeMoleculeGroup.Molecules).ToArray();
+            var converted = new PeptideDocNode[molecules.Length];
+            var settings = document.Settings;
+
+            // A MoleculeResults caches what it reads, so each one belongs to the thread which made
+            // it and is never handed to another. What the threads do share - the settings and the
+            // chromatogram cache - they only read, and the cache reads go through
+            // ChromatogramGroupInfo.LoadPeaksForAll, which takes a read lock and opens a stream of
+            // its own rather than using the shared pooled one.
+            ParallelEx.For(0, molecules.Length,
+                iMolecule => converted[iMolecule] = ConvertMoleculeResults(settings, molecules[iMolecule]));
+
+            var moleculeGroupsNew = new List<DocNode>(moleculeGroups.Length);
+            int iConverted = 0;
+            foreach (var nodeMoleculeGroup in moleculeGroups)
             {
-                var moleculesNew = new List<DocNode>();
-                foreach (PeptideDocNode nodePep in nodeMoleculeGroup.Molecules)
+                var moleculesNew = new List<DocNode>(nodeMoleculeGroup.Children.Count);
+                for (int i = 0; i < nodeMoleculeGroup.Children.Count; i++)
                 {
-                    moleculesNew.Add(ConvertMoleculeResults(document.Settings, nodePep));
+                    moleculesNew.Add(converted[iConverted++]);
                 }
 
                 moleculeGroupsNew.Add(nodeMoleculeGroup.ChangeChildrenChecked(moleculesNew));
@@ -958,6 +976,12 @@ namespace pwiz.Skyline.Model.Results
                 measuredResults == null
                     ? EmptyChromatogramGroupInfos()
                     : ReadTransitionGroup(measuredResults, nodeGroup)));
+
+            // Every precursor of every replicate in one read, grouped by cache, rather than one
+            // read per group info the first time each is asked for its peaks. The molecule is
+            // about to want all of them.
+            ChromatogramGroupInfo.LoadPeaksForAll(
+                _chromatogramGroupInfos.SelectMany(groupInfos => groupInfos.FlatValues), false);
             _groupResults = new GroupResults[_chromatogramGroupInfos.Count];
         }
 
