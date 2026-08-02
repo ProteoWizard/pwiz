@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -300,7 +301,8 @@ namespace pwiz.Skyline.Model.Results
         /// whole document's worth of them is never held at once.
         /// </para>
         /// </summary>
-        public static SrmDocument ConvertDocumentResults(SrmDocument document)
+        public static SrmDocument ConvertDocumentResults(SrmDocument document, IProgressMonitor progressMonitor,
+            ref IProgressStatus progressStatus)
         {
             if (document.Settings.MeasuredResults == null)
             {
@@ -312,16 +314,60 @@ namespace pwiz.Skyline.Model.Results
             // idle.
             var moleculeGroups = document.MoleculeGroups.ToArray();
             var molecules = moleculeGroups.SelectMany(nodeMoleculeGroup => nodeMoleculeGroup.Molecules).ToArray();
+
+            // Asked before saying anything, since a document saved with the columnar results, or
+            // one which has already been through this, has nothing to do and nothing to report.
+            // Reads no chromatogram.
+            if (!molecules.Any(nodePep => nodePep.TransitionGroups.Any(NeedsConverting)))
+            {
+                return document;
+            }
+
+            var status = progressStatus.ChangeMessage(
+                ResultsResources.MoleculeResults_ConvertDocumentResults_Reading_peaks);
+            progressMonitor?.UpdateProgress(status);
+
             var converted = new PeptideDocNode[molecules.Length];
             var settings = document.Settings;
+            int completedCount = 0;
+            var statusLock = new object();
 
             // A MoleculeResults caches what it reads, so each one belongs to the thread which made
             // it and is never handed to another. What the threads do share - the settings and the
             // chromatogram cache - they only read, and the cache reads go through
             // ChromatogramGroupInfo.LoadPeaksForAll, which takes a read lock and opens a stream of
             // its own rather than using the shared pooled one.
-            ParallelEx.For(0, molecules.Length,
-                iMolecule => converted[iMolecule] = ConvertMoleculeResults(settings, molecules[iMolecule]));
+            ParallelEx.For(0, molecules.Length, iMolecule =>
+            {
+                if (progressMonitor?.IsCanceled == true)
+                {
+                    // Leaving a molecule unconverted costs only the memory this would have saved,
+                    // so there is nothing to undo and no reason to throw.
+                    converted[iMolecule] = molecules[iMolecule];
+                    return;
+                }
+
+                converted[iMolecule] = ConvertMoleculeResults(settings, molecules[iMolecule]);
+                if (progressMonitor == null)
+                {
+                    return;
+                }
+
+                int completed = Interlocked.Increment(ref completedCount);
+                lock (statusLock)
+                {
+                    // 99 rather than 100: the load this is part of is not finished until its own
+                    // Complete() call, which is what takes it the rest of the way.
+                    var statusNew = status.ChangePercentComplete(completed * 99 / molecules.Length);
+                    if (statusNew.PercentComplete != status.PercentComplete)
+                    {
+                        status = statusNew;
+                        progressMonitor.UpdateProgress(status);
+                    }
+                }
+            });
+
+            progressStatus = status;
 
             var moleculeGroupsNew = new List<DocNode>(moleculeGroups.Length);
             int iConverted = 0;

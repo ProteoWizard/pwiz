@@ -546,6 +546,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reading peaks.
+        /// </summary>
+        public static string MoleculeResults_ConvertDocumentResults_Reading_peaks {
+            get {
+                return ResourceManager.GetString("MoleculeResults_ConvertDocumentResults_Reading_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure attempting to load the data cache file {0}.
         /// </summary>
         public static string Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_ {

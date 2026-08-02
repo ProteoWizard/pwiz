@@ -274,8 +274,9 @@ namespace pwiz.Skyline.Model.Results
                         docNew = docCurrent.ChangeSettingsNoDiff(docCurrent.Settings.ChangeMeasuredResults(loadedMeasuredResults));
                         // No diff above, deliberately, so opening a document does not recalculate
                         // everything. That also means nothing else releases the chrom infos it was
-                        // read with, now that the chromatograms can be read instead.
-                        docNew = MoleculeResults.ConvertDocumentResults(docNew);
+                        // read with, now that the chromatograms can be read instead. The status
+                        // stops at 99: the Complete() in the finally below takes it to 100.
+                        docNew = MoleculeResults.ConvertDocumentResults(docNew, loadMonitor, ref progressStatus);
                     } while (!CompleteProcessing(container, docNew, docCurrent));
                 }
                 finally
@@ -394,7 +395,17 @@ namespace pwiz.Skyline.Model.Results
                         // Skipping the settings change also skips the results pass, which is what
                         // would otherwise have given up the chrom infos the document was read with
                         // now that the chromatograms can be read instead.
-                        docNew = MoleculeResults.ConvertDocumentResults(docNew);
+                        var convertMonitor = new LoadMonitor(_manager, _container, null);
+                        IProgressStatus convertStatus = new ProgressStatus();
+                        var convertStatusStart = convertStatus;
+                        docNew = MoleculeResults.ConvertDocumentResults(docNew, convertMonitor, ref convertStatus);
+                        // Only when it had something to do, and so said something. This branch has
+                        // no status of its own to add to, so completing here is what takes the
+                        // progress the last of the way.
+                        if (!ReferenceEquals(convertStatus, convertStatusStart))
+                        {
+                            convertMonitor.UpdateProgress(convertStatus.Complete());
+                        }
                     }
                     else
                     {

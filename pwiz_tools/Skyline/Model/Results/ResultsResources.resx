@@ -248,6 +248,9 @@ It is recommended that you delete this file so that Skyline can create a new fil
   <data name="Loader_FinishLoad_Updating_peak_statistics" xml:space="preserve">
     <value>Updating peak statistics</value>
   </data>
+  <data name="MoleculeResults_ConvertDocumentResults_Reading_peaks" xml:space="preserve">
+    <value>Reading peaks</value>
+  </data>
   <data name="Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_" xml:space="preserve">
     <value>Failure attempting to load the data cache file {0}</value>
   </data>
