@@ -757,6 +757,27 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// These results with the peak boundaries of one file dropped from every transition. A
+        /// peak the user set keeps its boundaries whether or not they match a candidate peak, and
+        /// when they do the index says the same thing for nothing.
+        /// </summary>
+        public TransitionGroupResults DropTransitionPeakBounds(int transitionCount, ChromFileInfoId fileId)
+        {
+            var results = this;
+            for (int iTran = 0; iTran < transitionCount; iTran++)
+            {
+                var transitionResults = results.GetTransitionResults(iTran);
+                var newResults = transitionResults?.DropCustomPeakBounds(fileId);
+                if (newResults != null && !ReferenceEquals(newResults, transitionResults))
+                {
+                    results = results.ChangeTransitionResults(iTran, newResults);
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
         /// These results with every transition's unconverted chrom infos let go, which is what
         /// there is to do once every one of the precursor's files has been read.
         /// </summary>
@@ -1507,6 +1528,30 @@ namespace pwiz.Skyline.Model.Results
             {
                 int position = ChromFileIds.IndexOfFile(fileId);
                 return position < 0 ? this : ChangeCustomPeakBounds(position, startTime, endTime, identified);
+            }
+
+            /// <summary>
+            /// These results with the boundaries of one file's peak dropped, keeping whatever else
+            /// the custom peak had. Used once the peak turns out to be one of the candidate peaks
+            /// after all, when the index reproduces it and the boundaries say the same thing again.
+            /// </summary>
+            public TransitionResults DropCustomPeakBounds(ChromFileInfoId fileId)
+            {
+                int position = ChromFileIds.IndexOfFile(fileId);
+                if (position < 0)
+                {
+                    return this;
+                }
+
+                var customPeak = GetCustomPeak(position);
+                if (customPeak?.HasPeakBounds != true)
+                {
+                    return this;
+                }
+
+                var newCustomPeak = customPeak.ChangePeakBounds(null, null, PeakIdentification.FALSE);
+                return ChangeCustomPeaks(CustomPeak.SetAtPosition(CustomPeaks?.FlatValues,
+                    Peaks.FlatValues.Count, position, newCustomPeak.IsEmpty ? null : newCustomPeak));
             }
 
             /// <summary>

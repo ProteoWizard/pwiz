@@ -425,12 +425,11 @@ namespace pwiz.Skyline
                             focusStart.Focus();
                     }
 
-                    // Update displayed graphs, which are no longer valid
-                    var listGraphUpdate = from graph in _listGraphChrom
-                                          where graph.Visible
-                                          where !graph.IsCurrent(settingsOld, settingsNew)
-                                          select graph;
-                    listUpdateGraphs.AddRange(listGraphUpdate.ToArray());
+                    // Update displayed graphs, which are no longer valid. Every one of them, since
+                    // a graph no longer works out whether it would look the same: that meant
+                    // comparing the results of every charted transition, which a transition no
+                    // longer keeps. See GraphChromatogram.OnDocumentUIChanged.
+                    listUpdateGraphs.AddRange(_listGraphChrom.Where(graph => graph.Visible));
 
 //                    UpdateReplicateMenuItems(enabled);
 

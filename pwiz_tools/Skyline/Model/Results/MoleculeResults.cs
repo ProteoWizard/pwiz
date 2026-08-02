@@ -437,52 +437,53 @@ namespace pwiz.Skyline.Model.Results
             var replicatePositions = groupResults.ChromFileIds.ReplicatePositions;
             var chosenPeakIndexes = new int[groupResults.ChromFileIds.FileIds.Count];
             var resultsNew = groupResults;
-            bool everyFileRead = true;
             for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
             {
                 // A replicate which is still being imported or rescored has nothing settled to look
-                // at, and asking would read chromatograms which are about to be replaced.
-                if (!Settings.MeasuredResults.Chromatograms[replicateIndex].IsLoaded)
-                {
-                    everyFileRead = false;
-                    continue;
-                }
-
+                // at, and asking would read chromatograms which are about to be replaced. Its peaks
+                // still keep their boundaries below, the same as any other peak which is not one of
+                // the candidates.
+                bool isLoaded = Settings.MeasuredResults.Chromatograms[replicateIndex].IsLoaded;
                 foreach (int position in replicatePositions[replicateIndex])
                 {
                     var fileId = groupResults.ChromFileIds.FileIds[position].Value;
-                    var chromGroupInfo = FindChromatogramGroupInfo(nodeGroup, replicateIndex, fileId);
-                    if (chromGroupInfo == null)
-                    {
-                        // Its chromatograms have not been read, so nothing can be said about it and
-                        // nothing of it can be given up.
-                        everyFileRead = false;
-                        chosenPeakIndexes[position] = -1;
-                        continue;
-                    }
-
-                    chosenPeakIndexes[position] =
-                        FindChosenPeakIndex(resultsNew, transitionCount, chromGroupInfo, fileId);
+                    var chromGroupInfo = isLoaded
+                        ? FindChromatogramGroupInfo(nodeGroup, replicateIndex, fileId)
+                        : null;
+                    chosenPeakIndexes[position] = chromGroupInfo == null
+                        ? -1
+                        : FindChosenPeakIndex(resultsNew, transitionCount, chromGroupInfo, fileId);
                     if (chosenPeakIndexes[position] < 0)
                     {
+                        // Anything which could not be matched to a candidate peak - because the
+                        // peak is not one of them, or because there was nothing to match it
+                        // against - keeps its boundaries instead, and is reproduced by integrating
+                        // between them. That is what lets the chrom infos go in every case rather
+                        // than only when every file could be read.
                         resultsNew = CarryPeakBounds(transitionCount, resultsNew, fileId);
+                    }
+                    else
+                    {
+                        // A peak the user set is given boundaries whether or not they match a
+                        // candidate peak, and here they did: the index reproduces it, so the
+                        // boundaries are a second copy of the same thing.
+                        resultsNew = resultsNew.DropTransitionPeakBounds(transitionCount, fileId);
                     }
                 }
             }
 
-            var groupResultsNew = resultsNew.ChangeChosenPeakIndexes(chosenPeakIndexes);
-            if (everyFileRead)
-            {
-                // The precursor's chrom infos go the same way its transitions' do. Everything they
-                // said is either in the columnar results or rebuilt by GetTransitionGroupChromInfos,
-                // which drives the same calculator the settings pass does - the aggregates, the
-                // ranks and the dot products alike.
-                //
-                // This has to happen in the same pass that works out the peak indexes, not later:
-                // the indexes are found by matching the transitions' peak boundaries, and once the
-                // transitions are converted there are no boundaries left to match.
-                groupResultsNew = groupResultsNew.ClearTransitionLegacyChromInfos().ChangeLegacyChromInfos(null);
-            }
+            // The precursor's chrom infos go the same way its transitions' do. Everything they said
+            // is either in the columnar results now or rebuilt by GetTransitionGroupChromInfos,
+            // which drives the same calculator the settings pass does - the aggregates, the ranks
+            // and the dot products alike.
+            //
+            // Unconditional, because every peak above came away with either the index of the
+            // candidate peak it is or the boundaries to integrate between. Letting them go only
+            // when every file could be read meant a pass which rebuilt them - see
+            // TransitionGroupResultsCalculator.UpdateTransitionGroupNode - and then could not give
+            // them up left the document holding more than it started with.
+            var groupResultsNew = resultsNew.ChangeChosenPeakIndexes(chosenPeakIndexes)
+                .ClearTransitionLegacyChromInfos().ChangeLegacyChromInfos(null);
 
             return nodeGroup.ChangeAbbreviatedResults(groupResultsNew);
         }
@@ -749,8 +750,9 @@ namespace pwiz.Skyline.Model.Results
         /// <para>
         /// The boundaries identify it on their own. Integrating a chromatogram between the same two
         /// times cannot give a different peak, so there is nothing to gain by checking the area as
-        /// well. A peak whose boundaries the user set is not one of the candidates, and matches
-        /// none of them, which is the right answer for it.
+        /// well. A peak whose boundaries the user set is looked for the same way as any other: the
+        /// user may have picked one of the candidate peaks, and when the boundaries say so there is
+        /// no reason to keep them.
         /// </para>
         /// </summary>
         private static int SearchForChosenPeakIndex(TransitionGroupResults results, int replicateIndex,

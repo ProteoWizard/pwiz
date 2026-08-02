@@ -16,17 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -38,6 +27,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -47,6 +37,17 @@ using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -219,7 +220,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             _nameChromatogramSet = name;
             _documentContainer = documentContainer;
-            _document = documentContainer.DocumentUI;
+            SetDocument(documentContainer.DocumentUI);
             _documentContainer.ListenUI(OnDocumentUIChanged);
             _stateProvider = stateProvider;
             
@@ -275,7 +276,26 @@ namespace pwiz.Skyline.Controls.Graphs
         /// The document this graph is showing, which is not always the one the container has: it
         /// is taken when the graph updates, and everything drawn has to agree with it.
         /// </summary>
-        private SrmDocument _document;
+        /// <summary>
+        /// What identifies the document this graph last drew, and the settings it drew it with.
+        /// <para>
+        /// Not the document itself. A graph on a tab which is not showing never hears that the
+        /// document changed, so it went on holding the one it last drew - and with it every result
+        /// that document held, long after the document itself had been replaced.
+        /// <see cref="SrmDocument.ReferenceId"/> answers the only question worth asking of it -
+        /// whether this is still the document that was drawn.
+        /// </para>
+        /// </summary>
+        private object _documentReferenceId;
+
+        /// <summary>
+        /// The document to draw, which is always the current one rather than whichever was current
+        /// when this graph last updated.
+        /// </summary>
+        private SrmDocument Document
+        {
+            get { return _documentContainer.DocumentUI; }
+        }
 
         /// <summary>
         /// Takes the document the graph is to show. Anything worked out from the one before is
@@ -283,9 +303,9 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void SetDocument(SrmDocument document)
         {
-            if (ReferenceEquals(_document, document))
+            if (ReferenceEquals(_documentReferenceId, document.ReferenceId))
                 return;
-            _document = document;
+            _documentReferenceId = document.ReferenceId;
             _moleculeResultsByPeptide = null;
         }
 
@@ -411,7 +431,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 transitions.AddRange(GetOtherOptimizationTransitions(_closestCurve));
             }
 
-            var measuredResults = _document.Settings.MeasuredResults;
+            var measuredResults = Document.Settings.MeasuredResults;
             IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath, 
                 chromatogramInfo.Source, chromatogramInfo.Times, transitions.ToArray(), measuredResults);
             var e = new ClickedChromatogramEventArgs(
@@ -428,7 +448,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (clickedItem?.OptimizationStep == null)
                 yield break;
 
-            var settings = _document.Settings;
+            var settings = Document.Settings;
             var results = settings.MeasuredResults;
             if (results == null)
                 yield break;
@@ -612,44 +632,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
-            // Against what this graph is showing rather than against what the document was before
-            // the change: the two are not the same, since the graph only takes a document when it
-            // updates, and it may have missed changes since.
+            // Against what this graph last drew rather than against what the document was before
+            // the change: the two are not the same, since a graph on a tab which is not showing
+            // never hears about a change, and so may have missed several.
             var documentNew = _documentContainer.DocumentUI;
-
-            // Changes to the settings are handled elsewhere
-            if (ReferenceEquals(documentNew.Settings.MeasuredResults, _document.Settings.MeasuredResults))
+            if (!IsCacheInvalidated && ReferenceEquals(documentNew.ReferenceId, _documentReferenceId))
             {
-                // Update the graph if it is no longer current, due to changes
-                // within the document node tree.
-                if (Visible && !IsDisposed && !IsCurrent(_document.Settings, documentNew.Settings))
-                {
-                    UpdateUI();
-                }
+                return;
+            }
+
+            // Any document which is not the one last drawn is drawn again. Working out whether it
+            // would look the same used to mean comparing the results of every charted transition,
+            // which a transition no longer keeps, and asking MoleculeResults for them would read
+            // every chromatogram of the molecule just to decide whether to redraw.
+            if (Visible && !IsDisposed)
+            {
+                UpdateUI();
             }
         }
 
         public bool IsCacheInvalidated { get; set; }
 
         // Keyed on the path to the molecule, which is what says where its precursors are. Belongs
-        // to _document, and is thrown away with it.
+        // to Document, and is thrown away with it.
         private Dictionary<IdentityPath, MoleculeResults> _moleculeResultsByPeptide;
-
-        /// <summary>
-        /// Whether the graph is still showing what the settings say it should, so that it does not
-        /// have to be drawn again.
-        /// <para>
-        /// This used to compare the results of every charted transition, which meant reading the
-        /// chrom infos off the doc nodes. A transition does not keep them any more, and working
-        /// them out again through <see cref="MoleculeResults"/> would read every chromatogram of
-        /// the molecule just to decide whether to redraw. So nothing but the settings being the
-        /// very same object counts as current, and everything else redraws.
-        /// </para>
-        /// </summary>
-        public bool IsCurrent(SrmSettings settingsOld, SrmSettings settingsNew)
-        {
-            return !IsCacheInvalidated && ReferenceEquals(settingsOld, settingsNew);
-        }
 
         /// <summary>
         /// Gets the set of chromatogram info for the selected file of the groups.
@@ -668,7 +674,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public ChromFileInfoId GetChromFileInfoId()
         {
-            var document = _document;
+            var document = Document;
             if (!document.Settings.HasResults || null == _arrayChromInfo)
             {
                 return null;
@@ -809,7 +815,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
             GraphHelper.FormatFontSize(graphControl.GraphPane,Settings.Default.ChromatogramFontSize);
-            var settings = _document.Settings;
+            var settings = Document.Settings;
             var results = settings.MeasuredResults;
             if (results == null)
                 return;
@@ -909,7 +915,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 // Make sure all the chromatogram info for the relevant transition groups is present.
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
-                var displayType = GetDisplayType(_document);
+                var displayType = GetDisplayType(Document);
                 if (displayToExtractor.TryGetValue(displayType, out var extractor))
                 {
                     if (EnsureChromInfo(results,
@@ -1033,12 +1039,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                                    mzMatchTolerance,
                                                    nodeGroup, chromGroupInfo,
                                                    new PaneKey(nodeGroup),
-                                                   GetDisplayType(_document, nodeGroup), ref bestQuantitativePeak, ref bestNonQuantitativePeak);
+                                                   GetDisplayType(Document, nodeGroup), ref bestQuantitativePeak, ref bestNonQuantitativePeak);
                                 enableTrackingDot = enableTrackingDot || _enableTrackingDot;
                             }
                             else
                             {
-                                displayType = GetDisplayType(_document, nodeGroup);
+                                displayType = GetDisplayType(Document, nodeGroup);
                                 if (displayType != DisplayTypeChrom.products)
                                 {
                                     DisplayTransitions(timeRegressionFunction, nodeTranSelected, chromatograms, mzMatchTolerance,
@@ -1168,7 +1174,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                             break;
                     }
-                    SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, _document.DocumentType)));
+                    SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, Document.DocumentType)));
                 }
             }
             else if (CurveCount == 1 && CurveList[0].NPts == 1 && CurveList[0].Points[0].X == 0)
@@ -1183,7 +1189,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         message = GraphsResources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram;
                         break;
                 }
-                SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, _document.DocumentType)));
+                SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, Document.DocumentType)));
             }
             else
             {
@@ -1418,7 +1424,7 @@ namespace pwiz.Skyline.Controls.Graphs
             double[][] peakAreas = null;
             bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
             bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
-            bool isFullScanMs = _document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
+            bool isFullScanMs = Document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
             if ((isFullScanMs && !isShowingMsMs && nodeGroup.HasIsotopeDist) ||
                 (!isFullScanMs && nodeGroup.HasLibInfo))
             {
@@ -1556,7 +1562,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // 2. In a separate pane of the split graph (Transitions -> All AND Transitions -> Split Graph)
             // 3. In a single pane by themselves (Transition -> Products)
             // We will use an offset in the colors array for cases 2 and 3 so that we do not reuse the precursor ion colors.
-            var nodeDisplayType = GetDisplayType(_document, nodeGroup);
+            var nodeDisplayType = GetDisplayType(Document, nodeGroup);
             int colorOffset = 0;
             if(displayType == DisplayTypeChrom.products && 
                 (nodeDisplayType != DisplayTypeChrom.single || 
@@ -1707,7 +1713,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             float? backgroundLevel = null;
             if (PeakIntegrator.HasBackgroundSubtraction(
-                    _document.Settings.TransitionSettings.FullScan.AcquisitionMethod, chromatogramInfo.TimeIntervals,
+                    Document.Settings.TransitionSettings.FullScan.AcquisitionMethod, chromatogramInfo.TimeIntervals,
                     chromatogramInfo.Source))
             {
                 backgroundLevel = chromatogramInfo.GetBackgroundLevel(start, end);
@@ -2018,7 +2024,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // removed node until the next update catches up). Checked before any peak work so a
                 // skipped group cannot influence auto-zoom; the next update redraws against the
                 // current selection.
-                var peptideDocNode = (PeptideDocNode) _document.FindNode(_groupPaths[i].Parent);
+                var peptideDocNode = (PeptideDocNode) Document.FindNode(_groupPaths[i].Parent);
                 if (peptideDocNode == null)
                     continue;
 
@@ -2117,7 +2123,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool IsQuantitative(TransitionDocNode transitionDocNode)
         {
-            return transitionDocNode.IsQuantitative(_document.Settings);
+            return transitionDocNode.IsQuantitative(Document.Settings);
         }
 
         private class DisplayPeptide
@@ -2312,7 +2318,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ShowImputedPeakBounds(ChromGraphItem chromGraphPrimary, PeptideDocNode[] nodePeps)
         {
-            if (!ChromatogramContextMenu.IsShowImputedPeak(_document))
+            if (!ChromatogramContextMenu.IsShowImputedPeak(Document))
             {
                 return;
             }
@@ -2321,7 +2327,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return;
             }
-            var doc = _document;
+            var doc = Document;
             var peptideGroupDocNode =
                 doc.MoleculeGroups.FirstOrDefault(node => node.FindNodeIndex(peptide) >= 0);
             if (peptideGroupDocNode == null)
@@ -2419,7 +2425,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 if (Settings.Default.ShowAlignedPeptideIdTimes &&
-                    !DocumentRetentionTimes.IsLoaded(_document))
+                    !DocumentRetentionTimes.IsLoaded(Document))
                 {
                     Messages.Add(GraphsResources.GraphChromatogram_SetRetentionTimeIdIndicators_Waiting_for_retention_time_alignment);
                 }
@@ -2870,8 +2876,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                         new Dictionary<IdentityPath, MoleculeResults>();
             if (!_moleculeResultsByPeptide.TryGetValue(peptidePath, out var moleculeResults))
             {
-                moleculeResults = _document.FindNode(peptidePath) is PeptideDocNode nodePep
-                    ? new MoleculeResults(_document.Settings, nodePep)
+                moleculeResults = Document.FindNode(peptidePath) is PeptideDocNode nodePep
+                    ? new MoleculeResults(Document.Settings, nodePep)
                     : null;
                 _moleculeResultsByPeptide.Add(peptidePath, moleculeResults);
             }
