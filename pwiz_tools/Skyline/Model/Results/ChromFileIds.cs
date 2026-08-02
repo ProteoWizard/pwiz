@@ -26,37 +26,6 @@ namespace pwiz.Skyline.Model.Results
         public ImmutableList<ReferenceValue<ChromFileInfoId>> FileIds { get; private set; }
 
         /// <summary>
-        /// The flat position of a file's entry in one replicate, or -1 when the replicate has
-        /// nothing for that file.
-        /// <para>
-        /// This is how a position is found. Nothing should count its way to one, because the
-        /// entries of a replicate are in no order a caller can rely on. A replicate almost
-        /// always has exactly one entry, so searching it is cheap.
-        /// </para>
-        /// </summary>
-        /// <summary>
-        /// The flat position of a file's entry, or -1. A file belongs to one replicate, so it
-        /// identifies a position on its own when the replicate is not already known.
-        /// </summary>
-        public int IndexOfFile(ChromFileInfoId fileId)
-        {
-            for (int position = 0; position < FileIds.Count; position++)
-            {
-                if (ReferenceEquals(FileIds[position].Value, fileId))
-                {
-                    return position;
-                }
-            }
-
-            return -1;
-        }
-
-        /// <summary>
-        /// The files one replicate has entries for. Costs nothing beyond walking the positions,
-        /// which is what makes it the answer for callers that only need to know which files there
-        /// are rather than anything about their peaks.
-        /// </summary>
-        /// <summary>
         /// Every file, in position order. A file belongs to one replicate, so none appears twice.
         /// </summary>
         public IEnumerable<ChromFileInfoId> GetFileIds()
@@ -81,6 +50,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// The flat position of a file's entry in one replicate, or -1 when the replicate has
+        /// nothing for that file.
+        /// <para>
+        /// This is the only way a position is found, and the replicate is always known: nothing
+        /// searches every file of the document for one, and nothing counts its way to a position,
+        /// because the entries of a replicate are in no order a caller can rely on. A replicate
+        /// almost always has exactly one entry, so searching it is cheap.
+        /// </para>
+        /// </summary>
         public int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
         {
             foreach (int position in ReplicatePositions[replicateIndex])

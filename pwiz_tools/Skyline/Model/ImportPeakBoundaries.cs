@@ -552,6 +552,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 }
                 var chromSet = fileMatch.Chromatograms;
+                int replicateIndex = Document.Settings.MeasuredResults.Chromatograms.IndexOf(chromSet);
                 string nameSet = chromSet.Name;
                 var fileId = chromSet.FindFile(fileMatch.FilePath);
                 // Define the annotations to be added
@@ -602,7 +603,8 @@ namespace pwiz.Skyline.Model
                         // Attach annotations
                         if (annotations.Any())
                         {
-                            docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
+                            docNew = docNew.AddPrecursorResultsAnnotations(groupPath, replicateIndex, fileId,
+                                annotations);
                         }
                         // Change peak
                         var filePath = chromSet.GetFileInfo(fileId).FilePath;
@@ -795,7 +797,7 @@ namespace pwiz.Skyline.Model
                                 var newAnnotationValues = annotations.ListAnnotations().ToList();
                                 newAnnotationValues = newAnnotationValues.Where(a => !AnnotationsAdded.Contains(a.Key)).ToList();
                                 var newAnnotations = new Annotations(annotations.Note, newAnnotationValues, annotations.ColorIndex);
-                                var newGroupNode = groupNode.ChangePrecursorAnnotations(fileId, newAnnotations);
+                                var newGroupNode = groupNode.ChangePrecursorAnnotations(i, fileId, newAnnotations);
                                 if (!ReferenceEquals(groupNode, newGroupNode))
                                     docNew = (SrmDocument) docNew.ReplaceChild(groupPath.Parent, newGroupNode);
                                 // Adjust peaks to null if they weren't in the file

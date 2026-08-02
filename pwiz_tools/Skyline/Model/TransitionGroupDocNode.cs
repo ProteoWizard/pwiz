@@ -3312,31 +3312,33 @@ namespace pwiz.Skyline.Model
         /// The annotations of one file's peak are on its <see cref="CustomPeak"/>, so setting them
         /// rewrites that sparse list rather than a chrom info, and reads nothing.
         /// </summary>
-        public TransitionGroupDocNode ChangePrecursorAnnotations(ChromFileInfoId fileId, Annotations annotations)
+        public TransitionGroupDocNode ChangePrecursorAnnotations(int replicateIndex, ChromFileInfoId fileId,
+            Annotations annotations)
         {
-            int position = GetPrecursorAnnotationPosition(fileId);
+            int position = GetPrecursorAnnotationPosition(replicateIndex, fileId);
             var results = AbbreviatedResults;
             var newAnnotations = results.Annotations.FlatValues.ToList();
             newAnnotations[position] = annotations ?? Annotations.EMPTY;
             return ChangeAbbreviatedResults(results.ChangeAnnotations(newAnnotations));
         }
 
-        public TransitionGroupDocNode AddPrecursorAnnotations(ChromFileInfoId fileId, Dictionary<string, string> annotations)
+        public TransitionGroupDocNode AddPrecursorAnnotations(int replicateIndex, ChromFileInfoId fileId,
+            Dictionary<string, string> annotations)
         {
-            var groupAnnotations = GetPrecursorAnnotations(fileId);
+            var groupAnnotations = GetPrecursorAnnotations(replicateIndex, fileId);
             foreach (var annotation in annotations)
                 groupAnnotations = groupAnnotations.ChangeAnnotation(annotation.Key, annotation.Value);
-            return ChangePrecursorAnnotations(fileId, groupAnnotations);
+            return ChangePrecursorAnnotations(replicateIndex, fileId, groupAnnotations);
         }
 
-        public Annotations GetPrecursorAnnotations(ChromFileInfoId fileId)
+        public Annotations GetPrecursorAnnotations(int replicateIndex, ChromFileInfoId fileId)
         {
-            return AbbreviatedResults.GetAnnotations(GetPrecursorAnnotationPosition(fileId));
+            return AbbreviatedResults.GetAnnotations(GetPrecursorAnnotationPosition(replicateIndex, fileId));
         }
 
-        private int GetPrecursorAnnotationPosition(ChromFileInfoId fileId)
+        private int GetPrecursorAnnotationPosition(int replicateIndex, ChromFileInfoId fileId)
         {
-            int position = AbbreviatedResults?.ChromFileIds.IndexOfFile(fileId) ?? -1;
+            int position = AbbreviatedResults?.ChromFileIds.IndexOfFile(replicateIndex, fileId) ?? -1;
             if (position < 0)
                 throw new InvalidDataException(string.Format(ModelResources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_,
                                                fileId.GlobalIndex));

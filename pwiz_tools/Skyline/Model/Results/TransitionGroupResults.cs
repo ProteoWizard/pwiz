@@ -565,8 +565,8 @@ namespace pwiz.Skyline.Model.Results
         /// Records the boundaries of one transition's peak in one file. See
         /// <see cref="TransitionResults.ChangeCustomPeakBounds"/>.
         /// </summary>
-        public TransitionGroupResults ChangeTransitionCustomPeakBounds(int transitionIndex, ChromFileInfoId fileId,
-            float startTime, float endTime, PeakIdentification identified)
+        public TransitionGroupResults ChangeTransitionCustomPeakBounds(int transitionIndex, int replicateIndex,
+            ChromFileInfoId fileId, float startTime, float endTime, PeakIdentification identified)
         {
             var results = GetTransitionResults(transitionIndex);
             if (results == null)
@@ -575,7 +575,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return ChangeTransitionResults(transitionIndex,
-                results.ChangeCustomPeakBounds(fileId, startTime, endTime, identified));
+                results.ChangeCustomPeakBounds(replicateIndex, fileId, startTime, endTime, identified));
         }
 
         /// <summary>
@@ -767,13 +767,13 @@ namespace pwiz.Skyline.Model.Results
         /// peak the user set keeps its boundaries whether or not they match a candidate peak, and
         /// when they do the index says the same thing for nothing.
         /// </summary>
-        public TransitionGroupResults DropTransitionPeakBounds(ChromFileInfoId fileId)
+        public TransitionGroupResults DropTransitionPeakBounds(int replicateIndex, ChromFileInfoId fileId)
         {
             var results = this;
             for (int iTran = 0; iTran < TransitionCount; iTran++)
             {
                 var transitionResults = results.GetTransitionResults(iTran);
-                var newResults = transitionResults?.DropCustomPeakBounds(fileId);
+                var newResults = transitionResults?.DropCustomPeakBounds(replicateIndex, fileId);
                 if (newResults != null && !ReferenceEquals(newResults, transitionResults))
                 {
                     results = results.ChangeTransitionResults(iTran, newResults);
@@ -1530,10 +1530,10 @@ namespace pwiz.Skyline.Model.Results
             /// replicate, so it says which peak it is on its own, and the caller never holds a position
             /// of these results.
             /// </summary>
-            public TransitionResults ChangeCustomPeakBounds(ChromFileInfoId fileId, float startTime, float endTime,
-                PeakIdentification identified)
+            public TransitionResults ChangeCustomPeakBounds(int replicateIndex, ChromFileInfoId fileId,
+                float startTime, float endTime, PeakIdentification identified)
             {
-                int position = ChromFileIds.IndexOfFile(fileId);
+                int position = IndexOfFile(replicateIndex, fileId);
                 return position < 0 ? this : ChangeCustomPeakBounds(position, startTime, endTime, identified);
             }
 
@@ -1542,9 +1542,9 @@ namespace pwiz.Skyline.Model.Results
             /// the custom peak had. Used once the peak turns out to be one of the candidate peaks
             /// after all, when the index reproduces it and the boundaries say the same thing again.
             /// </summary>
-            public TransitionResults DropCustomPeakBounds(ChromFileInfoId fileId)
+            public TransitionResults DropCustomPeakBounds(int replicateIndex, ChromFileInfoId fileId)
             {
-                int position = ChromFileIds.IndexOfFile(fileId);
+                int position = IndexOfFile(replicateIndex, fileId);
                 if (position < 0)
                 {
                     return this;

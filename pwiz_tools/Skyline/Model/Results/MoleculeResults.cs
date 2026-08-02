@@ -467,7 +467,7 @@ namespace pwiz.Skyline.Model.Results
                         // A peak the user set is given boundaries whether or not they match a
                         // candidate peak, and here they did: the index reproduces it, so the
                         // boundaries are a second copy of the same thing.
-                        resultsNew = resultsNew.DropTransitionPeakBounds(fileId);
+                        resultsNew = resultsNew.DropTransitionPeakBounds(replicateIndex, fileId);
                     }
                 }
             }
@@ -564,7 +564,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                groupResults = groupResults.ChangeTransitionCustomPeakBounds(iTran, fileId,
+                groupResults = groupResults.ChangeTransitionCustomPeakBounds(iTran, replicateIndex, fileId,
                     chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.Identified);
             }
 

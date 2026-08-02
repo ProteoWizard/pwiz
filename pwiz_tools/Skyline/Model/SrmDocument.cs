@@ -1776,11 +1776,12 @@ namespace pwiz.Skyline.Model
             throw new InvalidOperationException(ModelResources.SrmDocument_MoveNode_Invalid_move_source);
         }
 
-        public SrmDocument AddPrecursorResultsAnnotations(IdentityPath groupPath, ChromFileInfoId fileId,
+        public SrmDocument AddPrecursorResultsAnnotations(IdentityPath groupPath, int replicateIndex,
+                                                          ChromFileInfoId fileId,
                                                           Dictionary<string, string> annotations)
         {
             var groupNode = (TransitionGroupDocNode) FindNode(groupPath);
-            var groupNodeNew = groupNode.AddPrecursorAnnotations(fileId, annotations);
+            var groupNodeNew = groupNode.AddPrecursorAnnotations(replicateIndex, fileId, annotations);
             if (ReferenceEquals(groupNode, groupNodeNew))
                 return this;
             return (SrmDocument) ReplaceChild(groupPath.Parent, groupNodeNew);

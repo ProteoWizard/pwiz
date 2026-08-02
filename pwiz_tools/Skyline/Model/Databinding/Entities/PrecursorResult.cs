@@ -61,10 +61,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         /// </summary>
         public void ChangeAnnotations(EditDescription editDescription, Func<Annotations, Annotations> newAnnotations)
         {
-            var fileId = GetResultFile().ChromFileInfoId;
+            var resultFile = GetResultFile();
+            var fileId = resultFile.ChromFileInfoId;
+            int replicateIndex = resultFile.Replicate.ReplicateIndex;
             Precursor.ChangeDocNode(editDescription,
-                docNode => docNode.ChangePrecursorAnnotations(fileId,
-                    newAnnotations(docNode.GetPrecursorAnnotations(fileId))));
+                docNode => docNode.ChangePrecursorAnnotations(replicateIndex, fileId,
+                    newAnnotations(docNode.GetPrecursorAnnotations(replicateIndex, fileId))));
         }
         [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
         public double? DetectionQValue { get { return ChromInfo.QValue; } }
