@@ -31,7 +31,6 @@ using Dapper;
 using JetBrains.Annotations;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -2091,8 +2090,8 @@ namespace pwiz.Skyline.Model.Lib
             private Dictionary<int, IndexedMultiArray<IonMobilityAndCCS>> _ionMobilities =
                 new Dictionary<int, IndexedMultiArray<IonMobilityAndCCS>>();
 
-            private Dictionary<int, ExplicitPeakBoundsDict> _explicitPeakBounds =
-                new Dictionary<int, ExplicitPeakBoundsDict>();
+            private Dictionary<int, ExplicitPeakBoundsList> _explicitPeakBounds =
+                new Dictionary<int, ExplicitPeakBoundsList>();
 
             private IProgressMonitor _progressMonitor;
             private IProgressStatus _progressStatus;
@@ -2131,7 +2130,7 @@ namespace pwiz.Skyline.Model.Lib
                 return _ionMobilities;
             }
 
-            public Dictionary<int, ExplicitPeakBoundsDict> GetExplicitPeakBounds()
+            public Dictionary<int, ExplicitPeakBoundsList> GetExplicitPeakBounds()
             {
                 return _explicitPeakBounds;
             }
@@ -2192,8 +2191,7 @@ namespace pwiz.Skyline.Model.Lib
                 var retentionTimes = new List<KeyValuePair<int, float>>();
                 var ionMobilities = new List<KeyValuePair<int, IonMobilityAndCCS>>();
                 // One entry per file index, holding null for the files which have no boundaries
-                var explicitPeakBounds = new List<ExplicitPeakBounds>();
-                bool anyPeakBounds = false;
+                ExplicitPeakBounds[] explicitPeakBounds = null;
                 foreach (var row in rows)
                 {
                     if (row.RedundantRefSpectraID.GetValueOrDefault() != 0)
@@ -2228,14 +2226,8 @@ namespace pwiz.Skyline.Model.Lib
                     var peakBounds = ReadPeakBounds(row);
                     if (peakBounds != null)
                     {
-                        while (explicitPeakBounds.Count <= fileIndex)
-                        {
-                            explicitPeakBounds.Add(null);
-                        }
-
-                        // A file can only have one set of boundaries, so the first row wins
-                        explicitPeakBounds[fileIndex] = explicitPeakBounds[fileIndex] ?? peakBounds;
-                        anyPeakBounds = true;
+                        explicitPeakBounds ??= new ExplicitPeakBounds[FileIndexesById.Count];
+                        explicitPeakBounds[fileIndex] ??= peakBounds;
                     }
                 }
 
@@ -2271,21 +2263,17 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                if (anyPeakBounds)
+                if (explicitPeakBounds != null)
                 {
-                    var explicitPeakBoundsDict = new ExplicitPeakBoundsDict(explicitPeakBounds);
                     lock (_explicitPeakBounds)
                     {
                         if (_explicitPeakBounds.TryGetValue(refSpectraId.Value, out var existing))
                         {
-                            int fileCount = Math.Max(existing.Count, explicitPeakBoundsDict.Count);
-                            _explicitPeakBounds[refSpectraId.Value] = new ExplicitPeakBoundsDict(
-                                Enumerable.Range(0, fileCount)
-                                    .Select(fileIndex => existing[fileIndex] ?? explicitPeakBoundsDict[fileIndex]));
+                            _explicitPeakBounds[refSpectraId.Value] = existing.Merge(explicitPeakBounds);
                         }
                         else
                         {
-                            _explicitPeakBounds.Add(refSpectraId.Value, explicitPeakBoundsDict);
+                            _explicitPeakBounds.Add(refSpectraId.Value, new ExplicitPeakBoundsList(explicitPeakBounds));
                         }
                     }
                 }
@@ -2624,7 +2612,7 @@ namespace pwiz.Skyline.Model.Lib
             Protein = protein;
             RetentionTimesByFileIndex = IndexedMultiArray<float>.EMPTY;
             IonMobilitiesByFileIndex = IndexedMultiArray<IonMobilityAndCCS>.EMPTY;
-            PeakBoundariesByFileIndex = ExplicitPeakBoundsDict.EMPTY;
+            PeakBoundariesByFileIndex = ExplicitPeakBoundsList.EMPTY;
             Score = score;
             ScoreType = scoreType;
         }
@@ -2642,7 +2630,7 @@ namespace pwiz.Skyline.Model.Lib
         public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
         public IndexedMultiArray<float> RetentionTimesByFileIndex { get; private set; }
         public IndexedMultiArray<IonMobilityAndCCS> IonMobilitiesByFileIndex { get; private set; }
-        public ExplicitPeakBoundsDict PeakBoundariesByFileIndex { get; private set; }
+        public ExplicitPeakBoundsList PeakBoundariesByFileIndex { get; private set; }
         public double? Score { get; }
         public string ScoreType { get; }
 
@@ -2656,7 +2644,7 @@ namespace pwiz.Skyline.Model.Lib
             return ChangeProp(ImClone(this), im => im.IonMobilitiesByFileIndex = ionMobilities);
         }
 
-        public BiblioLiteSpectrumInfo ChangePeakBoundaries(ExplicitPeakBoundsDict peakBoundaries)
+        public BiblioLiteSpectrumInfo ChangePeakBoundaries(ExplicitPeakBoundsList peakBoundaries)
         {
             return ChangeProp(ImClone(this), im => im.PeakBoundariesByFileIndex = peakBoundaries);
         }

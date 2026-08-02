@@ -94,10 +94,10 @@ namespace pwiz.Skyline.Model.Lib
     /// The <see cref="Results.ReplicatePositions"/> says which file indexes have boundaries, and
     /// is shared between the spectra which have them in the same files.
     /// </summary>
-    public class ExplicitPeakBoundsDict : Immutable, IReadOnlyList<ExplicitPeakBounds>
+    public class ExplicitPeakBoundsList : Immutable, IReadOnlyList<ExplicitPeakBounds>
     {
-        public static readonly ExplicitPeakBoundsDict EMPTY =
-            new ExplicitPeakBoundsDict(Array.Empty<ExplicitPeakBounds>());
+        public static readonly ExplicitPeakBoundsList EMPTY =
+            new ExplicitPeakBoundsList(Array.Empty<ExplicitPeakBounds>());
         private ReplicatePositions _positions;
         private float[] _startTimes;
         private float[] _endTimes;
@@ -107,16 +107,13 @@ namespace pwiz.Skyline.Model.Lib
         /// Takes the boundaries of each file in file index order, with a null for each file which
         /// has none.
         /// </summary>
-        public ExplicitPeakBoundsDict(IEnumerable<ExplicitPeakBounds> peakBoundsByFileIndex)
+        public ExplicitPeakBoundsList(IEnumerable<ExplicitPeakBounds> peakBoundsByFileIndex)
         {
             var list = peakBoundsByFileIndex.ToList();
-            // Trailing files with no boundaries say nothing, and leaving them out lets spectra
-            // which have boundaries in the same files share their positions.
             while (list.Count > 0 && list[list.Count - 1] == null)
             {
                 list.RemoveAt(list.Count - 1);
             }
-
             _positions = ReplicatePositions.FromCounts(list.Select(peakBounds => peakBounds == null ? 0 : 1));
             var peakBoundsList = list.Where(peakBounds => peakBounds != null).ToList();
             _startTimes = peakBoundsList.Select(peakBounds => (float) peakBounds.StartTime).ToArray();
@@ -170,7 +167,13 @@ namespace pwiz.Skyline.Model.Lib
             return GetEnumerator();
         }
 
-        public ExplicitPeakBoundsDict ValueFromCache(ValueCache valueCache)
+        public ExplicitPeakBoundsList Merge(IReadOnlyList<ExplicitPeakBounds> other)
+        {
+            var count = Math.Max(Count, other.Count);
+            return new ExplicitPeakBoundsList(Enumerable.Range(0, count).Select(i => this[i] ?? other[i]));
+        }
+
+        public ExplicitPeakBoundsList ValueFromCache(ValueCache valueCache)
         {
             var positions = valueCache.CacheValue(_positions);
             if (ReferenceEquals(positions, _positions))
