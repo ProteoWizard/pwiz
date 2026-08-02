@@ -944,24 +944,6 @@ namespace pwiz.Skyline.Model.Lib
             return dictionaries;
         }
 
-        public override Dictionary<Target, double> GetAllRetentionTimes(int fileIndex)
-        {
-            var dictionary = new Dictionary<Target, double>();
-            foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
-            {
-                foreach (var spectrumInfo in grouping)
-                {
-                    if (spectrumInfo.FileDatas.TryGetValue(fileIndex, out var fileData) &&
-                        fileData.ApexTime.HasValue)
-                    {
-                        dictionary[grouping.Key] = fileData.ApexTime.Value;
-                    }
-                }
-            }
-
-            return dictionary;
-        }
-
         public override IList<double>[] GetRetentionTimesWithSequences(ICollection<Target> targets)
         {
             var lists = new List<double>[LibraryFiles.Count];

@@ -2397,59 +2397,18 @@ namespace pwiz.Skyline.Model.Lib
 
         public override Dictionary<Target, double>[] GetAllRetentionTimes()
         {
-            var result = new Dictionary<Target, double>[LibraryFiles.Count];
-            for (int fileIndex = 0; fileIndex < result.Length; fileIndex++)
-            {
-                result[fileIndex] = new Dictionary<Target, double>();
-            }
-
-            // Poke one target's times into these, rather than making a dictionary per target,
-            // since a library can have hundreds of thousands of targets. A file which has no
-            // times for the current target is left holding MaxValue.
-            var minTimes = new double[result.Length];
-            for (int fileIndex = 0; fileIndex < minTimes.Length; fileIndex++)
-            {
-                minTimes[fileIndex] = double.MaxValue;
-            }
-
-            var fileIndexesWithTimes = new List<int>();
+            var result = Enumerable.Range(0, LibraryFiles.Count)
+                .Select(i => new Dictionary<Target, double>()).ToArray();
             foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
-                foreach (var entry in grouping)
+                for (int iFile = 0; iFile < LibraryFiles.Count; iFile ++)
                 {
-                    LowerMinTimes(entry.RetentionTimesByFileIndex, minTimes, fileIndexesWithTimes);
-                }
-
-                foreach (int fileIndex in fileIndexesWithTimes)
-                {
-                    result[fileIndex].Add(grouping.Key, minTimes[fileIndex]);
-                    minTimes[fileIndex] = double.MaxValue;
-                }
-
-                fileIndexesWithTimes.Clear();
-            }
-
-            return result;
-        }
-
-        public override Dictionary<Target, double> GetAllRetentionTimes(int fileIndex)
-        {
-            var result = new Dictionary<Target, double>();
-            foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
-            {
-                double? minTime = null;
-                foreach (var entry in grouping)
-                {
-                    var entryTimes = entry.RetentionTimesByFileIndex[fileIndex];
-                    if (entryTimes.Count > 0 && entryTimes.Min() < minTime.GetValueOrDefault(double.MaxValue))
+                    var minTime = grouping.SelectMany(entry => entry.RetentionTimesByFileIndex[iFile])
+                        .Append(float.MaxValue).Min();
+                    if (minTime != float.MaxValue)
                     {
-                        minTime = entryTimes.Min();
+                        result[iFile].Add(grouping.Key, minTime);
                     }
-                }
-
-                if (minTime.HasValue)
-                {
-                    result.Add(grouping.Key, minTime.Value);
                 }
             }
 
@@ -2519,35 +2478,6 @@ namespace pwiz.Skyline.Model.Lib
                 for (int i = start; i < end; i++)
                 {
                     fileTimes.Add(times.FlatValues[i]);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Lowers the value at each file's index of <paramref name="minTimeByFileIndex"/> to that
-        /// file's earliest time, when that is earlier. Every file index whose value moves down
-        /// from double.MaxValue is added to <paramref name="fileIndexesLowered"/>, so that a
-        /// caller accumulating across spectra can find the values which changed without walking
-        /// the whole array.
-        /// </summary>
-        private static void LowerMinTimes(IndexedMultiArray<float> times, IList<double> minTimeByFileIndex,
-            IList<int> fileIndexesLowered)
-        {
-            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
-            {
-                int start = times.ReplicatePositions.GetStart(fileIndex);
-                int end = start + times.GetCount(fileIndex);
-                for (int i = start; i < end; i++)
-                {
-                    if (times.FlatValues[i] < minTimeByFileIndex[fileIndex])
-                    {
-                        if (minTimeByFileIndex[fileIndex] == double.MaxValue)
-                        {
-                            fileIndexesLowered.Add(fileIndex);
-                        }
-
-                        minTimeByFileIndex[fileIndex] = times.FlatValues[i];
-                    }
                 }
             }
         }

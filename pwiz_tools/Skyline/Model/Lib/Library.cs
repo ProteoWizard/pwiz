@@ -1082,15 +1082,6 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// The same as <see cref="GetAllRetentionTimes()"/> for a single file. Libraries which can
-        /// do better than gathering all of the files and throwing the rest away override this.
-        /// </summary>
-        public virtual Dictionary<Target, double> GetAllRetentionTimes(int fileIndex)
-        {
-            return GetAllRetentionTimes()?[fileIndex];
-        }
-
-        /// <summary>
         /// The retention times of the targets in each of the library's files, with one list per
         /// entry in <see cref="LibraryFiles"/>.
         /// </summary>
