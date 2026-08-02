@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Model.Results
         public static SrmDocument ConvertDocumentResults(SrmDocument document, IProgressMonitor progressMonitor,
             ref IProgressStatus progressStatus)
         {
-            if (document.Settings.MeasuredResults == null)
+            if (document.Settings.MeasuredResults == null || !document.MoleculeTransitionGroups.Any(NeedsConverting))
             {
                 return document;
             }
@@ -313,14 +313,6 @@ namespace pwiz.Skyline.Model.Results
             // idle.
             var moleculeGroups = document.MoleculeGroups.ToArray();
             var molecules = moleculeGroups.SelectMany(nodeMoleculeGroup => nodeMoleculeGroup.Molecules).ToArray();
-
-            // Asked before saying anything, since a document saved with the columnar results, or
-            // one which has already been through this, has nothing to do and nothing to report.
-            // Reads no chromatogram.
-            if (!molecules.Any(nodePep => nodePep.TransitionGroups.Any(NeedsConverting)))
-            {
-                return document;
-            }
 
             var status = progressStatus.ChangeMessage(
                 ResultsResources.MoleculeResults_ConvertDocumentResults_Reading_peaks);
@@ -352,23 +344,20 @@ namespace pwiz.Skyline.Model.Results
                     return;
                 }
 
-                // Counted inside the lock so that the count and the update it produces cannot be
-                // separated, which is what would let two threads report out of order.
                 lock (statusLock)
                 {
-                    // The count before this molecule, which is never the total, so the percentage
-                    // never reaches 100. The load this is part of is not finished until its own
-                    // Complete() call, which is what takes it the rest of the way.
-                    var statusNew = status.ChangePercentComplete(completedCount * 100 / molecules.Length);
+                    int percentComplete = completedCount * 100 / molecules.Length;
                     completedCount++;
-                    if (statusNew.PercentComplete != status.PercentComplete)
+                    if (percentComplete != status.PercentComplete)
                     {
-                        status = statusNew;
-                        progressMonitor.UpdateProgress(status);
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
                     }
                 }
             });
-
+            if (true == progressMonitor?.IsCanceled)
+            {
+                return document;
+            }
             progressStatus = status;
 
             var moleculeGroupsNew = new List<DocNode>(moleculeGroups.Length);
@@ -404,7 +393,7 @@ namespace pwiz.Skyline.Model.Results
         public TransitionGroupDocNode ConvertResults(TransitionGroupDocNode nodeGroup)
         {
             var groupResults = nodeGroup.AbbreviatedResults;
-            var nodeTrans = nodeGroup.Transitions.ToArray();
+            int transitionCount = nodeGroup.Children.Count;
             if (groupResults == null || !NeedsConverting(nodeGroup))
             {
                 return nodeGroup;
@@ -438,10 +427,10 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     chosenPeakIndexes[position] =
-                        FindChosenPeakIndex(resultsNew, nodeTrans.Length, chromGroupInfo, fileId);
+                        FindChosenPeakIndex(resultsNew, transitionCount, chromGroupInfo, fileId);
                     if (chosenPeakIndexes[position] < 0)
                     {
-                        resultsNew = CarryPeakBounds(nodeTrans, resultsNew, fileId);
+                        resultsNew = CarryPeakBounds(transitionCount, resultsNew, fileId);
                     }
                 }
             }
@@ -528,10 +517,10 @@ namespace pwiz.Skyline.Model.Results
         /// the peaks are not all the same candidate peak. Integrating between them is then the only
         /// way any of them comes back.
         /// </summary>
-        private static TransitionGroupResults CarryPeakBounds(TransitionDocNode[] nodeTrans,
+        private static TransitionGroupResults CarryPeakBounds(int transitionCount,
             TransitionGroupResults groupResults, ChromFileInfoId fileId)
         {
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            for (int iTran = 0; iTran < transitionCount; iTran++)
             {
                 var chromInfo = groupResults.FindTransitionChromInfo(iTran, fileId, 0);
                 if (chromInfo == null || chromInfo.IsEmpty)
@@ -608,10 +597,10 @@ namespace pwiz.Skyline.Model.Results
         private IList<TransitionChromInfo>[] CalcTransitionChromInfos(TransitionGroupDocNode nodeGroup,
             int replicateIndex, out List<FileStepCorrelation> correlations)
         {
-            var nodeTrans = nodeGroup.Transitions.ToArray();
-            var chromInfoLists = new IList<TransitionChromInfo>[nodeTrans.Length];
-            var lists = new List<TransitionChromInfo>[nodeTrans.Length];
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            int transitionCount = nodeGroup.Children.Count;
+            var chromInfoLists = new IList<TransitionChromInfo>[transitionCount];
+            var lists = new List<TransitionChromInfo>[transitionCount];
+            for (int iTran = 0; iTran < transitionCount; iTran++)
             {
                 lists[iTran] = new List<TransitionChromInfo>();
                 chromInfoLists[iTran] = lists[iTran];
@@ -623,7 +612,7 @@ namespace pwiz.Skyline.Model.Results
                 var fileId = chromatograms.FindFile(chromGroupInfo);
                 if (fileId != null)
                 {
-                    ReadFile(nodeGroup, nodeTrans, lists, chromatograms, chromGroupInfo, fileId, replicateIndex);
+                    ReadFile(nodeGroup, lists, chromGroupInfo, fileId, replicateIndex);
                 }
             }
 
@@ -632,7 +621,7 @@ namespace pwiz.Skyline.Model.Results
             correlations = new List<FileStepCorrelation>();
             foreach (var fileStep in GetFileSteps(chromInfoLists))
             {
-                var correlation = RankFileStep(nodeGroup, nodeTrans, chromInfoLists, fileStep);
+                var correlation = RankFileStep(nodeGroup, chromInfoLists, fileStep);
                 if (correlation != null)
                 {
                     correlations.Add(correlation);
@@ -648,21 +637,23 @@ namespace pwiz.Skyline.Model.Results
         /// builds its lists: file major, optimization step minor, skipping any file where the
         /// transition has no chromatogram.
         /// </summary>
-        private void ReadFile(TransitionGroupDocNode nodeGroup, TransitionDocNode[] nodeTrans,
-            List<TransitionChromInfo>[] lists, ChromatogramSet chromatograms,
+        private void ReadFile(TransitionGroupDocNode nodeGroup, List<TransitionChromInfo>[] lists,
             ChromatogramGroupInfo chromGroupInfo, ChromFileInfoId fileId, int replicateIndex)
         {
+            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
+            int transitionCount = nodeGroup.Children.Count;
             // Optimization steps are separate chromatograms of the same transition, and each one
             // has its own set of candidate peaks.
-            var optStepChromatograms = new OptStepChromatograms[nodeTrans.Length];
-            var customPeaks = new CustomPeak[nodeTrans.Length];
+            var optStepChromatograms = new OptStepChromatograms[transitionCount];
+            var customPeaks = new CustomPeak[transitionCount];
             // Each transition's own peak for this file, or null when it has none there. The values
             // rather than positions in them: a position of one transition's results means nothing
             // in another's, and these are read alongside each other.
-            var transitionPeaks = new TransitionPeak?[nodeTrans.Length];
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            var transitionPeaks = new TransitionPeak?[transitionCount];
+            for (int iTran = 0; iTran < transitionCount; iTran++)
             {
-                optStepChromatograms[iTran] = chromGroupInfo.GetAllTransitionInfo(nodeTrans[iTran], MzMatchTolerance,
+                optStepChromatograms[iTran] = chromGroupInfo.GetAllTransitionInfo(
+                    (TransitionDocNode) nodeGroup.Children[iTran], MzMatchTolerance,
                     chromatograms.OptimizationFunction, TransformChrom.interpolated);
 
                 // The entry holding the values of optimization step zero, found by file.
@@ -676,7 +667,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             int chosenPeakIndex = GetChosenPeakIndex(nodeGroup, replicateIndex, fileId, chromGroupInfo);
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            for (int iTran = 0; iTran < transitionCount; iTran++)
             {
                 if (optStepChromatograms[iTran].IsEmpty)
                 {
@@ -691,8 +682,8 @@ namespace pwiz.Skyline.Model.Results
                     // A chrom info gets added for every step even when there is no chromatogram
                     // for it, because ChangeResults adds an empty peak there.
                     var chromatogramInfo = optStepChromatograms[iTran].GetChromatogramForStep(step);
-                    var chromPeak = GetChromPeak(nodeGroup, nodeTrans[iTran], replicateIndex, fileId, step,
-                        chromatogramInfo, chosenPeakIndex, customPeaks[iTran]);
+                    var chromPeak = GetChromPeak(nodeGroup, (TransitionDocNode) nodeGroup.Children[iTran],
+                        replicateIndex, fileId, step, chromatogramInfo, chosenPeakIndex, customPeaks[iTran]);
                     lists[iTran].Add(new TransitionChromInfo(fileId, step, chromPeak,
                         chromatogramInfo?.GetIonMobilityFilter() ?? IonMobilityFilter.EMPTY, annotations, userSet));
                 }
@@ -833,7 +824,6 @@ namespace pwiz.Skyline.Model.Results
             TransitionGroupDocNode nodeGroup, int replicateIndex, IList<TransitionChromInfo>[] chromInfoLists,
             List<FileStepCorrelation> correlations)
         {
-            var nodeTrans = nodeGroup.Transitions.ToArray();
             // What the precursor is still carrying, which is where the values this pass does not
             // work out - the annotations and the scores - are carried forward from.
             var chromInfos = nodeGroup.AbbreviatedResults?.LegacyChromInfos;
@@ -842,9 +832,9 @@ namespace pwiz.Skyline.Model.Results
                 : default;
             var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
                 PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos);
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
             {
-                listCalculator.AddChromInfoList(nodeTrans[iTran], chromInfoLists[iTran]);
+                listCalculator.AddChromInfoList((TransitionDocNode) nodeGroup.Children[iTran], chromInfoLists[iTran]);
             }
 
             // Recalculated from the chromatogram rather than carried forward, which is what
@@ -915,7 +905,7 @@ namespace pwiz.Skyline.Model.Results
         /// replicate, so they are not part of what the document stops holding.
         /// </para>
         /// </summary>
-        private FileStepCorrelation RankFileStep(TransitionGroupDocNode nodeGroup, TransitionDocNode[] nodeTrans,
+        private FileStepCorrelation RankFileStep(TransitionGroupDocNode nodeGroup,
             IList<TransitionChromInfo>[] chromInfoLists, FileStep fileStep)
         {
             bool isFullScanMs = Settings.TransitionSettings.FullScan.IsEnabledMs;
@@ -942,9 +932,9 @@ namespace pwiz.Skyline.Model.Results
 
             var ranked = new List<RankedTransition>();
             int countInfo = 0, countLibTrans = 0, countIsoTrans = 0;
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
             {
-                var nodeTran = nodeTrans[iTran];
+                var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
                 var chromInfo = FindChromInfo(chromInfoLists[iTran], fileStep);
                 ranked.Add(new RankedTransition(nodeTran.IsMs1, chromInfo, nodeTran.ParticipatesInScoring));
                 if (chromInfo != null)
