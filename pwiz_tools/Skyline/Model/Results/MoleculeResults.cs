@@ -63,17 +63,8 @@ namespace pwiz.Skyline.Model.Results
     {
         /// <summary>
         /// One entry per transition group, in the order the doc node's children are in, since
-        /// <see cref="DocNodeParent.FindNodeIndex(Identity)"/> makes that a fast lookup.
-        /// </summary>
-        private ImmutableList<ChromFileIdMap<ChromatogramGroupInfo>> _chromatogramGroupInfos;
-
-        private readonly Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator> _integrators =
-            new Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator>();
-
-        /// <summary>
-        /// What has been worked out so far, one entry per transition group, indexed the same way.
-        /// Rebuilding a precursor means rebuilding every one of its transitions, so it is worth
-        /// keeping: whoever asked for one of them usually goes on to ask for the rest.
+        /// <see cref="DocNodeParent.FindNodeIndex(Identity)"/> makes that a fast lookup. Null until
+        /// <see cref="EnsureRead"/> has run, and every entry non-null after it.
         /// </summary>
         private GroupResults[] _groupResults;
 
@@ -158,23 +149,40 @@ namespace pwiz.Skyline.Model.Results
         /// the ranks and the dot products are calculated from all of the transitions together, and
         /// the precursor values are aggregated from the transition values.
         /// </summary>
-        private GroupResults GetGroupResults(TransitionGroup transitionGroup)
+        /// <summary>
+        /// What is known about one precursor, without working anything out. This is what the paths
+        /// which run while a precursor is being worked out have to use - see
+        /// <see cref="GetIntegrator"/>, which <see cref="CalcGroupResults"/> reaches by way of
+        /// <see cref="IntegratePeak"/> - since asking for the results of the precursor being
+        /// calculated would not terminate.
+        /// </summary>
+        private GroupResults FindGroupResults(TransitionGroup transitionGroup)
         {
             EnsureRead();
             int groupIndex = PeptideDocNode.FindNodeIndex(transitionGroup);
-            if (groupIndex < 0 || ReplicateCount == 0)
+            return groupIndex < 0 ? null : _groupResults[groupIndex];
+        }
+
+        private GroupResults GetGroupResults(TransitionGroup transitionGroup)
+        {
+            var groupResults = FindGroupResults(transitionGroup);
+            if (groupResults == null || ReplicateCount == 0)
             {
                 return null;
             }
 
-            // Nothing else returns null, so there is no need to remember that a precursor has
-            // already been worked out.
-            return _groupResults[groupIndex] ??=
-                CalcGroupResults((TransitionGroupDocNode) PeptideDocNode.Children[groupIndex]);
+            // Both are set together, so either one says whether this has been worked out.
+            if (groupResults.ChromInfos == null)
+            {
+                CalcGroupResults(groupResults);
+            }
+
+            return groupResults;
         }
 
-        private GroupResults CalcGroupResults(TransitionGroupDocNode nodeGroup)
+        private void CalcGroupResults(GroupResults groupResults)
         {
+            var nodeGroup = groupResults.NodeGroup;
             var groupChromInfoLists = new List<ChromInfoList<TransitionGroupChromInfo>>(ReplicateCount);
             var transitionChromInfoLists = Enumerable.Range(0, nodeGroup.TransitionCount)
                 .Select(iTran => new List<ChromInfoList<TransitionChromInfo>>(ReplicateCount)).ToArray();
@@ -190,8 +198,10 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return new GroupResults(new Results<TransitionGroupChromInfo>(groupChromInfoLists),
+            groupResults.TransitionResults = ImmutableList.ValueOf(
                 transitionChromInfoLists.Select(lists => new Results<TransitionChromInfo>(lists)));
+            // Last, since it is what says the precursor has been worked out.
+            groupResults.ChromInfos = new Results<TransitionGroupChromInfo>(groupChromInfoLists);
         }
 
         /// <summary>
@@ -200,15 +210,40 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private class GroupResults
         {
-            public GroupResults(Results<TransitionGroupChromInfo> chromInfos,
-                IEnumerable<Results<TransitionChromInfo>> transitionResults)
+            public GroupResults(TransitionGroupDocNode nodeGroup,
+                ChromFileIdMap<ChromatogramGroupInfo> chromatogramGroupInfos)
             {
-                ChromInfos = chromInfos;
-                TransitionResults = ImmutableList.ValueOf(transitionResults);
+                NodeGroup = nodeGroup;
+                ChromatogramGroupInfos = chromatogramGroupInfos;
             }
 
-            public Results<TransitionGroupChromInfo> ChromInfos { get; }
-            public ImmutableList<Results<TransitionChromInfo>> TransitionResults { get; }
+            /// <summary>
+            /// The precursor these belong to, as it was when the molecule was read.
+            /// </summary>
+            public TransitionGroupDocNode NodeGroup { get; }
+
+            /// <summary>
+            /// This precursor's chromatograms in every replicate. Read for every precursor of the
+            /// molecule at once rather than when each is first asked for - see
+            /// <see cref="EnsureRead"/> for why - so it is here from the start.
+            /// </summary>
+            public ChromFileIdMap<ChromatogramGroupInfo> ChromatogramGroupInfos { get; }
+
+            /// <summary>
+            /// Worked out on the first ask and then kept, because rebuilding a precursor means
+            /// rebuilding every one of its transitions: whoever asked for one of them usually goes
+            /// on to ask for the rest. Null until then, and the two are always set together.
+            /// </summary>
+            public Results<TransitionGroupChromInfo> ChromInfos { get; set; }
+            public ImmutableList<Results<TransitionChromInfo>> TransitionResults { get; set; }
+
+            /// <summary>
+            /// One per file, made when a peak of that file first has to be integrated again. Kept
+            /// per precursor rather than per molecule because a chromatogram group belongs to one
+            /// precursor, so the entry which addresses this already says which.
+            /// </summary>
+            public Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator> Integrators { get; }
+                = new Dictionary<ReferenceValue<ChromatogramGroupInfo>, TransitionGroupIntegrator>();
         }
 
         /// <summary>
@@ -543,20 +578,18 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<ChromatogramGroupInfo> GetChromatogramGroupInfos(TransitionGroup transitionGroup,
             int replicateIndex)
         {
-            EnsureRead();
-            int groupIndex = PeptideDocNode.FindNodeIndex(transitionGroup);
-            if (groupIndex < 0 || replicateIndex < 0 || replicateIndex >= ReplicateCount)
+            var groupResults = FindGroupResults(transitionGroup);
+            if (groupResults == null || replicateIndex < 0 || replicateIndex >= ReplicateCount)
             {
                 return ImmutableList<ChromatogramGroupInfo>.EMPTY;
             }
 
-            return _chromatogramGroupInfos[groupIndex].Values[replicateIndex];
+            return groupResults.ChromatogramGroupInfos.Values[replicateIndex];
         }
 
         private TransitionGroupDocNode FindTransitionGroup(TransitionGroup transitionGroup)
         {
-            int groupIndex = PeptideDocNode.FindNodeIndex(transitionGroup);
-            return groupIndex < 0 ? null : (TransitionGroupDocNode) PeptideDocNode.Children[groupIndex];
+            return (TransitionGroupDocNode) PeptideDocNode.FindNode(transitionGroup);
         }
 
         /// <summary>
@@ -790,6 +823,12 @@ namespace pwiz.Skyline.Model.Results
         private TransitionGroupIntegrator GetIntegrator(TransitionGroupDocNode nodeGroup, int replicateIndex,
             ChromFileInfoId fileId)
         {
+            var groupResults = FindGroupResults(nodeGroup.TransitionGroup);
+            if (groupResults == null)
+            {
+                return null;
+            }
+
             var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
             foreach (var chromGroupInfo in GetChromatogramGroupInfos(nodeGroup.TransitionGroup, replicateIndex))
             {
@@ -798,10 +837,10 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                if (!_integrators.TryGetValue(chromGroupInfo, out var integrator))
+                if (!groupResults.Integrators.TryGetValue(chromGroupInfo, out var integrator))
                 {
                     integrator = new TransitionGroupIntegrator(Settings, nodeGroup, chromatograms, chromGroupInfo);
-                    _integrators.Add(chromGroupInfo, integrator);
+                    groupResults.Integrators.Add(chromGroupInfo, integrator);
                 }
 
                 return integrator;
@@ -1005,23 +1044,29 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private void EnsureRead()
         {
-            if (_chromatogramGroupInfos != null)
+            if (_groupResults != null)
             {
                 return;
             }
 
             var measuredResults = Settings.MeasuredResults;
-            _chromatogramGroupInfos = ImmutableList.ValueOf(PeptideDocNode.TransitionGroups.Select(nodeGroup =>
+            var groupResults = PeptideDocNode.TransitionGroups.Select(nodeGroup => new GroupResults(nodeGroup,
                 measuredResults == null
                     ? EmptyChromatogramGroupInfos()
-                    : ReadTransitionGroup(measuredResults, nodeGroup)));
+                    : ReadTransitionGroup(measuredResults, nodeGroup))).ToArray();
 
             // Every precursor of every replicate in one read, grouped by cache, rather than one
             // read per group info the first time each is asked for its peaks. The molecule is
             // about to want all of them.
+            //
+            // This is why the chromatograms are read for every precursor here rather than when
+            // each is first asked for, unlike everything else a GroupResults holds. Reading them
+            // one at a time would give up the batching, and would put the reads on the shared
+            // pooled stream through ChromatogramGroupInfo.ReadPeaks, which ConvertDocumentResults
+            // could then be doing from several threads at once.
             ChromatogramGroupInfo.LoadPeaksForAll(
-                _chromatogramGroupInfos.SelectMany(groupInfos => groupInfos.FlatValues), false);
-            _groupResults = new GroupResults[_chromatogramGroupInfos.Count];
+                groupResults.SelectMany(results => results.ChromatogramGroupInfos.FlatValues), false);
+            _groupResults = groupResults;
         }
 
         private ChromFileIdMap<ChromatogramGroupInfo> ReadTransitionGroup(MeasuredResults measuredResults,
