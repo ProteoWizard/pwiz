@@ -116,12 +116,56 @@ namespace pwiz.Osprey.Test
             {
                 new LibraryEntry(1, ISOBARIC_TARGET, ISOBARIC_TARGET, 2, 500.0, 10.0)
             };
+            // Fragments are required: GenerateAllWithCollisionDetection SKIPS a fragment-less
+            // entry outright, so without these the assertion below would hold over an EMPTY
+            // decoy list and pass no matter what the gate did.
+            foreach (var t in targets)
+                t.Fragments = new[] { Fragment(300.0, 1.0f, IonType.B, 3) };
 
             var decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
                 targets, config, null, false, out _);
 
+            Assert.AreEqual(1, decoys.Count, @"the cycling fallback should still supply a decoy");
             Assert.IsFalse(decoys.Any(d => d.Sequence == ISOBARIC_REVERSAL),
                 @"The fragment-overlap gate must reject the isobaric reversal");
+        }
+
+        [TestMethod]
+        public void CollisionCheckRejectsADecoyIsobaricToADifferentTarget()
+        {
+            // AAEESLR reverses to LSEEAAR, which is I/L-isobaric to the SECOND target below -
+            // one of the 742 real collisions measured over the Astral target set.
+            const string collider = "AAEESLR";
+            const string reversal = "LSEEAAR";
+            const string twin = "ISEEAAR";
+
+            // The property that makes this worth its own check: the fragment-overlap gate
+            // PASSES this candidate. That gate compares a candidate to its OWN source target,
+            // and against AAEESLR the ladder of LSEEAAR is ordinary. The collision is with a
+            // DIFFERENT target, which that gate never looks at - so the two are independent
+            // rather than redundant, and an exact-string audit reports 0 here.
+            Assert.IsTrue(DecoyGenerator.IsCandidateAcceptable(collider, reversal));
+
+            var config = new OspreyConfig();
+            var targets = new List<LibraryEntry>
+            {
+                new LibraryEntry(1, collider, collider, 2, 500.0, 10.0),
+                new LibraryEntry(2, twin, twin, 2, 500.0, 10.0)
+            };
+            // Fragments are required: GenerateAllWithCollisionDetection SKIPS a fragment-less
+            // entry outright, which would make the rejection assertion below pass vacuously.
+            foreach (var t in targets)
+                t.Fragments = new[] { Fragment(300.0, 1.0f, IonType.B, 3) };
+
+            var decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                targets, config, null, false, out _);
+
+            Assert.IsFalse(decoys.Any(d => d.Sequence == reversal),
+                @"A decoy I/L-isobaric to a real target is not a valid null and must be rejected");
+
+            // The cycling fallback must still supply decoys. Without this the test would pass
+            // just as well with a check that rejected every candidate.
+            Assert.AreEqual(2, decoys.Count, @"both targets should still receive a decoy");
         }
 
         [TestMethod]
