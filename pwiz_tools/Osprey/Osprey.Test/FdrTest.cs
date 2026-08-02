@@ -40,6 +40,41 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class FdrTest
     {
+        private bool _savedFloorMean;
+        private double? _savedFloorPercentile;
+        private int _savedMeanBestN;
+
+        /// <summary>
+        /// Pin the whole OSPREY_EXPERIMENT_AGG family to its defaults for every test in this class.
+        /// Many tests here assert exact q-values against a raw-max oracle, and these settings are
+        /// seeded from the process environment - so on the machine actually running a mean(best-N)
+        /// or floor A/B sweep the suite failed for reasons that had nothing to do with the code
+        /// under test. Mirrors <c>MeanBestNAggregationTest.PinFloorToMedian</c>.
+        ///
+        /// This class previously had no <c>[TestInitialize]</c> at all, which is why it inherited
+        /// the ambient sweep. Pinning the aggregation itself is possible because
+        /// <see cref="OspreyEnvironment.MeanBestN"/> is now the single settable source of truth
+        /// that <c>ExperimentAgg</c> / <c>ExperimentAggMeanBest</c> are computed from.
+        /// </summary>
+        [TestInitialize]
+        public void PinExperimentAggToDefault()
+        {
+            _savedFloorMean = OspreyEnvironment.MeanBest2FloorMean;
+            _savedFloorPercentile = OspreyEnvironment.MeanBest2FloorPercentile;
+            _savedMeanBestN = OspreyEnvironment.MeanBestN;
+            OspreyEnvironment.MeanBest2FloorMean = false;
+            OspreyEnvironment.MeanBest2FloorPercentile = null;
+            OspreyEnvironment.MeanBestN = 0;
+        }
+
+        [TestCleanup]
+        public void RestoreExperimentAgg()
+        {
+            OspreyEnvironment.MeanBest2FloorMean = _savedFloorMean;
+            OspreyEnvironment.MeanBest2FloorPercentile = _savedFloorPercentile;
+            OspreyEnvironment.MeanBestN = _savedMeanBestN;
+        }
+
         // ============================================================
         // FdrController: CompeteAndFilter tests
         // ============================================================
@@ -2099,11 +2134,18 @@ namespace pwiz.Osprey.Test
             var entryIdArr = entryIds.ToArray();
             var peptideArr = peptides.ToArray();
 
+            // applyExperimentAgg: false is REQUIRED, not decorative. The streaming builder here is
+            // the raw-max one (StreamingFirstPassQ() with no N), so the resident oracle must be
+            // raw-max too. The default (true) honors the ambient OSPREY_EXPERIMENT_AGG, which
+            // would compare a mean(best-N) map against a max map on any machine running an A/B
+            // sweep - a failure that says nothing about the code under test.
             AssertMapsEqual(
-                PercolatorQValues.ComputeExperimentPrecursorQMap(scoreArr, labelArr, entryIdArr),
+                PercolatorQValues.ComputeExperimentPrecursorQMap(
+                    scoreArr, labelArr, entryIdArr, applyExperimentAgg: false),
                 streaming.BuildExperimentPrecursorQMap(), "exp-precursor");
             AssertMapsEqual(
-                PercolatorQValues.ComputeExperimentPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr),
+                PercolatorQValues.ComputeExperimentPeptideQMap(
+                    scoreArr, labelArr, entryIdArr, peptideArr, applyExperimentAgg: false),
                 streaming.BuildExperimentPeptideQMap(), "exp-peptide");
             AssertMapsEqual(
                 PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
@@ -2143,7 +2185,11 @@ namespace pwiz.Osprey.Test
         private static void AssertStreamingMeanBestNMatchesResident(int n)
         {
             var rng = new Random(20260728 + n);
-            const int nFiles = 4;
+            // nFiles MUST exceed the largest N under test. At nFiles == 4 the N=4 case computed
+            // nObs = 4 + rng.Next(1) == 4 for every group, so _len filled straight to N and the
+            // `score > _top[0]` eviction branch - the actual top-N algorithm - never executed:
+            // the test degenerated to "mean of all four observations" while appearing to cover N=4.
+            const int nFiles = 6;
             const int nBaseIds = 50;
             var perFile = new List<(uint EntryId, bool IsDecoy, double Score, string Peptide)>[nFiles];
             for (int f = 0; f < nFiles; f++)
@@ -2193,6 +2239,15 @@ namespace pwiz.Osprey.Test
             AssertMapsEqual(
                 ResidentMeanBestNPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr, n),
                 streaming.BuildExperimentPeptideQMap(), "mbN exp-peptide");
+
+            // PEP must still be the RAW-max map, untouched by the aggregation. That invariant
+            // rests entirely on the mean-best-N block in Add() sitting AFTER the _precTargets /
+            // _precDecoys update and ending in an unconditional return - hoisting it would leave
+            // both dictionaries empty and silently give every row PEP = 1.0. Asserting it against
+            // the flat builder is what makes that a tested contract rather than a comment.
+            AssertMapsEqual(
+                PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
+                streaming.BuildPepWinnerMap(), "mbN pep-winner (must stay raw-max)");
         }
 
         /// <summary>
@@ -2249,6 +2304,328 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(map[oneRunBase] > map[twoRunBase],
                 string.Format("single-run demotion: one-run q ({0}) should exceed two-run q ({1}) at the same peak",
                     map[oneRunBase], map[twoRunBase]));
+        }
+
+        /// <summary>
+        /// Floor-path parity: the ONE component of mean(best-N) that the three existing parity
+        /// fixtures structurally cannot reach. They give every (base_id, side) at least N
+        /// observations, so <c>_len == N</c> everywhere and <c>AggregateScore</c>'s
+        /// <c>(n - _len) * floor</c> term is multiplied by ZERO on both paths - the missing-run
+        /// floor, the single most divergence-prone piece (two different estimators of the same
+        /// statistic), contributed nothing to any assertion.
+        ///
+        /// Here the floor WEIGHTS <c>(N - _len)</c> differ across units - every decoy and most
+        /// targets are under-detected, while some targets are fully detected and carry weight 0.
+        /// Differing weights are the point: a floor that is uniform across every unit is a
+        /// monotonic transform and cannot move any ranking, so a fixture in which all units share
+        /// a weight tests nothing about the floor no matter how wrong the floor is. Two things are
+        /// then asserted:
+        ///
+        ///  1. The two FLOOR ESTIMATORS agree to within <c>bin width + local decoy spacing</c>.
+        ///     That bound is wider than the bin width alone, and deliberately so: the resident path
+        ///     interpolates BETWEEN the two observed decoy scores straddling the quantile, while the
+        ///     streaming path interpolates uniformly WITHIN one histogram bin. Where the decoys are
+        ///     sparser than the bins, the streaming estimator cannot reach across the gap to the
+        ///     next observation, so the disagreement is set by the DATA SPACING, not by the bin
+        ///     width. Asserting the bin width alone fails on this fixture by ~18x, which is how the
+        ///     property was found. Production decoy counts are in the millions over a narrow score
+        ///     range, so there the spacing term vanishes and the bound does collapse to the bin
+        ///     width - but the general statement is what a test should pin.
+        ///  2. The resulting q MAPS are exactly equal. Not a contradiction with (1): a q-value is
+        ///     determined by the competition RANKING and the running target/decoy counts, both
+        ///     discrete. A sub-bin-width shift applied to every unit's aggregate moves no unit
+        ///     past another as long as the aggregates are separated by much more than that shift -
+        ///     which the fixture enforces and then VERIFIES below, so the premise is tested, not
+        ///     trusted. Exact map equality is therefore the correct, strictest assertion here.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingMeanBestNFloorPathMatchesResident()
+        {
+            AssertFloorPathParity(2);
+            AssertFloorPathParity(3);
+            AssertFloorPathParity(4);
+        }
+
+        private static void AssertFloorPathParity(int n)
+        {
+            const int nTargetGroups = 20;
+            const int nDecoyGroups = 60;
+            var rows = new List<(int G, uint EntryId, bool IsDecoy, double Score, string Peptide)>();
+            int g = 0;
+
+            // Targets: group i is seen in (i % N) + 1 runs, so the floor WEIGHTS (n - _len) differ
+            // across units - 1..n-1 for the under-detected ones, 0 for the fully-detected ones.
+            //
+            // Differing weights, not merely a live floor term, are what give this test its power.
+            // The previous form ((i % (n-1)) + 1) kept every unit under-detected, which at n == 2
+            // collapses to _len == 1 for ALL of them: every aggregate is then (score + floor)/2,
+            // the uniform monotonic transform this feature's own docs call ranking-invariant, so
+            // the q-map equality below would have held for ANY floor, including one off by 1000x.
+            // n == 2 is the arm #4484 actually measures, so that was precisely the N whose floor
+            // path went untested. At n == 2 "every unit under-detected" and "weights differ" are
+            // mutually exclusive, so covering it REQUIRES mixing in fully-detected units.
+            //
+            // Be precise about what the mixed weights buy, because it is narrower than it looks.
+            // This is a PARITY test: assertion (2) compares the streaming map against the resident
+            // map, both built from their own floor. It therefore CANNOT detect an error shared by
+            // both estimators - verified by mutation, shifting both floors by +7.0 leaves this test
+            // green (what goes red is the value-oracle set in MeanBestNAggregationTest, which
+            // asserts exact aggregates against a known decoy median; that is where floor
+            // CORRECTNESS is pinned, and it covers n = 2).
+            //
+            // What the mixed weights fix is that assertion (2) was DEGENERATE at n == 2: with one
+            // uniform weight the aggregate is a monotonic transform, so a difference BETWEEN the
+            // two paths' floors could not change any ranking at any magnitude, and assertion (2)
+            // could not have reported a divergence even in principle. With weights differing it
+            // can. Scores stay 3.0 apart, ~3000x the real sub-bin difference, so the legitimate
+            // approximation still reorders nothing and exact equality remains the right assertion.
+            for (int i = 0; i < nTargetGroups; i++)
+            {
+                uint baseId = (uint)(i + 1);
+                int nObs = (i % n) + 1;
+                for (int k = 0; k < nObs; k++)
+                    rows.Add((g++, baseId, false, 5.0 + i * 3.0, "PEP" + i));
+            }
+
+            // Decoys: EXACTLY ONE observation each, deliberately. Every decoy then carries the
+            // same (N - 1) floor weight, so a change in the floor shifts every decoy aggregate by
+            // the SAME amount and their relative order is invariant - which is what lets the
+            // decoy scores be packed tightly enough to define a meaningful quantile without the
+            // two paths' floors reordering the null. (Giving decoys mixed observation counts
+            // instead puts two families of aggregate - (s + 2f)/3 and (2s + f)/3 - within
+            // 0.006 of each other, and the exact map equality below becomes a coin flip; the
+            // fixture self-check below caught precisely that.)
+            //
+            // The 0.0005 grid is FINER than the 0.001 bins, which is the production regime -
+            // millions of decoy scores over a narrow range, several per bin - so the two
+            // estimators land within a bin width of each other. On a grid COARSER than the bins
+            // they instead diverge by the data spacing (~18x the bin width at 0.037), which the
+            // bound asserted below covers and the summary explains; a coarse grid was tried here
+            // first and pushed the floor difference into the same order as the target aggregate
+            // gaps, which is a fixture problem, not a code one.
+            for (int i = 0; i < nDecoyGroups; i++)
+            {
+                uint baseId = (uint)(i + 1) | 0x80000000u;
+                rows.Add((g++, baseId, true, -3.0 + i * 0.0005, "DEC" + i));
+            }
+
+            var scores = new double[rows.Count];
+            var labels = new bool[rows.Count];
+            var entryIds = new uint[rows.Count];
+            var peptides = new string[rows.Count];
+            var streaming = new StreamingFdr.StreamingFirstPassQ(n);
+            for (int i = 0; i < rows.Count; i++)
+            {
+                scores[i] = rows[i].Score;
+                labels[i] = rows[i].IsDecoy;
+                entryIds[i] = rows[i].EntryId;
+                peptides[i] = rows[i].Peptide;
+                streaming.Add(rows[i].G, rows[i].Score, rows[i].EntryId, rows[i].IsDecoy, rows[i].Peptide);
+            }
+
+            // (1) The two floor estimators, compared directly.
+            var decoySample = new List<double>();
+            for (int i = 0; i < rows.Count; i++)
+            {
+                if (labels[i])
+                    decoySample.Add(scores[i]);
+            }
+            // ComputeFloorFromDecoyScores sorts in place, which is what the local-spacing
+            // measurement below needs, so read the straddling pair AFTER the call.
+            double residentFloor = TargetDecoyCompetition.ComputeFloorFromDecoyScores(decoySample);
+            double streamingFloor = streaming.ComputeDecoyFloor();
+            double binWidth = StreamingFdr.StreamingFirstPassQ.FloorBinWidth;
+
+            // The two observed decoy scores the resident median interpolates between. The
+            // streaming estimator interpolates inside ONE bin instead, so it cannot resolve a gap
+            // wider than a bin - the disagreement is bounded by bin width PLUS this spacing.
+            double medianRank = 0.5 * (decoySample.Count - 1);
+            int lo = (int)Math.Floor(medianRank);
+            int hi = Math.Min((int)Math.Ceiling(medianRank), decoySample.Count - 1);
+            double localSpacing = decoySample[hi] - decoySample[lo];
+
+            double floorDelta = Math.Abs(residentFloor - streamingFloor);
+            double floorBound = binWidth + localSpacing;
+            Assert.IsTrue(floorDelta <= floorBound, string.Format(
+                "N={0}: streaming floor {1:R} and resident floor {2:R} differ by {3:R}, above the " +
+                "{4:R} bound (bin width {5:R} + local decoy spacing {6:R}) this approximation is " +
+                "held to",
+                n, streamingFloor, residentFloor, floorDelta, floorBound, binWidth, localSpacing));
+
+            // The fixture's premise, VERIFIED rather than assumed: no unit can cross another when
+            // the floor moves by floorDelta. Only pairs with DIFFERENT floor weights can cross at
+            // all - same-weight units shift by the same amount and keep their order exactly - and
+            // in this fixture every decoy carries the same weight, so the pairs that matter are
+            // target-target and target-decoy. Decoy-decoy pairs are packed far tighter than
+            // floorDelta by design and are exempt for that reason.
+            var agg = TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, n);
+            var targetAggs = new List<double>();
+            var decoyAggs = new List<double>();
+            for (int i = 0; i < agg.Length; i++)
+                (labels[i] ? decoyAggs : targetAggs).Add(agg[i]);
+            double minCrossable = MinGapAcross(targetAggs, targetAggs);
+            minCrossable = Math.Min(minCrossable, MinGapAcross(targetAggs, decoyAggs));
+            Assert.IsTrue(minCrossable > 10 * floorDelta, string.Format(
+                "N={0}: the closest reorderable aggregate pair is only {1:R} apart against a " +
+                "{2:R} floor difference - the exact map equality asserted below would be testing " +
+                "luck rather than the floor path. Re-space the fixture scores.",
+                n, minCrossable, floorDelta));
+
+            // (2) End-to-end q maps, with the floor term live on every unit.
+            AssertMapsEqual(
+                ResidentMeanBestNPrecursorQMap(scores, labels, entryIds, n),
+                streaming.BuildExperimentPrecursorQMap(),
+                string.Format("mbN floor-path exp-precursor (N={0})", n));
+            AssertMapsEqual(
+                ResidentMeanBestNPeptideQMap(scores, labels, entryIds, peptides, n),
+                streaming.BuildExperimentPeptideQMap(),
+                string.Format("mbN floor-path exp-peptide (N={0})", n));
+        }
+
+        /// <summary>
+        /// The pass gate itself, end to end through the <see cref="FdrEntry"/> overload of
+        /// <c>PercolatorEngine.RunPercolatorFdr</c>: a SECOND-pass run must produce exactly the
+        /// experiment q-values it would produce with the aggregation switched off entirely, and a
+        /// FIRST-pass run must not.
+        ///
+        /// This is the level BOTH regressions lived at, and nothing tested it. The bounded q maps
+        /// got the pass gate while the full-length wrappers did not even take the parameter, so the
+        /// resident 2nd pass kept re-aggregating; the map/wrapper test one level below cannot see
+        /// that, because it drives the parameter directly instead of deriving it from the pass
+        /// label. Here the label is the only input that changes.
+        ///
+        /// Value-free by construction: it compares three runs of the same fixture rather than
+        /// predicting any q, so it does not depend on the SVM's output - only on the gate. The
+        /// second assertion is what keeps the first honest; without it a gate that never engaged
+        /// would satisfy "second pass equals flag-off" trivially.
+        /// </summary>
+        [TestMethod]
+        public void TestSecondPassIgnoresExperimentAggregation()
+        {
+            const int nFeat = 3;
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", false),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
+
+            // MeanBestN is pinned to 0 by this class's [TestInitialize]; the cleanup restores it.
+            double[] flagOff = RunAndCollectExperimentQ(nFeat, featureInfos, 0, "First-pass");
+            double[] secondPass = RunAndCollectExperimentQ(nFeat, featureInfos, 3, "Second-pass");
+            double[] firstPass = RunAndCollectExperimentQ(nFeat, featureInfos, 3, "First-pass");
+
+            Assert.AreEqual(flagOff.Length, secondPass.Length, @"row count");
+            for (int i = 0; i < flagOff.Length; i++)
+            {
+                Assert.AreEqual(flagOff[i], secondPass[i], 0.0, string.Format(
+                    "row {0}: a Second-pass run must not aggregate, so its experiment q must equal " +
+                    "the aggregation-off value exactly", i));
+            }
+
+            bool firstPassDiffers = false;
+            for (int i = 0; i < flagOff.Length && !firstPassDiffers; i++)
+                firstPassDiffers = flagOff[i] != firstPass[i];
+            Assert.IsTrue(firstPassDiffers,
+                @"the First-pass run must actually aggregate on this fixture, or the gate is untested");
+        }
+
+        // One RunPercolatorFdr pass over a fresh fixture at the given aggregation and pass label,
+        // returning the experiment-precursor q of every row in buffer order. A fresh fixture per
+        // call because RunPercolatorFdr scores the stubs IN PLACE.
+        private static double[] RunAndCollectExperimentQ(
+            int nFeat, OspreyFeatureInfo[] featureInfos, int meanBestN, string passLabel)
+        {
+            OspreyEnvironment.MeanBestN = meanBestN;
+            var stubs = BuildPassGateFixture(nFeat);
+            PercolatorEngine.RunPercolatorFdr(
+                stubs, new OspreyConfig(), featureInfos, s => { }, out _, null, passLabel);
+            var q = new List<double>();
+            foreach (var kvp in stubs)
+            {
+                foreach (var e in kvp.Value)
+                    q.Add(e.ExperimentPrecursorQvalue);
+            }
+            return q.ToArray();
+        }
+
+        /// <summary>
+        /// A population where mean(best-N) provably changes the reported q, which the shared
+        /// multi-observation fixture does NOT: there every score is monotone in the same parameter,
+        /// so mean-best and max yield the identical target/decoy SEQUENCE down the ranked list -
+        /// and conservative q is a function of that sequence alone. Aggregating changed every score
+        /// and not one q-value.
+        ///
+        /// Here a target has to CROSS a decoy. Four populations arrange that:
+        /// robust targets (N observations, highest features) stay put; SPARSE targets have ONE
+        /// observation, so mean-best-3 replaces two thirds of their score with the decoy floor;
+        /// HIGH decoys sit just below the sparse targets with a full N observations, so they do not
+        /// move; and a bulk of LOW decoys drags the decoy median - the floor - far below both. The
+        /// sparse target then lands beneath the high decoy it outranked under max. The crossing
+        /// condition is <c>T - D &lt; (N - 1) * (D - floor)</c>, and this fixture leaves an order of
+        /// magnitude of slack in it, so it does not depend on exactly what the SVM produces.
+        /// Features are resident, so no per-file loader is needed.
+        /// </summary>
+        private static List<KeyValuePair<string, List<FdrEntry>>> BuildPassGateFixture(int nFeat)
+        {
+            var file0 = new List<FdrEntry>();
+            var file1 = new List<FdrEntry>();
+            uint scan = 0;
+
+            // Observations alternate between the two files so the experiment competition does not
+            // take its single-file shortcut.
+            void Add(uint entryId, bool isDecoy, string peptide, double level, int nObs)
+            {
+                for (int k = 0; k < nObs; k++)
+                {
+                    var feats = new double[nFeat];
+                    for (int j = 0; j < nFeat; j++)
+                        feats[j] = level + k * 0.01 + j * 0.05;
+                    (k % 2 == 0 ? file0 : file1).Add(new FdrEntry
+                    {
+                        EntryId = entryId,
+                        ModifiedSequence = peptide,
+                        Charge = 2,
+                        ScanNumber = ++scan,
+                        IsDecoy = isDecoy,
+                        CoelutionSum = feats[0],
+                        Features = feats
+                    });
+                }
+            }
+
+            for (int p = 0; p < 20; p++)
+                Add((uint)(p + 1), false, "PEP" + p, 5.0 + p * 0.02, 3);          // robust targets
+            for (int p = 20; p < 26; p++)
+                Add((uint)(p + 1), false, "PEP" + p, 4.60 + (p - 20) * 0.02, 1);  // sparse targets
+            for (int p = 20; p < 26; p++)
+                Add((uint)(p + 1) | 0x80000000u, true, "DEC" + p, 4.40 + (p - 20) * 0.02, 3);
+            for (int p = 0; p < 20; p++)
+                Add((uint)(p + 1) | 0x80000000u, true, "DECLOW" + p, 0.5 + p * 0.02, 3);
+
+            return new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>("file0", file0),
+                new KeyValuePair<string, List<FdrEntry>>("file1", file1)
+            };
+        }
+
+        // Smallest non-zero distance between a value in one list and a value in the other. Equal
+        // values are skipped: an exact tie is resolved identically on both paths (same
+        // comparator, same tie-break), so it is not a crossing risk.
+        private static double MinGapAcross(List<double> a, List<double> b)
+        {
+            double min = double.MaxValue;
+            foreach (double x in a)
+            {
+                foreach (double y in b)
+                {
+                    double d = Math.Abs(x - y);
+                    if (d > 0.0 && d < min)
+                        min = d;
+                }
+            }
+            return min;
         }
 
         private static void AssertMapsEqual<TKey>(

@@ -56,7 +56,8 @@ namespace pwiz.Osprey.Tasks
     {
         private const string ModelSuffix = @".1st-pass.model.json";
 
-        /// <summary>Serializable slice of <see cref="PercolatorResults"/> the frozen scorer needs.</summary>
+        /// <summary>Serializable slice of <see cref="PercolatorResults"/> the frozen scorer needs,
+        /// plus the pass-1 provenance a merge node cannot otherwise know.</summary>
         private sealed class ModelDto
         {
             public int SchemaVersion { get; set; }
@@ -65,6 +66,14 @@ namespace pwiz.Osprey.Tasks
             public double[] Stds { get; set; }
             public double[][] FoldWeights { get; set; }
             public double[] FoldBiases { get; set; }
+
+            /// <summary>Normalized OSPREY_EXPERIMENT_AGG of the process that TRAINED this model.
+            /// Deliberately added WITHOUT bumping <see cref="SchemaVersion"/>: it is an optional
+            /// additive property, so an older reader ignores it and this reader sees null on an
+            /// older file. Bumping the version would instead make every pre-existing sidecar
+            /// unreadable, which on a merge node is the hard fail-fast, not a graceful
+            /// degradation.</summary>
+            public string ExperimentAgg { get; set; }
         }
 
         /// <summary>
@@ -87,13 +96,15 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="perFileParquetPaths"/> (stem -&gt; score parquet path), or null when
         /// none is present. The copies are identical, so the first hit is authoritative.
         /// </summary>
-        public static PercolatorResults LoadFromAny(IReadOnlyDictionary<string, string> perFileParquetPaths)
+        public static PercolatorResults LoadFromAny(
+            IReadOnlyDictionary<string, string> perFileParquetPaths, out string experimentAgg)
         {
+            experimentAgg = null;
             if (perFileParquetPaths == null)
                 return null;
             foreach (var kvp in perFileParquetPaths)
             {
-                var model = Load(PathFor(kvp.Value, kvp.Key));
+                var model = Load(PathFor(kvp.Value, kvp.Key), out experimentAgg);
                 if (model != null)
                     return model;
             }
@@ -106,7 +117,13 @@ namespace pwiz.Osprey.Tasks
         /// -- the GBDT path, or an empty/degenerate model -- so the caller does not advertise a
         /// sidecar the merge node cannot use.
         /// </summary>
-        public static bool Save(string path, PercolatorResults model)
+        /// <param name="path">Sidecar path to write.</param>
+        /// <param name="model">The trained 1st-pass model.</param>
+        /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process,
+        ///   stamped so a merge node reads the pass-1 arm instead of guessing it from its own
+        ///   environment. Comes from the caller (which holds the byproduct) rather than being
+        ///   re-read here, so this stays a pure serializer.</param>
+        public static bool Save(string path, PercolatorResults model, string experimentAgg)
         {
             if (model?.Standardizer == null ||
                 model.FoldWeights == null || model.FoldWeights.Count == 0 ||
@@ -121,6 +138,7 @@ namespace pwiz.Osprey.Tasks
                 Stds = model.Standardizer.Stds,
                 FoldWeights = model.FoldWeights.ToArray(),
                 FoldBiases = model.FoldBiases.ToArray(),
+                ExperimentAgg = experimentAgg,
             };
 
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
@@ -150,8 +168,14 @@ namespace pwiz.Osprey.Tasks
         /// (standardizer + per-fold weights/biases); <see cref="FrozenModelScorer.TryCreate"/>
         /// needs nothing else.
         /// </summary>
-        public static PercolatorResults Load(string path)
+        /// <param name="path">Sidecar path to read.</param>
+        /// <param name="experimentAgg">Out: the pass-1 OSPREY_EXPERIMENT_AGG arm recorded in the
+        ///   sidecar, or null when the model could not be read OR the sidecar predates the field.
+        ///   Null therefore means "unknown", never "max" - a caller that gates on the arm must
+        ///   treat it as unknown rather than assuming the default.</param>
+        public static PercolatorResults Load(string path, out string experimentAgg)
         {
+            experimentAgg = null;
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return null;
 
@@ -179,6 +203,7 @@ namespace pwiz.Osprey.Tasks
                         return null;
                 }
 
+                experimentAgg = dto.ExperimentAgg;
                 return new PercolatorResults
                 {
                     Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),

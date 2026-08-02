@@ -215,6 +215,8 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_PICK_DUMP_CANDIDATES` | Dump per-candidate pick terms for offline model training | [peak-model-training.md](peak-model-training.md) |
 | `OSPREY_PASS2_QVALUE` | Second-pass q-value mode (`percolator` / `transfer` / `transfer-compete` / `protein-compact`) | [12](12-second-pass-fdr.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters (with `--fdr-method gbdt`) | [07](07-fdr-control.md) |
+| `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
+| `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps (also via `-d`) | [18](18-peptide-trace.md) |
 
 The full set is enumerated in the relevant algorithm docs; there is no single flat
