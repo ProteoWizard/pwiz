@@ -437,10 +437,13 @@ namespace pwiz.Skyline.Model.Results
         /// and its boundaries have to be kept instead. See <see cref="CarryPeakBounds"/>.
         /// </para>
         /// <para>
-        /// The boundaries are all this needs, so it reads no transition chromatogram: no m/z
-        /// match, no transform, and one search of the group's peaks rather than one per
-        /// transition. <see cref="FindTransitionChromInfo"/> walks a list, so the disagreement
-        /// which settles the answer stops the walk rather than finishing it.
+        /// The boundaries are all this needs, so it reads no transition chromatogram at all. That
+        /// is where the cost is - <see cref="ChromatogramGroupInfo.GetTransitionInfo"/> and
+        /// <see cref="ChromatogramGroupInfo.GetAllTransitionInfo"/> match an m/z and build a
+        /// <see cref="ChromatogramInfo"/> - while
+        /// <see cref="TransitionGroupResults.FindTransitionChromInfo"/> is cheap. So every
+        /// transition is asked for its boundaries, and the group's peaks are searched once rather
+        /// than once per transition.
         /// </para>
         /// </summary>
         private static int FindChosenPeakIndex(TransitionGroupResults groupResults, int transitionCount,
