@@ -531,34 +531,47 @@ namespace pwiz.Osprey.Tasks
             //    MapFeaturesByIdentity key), so each survivor's score is byte-identical to the
             //    old resident path. Keyed by (file, entry_id); entry_id is unique per file.
             var survivorScore = new Dictionary<(string, uint), double>();
-            foreach (var kvp in perFileEntries)
+            // Announce BEFORE the loop, not after it. This reads one reconciled parquet per file
+            // and on a 163-file Astral set that is ~212 GB off disk - measured at 34.9 min with
+            // no console output at all, because the summary line below is only reached once the
+            // loop finishes. A silent phase that long is indistinguishable from a hang, and it
+            // was read as one during the first 163-file run.
+            using (var progress = new ProgressReporter(
+                string.Format("{0}: reloading frozen-model features from {1} file(s)",
+                    mode, perFileEntries.Count),
+                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
-                    continue;
-                string effectiveParquetPath =
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
-                Dictionary<(uint, byte, uint), double[]> featByIdentity;
-                try
+                long nDone = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "{0}: failed to reload PIN features from {1}: {2}",
-                        mode, effectiveParquetPath, ex.Message));
-                    continue;
-                }
-                foreach (var e in kvp.Value)
-                {
-                    if (featByIdentity.TryGetValue(
-                            (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
-                        feats != null && feats.Length == nFeatures)
+                    progress.Report(++nDone);
+                    if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
+                        continue;
+                    string effectiveParquetPath =
+                        ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
+                    Dictionary<(uint, byte, uint), double[]> featByIdentity;
+                    try
                     {
-                        survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
+                        featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
                     }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "{0}: failed to reload PIN features from {1}: {2}",
+                            mode, effectiveParquetPath, ex.Message));
+                        continue;
+                    }
+                    foreach (var e in kvp.Value)
+                    {
+                        if (featByIdentity.TryGetValue(
+                                (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
+                            feats != null && feats.Length == nFeatures)
+                        {
+                            survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
+                        }
+                    }
+                    // featByIdentity released here (one file resident at a time).
                 }
-                // featByIdentity released here (one file resident at a time).
             }
 
             // 2. Reported survivors to emit (every post-reconciliation entry) + per-file scalar
@@ -598,16 +611,6 @@ namespace pwiz.Osprey.Tasks
                 mode, fileKeys.Count, survivorScore.Count,
                 proteinCompact ? ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"
                                : ", full-population null"));
-
-            // 3. Streamed full-population competition + run/experiment precursor q + PEP. Only one
-            //    file's scalars are resident at a time; the cross-file state is bounded by the
-            //    number of distinct precursors, not the total observation count -- so peak memory
-            //    is flat in file count (the 32/64 GB many-file target).
-            (uint[] entryIds, double[] scores) ReadFile(string fileKey)
-            {
-                FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
-                return (eids, scs);
-            }
 
             // This competition reduces per base_id by MAX, and BOTH modes that reach it then
             // overwrite the reported experiment q from that reduction. Neither is compatible with
@@ -665,9 +668,34 @@ namespace pwiz.Osprey.Tasks
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
-            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
-                fileKeys, ReadFile, survivorScore, survivors,
-                out var runQ, out var expQ, out var pep, stratumBaseIds);
+            // 3. Streamed full-population competition + run/experiment precursor q + PEP. Only one
+            //    file's scalars are resident at a time; the cross-file state is bounded by the
+            //    number of distinct precursors, not the total observation count -- so peak memory
+            //    is flat in file count (the 32/64 GB many-file target).
+            Dictionary<(string, uint), double> runQ, expQ, pep;
+            // The streaming competition reads one file's scalars per call and is otherwise silent;
+            // at 163 files that was a 9.6 min gap immediately after the line above announced it.
+            // readFileScalars is invoked exactly once per file (StreamingFdr.cs:180, single pass),
+            // so counting calls here is an honest per-file progress signal without threading a
+            // callback through the FDR layer.
+            using (var progress = new ProgressReporter(
+                string.Format("{0}: reading per-file scalars for the streamed competition ({1} file(s))",
+                    mode, fileKeys.Count),
+                fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            {
+                long nRead = 0;
+
+                (uint[] entryIds, double[] scores) ReadFile(string fileKey)
+                {
+                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                    progress.Report(++nRead);
+                    return (eids, scs);
+                }
+
+                StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                    fileKeys, ReadFile, survivorScore, survivors,
+                    out runQ, out expQ, out pep, stratumBaseIds);
+            }
 
             // 4. Map the recomputed q/PEP back onto the reported survivor entries. Under
             //    protein-compact, an OFF-stratum survivor got q=1.0 from the (constrained)
