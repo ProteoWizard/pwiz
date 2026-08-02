@@ -389,8 +389,8 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
 
-                    chosenPeakIndexes[position] = FindChosenPeakIndex(nodeGroup, nodeTrans, resultsNew,
-                        replicateIndex, chromGroupInfo, fileId);
+                    chosenPeakIndexes[position] =
+                        FindChosenPeakIndex(resultsNew, nodeTrans.Length, chromGroupInfo, fileId);
                     if (chosenPeakIndexes[position] < 0)
                     {
                         resultsNew = CarryPeakBounds(nodeTrans, resultsNew, fileId);
@@ -427,51 +427,49 @@ namespace pwiz.Skyline.Model.Results
                 .FirstOrDefault(info => ReferenceEquals(fileId, chromatograms.FindFile(info)));
         }
 
-        private int FindChosenPeakIndex(TransitionGroupDocNode nodeGroup, TransitionDocNode[] nodeTrans,
-            TransitionGroupResults groupResults, int replicateIndex, ChromatogramGroupInfo chromGroupInfo,
-            ChromFileInfoId fileId)
+        /// <summary>
+        /// Which of the candidate peaks in the .skyd the precursor's peak in one file is, or -1 when
+        /// it is not one of them.
+        /// <para>
+        /// Every peak of a peak group was integrated between the group's boundaries, so the
+        /// transitions have to agree on those before there is a single candidate peak to look for.
+        /// One which disagrees means the peak is not a candidate peak at all - the user moved it -
+        /// and its boundaries have to be kept instead. See <see cref="CarryPeakBounds"/>.
+        /// </para>
+        /// <para>
+        /// The boundaries are all this needs, so it reads no transition chromatogram: no m/z
+        /// match, no transform, and one search of the group's peaks rather than one per
+        /// transition. <see cref="FindTransitionChromInfo"/> walks a list, so the disagreement
+        /// which settles the answer stops the walk rather than finishing it.
+        /// </para>
+        /// </summary>
+        private static int FindChosenPeakIndex(TransitionGroupResults groupResults, int transitionCount,
+            ChromatogramGroupInfo chromGroupInfo, ChromFileInfoId fileId)
         {
-            var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
-            int chosenPeakIndex = -1;
-            for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
+            float startTime = 0, endTime = 0;
+            bool anyPeak = false;
+            for (int iTran = 0; iTran < transitionCount; iTran++)
             {
+                // A transition with no peak in this file says nothing about which one was chosen.
                 var chromInfo = groupResults.FindTransitionChromInfo(iTran, fileId, 0);
                 if (chromInfo == null || chromInfo.IsEmpty)
                 {
                     continue;
                 }
 
-                var chromatogramInfo = chromGroupInfo.GetAllTransitionInfo(nodeTrans[iTran], MzMatchTolerance,
-                    chromatograms.OptimizationFunction, TransformChrom.interpolated).GetChromatogramForStep(0);
-                int peakIndex = IndexOfPeak(chromatogramInfo, chromInfo);
-                if (peakIndex < 0 || (chosenPeakIndex >= 0 && peakIndex != chosenPeakIndex))
+                if (!anyPeak)
+                {
+                    startTime = chromInfo.StartRetentionTime;
+                    endTime = chromInfo.EndRetentionTime;
+                    anyPeak = true;
+                }
+                else if (chromInfo.StartRetentionTime != startTime || chromInfo.EndRetentionTime != endTime)
                 {
                     return -1;
                 }
-
-                chosenPeakIndex = peakIndex;
             }
 
-            return chosenPeakIndex;
-        }
-
-        private static int IndexOfPeak(ChromatogramInfo chromatogramInfo, TransitionChromInfo chromInfo)
-        {
-            if (chromatogramInfo == null)
-            {
-                return -1;
-            }
-
-            for (int peakIndex = 0; peakIndex < chromatogramInfo.NumPeaks; peakIndex++)
-            {
-                var peak = chromatogramInfo.GetPeak(peakIndex);
-                if (peak.StartTime == chromInfo.StartRetentionTime && peak.EndTime == chromInfo.EndRetentionTime)
-                {
-                    return peakIndex;
-                }
-            }
-
-            return -1;
+            return anyPeak ? chromGroupInfo.FindPeakIndex(startTime, endTime) : -1;
         }
 
         /// <summary>
