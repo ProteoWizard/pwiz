@@ -853,10 +853,12 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 // Left out when the precursor already carries these areas and there is nothing
                 // else here to say.
-                var transitionResults = nodeGroup.GetTransitionResults(nodeTransition);
-                if (transitionResults != null && !IsCoveredBySharedTransitionAreas(transitionResults))
+                int iTran = nodeGroup.IndexOfTransition(nodeTransition);
+                var groupResults = nodeGroup.AbbreviatedResults;
+                if (groupResults != null && groupResults.HasTransitionResults(iTran) &&
+                    !groupResults.IsTransitionCoveredBySharedAreas(iTran, _sharedTransitionAreaFiles))
                 {
-                    WriteTransitionResults(writer, transitionResults);
+                    WriteTransitionResults(writer, groupResults, iTran);
                 }
             }
             else
@@ -1066,20 +1068,22 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private void WriteTransitionResults(XmlWriter writer, TransitionResults results)
+        private void WriteTransitionResults(XmlWriter writer, TransitionGroupResults results, int transitionIndex)
         {
-            WriteColumnarResults(writer, results?.ChromFileIds, EL.transition_results_columnar, (w, position) =>
-            {
-                w.WriteAttribute(ATTR.area, results.Peaks.FlatValues[position].Area);
-                w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
-                WriteCustomPeak(w, results.GetCustomPeak(position));
-            });
+            WriteColumnarResults(writer, results.GetTransitionChromFileIds(transitionIndex),
+                EL.transition_results_columnar, (w, position) =>
+                {
+                    w.WriteAttribute(ATTR.area, results.GetTransitionArea(transitionIndex, position));
+                    w.WriteAttribute(ATTR.user_set, results.GetTransitionUserSet(transitionIndex, position),
+                        UserSet.FALSE);
+                    WriteCustomPeak(w, results.GetTransitionCustomPeak(transitionIndex, position));
+                });
         }
 
         private void WriteTransitionGroupResults(XmlWriter writer, TransitionGroupDocNode nodeGroup)
         {
             var results = nodeGroup.AbbreviatedResults;
-            var sharedAreas = GetSharedTransitionAreas(nodeGroup, results);
+            var sharedAreas = results?.GetSharedTransitionAreas(nodeGroup.Children.Count);
             _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
             WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar, (w, position) =>
             {
@@ -1106,57 +1110,6 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// The areas of every transition of a precursor, at each of the precursor's positions, or
-        /// null at a position where any transition has something else to say: no peak there at all,
-        /// a user set peak, annotations, or boundaries which are not a candidate peak's. Then they
-        /// each need an element of their own.
-        /// <para>
-        /// Worked out once for the whole precursor. Doing it a position at a time, and looking up
-        /// each transition's entry across all of its positions, is quadratic in the number of
-        /// replicates, which is enough to make saving a large document look like a hang.
-        /// </para>
-        /// </summary>
-        private static float[][] GetSharedTransitionAreas(TransitionGroupDocNode nodeGroup,
-            TransitionGroupResults results)
-        {
-            if (results == null)
-            {
-                return null;
-            }
-
-            var transitionResults = Enumerable.Range(0, nodeGroup.Children.Count)
-                .Select(iTran => results.GetTransitionResults(iTran)).ToArray();
-            var replicatePositions = results.ChromFileIds.ReplicatePositions;
-            var areasByPosition = new float[results.ChromFileIds.FileIds.Count][];
-            for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
-            {
-                foreach (int position in replicatePositions[replicateIndex])
-                {
-                    var fileId = results.ChromFileIds.FileIds[position].Value;
-                    var areas = new float[transitionResults.Length];
-                    for (int iTran = 0; iTran < transitionResults.Length; iTran++)
-                    {
-                        var transitionResult = transitionResults[iTran];
-
-                        // Asked by file rather than by position: the position in hand is the
-                        // precursor's, and a transition's positions are its own.
-                        if (transitionResult?.TryGetPlainArea(replicateIndex, fileId, out float area) != true)
-                        {
-                            areas = null;
-                            break;
-                        }
-
-                        areas[iTran] = area;
-                    }
-
-                    areasByPosition[position] = areas;
-                }
-            }
-
-            return areasByPosition;
-        }
-
-        /// <summary>
         /// The files whose transition areas the precursor carries, so that a transition which has
         /// nothing to say beyond those areas can be left out altogether.
         /// </summary>
@@ -1178,20 +1131,6 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             return fileIds;
-        }
-
-        /// <summary>
-        /// Whether every area this transition has is already in the precursor's transition areas.
-        /// </summary>
-        private bool IsCoveredBySharedTransitionAreas(TransitionResults results)
-        {
-            if (_sharedTransitionAreaFiles == null || results == null)
-            {
-                return false;
-            }
-
-            var fileIds = results.ChromFileIds.FileIds;
-            return fileIds.Count == _sharedTransitionAreaFiles.Count && fileIds.All(_sharedTransitionAreaFiles.Contains);
         }
 
         /// <summary>

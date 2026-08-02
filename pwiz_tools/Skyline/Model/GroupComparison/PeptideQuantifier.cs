@@ -371,7 +371,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         /// </summary>
         private static QuantifiablePeak GetTransitionPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode transitionDocNode, int replicateIndex)
         {
-            return nodeGroup.GetTransitionResults(transitionDocNode)?.GetQuantifiablePeaks(replicateIndex).FirstOrDefault();
+            return nodeGroup.AbbreviatedResults
+                ?.GetQuantifiablePeaks(nodeGroup.IndexOfTransition(transitionDocNode), replicateIndex)
+                .FirstOrDefault();
         }
 
         private Dictionary<PeptideDocNode.TransitionKey, QuantifiablePeak> GetTransitionsToNormalizeAgainst(

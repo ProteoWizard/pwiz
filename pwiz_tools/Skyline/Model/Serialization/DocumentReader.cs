@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.Serialization
             /// <summary>
             /// What a document written without the chrom infos has instead of them.
             /// </summary>
-            public TransitionResults ColumnarResults { get; private set; }
+            public TransitionResultsData ColumnarResults { get; private set; }
             public MeasuredIon MeasuredIon { get; private set; }
             public bool Quantitative { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
@@ -1531,9 +1531,12 @@ namespace pwiz.Skyline.Model.Serialization
                 if (columnarResults != null)
                     nodeGroup = nodeGroup.ChangeAbbreviatedResults(columnarResults);
                 if (transitionResults.Any(results => results != null))
-                    nodeGroup = nodeGroup.ChangeAbbreviatedResults(
-                        (nodeGroup.AbbreviatedResults ?? TransitionGroupResults.Empty)
-                        .ChangeTransitions(transitionResults));
+                {
+                    var groupResults = nodeGroup.AbbreviatedResults ?? TransitionGroupResults.Empty;
+                    for (int iTran = 0; iTran < transitionResults.Length; iTran++)
+                        groupResults = transitionResults[iTran]?.AddTo(groupResults, iTran) ?? groupResults;
+                    nodeGroup = nodeGroup.ChangeAbbreviatedResults(groupResults);
+                }
             }
             nodeGroup = nodeGroup.ChangePrecursorConcentration(precursorConcentration);
             return nodeGroup;
@@ -1606,7 +1609,44 @@ namespace pwiz.Skyline.Model.Serialization
             return new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
         }
 
-        private TransitionResults ReadColumnarTransitionResults(XmlReader reader)
+        /// <summary>
+        /// What was read for one transition, held until the precursor which owns its results has
+        /// its children and can be told. Either the columnar values or the chrom infos a document
+        /// written the old way carries, never both.
+        /// </summary>
+        private class TransitionResultsData
+        {
+            public TransitionResultsData(ChromFileIds chromFileIds, IList<TransitionPeak> peaks,
+                IList<CustomPeak> customPeaks)
+            {
+                ChromFileIds = chromFileIds;
+                Peaks = peaks;
+                CustomPeaks = customPeaks;
+            }
+
+            public TransitionResultsData(Results<TransitionChromInfo> chromInfos)
+            {
+                ChromInfos = chromInfos;
+            }
+
+            private ChromFileIds ChromFileIds { get; }
+            private IList<TransitionPeak> Peaks { get; }
+            private IList<CustomPeak> CustomPeaks { get; }
+            private Results<TransitionChromInfo> ChromInfos { get; }
+
+            /// <summary>
+            /// The precursor's results with this transition's added at
+            /// <paramref name="transitionIndex"/>.
+            /// </summary>
+            public TransitionGroupResults AddTo(TransitionGroupResults groupResults, int transitionIndex)
+            {
+                return ChromInfos != null
+                    ? groupResults.ChangeTransitionFromChromInfos(transitionIndex, ChromInfos)
+                    : groupResults.ChangeTransitionResults(transitionIndex, ChromFileIds, Peaks, CustomPeaks);
+            }
+        }
+
+        private TransitionResultsData ReadColumnarTransitionResults(XmlReader reader)
         {
             var peaks = new List<TransitionPeak>();
             var customPeaks = new List<CustomPeak>();
@@ -1618,10 +1658,8 @@ namespace pwiz.Skyline.Model.Serialization
                     PeakIdentification.FALSE, false));
                 customPeaks.Add(ReadCustomPeak(r, AnnotationDef.AnnotationTarget.transition_result));
             });
-            var transitionResults = new TransitionResults(chromFileIds, peaks);
-            return customPeaks.All(customPeak => customPeak == null)
-                ? transitionResults
-                : transitionResults.ChangeCustomPeaks(customPeaks);
+            return new TransitionResultsData(chromFileIds, peaks,
+                customPeaks.All(customPeak => customPeak == null) ? null : customPeaks);
         }
 
         /// <summary>
@@ -1643,7 +1681,7 @@ namespace pwiz.Skyline.Model.Serialization
             /// The results of one transition, or null when the precursor carried nothing for it,
             /// which means it was written out on its own.
             /// </summary>
-            public TransitionResults MakeTransitionResults(int transitionIndex)
+            public TransitionResultsData MakeTransitionResults(int transitionIndex)
             {
                 var replicatePositions = ChromFileIds.ReplicatePositions;
                 var fileIds = new List<ChromFileInfoId>();
@@ -1674,9 +1712,10 @@ namespace pwiz.Skyline.Model.Serialization
 
                 // A transition is only left out when nothing was set on it, so its user sets are
                 // all FALSE, which is what a written out one would have said.
-                return new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+                return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
                     areas.Select(area =>
-                        new TransitionPeak(area, UserSet.FALSE, null, false, PeakIdentification.FALSE, false)));
+                        new TransitionPeak(area, UserSet.FALSE, null, false, PeakIdentification.FALSE, false))
+                        .ToArray(), null);
             }
         }
 
@@ -1719,7 +1758,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// The transitions' results, with the ones the precursor wrote once for all of them filled
         /// in where a transition had nothing of its own to say.
         /// </summary>
-        private static TransitionResults[] ApplySharedTransitionAreas(TransitionResults[] transitionResults,
+        private static TransitionResultsData[] ApplySharedTransitionAreas(TransitionResultsData[] transitionResults,
             SharedTransitionAreas sharedTransitionAreas)
         {
             if (sharedTransitionAreas == null)
@@ -1727,7 +1766,7 @@ namespace pwiz.Skyline.Model.Serialization
                 return transitionResults;
             }
 
-            var resultsNew = new TransitionResults[transitionResults.Length];
+            var resultsNew = new TransitionResultsData[transitionResults.Length];
             for (int iTran = 0; iTran < transitionResults.Length; iTran++)
             {
                 resultsNew[iTran] = transitionResults[iTran] ?? sharedTransitionAreas.MakeTransitionResults(iTran);
@@ -1873,7 +1912,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <returns>A new array of <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode[] ReadTransitionListXml(XmlReader reader,
             TransitionGroupDocNode nodeGroup, ExplicitMods mods, ExplicitTransitionValues pre422ExplicitTransitionValues,
-            out TransitionResults[] transitionResults)
+            out TransitionResultsData[] transitionResults)
         {
             var group = nodeGroup.TransitionGroup;
             var isotopeDist = nodeGroup.IsotopeDist;
@@ -1881,7 +1920,7 @@ namespace pwiz.Skyline.Model.Serialization
             // One per transition, in the order they are read, which is the order the precursor
             // stores them in. The compact format leaves these null: its transitions carry chrom
             // infos, and the columnar form is worked out from them by UpdateResults.
-            var resultsList = new List<TransitionResults>();
+            var resultsList = new List<TransitionResultsData>();
             CrosslinkBuilder crosslinkBuilder = new CrosslinkBuilder(Settings, nodeGroup.Peptide, mods, nodeGroup.LabelType);
             if (reader.IsStartElement(EL.transition_data))
             {
@@ -1922,7 +1961,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
             ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues,
-            CrosslinkBuilder crosslinkBuilder, out TransitionResults columnarResults)
+            CrosslinkBuilder crosslinkBuilder, out TransitionResultsData columnarResults)
         {
             TransitionInfo info = new TransitionInfo(this);
 
@@ -2049,7 +2088,8 @@ namespace pwiz.Skyline.Model.Serialization
             // document written the old way has its chrom infos turned into them here and then does
             // not hold on to the chrom infos: they are read back from the .skyd, or worked out from
             // the columnar results.
-            columnarResults = info.ColumnarResults ?? TransitionResults.FromChromInfos(info.Results);
+            columnarResults = info.ColumnarResults ??
+                              (info.Results == null ? null : new TransitionResultsData(info.Results));
 
             return node;
         }

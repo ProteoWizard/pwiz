@@ -321,9 +321,9 @@ namespace pwiz.Skyline.Model.Results
         /// children, which is the only reason a caller can trust the index.
         /// </para>
         /// </summary>
-        public ImmutableList<TransitionResults> Transitions { get; private set; }
+        private ImmutableList<TransitionResults> Transitions { get; set; }
 
-        public TransitionGroupResults ChangeTransitions(IEnumerable<TransitionResults> value)
+        private TransitionGroupResults ChangeTransitions(IEnumerable<TransitionResults> value)
         {
             var transitions = value == null ? null : ImmutableList.ValueOf(value);
             if (transitions != null && transitions.All(results => results == null))
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model.Results
         /// transition among the precursor's children, which is the only thing these are in the
         /// order of.
         /// </summary>
-        public TransitionResults GetTransitionResults(int transitionIndex)
+        private TransitionResults GetTransitionResults(int transitionIndex)
         {
             if (Transitions == null || transitionIndex < 0 || transitionIndex >= Transitions.Count)
             {
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.Results
         /// These results with one transition's replaced. Returns this when it is already the same,
         /// so that a document which does not change stays reference equal.
         /// </summary>
-        public TransitionGroupResults ChangeTransitionResults(int transitionIndex, TransitionResults value)
+        private TransitionGroupResults ChangeTransitionResults(int transitionIndex, TransitionResults value)
         {
             if (Equals(GetTransitionResults(transitionIndex), value))
             {
@@ -363,6 +363,386 @@ namespace pwiz.Skyline.Model.Results
             int count = Math.Max(Transitions?.Count ?? 0, transitionIndex + 1);
             return ChangeTransitions(Enumerable.Range(0, count)
                 .Select(i => i == transitionIndex ? value : GetTransitionResults(i)));
+        }
+
+        /// <summary>
+        /// Whether any of the precursor's transitions has results, which is the cheap question
+        /// to ask before doing anything per transition.
+        /// </summary>
+        public bool HasAnyTransitionResults
+        {
+            get { return Transitions != null; }
+        }
+
+        /// <summary>
+        /// These results with their transitions put in a new order, where
+        /// <paramref name="oldIndexes"/> gives the index each transition used to be at, or -1 for
+        /// one which was not there before. See
+        /// <see cref="TransitionGroupDocNode.OnChangingChildren"/>, which is the only thing that
+        /// knows how a precursor's transitions moved.
+        /// </summary>
+        public TransitionGroupResults ReorderTransitions(IList<int> oldIndexes)
+        {
+            if (Transitions == null)
+            {
+                return this;
+            }
+
+            return ChangeTransitions(oldIndexes.Select(GetTransitionResults));
+        }
+
+        /// <summary>
+        /// Whether one of the precursor's transitions has any results.
+        /// </summary>
+        public bool HasTransitionResults(int transitionIndex)
+        {
+            return GetTransitionResults(transitionIndex) != null;
+        }
+
+        /// <summary>
+        /// The files and replicate layout of one transition's results, or null when it has none.
+        /// <para>
+        /// These are the transition's own, which are not the precursor's: a transition can be
+        /// missing from a file the precursor was found in.
+        /// </para>
+        /// </summary>
+        public ChromFileIds GetTransitionChromFileIds(int transitionIndex)
+        {
+            return GetTransitionResults(transitionIndex)?.ChromFileIds;
+        }
+
+        /// <summary>
+        /// The flat positions of one transition's results belonging to one replicate. Empty when
+        /// the transition has no results at all.
+        /// </summary>
+        public IEnumerable<int> GetTransitionPositions(int transitionIndex, int replicateIndex)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            return results == null ? Array.Empty<int>() : results.GetPositions(replicateIndex);
+        }
+
+        /// <summary>
+        /// The peak area of one transition at one of its positions. See
+        /// <see cref="GetTransitionPositions"/> for where a position comes from: one of these
+        /// means nothing anywhere but in the transition it came from.
+        /// </summary>
+        public float GetTransitionArea(int transitionIndex, int position)
+        {
+            return GetTransitionResults(transitionIndex).Peaks.FlatValues[position].Area;
+        }
+
+        public UserSet GetTransitionUserSet(int transitionIndex, int position)
+        {
+            return GetTransitionResults(transitionIndex).GetUserSet(position);
+        }
+
+        public CustomPeak GetTransitionCustomPeak(int transitionIndex, int position)
+        {
+            return GetTransitionResults(transitionIndex).GetCustomPeak(position);
+        }
+
+        public PeakIdentification GetTransitionIdentified(int transitionIndex, int position)
+        {
+            return GetTransitionResults(transitionIndex).GetIdentified(position);
+        }
+
+        /// <summary>
+        /// Whether one transition's peak counts towards the peak count ratio. See
+        /// <see cref="TransitionResults.IsGoodPeak"/>.
+        /// </summary>
+        public bool IsGoodTransitionPeak(int transitionIndex, int position, bool integrateAll)
+        {
+            return GetTransitionResults(transitionIndex).IsGoodPeak(position, integrateAll);
+        }
+
+        /// <summary>
+        /// What quantification needs to know about one transition's peaks in one replicate. Empty
+        /// when the transition has no results. See
+        /// <see cref="TransitionResults.GetQuantifiablePeaks"/>.
+        /// </summary>
+        public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int transitionIndex, int replicateIndex)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            return results == null
+                ? Array.Empty<QuantifiablePeak>()
+                : results.GetQuantifiablePeaks(replicateIndex);
+        }
+
+        /// <summary>
+        /// One transition's peak in one file of one replicate, found by file rather than by
+        /// position, which is how a caller which has neither the transition's positions nor a
+        /// reason to learn them asks.
+        /// </summary>
+        public bool TryGetTransitionPeak(int transitionIndex, int replicateIndex, ChromFileInfoId fileId,
+            out TransitionPeak peak)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            if (results == null)
+            {
+                peak = default;
+                return false;
+            }
+
+            return results.Peaks.TryGetValue(replicateIndex, fileId, out peak);
+        }
+
+        /// <summary>
+        /// One transition's custom peak in one file of one replicate, or null when it has none
+        /// there - which is nearly every peak. See <see cref="TryGetTransitionPeak"/>.
+        /// </summary>
+        public CustomPeak FindTransitionCustomPeak(int transitionIndex, int replicateIndex, ChromFileInfoId fileId)
+        {
+            var customPeaks = GetTransitionResults(transitionIndex)?.CustomPeaks;
+            if (customPeaks == null || !customPeaks.TryGetValue(replicateIndex, fileId, out var customPeak))
+            {
+                return null;
+            }
+
+            return customPeak;
+        }
+
+        /// <summary>
+        /// Whether one transition's results are still carrying chrom infos which have not been
+        /// worked out from the .skyd. False when it has no results at all, which is nothing to
+        /// convert either way.
+        /// </summary>
+        public bool IsTransitionConverted(int transitionIndex)
+        {
+            return GetTransitionResults(transitionIndex)?.IsConverted != false;
+        }
+
+        /// <summary>
+        /// How many unconverted chrom infos one transition's results are still carrying, which is
+        /// every optimization step of every file. Zero once they have been worked out.
+        /// </summary>
+        public int GetTransitionLegacyChromInfoCount(int transitionIndex)
+        {
+            return GetTransitionResults(transitionIndex)?.LegacyChromInfos?.Count ?? 0;
+        }
+
+        /// <summary>
+        /// One transition's chrom info for a file and optimization step which has not been
+        /// converted yet, or null. See <see cref="TransitionResults.FindChromInfo"/>.
+        /// </summary>
+        public TransitionChromInfo FindTransitionChromInfo(int transitionIndex, ChromFileInfoId fileId,
+            int optimizationStep)
+        {
+            return GetTransitionResults(transitionIndex)?.FindChromInfo(fileId, optimizationStep);
+        }
+
+        /// <summary>
+        /// Records the boundaries of one transition's peak in one file. See
+        /// <see cref="TransitionResults.ChangeCustomPeakBounds"/>.
+        /// </summary>
+        public TransitionGroupResults ChangeTransitionCustomPeakBounds(int transitionIndex, ChromFileInfoId fileId,
+            float startTime, float endTime, PeakIdentification identified)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            if (results == null)
+            {
+                return this;
+            }
+
+            return ChangeTransitionResults(transitionIndex,
+                results.ChangeCustomPeakBounds(fileId, startTime, endTime, identified));
+        }
+
+        /// <summary>
+        /// The areas of every transition of the precursor, at each of the precursor's positions, or
+        /// null at a position where any transition has something else to say: no peak there at all,
+        /// a user set peak, annotations, or boundaries which are not a candidate peak's. Then they
+        /// each need an element of their own.
+        /// <para>
+        /// Worked out once for the whole precursor. Doing it a position at a time, and looking up
+        /// each transition's entry across all of its positions, is quadratic in the number of
+        /// replicates, which is enough to make saving a large document look like a hang.
+        /// </para>
+        /// </summary>
+        public float[][] GetSharedTransitionAreas(int transitionCount)
+        {
+            var replicatePositions = ChromFileIds.ReplicatePositions;
+            var areasByPosition = new float[ChromFileIds.FileIds.Count][];
+            for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+            {
+                foreach (int position in replicatePositions[replicateIndex])
+                {
+                    var fileId = ChromFileIds.FileIds[position].Value;
+                    var areas = new float[transitionCount];
+                    for (int iTran = 0; iTran < transitionCount; iTran++)
+                    {
+                        // Asked by file rather than by position: the position in hand is the
+                        // precursor's, and a transition's positions are its own.
+                        var results = GetTransitionResults(iTran);
+                        if (results?.TryGetPlainArea(replicateIndex, fileId, out float area) != true)
+                        {
+                            areas = null;
+                            break;
+                        }
+
+                        areas[iTran] = area;
+                    }
+
+                    areasByPosition[position] = areas;
+                }
+            }
+
+            return areasByPosition;
+        }
+
+        /// <summary>
+        /// Whether every area one transition has is already in the precursor's shared transition
+        /// areas, so that the transition can be left out of the file altogether.
+        /// </summary>
+        public bool IsTransitionCoveredBySharedAreas(int transitionIndex,
+            ICollection<ReferenceValue<ChromFileInfoId>> sharedAreaFiles)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            if (sharedAreaFiles == null || results == null)
+            {
+                return false;
+            }
+
+            var fileIds = results.ChromFileIds.FileIds;
+            return fileIds.Count == sharedAreaFiles.Count && fileIds.All(sharedAreaFiles.Contains);
+        }
+
+        /// <summary>
+        /// How many entries one transition's results have, which is how many positions there are
+        /// to walk. Zero when it has none.
+        /// </summary>
+        public int GetTransitionPositionCount(int transitionIndex)
+        {
+            return GetTransitionResults(transitionIndex)?.Peaks.FlatValues.Count ?? 0;
+        }
+
+        /// <summary>
+        /// One entry per position of one transition's results, null where the peak there has
+        /// nothing which cannot be derived from the .skyd - which is nearly every one.
+        /// </summary>
+        public IEnumerable<CustomPeak> GetTransitionCustomPeaks(int transitionIndex)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            return results?.CustomPeaks?.FlatValues ??
+                   Enumerable.Repeat((CustomPeak) null, GetTransitionPositionCount(transitionIndex));
+        }
+
+        public TransitionGroupResults ChangeTransitionCustomPeaks(int transitionIndex,
+            IEnumerable<CustomPeak> customPeaks)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            if (results == null)
+            {
+                return this;
+            }
+
+            return ChangeTransitionResults(transitionIndex, results.ChangeCustomPeaks(customPeaks));
+        }
+
+        /// <summary>
+        /// These results with one transition's built from chrom infos, keeping the chrom infos
+        /// themselves until which candidate peak each peak is has been worked out. This is what
+        /// reading a document written the old way does.
+        /// </summary>
+        public TransitionGroupResults ChangeTransitionFromChromInfos(int transitionIndex,
+            Results<TransitionChromInfo> chromInfos)
+        {
+            return ChangeTransitionResults(transitionIndex, TransitionResults.FromChromInfos(chromInfos));
+        }
+
+        /// <summary>
+        /// These results with one transition's built from the columnar values a document was
+        /// written with. <paramref name="customPeaks"/> may be null, which is what nearly every
+        /// transition has.
+        /// </summary>
+        public TransitionGroupResults ChangeTransitionResults(int transitionIndex, ChromFileIds chromFileIds,
+            IEnumerable<TransitionPeak> peaks, IEnumerable<CustomPeak> customPeaks)
+        {
+            var results = new TransitionResults(chromFileIds, peaks);
+            if (customPeaks != null)
+            {
+                results = results.ChangeCustomPeaks(customPeaks);
+            }
+
+            return ChangeTransitionResults(transitionIndex, results);
+        }
+
+        /// <summary>
+        /// These results with one transition's worked out again from the chrom infos a results
+        /// calculation produced. Returns this when the transition already says the same, which is
+        /// what keeps a pass that changed nothing from making the whole molecule convert again.
+        /// <para>
+        /// The two are never equal outright: what is already there has been converted, having had
+        /// its candidate peaks worked out, while what comes out of the chrom infos still carries
+        /// them. Replacing one with the other would make every pass read all of the molecule's
+        /// chromatograms, which is enough to make loading a large document look like a hang.
+        /// </para>
+        /// </summary>
+        public TransitionGroupResults UpdateTransitionFromChromInfos(int transitionIndex,
+            Results<TransitionChromInfo> chromInfos)
+        {
+            var calculated = TransitionResults.FromChromInfos(chromInfos);
+
+            // Only when this pass actually worked something out. A pass which read no chromatogram
+            // - because none is loaded yet - has nothing to say, and must not replace what a
+            // document was read with.
+            if (!(calculated?.Peaks.FlatValues.Count > 0))
+            {
+                return this;
+            }
+
+            var existing = GetTransitionResults(transitionIndex);
+            if (existing != null && existing.IsConverted &&
+                Equals(existing, calculated.ChangeLegacyChromInfos(null)))
+            {
+                return this;
+            }
+
+            return ChangeTransitionResults(transitionIndex, calculated);
+        }
+
+        /// <summary>
+        /// These results with each transition's merged from <paramref name="other"/>, where
+        /// <paramref name="otherIndexes"/> says which of the other's transitions matches each of
+        /// these, or -1 when none does. The caller works that out, since only it knows how the two
+        /// precursors' transitions line up.
+        /// </summary>
+        public TransitionGroupResults MergeTransitions(TransitionGroupResults other, IList<int> otherIndexes)
+        {
+            if (Transitions == null && other?.Transitions == null)
+            {
+                return this;
+            }
+
+            var results = this;
+            for (int iTran = 0; iTran < otherIndexes.Count; iTran++)
+            {
+                var resultsMerge = other?.GetTransitionResults(otherIndexes[iTran]);
+                if (resultsMerge == null)
+                {
+                    continue;
+                }
+
+                // What is already here came from this side, which wins where both have a peak.
+                var existing = results.GetTransitionResults(iTran);
+                results = results.ChangeTransitionResults(iTran,
+                    existing == null ? resultsMerge : existing.MergeUserInfo(resultsMerge));
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// These results with every transition's unconverted chrom infos let go, which is what
+        /// there is to do once every one of the precursor's files has been read.
+        /// </summary>
+        public TransitionGroupResults ClearTransitionLegacyChromInfos()
+        {
+            if (Transitions == null)
+            {
+                return this;
+            }
+
+            return ChangeTransitions(Transitions.Select(results => results?.ChangeLegacyChromInfos(null)));
         }
 
         /// <summary>
@@ -811,409 +1191,404 @@ namespace pwiz.Skyline.Model.Results
                 return result;
             }
         }
-    }
-
-    /// <summary>
-    /// Note that this deliberately holds no retention times. The apex of an individual
-    /// transition matters much less than the apex of the transition group, so code which
-    /// wants it reads it back from the .skyd file instead.
-    /// <para>
-    /// There is one entry per file per replicate: optimization step zero only. Nothing stored
-    /// here can differ between the steps of one file.
-    /// </para>
-    /// </summary>
-    public class TransitionResults : Immutable
-    {
-        /// <summary>
-        /// Builds the columnar form from the chrom infos a document already holds, keeping the
-        /// chrom infos themselves in <see cref="LegacyChromInfos"/>. See
-        /// <see cref="TransitionGroupResults.FromChromInfos"/>.
-        /// </summary>
-        public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results)
-        {
-            return FromChromInfos(results, true);
-        }
 
         /// <summary>
-        /// <paramref name="keepChromInfos"/> false means the caller knows which candidate peak each
-        /// peak is, so the chrom infos can be rebuilt from the .skyd and none of them needs to be
-        /// kept. Only a caller with the chromatograms can know that, which is why the plain
-        /// overload keeps them.
+        /// Note that this deliberately holds no retention times. The apex of an individual
+        /// transition matters much less than the apex of the transition group, so code which
+        /// wants it reads it back from the .skyd file instead.
+        /// <para>
+        /// There is one entry per file per replicate: optimization step zero only. Nothing stored
+        /// here can differ between the steps of one file.
+        /// </para>
         /// </summary>
-        public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results, bool keepChromInfos)
+        private class TransitionResults : Immutable
         {
-            if (results == null)
+            /// <summary>
+            /// Builds the columnar form from the chrom infos a document already holds, keeping the
+            /// chrom infos themselves in <see cref="LegacyChromInfos"/>. See
+            /// <see cref="TransitionGroupResults.FromChromInfos"/>.
+            /// </summary>
+            public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results)
             {
-                return null;
+                return FromChromInfos(results, true);
             }
 
-            var fileIds = new List<ChromFileInfoId>();
-            var counts = new List<int>();
-            var peaks = new List<TransitionPeak>();
-            var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
-            var customPeaks = new List<CustomPeak>();
-            foreach (var chromInfoList in results)
+            /// <summary>
+            /// <paramref name="keepChromInfos"/> false means the caller knows which candidate peak each
+            /// peak is, so the chrom infos can be rebuilt from the .skyd and none of them needs to be
+            /// kept. Only a caller with the chromatograms can know that, which is why the plain
+            /// overload keeps them.
+            /// </summary>
+            public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results, bool keepChromInfos)
             {
-                int count = 0;
-                foreach (var chromInfo in chromInfoList)
+                if (results == null)
                 {
-                    // Every step is kept, because the ones which are not step zero can only be got
-                    // back from the .skyd, and this is the state of not having looked at it yet.
-                    chromInfos?.Add(chromInfo);
-                    if (chromInfo.OptimizationStep != 0)
+                    return null;
+                }
+
+                var fileIds = new List<ChromFileInfoId>();
+                var counts = new List<int>();
+                var peaks = new List<TransitionPeak>();
+                var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
+                var customPeaks = new List<CustomPeak>();
+                foreach (var chromInfoList in results)
+                {
+                    int count = 0;
+                    foreach (var chromInfo in chromInfoList)
                     {
-                        continue;
+                        // Every step is kept, because the ones which are not step zero can only be got
+                        // back from the .skyd, and this is the state of not having looked at it yet.
+                        chromInfos?.Add(chromInfo);
+                        if (chromInfo.OptimizationStep != 0)
+                        {
+                            continue;
+                        }
+
+                        customPeaks.Add(MakeCustomPeak(chromInfo));
+                        fileIds.Add(chromInfo.FileId);
+                        peaks.Add(new TransitionPeak(chromInfo.Area, chromInfo.UserSet, chromInfo.IsTruncated,
+                            chromInfo.IsEmpty, chromInfo.Identified, chromInfo.IsForcedIntegration));
+                        count++;
                     }
 
-                    customPeaks.Add(MakeCustomPeak(chromInfo));
-                    fileIds.Add(chromInfo.FileId);
-                    peaks.Add(new TransitionPeak(chromInfo.Area, chromInfo.UserSet, chromInfo.IsTruncated,
-                        chromInfo.IsEmpty, chromInfo.Identified, chromInfo.IsForcedIntegration));
-                    count++;
+                    counts.Add(count);
                 }
 
-                counts.Add(count);
-            }
-
-            var transitionResults =
-                new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), peaks);
-            // Null rather than a list of nothing but nulls, which is what nearly every document has.
-            if (customPeaks.Any(customPeak => customPeak != null))
-            {
-                transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
-            }
-
-            return chromInfos == null ? transitionResults : transitionResults.ChangeLegacyChromInfos(chromInfos);
-        }
-
-        /// <summary>
-        /// The entry for one position, or null when it has nothing which cannot be derived from the
-        /// .skyd.
-        /// <para>
-        /// A peak the user set is not one of the candidate peaks Skyline found, so its boundaries
-        /// have to be kept: everything else about it is recovered by integrating the chromatogram
-        /// again between them. A peak Skyline chose is one of the candidate peaks, and is found
-        /// again by its area.
-        /// </para>
-        /// </summary>
-        private static CustomPeak MakeCustomPeak(TransitionChromInfo chromInfo)
-        {
-            bool hasAnnotations = chromInfo.Annotations != null && !chromInfo.Annotations.IsEmpty;
-            bool isUserSet = chromInfo.UserSet != UserSet.FALSE && !chromInfo.IsEmpty;
-            if (!hasAnnotations && !isUserSet)
-            {
-                return null;
-            }
-
-            var customPeak = new CustomPeak();
-            if (hasAnnotations)
-            {
-                customPeak = customPeak.ChangeAnnotations(chromInfo.Annotations);
-            }
-
-            if (isUserSet)
-            {
-                customPeak = customPeak.ChangePeakBounds(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime,
-                    chromInfo.Identified);
-            }
-
-            return customPeak;
-        }
-
-        public TransitionResults(ChromFileIds chromFileIds, IEnumerable<TransitionPeak> peaks)
-        {
-            Peaks = new ChromFileIdMap<TransitionPeak>(chromFileIds, peaks);
-        }
-
-        /// <summary>
-        /// Everything every peak has: its area, and the handful of flags quantification and the
-        /// peak count ratio ask for over the whole document. One map of a struct rather than a map
-        /// per value, and the map the positions come from since it is always there.
-        /// </summary>
-        public ChromFileIdMap<TransitionPeak> Peaks { get; private set; }
-
-        public ChromFileIds ChromFileIds
-        {
-            get { return Peaks.ChromFileIds; }
-        }
-
-        /// <summary>
-        /// One entry per position, null where a peak has nothing which cannot be derived from the
-        /// .skyd file. Null altogether when no position has anything, which is nearly every
-        /// document.
-        /// </summary>
-        public ChromFileIdMap<CustomPeak> CustomPeaks { get; private set; }
-
-        /// <summary>
-        /// The chrom infos which have not been worked out from the .skyd file yet, each knowing its
-        /// own file and optimization step. Null once they have been.
-        /// <para>
-        /// A document read from a file arrives with these, because which candidate peak each peak
-        /// is cannot be told without the chromatograms, and until that is known nothing here can be
-        /// rebuilt. Loading the chromatogram cache is what gets rid of them: see
-        /// <see cref="TransitionGroupDocNode.UpdateResults"/>, which works out
-        /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> and then has no need of them.
-        /// </para>
-        /// <para>
-        /// So this is the whole of what the columnar form costs before conversion, and nothing
-        /// while it is converted. It is the reason a document can be read at all before its .skyd
-        /// is available.
-        /// </para>
-        /// </summary>
-        public ImmutableList<TransitionChromInfo> LegacyChromInfos { get; private set; }
-
-        public bool IsConverted
-        {
-            get { return LegacyChromInfos == null; }
-        }
-
-        public TransitionResults ChangeLegacyChromInfos(IEnumerable<TransitionChromInfo> value)
-        {
-            return ChangeProp(ImClone(this), im => im.LegacyChromInfos = value == null ? null : ImmutableList.ValueOf(value));
-        }
-
-        /// <summary>
-        /// The chrom info for one file and optimization step which has not been converted, or null.
-        /// A file belongs to one replicate, so the file and the step identify it on their own.
-        /// </summary>
-        public TransitionChromInfo FindChromInfo(ChromFileInfoId fileId, int optimizationStep)
-        {
-            if (LegacyChromInfos == null)
-            {
-                return null;
-            }
-
-            foreach (var chromInfo in LegacyChromInfos)
-            {
-                if (ReferenceEquals(chromInfo.FileId, fileId) && chromInfo.OptimizationStep == optimizationStep)
+                var transitionResults =
+                    new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), peaks);
+                // Null rather than a list of nothing but nulls, which is what nearly every document has.
+                if (customPeaks.Any(customPeak => customPeak != null))
                 {
-                    return chromInfo;
+                    transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
+                }
+
+                return chromInfos == null ? transitionResults : transitionResults.ChangeLegacyChromInfos(chromInfos);
+            }
+
+            /// <summary>
+            /// The entry for one position, or null when it has nothing which cannot be derived from the
+            /// .skyd.
+            /// <para>
+            /// A peak the user set is not one of the candidate peaks Skyline found, so its boundaries
+            /// have to be kept: everything else about it is recovered by integrating the chromatogram
+            /// again between them. A peak Skyline chose is one of the candidate peaks, and is found
+            /// again by its area.
+            /// </para>
+            /// </summary>
+            private static CustomPeak MakeCustomPeak(TransitionChromInfo chromInfo)
+            {
+                bool hasAnnotations = chromInfo.Annotations != null && !chromInfo.Annotations.IsEmpty;
+                bool isUserSet = chromInfo.UserSet != UserSet.FALSE && !chromInfo.IsEmpty;
+                if (!hasAnnotations && !isUserSet)
+                {
+                    return null;
+                }
+
+                var customPeak = new CustomPeak();
+                if (hasAnnotations)
+                {
+                    customPeak = customPeak.ChangeAnnotations(chromInfo.Annotations);
+                }
+
+                if (isUserSet)
+                {
+                    customPeak = customPeak.ChangePeakBounds(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime,
+                        chromInfo.Identified);
+                }
+
+                return customPeak;
+            }
+
+            public TransitionResults(ChromFileIds chromFileIds, IEnumerable<TransitionPeak> peaks)
+            {
+                Peaks = new ChromFileIdMap<TransitionPeak>(chromFileIds, peaks);
+            }
+
+            /// <summary>
+            /// Everything every peak has: its area, and the handful of flags quantification and the
+            /// peak count ratio ask for over the whole document. One map of a struct rather than a map
+            /// per value, and the map the positions come from since it is always there.
+            /// </summary>
+            public ChromFileIdMap<TransitionPeak> Peaks { get; private set; }
+
+            public ChromFileIds ChromFileIds
+            {
+                get { return Peaks.ChromFileIds; }
+            }
+
+            /// <summary>
+            /// One entry per position, null where a peak has nothing which cannot be derived from the
+            /// .skyd file. Null altogether when no position has anything, which is nearly every
+            /// document.
+            /// </summary>
+            public ChromFileIdMap<CustomPeak> CustomPeaks { get; private set; }
+
+            /// <summary>
+            /// The chrom infos which have not been worked out from the .skyd file yet, each knowing its
+            /// own file and optimization step. Null once they have been.
+            /// <para>
+            /// A document read from a file arrives with these, because which candidate peak each peak
+            /// is cannot be told without the chromatograms, and until that is known nothing here can be
+            /// rebuilt. Loading the chromatogram cache is what gets rid of them: see
+            /// <see cref="TransitionGroupDocNode.UpdateResults"/>, which works out
+            /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> and then has no need of them.
+            /// </para>
+            /// <para>
+            /// So this is the whole of what the columnar form costs before conversion, and nothing
+            /// while it is converted. It is the reason a document can be read at all before its .skyd
+            /// is available.
+            /// </para>
+            /// </summary>
+            public ImmutableList<TransitionChromInfo> LegacyChromInfos { get; private set; }
+
+            public bool IsConverted
+            {
+                get { return LegacyChromInfos == null; }
+            }
+
+            public TransitionResults ChangeLegacyChromInfos(IEnumerable<TransitionChromInfo> value)
+            {
+                return ChangeProp(ImClone(this), im => im.LegacyChromInfos = value == null ? null : ImmutableList.ValueOf(value));
+            }
+
+            /// <summary>
+            /// The chrom info for one file and optimization step which has not been converted, or null.
+            /// A file belongs to one replicate, so the file and the step identify it on their own.
+            /// </summary>
+            public TransitionChromInfo FindChromInfo(ChromFileInfoId fileId, int optimizationStep)
+            {
+                if (LegacyChromInfos == null)
+                {
+                    return null;
+                }
+
+                foreach (var chromInfo in LegacyChromInfos)
+                {
+                    if (ReferenceEquals(chromInfo.FileId, fileId) && chromInfo.OptimizationStep == optimizationStep)
+                    {
+                        return chromInfo;
+                    }
+                }
+
+                return null;
+            }
+
+            public TransitionResults ChangePeaks(IEnumerable<TransitionPeak> value)
+            {
+                return ChangeProp(ImClone(this),
+                    im => im.Peaks = new ChromFileIdMap<TransitionPeak>(ChromFileIds, value));
+            }
+
+            /// <summary>
+            /// Whether the peak at one position ran off the end of the chromatogram, or null when
+            /// nothing worked that out. See <see cref="Truncated"/>.
+            /// </summary>
+            public bool? GetTruncated(int position)
+            {
+                return Peaks.FlatValues[position].IsTruncated;
+            }
+
+            /// <summary>
+            /// Whether there is no peak at one position at all. See <see cref="EmptyPeaks"/>.
+            /// </summary>
+            public bool IsEmptyPeak(int position)
+            {
+                return Peaks.FlatValues[position].IsEmpty;
+            }
+
+            /// <summary>
+            /// Whether the peak at one position contains an identification. See
+            /// <see cref="Identified"/>.
+            /// </summary>
+            public PeakIdentification GetIdentified(int position)
+            {
+                return Peaks.FlatValues[position].Identified;
+            }
+
+            /// <summary>
+            /// Whether the peak at one position counts towards the peak count ratio, which is what
+            /// <see cref="TransitionChromInfo.IsGoodPeak"/> decides. Everything it looks at is stored,
+            /// so this needs no chromatogram.
+            /// </summary>
+            public bool IsGoodPeak(int position, bool integrateAll)
+            {
+                return Peaks.FlatValues[position].IsGoodPeak(integrateAll);
+            }
+
+            /// <summary>
+            /// What quantification needs to know about the peaks of one replicate, in position order.
+            /// <para>
+            /// This is deliberately everything quantification needs and nothing else, so that it can
+            /// run over a whole document without a chromatogram being read. Only optimization step zero
+            /// is here, which is the step quantification uses.
+            /// </para>
+            /// </summary>
+            public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int replicateIndex)
+            {
+                foreach (int position in ChromFileIds.ReplicatePositions[replicateIndex])
+                {
+                    var peak = Peaks.FlatValues[position];
+                    yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, peak.Area,
+                        peak.IsTruncated, peak.IsEmpty);
                 }
             }
 
-            return null;
-        }
-
-        public TransitionResults ChangePeaks(IEnumerable<TransitionPeak> value)
-        {
-            return ChangeProp(ImClone(this),
-                im => im.Peaks = new ChromFileIdMap<TransitionPeak>(ChromFileIds, value));
-        }
-
-        /// <summary>
-        /// Whether the peak at one position ran off the end of the chromatogram, or null when
-        /// nothing worked that out. See <see cref="Truncated"/>.
-        /// </summary>
-        public bool? GetTruncated(int position)
-        {
-            return Peaks.FlatValues[position].IsTruncated;
-        }
-
-        /// <summary>
-        /// Whether there is no peak at one position at all. See <see cref="EmptyPeaks"/>.
-        /// </summary>
-        public bool IsEmptyPeak(int position)
-        {
-            return Peaks.FlatValues[position].IsEmpty;
-        }
-
-        /// <summary>
-        /// Whether the peak at one position contains an identification. See
-        /// <see cref="Identified"/>.
-        /// </summary>
-        public PeakIdentification GetIdentified(int position)
-        {
-            return Peaks.FlatValues[position].Identified;
-        }
-
-        /// <summary>
-        /// Whether the peak at one position counts towards the peak count ratio, which is what
-        /// <see cref="TransitionChromInfo.IsGoodPeak"/> decides. Everything it looks at is stored,
-        /// so this needs no chromatogram.
-        /// </summary>
-        public bool IsGoodPeak(int position, bool integrateAll)
-        {
-            return Peaks.FlatValues[position].IsGoodPeak(integrateAll);
-        }
-
-        /// <summary>
-        /// What quantification needs to know about the peaks of one replicate, in position order.
-        /// <para>
-        /// This is deliberately everything quantification needs and nothing else, so that it can
-        /// run over a whole document without a chromatogram being read. Only optimization step zero
-        /// is here, which is the step quantification uses.
-        /// </para>
-        /// </summary>
-        public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int replicateIndex)
-        {
-            foreach (int position in ChromFileIds.ReplicatePositions[replicateIndex])
+            public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
             {
-                var peak = Peaks.FlatValues[position];
-                yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, peak.Area,
-                    peak.IsTruncated, peak.IsEmpty);
-            }
-        }
-
-        public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
-        {
-            return ChangeProp(ImClone(this), im => im.CustomPeaks = value == null ? null : new ChromFileIdMap<CustomPeak>(ChromFileIds, value));
-        }
-
-        /// <summary>
-        /// See <see cref="TransitionGroupResults.StripAnnotationValues"/>.
-        /// </summary>
-        public TransitionResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
-        {
-            var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks?.FlatValues);
-            if (ReferenceEquals(newCustomPeaks, CustomPeaks?.FlatValues))
-                return this;
-            return ChangeCustomPeaks(newCustomPeaks);
-        }
-
-        /// <summary>
-        /// Records the boundaries of the peak at one position, keeping whatever else is already
-        /// known about it. Used when the peak turns out not to be one of the candidate peaks, and
-        /// so can only be got back by integrating between its boundaries.
-        /// </summary>
-        public TransitionResults ChangeCustomPeakBounds(int position, float startTime, float endTime,
-            PeakIdentification identified)
-        {
-            var newCustomPeak = (GetCustomPeak(position) ?? new CustomPeak())
-                .ChangePeakBounds(startTime, endTime, identified);
-            return ChangeCustomPeaks(
-                CustomPeak.SetAtPosition(CustomPeaks?.FlatValues, Peaks.FlatValues.Count, position, newCustomPeak));
-        }
-
-        /// <summary>
-        /// The position of one file's entry in one replicate, or -1. See
-        /// the positions of these results, which is where it means something.
-        /// </summary>
-        private int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
-        {
-            return ChromFileIds.IndexOfFile(replicateIndex, fileId);
-        }
-
-        /// <summary>
-        /// Records the boundaries of one file's peak, found by file. A file belongs to one
-        /// replicate, so it says which peak it is on its own, and the caller never holds a position
-        /// of these results.
-        /// </summary>
-        public TransitionResults ChangeCustomPeakBounds(ChromFileInfoId fileId, float startTime, float endTime,
-            PeakIdentification identified)
-        {
-            int position = ChromFileIds.IndexOfFile(fileId);
-            return position < 0 ? this : ChangeCustomPeakBounds(position, startTime, endTime, identified);
-        }
-
-        /// <summary>
-        /// Whether one file of one replicate has a peak here, and if so its area and whether
-        /// anything about it was the user's. Answered together so that a caller working across
-        /// objects - a precursor's positions are not its transitions' - never has to hold a
-        /// position of this one.
-        /// </summary>
-        public bool TryGetPlainArea(int replicateIndex, ChromFileInfoId fileId, out float area)
-        {
-            area = 0;
-            int position = ChromFileIds.IndexOfFile(replicateIndex, fileId);
-            if (position < 0 || GetUserSet(position) != UserSet.FALSE || GetCustomPeak(position) != null)
-            {
-                return false;
+                return ChangeProp(ImClone(this), im => im.CustomPeaks = value == null ? null : new ChromFileIdMap<CustomPeak>(ChromFileIds, value));
             }
 
-            area = Peaks.FlatValues[position].Area;
-            return true;
-        }
-
-        public CustomPeak GetCustomPeak(int position)
-        {
-            return CustomPeaks?.FlatValues[position];
-        }
-
-        public UserSet GetUserSet(int position)
-        {
-            return Peaks.FlatValues[position].UserSet;
-        }
-
-        /// <summary>
-        /// The transition level counterpart of
-        /// <see cref="TransitionGroupResults.MergeUserInfo"/>, worked out the same way.
-        /// </summary>
-        public TransitionResults MergeUserInfo(TransitionResults other)
-        {
-            var sources = MergeSource.Build(ChromFileIds, other?.ChromFileIds,
-                position => other.GetUserSet(position) != UserSet.FALSE, out var counts);
-            if (sources == null)
+            /// <summary>
+            /// See <see cref="TransitionGroupResults.StripAnnotationValues"/>.
+            /// </summary>
+            public TransitionResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
             {
-                return this;
+                var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks?.FlatValues);
+                if (ReferenceEquals(newCustomPeaks, CustomPeaks?.FlatValues))
+                    return this;
+                return ChangeCustomPeaks(newCustomPeaks);
             }
 
-            var results = new TransitionResults(
-                new ChromFileIds(ReplicatePositions.FromCounts(counts),
-                    sources.Select(source =>
-                        source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
-                sources.Select(source => source.Pick(this, other).Peaks.FlatValues[source.Position]));
-            var customPeaks = MergeSource.MergeCustomPeaks(sources,
-                source => source.Pick(this, other).GetCustomPeak(source.Position));
-            if (customPeaks != null)
+            /// <summary>
+            /// Records the boundaries of the peak at one position, keeping whatever else is already
+            /// known about it. Used when the peak turns out not to be one of the candidate peaks, and
+            /// so can only be got back by integrating between its boundaries.
+            /// </summary>
+            public TransitionResults ChangeCustomPeakBounds(int position, float startTime, float endTime,
+                PeakIdentification identified)
             {
-                results = results.ChangeCustomPeaks(customPeaks);
+                var newCustomPeak = (GetCustomPeak(position) ?? new CustomPeak())
+                    .ChangePeakBounds(startTime, endTime, identified);
+                return ChangeCustomPeaks(
+                    CustomPeak.SetAtPosition(CustomPeaks?.FlatValues, Peaks.FlatValues.Count, position, newCustomPeak));
             }
 
-            return results;
-        }
-
-        /// <summary>
-        /// The flat positions belonging to one replicate. How a caller walks a replicate without
-        /// counting: the entries of one are in no order it can rely on.
-        /// </summary>
-        public IEnumerable<int> GetPositions(int replicateIndex)
-        {
-            return ChromFileIds.ReplicatePositions[replicateIndex];
-        }
-
-        /// <summary>
-        /// Compared by value. See <see cref="TransitionGroupResults.Equals(TransitionGroupResults)"/>.
-        /// </summary>
-        protected bool Equals(TransitionResults other)
-        {
-            // No ChromFileIds of its own: every map carries it, and Peaks is always there.
-            return Equals(Peaks, other.Peaks) &&
-                   Equals(CustomPeaks, other.CustomPeaks) &&
-                   Equals(LegacyChromInfos, other.LegacyChromInfos);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is null)
+            /// <summary>
+            /// The position of one file's entry in one replicate, or -1. See
+            /// the positions of these results, which is where it means something.
+            /// </summary>
+            private int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
             {
-                return false;
+                return ChromFileIds.IndexOfFile(replicateIndex, fileId);
             }
 
-            if (ReferenceEquals(this, obj))
+            /// <summary>
+            /// Records the boundaries of one file's peak, found by file. A file belongs to one
+            /// replicate, so it says which peak it is on its own, and the caller never holds a position
+            /// of these results.
+            /// </summary>
+            public TransitionResults ChangeCustomPeakBounds(ChromFileInfoId fileId, float startTime, float endTime,
+                PeakIdentification identified)
             {
+                int position = ChromFileIds.IndexOfFile(fileId);
+                return position < 0 ? this : ChangeCustomPeakBounds(position, startTime, endTime, identified);
+            }
+
+            /// <summary>
+            /// Whether one file of one replicate has a peak here, and if so its area and whether
+            /// anything about it was the user's. Answered together so that a caller working across
+            /// objects - a precursor's positions are not its transitions' - never has to hold a
+            /// position of this one.
+            /// </summary>
+            public bool TryGetPlainArea(int replicateIndex, ChromFileInfoId fileId, out float area)
+            {
+                area = 0;
+                int position = ChromFileIds.IndexOfFile(replicateIndex, fileId);
+                if (position < 0 || GetUserSet(position) != UserSet.FALSE || GetCustomPeak(position) != null)
+                {
+                    return false;
+                }
+
+                area = Peaks.FlatValues[position].Area;
                 return true;
             }
 
-            return obj.GetType() == GetType() && Equals((TransitionResults) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
+            public CustomPeak GetCustomPeak(int position)
             {
-                int result = Peaks.GetHashCode();
-                result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
-                result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
-                return result;
+                return CustomPeaks?.FlatValues[position];
+            }
+
+            public UserSet GetUserSet(int position)
+            {
+                return Peaks.FlatValues[position].UserSet;
+            }
+
+            /// <summary>
+            /// The transition level counterpart of
+            /// <see cref="TransitionGroupResults.MergeUserInfo"/>, worked out the same way.
+            /// </summary>
+            public TransitionResults MergeUserInfo(TransitionResults other)
+            {
+                var sources = MergeSource.Build(ChromFileIds, other?.ChromFileIds,
+                    position => other.GetUserSet(position) != UserSet.FALSE, out var counts);
+                if (sources == null)
+                {
+                    return this;
+                }
+
+                var results = new TransitionResults(
+                    new ChromFileIds(ReplicatePositions.FromCounts(counts),
+                        sources.Select(source =>
+                            source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
+                    sources.Select(source => source.Pick(this, other).Peaks.FlatValues[source.Position]));
+                var customPeaks = MergeSource.MergeCustomPeaks(sources,
+                    source => source.Pick(this, other).GetCustomPeak(source.Position));
+                if (customPeaks != null)
+                {
+                    results = results.ChangeCustomPeaks(customPeaks);
+                }
+
+                return results;
+            }
+
+            /// <summary>
+            /// The flat positions belonging to one replicate. How a caller walks a replicate without
+            /// counting: the entries of one are in no order it can rely on.
+            /// </summary>
+            public IEnumerable<int> GetPositions(int replicateIndex)
+            {
+                return ChromFileIds.ReplicatePositions[replicateIndex];
+            }
+
+            /// <summary>
+            /// Compared by value. See <see cref="TransitionGroupResults.Equals(TransitionGroupResults)"/>.
+            /// </summary>
+            protected bool Equals(TransitionResults other)
+            {
+                // No ChromFileIds of its own: every map carries it, and Peaks is always there.
+                return Equals(Peaks, other.Peaks) &&
+                       Equals(CustomPeaks, other.CustomPeaks) &&
+                       Equals(LegacyChromInfos, other.LegacyChromInfos);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is null)
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                return obj.GetType() == GetType() && Equals((TransitionResults) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int result = Peaks.GetHashCode();
+                    result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
+                    result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
+                    return result;
+                }
             }
         }
     }
 
-    /// <summary>
-    /// Removing annotations from the columnar results, which is where they live now. The
-    /// annotations of a peak are on its <see cref="CustomPeak"/>, and a peak whose annotations all
-    /// go and which has nothing else to say stops needing one at all.
-    /// </summary>
     /// <summary>
     /// Where one position of a merged set of results comes from: the results being merged into, or
     /// the ones being merged in, and which position of it.
@@ -1318,6 +1693,11 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    /// <summary>
+    /// Removing annotations from the columnar results, which is where they live now. The
+    /// annotations of a peak are on its <see cref="CustomPeak"/>, and a peak whose annotations all
+    /// go and which has nothing else to say stops needing one at all.
+    /// </summary>
     public static class StripAnnotations
     {
         /// <summary>

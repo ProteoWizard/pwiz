@@ -124,15 +124,15 @@ namespace pwiz.SkylineTestFunctional
             var peaks = new List<string>();
             foreach (var results in ResultsUtil.EnumerateTransitionResults(document))
             {
-                if (results == null)
+                if (!results.HasResults)
                 {
                     continue;
                 }
 
-                for (int position = 0; position < results.Peaks.FlatValues.Count; position++)
+                for (int position = 0; position < results.PositionCount; position++)
                 {
                     var customPeak = results.GetCustomPeak(position);
-                    peaks.Add(string.Format(@"{0} {1} {2} {3}", results.Peaks.FlatValues[position].Area,
+                    peaks.Add(string.Format(@"{0} {1} {2} {3}", results.GetArea(position),
                         results.GetUserSet(position), customPeak?.StartTime, customPeak?.EndTime));
                 }
             }

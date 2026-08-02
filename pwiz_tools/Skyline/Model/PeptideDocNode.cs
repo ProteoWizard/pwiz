@@ -632,10 +632,9 @@ namespace pwiz.Skyline.Model
                     for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
                     {
                         var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
-                        var results = nodeGroup.GetTransitionResults(iTran);
-                        if (results == null)
+                        if (!nodeGroup.HasTransitionResults(iTran))
                             continue;
-                        var positions = results.GetPositions(i).ToArray();
+                        var positions = nodeGroup.AbbreviatedResults.GetTransitionPositions(iTran, i).ToArray();
                         int resultCount = positions.Length;
                         if (resultCount == 0)
                             continue;
@@ -647,14 +646,15 @@ namespace pwiz.Skyline.Model
                         double tranMeasured = 0;
                         foreach (int position in positions)
                         {
-                            float area = results.Peaks.FlatValues[position].Area;
+                            float area = nodeGroup.AbbreviatedResults.GetTransitionArea(iTran, position);
                             if (nodeTran.ParticipatesInScoring && area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += area;
                                 tranMeasured++;
 
                                 isGroupIdentified = isGroupIdentified ||
-                                                    results.GetIdentified(position) != PeakIdentification.FALSE;
+                                                    nodeGroup.AbbreviatedResults.GetTransitionIdentified(iTran, position) !=
+                                                    PeakIdentification.FALSE;
                             }
                         }
                         groupArea += tranArea/resultCount;

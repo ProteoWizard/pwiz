@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransitionGroup(Parameters parameters, TransitionGroupDocNode transitionGroup)
         {
             var transitionsByMsLevel = transitionGroup.Transitions
-                .Where(transition => null != transitionGroup.GetTransitionResults(transition))
+                .Where(transition => transitionGroup.HasTransitionResults(transition))
                 .GroupBy(transition => transition.IsMs1);
             return transitionsByMsLevel.SelectMany(msLevelGroup =>
             {
@@ -313,15 +313,16 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             // The columnar results, which hold optimization step zero only, so there is no step to
             // skip past and no chromatogram to read.
-            var results = transitionGroup.GetTransitionResults(transition);
-            if (results == null)
+            int iTran = transitionGroup.IndexOfTransition(transition);
+            var chromFileIds = transitionGroup.AbbreviatedResults?.GetTransitionChromFileIds(iTran);
+            if (chromFileIds == null)
             {
                 yield break;
             }
 
-            for (int iResult = 0; iResult < results.ChromFileIds.ReplicatePositions.ReplicateCount; iResult++)
+            for (int iResult = 0; iResult < chromFileIds.ReplicatePositions.ReplicateCount; iResult++)
             {
-                foreach (var chromInfo in results.GetQuantifiablePeaks(iResult))
+                foreach (var chromInfo in transitionGroup.AbbreviatedResults.GetQuantifiablePeaks(iTran, iResult))
                 {
                     double? area = GetTransitionArea(parameters, transitionGroup, transition, iResult, chromInfo);
                     if (area.HasValue)

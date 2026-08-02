@@ -279,8 +279,9 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public static bool NeedsConverting(TransitionGroupDocNode nodeGroup)
         {
-            var transitions = nodeGroup.AbbreviatedResults?.Transitions;
-            return transitions != null && transitions.Any(results => results?.IsConverted == false);
+            var groupResults = nodeGroup.AbbreviatedResults;
+            return groupResults != null && Enumerable.Range(0, nodeGroup.Children.Count)
+                .Any(iTran => !groupResults.IsTransitionConverted(iTran));
         }
 
         public TransitionGroupDocNode ConvertResults(TransitionGroupDocNode nodeGroup)
@@ -294,8 +295,7 @@ namespace pwiz.Skyline.Model.Results
 
             var replicatePositions = groupResults.ChromFileIds.ReplicatePositions;
             var chosenPeakIndexes = new int[groupResults.ChromFileIds.FileIds.Count];
-            var transitionResults = Enumerable.Range(0, nodeTrans.Length)
-                .Select(iTran => groupResults.GetTransitionResults(iTran)).ToArray();
+            var resultsNew = groupResults;
             bool everyFileRead = true;
             for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
             {
@@ -320,19 +320,20 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
 
-                    chosenPeakIndexes[position] = FindChosenPeakIndex(nodeGroup, nodeTrans, transitionResults,
+                    chosenPeakIndexes[position] = FindChosenPeakIndex(nodeGroup, nodeTrans, resultsNew,
                         replicateIndex, chromGroupInfo, fileId);
                     if (chosenPeakIndexes[position] < 0)
                     {
-                        CarryPeakBounds(nodeTrans, transitionResults, fileId);
+                        resultsNew = CarryPeakBounds(nodeTrans, resultsNew, fileId);
                     }
                 }
             }
 
-            var groupResultsNew = groupResults.ChangeChosenPeakIndexes(chosenPeakIndexes)
-                .ChangeTransitions(everyFileRead
-                    ? transitionResults.Select(results => results?.ChangeLegacyChromInfos(null))
-                    : transitionResults);
+            var groupResultsNew = resultsNew.ChangeChosenPeakIndexes(chosenPeakIndexes);
+            if (everyFileRead)
+            {
+                groupResultsNew = groupResultsNew.ClearTransitionLegacyChromInfos();
+            }
             if (everyFileRead)
             {
                 // The precursor's chrom infos go the same way its transitions' do. Everything they
@@ -362,14 +363,14 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private int FindChosenPeakIndex(TransitionGroupDocNode nodeGroup, TransitionDocNode[] nodeTrans,
-            TransitionResults[] transitionResults, int replicateIndex, ChromatogramGroupInfo chromGroupInfo,
+            TransitionGroupResults groupResults, int replicateIndex, ChromatogramGroupInfo chromGroupInfo,
             ChromFileInfoId fileId)
         {
             var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
             int chosenPeakIndex = -1;
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
-                var chromInfo = transitionResults[iTran]?.FindChromInfo(fileId, 0);
+                var chromInfo = groupResults.FindTransitionChromInfo(iTran, fileId, 0);
                 if (chromInfo == null || chromInfo.IsEmpty)
                 {
                     continue;
@@ -413,20 +414,22 @@ namespace pwiz.Skyline.Model.Results
         /// the peaks are not all the same candidate peak. Integrating between them is then the only
         /// way any of them comes back.
         /// </summary>
-        private static void CarryPeakBounds(TransitionDocNode[] nodeTrans, TransitionResults[] transitionResults,
-            ChromFileInfoId fileId)
+        private static TransitionGroupResults CarryPeakBounds(TransitionDocNode[] nodeTrans,
+            TransitionGroupResults groupResults, ChromFileInfoId fileId)
         {
             for (int iTran = 0; iTran < nodeTrans.Length; iTran++)
             {
-                var chromInfo = transitionResults[iTran]?.FindChromInfo(fileId, 0);
+                var chromInfo = groupResults.FindTransitionChromInfo(iTran, fileId, 0);
                 if (chromInfo == null || chromInfo.IsEmpty)
                 {
                     continue;
                 }
 
-                transitionResults[iTran] = transitionResults[iTran].ChangeCustomPeakBounds(fileId,
+                groupResults = groupResults.ChangeTransitionCustomPeakBounds(iTran, fileId,
                     chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.Identified);
             }
+
+            return groupResults;
         }
 
         /// <summary>
@@ -549,11 +552,12 @@ namespace pwiz.Skyline.Model.Results
                     chromatograms.OptimizationFunction, TransformChrom.interpolated);
 
                 // The entry holding the values of optimization step zero, found by file.
-                var results = nodeGroup.GetTransitionResults(iTran);
-                if (results != null && results.Peaks.TryGetValue(replicateIndex, fileId, out var transitionPeak))
+                var groupResults = nodeGroup.AbbreviatedResults;
+                if (groupResults != null &&
+                    groupResults.TryGetTransitionPeak(iTran, replicateIndex, fileId, out var transitionPeak))
                 {
                     transitionPeaks[iTran] = transitionPeak;
-                    results.CustomPeaks?.TryGetValue(replicateIndex, fileId, out customPeaks[iTran]);
+                    customPeaks[iTran] = groupResults.FindTransitionCustomPeak(iTran, replicateIndex, fileId);
                 }
             }
 

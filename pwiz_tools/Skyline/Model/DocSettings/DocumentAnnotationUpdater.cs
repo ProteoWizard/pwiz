@@ -298,8 +298,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             for (int iTran = 0; iTran < precursorDocNode.Children.Count; iTran++)
             {
-                var results = precursorDocNode.GetTransitionResults(iTran);
-                if (results == null)
+                var groupResults = precursorDocNode.AbbreviatedResults;
+                if (groupResults?.HasTransitionResults(iTran) != true)
                 {
                     continue;
                 }
@@ -308,9 +308,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 var nodeTran = (TransitionDocNode) precursorDocNode.Children[iTran];
                 var transition = new Databinding.Entities.Transition(SkylineDataSchema,
                     new IdentityPath(parent, nodeTran.Transition));
-                var newCustomPeaks = results.CustomPeaks?.FlatValues.ToList() ??
-                                     Enumerable.Repeat((CustomPeak) null, results.Peaks.FlatValues.Count).ToList();
-                _transitionResultUpdater.Update(results.ChromFileIds, transition.Results,
+                var newCustomPeaks = groupResults.GetTransitionCustomPeaks(iTran).ToList();
+                _transitionResultUpdater.Update(groupResults.GetTransitionChromFileIds(iTran), transition.Results,
                     position => newCustomPeaks[position]?.Annotations ?? Annotations.EMPTY,
                     (position, annotations) =>
                     {
@@ -318,8 +317,9 @@ namespace pwiz.Skyline.Model.DocSettings
                             .ChangeAnnotations(annotations);
                         newCustomPeaks[position] = customPeak.IsEmpty ? null : customPeak;
                     });
-                precursorDocNode = precursorDocNode.ChangeTransitionResults(iTran, results.ChangeCustomPeaks(
-                    newCustomPeaks.All(customPeak => customPeak == null) ? null : newCustomPeaks));
+                precursorDocNode = precursorDocNode.ChangeAbbreviatedResults(
+                    groupResults.ChangeTransitionCustomPeaks(iTran,
+                        newCustomPeaks.All(customPeak => customPeak == null) ? null : newCustomPeaks));
             }
 
             return precursorDocNode;

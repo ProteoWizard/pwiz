@@ -50,8 +50,9 @@ namespace pwiz.Skyline.Model.Find
 
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
-            var results = nodeGroup?.GetTransitionResults(nodeTran);
-            return results != null && results.ChromFileIds.ReplicatePositions.TotalCount == 0;
+            var chromFileIds = nodeGroup?.AbbreviatedResults?
+                .GetTransitionChromFileIds(nodeGroup.IndexOfTransition(nodeTran));
+            return chromFileIds != null && chromFileIds.ReplicatePositions.TotalCount == 0;
         }
     }
 }

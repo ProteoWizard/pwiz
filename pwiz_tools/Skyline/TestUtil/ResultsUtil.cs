@@ -36,20 +36,91 @@ using System.Xml.Serialization;
 
 namespace pwiz.SkylineTestUtil
 {
+    /// <summary>
+    /// One transition's results: the precursor which holds them and the index which addresses
+    /// them. Everything about them is asked of <see cref="TransitionGroupResults"/> with the
+    /// index, since the results object itself is the precursor's own business.
+    /// </summary>
+    public struct TransitionResultsRef
+    {
+        public TransitionResultsRef(TransitionGroupResults results, int transitionIndex)
+        {
+            Results = results;
+            TransitionIndex = transitionIndex;
+        }
+
+        public TransitionGroupResults Results { get; }
+        public int TransitionIndex { get; }
+
+        public bool HasResults
+        {
+            get { return Results?.HasTransitionResults(TransitionIndex) ?? false; }
+        }
+
+        public ChromFileIds ChromFileIds
+        {
+            get { return Results?.GetTransitionChromFileIds(TransitionIndex); }
+        }
+
+        public int PositionCount
+        {
+            get { return Results?.GetTransitionPositionCount(TransitionIndex) ?? 0; }
+        }
+
+        public float GetArea(int position)
+        {
+            return Results.GetTransitionArea(TransitionIndex, position);
+        }
+
+        public UserSet GetUserSet(int position)
+        {
+            return Results.GetTransitionUserSet(TransitionIndex, position);
+        }
+
+        public CustomPeak GetCustomPeak(int position)
+        {
+            return Results.GetTransitionCustomPeak(TransitionIndex, position);
+        }
+
+        public IEnumerable<float> Areas
+        {
+            get { return Enumerable.Range(0, PositionCount).Select(GetArea); }
+        }
+
+        public IEnumerable<UserSet> UserSets
+        {
+            get { return Enumerable.Range(0, PositionCount).Select(GetUserSet); }
+        }
+
+        /// <summary>
+        /// One entry per position, null where the peak has no custom peak, and null altogether
+        /// when none of them does - which is what the results themselves store.
+        /// </summary>
+        public CustomPeak[] CustomPeaks
+        {
+            get
+            {
+                var customPeaks = Enumerable.Range(0, PositionCount).Select(GetCustomPeak).ToArray();
+                return customPeaks.All(customPeak => customPeak == null) ? null : customPeaks;
+            }
+        }
+    }
+
     public static class ResultsUtil
     {
         /// <summary>
-        /// Every transition's columnar results, in document order. A transition's results belong to
-        /// its precursor now, so this is what a test which used to walk MoleculeTransitions and ask
-        /// each node for them does instead.
+        /// Every transition's results, in document order, each as the precursor which owns them
+        /// and the index which addresses them. A transition's results belong to its precursor now,
+        /// and nothing hands the results object itself out, so this is what a test which used to
+        /// walk MoleculeTransitions and ask each node for them does instead.
         /// </summary>
-        public static IEnumerable<TransitionResults> EnumerateTransitionResults(SrmDocument document)
+        public static IEnumerable<TransitionResultsRef> EnumerateTransitionResults(SrmDocument document)
         {
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
                 for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
                 {
-                    yield return nodeGroup.GetTransitionResults(iTran);
+                    yield return new TransitionResultsRef(nodeGroup.AbbreviatedResults, iTran);
                 }
             }
         }

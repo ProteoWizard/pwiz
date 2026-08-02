@@ -445,7 +445,7 @@ namespace pwiz.Skyline.Model.Find
                     // A transition's results belong to its precursor, so the parent is what says
                     // whether it has any.
                     var nodeGroup = Document.FindNode(identityPath.Parent) as TransitionGroupDocNode;
-                    return nodeGroup?.GetTransitionResults(transitionDocNode) == null ? 0 : ReplicateCount();
+                    return nodeGroup?.HasTransitionResults(transitionDocNode) == true ? ReplicateCount() : 0;
                 case TransitionGroupDocNode transitionGroupDocNode:
                     return transitionGroupDocNode.HasAbbreviatedResults ? ReplicateCount() : 0;
                 case PeptideDocNode peptideDocNode:

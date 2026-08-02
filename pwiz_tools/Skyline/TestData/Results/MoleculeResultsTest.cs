@@ -211,8 +211,9 @@ namespace pwiz.SkylineTestData.Results
         private static int CheckTransition(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
             TransitionDocNode nodeTran, ref int reintegrated)
         {
-            var abbreviated = nodeGroup.GetTransitionResults(nodeTran);
-            if (abbreviated == null)
+            int iTran = nodeGroup.IndexOfTransition(nodeTran);
+            var abbreviated = nodeGroup.AbbreviatedResults;
+            if (abbreviated?.HasTransitionResults(iTran) != true)
             {
                 return 0;
             }
@@ -225,7 +226,8 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreSame(results,
                 moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition));
 
-            CheckFromChromInfos(abbreviated, nodeTran, results);
+            CheckFromChromInfos(abbreviated, iTran, nodeTran, results);
+
 
             int positionsChecked = 0;
             for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
@@ -246,12 +248,13 @@ namespace pwiz.SkylineTestData.Results
                         continue;
                     }
 
-                    Assert.IsTrue(abbreviated.Peaks.TryGetValue(replicateIndex, chromInfo.FileId, out var peak));
+                    Assert.IsTrue(abbreviated.TryGetTransitionPeak(iTran, replicateIndex,
+                        chromInfo.FileId, out var peak));
                     Assert.AreEqual(peak.Area, chromInfo.Area);
                     Assert.AreEqual(peak.UserSet, chromInfo.UserSet);
 
-                    CustomPeak customPeak = null;
-                    abbreviated.CustomPeaks?.TryGetValue(replicateIndex, chromInfo.FileId, out customPeak);
+                    var customPeak = abbreviated.FindTransitionCustomPeak(iTran, replicateIndex,
+                        chromInfo.FileId);
                     if (customPeak?.HasPeakBounds == true)
                     {
                         // Reproduced by integrating between them rather than by finding a
@@ -400,20 +403,24 @@ namespace pwiz.SkylineTestData.Results
         /// works from chrom infos <see cref="MoleculeResults"/> rebuilt rather than from any the
         /// document holds.
         /// </summary>
-        private static void CheckFromChromInfos(TransitionResults abbreviated, TransitionDocNode nodeTran,
-            Results<TransitionChromInfo> rebuilt)
+        private static void CheckFromChromInfos(TransitionGroupResults abbreviated, int transitionIndex,
+            TransitionDocNode nodeTran, Results<TransitionChromInfo> rebuilt)
         {
-            var unconverted = TransitionResults.FromChromInfos(rebuilt);
-            Assert.IsFalse(unconverted.IsConverted);
-            Assert.AreEqual(rebuilt.Sum(chromInfoList => chromInfoList.Count), unconverted.LegacyChromInfos.Count);
+            // Index zero of a precursor of its own, since what is being checked is the conversion
+            // rather than where the transition sits.
+            var unconverted = TransitionGroupResults.Empty.ChangeTransitionFromChromInfos(0, rebuilt);
+            Assert.IsFalse(unconverted.IsTransitionConverted(0));
+            Assert.AreEqual(rebuilt.Sum(chromInfoList => chromInfoList.Count),
+                unconverted.GetTransitionLegacyChromInfoCount(0));
             foreach (var chromInfo in rebuilt[0])
             {
-                Assert.AreSame(chromInfo, unconverted.FindChromInfo(chromInfo.FileId, chromInfo.OptimizationStep));
+                Assert.AreSame(chromInfo,
+                    unconverted.FindTransitionChromInfo(0, chromInfo.FileId, chromInfo.OptimizationStep));
             }
 
             // What the document keeps has been converted: which candidate peak each peak is has
             // been worked out, so the chrom infos are not needed any more.
-            Assert.IsTrue(abbreviated.IsConverted);
+            Assert.IsTrue(abbreviated.IsTransitionConverted(transitionIndex));
 
             // Not derived from the chrom infos, so replacing those leaves them alone. Structural
             // now that the columnar results belong to the precursor: clearing a transition node's

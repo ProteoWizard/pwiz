@@ -88,14 +88,12 @@ namespace pwiz.SkylineTestData.Results
                         // Only the area and the user set: the rest of a TransitionPeak - truncated,
                         // empty, identified, forced integration - is deliberately not written,
                         // because it is worked out again from the .skyd when that is read.
-                        CollectionAssert.AreEqual(
-                            expectedResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(),
-                            actualResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(), @"areas");
-                        CollectionAssert.AreEqual(
-                            expectedResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(),
-                            actualResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(), @"user sets");
-                        CollectionAssert.AreEqual(expectedResults.CustomPeaks?.FlatValues.ToArray(),
-                            actualResults.CustomPeaks?.FlatValues.ToArray(), @"custom peaks");
+                        CollectionAssert.AreEqual(expectedResults.Areas.ToArray(),
+                            actualResults.Areas.ToArray(), @"areas");
+                        CollectionAssert.AreEqual(expectedResults.UserSets.ToArray(),
+                            actualResults.UserSets.ToArray(), @"user sets");
+                        CollectionAssert.AreEqual(expectedResults.CustomPeaks,
+                            actualResults.CustomPeaks, @"custom peaks");
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
                         transitionsChecked++;
@@ -174,12 +172,12 @@ namespace pwiz.SkylineTestData.Results
                 {
                     while (expected.MoveNext() && actual.MoveNext())
                     {
-                        var expectedAreas = expected.Current.Peaks;
-                        var actualAreas = actual.Current.Peaks;
-                        CollectionAssert.AreEqual(expectedAreas.FlatValues.Select(peak => peak.Area).ToArray(), actualAreas.FlatValues.Select(peak => peak.Area).ToArray(),
-                            string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.FlatValues.Count,
-                                actualAreas.FlatValues.Count));
-                        sharedAreasChecked += expectedAreas.FlatValues.Count;
+                        var expectedAreas = expected.Current.Areas.ToArray();
+                        var actualAreas = actual.Current.Areas.ToArray();
+                        CollectionAssert.AreEqual(expectedAreas, actualAreas,
+                            string.Format(@"shared areas: expected {0} actual {1}", expectedAreas.Length,
+                                actualAreas.Length));
+                        sharedAreasChecked += expectedAreas.Length;
                     }
                 }
 
@@ -220,12 +218,10 @@ namespace pwiz.SkylineTestData.Results
             var expectedResults = ResultsUtil.EnumerateTransitionResults(docMoved).First();
             var actualResults = ResultsUtil.EnumerateTransitionResults(docRoundTrip).First();
             // The area and the user set are what the format carries. See above.
-            CollectionAssert.AreEqual(expectedResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(),
-                actualResults.Peaks.FlatValues.Select(peak => peak.Area).ToArray(), @"areas");
-            CollectionAssert.AreEqual(expectedResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(),
-                actualResults.Peaks.FlatValues.Select(peak => peak.UserSet).ToArray(), @"user sets");
-            CollectionAssert.AreEqual(expectedResults.CustomPeaks?.FlatValues.ToArray(),
-                actualResults.CustomPeaks?.FlatValues.ToArray(), @"custom peaks");
+            CollectionAssert.AreEqual(expectedResults.Areas.ToArray(), actualResults.Areas.ToArray(), @"areas");
+            CollectionAssert.AreEqual(expectedResults.UserSets.ToArray(), actualResults.UserSets.ToArray(),
+                @"user sets");
+            CollectionAssert.AreEqual(expectedResults.CustomPeaks, actualResults.CustomPeaks, @"custom peaks");
             Assert.IsNotNull(actualResults.CustomPeaks);
         }
 
