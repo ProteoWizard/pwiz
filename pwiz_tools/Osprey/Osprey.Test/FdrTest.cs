@@ -2314,8 +2314,12 @@ namespace pwiz.Osprey.Test
         /// floor, the single most divergence-prone piece (two different estimators of the same
         /// statistic), contributed nothing to any assertion.
         ///
-        /// Here EVERY group has 1..N-1 observations, so the floor term is non-zero for every unit
-        /// on both paths. Two things are then asserted:
+        /// Here the floor WEIGHTS <c>(N - _len)</c> differ across units - every decoy and most
+        /// targets are under-detected, while some targets are fully detected and carry weight 0.
+        /// Differing weights are the point: a floor that is uniform across every unit is a
+        /// monotonic transform and cannot move any ranking, so a fixture in which all units share
+        /// a weight tests nothing about the floor no matter how wrong the floor is. Two things are
+        /// then asserted:
         ///
         ///  1. The two FLOOR ESTIMATORS agree to within <c>bin width + local decoy spacing</c>.
         ///     That bound is wider than the bin width alone, and deliberately so: the resident path
@@ -2349,14 +2353,36 @@ namespace pwiz.Osprey.Test
             var rows = new List<(int G, uint EntryId, bool IsDecoy, double Score, string Peptide)>();
             int g = 0;
 
-            // Targets: group i is seen in (i % (N - 1)) + 1 runs - ALWAYS strictly fewer than N,
-            // so (n - _len) >= 1 and the floor term is live for every unit, at a MIX of floor
-            // weights (1..N-1 missing runs). Scores are spaced 1.0 apart, ~1000x the floor
-            // disagreement, so the differing weights still cannot reorder them.
+            // Targets: group i is seen in (i % N) + 1 runs, so the floor WEIGHTS (n - _len) differ
+            // across units - 1..n-1 for the under-detected ones, 0 for the fully-detected ones.
+            //
+            // Differing weights, not merely a live floor term, are what give this test its power.
+            // The previous form ((i % (n-1)) + 1) kept every unit under-detected, which at n == 2
+            // collapses to _len == 1 for ALL of them: every aggregate is then (score + floor)/2,
+            // the uniform monotonic transform this feature's own docs call ranking-invariant, so
+            // the q-map equality below would have held for ANY floor, including one off by 1000x.
+            // n == 2 is the arm #4484 actually measures, so that was precisely the N whose floor
+            // path went untested. At n == 2 "every unit under-detected" and "weights differ" are
+            // mutually exclusive, so covering it REQUIRES mixing in fully-detected units.
+            //
+            // Be precise about what the mixed weights buy, because it is narrower than it looks.
+            // This is a PARITY test: assertion (2) compares the streaming map against the resident
+            // map, both built from their own floor. It therefore CANNOT detect an error shared by
+            // both estimators - verified by mutation, shifting both floors by +7.0 leaves this test
+            // green (what goes red is the value-oracle set in MeanBestNAggregationTest, which
+            // asserts exact aggregates against a known decoy median; that is where floor
+            // CORRECTNESS is pinned, and it covers n = 2).
+            //
+            // What the mixed weights fix is that assertion (2) was DEGENERATE at n == 2: with one
+            // uniform weight the aggregate is a monotonic transform, so a difference BETWEEN the
+            // two paths' floors could not change any ranking at any magnitude, and assertion (2)
+            // could not have reported a divergence even in principle. With weights differing it
+            // can. Scores stay 3.0 apart, ~3000x the real sub-bin difference, so the legitimate
+            // approximation still reorders nothing and exact equality remains the right assertion.
             for (int i = 0; i < nTargetGroups; i++)
             {
                 uint baseId = (uint)(i + 1);
-                int nObs = (i % Math.Max(1, n - 1)) + 1;
+                int nObs = (i % n) + 1;
                 for (int k = 0; k < nObs; k++)
                     rows.Add((g++, baseId, false, 5.0 + i * 3.0, "PEP" + i));
             }

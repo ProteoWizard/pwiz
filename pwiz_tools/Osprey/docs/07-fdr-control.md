@@ -399,12 +399,26 @@ any plausible reproducibility frontier for a DIA experiment.
 #### N must not exceed the number of runs
 
 For that same saturation reason, an analysis with fewer runs than N is **refused**,
-not run (`OspreyEnvironment.ValidateExperimentAggSettings(fileCount)`). The check
-runs twice from the one helper, so the two cannot drift and neither entry path can be
-skipped: at startup in `Program.ValidateArgs` before any I/O (a bad combination costs
-a second instead of the hours a large run spends reaching Stage 5), and again at the
-Stage-5 consuming site in `FirstJoinTask.Run`, which sees the real file count and is
-still reached on a resumed or single-task run.
+not run (`OspreyEnvironment.ValidateExperimentAggSettings(fileCount)`). The check runs
+from one helper at two sites: at startup in `Program.ValidateArgs` before any I/O (a bad
+value costs a second instead of the hours a large run spends reaching Stage 5), and again
+at the Stage-5 consuming site in `FirstJoinTask.Run`.
+
+The two sites are fed **different counts on purpose**, and neither subsumes the other.
+Startup counts the files named on the command line; Stage 5 counts the files that actually
+produced scored entries, which is smaller when a file fails to score or yields nothing. So
+a run can pass at startup and still be refused at Stage 5 - that is the second check doing
+its job, not a drift to be eliminated. Conversely `FirstJoinTask.Run` is skipped on
+`--task SecondPassFDR`, on a Rehydrate and on any warm resume, which is exactly why the
+startup check exists. The bound itself is also approximate: the statistic saturates at the
+largest per-unit observation count, which is at most the file count and usually less, so
+some N below the file count are already saturated and are not refused.
+
+Because the Stage-5 check can throw, it runs **before** that task deletes the validity
+sidecars of the outputs it is about to write. Otherwise an argument error would destroy the
+cached Stage-5 state of a run that computed no FDR at all, and the operator would pay for a
+full recompute after fixing a typo - concentrated precisely on the sweep workflow, since the
+arm is part of the validity key and a flipped arm therefore always takes the compute path.
 
 Every check in that helper is gated on the aggregation being **engaged**. With
 `OSPREY_EXPERIMENT_AGG` unset none of these variables is read, so an ordinary run
@@ -488,7 +502,15 @@ That makes the second-pass q-value mode
 | `transfer` | **The compatible mode.** Carries the first-pass q through unchanged, so the reported experiment q stays mean(best-N). |
 | `percolator` (default) | Allowed, but it retrains and recomputes the reported experiment q from a MAX competition over the reconciled pool, so the mean(best-N) statistic survives only in the first-pass outputs. |
 | `transfer-compete` | **Refused** (`Pass2FdrSidecar` throws). It rewrites every survivor's experiment q from a MAX-aggregated competition, making a reproducibility-weighted run indistinguishable from a default run in its own output. |
-| `protein-compact` | **Refused.** Worse than uniform: on-stratum survivors would get the MAX-aggregated value while off-stratum survivors keep their first-pass mean(best-N) q, giving one reported column with two statistics and no way for a consumer to tell which row used which. |
+| `protein-compact` | **Refused** (but see the caveat below). Worse than uniform: on-stratum survivors would get the MAX-aggregated value while off-stratum survivors keep their first-pass mean(best-N) q, giving one reported column with two statistics and no way for a consumer to tell which row used which. |
+
+> **Caveat: `protein-compact` + `OSPREY_PROTEIN_COMPACT_RETRAIN=1` is NOT refused.** The refusal
+> lives in the frozen-model recompute, and that A/B lever deliberately bypasses it to retrain
+> instead - so the combination falls through to the same `percolator` retrain described above and
+> silently reports a MAX-aggregated experiment q. This is left as-is rather than guarded because
+> the combination is a three-way diagnostic opt-in, and these environment variables are
+> development instrumentation rather than a supported interface (see
+> `ai/docs/osprey-development-guide.md`). Do not read the "Refused" row above as covering it.
 
 The refusal gates on the arm the **first pass recorded** - persisted as
 `ExperimentAgg` in the per-file `<stem>.1st-pass.model.json` sidecar
