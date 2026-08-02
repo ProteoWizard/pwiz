@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.ChromLib.Data;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -500,8 +501,9 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
                     var fileIndexesById = FileIndexesById();
 
+                    var valueCache = new ValueCache();
                     var rtQuery = session.CreateQuery(@"SELECT Precursor.Id, SampleFile.Id, RetentionTime FROM PrecursorRetentionTime");
-                    var rtDictionary = new Dictionary<int, List<KeyValuePair<int, double>>>(); // PrecursorId -> [SampleFileIndex -> RetentionTime]
+                    var rtDictionary = new Dictionary<int, List<KeyValuePair<int, float>>>(); // PrecursorId -> [SampleFileIndex -> RetentionTime]
                     foreach (object[] row in rtQuery.List<object[]>())
                     {
                         var precursorId = (int) row[0];
@@ -510,12 +512,12 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         {
                             continue;
                         }
-                        var rt = Convert.ToDouble(row[2]);
+                        var rt = Convert.ToSingle(row[2]);
                         if (!rtDictionary.ContainsKey(precursorId))
                         {
-                            rtDictionary.Add(precursorId, new List<KeyValuePair<int, double>>());
+                            rtDictionary.Add(precursorId, new List<KeyValuePair<int, float>>());
                         }
-                        rtDictionary[precursorId].Add(new KeyValuePair<int, double>(sampleFileIndex, rt));
+                        rtDictionary[precursorId].Add(new KeyValuePair<int, float>(sampleFileIndex, rt));
                     }
 
                     var precursorQuery =
@@ -556,11 +558,11 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                             moleculeList = dictMoleculeLists[peptideId]?.Name;
                         }
                         double totalArea = Convert.ToDouble(row[3]);
-                        List<KeyValuePair<int, double>> retentionTimes;
-                        var indexedRetentionTimes = new IndexedRetentionTimes();
+                        List<KeyValuePair<int, float>> retentionTimes;
+                        var indexedRetentionTimes = IndexedMultiArray<float>.EMPTY;
                         if (rtDictionary.TryGetValue(id, out retentionTimes))
                         {
-                            indexedRetentionTimes = new IndexedRetentionTimes(retentionTimes);
+                            indexedRetentionTimes = retentionTimes.ToIndexedMultiArray().ValueFromCache(valueCache);
                         }
 
                         // Note ion mobility, if any.
@@ -588,7 +590,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
-                retentionTimes = _libraryEntries[i].RetentionTimesByFileIndex.GetTimes(j);
+                retentionTimes = ToDoubleArray(_libraryEntries[i].RetentionTimesByFileIndex[j]);
                 return true;
             }
 
@@ -602,7 +604,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             {
                 ILookup<Target, double[]> timesLookup = _libraryEntries.ToLookup(
                     entry => entry.Key.Target,
-                    entry => entry.RetentionTimesByFileIndex.GetTimes(j));
+                    entry => ToDoubleArray(entry.RetentionTimesByFileIndex[j]));
                 var timesDict = timesLookup.ToDictionary(
                     grouping => grouping.Key,
                     grouping =>
@@ -637,7 +639,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             var times = new List<double[]>();
             foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
-                times.Add(item.RetentionTimesByFileIndex.GetTimes(iFile));
+                times.Add(ToDoubleArray(item.RetentionTimesByFileIndex[iFile]));
             }
             return times.SelectMany(array => array);
         }
@@ -693,6 +695,17 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 return new List<SpectrumPeakAnnotation>{SpectrumPeakAnnotation.Create(ion, null)};
             }
             return null;
+        }
+
+        private static double[] ToDoubleArray(IList<float> values)
+        {
+            var result = new double[values.Count];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = values[i];
+            }
+
+            return result;
         }
 
         /// <summary>

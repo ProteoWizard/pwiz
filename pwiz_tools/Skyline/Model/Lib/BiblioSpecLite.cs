@@ -323,9 +323,9 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     var retentionTimes = entry.RetentionTimesByFileIndex;
-                    for (int fileIndex = 0; fileIndex < retentionTimes.FileCount; fileIndex++)
+                    for (int fileIndex = 0; fileIndex < retentionTimes.Count; fileIndex++)
                     {
-                        detailsByFileIndex[fileIndex].MatchedSpectrum += retentionTimes.GetTimeCount(fileIndex);
+                        detailsByFileIndex[fileIndex].MatchedSpectrum += retentionTimes.GetCount(fileIndex);
                     }
                 }
             }
@@ -854,14 +854,17 @@ namespace pwiz.Skyline.Model.Lib
                 for (int i = 0; i < libraryEntries.Count; i++)
                 {
                     var libraryEntry = libraryEntries[i];
+                    // Share the ReplicatePositions between the entries which have values in the
+                    // same files, which on a library where every spectrum was found in every file
+                    // leaves one of them instead of one per spectrum.
                     if (retentionTimesBySpectraId.TryGetValue(libraryEntry.Id, out var retentionTimes))
                     {
-                        libraryEntry = libraryEntry.ChangeRetentionTimes(retentionTimes);
+                        libraryEntry = libraryEntry.ChangeRetentionTimes(retentionTimes.ValueFromCache(valueCache));
                     }
 
                     if (driftTimesBySpectraId.TryGetValue(libraryEntry.Id, out var driftTimes))
                     {
-                        libraryEntry = libraryEntry.ChangeIonMobilities(driftTimes);
+                        libraryEntry = libraryEntry.ChangeIonMobilities(driftTimes.ValueFromCache(valueCache));
                     }
 
                     if (peakBoundsBySpectraId.TryGetValue(libraryEntry.Id, out var peakBounds) && peakBounds.Count > 0)
@@ -1210,7 +1213,7 @@ namespace pwiz.Skyline.Model.Lib
             int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
-                retentionTimes = _libraryEntries[i].RetentionTimesByFileIndex.GetTimes(j);
+                retentionTimes = ToDoubleArray(_libraryEntries[i].RetentionTimesByFileIndex[j]);
                 return true;
             }
 
@@ -1228,17 +1231,16 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return null;
             }
-            int fileId = _librarySourceFiles[iFile].Id;
             bool anySequenceMatch = false;
             foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
                 ExplicitPeakBounds peakBoundaries;
-                if (item.PeakBoundariesByFileId.TryGetValue(fileId, out peakBoundaries))
+                if (item.PeakBoundariesByFileIndex.TryGetValue(iFile, out peakBoundaries))
                 {
                     return peakBoundaries;
                 }
 
-                if (item.PeakBoundariesByFileId.Any())
+                if (item.PeakBoundariesByFileIndex.Count > 0)
                 {
                     // If the library has peak boundaries for this sequence in some other file, assume
                     // that the peptide was just not found in this file.
@@ -1275,7 +1277,7 @@ namespace pwiz.Skyline.Model.Lib
                 var dictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
                 foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
                 {
-                    var times = grouping.SelectMany(entry => entry.RetentionTimesByFileIndex.GetTimes(j))
+                    var times = grouping.SelectMany(entry => ToDoubleArray(entry.RetentionTimesByFileIndex[j]))
                         .OrderBy(time => time).ToArray();
                     if (times.Length > 0)
                     {
@@ -1301,7 +1303,7 @@ namespace pwiz.Skyline.Model.Lib
             var times = new List<double[]>();
             foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
-                times.Add(item.RetentionTimesByFileIndex.GetTimes(iFile.Value));
+                times.Add(ToDoubleArray(item.RetentionTimesByFileIndex[iFile.Value]));
             }
             return times.SelectMany(array => array);
         }
@@ -1430,7 +1432,8 @@ namespace pwiz.Skyline.Model.Lib
             int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
-                ionMobilities = _libraryEntries[i].IonMobilitiesByFileIndex.GetIonMobilityInfo(j);
+                var entryIonMobilities = _libraryEntries[i].IonMobilitiesByFileIndex[j];
+                ionMobilities = entryIonMobilities.Count == 0 ? null : entryIonMobilities.ToArray();
                 return ionMobilities != null;
             }
 
@@ -1446,7 +1449,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (fileIndex >= 0 && fileIndex < _librarySourceFiles.Length)
             {
-                ILookup<LibKey, IonMobilityAndCCS[]> ionMobilitiesLookup;
+                ILookup<LibKey, IList<IonMobilityAndCCS>> ionMobilitiesLookup;
                 var source = _librarySourceFiles[fileIndex];
                 if (targetIons != null)
                 {
@@ -1458,15 +1461,15 @@ namespace pwiz.Skyline.Model.Lib
 
                     ionMobilitiesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
                         entry => entry.Key,
-                        entry => entry.IonMobilitiesByFileIndex.GetIonMobilityInfo(fileIndex));
+                        entry => entry.IonMobilitiesByFileIndex[fileIndex]);
                 }
                 else
                 {
                     ionMobilitiesLookup = _libraryEntries.ToLookup(
                         entry => entry.Key,
-                        entry => entry.IonMobilitiesByFileIndex.GetIonMobilityInfo(fileIndex));
+                        entry => entry.IonMobilitiesByFileIndex[fileIndex]);
                 }
-                var ionMobilitiesDict = ionMobilitiesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
+                var ionMobilitiesDict = ionMobilitiesLookup.ToDictionary(
                     grouping => grouping.Key,
                     grouping =>
                     {
@@ -1494,9 +1497,10 @@ namespace pwiz.Skyline.Model.Lib
                     foreach (var matchedItem in _libraryEntries.ItemsMatching(target, true))
                     {
                         var matchedTarget = matchedItem.Key;
-                        var match = matchedItem.IonMobilitiesByFileIndex.AllValuesSorted;
-                        if (match == null)
+                        if (matchedItem.IonMobilitiesByFileIndex.IsEmpty)
                             continue;
+                        var match = matchedItem.IonMobilitiesByFileIndex.FlatValues.ToArray();
+                        Array.Sort(match);
                         if (ionMobilitiesDict.TryGetValue(matchedTarget, out var mobilities))
                         {
                             var newMobilities = match.Concat(mobilities).ToArray();
@@ -2081,14 +2085,14 @@ namespace pwiz.Skyline.Model.Lib
             private readonly int _schemaVer;
             private readonly string _dbPath;
 
-            private Dictionary<int, IndexedRetentionTimes> _retentionTimes =
-                new Dictionary<int, IndexedRetentionTimes>();
+            private Dictionary<int, IndexedMultiArray<float>> _retentionTimes =
+                new Dictionary<int, IndexedMultiArray<float>>();
 
-            private Dictionary<int, IndexedIonMobilities> _ionMobilities =
-                new Dictionary<int, IndexedIonMobilities>();
+            private Dictionary<int, IndexedMultiArray<IonMobilityAndCCS>> _ionMobilities =
+                new Dictionary<int, IndexedMultiArray<IonMobilityAndCCS>>();
 
-            private Dictionary<int, ExplicitPeakBoundsDict<int>> _explicitPeakBounds =
-                new Dictionary<int, ExplicitPeakBoundsDict<int>>();
+            private Dictionary<int, ExplicitPeakBoundsDict> _explicitPeakBounds =
+                new Dictionary<int, ExplicitPeakBoundsDict>();
 
             private IProgressMonitor _progressMonitor;
             private IProgressStatus _progressStatus;
@@ -2117,17 +2121,17 @@ namespace pwiz.Skyline.Model.Lib
             public bool AnyRedundantSpectra { get; private set; }
 
             // ReSharper disable InconsistentlySynchronizedField
-            public Dictionary<int, IndexedRetentionTimes> GetRetentionTimes()
+            public Dictionary<int, IndexedMultiArray<float>> GetRetentionTimes()
             {
                 return _retentionTimes;
             }
 
-            public Dictionary<int, IndexedIonMobilities> GetIonMobilities()
+            public Dictionary<int, IndexedMultiArray<IonMobilityAndCCS>> GetIonMobilities()
             {
                 return _ionMobilities;
             }
 
-            public Dictionary<int, ExplicitPeakBoundsDict<int>> GetExplicitPeakBounds()
+            public Dictionary<int, ExplicitPeakBoundsDict> GetExplicitPeakBounds()
             {
                 return _explicitPeakBounds;
             }
@@ -2185,7 +2189,7 @@ namespace pwiz.Skyline.Model.Lib
             private bool ConsumeRows(List<RetentionTimeRow> rows)
             {
                 var refSpectraId = rows[0].RefSpectraID;
-                var retentionTimes = new List<KeyValuePair<int, double>>();
+                var retentionTimes = new List<KeyValuePair<int, float>>();
                 var ionMobilities = new List<KeyValuePair<int, IonMobilityAndCCS>>();
                 var explicitPeakBounds = new List<KeyValuePair<int, ExplicitPeakBounds>>();
                 foreach (var row in rows)
@@ -2201,8 +2205,8 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     }
 
-                    // Note that the retention times and ion mobilities are keyed by the file's
-                    // index in LibraryFiles, but the peak bounds are keyed by its database id.
+                    // Everything here is keyed by the file's index in LibraryFiles rather than by
+                    // its id in the library database.
                     if (!FileIndexesById.TryGetValue(fileId.Value, out int fileIndex))
                     {
                         continue;
@@ -2210,7 +2214,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     if (row.retentionTime.HasValue)
                     {
-                        retentionTimes.Add(new KeyValuePair<int, double>(fileIndex, row.retentionTime.Value));
+                        retentionTimes.Add(new KeyValuePair<int, float>(fileIndex, (float) row.retentionTime.Value));
                     }
 
                     var ionMobility = ReadIonMobilityInfo(row);
@@ -2222,18 +2226,18 @@ namespace pwiz.Skyline.Model.Lib
                     var peakBounds = ReadPeakBounds(row);
                     if (peakBounds != null)
                     {
-                        explicitPeakBounds.Add(new KeyValuePair<int, ExplicitPeakBounds>(fileId.Value, peakBounds));
+                        explicitPeakBounds.Add(new KeyValuePair<int, ExplicitPeakBounds>(fileIndex, peakBounds));
                     }
                 }
 
                 if (retentionTimes.Count > 0)
                 {
-                    var indexedRetentionTimes = new IndexedRetentionTimes(retentionTimes);
+                    var indexedRetentionTimes = retentionTimes.ToIndexedMultiArray();
                     lock (_retentionTimes)
                     {
                         if (_retentionTimes.TryGetValue(refSpectraId.Value, out var existing))
                         {
-                            _retentionTimes[refSpectraId.Value] = existing.MergeWith(indexedRetentionTimes);
+                            _retentionTimes[refSpectraId.Value] = existing.Merge(indexedRetentionTimes);
                         }
                         else
                         {
@@ -2244,12 +2248,12 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (ionMobilities.Count > 0)
                 {
-                    var indexedIonMobilities = new IndexedIonMobilities(ionMobilities);
+                    var indexedIonMobilities = ionMobilities.ToIndexedMultiArray();
                     lock (_ionMobilities)
                     {
                         if (_ionMobilities.TryGetValue(refSpectraId.Value, out var existing))
                         {
-                            _ionMobilities[refSpectraId.Value] = existing.MergeWith(indexedIonMobilities);
+                            _ionMobilities[refSpectraId.Value] = existing.Merge(indexedIonMobilities);
                         }
                         else
                         {
@@ -2260,13 +2264,13 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (explicitPeakBounds.Count > 0)
                 {
-                    var explicitPeakBoundsDict = new ExplicitPeakBoundsDict<int>(explicitPeakBounds.Distinct());
+                    var explicitPeakBoundsDict = new ExplicitPeakBoundsDict(explicitPeakBounds.Distinct());
                     lock (_explicitPeakBounds)
                     {
                         if (_explicitPeakBounds.TryGetValue(refSpectraId.Value, out var existing))
                         {
                             _explicitPeakBounds[refSpectraId.Value] =
-                                new ExplicitPeakBoundsDict<int>(existing.Concat(explicitPeakBounds));
+                                new ExplicitPeakBoundsDict(existing.GetEntries().Concat(explicitPeakBounds));
                         }
                         else
                         {
@@ -2414,7 +2418,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var entry in grouping)
                 {
-                    entry.RetentionTimesByFileIndex.LowerMinTimes(minTimes, fileIndexesWithTimes);
+                    LowerMinTimes(entry.RetentionTimesByFileIndex, minTimes, fileIndexesWithTimes);
                 }
 
                 foreach (int fileIndex in fileIndexesWithTimes)
@@ -2437,10 +2441,10 @@ namespace pwiz.Skyline.Model.Lib
                 double? minTime = null;
                 foreach (var entry in grouping)
                 {
-                    double? entryMinTime = entry.RetentionTimesByFileIndex.GetMinTime(fileIndex);
-                    if (entryMinTime < minTime.GetValueOrDefault(double.MaxValue))
+                    var entryTimes = entry.RetentionTimesByFileIndex[fileIndex];
+                    if (entryTimes.Count > 0 && entryTimes.Min() < minTime.GetValueOrDefault(double.MaxValue))
                     {
-                        minTime = entryMinTime;
+                        minTime = entryTimes.Min();
                     }
                 }
 
@@ -2463,7 +2467,7 @@ namespace pwiz.Skyline.Model.Lib
 
             foreach (var entry in EntriesMatching(targets))
             {
-                entry.RetentionTimesByFileIndex.AppendTimesTo(result);
+                AppendTimesTo(entry.RetentionTimesByFileIndex, result);
             }
 
             return result;
@@ -2474,7 +2478,7 @@ namespace pwiz.Skyline.Model.Lib
             var result = new List<double>();
             foreach (var entry in EntriesMatching(targets))
             {
-                result.AddRange(entry.RetentionTimesByFileIndex.GetTimes(fileIndex));
+                result.AddRange(ToDoubleArray(entry.RetentionTimesByFileIndex[fileIndex]));
             }
 
             return result;
@@ -2484,6 +2488,69 @@ namespace pwiz.Skyline.Model.Lib
         {
             return targets.SelectMany(target =>
                 _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false));
+        }
+
+        private static double[] ToDoubleArray(IList<float> values)
+        {
+            var result = new double[values.Count];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = values[i];
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Appends the times of each file to the list at the same index of
+        /// <paramref name="timesByFileIndex"/>, which must have an entry for every file.
+        /// </summary>
+        private static void AppendTimesTo(IndexedMultiArray<float> times, IList<List<double>> timesByFileIndex)
+        {
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
+            {
+                int start = times.ReplicatePositions.GetStart(fileIndex);
+                int end = start + times.GetCount(fileIndex);
+                if (start == end)
+                {
+                    continue;
+                }
+
+                var fileTimes = timesByFileIndex[fileIndex];
+                for (int i = start; i < end; i++)
+                {
+                    fileTimes.Add(times.FlatValues[i]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Lowers the value at each file's index of <paramref name="minTimeByFileIndex"/> to that
+        /// file's earliest time, when that is earlier. Every file index whose value moves down
+        /// from double.MaxValue is added to <paramref name="fileIndexesLowered"/>, so that a
+        /// caller accumulating across spectra can find the values which changed without walking
+        /// the whole array.
+        /// </summary>
+        private static void LowerMinTimes(IndexedMultiArray<float> times, IList<double> minTimeByFileIndex,
+            IList<int> fileIndexesLowered)
+        {
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
+            {
+                int start = times.ReplicatePositions.GetStart(fileIndex);
+                int end = start + times.GetCount(fileIndex);
+                for (int i = start; i < end; i++)
+                {
+                    if (times.FlatValues[i] < minTimeByFileIndex[fileIndex])
+                    {
+                        if (minTimeByFileIndex[fileIndex] == double.MaxValue)
+                        {
+                            fileIndexesLowered.Add(fileIndex);
+                        }
+
+                        minTimeByFileIndex[fileIndex] = times.FlatValues[i];
+                    }
+                }
+            }
         }
 
         public BiblioSpecLiteLibrary ChangeLibrarySpec(BiblioSpecLiteSpec newSpec, ConnectionPool connectionPool)
@@ -2533,252 +2600,6 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    /// <summary>
-    /// The retention times that a library holds for one spectrum, grouped by the index of the file
-    /// in the library's <see cref="LibraryFiles"/> list. Note that this index is not the file's id
-    /// in the library database.
-    /// </summary>
-    public struct IndexedRetentionTimes
-    {
-        private readonly IndexedMultiArray<float> _timesByFileIndex;
-
-        public IndexedRetentionTimes(IEnumerable<KeyValuePair<int, double>> timesByFileIndex)
-        {
-            _timesByFileIndex = timesByFileIndex
-                .Select(kvp => new KeyValuePair<int, float>(kvp.Key, (float) kvp.Value)).ToIndexedMultiArray();
-        }
-
-        private IndexedRetentionTimes(IndexedMultiArray<float> timesByFileIndex)
-        {
-            _timesByFileIndex = timesByFileIndex;
-        }
-
-        private IndexedMultiArray<float> TimesByFileIndex
-        {
-            get { return _timesByFileIndex ?? IndexedMultiArray<float>.EMPTY; }
-        }
-
-        public double[] GetTimes(int fileIndex)
-        {
-            return TimesByFileIndex[fileIndex].Select(time => (double) time).ToArray();
-        }
-
-        /// <summary>
-        /// One more than the highest file index which has any times, which is never more than the
-        /// number of entries in <see cref="LibraryFiles"/>.
-        /// </summary>
-        public int FileCount
-        {
-            get { return TimesByFileIndex.Count; }
-        }
-
-        public int GetTimeCount(int fileIndex)
-        {
-            return TimesByFileIndex.ReplicatePositions.GetCount(fileIndex);
-        }
-
-        /// <summary>
-        /// Returns the earliest time in a file, or null if it has none.
-        /// </summary>
-        public double? GetMinTime(int fileIndex)
-        {
-            var times = TimesByFileIndex[fileIndex];
-            if (times.Count == 0)
-            {
-                return null;
-            }
-
-            return times.Min();
-        }
-
-        /// <summary>
-        /// Appends the times of each file to the list at the same index of
-        /// <paramref name="timesByFileIndex"/>, which must have at least <see cref="FileCount"/>
-        /// entries.
-        /// </summary>
-        public void AppendTimesTo(IList<List<double>> timesByFileIndex)
-        {
-            var times = TimesByFileIndex;
-            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
-            {
-                int start = times.ReplicatePositions.GetStart(fileIndex);
-                int end = start + times.ReplicatePositions.GetCount(fileIndex);
-                if (start == end)
-                {
-                    continue;
-                }
-
-                var fileTimes = timesByFileIndex[fileIndex];
-                for (int i = start; i < end; i++)
-                {
-                    fileTimes.Add(times.FlatValues[i]);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Lowers the value at each file's index of <paramref name="minTimeByFileIndex"/> to that
-        /// file's earliest time, when that is earlier. Every file index whose value moves down
-        /// from double.MaxValue is added to <paramref name="fileIndexesLowered"/>, so that a
-        /// caller accumulating across spectra can find the values which changed without walking
-        /// the whole array.
-        /// </summary>
-        public void LowerMinTimes(IList<double> minTimeByFileIndex, IList<int> fileIndexesLowered)
-        {
-            var times = TimesByFileIndex;
-            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
-            {
-                int start = times.ReplicatePositions.GetStart(fileIndex);
-                int end = start + times.ReplicatePositions.GetCount(fileIndex);
-                for (int i = start; i < end; i++)
-                {
-                    if (times.FlatValues[i] < minTimeByFileIndex[fileIndex])
-                    {
-                        if (minTimeByFileIndex[fileIndex] == double.MaxValue)
-                        {
-                            fileIndexesLowered.Add(fileIndex);
-                        }
-
-                        minTimeByFileIndex[fileIndex] = times.FlatValues[i];
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Writes the times of each file, identified by its database id rather than by its index,
-        /// so that the format does not change when the file list does.
-        /// </summary>
-        /// <param name="fileIds">The database id of each file, in file index order.</param>
-        public void Write(Stream stream, IList<int> fileIds)
-        {
-            var times = TimesByFileIndex;
-            int fileCount = 0;
-            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
-            {
-                if (times.ReplicatePositions.GetCount(fileIndex) > 0)
-                {
-                    fileCount++;
-                }
-            }
-
-            PrimitiveArrays.WriteOneValue(stream, fileCount);
-            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
-            {
-                int count = times.ReplicatePositions.GetCount(fileIndex);
-                if (count == 0)
-                {
-                    continue;
-                }
-
-                int start = times.ReplicatePositions.GetStart(fileIndex);
-                var fileTimes = new float[count];
-                for (int i = 0; i < count; i++)
-                {
-                    fileTimes[i] = times.FlatValues[start + i];
-                }
-
-                PrimitiveArrays.WriteOneValue(stream, fileIds[fileIndex]);
-                PrimitiveArrays.WriteOneValue(stream, count);
-                PrimitiveArrays.Write(stream, fileTimes);
-            }
-        }
-
-        /// <param name="fileIndexesById">The file index of each database file id. Times of files
-        /// which are not in here are dropped.</param>
-        public static IndexedRetentionTimes Read(Stream stream, IDictionary<int, int> fileIndexesById)
-        {
-            int fileCount = PrimitiveArrays.ReadOneValue<int>(stream);
-            if (0 == fileCount)
-            {
-                return default;
-            }
-
-            var timesByFileIndex = new List<KeyValuePair<int, float>>();
-            for (int i = 0; i < fileCount; i++)
-            {
-                int fileId = PrimitiveArrays.ReadOneValue<int>(stream);
-                int timeCount = PrimitiveArrays.ReadOneValue<int>(stream);
-                var times = PrimitiveArrays.Read<float>(stream, timeCount);
-                if (!fileIndexesById.TryGetValue(fileId, out int fileIndex))
-                {
-                    continue;
-                }
-
-                foreach (var time in times)
-                {
-                    timesByFileIndex.Add(new KeyValuePair<int, float>(fileIndex, time));
-                }
-            }
-
-            return new IndexedRetentionTimes(timesByFileIndex.ToIndexedMultiArray());
-        }
-
-        public IndexedRetentionTimes MergeWith(params IndexedRetentionTimes[] other)
-        {
-            return new IndexedRetentionTimes(
-                TimesByFileIndex.MergeWith(other.Select(item => item.TimesByFileIndex)));
-        }
-    }
-
-    /// <summary>
-    /// The ion mobility values that a library holds for one spectrum, grouped by the index of the
-    /// file in the library's <see cref="LibraryFiles"/> list. Note that this index is not the
-    /// file's id in the library database.
-    /// </summary>
-    public struct IndexedIonMobilities
-    {
-        private readonly IndexedMultiArray<IonMobilityAndCCS> _ionMobilitiesByFileIndex;
-
-        public IndexedIonMobilities(IEnumerable<KeyValuePair<int, IonMobilityAndCCS>> ionMobilitiesByFileIndex)
-        {
-            _ionMobilitiesByFileIndex = ionMobilitiesByFileIndex.ToIndexedMultiArray();
-        }
-
-        private IndexedIonMobilities(IndexedMultiArray<IonMobilityAndCCS> ionMobilitiesByFileIndex)
-        {
-            _ionMobilitiesByFileIndex = ionMobilitiesByFileIndex;
-        }
-
-        private IndexedMultiArray<IonMobilityAndCCS> IonMobilitiesByFileIndex
-        {
-            get { return _ionMobilitiesByFileIndex ?? IndexedMultiArray<IonMobilityAndCCS>.EMPTY; }
-        }
-
-        public bool IsEmpty
-        {
-            get { return IonMobilitiesByFileIndex.IsEmpty; }
-        }
-
-        public IonMobilityAndCCS[] AllValuesSorted
-        {
-            get
-            {
-                if (IsEmpty)
-                    return null;
-
-                var val = IonMobilitiesByFileIndex.FlatValues.ToArray();
-                Array.Sort(val);
-                return val;
-            }
-        }
-
-        /// <summary>
-        /// Returns the ion mobilities for a file, or null if it has none.
-        /// </summary>
-        public IonMobilityAndCCS[] GetIonMobilityInfo(int fileIndex)
-        {
-            var ionMobilities = IonMobilitiesByFileIndex[fileIndex];
-            return ionMobilities.Count == 0 ? null : ionMobilities.ToArray();
-        }
-
-        public IndexedIonMobilities MergeWith(params IndexedIonMobilities[] all)
-        {
-            return new IndexedIonMobilities(
-                IonMobilitiesByFileIndex.MergeWith(all.Select(item => item.IonMobilitiesByFileIndex)));
-        }
-    }
-
     public class BiblioLiteSpectrumInfo : Immutable, ICachedSpectrumInfo
     {
         public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceIndex, string protein,
@@ -2790,7 +2611,9 @@ namespace pwiz.Skyline.Model.Lib
             Id = id;
             SpectrumSourceIndex = spectrumSourceIndex;
             Protein = protein;
-            PeakBoundariesByFileId = ExplicitPeakBoundsDict<int>.EMPTY;
+            RetentionTimesByFileIndex = IndexedMultiArray<float>.EMPTY;
+            IonMobilitiesByFileIndex = IndexedMultiArray<IonMobilityAndCCS>.EMPTY;
+            PeakBoundariesByFileIndex = ExplicitPeakBoundsDict.EMPTY;
             Score = score;
             ScoreType = scoreType;
         }
@@ -2806,25 +2629,25 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public int? SpectrumSourceIndex { get; }
         public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
-        public IndexedRetentionTimes RetentionTimesByFileIndex { get; private set; }
-        public IndexedIonMobilities IonMobilitiesByFileIndex { get; private set; }
-        public ExplicitPeakBoundsDict<int> PeakBoundariesByFileId { get; private set; }
+        public IndexedMultiArray<float> RetentionTimesByFileIndex { get; private set; }
+        public IndexedMultiArray<IonMobilityAndCCS> IonMobilitiesByFileIndex { get; private set; }
+        public ExplicitPeakBoundsDict PeakBoundariesByFileIndex { get; private set; }
         public double? Score { get; }
         public string ScoreType { get; }
 
-        public BiblioLiteSpectrumInfo ChangeRetentionTimes(IndexedRetentionTimes retentionTimes)
+        public BiblioLiteSpectrumInfo ChangeRetentionTimes(IndexedMultiArray<float> retentionTimes)
         {
             return ChangeProp(ImClone(this), im => im.RetentionTimesByFileIndex = retentionTimes);
         }
 
-        public BiblioLiteSpectrumInfo ChangeIonMobilities(IndexedIonMobilities ionMobilities)
+        public BiblioLiteSpectrumInfo ChangeIonMobilities(IndexedMultiArray<IonMobilityAndCCS> ionMobilities)
         {
             return ChangeProp(ImClone(this), im => im.IonMobilitiesByFileIndex = ionMobilities);
         }
 
-        public BiblioLiteSpectrumInfo ChangePeakBoundaries(ExplicitPeakBoundsDict<int> peakBoundaries)
+        public BiblioLiteSpectrumInfo ChangePeakBoundaries(ExplicitPeakBoundsDict peakBoundaries)
         {
-            return ChangeProp(ImClone(this), im => im.PeakBoundariesByFileId = peakBoundaries);
+            return ChangeProp(ImClone(this), im => im.PeakBoundariesByFileIndex = peakBoundaries);
         }
     }
 }

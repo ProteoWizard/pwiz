@@ -34,6 +34,7 @@ using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -636,9 +637,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     continue;
                 }
 
-                libraryEntries[i] = libraryEntries[i].ChangeIonMobilities(new IndexedIonMobilities(
-                    ionMobilitiesByFileId.Select(kvp =>
-                        new KeyValuePair<int, IonMobilityAndCCS>(fileIndexesById[kvp.Key], kvp.Value))));
+                libraryEntries[i] = libraryEntries[i].ChangeIonMobilities(ionMobilitiesByFileId
+                    .Select(kvp => new KeyValuePair<int, IonMobilityAndCCS>(fileIndexesById[kvp.Key], kvp.Value))
+                    .ToIndexedMultiArray());
             }
 
             return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer, libraryEntries, FileStreamManager.Default);

@@ -23,6 +23,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -58,6 +59,24 @@ namespace pwiz.Skyline.Model.Results
 
             return IndexedMultiArray<T>.FromCounts(valueLists.Select(valueList => valueList?.Count ?? 0),
                 valueLists.Where(valueList => valueList != null).SelectMany(valueList => valueList).ToArray());
+        }
+
+        /// <summary>
+        /// Takes the values of each index in order, which is the shape that indexing an
+        /// <see cref="IndexedMultiArray{T}"/> gives back.
+        /// </summary>
+        public static IndexedMultiArray<T> ToIndexedMultiArray<T>(this IEnumerable<IEnumerable<T>> valuesByIndex)
+        {
+            var flatValues = new List<T>();
+            var counts = new List<int>();
+            foreach (var values in valuesByIndex)
+            {
+                int prevCount = flatValues.Count;
+                flatValues.AddRange(values);
+                counts.Add(flatValues.Count - prevCount);
+            }
+
+            return IndexedMultiArray<T>.FromCounts(counts, flatValues.ToArray());
         }
     }
 
@@ -139,9 +158,31 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public int GetCount(int index)
+        {
+            return ReplicatePositions.GetCount(index);
+        }
+
         public IEnumerable<int> GetCounts()
         {
-            return Enumerable.Range(0, Count).Select(ReplicatePositions.GetCount);
+            return Enumerable.Range(0, Count).Select(GetCount);
+        }
+
+        /// <summary>
+        /// Returns an equivalent instance which shares its <see cref="Results.ReplicatePositions"/>
+        /// with the others in the cache. Instances which hold values at the same indexes have equal
+        /// positions, so on a library where most spectra were found in the same files this leaves
+        /// one positions object instead of one per spectrum.
+        /// </summary>
+        public IndexedMultiArray<T> ValueFromCache(ValueCache valueCache)
+        {
+            var replicatePositions = valueCache.CacheValue(ReplicatePositions);
+            if (ReferenceEquals(replicatePositions, ReplicatePositions))
+            {
+                return this;
+            }
+
+            return new IndexedMultiArray<T>(replicatePositions, FlatValues);
         }
 
         /// <summary>
@@ -164,9 +205,15 @@ namespace pwiz.Skyline.Model.Results
                 entry.Value.Select(value => new KeyValuePair<int, T>(entry.Key, value)));
         }
 
-        public IndexedMultiArray<T> MergeWith(IEnumerable<IndexedMultiArray<T>> others)
+        /// <summary>
+        /// Returns the values of both, with the values of <paramref name="other"/> after this
+        /// one's at each index.
+        /// </summary>
+        public IndexedMultiArray<T> Merge(IndexedMultiArray<T> other)
         {
-            return others.Prepend(this).SelectMany(item => item.GetIndexValuePairs()).ToIndexedMultiArray();
+            int indexCount = Math.Max(Count, other.Count);
+            return Enumerable.Range(0, indexCount).Select(index => this[index].Concat(other[index]))
+                .ToIndexedMultiArray();
         }
 
         public IEnumerator<IList<T>> GetEnumerator()
