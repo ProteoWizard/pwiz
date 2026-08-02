@@ -61,6 +61,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public const double IO_INTERVAL_SECONDS = 5.0;
 
+
         /// <summary>
         /// Idle threshold for the frozen-percent heartbeat. When a determinate phase
         /// progresses slower than 1% per this many seconds, the integer percent does not

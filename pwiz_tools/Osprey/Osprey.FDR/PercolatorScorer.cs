@@ -64,7 +64,8 @@ namespace pwiz.Osprey.FDR
             IList<PercolatorEntry> entries,
             PercolatorResults trainResults,
             PercolatorConfig config,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            bool applyExperimentAgg = true)
         {
             int n = entries.Count;
             if (n == 0)
@@ -211,7 +212,7 @@ namespace pwiz.Osprey.FDR
             StreamingFdr.ComputeStreamingCompetitionQvalues(
                 finalScores, labels, entryIds, peptides, fileNames,
                 out peps, out runPrecursorQvalues, out runPeptideQvalues,
-                out expPrecursorQvalues, out expPeptideQvalues);
+                out expPrecursorQvalues, out expPeptideQvalues, applyExperimentAgg);
 
             var results = new List<PercolatorResult>(n);
             for (int i = 0; i < n; i++)
@@ -271,7 +272,8 @@ namespace pwiz.Osprey.FDR
             PercolatorResults trainResults, PercolatorConfig config,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             IFdrOutputSink sink,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null,
+            bool applyExperimentAgg = true)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -422,9 +424,11 @@ namespace pwiz.Osprey.FDR
                     nonEmptyFiles++;
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByBaseId = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(finalScores, labels, entryIds);
+                ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
+                    finalScores, labels, entryIds, applyExperimentAgg);
             Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(finalScores, labels, entryIds, peptides);
+                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
+                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
 
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
@@ -791,7 +795,13 @@ namespace pwiz.Osprey.FDR
             // buffer, reduced into the best-of-runs clamp floors (issue #4390). The score is
             // recomputed per row (bias first, then the averaged-weight dot product in feature order)
             // -- byte-for-byte the resident score loop, only without the O(n) finalScores array.
-            var streamingQ = new StreamingFdr.StreamingFirstPassQ();
+            // Gate the aggregation on the pass label, exactly as the resident and projection score
+            // passes do. This method has one caller and it passes FIRST_PASS_LABEL, so today the
+            // gate is a no-op - but an ungated read of MeanBestN here is the identical shape of the
+            // defect that let the 2nd pass re-aggregate on the other two paths, and a future
+            // second-pass caller would reintroduce it silently.
+            var streamingQ = new StreamingFdr.StreamingFirstPassQ(
+                passLabel == PercolatorEngine.FIRST_PASS_LABEL ? OspreyEnvironment.MeanBestN : 0);
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);

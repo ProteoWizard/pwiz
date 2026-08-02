@@ -108,11 +108,17 @@ namespace pwiz.Osprey.Tasks
                                     OspreyEnvironment.Pass2TransferCompete;
             if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
-                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths, out string pass1Agg);
                 if (reloaded != null)
                 {
-                    ctx.Publish(new FirstPassPercolatorModel { Results = reloaded });
-                    ctx.LogInfo(@"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass.");
+                    // pass1Agg is what the TRAINING process ran under (null on a sidecar written
+                    // before the field existed). This node's own OSPREY_EXPERIMENT_AGG says
+                    // nothing about it, so carry the recorded value rather than re-reading.
+                    ctx.Publish(new FirstPassPercolatorModel { Results = reloaded, ExperimentAgg = pass1Agg });
+                    ctx.LogInfo(string.Format(
+                        @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
+                        @"experiment aggregation: {0}).",
+                        pass1Agg ?? @"not recorded"));
                 }
             }
 
@@ -493,6 +499,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PercolatorResults frozenModel,
+            string pass1ExperimentAgg,
             HashSet<uint> stratumBaseIds = null)
         {
             // stratumBaseIds == null -> transfer-compete (full-population competition).
@@ -524,34 +531,47 @@ namespace pwiz.Osprey.Tasks
             //    MapFeaturesByIdentity key), so each survivor's score is byte-identical to the
             //    old resident path. Keyed by (file, entry_id); entry_id is unique per file.
             var survivorScore = new Dictionary<(string, uint), double>();
-            foreach (var kvp in perFileEntries)
+            // Announce BEFORE the loop, not after it. This reads one reconciled parquet per file
+            // and on a 163-file Astral set that is ~212 GB off disk - measured at 34.9 min with
+            // no console output at all, because the summary line below is only reached once the
+            // loop finishes. A silent phase that long is indistinguishable from a hang, and it
+            // was read as one during the first 163-file run.
+            using (var progress = new ProgressReporter(
+                string.Format("{0}: reloading frozen-model features from {1} file(s)",
+                    mode, perFileEntries.Count),
+                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
-                    continue;
-                string effectiveParquetPath =
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
-                Dictionary<(uint, byte, uint), double[]> featByIdentity;
-                try
+                long nDone = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "{0}: failed to reload PIN features from {1}: {2}",
-                        mode, effectiveParquetPath, ex.Message));
-                    continue;
-                }
-                foreach (var e in kvp.Value)
-                {
-                    if (featByIdentity.TryGetValue(
-                            (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
-                        feats != null && feats.Length == nFeatures)
+                    progress.Report(++nDone);
+                    if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
+                        continue;
+                    string effectiveParquetPath =
+                        ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
+                    Dictionary<(uint, byte, uint), double[]> featByIdentity;
+                    try
                     {
-                        survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
+                        featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
                     }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(string.Format(
+                            "{0}: failed to reload PIN features from {1}: {2}",
+                            mode, effectiveParquetPath, ex.Message));
+                        continue;
+                    }
+                    foreach (var e in kvp.Value)
+                    {
+                        if (featByIdentity.TryGetValue(
+                                (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
+                            feats != null && feats.Length == nFeatures)
+                        {
+                            survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
+                        }
+                    }
+                    // featByIdentity released here (one file resident at a time).
                 }
-                // featByIdentity released here (one file resident at a time).
             }
 
             // 2. Reported survivors to emit (every post-reconciliation entry) + per-file scalar
@@ -592,19 +612,90 @@ namespace pwiz.Osprey.Tasks
                 proteinCompact ? ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"
                                : ", full-population null"));
 
+            // This competition reduces per base_id by MAX, and BOTH modes that reach it then
+            // overwrite the reported experiment q from that reduction. Neither is compatible with
+            // a mean(best-N) 1st pass, in two different ways:
+            //
+            //   protein-compact assembles the reported column from TWO sources - on-stratum
+            //   survivors get the max-aggregated value computed here, off-stratum survivors keep
+            //   their 1st-pass mean(best-N) q (the `continue` in the map-back below). One column,
+            //   two aggregations, and no way for a consumer to tell which row used which.
+            //
+            //   transfer-compete rewrites EVERY survivor, so its column is at least internally
+            //   consistent - but it is consistently MAX, silently discarding the mean(best-N)
+            //   statistic the operator asked for and reporting a reproducibility-weighted run as
+            //   an ordinary one. Uniformly wrong is not better than mixed here, because the run
+            //   is indistinguishable from a max run in its own output.
+            //
+            // Refuse both rather than emit either: a number a user would reasonably trust and
+            // cannot audit is worse than an error. Making the streamed competition itself
+            // aggregate-aware is the real fix and is deliberately NOT folded in - it depends on
+            // the gap-fill run-count exclusion, which is its own design (issue #4511).
+            //
+            // Gated on the arm the FIRST PASS recorded, not on this process's environment: a
+            // --task SecondPassFDR merge node reloads the frozen model from disk and never
+            // trained pass 1, so its own OSPREY_EXPERIMENT_AGG is unrelated to the q-values it is
+            // about to rewrite. Reading the live process was wrong in both directions - unset on
+            // the merge node emitted a mixed column with no refusal, and a stale exported
+            // variable aborted a consistent run.
+            // A sidecar written before the arm was recorded reports null. Null means UNKNOWN, not
+            // "max", so fall back to this process's variable and SAY SO - an inferred answer the
+            // operator can see beats a silent one, and it is exactly the pre-provenance behavior
+            // for exactly the artifacts that predate provenance.
+            bool armRecorded = pass1ExperimentAgg != null;
+            string pass1Arm = armRecorded ? pass1ExperimentAgg : OspreyEnvironment.ExperimentAgg;
+            if (OspreyEnvironment.IsMeanBestArm(pass1Arm))
+            {
+                throw new InvalidOperationException(string.Format(
+                    "OSPREY_PASS2_QVALUE={0} cannot be combined with a 1st pass run under " +
+                    "OSPREY_EXPERIMENT_AGG={1}{2}. This mode recomputes the reported experiment q " +
+                    "from a MAX-aggregated competition, which {3}. Use OSPREY_PASS2_QVALUE={4}, " +
+                    "which carries the 1st-pass mean(best-N) q through unchanged, for a " +
+                    "mean(best-N) arm.",
+                    proteinCompact
+                        ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
+                        : OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
+                    pass1Arm,
+                    armRecorded
+                        ? " (recorded in the 1st-pass model sidecar)"
+                        : " (INFERRED from this process's environment - the 1st-pass model sidecar " +
+                          "predates arm recording and does not say which arm trained it)",
+                    proteinCompact
+                        ? "would leave on-stratum precursors max-aggregated and off-stratum " +
+                          "precursors on their 1st-pass mean(best-N) q - one column, two statistics"
+                        : "would replace every precursor's mean(best-N) q with a max q, making the " +
+                          "run indistinguishable from a default run in its own output",
+                    OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            }
+
             // 3. Streamed full-population competition + run/experiment precursor q + PEP. Only one
             //    file's scalars are resident at a time; the cross-file state is bounded by the
             //    number of distinct precursors, not the total observation count -- so peak memory
             //    is flat in file count (the 32/64 GB many-file target).
-            (uint[] entryIds, double[] scores) ReadFile(string fileKey)
+            Dictionary<(string, uint), double> runQ, expQ, pep;
+            // The streaming competition reads one file's scalars per call and is otherwise silent;
+            // at 163 files that was a 9.6 min gap immediately after the line above announced it.
+            // readFileScalars is invoked exactly once per file (StreamingFdr.cs:180, single pass),
+            // so counting calls here is an honest per-file progress signal without threading a
+            // callback through the FDR layer.
+            using (var progress = new ProgressReporter(
+                string.Format("{0}: reading per-file scalars for the streamed competition ({1} file(s))",
+                    mode, fileKeys.Count),
+                fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
-                return (eids, scs);
-            }
+                long nRead = 0;
 
-            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
-                fileKeys, ReadFile, survivorScore, survivors,
-                out var runQ, out var expQ, out var pep, stratumBaseIds);
+                (uint[] entryIds, double[] scores) ReadFile(string fileKey)
+                {
+                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                    progress.Report(++nRead);
+                    return (eids, scs);
+                }
+
+                StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                    fileKeys, ReadFile, survivorScore, survivors,
+                    out runQ, out expQ, out pep, stratumBaseIds);
+            }
 
             // 4. Map the recomputed q/PEP back onto the reported survivor entries. Under
             //    protein-compact, an OFF-stratum survivor got q=1.0 from the (constrained)
@@ -672,7 +763,8 @@ namespace pwiz.Osprey.Tasks
                         stratum = pcStratum.BaseIds;
                 }
                 if (haveInputs && ComputePass2TransferCompeteFull(
-                        ctx, perFileEntries, perFileParquetPaths, config, frozen.Results, stratum))
+                        ctx, perFileEntries, perFileParquetPaths, config, frozen.Results,
+                        frozen.ExperimentAgg, stratum))
                 {
                     // Frozen recompute streamed the score pass + wrote q/PEP onto the
                     // survivors; the resident full-feature reload below is skipped.

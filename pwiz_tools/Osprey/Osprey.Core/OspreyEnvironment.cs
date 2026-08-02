@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -307,6 +308,38 @@ namespace pwiz.Osprey.Core
         /// decoys. The frozen model avoids the two-pass retrain's over-separation.</summary>
         public const string PASS2_QVALUE_PROTEIN_COMPACT = @"protein-compact";
 
+        /// <summary>The <see cref="ExperimentAgg"/> default: each precursor/peptide keeps its
+        /// single BEST (max) observation across runs before the experiment-wide target/decoy
+        /// competition. The shipped behavior; the committed golden is byte-identical here.</summary>
+        public const string EXPERIMENT_AGG_MAX = @"max";
+
+        /// <summary>Prefix of the <see cref="ExperimentAgg"/> reproducibility mode value
+        /// OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt; (e.g. mean-best-2, mean-best-3, mean-best-4): the
+        /// experiment-wide PRECURSOR score becomes the mean of its best-N per-run scores (runs beyond
+        /// the detected count are filled with the decoy-median floor; see the OSPREY_MEANBEST2_FLOOR_*
+        /// A/B toggles), rolled up by MAX to PEPTIDE. Not to protein: protein FDR ranks groups by the
+        /// max RAW per-peptide SVM score and never reads this aggregate, so mean(best-N) reaches
+        /// protein results only through which peptides clear the experiment-q gate. Larger N rewards
+        /// detection in more runs (drives toward the &gt;=N-run reproducibility frontier). Symmetric
+        /// for decoys, so the null stays honest - the honest sensitivity lever for #4484 vs. the
+        /// target-conditioned transfer-compete/protein-compact. N is read from the flag value and
+        /// bounded by <see cref="MEAN_BEST_N_MAX"/>; a future command argument may pick N
+        /// intelligently from the run count.</summary>
+        public const string EXPERIMENT_AGG_MEAN_BEST_PREFIX = @"mean-best-";
+
+        /// <summary>Largest accepted N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;. Two unbounded
+        /// failures motivate a cap rather than trust: <c>mean-best-1000000</c> allocates an
+        /// N-wide accumulator per (base_id, side) - gigabytes, an out-of-memory abort seconds
+        /// into Stage 5 - and any N above the run count leaves EVERY unit floor-filled, which
+        /// saturates the statistic (for N &gt;= the largest observation count the aggregate is
+        /// <c>(S - L*floor)/N + floor</c>, whose ranking no longer depends on N at all) while
+        /// still being recorded by the operator as a distinct A/B arm. 64 is far above any
+        /// plausible reproducibility frontier for a DIA experiment and well inside both
+        /// failures. Values above it are rejected as unrecognized, so
+        /// <see cref="ExperimentAggUnrecognized"/> warns instead of the run silently
+        /// proceeding on the max default.</summary>
+        public const int MEAN_BEST_N_MAX = 64;
+
         /// <summary>
         /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
@@ -316,11 +349,16 @@ namespace pwiz.Osprey.Core
         ///     a target/decoy null on the reconciled + compacted pool. Preserves the
         ///     always-on Rust 2nd pass. Compaction has already stripped most decoys from
         ///     that pool, so the null is decoy-depleted and the retrained q anti-conservative.
-        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: score each reconciled peak with the FROZEN
-        ///     1st-pass model and read its q from the FULL pre-compaction 1st-pass
-        ///     score-&gt;q table (co-monotonic confidence transfer; Rost 2016 TRIC). No
+        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
+        ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
+        ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
+        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time. No
         ///     retrain, no reduced-pool null. Restores calibration while keeping the
         ///     re-scoring ID gain.
+        ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
+        ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
+        ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
+        ///     <c>ResidentPaths</c>.
         /// Unset or unrecognized normalizes to the parity-preserving default. Read once at
         /// process start. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
         ///
@@ -365,18 +403,270 @@ namespace pwiz.Osprey.Core
             IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
 
         /// <summary>
-        /// OSPREY_ALLOW_UNBOUNDED_MEMORY: opt in to the RESIDENT first-pass pool paths, which
-        /// hold every entry resident and grow O(files) so they do not scale to large file
-        /// counts. DEFAULT OFF: with this unset, a run that would take such a path fails fast
-        /// with an error naming the trigger, rather than silently exhausting memory -- so no
-        /// user reaches an O(files) memory path by accident. Set to a non-zero value ONLY for
-        /// our own testing (A/B byte-identity oracles, small runs, HPC test harnesses). The
-        /// existing <see cref="UseFdrProjection"/>=false (OSPREY_FDR_PROJECTION=0) switch is
-        /// itself an explicit resident-path opt-in and is honored the same way. Read once at
-        /// process start. See ai/todos/active/TODO-20260720_osprey_pass2_per_run_qvalue.md.
+        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the ONE known-unfixed resident path this run may
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=mdiag-full-resume</c>. Legal values are
+        /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
+        /// that is not on that list, is refused no matter what this is set to.
+        ///
+        /// This REPLACES the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c>, which granted
+        /// amnesty to every trigger at once. That is not a hypothetical failure: it let
+        /// <c>OSPREY_PASS2_QVALUE=transfer</c> silently regress back onto the resident pool for
+        /// ten days (#4438 removed the forcing, a #4446 merge artifact restored it), because
+        /// developers simply set the boolean and a re-broken memory bound looked like normal
+        /// operating procedure. A named token cannot do that: an unlisted path errors even with
+        /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
+        /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
+        ///
+        /// Read once at process start. Intended for local testing; CI names its token explicitly
+        /// (regression.ps1 mode 2), so what CI depends on is visible rather than ambient.
         /// </summary>
-        public static readonly bool AllowUnboundedMemory =
-            IsSetAndNotZero(@"OSPREY_ALLOW_UNBOUNDED_MEMORY");
+        public static readonly string AllowUnfixedResident =
+            (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
+
+        /// <summary>
+        /// True when <see cref="AllowUnfixedResident"/> was set to something that is not a legal
+        /// token, so the guard can say "that value is not a known path" instead of printing the
+        /// same message it prints when the variable is unset. Without this, a typo
+        /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
+        /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
+        /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
+        /// </summary>
+        public static readonly bool AllowUnfixedResidentUnrecognized =
+            AllowUnfixedResident.Length > 0 &&
+            !ResidentPaths.KNOWN_UNFIXED.Any(
+                t => string.Equals(t, AllowUnfixedResident, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
+        /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default
+        /// max mode; otherwise in [2, <see cref="MEAN_BEST_N_MAX"/>]. A value outside that range,
+        /// or unrecognized, falls back to max (and sets <see cref="ExperimentAggUnrecognized"/>).
+        ///
+        /// Initialized from the environment at process start, exactly as before; a settable
+        /// property only so unit tests can exercise the mean(best-N) arm at all. It is the SINGLE
+        /// source of truth - <see cref="ExperimentAgg"/> and <see cref="ExperimentAggMeanBest"/>
+        /// are computed from it rather than snapshotted, so a test that pins N cannot leave the
+        /// three disagreeing (the failure mode that made <c>MeanBestFloorOverspecified</c> a
+        /// computed property too). Nothing in the pipeline writes it.</summary>
+        public static int MeanBestN { get; set; } = ParseMeanBestN(
+            Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
+
+        /// <summary>OSPREY_EXPERIMENT_AGG: how the 1st-pass EXPERIMENT-wide precursor/peptide
+        /// score aggregates a unit's per-run observations before the target/decoy competition.
+        /// <see cref="EXPERIMENT_AGG_MAX"/> (default, byte-identical golden) or
+        /// <see cref="EXPERIMENT_AGG_MEAN_BEST_PREFIX"/>&lt;N&gt;. The normalized spelling of
+        /// <see cref="MeanBestN"/> - this is the form persisted as pass-1 provenance and appended
+        /// to the cache validity key, so it must never disagree with the N actually used.</summary>
+        public static string ExperimentAgg =>
+            MeanBestN >= 2
+                ? EXPERIMENT_AGG_MEAN_BEST_PREFIX +
+                  MeanBestN.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : EXPERIMENT_AGG_MAX;
+
+        /// <summary>True when <see cref="MeanBestN"/> selects a mean(best-N) reproducibility score
+        /// (OSPREY_EXPERIMENT_AGG=mean-best-N, N&gt;=2).</summary>
+        public static bool ExperimentAggMeanBest => MeanBestN >= 2;
+
+        /// <summary>True when OSPREY_EXPERIMENT_AGG was set to something that is neither
+        /// <see cref="EXPERIMENT_AGG_MAX"/> nor a well-formed
+        /// <see cref="EXPERIMENT_AGG_MEAN_BEST_PREFIX"/>&lt;N&gt; with N&gt;=2, and was therefore
+        /// normalized to the max default. The consuming site logs a one-line warning, mirroring
+        /// <see cref="Pass2QValueUnrecognized"/>. This matters more here than for most flags: the
+        /// whole point of this one is A/B measurement, so a typo (mean-best-1, meanbest2) that
+        /// silently ran the DEFAULT would be recorded by the operator as a mean(best-N) result and
+        /// would corrupt the comparison rather than fail it.</summary>
+        public static readonly bool ExperimentAggUnrecognized = IsUnrecognizedExperimentAgg(
+            Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
+
+        /// <summary>OSPREY_MEANBEST2_FLOOR_MEAN: A/B toggle to use the decoy MEAN instead of the
+        /// default decoy MEDIAN as the missing-run floor. Off by default. Applies at every N
+        /// despite the MEANBEST2 name, which predates the best-2 -> best-N generalization.
+        /// TAKES PRECEDENCE over <see cref="MeanBest2FloorPercentile"/>; setting both is a
+        /// configuration error and is refused rather than silently resolved.
+        /// A settable property (not a readonly field) so unit tests can pin the floor instead of
+        /// inheriting whatever the operator exported for a floor sweep - the aggregation tests
+        /// assert exact floor-dependent values, so an ambient variable would fail them.</summary>
+        public static bool MeanBest2FloorMean { get; set; } =
+            IsSetAndNotZero(@"OSPREY_MEANBEST2_FLOOR_MEAN");
+
+        /// <summary>OSPREY_MEANBEST2_FLOOR_PCT: A/B override to use a low PERCENTILE (0-100) of the
+        /// decoy score distribution as the missing-run floor instead of the median center - a
+        /// harder reproducibility cut. Null (unset) selects the median default. Applies at every N
+        /// (see the MEANBEST2 naming note above). Settable for the same test reason.</summary>
+        public static double? MeanBest2FloorPercentile { get; set; } =
+            ParseDoubleOrNull(@"OSPREY_MEANBEST2_FLOOR_PCT");
+
+        /// <summary>True when BOTH floor overrides are set. They are not composable -
+        /// <see cref="MeanBest2FloorMean"/> would silently win and the percentile would never be
+        /// consulted, so an operator sweeping OSPREY_MEANBEST2_FLOOR_PCT with a stale
+        /// OSPREY_MEANBEST2_FLOOR_MEAN=1 still exported would log a percentile arm while measuring
+        /// the mean. The consuming site refuses the combination.</summary>
+        /// Computed, not snapshotted: the two toggles above are settable properties (so tests can
+        /// pin the floor), and a readonly field capturing the raw environment at type load would
+        /// disagree with them in both directions.
+        public static bool MeanBestFloorOverspecified =>
+            MeanBest2FloorMean && MeanBest2FloorPercentile.HasValue;
+
+        /// <summary>
+        /// One line naming the experiment-wide aggregation this process will actually use,
+        /// including the missing-run floor arm. Logged unconditionally in the startup settings
+        /// block - a POSITIVE statement, not only a warning - because the dominant real failure
+        /// of an environment-variable flag is that the variable never reached the process
+        /// (Start-Process without the parent environment, an HPC job spec, a scheduled launch,
+        /// a service account). Unset is indistinguishable from a typo'd-then-normalized value in
+        /// the output itself, so without this line an operator records a DEFAULT run as a
+        /// mean(best-N) result and the A/B is silently corrupted rather than failed. Mirrors the
+        /// positive "mode active" line OSPREY_PASS2_QVALUE prints.
+        /// </summary>
+        public static string DescribeExperimentAgg()
+        {
+            if (!ExperimentAggMeanBest)
+            {
+                return string.Format(@"Experiment aggregation: {0} (default - best observation per unit)",
+                    EXPERIMENT_AGG_MAX);
+            }
+            return string.Format(
+                @"Experiment aggregation: {0} ACTIVE - experiment-wide precursor score is the mean " +
+                @"of its best {1} per-run scores; missing-run floor = {2}",
+                ExperimentAgg, MeanBestN, DescribeMeanBestFloor());
+        }
+
+        /// <summary>
+        /// Validate the OSPREY_EXPERIMENT_AGG family against each other and against the run's
+        /// file count. Returns null when the settings are usable, or an operator-actionable
+        /// message when they are not. Shared by the startup check
+        /// (<c>Program.ValidateArgs</c>, before any I/O) and the Stage-5 consuming site, so a
+        /// resumed or single-task run that skips one still hits the other and both say the same
+        /// thing. Every check is gated on the aggregation being ENGAGED: with
+        /// OSPREY_EXPERIMENT_AGG unset none of these variables is read, so refusing an ordinary
+        /// run over a floor sweep the operator merely left exported would break the default path.
+        /// </summary>
+        /// <param name="fileCount">Number of runs (input files) this analysis will aggregate
+        /// across, or 0 when the caller does not know it yet.</param>
+        public static string ValidateExperimentAggSettings(int fileCount)
+        {
+            if (!ExperimentAggMeanBest)
+                return null;
+            if (MeanBestFloorOverspecified)
+            {
+                return @"OSPREY_MEANBEST2_FLOOR_MEAN and OSPREY_MEANBEST2_FLOOR_PCT are both set. " +
+                       @"They are not composable: FLOOR_MEAN wins and the percentile is never " +
+                       @"consulted, so a sweep would record a percentile arm while measuring the " +
+                       @"decoy mean. Set exactly one.";
+            }
+            // Validated ONCE here rather than where the floor is computed: the streaming
+            // estimator reaches its percentile only at the END of Stage 5, hours into a large
+            // run, and the resident twin silently clamps the same value - so a mid-run refusal
+            // would both come too late to be actionable and disagree with the other path.
+            double? pct = MeanBest2FloorPercentile;
+            if (pct.HasValue && (double.IsNaN(pct.Value) || pct.Value < 0.0 || pct.Value > 100.0))
+            {
+                return string.Format(
+                    @"OSPREY_MEANBEST2_FLOOR_PCT={0} is outside the valid range [0, 100]. It names a " +
+                    @"percentile of the decoy score distribution to use as the missing-run floor.",
+                    pct.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            if (fileCount > 0 && MeanBestN > fileCount)
+            {
+                return string.Format(
+                    @"OSPREY_EXPERIMENT_AGG={0} averages the best {1} per-run scores, but this " +
+                    @"analysis has only {2} run(s). Every unit would be floor-filled for the " +
+                    @"missing {3}, which saturates the statistic - for any N at or above the " +
+                    @"largest observation count the ranking, and therefore every q-value, is " +
+                    @"identical - so the arm would be recorded as distinct while measuring the " +
+                    @"same thing. Use N <= {2}.",
+                    ExperimentAgg, MeanBestN, fileCount, MeanBestN - fileCount);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the experiment-wide
+        /// aggregation, or the EMPTY string when the aggregation is not engaged.
+        ///
+        /// Empty by default and not merely "the default arm's value": <see cref="ExperimentAgg"/>
+        /// normalizes an unset variable to the constant "max", so appending unconditionally would
+        /// change the key of every DEFAULT run and invalidate every output directory produced
+        /// before this suffix existed - re-running Stage 5 FDR, protein FDR and compaction (hours
+        /// at 82 files) to reproduce byte-identical output. That exact regression shipped once and
+        /// the byte-identity gate could not see it, because the gate always uses fresh directories.
+        ///
+        /// One helper rather than three copies: the suffix must be IDENTICAL across
+        /// <c>FirstJoinTask</c>, <c>PerFileRescoreTask</c> and <c>MergeNodeTask</c>. When only the
+        /// first had it, a flipped arm re-ran Stage 5 while the downstream reconciled parquets,
+        /// 2nd-pass sidecars and .blib were reused from the OTHER arm - a self-inconsistent output
+        /// set that no single task's key could have caught.
+        /// </summary>
+        public static string ExperimentAggValidityKeySuffix()
+        {
+            if (!ExperimentAggMeanBest)
+                return string.Empty;
+            return @";expagg=" + ExperimentAgg
+                   + @";floormean=" + MeanBest2FloorMean
+                   + @";floorpct=" + (MeanBest2FloorPercentile?.ToString(
+                       System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
+        }
+
+        /// <summary>
+        /// True when <paramref name="normalizedAgg"/> names a mean(best-N) arm. Takes the arm as
+        /// an ARGUMENT rather than reading <see cref="ExperimentAggMeanBest"/> so a consumer can
+        /// ask about an arm RECORDED BY ANOTHER PROCESS - a distributed <c>--task SecondPassFDR</c>
+        /// merge node reloads the 1st-pass model from disk and must gate on the arm that trained
+        /// it, not on its own environment. Expects the normalized form
+        /// (<see cref="ExperimentAgg"/>) as persisted alongside the model.
+        /// </summary>
+        public static bool IsMeanBestArm(string normalizedAgg)
+        {
+            return !string.IsNullOrEmpty(normalizedAgg) &&
+                   normalizedAgg.StartsWith(EXPERIMENT_AGG_MEAN_BEST_PREFIX, StringComparison.Ordinal);
+        }
+
+        /// <summary>The missing-run floor arm in words, for
+        /// <see cref="DescribeExperimentAgg"/>.</summary>
+        private static string DescribeMeanBestFloor()
+        {
+            if (MeanBest2FloorMean)
+                return @"decoy MEAN (OSPREY_MEANBEST2_FLOOR_MEAN)";
+            double? pct = MeanBest2FloorPercentile;
+            if (pct.HasValue)
+            {
+                return string.Format(@"decoy {0} percentile (OSPREY_MEANBEST2_FLOOR_PCT)",
+                    pct.Value.ToString(@"0.###", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            return @"decoy MEDIAN (default)";
+        }
+
+        // Parse N from OSPREY_EXPERIMENT_AGG=mean-best-<N>. Returns 0 (the max default) when unset,
+        // not a mean-best-<N> value, or N outside [2, MEAN_BEST_N_MAX] - and 0 makes
+        // IsUnrecognizedExperimentAgg true, so an out-of-range N warns rather than silently
+        // running the default.
+        private static int ParseMeanBestN(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return 0;
+            string v = raw.Trim().ToLowerInvariant();
+            if (!v.StartsWith(EXPERIMENT_AGG_MEAN_BEST_PREFIX, StringComparison.Ordinal))
+                return 0;
+            string tail = v.Substring(EXPERIMENT_AGG_MEAN_BEST_PREFIX.Length);
+            // NumberStyles.None, not Integer: Integer also accepts a leading sign and surrounding
+            // whitespace, so "mean-best-+3" and "mean-best- 3" parsed as 3 - two spellings of the
+            // same arm that an A/B log could not tell apart from the canonical one.
+            return int.TryParse(tail, System.Globalization.NumberStyles.None,
+                       System.Globalization.CultureInfo.InvariantCulture, out int n) &&
+                   n >= 2 && n <= MEAN_BEST_N_MAX
+                ? n
+                : 0;
+        }
+
+        // A set-but-unusable OSPREY_EXPERIMENT_AGG: anything that is neither the max default nor a
+        // well-formed mean-best-<N> with N >= 2. Unset / whitespace is NOT unrecognized - that is
+        // simply the default. Mirrors IsUnrecognizedPass2QValue.
+        private static bool IsUnrecognizedExperimentAgg(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return false;
+            return !string.Equals(raw.Trim(), EXPERIMENT_AGG_MAX, StringComparison.OrdinalIgnoreCase) &&
+                   ParseMeanBestN(raw) == 0;
+        }
 
         private static string NormalizePass2QValue(string raw)
         {

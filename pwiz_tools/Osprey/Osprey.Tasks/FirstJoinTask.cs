@@ -184,8 +184,23 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
+            // OSPREY_EXPERIMENT_AGG changes this task's OWN output (the experiment-wide precursor
+            // and peptide q maps), so it has to invalidate the cache. Without it, re-running an A/B
+            // arm in an output directory that already holds the other arm's results makes
+            // TaskValiditySidecar.IsValid return true, the driver skips Run entirely - taking the
+            // unrecognized-value warning with it, since that lives inside Run - and the previous
+            // mode's q is silently reused and recorded as the new arm's measurement. The flag is
+            // read from a process-wide static rather than the config, which is why it is not
+            // already covered by SearchIdentity; promoting it to a real command argument would
+            // subsume this line.
+            // The aggregation suffix (empty unless engaged) is built by the ONE shared helper the
+            // downstream tasks also use, so the three keys cannot drift apart. The floor toggles
+            // are part of it: they feed the aggregate written into this task's own Pass1Path
+            // output, so a floor sweep in one directory would otherwise reuse the previous arm's
+            // q as the new arm's measurement.
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + OspreyEnvironment.ExperimentAggValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)
@@ -199,13 +214,6 @@ namespace pwiz.Osprey.Tasks
             // ctx.Demand which routes to Rehydrate.
             var config = ctx.Config;
 
-            // Mid-Run crash safety: clear stale sidecars for the outputs
-            // this task is about to produce. A crash before the matching
-            // post-Run sidecar write leaves no false-positive sidecar
-            // claiming the partially-written output is valid.
-            foreach (var output in Outputs(ctx))
-                TaskValiditySidecar.Delete(output, Name);
-
             // ScoredEntries (pre-compaction) -- this task is the one that
             // compacts the shared buffer below, so it reads it before that.
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
@@ -213,6 +221,36 @@ namespace pwiz.Osprey.Tasks
             var perFileIsolationMz = ctx.Get<PerFileIsolationMz>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
+
+            // OSPREY_EXPERIMENT_AGG family, re-checked at the CONSUMING site against the join's
+            // real file count. Program.ValidateArgs runs the same helper at startup from the
+            // command line, which is where an operator wants the message.
+            //
+            // The two counts are NOT the same number and are not meant to be: startup counts the
+            // files named on the command line, while this counts the files that actually produced
+            // scored entries (PerFileScoringTask adds a file only on success). A run can therefore
+            // pass at startup and be refused here - which is the point of checking twice, not a
+            // drift to be eliminated.
+            //
+            // This MUST stay above the sidecar deletion below. Deleting first meant an argument
+            // error destroyed the Stage-5 validity sidecars of a run that had computed no FDR at
+            // all, so the operator fixed the variable and paid for a full recompute - hours at 82
+            // files. The damage concentrated exactly on the sweep workflow, because the arm is part
+            // of ValidityKey, so a warm re-run into a directory holding a different arm always
+            // takes this path. Nothing above this point writes or removes any output.
+            //
+            // Every check inside is gated on the aggregation being engaged, so a default run
+            // that merely inherited a stale sweep variable is untouched.
+            string aggError = OspreyEnvironment.ValidateExperimentAggSettings(perFileEntries.Count);
+            if (aggError != null)
+                throw new InvalidOperationException(aggError);
+
+            // Mid-Run crash safety: clear stale sidecars for the outputs
+            // this task is about to produce. A crash before the matching
+            // post-Run sidecar write leaves no false-positive sidecar
+            // claiming the partially-written output is valid.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
 
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
             // its own "Running First-pass Percolator on N entries..." line from the FDR
@@ -286,8 +324,7 @@ namespace pwiz.Osprey.Tasks
             // streamed report is byte-identical to the resident build, and it stays off the
             // default output path.
             bool needsResidentFirstPassPool =
-                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
-                OspreyEnvironment.Pass2TransferQ;
+                !string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1;
             // NOTE: transfer-compete does NOT force the resident pool -- it only needs the
             // trained 1st-pass MODEL (not the full-population score->q table), which the
             // streaming projection path publishes cheaply via captureModel below. Forcing
@@ -1005,7 +1042,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     try
                     {
-                        if (FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), firstPassModel.Results))
+                        if (FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key),
+                                firstPassModel.Results, firstPassModel.ExperimentAgg))
                             modelWrites++;
                     }
                     catch (Exception ex)
@@ -1516,7 +1554,14 @@ namespace pwiz.Osprey.Tasks
                 captureModel = results =>
                 {
                     if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
-                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                    {
+                        // Stamp the arm THIS pass ran under; the 2nd pass may be another process.
+                        ctx.Publish(new FirstPassPercolatorModel
+                        {
+                            Results = results,
+                            ExperimentAgg = OspreyEnvironment.ExperimentAgg
+                        });
+                    }
                 };
             }
 
@@ -1807,7 +1852,14 @@ namespace pwiz.Osprey.Tasks
                 captureModel = results =>
                 {
                     if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
-                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                    {
+                        // Stamp the arm THIS pass ran under; the 2nd pass may be another process.
+                        ctx.Publish(new FirstPassPercolatorModel
+                        {
+                            Results = results,
+                            ExperimentAgg = OspreyEnvironment.ExperimentAgg
+                        });
+                    }
                 };
             }
 

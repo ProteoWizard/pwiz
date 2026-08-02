@@ -272,5 +272,20 @@ namespace pwiz.Osprey.Tasks
     internal sealed class FirstPassPercolatorModel
     {
         public PercolatorResults Results { get; set; }
+
+        /// <summary>
+        /// The normalized OSPREY_EXPERIMENT_AGG arm that the FIRST pass actually ran under
+        /// (<see cref="OspreyEnvironment.ExperimentAgg"/> as of that process), or null when the
+        /// model came from a sidecar written before this was recorded.
+        ///
+        /// Recorded rather than re-read, because the 2nd pass may not be the same process: a
+        /// distributed <c>--task SecondPassFDR</c> merge node reloads this model from disk
+        /// (<see cref="FirstPassModelIO"/>) and never trained pass 1, so ITS environment says
+        /// nothing about which aggregation produced the q-values it is about to rewrite.
+        /// Inferring from the live process was wrong in both directions - a merge node with the
+        /// variable unset would emit a mixed q column with no refusal, and a consistent run
+        /// could be aborted by a stale exported variable. Provenance travels with the artifact.
+        /// </summary>
+        public string ExperimentAgg { get; set; }
     }
 }
