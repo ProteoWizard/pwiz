@@ -318,14 +318,18 @@ namespace pwiz.SkylineTestData.Results
                     Assert.AreEqual(peak.Area, chromInfo.Area);
                     Assert.AreEqual(peak.UserSet, chromInfo.UserSet);
 
-                    var customPeak = abbreviated.FindTransitionCustomPeak(iTran, replicateIndex,
-                        chromInfo.FileId);
-                    if (customPeak?.HasPeakBounds == true)
+                    // A peak with no candidate peak to read is reproduced by integrating between
+                    // the boundaries the results kept: the transition's own when it has any, and
+                    // otherwise the precursor's, which is what the whole peak group shares.
+                    var peakBounds =
+                        abbreviated.FindTransitionCustomPeakBounds(iTran, replicateIndex, chromInfo.FileId) ??
+                        (abbreviated.FindChosenPeakIndex(replicateIndex, chromInfo.FileId).HasValue
+                            ? null
+                            : abbreviated.FindPrecursorPeakBounds(replicateIndex, chromInfo.FileId));
+                    if (peakBounds.HasValue)
                     {
-                        // Reproduced by integrating between them rather than by finding a
-                        // candidate peak, so the boundaries have to be the ones kept.
-                        Assert.AreEqual(customPeak.StartTime.Value, chromInfo.StartRetentionTime);
-                        Assert.AreEqual(customPeak.EndTime.Value, chromInfo.EndRetentionTime);
+                        Assert.AreEqual(peakBounds.Value.StartTime, chromInfo.StartRetentionTime);
+                        Assert.AreEqual(peakBounds.Value.EndTime, chromInfo.EndRetentionTime);
                         reintegrated++;
                     }
 

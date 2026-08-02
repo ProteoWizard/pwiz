@@ -62,46 +62,100 @@ namespace pwiz.SkylineTestUtil
             get { return Results?.GetTransitionChromFileIds(TransitionIndex); }
         }
 
+        /// <summary>
+        /// Every file the transition has a peak for, with the replicate it belongs to, in position
+        /// order. Everything about a peak is found by those two, so this is what walking a
+        /// transition's results comes to: none of the values is stored per position, and two
+        /// documents' positions are the only thing they have in common.
+        /// </summary>
+        public IEnumerable<KeyValuePair<int, ChromFileInfoId>> Files
+        {
+            get
+            {
+                var chromFileIds = ChromFileIds;
+                if (chromFileIds == null)
+                {
+                    yield break;
+                }
+
+                for (int replicateIndex = 0;
+                     replicateIndex < chromFileIds.ReplicatePositions.ReplicateCount;
+                     replicateIndex++)
+                {
+                    foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
+                    {
+                        yield return new KeyValuePair<int, ChromFileInfoId>(replicateIndex, fileId);
+                    }
+                }
+            }
+        }
+
         public int PositionCount
         {
-            get { return Results?.GetTransitionPositionCount(TransitionIndex) ?? 0; }
+            get { return ChromFileIds?.FileIds.Count ?? 0; }
         }
 
-        public float GetArea(int position)
+        public TransitionPeak GetPeak(int replicateIndex, ChromFileInfoId fileId)
         {
-            return Results.GetTransitionArea(TransitionIndex, position);
+            Assert.IsTrue(Results.TryGetTransitionPeak(TransitionIndex, replicateIndex, fileId, out var peak));
+            return peak;
         }
 
-        public UserSet GetUserSet(int position)
+        // A struct, so a lambda cannot reach "this": each of these copies it to a local first.
+        public IEnumerable<TransitionPeak> Peaks
         {
-            return Results.GetTransitionUserSet(TransitionIndex, position);
-        }
-
-        public CustomPeak GetCustomPeak(int position)
-        {
-            return Results.GetTransitionCustomPeak(TransitionIndex, position);
+            get
+            {
+                var self = this;
+                return Files.Select(file => self.GetPeak(file.Key, file.Value));
+            }
         }
 
         public IEnumerable<float> Areas
         {
-            get { return Enumerable.Range(0, PositionCount).Select(GetArea); }
+            get { return Peaks.Select(peak => peak.Area); }
         }
 
         public IEnumerable<UserSet> UserSets
         {
-            get { return Enumerable.Range(0, PositionCount).Select(GetUserSet); }
+            get { return Peaks.Select(peak => peak.UserSet); }
         }
 
-        /// <summary>
-        /// One entry per position, null where the peak has no custom peak, and null altogether
-        /// when none of them does - which is what the results themselves store.
-        /// </summary>
-        public CustomPeak[] CustomPeaks
+        public IEnumerable<Annotations> AnnotationsList
         {
             get
             {
-                var customPeaks = Enumerable.Range(0, PositionCount).Select(GetCustomPeak).ToArray();
-                return customPeaks.All(customPeak => customPeak == null) ? null : customPeaks;
+                var self = this;
+                return Files.Select(file =>
+                    self.Results.FindTransitionAnnotations(self.TransitionIndex, file.Key, file.Value));
+            }
+        }
+
+        /// <summary>
+        /// One entry per file, null where the transition's peak was integrated between the same
+        /// boundaries as the rest of the precursor's - which is nearly every peak.
+        /// </summary>
+        public IEnumerable<CustomPeakBounds?> CustomPeakBounds
+        {
+            get
+            {
+                var self = this;
+                return Files.Select(file =>
+                    self.Results.FindTransitionCustomPeakBounds(self.TransitionIndex, file.Key, file.Value));
+            }
+        }
+
+        /// <summary>
+        /// One entry per file, null where the peak is one of the candidate peaks in the .skyd and
+        /// so has nothing to keep for itself.
+        /// </summary>
+        public IEnumerable<CustomPeakMetrics> CustomPeakMetrics
+        {
+            get
+            {
+                var self = this;
+                return Files.Select(file =>
+                    self.Results.FindTransitionCustomPeakMetrics(self.TransitionIndex, file.Key, file.Value));
             }
         }
     }
@@ -260,8 +314,8 @@ namespace pwiz.SkylineTestUtil
 
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
-                    // A peak per position of the columnar results, and its annotations on the
-                    // CustomPeak the position has when it has any.
+                    // A peak per position of the columnar results, and its annotations from the
+                    // precursor's annotation map.
                     var groupResults = nodeGroup.AbbreviatedResults;
                     if (groupResults != null)
                     {

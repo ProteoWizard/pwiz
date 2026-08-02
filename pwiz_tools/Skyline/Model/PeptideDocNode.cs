@@ -634,8 +634,8 @@ namespace pwiz.Skyline.Model
                         var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
                         if (!nodeGroup.HasTransitionResults(iTran))
                             continue;
-                        var positions = nodeGroup.AbbreviatedResults.GetTransitionPositions(iTran, i).ToArray();
-                        int resultCount = positions.Length;
+                        var peaks = nodeGroup.AbbreviatedResults.GetTransitionPeaks(iTran, i).ToArray();
+                        int resultCount = peaks.Length;
                         if (resultCount == 0)
                             continue;
                         // Use average area over all files in a replicate to avoid
@@ -644,17 +644,16 @@ namespace pwiz.Skyline.Model
                         // file per precursor per replicate.
                         double tranArea = 0;
                         double tranMeasured = 0;
-                        foreach (int position in positions)
+                        foreach (var entry in peaks)
                         {
-                            float area = nodeGroup.AbbreviatedResults.GetTransitionArea(iTran, position);
+                            float area = entry.Value.Area;
                             if (nodeTran.ParticipatesInScoring && area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += area;
                                 tranMeasured++;
 
                                 isGroupIdentified = isGroupIdentified ||
-                                                    nodeGroup.AbbreviatedResults.GetTransitionIdentified(iTran, position) !=
-                                                    PeakIdentification.FALSE;
+                                                    entry.Value.Identified != PeakIdentification.FALSE;
                             }
                         }
                         groupArea += tranArea/resultCount;

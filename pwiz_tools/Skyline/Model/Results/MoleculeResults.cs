@@ -464,10 +464,10 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        // A peak the user set is given boundaries whether or not they match a
-                        // candidate peak, and here they did: the index reproduces it, so the
-                        // boundaries are a second copy of the same thing.
-                        resultsNew = resultsNew.DropTransitionPeakBounds(replicateIndex, fileId);
+                        // A peak the user set keeps whatever integrating again could not find,
+                        // whether or not it matches a candidate peak, and here it did: the index
+                        // reproduces the peak, so all of that is a second copy of the .skyd.
+                        resultsNew = resultsNew.DropTransitionCustomPeaks(replicateIndex, fileId);
                     }
                 }
             }
@@ -549,9 +549,13 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Records the peak boundaries of every transition in one file, which is what happens when
-        /// the peaks are not all the same candidate peak. Integrating between them is then the only
-        /// way any of them comes back.
+        /// Records what every transition's peak in one file has to keep, which is what happens when
+        /// the peaks are not all the same candidate peak. Integrating between the boundaries is then
+        /// the only way any of them comes back, and what integrating cannot find has to be stored.
+        /// <para>
+        /// Only the transitions whose boundaries are not the precursor's own end up keeping any:
+        /// see <see cref="TransitionGroupResults.CarryTransitionPeak"/>.
+        /// </para>
         /// </summary>
         private static TransitionGroupResults CarryPeakBounds(TransitionGroupResults groupResults,
             int replicateIndex, ChromFileInfoId fileId)
@@ -564,8 +568,9 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                groupResults = groupResults.ChangeTransitionCustomPeakBounds(iTran, replicateIndex, fileId,
-                    chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.Identified);
+                groupResults = groupResults.CarryTransitionPeak(iTran, replicateIndex, fileId,
+                    chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.MassError,
+                    chromInfo.Identified);
             }
 
             return groupResults;
@@ -675,11 +680,11 @@ namespace pwiz.Skyline.Model.Results
             ChromatogramGroupInfo chromGroupInfo, ChromFileInfoId fileId, int replicateIndex)
         {
             var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
+            var groupResults = nodeGroup.AbbreviatedResults;
             int transitionCount = nodeGroup.Children.Count;
             // Optimization steps are separate chromatograms of the same transition, and each one
             // has its own set of candidate peaks.
             var optStepChromatograms = new OptStepChromatograms[transitionCount];
-            var customPeaks = new CustomPeak[transitionCount];
             // Each transition's own peak for this file, or null when it has none there. The values
             // rather than positions in them: a position of one transition's results means nothing
             // in another's, and these are read alongside each other.
@@ -691,16 +696,20 @@ namespace pwiz.Skyline.Model.Results
                     chromatograms.OptimizationFunction, TransformChrom.interpolated);
 
                 // The entry holding the values of optimization step zero, found by file.
-                var groupResults = nodeGroup.AbbreviatedResults;
                 if (groupResults != null &&
                     groupResults.TryGetTransitionPeak(iTran, replicateIndex, fileId, out var transitionPeak))
                 {
                     transitionPeaks[iTran] = transitionPeak;
-                    customPeaks[iTran] = groupResults.FindTransitionCustomPeak(iTran, replicateIndex, fileId);
                 }
             }
 
             int chosenPeakIndex = GetChosenPeakIndex(nodeGroup, replicateIndex, fileId, chromGroupInfo);
+            // The boundaries the peak group was integrated between, which every transition uses
+            // unless it kept boundaries of its own. Only wanted when there is no candidate peak to
+            // read instead, which is what a negative index says.
+            var precursorBounds = chosenPeakIndex < 0
+                ? groupResults?.FindPrecursorPeakBounds(replicateIndex, fileId)
+                : null;
             for (int iTran = 0; iTran < transitionCount; iTran++)
             {
                 if (optStepChromatograms[iTran].IsEmpty)
@@ -708,8 +717,12 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var annotations = customPeaks[iTran]?.Annotations ?? Annotations.EMPTY;
+                var annotations = groupResults?.FindTransitionAnnotations(iTran, replicateIndex, fileId) ??
+                                  Annotations.EMPTY;
                 var userSet = transitionPeaks[iTran]?.UserSet ?? UserSet.FALSE;
+                var peakBounds = groupResults?.FindTransitionCustomPeakBounds(iTran, replicateIndex, fileId) ??
+                                 precursorBounds;
+                var peakMetrics = groupResults?.FindTransitionCustomPeakMetrics(iTran, replicateIndex, fileId);
                 int stepCount = optStepChromatograms[iTran].StepCount;
                 for (int step = -stepCount; step <= stepCount; step++)
                 {
@@ -717,7 +730,7 @@ namespace pwiz.Skyline.Model.Results
                     // for it, because ChangeResults adds an empty peak there.
                     var chromatogramInfo = optStepChromatograms[iTran].GetChromatogramForStep(step);
                     var chromPeak = GetChromPeak(nodeGroup, (TransitionDocNode) nodeGroup.Children[iTran],
-                        replicateIndex, fileId, step, chromatogramInfo, chosenPeakIndex, customPeaks[iTran]);
+                        replicateIndex, fileId, step, chromatogramInfo, chosenPeakIndex, peakBounds, peakMetrics);
                     lists[iTran].Add(new TransitionChromInfo(fileId, step, chromPeak,
                         chromatogramInfo?.GetIonMobilityFilter() ?? IonMobilityFilter.EMPTY, annotations, userSet));
                 }
@@ -728,7 +741,7 @@ namespace pwiz.Skyline.Model.Results
         /// Which of the candidate peaks in the .skyd was chosen in one file, or -1 when no peak was
         /// chosen. This is a property of the peak group: one index covers every transition and
         /// every optimization step, because a transition whose peak is a different one has
-        /// boundaries the user set instead, and so a <see cref="CustomPeak"/> of its own.
+        /// <see cref="CustomPeakBounds"/> of its own instead.
         /// </summary>
         private int GetChosenPeakIndex(TransitionGroupDocNode nodeGroup, int replicateIndex, ChromFileInfoId fileId,
             ChromatogramGroupInfo chromGroupInfo)
@@ -773,16 +786,17 @@ namespace pwiz.Skyline.Model.Results
         }
         private ChromPeak GetChromPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
             int replicateIndex, ChromFileInfoId fileId, int step, ChromatogramInfo chromatogramInfo, int peakIndex,
-            CustomPeak customPeak)
+            CustomPeakBounds? peakBounds, CustomPeakMetrics peakMetrics)
         {
             if (chromatogramInfo == null)
             {
                 return ChromPeak.EMPTY;
             }
 
-            if (customPeak?.HasPeakBounds == true)
+            if (peakBounds.HasValue)
             {
-                return IntegratePeak(nodeGroup, nodeTran, replicateIndex, fileId, step, customPeak);
+                return IntegratePeak(nodeGroup, nodeTran, replicateIndex, fileId, step, peakBounds.Value,
+                    peakMetrics);
             }
 
             return peakIndex < 0 || peakIndex >= chromatogramInfo.NumPeaks
@@ -797,7 +811,8 @@ namespace pwiz.Skyline.Model.Results
         /// file is kept once it has been made.
         /// </summary>
         private ChromPeak IntegratePeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
-            int replicateIndex, ChromFileInfoId fileId, int step, CustomPeak customPeak)
+            int replicateIndex, ChromFileInfoId fileId, int step, CustomPeakBounds peakBounds,
+            CustomPeakMetrics peakMetrics)
         {
             var integrator = GetIntegrator(nodeGroup, replicateIndex, fileId);
             if (integrator == null)
@@ -805,21 +820,23 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
 
-            // Identification is not a property of the boundaries, so integrating again cannot
-            // find it. It is carried on the custom peak, the same as the boundaries themselves.
+            // Neither the identification nor the mass error is a property of the boundaries, so
+            // integrating again cannot find them. They are what the peak kept for this.
+            var identified = peakMetrics?.Identified ?? PeakIdentification.FALSE;
             var flags = default(ChromPeak.FlagValues);
-            if (customPeak.Identified != PeakIdentification.FALSE)
+            if (identified != PeakIdentification.FALSE)
             {
                 flags |= ChromPeak.FlagValues.contains_id;
             }
 
-            if (customPeak.Identified == PeakIdentification.ALIGNED)
+            if (identified == PeakIdentification.ALIGNED)
             {
                 flags |= ChromPeak.FlagValues.used_id_alignment;
             }
 
-            return integrator.CalcPeak(nodeTran.Transition, step, customPeak.StartTime.Value,
-                customPeak.EndTime.Value, flags);
+            var chromPeak = integrator.CalcPeak(nodeTran.Transition, step, peakBounds.StartTime,
+                peakBounds.EndTime, flags);
+            return peakMetrics?.MassError == null ? chromPeak : chromPeak.ChangeMassError(peakMetrics.MassError);
         }
 
         private TransitionGroupIntegrator GetIntegrator(TransitionGroupDocNode nodeGroup, int replicateIndex,

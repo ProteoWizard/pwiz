@@ -236,12 +236,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 var results = precursorDocNode.AbbreviatedResults;
                 if (_precursorResultUpdater != null && results != null)
                 {
-                    var newAnnotations = results.Annotations.FlatValues.ToList();
+                    var newAnnotations = results.Annotations ?? ChromFileIdMap<Annotations>.Empty;
                     _precursorResultUpdater.Update(results.ChromFileIds, precursor.Results,
-                        position => newAnnotations[position],
-                        (position, annotations) => newAnnotations[position] = annotations);
-                    precursorDocNode =
-                        precursorDocNode.ChangeAbbreviatedResults(results.ChangeAnnotations(newAnnotations));
+                        (replicateIndex, fileId) =>
+                            newAnnotations.TryGetValue(replicateIndex, fileId, out var annotations)
+                                ? annotations
+                                : Annotations.EMPTY,
+                        (replicateIndex, fileId, annotations) =>
+                            newAnnotations = newAnnotations.Set(replicateIndex, fileId, annotations));
+                    precursorDocNode = precursorDocNode.ChangeAbbreviatedResults(
+                        results.ChangeAnnotations(newAnnotations.FlatValues));
                 }
             }
 
@@ -308,18 +312,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 var nodeTran = (TransitionDocNode) precursorDocNode.Children[iTran];
                 var transition = new Databinding.Entities.Transition(SkylineDataSchema,
                     new IdentityPath(parent, nodeTran.Transition));
-                var newCustomPeaks = groupResults.GetTransitionCustomPeaks(iTran).ToList();
+                int transitionIndex = iTran;
+                var newResults = groupResults;
                 _transitionResultUpdater.Update(groupResults.GetTransitionChromFileIds(iTran), transition.Results,
-                    position => newCustomPeaks[position]?.Annotations ?? Annotations.EMPTY,
-                    (position, annotations) =>
-                    {
-                        var customPeak = (newCustomPeaks[position] ?? new CustomPeak())
-                            .ChangeAnnotations(annotations);
-                        newCustomPeaks[position] = customPeak.IsEmpty ? null : customPeak;
-                    });
-                precursorDocNode = precursorDocNode.ChangeAbbreviatedResults(
-                    groupResults.ChangeTransitionCustomPeaks(iTran,
-                        newCustomPeaks.All(customPeak => customPeak == null) ? null : newCustomPeaks));
+                    (replicateIndex, fileId) =>
+                        newResults.FindTransitionAnnotations(transitionIndex, replicateIndex, fileId),
+                    (replicateIndex, fileId, annotations) => newResults =
+                        newResults.ChangeTransitionAnnotations(transitionIndex, replicateIndex, fileId, annotations));
+                precursorDocNode = precursorDocNode.ChangeAbbreviatedResults(newResults);
             }
 
             return precursorDocNode;
@@ -350,10 +350,10 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Rewrites the annotations of the peaks of one precursor or transition.
         /// <para>
         /// The annotations are in the columnar results, so this reads no chromatograms. Where they
-        /// sit differs between the two levels - a precursor keeps a list of them and a transition
-        /// keeps them on its custom peaks - so the caller supplies the reading and the writing and
-        /// this walks the positions. The <see cref="ResultKey"/> file index counts the files of one
-        /// replicate, which is what a position is offset by, so the two line up directly.
+        /// sit differs between the two levels - a precursor keeps one map of them and each of its
+        /// transitions keeps its own - so the caller supplies the reading and the writing, both by
+        /// replicate and file. The <see cref="ResultKey"/> file index counts the files of one
+        /// replicate, which is the order they are walked in, so the two line up directly.
         /// </para>
         /// </summary>
         private class ResultAnnotationUpdater<TResult> where TResult : SkylineObject
@@ -362,7 +362,8 @@ namespace pwiz.Skyline.Model.DocSettings
             public AnnotationUpdater AnnotationUpdater { get; set; }
 
             public void Update(ChromFileIds chromFileIds, IDictionary<ResultKey, TResult> resultObjects,
-                Func<int, Annotations> getAnnotations, Action<int, Annotations> setAnnotations)
+                Func<int, ChromFileInfoId, Annotations> getAnnotations,
+                Action<int, ChromFileInfoId, Annotations> setAnnotations)
             {
                 if (chromFileIds == null)
                 {
@@ -383,11 +384,12 @@ namespace pwiz.Skyline.Model.DocSettings
                             continue;
                         }
 
-                        var annotations = getAnnotations(position);
+                        var fileId = chromFileIds.FileIds[position].Value;
+                        var annotations = getAnnotations(replicateIndex, fileId);
                         var newAnnotations = AnnotationUpdater.UpdateAnnotations(annotations, resultObject);
                         if (!Equals(annotations, newAnnotations))
                         {
-                            setAnnotations(position, newAnnotations);
+                            setAnnotations(replicateIndex, fileId, newAnnotations);
                         }
                     }
                 }

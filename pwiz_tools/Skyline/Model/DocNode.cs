@@ -223,9 +223,9 @@ namespace pwiz.Skyline.Model
                     newDocNode = docNodeParent.ChangeChildren(newChildren);
                 }
             }
-            // The annotations of a peak live on its CustomPeak in the columnar results now. Both
-            // of these return the same instance when there was nothing to strip, so a document
-            // which does not change stays reference equal.
+            // The annotations of a peak live in the columnar results now. Both of these return the
+            // same instance when there was nothing to strip, so a document which does not change
+            // stays reference equal.
             if (newDocNode is TransitionGroupDocNode transitionGroupDocNode)
             {
                 var results = transitionGroupDocNode.AbbreviatedResults;

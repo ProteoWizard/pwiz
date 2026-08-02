@@ -92,8 +92,7 @@ namespace pwiz.SkylineTestData.Results
                             actualResults.Areas.ToArray(), @"areas");
                         CollectionAssert.AreEqual(expectedResults.UserSets.ToArray(),
                             actualResults.UserSets.ToArray(), @"user sets");
-                        CollectionAssert.AreEqual(expectedResults.CustomPeaks,
-                            actualResults.CustomPeaks, @"custom peaks");
+                        AssertSameCustomPeaks(expectedResults, actualResults);
                         AssertSameFiles(docResults, expectedResults.ChromFileIds, docRoundTrip,
                             actualResults.ChromFileIds);
                         transitionsChecked++;
@@ -221,8 +220,32 @@ namespace pwiz.SkylineTestData.Results
             CollectionAssert.AreEqual(expectedResults.Areas.ToArray(), actualResults.Areas.ToArray(), @"areas");
             CollectionAssert.AreEqual(expectedResults.UserSets.ToArray(), actualResults.UserSets.ToArray(),
                 @"user sets");
-            CollectionAssert.AreEqual(expectedResults.CustomPeaks, actualResults.CustomPeaks, @"custom peaks");
-            Assert.IsNotNull(actualResults.CustomPeaks);
+            AssertSameCustomPeaks(expectedResults, actualResults);
+
+            // The whole peak group moved together, so no transition kept boundaries of its own:
+            // the ones to integrate between are the precursor's, and those have to come back.
+            var expectedGroup = docMoved.MoleculeTransitionGroups.First().AbbreviatedResults;
+            var actualGroup = docRoundTrip.MoleculeTransitionGroups.First().AbbreviatedResults;
+            CollectionAssert.AreEqual(expectedGroup.Peaks.FlatValues.ToArray(),
+                actualGroup.Peaks.FlatValues.ToArray(), @"moved precursor peaks");
+            Assert.IsTrue(actualResults.CustomPeakBounds.All(peakBounds => !peakBounds.HasValue),
+                @"a transition kept the precursor's own boundaries");
+        }
+
+        /// <summary>
+        /// The three sparse values of a transition's peaks, each its own map: the annotations, the
+        /// boundaries a transition kept because they are not the precursor's, and what integrating
+        /// between them again could not find.
+        /// </summary>
+        private static void AssertSameCustomPeaks(TransitionResultsRef expectedResults,
+            TransitionResultsRef actualResults)
+        {
+            CollectionAssert.AreEqual(expectedResults.AnnotationsList.ToArray(),
+                actualResults.AnnotationsList.ToArray(), @"annotations");
+            CollectionAssert.AreEqual(expectedResults.CustomPeakBounds.ToArray(),
+                actualResults.CustomPeakBounds.ToArray(), @"custom peak bounds");
+            CollectionAssert.AreEqual(expectedResults.CustomPeakMetrics.ToArray(),
+                actualResults.CustomPeakMetrics.ToArray(), @"custom peak metrics");
         }
 
         /// <summary>

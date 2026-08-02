@@ -1035,7 +1035,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// they come back in.
         /// </summary>
         private void WriteColumnarResults(XmlWriter writer, ChromFileIds chromFileIds, string start,
-            Action<XmlWriter, int> writePeak)
+            Action<XmlWriter, int, int> writePeak)
         {
             var replicatePositions = chromFileIds?.ReplicatePositions;
             if (replicatePositions == null || replicatePositions.TotalCount == 0)
@@ -1060,7 +1060,7 @@ namespace pwiz.Skyline.Model.Serialization
                             chromatogramSet.GetFileSaveId(chromFileIds.FileIds[position]));
                     }
 
-                    writePeak(writer, position);
+                    writePeak(writer, replicateIndex, position);
                     writer.WriteEndElement();
                 }
             }
@@ -1068,15 +1068,41 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
+        /// <summary>
+        /// Each of a transition's values is looked up by replicate and file, because each of them
+        /// is its own map: the boundaries a transition kept, what it kept alongside them, and the
+        /// annotations are each held only where there is one, and none of the three has an entry
+        /// wherever another does.
+        /// </summary>
         private void WriteTransitionResults(XmlWriter writer, TransitionGroupResults results, int transitionIndex)
         {
-            WriteColumnarResults(writer, results.GetTransitionChromFileIds(transitionIndex),
-                EL.transition_results_columnar, (w, position) =>
+            var chromFileIds = results.GetTransitionChromFileIds(transitionIndex);
+            WriteColumnarResults(writer, chromFileIds, EL.transition_results_columnar,
+                (w, replicateIndex, position) =>
                 {
-                    w.WriteAttribute(ATTR.area, results.GetTransitionArea(transitionIndex, position));
-                    w.WriteAttribute(ATTR.user_set, results.GetTransitionUserSet(transitionIndex, position),
-                        UserSet.FALSE);
-                    WriteCustomPeak(w, results.GetTransitionCustomPeak(transitionIndex, position));
+                    var fileId = chromFileIds.FileIds[position].Value;
+                    results.TryGetTransitionPeak(transitionIndex, replicateIndex, fileId, out var peak);
+                    w.WriteAttribute(ATTR.area, peak.Area);
+                    w.WriteAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
+
+                    var peakBounds = results.FindTransitionCustomPeakBounds(transitionIndex, replicateIndex, fileId);
+                    if (peakBounds.HasValue)
+                    {
+                        w.WriteAttribute(ATTR.start_time, peakBounds.Value.StartTime);
+                        w.WriteAttribute(ATTR.end_time, peakBounds.Value.EndTime);
+                    }
+
+                    var peakMetrics = results.FindTransitionCustomPeakMetrics(transitionIndex, replicateIndex, fileId);
+                    if (peakMetrics != null)
+                    {
+                        w.WriteAttributeNullable(ATTR.mass_error_ppm, peakMetrics.MassError);
+                        if (peakMetrics.Identified != PeakIdentification.FALSE)
+                            w.WriteAttribute(ATTR.identified, peakMetrics.Identified.ToString().ToLowerInvariant());
+                    }
+
+                    // Last, because these are child elements and an XmlWriter takes no more
+                    // attributes once an element has content.
+                    WriteAnnotations(w, results.FindTransitionAnnotations(transitionIndex, replicateIndex, fileId));
                 });
         }
 
@@ -1085,7 +1111,8 @@ namespace pwiz.Skyline.Model.Serialization
             var results = nodeGroup.AbbreviatedResults;
             var sharedAreas = results?.GetSharedTransitionAreas(nodeGroup.Children.Count);
             _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
-            WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar, (w, position) =>
+            WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar,
+                (w, replicateIndex, position) =>
             {
                 // No area: a precursor's is the sum of its transitions', which are written below it.
                 w.WriteAttribute(ATTR.retention_time, results.Peaks.FlatValues[position].RetentionTime);
@@ -1131,33 +1158,6 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             return fileIds;
-        }
-
-        /// <summary>
-        /// The boundaries of a peak which is not one of the candidate peaks, and the annotations.
-        /// Both are things the .skyd cannot give back.
-        /// </summary>
-        /// <summary>
-        /// <paramref name="writePeakBounds"/> is false at the precursor level, where the element
-        /// already carries the peak's own start and end times. A precursor's custom peak is nothing
-        /// but annotations, so there is nothing there to collide with them.
-        /// </summary>
-        private static void WriteCustomPeak(XmlWriter writer, CustomPeak customPeak, bool writePeakBounds = true)
-        {
-            if (customPeak == null)
-            {
-                return;
-            }
-
-            if (writePeakBounds && customPeak.HasPeakBounds)
-            {
-                writer.WriteAttribute(ATTR.start_time, customPeak.StartTime.Value);
-                writer.WriteAttribute(ATTR.end_time, customPeak.EndTime.Value);
-                if (customPeak.Identified != PeakIdentification.FALSE)
-                    writer.WriteAttribute(ATTR.identified, customPeak.Identified.ToString().ToLowerInvariant());
-            }
-
-            WriteAnnotations(writer, customPeak.Annotations);
         }
 
         private static void WriteResults<TItem>(XmlWriter writer, SrmSettings settings,

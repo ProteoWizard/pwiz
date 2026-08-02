@@ -563,9 +563,9 @@ namespace pwiz.Skyline.Model
                     continue;
                 if (!HasTransitionResults(iTran))
                     continue;
-                foreach (var position in AbbreviatedResults.GetTransitionPositions(iTran, replicateIndex))
+                foreach (var entry in AbbreviatedResults.GetTransitionPeaks(iTran, replicateIndex))
                 {
-                    area += AbbreviatedResults.GetTransitionArea(iTran, position);
+                    area += entry.Value.Area;
                     anyPeak = true;
                 }
             }
@@ -587,9 +587,9 @@ namespace pwiz.Skyline.Model
                 if (!HasTransitionResults(iTran))
                     continue;
                 transitionCount++;
-                foreach (int position in AbbreviatedResults.GetTransitionPositions(iTran, replicateIndex))
+                foreach (var entry in AbbreviatedResults.GetTransitionPeaks(iTran, replicateIndex))
                 {
-                    if (AbbreviatedResults.IsGoodTransitionPeak(iTran, position, integrateAll))
+                    if (entry.Value.IsGoodPeak(integrateAll))
                     {
                         goodPeaks++;
                         break;
@@ -1077,9 +1077,8 @@ namespace pwiz.Skyline.Model
             {
                 if (!Annotations.IsEmpty)
                     return true;
-                // A peak the user set says so with its UserSet, and one they annotated or gave
-                // boundaries to has a CustomPeak. Both are in the columnar results, so this reads
-                // nothing.
+                // A peak the user set says so with its UserSet, and one they annotated has an entry
+                // in the annotations. Both are in the columnar results, so this reads nothing.
                 var results = AbbreviatedResults;
                 if (results != null &&
                     (results.UserSets?.FlatValues.Any(userSet => userSet != UserSet.FALSE) == true ||
@@ -3309,8 +3308,8 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// The annotations of one file's peak are on its <see cref="CustomPeak"/>, so setting them
-        /// rewrites that sparse list rather than a chrom info, and reads nothing.
+        /// The annotations of one file's peak are in the columnar results, so setting them rewrites
+        /// that map rather than a chrom info, and reads nothing.
         /// </summary>
         public TransitionGroupDocNode ChangePrecursorAnnotations(int replicateIndex, ChromFileInfoId fileId,
             Annotations annotations)

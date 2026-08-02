@@ -1615,11 +1615,14 @@ namespace pwiz.Skyline.Model.Serialization
         private class TransitionResultsData
         {
             public TransitionResultsData(ChromFileIds chromFileIds, IList<TransitionPeak> peaks,
-                IList<CustomPeak> customPeaks)
+                IList<Annotations> annotations, IList<CustomPeakBounds> peakBounds,
+                IList<CustomPeakMetrics> peakMetrics)
             {
                 ChromFileIds = chromFileIds;
                 Peaks = peaks;
-                CustomPeaks = customPeaks;
+                Annotations = annotations;
+                PeakBounds = peakBounds;
+                PeakMetrics = peakMetrics;
             }
 
             public TransitionResultsData(Results<TransitionChromInfo> chromInfos)
@@ -1629,7 +1632,9 @@ namespace pwiz.Skyline.Model.Serialization
 
             private ChromFileIds ChromFileIds { get; }
             private IList<TransitionPeak> Peaks { get; }
-            private IList<CustomPeak> CustomPeaks { get; }
+            private IList<Annotations> Annotations { get; }
+            private IList<CustomPeakBounds> PeakBounds { get; }
+            private IList<CustomPeakMetrics> PeakMetrics { get; }
             private Results<TransitionChromInfo> ChromInfos { get; }
 
             /// <summary>
@@ -1640,24 +1645,44 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 return ChromInfos != null
                     ? groupResults.ChangeTransitionFromChromInfos(transitionIndex, ChromInfos)
-                    : groupResults.ChangeTransitionResults(transitionIndex, ChromFileIds, Peaks, CustomPeaks);
+                    : groupResults.ChangeTransitionResults(transitionIndex, ChromFileIds, Peaks, Annotations,
+                        PeakBounds, PeakMetrics);
             }
         }
 
+        /// <summary>
+        /// The three sparse values are read as one entry per position alongside the peaks, and it
+        /// is <see cref="TransitionGroupResults"/> which turns each of them into a map of its own
+        /// holding only the entries which say something.
+        /// </summary>
         private TransitionResultsData ReadColumnarTransitionResults(XmlReader reader)
         {
             var peaks = new List<TransitionPeak>();
-            var customPeaks = new List<CustomPeak>();
+            var annotations = new List<Annotations>();
+            var peakBounds = new List<CustomPeakBounds>();
+            var peakMetrics = new List<CustomPeakMetrics>();
             var chromFileIds = ReadColumnarResults(reader, (r, position) =>
             {
                 // Only the area and the user set are written. Everything else about a transition
                 // peak is worked out again from the .skyd, and until then reads as not known.
                 peaks.Add(new TransitionPeak(r.GetFloatAttribute(ATTR.area), ReadUserSet(r), null, false,
                     PeakIdentification.FALSE, false));
-                customPeaks.Add(ReadCustomPeak(r, AnnotationDef.AnnotationTarget.transition_result));
+
+                // The boundaries are here only when they are not the precursor's own, which is what
+                // a transition whose peak was moved on its own has.
+                float? startTime = r.GetNullableFloatAttribute(ATTR.start_time);
+                float? endTime = r.GetNullableFloatAttribute(ATTR.end_time);
+                peakBounds.Add(startTime.HasValue && endTime.HasValue
+                    ? new CustomPeakBounds(startTime.Value, endTime.Value)
+                    : default);
+                peakMetrics.Add(CustomPeakMetrics.Create(r.GetNullableFloatAttribute(ATTR.mass_error_ppm),
+                    r.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict, PeakIdentification.FALSE,
+                        XmlUtil.EnumCase.upper)));
+
+                // Last, because these are the element's child elements.
+                annotations.Add(ReadPositionAnnotations(r, AnnotationDef.AnnotationTarget.transition_result));
             });
-            return new TransitionResultsData(chromFileIds, peaks,
-                customPeaks.All(customPeak => customPeak == null) ? null : customPeaks);
+            return new TransitionResultsData(chromFileIds, peaks, annotations, peakBounds, peakMetrics);
         }
 
         /// <summary>
@@ -1713,7 +1738,7 @@ namespace pwiz.Skyline.Model.Serialization
                 return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
                     areas.Select(area =>
                         new TransitionPeak(area, UserSet.FALSE, null, false, PeakIdentification.FALSE, false))
-                        .ToArray(), null);
+                        .ToArray(), null, null, null);
             }
         }
 
@@ -1782,34 +1807,6 @@ namespace pwiz.Skyline.Model.Serialization
         {
             return reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict, UserSet.FALSE,
                 XmlUtil.EnumCase.upper);
-        }
-
-        /// <summary>
-        /// The transition level custom peak, or null when the element says nothing that cannot be
-        /// worked out from the .skyd. A precursor has no custom peaks: its annotations are read with
-        /// <see cref="ReadPositionAnnotations"/>, and the start and end times on its element are the
-        /// peak's own boundaries rather than ones a user set.
-        /// </summary>
-        private CustomPeak ReadCustomPeak(XmlReader reader, AnnotationDef.AnnotationTarget annotationTarget)
-        {
-            float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
-            float? endTime = reader.GetNullableFloatAttribute(ATTR.end_time);
-            var identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
-                PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
-            var annotations = ReadPositionAnnotations(reader, annotationTarget);
-
-            if (!startTime.HasValue && !endTime.HasValue && annotations.IsEmpty)
-            {
-                return null;
-            }
-
-            var customPeak = new CustomPeak().ChangeAnnotations(annotations);
-            if (startTime.HasValue && endTime.HasValue)
-            {
-                customPeak = customPeak.ChangePeakBounds(startTime, endTime, identified);
-            }
-
-            return customPeak;
         }
 
         /// <summary>

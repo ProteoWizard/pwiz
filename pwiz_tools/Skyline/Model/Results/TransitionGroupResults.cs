@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Which of the candidate peaks in the .skyd this is, or <see cref="NO_PEAK_INDEX"/>. One
         /// index covers every transition of the precursor: a transition whose peak is a different
-        /// one has boundaries the user set, and so a <see cref="CustomPeak"/> of its own.
+        /// one has <see cref="CustomPeakBounds"/> of its own.
         /// </summary>
         public int ChosenPeakIndex { get; private set; }
 
@@ -421,47 +421,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The flat positions of one transition's results belonging to one replicate. Empty when
-        /// the transition has no results at all.
+        /// One transition's peaks in one replicate, each with the file it belongs to. This is how a
+        /// caller walks a transition's results: the file is what everything else about that peak is
+        /// found by, and a position of these results means nothing anywhere else. Empty when the
+        /// transition has no results at all.
         /// </summary>
-        public IEnumerable<int> GetTransitionPositions(int transitionIndex, int replicateIndex)
+        public IEnumerable<KeyValuePair<ChromFileInfoId, TransitionPeak>> GetTransitionPeaks(int transitionIndex,
+            int replicateIndex)
         {
             var results = GetTransitionResults(transitionIndex);
-            return results == null ? Array.Empty<int>() : results.GetPositions(replicateIndex);
-        }
-
-        /// <summary>
-        /// The peak area of one transition at one of its positions. See
-        /// <see cref="GetTransitionPositions"/> for where a position comes from: one of these
-        /// means nothing anywhere but in the transition it came from.
-        /// </summary>
-        public float GetTransitionArea(int transitionIndex, int position)
-        {
-            return GetTransitionResults(transitionIndex).Peaks.FlatValues[position].Area;
-        }
-
-        public UserSet GetTransitionUserSet(int transitionIndex, int position)
-        {
-            return GetTransitionResults(transitionIndex).GetUserSet(position);
-        }
-
-        public CustomPeak GetTransitionCustomPeak(int transitionIndex, int position)
-        {
-            return GetTransitionResults(transitionIndex).GetCustomPeak(position);
-        }
-
-        public PeakIdentification GetTransitionIdentified(int transitionIndex, int position)
-        {
-            return GetTransitionResults(transitionIndex).GetIdentified(position);
-        }
-
-        /// <summary>
-        /// Whether one transition's peak counts towards the peak count ratio. See
-        /// <see cref="TransitionResults.IsGoodPeak"/>.
-        /// </summary>
-        public bool IsGoodTransitionPeak(int transitionIndex, int position, bool integrateAll)
-        {
-            return GetTransitionResults(transitionIndex).IsGoodPeak(position, integrateAll);
+            return results == null
+                ? Array.Empty<KeyValuePair<ChromFileInfoId, TransitionPeak>>()
+                : results.Peaks[replicateIndex];
         }
 
         /// <summary>
@@ -496,18 +467,51 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// One transition's custom peak in one file of one replicate, or null when it has none
-        /// there - which is nearly every peak. See <see cref="TryGetTransitionPeak"/>.
+        /// The annotations of one transition's peak in one file of one replicate, which are empty
+        /// for nearly every peak. See <see cref="TryGetTransitionPeak"/>.
         /// </summary>
-        public CustomPeak FindTransitionCustomPeak(int transitionIndex, int replicateIndex, ChromFileInfoId fileId)
+        public Annotations FindTransitionAnnotations(int transitionIndex, int replicateIndex, ChromFileInfoId fileId)
         {
-            var customPeaks = GetTransitionResults(transitionIndex)?.CustomPeaks;
-            if (customPeaks == null || !customPeaks.TryGetValue(replicateIndex, fileId, out var customPeak))
+            return GetTransitionResults(transitionIndex)?.FindAnnotations(replicateIndex, fileId) ??
+                   Model.Annotations.EMPTY;
+        }
+
+        /// <summary>
+        /// The boundaries one transition's peak was integrated between, when they are not the ones
+        /// the rest of the precursor's transitions used, and otherwise null - which is nearly every
+        /// peak. See <see cref="FindPrecursorPeakBounds"/> for the boundaries they share.
+        /// </summary>
+        public CustomPeakBounds? FindTransitionCustomPeakBounds(int transitionIndex, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            return GetTransitionResults(transitionIndex)?.FindCustomPeakBounds(replicateIndex, fileId);
+        }
+
+        /// <summary>
+        /// What one transition's peak keeps because integrating between its boundaries again cannot
+        /// find it, or null when it is one of the candidate peaks and the .skyd has it all.
+        /// </summary>
+        public CustomPeakMetrics FindTransitionCustomPeakMetrics(int transitionIndex, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            return GetTransitionResults(transitionIndex)?.FindCustomPeakMetrics(replicateIndex, fileId);
+        }
+
+        /// <summary>
+        /// The boundaries of the precursor's peak in one file, which are the ones its transitions
+        /// were integrated between unless one of them says otherwise. Null when there is no peak
+        /// there, or when nothing worked the boundaries out: see <see cref="PrecursorPeak"/> for
+        /// why zero at both ends is what that looks like.
+        /// </summary>
+        public CustomPeakBounds? FindPrecursorPeakBounds(int replicateIndex, ChromFileInfoId fileId)
+        {
+            if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) ||
+                (peak.StartTime == 0 && peak.EndTime == 0))
             {
                 return null;
             }
 
-            return customPeak;
+            return new CustomPeakBounds(peak.StartTime, peak.EndTime);
         }
 
         /// <summary>
@@ -562,11 +566,47 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Records the boundaries of one transition's peak in one file. See
-        /// <see cref="TransitionResults.ChangeCustomPeakBounds"/>.
+        /// Records what one transition's peak in one file has to keep because it is not one of the
+        /// candidate peaks in the .skyd: the boundaries to integrate between, and what integrating
+        /// between them cannot find again.
+        /// <para>
+        /// The boundaries are kept only when they are not the precursor's own. Nearly always the
+        /// whole peak group was integrated between the same two times, and then the precursor's
+        /// peak already says what they were.
+        /// </para>
         /// </summary>
-        public TransitionGroupResults ChangeTransitionCustomPeakBounds(int transitionIndex, int replicateIndex,
-            ChromFileInfoId fileId, float startTime, float endTime, PeakIdentification identified)
+        public TransitionGroupResults CarryTransitionPeak(int transitionIndex, int replicateIndex,
+            ChromFileInfoId fileId, float startTime, float endTime, float? massError, PeakIdentification identified)
+        {
+            var results = GetTransitionResults(transitionIndex);
+            if (results == null)
+            {
+                return this;
+            }
+
+            var bounds = new CustomPeakBounds(startTime, endTime);
+            return ChangeTransitionResults(transitionIndex, results
+                .ChangeCustomPeakBounds(replicateIndex, fileId,
+                    IsPrecursorPeakBounds(replicateIndex, fileId, bounds) ? (CustomPeakBounds?) null : bounds)
+                .ChangeCustomPeakMetrics(replicateIndex, fileId,
+                    CustomPeakMetrics.Create(massError, identified)));
+        }
+
+        /// <summary>
+        /// Whether boundaries are the precursor's own, which is what a transition's are unless its
+        /// peak was moved on its own.
+        /// </summary>
+        private bool IsPrecursorPeakBounds(int replicateIndex, ChromFileInfoId fileId, CustomPeakBounds bounds)
+        {
+            var precursorBounds = FindPrecursorPeakBounds(replicateIndex, fileId);
+            return precursorBounds.HasValue && precursorBounds.Value.Equals(bounds);
+        }
+
+        /// <summary>
+        /// These results with the annotations of one transition's peak in one file replaced.
+        /// </summary>
+        public TransitionGroupResults ChangeTransitionAnnotations(int transitionIndex, int replicateIndex,
+            ChromFileInfoId fileId, Annotations annotations)
         {
             var results = GetTransitionResults(transitionIndex);
             if (results == null)
@@ -575,7 +615,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return ChangeTransitionResults(transitionIndex,
-                results.ChangeCustomPeakBounds(replicateIndex, fileId, startTime, endTime, identified));
+                results.ChangeAnnotations(replicateIndex, fileId, annotations));
         }
 
         /// <summary>
@@ -638,38 +678,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// How many entries one transition's results have, which is how many positions there are
-        /// to walk. Zero when it has none.
-        /// </summary>
-        public int GetTransitionPositionCount(int transitionIndex)
-        {
-            return GetTransitionResults(transitionIndex)?.Peaks.FlatValues.Count ?? 0;
-        }
-
-        /// <summary>
-        /// One entry per position of one transition's results, null where the peak there has
-        /// nothing which cannot be derived from the .skyd - which is nearly every one.
-        /// </summary>
-        public IEnumerable<CustomPeak> GetTransitionCustomPeaks(int transitionIndex)
-        {
-            var results = GetTransitionResults(transitionIndex);
-            return results?.CustomPeaks?.FlatValues ??
-                   Enumerable.Repeat((CustomPeak) null, GetTransitionPositionCount(transitionIndex));
-        }
-
-        public TransitionGroupResults ChangeTransitionCustomPeaks(int transitionIndex,
-            IEnumerable<CustomPeak> customPeaks)
-        {
-            var results = GetTransitionResults(transitionIndex);
-            if (results == null)
-            {
-                return this;
-            }
-
-            return ChangeTransitionResults(transitionIndex, results.ChangeCustomPeaks(customPeaks));
-        }
-
-        /// <summary>
         /// These results with one transition's built from chrom infos, keeping the chrom infos
         /// themselves until which candidate peak each peak is has been worked out. This is what
         /// reading a document written the old way does.
@@ -677,24 +685,55 @@ namespace pwiz.Skyline.Model.Results
         public TransitionGroupResults ChangeTransitionFromChromInfos(int transitionIndex,
             Results<TransitionChromInfo> chromInfos)
         {
-            return ChangeTransitionResults(transitionIndex, TransitionResults.FromChromInfos(chromInfos));
+            return ChangeTransitionResults(transitionIndex,
+                DropSharedPeakBounds(TransitionResults.FromChromInfos(chromInfos)));
+        }
+
+        /// <summary>
+        /// One transition's results with the boundaries which are the precursor's own dropped, so
+        /// that the map holds only the transitions whose peak is not where the rest of the
+        /// precursor's are.
+        /// <para>
+        /// Building a transition's results cannot tell: a chrom info says what its own boundaries
+        /// were and nothing about what the other transitions used. Only the precursor knows, so
+        /// this is where the map is narrowed to what it is supposed to hold.
+        /// </para>
+        /// </summary>
+        private TransitionResults DropSharedPeakBounds(TransitionResults results)
+        {
+            var peakBounds = results?.CustomPeakBounds;
+            if (peakBounds == null)
+            {
+                return results;
+            }
+
+            var resultsNew = results;
+            for (int replicateIndex = 0; replicateIndex < peakBounds.Count; replicateIndex++)
+            {
+                foreach (var entry in peakBounds[replicateIndex])
+                {
+                    if (IsPrecursorPeakBounds(replicateIndex, entry.Key, entry.Value))
+                    {
+                        resultsNew = resultsNew.ChangeCustomPeakBounds(replicateIndex, entry.Key, null);
+                    }
+                }
+            }
+
+            return resultsNew;
         }
 
         /// <summary>
         /// These results with one transition's built from the columnar values a document was
-        /// written with. <paramref name="customPeaks"/> may be null, which is what nearly every
-        /// transition has.
+        /// written with. Each of the sparse lists has one entry per position, or is null when the
+        /// transition had no element of its own - which is what nearly every transition has.
         /// </summary>
         public TransitionGroupResults ChangeTransitionResults(int transitionIndex, ChromFileIds chromFileIds,
-            IEnumerable<TransitionPeak> peaks, IEnumerable<CustomPeak> customPeaks)
+            IEnumerable<TransitionPeak> peaks, IEnumerable<Annotations> annotations,
+            IEnumerable<CustomPeakBounds> peakBounds, IEnumerable<CustomPeakMetrics> peakMetrics)
         {
-            var results = new TransitionResults(chromFileIds, peaks);
-            if (customPeaks != null)
-            {
-                results = results.ChangeCustomPeaks(customPeaks);
-            }
-
-            return ChangeTransitionResults(transitionIndex, results);
+            return ChangeTransitionResults(transitionIndex,
+                DropSharedPeakBounds(new TransitionResults(chromFileIds, peaks, annotations, peakBounds,
+                    peakMetrics)));
         }
 
         /// <summary>
@@ -711,7 +750,7 @@ namespace pwiz.Skyline.Model.Results
         public TransitionGroupResults UpdateTransitionFromChromInfos(int transitionIndex,
             Results<TransitionChromInfo> chromInfos)
         {
-            var calculated = TransitionResults.FromChromInfos(chromInfos);
+            var calculated = DropSharedPeakBounds(TransitionResults.FromChromInfos(chromInfos));
 
             // Only when this pass actually worked something out. A pass which read no chromatogram
             // - because none is loaded yet - has nothing to say, and must not replace what a
@@ -763,17 +802,20 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// These results with the peak boundaries of one file dropped from every transition. A
-        /// peak the user set keeps its boundaries whether or not they match a candidate peak, and
-        /// when they do the index says the same thing for nothing.
+        /// These results with what one file's peaks kept for being integrated again dropped from
+        /// every transition. Once the peak turns out to be one of the candidate peaks after all,
+        /// the index reproduces it, and the .skyd says everything the peak kept for itself.
+        /// <para>
+        /// The annotations stay: nothing in the .skyd knows those.
+        /// </para>
         /// </summary>
-        public TransitionGroupResults DropTransitionPeakBounds(int replicateIndex, ChromFileInfoId fileId)
+        public TransitionGroupResults DropTransitionCustomPeaks(int replicateIndex, ChromFileInfoId fileId)
         {
             var results = this;
             for (int iTran = 0; iTran < TransitionCount; iTran++)
             {
                 var transitionResults = results.GetTransitionResults(iTran);
-                var newResults = transitionResults?.DropCustomPeakBounds(replicateIndex, fileId);
+                var newResults = transitionResults?.DropCustomPeak(replicateIndex, fileId);
                 if (newResults != null && !ReferenceEquals(newResults, transitionResults))
                 {
                     results = results.ChangeTransitionResults(iTran, newResults);
@@ -840,8 +882,8 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Scores which come from the peak scoring model and so cannot be derived from the
-        /// .skyd file. Held as one value per position rather than in <see cref="CustomPeak"/>
-        /// because a scored document has one for nearly every position.
+        /// .skyd file. Held as one value per position rather than sparsely because a scored
+        /// document has one for nearly every position.
         /// <para>
         /// NaN means there is no value, which keeps these four bytes per position instead of
         /// the eight a nullable float would take, and lets a document with no scoring model
@@ -853,9 +895,10 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// One entry per position, Annotations.EMPTY where a peak has none, which is nearly always.
-        /// A precursor peak has nothing else which cannot be derived from the .skyd: the boundaries
-        /// a user set live on the transitions, where <see cref="TransitionResults.CustomPeaks"/>
-        /// keeps them, and everything else is worked out from the chromatogram.
+        /// A precursor peak has nothing else which cannot be derived from the .skyd: its boundaries
+        /// are on <see cref="PrecursorPeak"/>, where a transition whose peak is somewhere else
+        /// reaches past them with a <see cref="CustomPeakBounds"/>, and everything else is worked
+        /// out from the chromatogram.
         /// <para>
         /// Stored through <see cref="ImmutableListFactory.MaybeConstant{T}"/>, so a document with no
         /// precursor annotations - almost every document - pays for one entry rather than one for
@@ -1117,12 +1160,12 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Which of the candidate peaks in the .skyd is the chosen one, or null when that is not
         /// known. One index covers every transition of the precursor: a transition whose peak is a
-        /// different one has boundaries the user set, and so a <see cref="CustomPeak"/> of its own.
+        /// different one has <see cref="CustomPeakBounds"/> of its own.
         /// <para>
         /// A negative index reads back as null rather than as "no candidate peak". The paths which
         /// put results on a node without looking at any chromatogram cannot know an index, and this
-        /// is what they leave behind. A peak which really is not one of the candidate peaks is the
-        /// user's, and says so by having a <see cref="CustomPeak"/> with boundaries.
+        /// is what they leave behind. A peak which really is not one of the candidate peaks is
+        /// reproduced by integrating between <see cref="FindPrecursorPeakBounds"/> instead.
         /// </para>
         /// </summary>
         public int? GetChosenPeakIndex(int position)
@@ -1282,7 +1325,9 @@ namespace pwiz.Skyline.Model.Results
                 var counts = new List<int>();
                 var peaks = new List<TransitionPeak>();
                 var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
-                var customPeaks = new List<CustomPeak>();
+                var annotations = new List<Annotations>();
+                var peakBounds = new List<CustomPeakBounds>();
+                var peakMetrics = new List<CustomPeakMetrics>();
                 foreach (var chromInfoList in results)
                 {
                     int count = 0;
@@ -1296,60 +1341,33 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         chromInfos?.Add(chromInfo);
-                        customPeaks.Add(MakeCustomPeak(chromInfo));
                         fileIds.Add(chromInfo.FileId);
                         peaks.Add(new TransitionPeak(chromInfo.Area, chromInfo.UserSet, chromInfo.IsTruncated,
                             chromInfo.IsEmpty, chromInfo.Identified, chromInfo.IsForcedIntegration));
+                        annotations.Add(chromInfo.Annotations ?? Model.Annotations.EMPTY);
+
+                        // A peak the user set is not one of the candidate peaks Skyline found, so the
+                        // boundaries it was integrated between have to be kept, and so does what
+                        // integrating between them again cannot work out. A peak Skyline chose is one
+                        // of the candidate peaks, and the .skyd has all of it.
+                        bool isUserSet = chromInfo.UserSet != UserSet.FALSE && !chromInfo.IsEmpty;
+                        peakBounds.Add(isUserSet
+                            ? new CustomPeakBounds(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime)
+                            : default);
+                        // Qualified, because the property of that name here is the map of them.
+                        peakMetrics.Add(isUserSet
+                            ? Model.Results.CustomPeakMetrics.Create(chromInfo.MassError, chromInfo.Identified)
+                            : null);
                         count++;
                     }
 
                     counts.Add(count);
                 }
 
-                var transitionResults =
-                    new TransitionResults(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), peaks);
-                // Null rather than a list of nothing but nulls, which is what nearly every document has.
-                if (customPeaks.Any(customPeak => customPeak != null))
-                {
-                    transitionResults = transitionResults.ChangeCustomPeaks(customPeaks);
-                }
-
+                var transitionResults = new TransitionResults(
+                    new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), peaks, annotations, peakBounds,
+                    peakMetrics);
                 return chromInfos == null ? transitionResults : transitionResults.ChangeLegacyChromInfos(chromInfos);
-
-            }
-
-            /// <summary>
-            /// The entry for one position, or null when it has nothing which cannot be derived from the
-            /// .skyd.
-            /// <para>
-            /// A peak the user set is not one of the candidate peaks Skyline found, so its boundaries
-            /// have to be kept: everything else about it is recovered by integrating the chromatogram
-            /// again between them. A peak Skyline chose is one of the candidate peaks, and is found
-            /// again by its area.
-            /// </para>
-            /// </summary>
-            private static CustomPeak MakeCustomPeak(TransitionChromInfo chromInfo)
-            {
-                bool hasAnnotations = chromInfo.Annotations != null && !chromInfo.Annotations.IsEmpty;
-                bool isUserSet = chromInfo.UserSet != UserSet.FALSE && !chromInfo.IsEmpty;
-                if (!hasAnnotations && !isUserSet)
-                {
-                    return null;
-                }
-
-                var customPeak = new CustomPeak();
-                if (hasAnnotations)
-                {
-                    customPeak = customPeak.ChangeAnnotations(chromInfo.Annotations);
-                }
-
-                if (isUserSet)
-                {
-                    customPeak = customPeak.ChangePeakBounds(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime,
-                        chromInfo.Identified);
-                }
-
-                return customPeak;
             }
 
             public TransitionResults(ChromFileIds chromFileIds, IEnumerable<TransitionPeak> peaks)
@@ -1358,9 +1376,25 @@ namespace pwiz.Skyline.Model.Results
             }
 
             /// <summary>
+            /// The sparse values as one entry per position, which is the shape they are read and
+            /// written in. Any of them may be null, meaning no position has one. They do not become
+            /// one map of a struct here: what is stored is a map each, so that a value nothing has
+            /// costs nothing at all.
+            /// </summary>
+            public TransitionResults(ChromFileIds chromFileIds, IEnumerable<TransitionPeak> peaks,
+                IEnumerable<Annotations> annotations, IEnumerable<CustomPeakBounds> peakBounds,
+                IEnumerable<CustomPeakMetrics> peakMetrics)
+                : this(chromFileIds, peaks)
+            {
+                Annotations = MakeSparseMap(chromFileIds, annotations, Model.Annotations.EMPTY);
+                CustomPeakBounds = MakeSparseMap(chromFileIds, peakBounds, default(CustomPeakBounds));
+                CustomPeakMetrics = MakeSparseMap(chromFileIds, peakMetrics, (CustomPeakMetrics) null);
+            }
+
+            /// <summary>
             /// Everything every peak has: its area, and the handful of flags quantification and the
             /// peak count ratio ask for over the whole document. One map of a struct rather than a map
-            /// per value, and the map the positions come from since it is always there.
+            /// per value, and the map the transition's own files come from since it is always there.
             /// </summary>
             public ChromFileIdMap<TransitionPeak> Peaks { get; private set; }
 
@@ -1370,11 +1404,31 @@ namespace pwiz.Skyline.Model.Results
             }
 
             /// <summary>
-            /// One entry per position, null where a peak has nothing which cannot be derived from the
-            /// .skyd file. Null altogether when no position has anything, which is nearly every
-            /// document.
+            /// The peaks which have an annotation, which is nearly none of them. Null when no peak
+            /// does.
+            /// <para>
+            /// This and the two below are each a map in their own right: how many entries one has
+            /// says nothing about how many another has, and none of them lines up with
+            /// <see cref="Peaks"/>. A value is found by replicate and file, never by carrying a
+            /// position across from one to another.
+            /// </para>
             /// </summary>
-            public ChromFileIdMap<CustomPeak> CustomPeaks { get; private set; }
+            public ChromFileIdMap<Annotations> Annotations { get; private set; }
+
+            /// <summary>
+            /// The peaks which were integrated between boundaries the rest of the precursor's
+            /// transitions did not share, which is what a transition whose peak the user moved on
+            /// its own has. Null when no peak does, which is nearly every transition: usually the
+            /// whole peak group has the boundaries on <see cref="PrecursorPeak"/>.
+            /// </summary>
+            public ChromFileIdMap<CustomPeakBounds> CustomPeakBounds { get; private set; }
+
+            /// <summary>
+            /// What the peaks which are not candidate peaks in the .skyd keep, because integrating
+            /// between their boundaries again cannot find it. Null when every peak is one of the
+            /// candidate peaks.
+            /// </summary>
+            public ChromFileIdMap<CustomPeakMetrics> CustomPeakMetrics { get; private set; }
 
             /// <summary>
             /// The chrom infos which have not been worked out from the .skyd file yet, each knowing its
@@ -1426,50 +1480,8 @@ namespace pwiz.Skyline.Model.Results
                 return chromInfo;
             }
 
-            public TransitionResults ChangePeaks(IEnumerable<TransitionPeak> value)
-            {
-                return ChangeProp(ImClone(this),
-                    im => im.Peaks = new ChromFileIdMap<TransitionPeak>(ChromFileIds, value));
-            }
-
             /// <summary>
-            /// Whether the peak at one position ran off the end of the chromatogram, or null when
-            /// nothing worked that out. See <see cref="Truncated"/>.
-            /// </summary>
-            public bool? GetTruncated(int position)
-            {
-                return Peaks.FlatValues[position].IsTruncated;
-            }
-
-            /// <summary>
-            /// Whether there is no peak at one position at all. See <see cref="EmptyPeaks"/>.
-            /// </summary>
-            public bool IsEmptyPeak(int position)
-            {
-                return Peaks.FlatValues[position].IsEmpty;
-            }
-
-            /// <summary>
-            /// Whether the peak at one position contains an identification. See
-            /// <see cref="Identified"/>.
-            /// </summary>
-            public PeakIdentification GetIdentified(int position)
-            {
-                return Peaks.FlatValues[position].Identified;
-            }
-
-            /// <summary>
-            /// Whether the peak at one position counts towards the peak count ratio, which is what
-            /// <see cref="TransitionChromInfo.IsGoodPeak"/> decides. Everything it looks at is stored,
-            /// so this needs no chromatogram.
-            /// </summary>
-            public bool IsGoodPeak(int position, bool integrateAll)
-            {
-                return Peaks.FlatValues[position].IsGoodPeak(integrateAll);
-            }
-
-            /// <summary>
-            /// What quantification needs to know about the peaks of one replicate, in position order.
+            /// What quantification needs to know about the peaks of one replicate.
             /// <para>
             /// This is deliberately everything quantification needs and nothing else, so that it can
             /// run over a whole document without a chromatogram being read. Only optimization step zero
@@ -1478,17 +1490,116 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int replicateIndex)
             {
-                foreach (int position in ChromFileIds.ReplicatePositions[replicateIndex])
+                foreach (var entry in Peaks[replicateIndex])
                 {
-                    var peak = Peaks.FlatValues[position];
-                    yield return new QuantifiablePeak(ChromFileIds.FileIds[position].Value, peak.Area,
-                        peak.IsTruncated, peak.IsEmpty);
+                    var peak = entry.Value;
+                    yield return new QuantifiablePeak(entry.Key, peak.Area, peak.IsTruncated, peak.IsEmpty);
                 }
             }
 
-            public TransitionResults ChangeCustomPeaks(IEnumerable<CustomPeak> value)
+            /// <summary>
+            /// A map holding only the values which say something, or null when none of them does -
+            /// which is what nearly every one of these has. The values come in one per position of
+            /// <paramref name="chromFileIds"/>, and what survives keeps the file it belongs to, so
+            /// the result has positions of its own which are nobody else's.
+            /// </summary>
+            private static ChromFileIdMap<TValue> MakeSparseMap<TValue>(ChromFileIds chromFileIds,
+                IEnumerable<TValue> values, TValue defaultValue)
             {
-                return ChangeProp(ImClone(this), im => im.CustomPeaks = value == null ? null : new ChromFileIdMap<CustomPeak>(ChromFileIds, value));
+                if (values == null)
+                {
+                    return null;
+                }
+
+                return new ChromFileIdMap<TValue>(chromFileIds, values).WithoutDefault(defaultValue)?.Normalize();
+            }
+
+            /// <summary>
+            /// The map with one file's value replaced, and no entry at all where the value is the
+            /// one an absent entry already means. Null when that leaves nothing.
+            /// </summary>
+            private static ChromFileIdMap<TValue> SetValue<TValue>(ChromFileIdMap<TValue> map, int replicateIndex,
+                ChromFileInfoId fileId, TValue value, TValue defaultValue)
+            {
+                if (map == null)
+                {
+                    if (EqualityComparer<TValue>.Default.Equals(value, defaultValue))
+                    {
+                        return null;
+                    }
+
+                    map = ChromFileIdMap<TValue>.Empty;
+                }
+
+                return map.Set(replicateIndex, fileId, value).WithoutDefault(defaultValue)?.Normalize();
+            }
+
+            public Annotations FindAnnotations(int replicateIndex, ChromFileInfoId fileId)
+            {
+                if (Annotations == null || !Annotations.TryGetValue(replicateIndex, fileId, out var annotations))
+                {
+                    return Model.Annotations.EMPTY;
+                }
+
+                return annotations;
+            }
+
+            public CustomPeakBounds? FindCustomPeakBounds(int replicateIndex, ChromFileInfoId fileId)
+            {
+                if (CustomPeakBounds == null ||
+                    !CustomPeakBounds.TryGetValue(replicateIndex, fileId, out var peakBounds))
+                {
+                    return null;
+                }
+
+                return peakBounds;
+            }
+
+            public CustomPeakMetrics FindCustomPeakMetrics(int replicateIndex, ChromFileInfoId fileId)
+            {
+                if (CustomPeakMetrics == null ||
+                    !CustomPeakMetrics.TryGetValue(replicateIndex, fileId, out var peakMetrics))
+                {
+                    return null;
+                }
+
+                return peakMetrics;
+            }
+
+            /// <summary>
+            /// Whether one file's peak has anything of its own: an annotation, boundaries which are
+            /// not the precursor's, or something integrating between them could not find again.
+            /// </summary>
+            public bool HasCustomPeak(int replicateIndex, ChromFileInfoId fileId)
+            {
+                return !FindAnnotations(replicateIndex, fileId).IsEmpty ||
+                       FindCustomPeakBounds(replicateIndex, fileId).HasValue ||
+                       FindCustomPeakMetrics(replicateIndex, fileId) != null;
+            }
+
+            private TransitionResults ChangeAnnotations(ChromFileIdMap<Annotations> value)
+            {
+                return ChangeProp(ImClone(this), im => im.Annotations = value);
+            }
+
+            public TransitionResults ChangeAnnotations(int replicateIndex, ChromFileInfoId fileId, Annotations value)
+            {
+                return ChangeAnnotations(SetValue(Annotations, replicateIndex, fileId,
+                    value ?? Model.Annotations.EMPTY, Model.Annotations.EMPTY));
+            }
+
+            public TransitionResults ChangeCustomPeakBounds(int replicateIndex, ChromFileInfoId fileId,
+                CustomPeakBounds? value)
+            {
+                return ChangeProp(ImClone(this), im => im.CustomPeakBounds = SetValue(CustomPeakBounds,
+                    replicateIndex, fileId, value ?? default, default(CustomPeakBounds)));
+            }
+
+            public TransitionResults ChangeCustomPeakMetrics(int replicateIndex, ChromFileInfoId fileId,
+                CustomPeakMetrics value)
+            {
+                return ChangeProp(ImClone(this), im => im.CustomPeakMetrics = SetValue(CustomPeakMetrics,
+                    replicateIndex, fileId, value, null));
             }
 
             /// <summary>
@@ -1496,135 +1607,105 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             public TransitionResults StripAnnotationValues(ICollection<string> annotationNamesToKeep)
             {
-                var newCustomPeaks = StripAnnotations.FromCustomPeaks(annotationNamesToKeep, CustomPeaks?.FlatValues);
-                if (ReferenceEquals(newCustomPeaks, CustomPeaks?.FlatValues))
-                    return this;
-                return ChangeCustomPeaks(newCustomPeaks);
-            }
-
-            /// <summary>
-            /// Records the boundaries of the peak at one position, keeping whatever else is already
-            /// known about it. Used when the peak turns out not to be one of the candidate peaks, and
-            /// so can only be got back by integrating between its boundaries.
-            /// </summary>
-            public TransitionResults ChangeCustomPeakBounds(int position, float startTime, float endTime,
-                PeakIdentification identified)
-            {
-                var newCustomPeak = (GetCustomPeak(position) ?? new CustomPeak())
-                    .ChangePeakBounds(startTime, endTime, identified);
-                return ChangeCustomPeaks(
-                    CustomPeak.SetAtPosition(CustomPeaks?.FlatValues, Peaks.FlatValues.Count, position, newCustomPeak));
-            }
-
-            /// <summary>
-            /// The position of one file's entry in one replicate, or -1. See
-            /// the positions of these results, which is where it means something.
-            /// </summary>
-            private int IndexOfFile(int replicateIndex, ChromFileInfoId fileId)
-            {
-                return ChromFileIds.IndexOfFile(replicateIndex, fileId);
-            }
-
-            /// <summary>
-            /// Records the boundaries of one file's peak, found by file. A file belongs to one
-            /// replicate, so it says which peak it is on its own, and the caller never holds a position
-            /// of these results.
-            /// </summary>
-            public TransitionResults ChangeCustomPeakBounds(int replicateIndex, ChromFileInfoId fileId,
-                float startTime, float endTime, PeakIdentification identified)
-            {
-                int position = IndexOfFile(replicateIndex, fileId);
-                return position < 0 ? this : ChangeCustomPeakBounds(position, startTime, endTime, identified);
-            }
-
-            /// <summary>
-            /// These results with the boundaries of one file's peak dropped, keeping whatever else
-            /// the custom peak had. Used once the peak turns out to be one of the candidate peaks
-            /// after all, when the index reproduces it and the boundaries say the same thing again.
-            /// </summary>
-            public TransitionResults DropCustomPeakBounds(int replicateIndex, ChromFileInfoId fileId)
-            {
-                int position = IndexOfFile(replicateIndex, fileId);
-                if (position < 0)
+                var newAnnotations = StripAnnotations.FromAnnotations(annotationNamesToKeep, Annotations?.FlatValues);
+                if (ReferenceEquals(newAnnotations, Annotations?.FlatValues))
                 {
                     return this;
                 }
 
-                var customPeak = GetCustomPeak(position);
-                if (customPeak?.HasPeakBounds != true)
+                return ChangeAnnotations(MakeSparseMap(Annotations.ChromFileIds, newAnnotations,
+                    Model.Annotations.EMPTY));
+            }
+
+            /// <summary>
+            /// These results with what one file's peak kept for being integrated again dropped,
+            /// which is what there is to do once it turns out to be one of the candidate peaks after
+            /// all: the index reproduces it, and the .skyd has everything about it. The annotations
+            /// stay, since nothing in the .skyd knows those.
+            /// </summary>
+            public TransitionResults DropCustomPeak(int replicateIndex, ChromFileInfoId fileId)
+            {
+                if (!FindCustomPeakBounds(replicateIndex, fileId).HasValue &&
+                    FindCustomPeakMetrics(replicateIndex, fileId) == null)
                 {
                     return this;
                 }
 
-                var newCustomPeak = customPeak.ChangePeakBounds(null, null, PeakIdentification.FALSE);
-                return ChangeCustomPeaks(CustomPeak.SetAtPosition(CustomPeaks?.FlatValues,
-                    Peaks.FlatValues.Count, position, newCustomPeak.IsEmpty ? null : newCustomPeak));
+                return ChangeCustomPeakBounds(replicateIndex, fileId, null)
+                    .ChangeCustomPeakMetrics(replicateIndex, fileId, null);
             }
 
             /// <summary>
-            /// Whether one file of one replicate has a peak here, and if so its area and whether
-            /// anything about it was the user's. Answered together so that a caller working across
-            /// objects - a precursor's positions are not its transitions' - never has to hold a
-            /// position of this one.
+            /// Whether one file of one replicate has a peak here which says nothing beyond its area,
+            /// and if so what that area is. Answered together so that a caller working across objects
+            /// - a precursor's positions are not its transitions' - never has to hold a position of
+            /// this one.
             /// </summary>
             public bool TryGetPlainArea(int replicateIndex, ChromFileInfoId fileId, out float area)
             {
                 area = 0;
-                int position = ChromFileIds.IndexOfFile(replicateIndex, fileId);
-                if (position < 0 || GetUserSet(position) != UserSet.FALSE || GetCustomPeak(position) != null)
+                if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) || peak.UserSet != UserSet.FALSE ||
+                    HasCustomPeak(replicateIndex, fileId))
                 {
                     return false;
                 }
 
-                area = Peaks.FlatValues[position].Area;
+                area = peak.Area;
                 return true;
-            }
-
-            public CustomPeak GetCustomPeak(int position)
-            {
-                return CustomPeaks?.FlatValues[position];
-            }
-
-            public UserSet GetUserSet(int position)
-            {
-                return Peaks.FlatValues[position].UserSet;
             }
 
             /// <summary>
             /// The transition level counterpart of
-            /// <see cref="TransitionGroupResults.MergeUserInfo"/>, worked out the same way.
+            /// <see cref="TransitionGroupResults.MergeUserInfo"/>, worked out the same way. Each of
+            /// the sparse maps is rebuilt by file rather than by position: the merged results have
+            /// positions of their own, and so does every one of the maps being merged.
             /// </summary>
             public TransitionResults MergeUserInfo(TransitionResults other)
             {
                 var sources = MergeSource.Build(ChromFileIds, other?.ChromFileIds,
-                    position => other.GetUserSet(position) != UserSet.FALSE, out var counts);
+                    position => other.Peaks.FlatValues[position].UserSet != UserSet.FALSE, out var counts);
                 if (sources == null)
                 {
                     return this;
                 }
 
-                var results = new TransitionResults(
-                    new ChromFileIds(ReplicatePositions.FromCounts(counts),
-                        sources.Select(source =>
-                            source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value)),
+                var chromFileIds = new ChromFileIds(ReplicatePositions.FromCounts(counts),
+                    sources.Select(source =>
+                        source.Pick(ChromFileIds, other.ChromFileIds).FileIds[source.Position].Value));
+                var results = new TransitionResults(chromFileIds,
                     sources.Select(source => source.Pick(this, other).Peaks.FlatValues[source.Position]));
-                var customPeaks = MergeSource.MergeCustomPeaks(sources,
-                    source => source.Pick(this, other).GetCustomPeak(source.Position));
-                if (customPeaks != null)
-                {
-                    results = results.ChangeCustomPeaks(customPeaks);
-                }
-
-                return results;
+                return results
+                    .ChangeAnnotations(MergeMap(sources, chromFileIds, other,
+                        (from, replicateIndex, fileId) => from.FindAnnotations(replicateIndex, fileId),
+                        Model.Annotations.EMPTY))
+                    .ChangeCustomPeakBounds(MergeMap(sources, chromFileIds, other,
+                        (from, replicateIndex, fileId) => from.FindCustomPeakBounds(replicateIndex, fileId) ?? default,
+                        default(CustomPeakBounds)))
+                    .ChangeCustomPeakMetrics(MergeMap(sources, chromFileIds, other,
+                        (from, replicateIndex, fileId) => from.FindCustomPeakMetrics(replicateIndex, fileId), null));
             }
 
             /// <summary>
-            /// The flat positions belonging to one replicate. How a caller walks a replicate without
-            /// counting: the entries of one are in no order it can rely on.
+            /// One of the sparse maps of the merged results, read by replicate and file out of
+            /// whichever side each merged position came from.
             /// </summary>
-            public IEnumerable<int> GetPositions(int replicateIndex)
+            private ChromFileIdMap<TValue> MergeMap<TValue>(IList<MergeSource> sources, ChromFileIds chromFileIds,
+                TransitionResults other, Func<TransitionResults, int, ChromFileInfoId, TValue> getValue,
+                TValue defaultValue)
             {
-                return ChromFileIds.ReplicatePositions[replicateIndex];
+                return MakeSparseMap(chromFileIds, sources.Select((source, position) =>
+                    getValue(source.Pick(this, other), source.ReplicateIndex,
+                        chromFileIds.FileIds[position].Value)), defaultValue);
+            }
+
+            private TransitionResults ChangeCustomPeakBounds(ChromFileIdMap<CustomPeakBounds> value)
+            {
+                return ChangeProp(ImClone(this), im => im.CustomPeakBounds = value);
+            }
+
+            private TransitionResults ChangeCustomPeakMetrics(ChromFileIdMap<CustomPeakMetrics> value)
+            {
+                return ChangeProp(ImClone(this), im => im.CustomPeakMetrics = value);
             }
 
             /// <summary>
@@ -1634,7 +1715,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 // No ChromFileIds of its own: every map carries it, and Peaks is always there.
                 return Equals(Peaks, other.Peaks) &&
-                       Equals(CustomPeaks, other.CustomPeaks) &&
+                       Equals(Annotations, other.Annotations) &&
+                       Equals(CustomPeakBounds, other.CustomPeakBounds) &&
+                       Equals(CustomPeakMetrics, other.CustomPeakMetrics) &&
                        Equals(LegacyChromInfos, other.LegacyChromInfos);
             }
 
@@ -1658,7 +1741,9 @@ namespace pwiz.Skyline.Model.Results
                 unchecked
                 {
                     int result = Peaks.GetHashCode();
-                    result = (result * 397) ^ (CustomPeaks?.GetHashCode() ?? 0);
+                    result = (result * 397) ^ (Annotations?.GetHashCode() ?? 0);
+                    result = (result * 397) ^ (CustomPeakBounds?.GetHashCode() ?? 0);
+                    result = (result * 397) ^ (CustomPeakMetrics?.GetHashCode() ?? 0);
                     result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                     return result;
                 }
@@ -1677,13 +1762,20 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class MergeSource
     {
-        private MergeSource(bool fromOther, int position)
+        private MergeSource(bool fromOther, int replicateIndex, int position)
         {
             FromOther = fromOther;
+            ReplicateIndex = replicateIndex;
             Position = position;
         }
 
         public bool FromOther { get; }
+
+        /// <summary>
+        /// Which replicate this position belongs to, which is half of what a value is found by once
+        /// the results being merged do not all have the same positions.
+        /// </summary>
+        public int ReplicateIndex { get; }
         public int Position { get; }
 
         public T Pick<T>(T mine, T other)
@@ -1722,12 +1814,12 @@ namespace pwiz.Skyline.Model.Results
                     int otherPosition = otherFileIds.IndexOfFile(replicateIndex, fileIds.FileIds[position].Value);
                     if (otherPosition >= 0 && otherIsUserSet(otherPosition))
                     {
-                        sources.Add(new MergeSource(true, otherPosition));
+                        sources.Add(new MergeSource(true, replicateIndex, otherPosition));
                         anyFromOther = true;
                     }
                     else
                     {
-                        sources.Add(new MergeSource(false, position));
+                        sources.Add(new MergeSource(false, replicateIndex, position));
                     }
 
                     count++;
@@ -1741,7 +1833,7 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
 
-                    sources.Add(new MergeSource(true, otherPosition));
+                    sources.Add(new MergeSource(true, replicateIndex, otherPosition));
                     anyFromOther = true;
                     count++;
                 }
@@ -1757,76 +1849,18 @@ namespace pwiz.Skyline.Model.Results
             counts = newCounts;
             return sources;
         }
-
-        /// <summary>
-        /// The custom peaks of the merged results, one entry per merged position, or null when no
-        /// position has one.
-        /// </summary>
-        public static ImmutableList<CustomPeak> MergeCustomPeaks(IList<MergeSource> sources,
-            Func<MergeSource, CustomPeak> getCustomPeak)
-        {
-            var customPeaks = sources.Select(getCustomPeak).ToList();
-            return customPeaks.All(customPeak => customPeak == null) ? null : ImmutableList.ValueOf(customPeaks);
-        }
     }
 
     /// <summary>
-    /// Removing annotations from the columnar results, which is where they live now. The
-    /// annotations of a peak are on its <see cref="CustomPeak"/>, and a peak whose annotations all
-    /// go and which has nothing else to say stops needing one at all.
+    /// Removing annotations from the columnar results, which is where they live now: a map of them
+    /// on the precursor, and one on each of its transitions.
     /// </summary>
     public static class StripAnnotations
     {
         /// <summary>
-        /// The custom peaks with every annotation not in <paramref name="annotationNamesToKeep"/>
-        /// removed, or the same list when there was nothing to remove, so that a document which
-        /// does not change stays reference equal.
-        /// </summary>
-        public static ImmutableList<CustomPeak> FromCustomPeaks(ICollection<string> annotationNamesToKeep,
-            ImmutableList<CustomPeak> customPeaks)
-        {
-            if (customPeaks == null)
-            {
-                return null;
-            }
-
-            List<CustomPeak> newCustomPeaks = null;
-            for (int i = 0; i < customPeaks.Count; i++)
-            {
-                var customPeak = customPeaks[i];
-                var annotations = customPeak?.Annotations ?? Model.Annotations.EMPTY;
-                if (!Strip(annotationNamesToKeep, ref annotations))
-                {
-                    newCustomPeaks?.Add(customPeak);
-                    continue;
-                }
-
-                if (newCustomPeaks == null)
-                {
-                    newCustomPeaks = new List<CustomPeak>(customPeaks.Take(i));
-                }
-
-                // A peak with no annotations left and no boundaries of its own has nothing which
-                // cannot be read back from the .skyd, so it stops being a custom peak.
-                var newCustomPeak = customPeak.ChangeAnnotations(annotations);
-                newCustomPeaks.Add(newCustomPeak.IsEmpty ? null : newCustomPeak);
-            }
-
-            if (newCustomPeaks == null)
-            {
-                return customPeaks;
-            }
-
-            return newCustomPeaks.All(customPeak => customPeak == null)
-                ? null
-                : ImmutableList.ValueOf(newCustomPeaks);
-        }
-
-        /// <summary>
         /// The annotations with every name not in <paramref name="annotationNamesToKeep"/> removed,
-        /// or the same list when there was nothing to remove. This is the precursor level
-        /// counterpart of <see cref="FromCustomPeaks"/>, where the annotations are the whole of what
-        /// a peak keeps.
+        /// or the same list when there was nothing to remove, so that a document which does not
+        /// change stays reference equal.
         /// </summary>
         public static ImmutableList<Annotations> FromAnnotations(ICollection<string> annotationNamesToKeep,
             ImmutableList<Annotations> annotationsList)
@@ -1902,89 +1936,103 @@ namespace pwiz.Skyline.Model.Results
     }
 
     /// <summary>
-    /// Everything about one transition peak which cannot be read back out of the .skyd file: the
-    /// annotations, and the peak boundaries when the user chose them instead of accepting one of
-    /// the candidate peaks that Skyline found.
+    /// The boundaries one transition's peak was integrated between, when they are not the ones the
+    /// rest of the precursor's transitions used.
     /// <para>
-    /// A peak with none of that has no CustomPeak at all, and its entry in
-    /// <see cref="TransitionResults.CustomPeaks"/> is null. That list has one entry per position, so
-    /// a CustomPeak neither knows nor needs to know where it sits.
+    /// Nearly every transition of a peak group was integrated between the same two times, which are
+    /// the precursor's own and live on its <see cref="PrecursorPeak"/>. Only a transition whose peak
+    /// the user moved on its own needs one of these, so
+    /// <see cref="TransitionGroupResults.FindTransitionCustomPeakBounds"/> gives back null for
+    /// almost every peak there is.
     /// </para>
     /// </summary>
-    public class CustomPeak : Immutable
+    public struct CustomPeakBounds
     {
-        public CustomPeak()
+        public CustomPeakBounds(float startTime, float endTime)
         {
-            Annotations = Annotations.EMPTY;
+            StartTime = startTime;
+            EndTime = endTime;
         }
 
-        public Annotations Annotations { get; private set; }
+        public float StartTime { get; private set; }
+        public float EndTime { get; private set; }
 
-        /// <summary>
-        /// Set when the peak boundaries may not be those of a candidate peak, which is what
-        /// happens when the user sets them. The values which depend on the boundaries get
-        /// recalculated by integrating the chromatogram again between these times.
-        /// </summary>
-        public float? StartTime { get; private set; }
-        public float? EndTime { get; private set; }
-
-        /// <summary>
-        /// Whether the peak contains an identification, which cannot be derived from the
-        /// boundaries alone and so has to be kept alongside them.
-        /// </summary>
-        public PeakIdentification Identified { get; private set; }
-
-        public bool HasPeakBounds
+        public bool Equals(CustomPeakBounds other)
         {
-            get { return StartTime.HasValue && EndTime.HasValue; }
+            return StartTime.Equals(other.StartTime) && EndTime.Equals(other.EndTime);
         }
 
-        public CustomPeak ChangeAnnotations(Annotations value)
+        public override bool Equals(object obj)
         {
-            return ChangeProp(ImClone(this), im => im.Annotations = value ?? Annotations.EMPTY);
+            return obj is CustomPeakBounds other && Equals(other);
         }
 
-        public CustomPeak ChangePeakBounds(float? startTime, float? endTime, PeakIdentification identified)
+        public override int GetHashCode()
         {
-            return ChangeProp(ImClone(this), im =>
+            unchecked
             {
-                im.StartTime = startTime;
-                im.EndTime = endTime;
-                im.Identified = identified;
-            });
+                return (StartTime.GetHashCode() * 397) ^ EndTime.GetHashCode();
+            }
         }
+    }
 
+    /// <summary>
+    /// What one transition peak keeps because integrating a chromatogram between its boundaries
+    /// again cannot find it.
+    /// <para>
+    /// These are normally read straight off the <see cref="ChromPeak"/> in the .skyd file. A peak
+    /// whose <see cref="PrecursorPeak.ChosenPeakIndex"/> is
+    /// <see cref="PrecursorPeak.NO_PEAK_INDEX"/> is not one of the candidate peaks there, so there
+    /// is no ChromPeak to read, and what integrating cannot work out for itself has to be stored.
+    /// </para>
+    /// <para>
+    /// Only these two: everything else about such a peak - the area, the height, the background,
+    /// the peak shape - comes out of integrating between the boundaries again, and is worth
+    /// recomputing rather than storing.
+    /// </para>
+    /// </summary>
+    public class CustomPeakMetrics : Immutable
+    {
         /// <summary>
-        /// Whether this holds anything at all. One that does not is left out of the list, as a null.
+        /// One of these, or null when there is nothing to keep, which is what a peak with no mass
+        /// error and no identification would be storing an object for.
         /// </summary>
-        public bool IsEmpty
+        public static CustomPeakMetrics Create(float? massError, PeakIdentification identified)
         {
-            get { return Annotations.IsEmpty && !HasPeakBounds; }
-        }
-
-        /// <summary>
-        /// The list of <paramref name="count"/> entries with the one at <paramref name="position"/>
-        /// replaced. Null when no position has anything, which is the usual document, and which is
-        /// why every caller has to be ready for a null list.
-        /// </summary>
-        public static ImmutableList<CustomPeak> SetAtPosition(ImmutableList<CustomPeak> customPeaks, int count,
-            int position, CustomPeak customPeak)
-        {
-            if (customPeak?.IsEmpty != false && customPeaks == null)
+            if (!massError.HasValue && identified == PeakIdentification.FALSE)
             {
                 return null;
             }
 
-            var newCustomPeaks = customPeaks?.ToList() ?? Enumerable.Repeat((CustomPeak) null, count).ToList();
-            newCustomPeaks[position] = customPeak?.IsEmpty == false ? customPeak : null;
-            return newCustomPeaks.All(entry => entry == null) ? null : ImmutableList.ValueOf(newCustomPeaks);
+            return new CustomPeakMetrics().ChangeMassError(massError).ChangeIdentified(identified);
         }
 
-        protected bool Equals(CustomPeak other)
+        /// <summary>
+        /// How far off the expected m/z the peak was, weighted by intensity. Integrating again
+        /// could work this out from the mass errors in the chromatogram, but only when the .skyd
+        /// has them, so the value the peak was given keeps.
+        /// </summary>
+        public float? MassError { get; private set; }
+
+        /// <summary>
+        /// Whether the peak contains an identification, which is not a property of the boundaries
+        /// and so cannot be found by integrating between them.
+        /// </summary>
+        public PeakIdentification Identified { get; private set; }
+
+        public CustomPeakMetrics ChangeMassError(float? value)
         {
-            return Equals(Annotations, other.Annotations) &&
-                   Nullable.Equals(StartTime, other.StartTime) && Nullable.Equals(EndTime, other.EndTime) &&
-                   Identified == other.Identified;
+            return ChangeProp(ImClone(this), im => im.MassError = value);
+        }
+
+        public CustomPeakMetrics ChangeIdentified(PeakIdentification value)
+        {
+            return ChangeProp(ImClone(this), im => im.Identified = value);
+        }
+
+        protected bool Equals(CustomPeakMetrics other)
+        {
+            return Nullable.Equals(MassError, other.MassError) && Identified == other.Identified;
         }
 
         public override bool Equals(object obj)
@@ -1999,23 +2047,14 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             }
 
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((CustomPeak)obj);
+            return obj.GetType() == GetType() && Equals((CustomPeakMetrics) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int result = Annotations.GetHashCode();
-                result = (result * 397) ^ StartTime.GetHashCode();
-                result = (result * 397) ^ EndTime.GetHashCode();
-                result = (result * 397) ^ (int) Identified;
-                return result;
+                return (MassError.GetHashCode() * 397) ^ (int) Identified;
             }
         }
     }

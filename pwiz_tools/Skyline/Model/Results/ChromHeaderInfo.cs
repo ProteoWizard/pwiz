@@ -1297,6 +1297,25 @@ namespace pwiz.Skyline.Model.Results
             return copy;
         }
 
+        /// <summary>
+        /// The peak with a mass error it could not work out for itself. Integrating a chromatogram
+        /// between boundaries which are not a candidate peak's finds one only when the .skyd has
+        /// mass errors to integrate, so a peak which kept its own gets it back this way. See
+        /// <see cref="CustomPeakMetrics"/>.
+        /// </summary>
+        public ChromPeak ChangeMassError(float? massError)
+        {
+            var copy = this;
+            if (massError.HasValue)
+            {
+                copy._flagValues = Flags | FlagValues.mass_error_known;
+                copy._massError = To10x(massError.Value);
+                return copy;
+            }
+
+            return copy.RemoveMassError();
+        }
+
         public static float Intersect(ChromPeak peak1, ChromPeak peak2)
         {
             return Intersect(peak1.StartTime, peak1.EndTime, peak2.StartTime, peak2.EndTime);
