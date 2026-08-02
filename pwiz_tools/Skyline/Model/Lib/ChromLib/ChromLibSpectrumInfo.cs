@@ -27,13 +27,13 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 {
     public class ChromLibSpectrumInfo : ICachedSpectrumInfo
     {
-        public ChromLibSpectrumInfo(LibKey key, int id, int sampleFileId, double peakArea, IndexedRetentionTimes retentionTimesByFileId, IonMobilityAndCCS ionMobility, IEnumerable<SpectrumPeaksInfo.MI> transitionAreas, string protein)
+        public ChromLibSpectrumInfo(LibKey key, int id, int sampleFileId, double peakArea, IndexedRetentionTimes retentionTimesByFileIndex, IonMobilityAndCCS ionMobility, IEnumerable<SpectrumPeaksInfo.MI> transitionAreas, string protein)
         {
             Key = key;
             Id = id;
             SampleFileId = sampleFileId;
             PeakArea = peakArea;
-            RetentionTimesByFileId = retentionTimesByFileId;
+            RetentionTimesByFileIndex = retentionTimesByFileIndex;
             IonMobility = ionMobility ?? IonMobilityAndCCS.EMPTY;
             TransitionAreas = ImmutableList.ValueOf(transitionAreas) ?? ImmutableList.Empty<SpectrumPeaksInfo.MI>();
             Protein = protein ?? string.Empty;
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public int SampleFileId { get; private set; }
         public double PeakArea { get; private set; }
         public string Protein { get; private set; } // Some .clib files provide a protein accession (or Molecule List Name for small molecules)
-        public IndexedRetentionTimes RetentionTimesByFileId { get; private set; }
+        public IndexedRetentionTimes RetentionTimesByFileIndex { get; private set; }
         public IonMobilityAndCCS IonMobility { get; private set; }
         public IList<SpectrumPeaksInfo.MI> TransitionAreas { get; private set; }
         public void Write(Stream stream)
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             PrimitiveArrays.WriteOneValue(stream, Id);
             PrimitiveArrays.WriteOneValue(stream, SampleFileId);
             PrimitiveArrays.WriteOneValue(stream, PeakArea);
-            RetentionTimesByFileId.Write(stream);
+            RetentionTimesByFileIndex.Write(stream);
             IonMobility.Write(stream);
             PrimitiveArrays.WriteOneValue(stream, TransitionAreas.Count);
             PrimitiveArrays.Write(stream, TransitionAreas.Select(mi => mi.Mz).ToArray());
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             int id = PrimitiveArrays.ReadOneValue<int>(stream);
             int sampleFileId = PrimitiveArrays.ReadOneValue<int>(stream);
             double peakArea = PrimitiveArrays.ReadOneValue<double>(stream);
-            var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
+            var retentionTimesByFileIndex = IndexedRetentionTimes.Read(stream);
             var ionMobility = IonMobilityAndCCS.Read(stream);
             int mzCount = PrimitiveArrays.ReadOneValue<int>(stream);
             var mzs = PrimitiveArrays.Read<double>(stream, mzCount);
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     Annotations = annotations?[index]
                 }));
             var protein = PrimitiveArrays.ReadString(stream);
-            return new ChromLibSpectrumInfo(key, id, sampleFileId, peakArea, retentionTimesByFileId, ionMobility, mzAreas, protein);
+            return new ChromLibSpectrumInfo(key, id, sampleFileId, peakArea, retentionTimesByFileIndex, ionMobility, mzAreas, protein);
         }
     }
 }

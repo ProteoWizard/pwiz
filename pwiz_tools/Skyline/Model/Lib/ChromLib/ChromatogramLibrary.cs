@@ -473,18 +473,53 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         // IrtLibrary table probably doesn't exist
                     }
 
+                    // Read the sample files first, because the retention times are stored by the
+                    // index of the file in LibraryFiles rather than by its database id.
+                    var sampleFileQuery =
+                        session.CreateQuery(@"SELECT Id, FilePath, SampleName, AcquiredTime, ModifiedTime, InstrumentIonizationType, " +
+                                            @"InstrumentAnalyzer, InstrumentDetector FROM SampleFile");
+                    var sampleFiles = new List<ChromatogramLibrarySourceInfo>();
+                    foreach (object[] row in sampleFileQuery.List<object[]>())
+                    {
+                        var id = (int) row[0];
+                        if (row[1] == null || row[2] == null)
+                        {
+                            continue; // Throw an error?
+                        }
+                        var filePath = row[1].ToString();
+                        var sampleName = row[2].ToString();
+                        var acquiredTime = row[3] != null ? row[3].ToString() : string.Empty;
+                        var modifiedTime = row[4] != null ? row[4].ToString() : string.Empty;
+                        var instrumentIonizationType = row[5] != null ? row[5].ToString() : string.Empty;
+                        var instrumentAnalyzer = row[6] != null ? row[6].ToString() : string.Empty;
+                        var instrumentDetector = row[7] != null ? row[7].ToString() : string.Empty;
+                        sampleFiles.Add(new ChromatogramLibrarySourceInfo(id, filePath, sampleName, acquiredTime, modifiedTime, instrumentIonizationType,
+                                                                          instrumentAnalyzer, instrumentDetector));
+                    }
+                    _librarySourceFiles = sampleFiles.ToArray();
+                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
+                    var fileIndexesById = new Dictionary<int, int>(_librarySourceFiles.Length);
+                    for (int fileIndex = _librarySourceFiles.Length - 1; fileIndex >= 0; fileIndex--)
+                    {
+                        fileIndexesById[_librarySourceFiles[fileIndex].Id] = fileIndex;
+                    }
+
                     var rtQuery = session.CreateQuery(@"SELECT Precursor.Id, SampleFile.Id, RetentionTime FROM PrecursorRetentionTime");
-                    var rtDictionary = new Dictionary<int, List<KeyValuePair<int, double>>>(); // PrecursorId -> [SampleFileId -> RetentionTime]
+                    var rtDictionary = new Dictionary<int, List<KeyValuePair<int, double>>>(); // PrecursorId -> [SampleFileIndex -> RetentionTime]
                     foreach (object[] row in rtQuery.List<object[]>())
                     {
                         var precursorId = (int) row[0];
                         var sampleFileId = (int) row[1];
+                        if (!fileIndexesById.TryGetValue(sampleFileId, out int sampleFileIndex))
+                        {
+                            continue;
+                        }
                         var rt = Convert.ToDouble(row[2]);
                         if (!rtDictionary.ContainsKey(precursorId))
                         {
                             rtDictionary.Add(precursorId, new List<KeyValuePair<int, double>>());
                         }
-                        rtDictionary[precursorId].Add(new KeyValuePair<int, double>(sampleFileId, rt));
+                        rtDictionary[precursorId].Add(new KeyValuePair<int, double>(sampleFileIndex, rt));
                     }
 
                     var precursorQuery =
@@ -540,30 +575,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, sampleFileId, totalArea, indexedRetentionTimes, ionMobility, transitionAreas, moleculeList));
                     }
                     SetLibraryEntries(spectrumInfos);
-
-                    var sampleFileQuery =
-                        session.CreateQuery(@"SELECT Id, FilePath, SampleName, AcquiredTime, ModifiedTime, InstrumentIonizationType, " +
-                                            @"InstrumentAnalyzer, InstrumentDetector FROM SampleFile");
-                    var sampleFiles = new List<ChromatogramLibrarySourceInfo>();
-                    foreach (object[] row in sampleFileQuery.List<object[]>())
-                    {
-                        var id = (int) row[0];
-                        if (row[1] == null || row[2] == null)
-                        {
-                            continue; // Throw an error?
-                        }
-                        var filePath = row[1].ToString();
-                        var sampleName = row[2].ToString();
-                        var acquiredTime = row[3] != null ? row[3].ToString() : string.Empty;
-                        var modifiedTime = row[4] != null ? row[4].ToString() : string.Empty;
-                        var instrumentIonizationType = row[5] != null ? row[5].ToString() : string.Empty;
-                        var instrumentAnalyzer = row[6] != null ? row[6].ToString() : string.Empty;
-                        var instrumentDetector = row[7] != null ? row[7].ToString() : string.Empty;
-                        sampleFiles.Add(new ChromatogramLibrarySourceInfo(id, filePath, sampleName, acquiredTime, modifiedTime, instrumentIonizationType,
-                                                                          instrumentAnalyzer, instrumentDetector));
-                    }
-                    _librarySourceFiles = sampleFiles.ToArray();
-                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
                     loader.UpdateProgress(status.Complete());
                     return true;
                 }
@@ -581,7 +592,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
-                retentionTimes = _libraryEntries[i].RetentionTimesByFileId.GetTimes(_librarySourceFiles[j].Id);
+                retentionTimes = _libraryEntries[i].RetentionTimesByFileIndex.GetTimes(j);
                 return true;
             }
 
@@ -593,10 +604,9 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             int j = FindSource(filePath);
             if (j != -1)
             {
-                var source = _librarySourceFiles[j];
                 ILookup<Target, double[]> timesLookup = _libraryEntries.ToLookup(
                     entry => entry.Key.Target,
-                    entry => entry.RetentionTimesByFileId.GetTimes(source.Id));
+                    entry => entry.RetentionTimesByFileIndex.GetTimes(j));
                 var timesDict = timesLookup.ToDictionary(
                     grouping => grouping.Key,
                     grouping =>
@@ -631,7 +641,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             var times = new List<double[]>();
             foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
-                times.Add(item.RetentionTimesByFileId.GetTimes(_librarySourceFiles[iFile].Id));
+                times.Add(item.RetentionTimesByFileIndex.GetTimes(iFile));
             }
             return times.SelectMany(array => array);
         }
@@ -904,8 +914,9 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         private class Serializer
         {
             // Version 5 adds small molecule and ion mobility information
-            private const int CURRENT_VERSION = 5;
-            private const int MIN_READABLE_VERSION = 5;
+            // Version 6 stores retention times by file index instead of by file id
+            private const int CURRENT_VERSION = 6;
+            private const int MIN_READABLE_VERSION = 6;
 
             private readonly ChromatogramLibrary _library;
             private readonly Stream _stream;
