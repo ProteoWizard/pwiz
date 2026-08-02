@@ -332,10 +332,6 @@ namespace pwiz.Skyline.Model.Results
             var groupResultsNew = resultsNew.ChangeChosenPeakIndexes(chosenPeakIndexes);
             if (everyFileRead)
             {
-                groupResultsNew = groupResultsNew.ClearTransitionLegacyChromInfos();
-            }
-            if (everyFileRead)
-            {
                 // The precursor's chrom infos go the same way its transitions' do. Everything they
                 // said is either in the columnar results or rebuilt by GetTransitionGroupChromInfos,
                 // which drives the same calculator the settings pass does - the aggregates, the
@@ -344,7 +340,7 @@ namespace pwiz.Skyline.Model.Results
                 // This has to happen in the same pass that works out the peak indexes, not later:
                 // the indexes are found by matching the transitions' peak boundaries, and once the
                 // transitions are converted there are no boundaries left to match.
-                groupResultsNew = groupResultsNew.ChangeLegacyChromInfos(null);
+                groupResultsNew = groupResultsNew.ClearTransitionLegacyChromInfos().ChangeLegacyChromInfos(null);
             }
 
             return nodeGroup.ChangeAbbreviatedResults(groupResultsNew);
