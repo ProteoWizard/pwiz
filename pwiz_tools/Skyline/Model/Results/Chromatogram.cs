@@ -272,6 +272,10 @@ namespace pwiz.Skyline.Model.Results
                             return false;
                         }
                         docNew = docCurrent.ChangeSettingsNoDiff(docCurrent.Settings.ChangeMeasuredResults(loadedMeasuredResults));
+                        // No diff above, deliberately, so opening a document does not recalculate
+                        // everything. That also means nothing else releases the chrom infos it was
+                        // read with, now that the chromatograms can be read instead.
+                        docNew = MoleculeResults.ConvertDocumentResults(docNew);
                     } while (!CompleteProcessing(container, docNew, docCurrent));
                 }
                 finally
@@ -387,6 +391,10 @@ namespace pwiz.Skyline.Model.Results
                         results = results.UpdateCaches(documentPath, resultsLoad);
                         docNew = docCurrent.ChangeSettingsNoDiff(docCurrent.Settings.ChangeMeasuredResults(results));
                         docNew = _manager.ApplyMetadataRules(docNew);
+                        // Skipping the settings change also skips the results pass, which is what
+                        // would otherwise have given up the chrom infos the document was read with
+                        // now that the chromatograms can be read instead.
+                        docNew = MoleculeResults.ConvertDocumentResults(docNew);
                     }
                     else
                     {

@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model.Results
 
         private TransitionGroupResults ChangeTransitions(IEnumerable<TransitionResults> value)
         {
-            var transitions = value == null ? null : ImmutableList.ValueOf(value);
+            var transitions = ImmutableList.ValueOf(value);
             if (transitions != null && transitions.All(results => results == null))
             {
                 transitions = null;
@@ -1373,7 +1373,7 @@ namespace pwiz.Skyline.Model.Results
 
             public TransitionResults ChangeLegacyChromInfos(IEnumerable<TransitionChromInfo> value)
             {
-                return ChangeProp(ImClone(this), im => im.LegacyChromInfos = value == null ? null : ImmutableList.ValueOf(value));
+                return ChangeProp(ImClone(this), im => im.LegacyChromInfos = ImmutableList.ValueOf(value));
             }
 
             /// <summary>

@@ -284,6 +284,57 @@ namespace pwiz.Skyline.Model.Results
                 .Any(iTran => !groupResults.IsTransitionConverted(iTran));
         }
 
+        /// <summary>
+        /// The document with every precursor's results converted - which candidate peak each peak
+        /// is worked out from the .skyd, and the chrom infos it was read with let go. Returns the
+        /// same document when there was nothing to convert.
+        /// <para>
+        /// A document which was opened rather than imported never goes through a results pass: the
+        /// chromatogram loader changes the settings without a diff, deliberately, so that opening
+        /// one does not recalculate everything. That left nothing to release the chrom infos, which
+        /// is what this is for.
+        /// </para>
+        /// <para>
+        /// One <see cref="MoleculeResults"/> per molecule, made and dropped as the walk goes, so a
+        /// whole document's worth of them is never held at once.
+        /// </para>
+        /// </summary>
+        public static SrmDocument ConvertDocumentResults(SrmDocument document)
+        {
+            if (document.Settings.MeasuredResults == null)
+            {
+                return document;
+            }
+
+            var moleculeGroupsNew = new List<DocNode>();
+            foreach (PeptideGroupDocNode nodeMoleculeGroup in document.MoleculeGroups)
+            {
+                var moleculesNew = new List<DocNode>();
+                foreach (PeptideDocNode nodePep in nodeMoleculeGroup.Molecules)
+                {
+                    moleculesNew.Add(ConvertMoleculeResults(document.Settings, nodePep));
+                }
+
+                moleculeGroupsNew.Add(nodeMoleculeGroup.ChangeChildrenChecked(moleculesNew));
+            }
+
+            return (SrmDocument) document.ChangeChildrenChecked(moleculeGroupsNew);
+        }
+
+        private static PeptideDocNode ConvertMoleculeResults(SrmSettings settings, PeptideDocNode nodePep)
+        {
+            // Asked before making one, since making one reads every chromatogram of the molecule.
+            if (!nodePep.TransitionGroups.Any(NeedsConverting))
+            {
+                return nodePep;
+            }
+
+            var moleculeResults = new MoleculeResults(settings, nodePep);
+            var childrenNew = nodePep.TransitionGroups
+                .Select(nodeGroup => (DocNode) moleculeResults.ConvertResults(nodeGroup)).ToList();
+            return (PeptideDocNode) nodePep.ChangeChildrenChecked(childrenNew);
+        }
+
         public TransitionGroupDocNode ConvertResults(TransitionGroupDocNode nodeGroup)
         {
             var groupResults = nodeGroup.AbbreviatedResults;

@@ -48,6 +48,71 @@ namespace pwiz.SkylineTestData.Results
     {
         private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
+        /// <summary>
+        /// A document written the old way, with the chrom infos as attributes, has to give them up
+        /// once its chromatograms are loaded, the same as one whose results were just imported.
+        /// Every document saved before the columnar results is that document, so this is the case
+        /// which decides whether anything is saved in practice.
+        /// </summary>
+        [TestMethod]
+        public void TestMoleculeResultsConvertedAfterReopen()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2.sky");
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            SrmDocument docReopened;
+            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+            {
+                var rawPath = new MsDataFilePath(TestFilesDir.GetTestPath(
+                    "081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw));
+                var chromSets = new[] {new ChromatogramSet(@"AgilentTest", new[] {rawPath})};
+                var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+                docContainer.AssertComplete();
+                AssertNoChromInfosKept(docContainer.Document, @"after import");
+
+                // Round tripping writes the chrom infos, which is what every document saved before
+                // the columnar results has, and reads them back into LegacyChromInfos. Done inside
+                // the container so that nothing holding the cache outlives it.
+                string expected = null;
+                docReopened = AssertEx.RoundTrip(docContainer.Document, SkylineVersion.CURRENT, ref expected);
+            }
+
+            using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+            {
+                Assert.IsTrue(docContainer.SetDocument(docReopened, doc, true));
+                docContainer.AssertComplete();
+                AssertNoChromInfosKept(docContainer.Document, @"after reopen");
+            }
+        }
+
+        /// <summary>
+        /// That no transition is still holding chrom infos which have been worked out from the
+        /// .skyd, which is the whole point of reading them back from it.
+        /// </summary>
+        private static void AssertNoChromInfosKept(SrmDocument document, string when)
+        {
+            int kept = 0;
+            int transitions = 0;
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            {
+                var results = nodeGroup.AbbreviatedResults;
+                if (results == null)
+                {
+                    continue;
+                }
+
+                for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
+                {
+                    transitions++;
+                    kept += results.GetTransitionLegacyChromInfoCount(iTran);
+                }
+            }
+
+            Assert.AreNotEqual(0, transitions, when);
+            Assert.AreEqual(0, kept, when);
+        }
+
         [TestMethod]
         public void TestMoleculeResultsMatchTransitionChromInfo()
         {
