@@ -323,7 +323,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
 
-                    foreach (var indexTimes in entry.RetentionTimesByFileIndex.GetRetentionTimes(null))
+                    foreach (var indexTimes in entry.RetentionTimesByFileIndex.GetTimesByFileIndex())
                     {
                         if (indexTimes.Key < _librarySourceFiles.Length &&
                             detailsByFileId.TryGetValue(_librarySourceFiles[indexTimes.Key].Id, out var details))
@@ -1426,34 +1426,6 @@ namespace pwiz.Skyline.Model.Lib
 
 
 
-        /// <summary>
-        /// Returns the earliest retention time in each of the requested files, keyed by the file's
-        /// index in <see cref="LibraryFiles"/>.
-        /// </summary>
-        private Dictionary<int, double> GetMinRetentionTimes(IEnumerable<BiblioLiteSpectrumInfo> spectrumInfos, IList<int> fileIndexes)
-        {
-            var result = new Dictionary<int, double>();
-            foreach (var spectrumInfo in spectrumInfos)
-            {
-                foreach (var entry in spectrumInfo.RetentionTimesByFileIndex.GetMinRetentionTimes(fileIndexes))
-                {
-                    if (result.TryGetValue(entry.Key, out var oldMin))
-                    {
-                        if (entry.Value < oldMin)
-                        {
-                            result[entry.Key] = entry.Value;
-                        }
-                    }
-                    else
-                    {
-                        result.Add(entry.Key, entry.Value);
-                    }
-                }
-            }
-
-            return result;
-        }
-
         public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
         {
             int i = FindEntry(key);
@@ -2422,69 +2394,111 @@ namespace pwiz.Skyline.Model.Lib
             return new PeptideLibraryKey(newSequence.ToString(), impreciseLibraryKey.Charge);
         }
 
-        public override Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        public override Dictionary<Target, double>[] GetAllRetentionTimes()
         {
-            var fileIndexes = GetFileIndexes(spectrumSourceFiles, out var distinctFileIndexes);
-            var result = fileIndexes.Select(fileIndex => new Dictionary<Target, double>()).ToArray();
+            var result = new Dictionary<Target, double>[LibraryFiles.Count];
+            for (int fileIndex = 0; fileIndex < result.Length; fileIndex++)
+            {
+                result[fileIndex] = new Dictionary<Target, double>();
+            }
+
+            // Poke one target's times into these, rather than making a dictionary per target,
+            // since a library can have hundreds of thousands of targets. A file which has no
+            // times for the current target is left holding MaxValue.
+            var minTimes = new double[result.Length];
+            for (int fileIndex = 0; fileIndex < minTimes.Length; fileIndex++)
+            {
+                minTimes[fileIndex] = double.MaxValue;
+            }
+
+            var fileIndexesWithTimes = new List<int>();
             foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
-                var minTimes = GetMinRetentionTimes(grouping, distinctFileIndexes);
-                if (minTimes.Count == 0)
+                foreach (var entry in grouping)
                 {
-                    continue;
-                }
-                for (int i = 0; i < fileIndexes.Count; i++)
-                {
-                    if (fileIndexes[i].HasValue && minTimes.TryGetValue(fileIndexes[i].Value, out var minTime))
+                    foreach (var fileTimes in entry.RetentionTimesByFileIndex.GetTimesByFileIndex())
                     {
-                        result[i].Add(grouping.Key, minTime);
+                        if (minTimes[fileTimes.Key] == double.MaxValue)
+                        {
+                            fileIndexesWithTimes.Add(fileTimes.Key);
+                        }
+
+                        minTimes[fileTimes.Key] = Math.Min(minTimes[fileTimes.Key], fileTimes.Value.Min());
                     }
+                }
+
+                foreach (int fileIndex in fileIndexesWithTimes)
+                {
+                    result[fileIndex].Add(grouping.Key, minTimes[fileIndex]);
+                    minTimes[fileIndex] = double.MaxValue;
+                }
+
+                fileIndexesWithTimes.Clear();
+            }
+
+            return result;
+        }
+
+        public override Dictionary<Target, double> GetAllRetentionTimes(int fileIndex)
+        {
+            var result = new Dictionary<Target, double>();
+            foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
+            {
+                double? minTime = null;
+                foreach (var entry in grouping)
+                {
+                    double? entryMinTime = entry.RetentionTimesByFileIndex.GetMinTime(fileIndex);
+                    if (entryMinTime < minTime.GetValueOrDefault(double.MaxValue))
+                    {
+                        minTime = entryMinTime;
+                    }
+                }
+
+                if (minTime.HasValue)
+                {
+                    result.Add(grouping.Key, minTime.Value);
                 }
             }
 
             return result;
         }
 
-        public override IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
-            ICollection<Target> targets)
+        public override IList<double>[] GetRetentionTimesWithSequences(ICollection<Target> targets)
         {
-            var fileIndexes = GetFileIndexes(spectrumSourceFiles, out var distinctFileIndexes);
-            var result = fileIndexes.OfType<int>().Distinct().ToDictionary(fileIndex => fileIndex, fileIndex => new List<double>());
-            foreach (var entry in targets.SelectMany(target =>
-                         _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false)))
+            var result = new List<double>[LibraryFiles.Count];
+            for (int fileIndex = 0; fileIndex < result.Length; fileIndex++)
             {
-                foreach (var fileIndexRetentionTimes in entry.RetentionTimesByFileIndex.GetRetentionTimes(distinctFileIndexes))
+                result[fileIndex] = new List<double>();
+            }
+
+            foreach (var entry in EntriesMatching(targets))
+            {
+                foreach (var fileTimes in entry.RetentionTimesByFileIndex.GetTimesByFileIndex())
                 {
-                    result[fileIndexRetentionTimes.Key].AddRange(fileIndexRetentionTimes.Value.Select(t=>(double) t));
+                    result[fileTimes.Key].AddRange(fileTimes.Value.Select(time => (double) time));
                 }
             }
 
-            return fileIndexes.Select(fileIndex => fileIndex == null ? (IList<double>)Array.Empty<double>() : result[fileIndex.Value])
-                .ToArray();
+            return result;
         }
 
-        /// <summary>
-        /// Returns the index in <see cref="LibraryFiles"/> of each of the requested files, or of
-        /// every file in the library if <paramref name="spectrumSourceFiles"/> is null. Files which
-        /// the library does not have are returned as null.
-        /// </summary>
-        /// <param name="distinctFileIndexes">The indexes which were found, without duplicates, or
-        /// null when every file was requested.</param>
-        private IList<int?> GetFileIndexes(IEnumerable<string> spectrumSourceFiles, out IList<int> distinctFileIndexes)
+        public override IList<double> GetRetentionTimesWithSequences(int fileIndex, ICollection<Target> targets)
         {
-            if (spectrumSourceFiles == null)
+            var result = new List<double>();
+            foreach (var entry in EntriesMatching(targets))
             {
-                distinctFileIndexes = null;
-                return Enumerable.Range(0, _librarySourceFiles.Length).Cast<int?>().ToList();
+                result.AddRange(entry.RetentionTimesByFileIndex.GetTimes(fileIndex));
             }
 
-            var fileIndexes = spectrumSourceFiles
-                .Select(file => LibraryFiles.IndexOfFilePath(file))
-                .Select(fileIndex => fileIndex >= 0 && fileIndex < _librarySourceFiles.Length ? fileIndex : (int?) null)
-                .ToList();
-            distinctFileIndexes = fileIndexes.OfType<int>().Distinct().OrderBy(fileIndex => fileIndex).ToList();
-            return fileIndexes;
+            return result;
         }
+
+        private IEnumerable<BiblioLiteSpectrumInfo> EntriesMatching(IEnumerable<Target> targets)
+        {
+            return targets.SelectMany(target =>
+                _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false));
+        }
+
         public BiblioSpecLiteLibrary ChangeLibrarySpec(BiblioSpecLiteSpec newSpec, ConnectionPool connectionPool)
         {
             return ChangeProp(ImClone((BiblioSpecLiteLibrary)ChangeName(newSpec.Name)), im =>
@@ -2543,8 +2557,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public IndexedRetentionTimes(IEnumerable<KeyValuePair<int, double>> timesByFileIndex)
         {
-            _timesByFileIndex = IndexedMultiArray<float>.FromValues(
-                timesByFileIndex.Select(kvp => new KeyValuePair<int, float>(kvp.Key, (float) kvp.Value)));
+            _timesByFileIndex = timesByFileIndex
+                .Select(kvp => new KeyValuePair<int, float>(kvp.Key, (float) kvp.Value)).ToIndexedMultiArray();
         }
 
         private IndexedRetentionTimes(IndexedMultiArray<float> timesByFileIndex)
@@ -2562,30 +2576,26 @@ namespace pwiz.Skyline.Model.Lib
             return TimesByFileIndex[fileIndex].Select(time => (double) time).ToArray();
         }
 
-        public IEnumerable<KeyValuePair<int, double>> GetMinRetentionTimes(IList<int> fileIndexes)
+        /// <summary>
+        /// Returns the earliest time in a file, or null if it has none.
+        /// </summary>
+        public double? GetMinTime(int fileIndex)
         {
-            foreach (var entry in GetRetentionTimes(fileIndexes))
+            var times = TimesByFileIndex[fileIndex];
+            if (times.Count == 0)
             {
-                yield return new KeyValuePair<int, double>(entry.Key, entry.Value.Min());
+                return null;
             }
+
+            return times.Min();
         }
 
         /// <summary>
-        /// Returns the times for each of the requested file indexes which has any, or for every
-        /// file index which has any if <paramref name="fileIndexes"/> is null. The file indexes
-        /// must be distinct.
+        /// Returns the times of each file which has any, skipping the files which have none.
         /// </summary>
-        public IEnumerable<KeyValuePair<int, IList<float>>> GetRetentionTimes(IList<int> fileIndexes)
+        public IEnumerable<KeyValuePair<int, IList<float>>> GetTimesByFileIndex()
         {
-            var timesByFileIndex = TimesByFileIndex;
-            if (fileIndexes == null)
-            {
-                return timesByFileIndex.GetNonEmptyEntries();
-            }
-
-            return fileIndexes.Select(fileIndex =>
-                    new KeyValuePair<int, IList<float>>(fileIndex, timesByFileIndex[fileIndex]))
-                .Where(entry => entry.Value.Count > 0);
+            return TimesByFileIndex.GetNonEmptyEntries();
         }
 
         public void Write(Stream stream)
@@ -2630,7 +2640,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public IndexedIonMobilities(IEnumerable<KeyValuePair<int, IonMobilityAndCCS>> ionMobilitiesByFileIndex)
         {
-            _ionMobilitiesByFileIndex = IndexedMultiArray<IonMobilityAndCCS>.FromValues(ionMobilitiesByFileIndex);
+            _ionMobilitiesByFileIndex = ionMobilitiesByFileIndex.ToIndexedMultiArray();
         }
 
         private IndexedIonMobilities(IndexedMultiArray<IonMobilityAndCCS> ionMobilitiesByFileIndex)

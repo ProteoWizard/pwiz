@@ -26,26 +26,13 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results
 {
-    /// <summary>
-    /// A list of values for each of a range of indexes starting at zero, laid out by the positions
-    /// of a <see cref="Results.ReplicatePositions"/>: the values are held in one flat list, and
-    /// indexing gives the range of that list which belongs to one index.
-    /// <para>
-    /// This costs two objects rather than one per index, which is what an array per index costs.
-    /// The tradeoff is that the space used is proportional to the highest index which has any
-    /// values, whether or not the lower indexes have any, so the indexes have to be small numbers.
-    /// </para>
-    /// </summary>
-    public class IndexedMultiArray<T> : IReadOnlyList<IList<T>>
+    public static class IndexedMultiArray
     {
-        public static readonly IndexedMultiArray<T> EMPTY
-            = new IndexedMultiArray<T>(ReplicatePositions.FromCounts(Array.Empty<int>()), ImmutableList<T>.EMPTY);
-
         /// <summary>
         /// Groups values which are keyed by index. Values with the same index stay in the order
         /// they were supplied in.
         /// </summary>
-        public static IndexedMultiArray<T> FromValues(IEnumerable<KeyValuePair<int, T>> valuesByIndex)
+        public static IndexedMultiArray<T> ToIndexedMultiArray<T>(this IEnumerable<KeyValuePair<int, T>> valuesByIndex)
         {
             var valueLists = new List<List<T>>();
             foreach (var entry in valuesByIndex)
@@ -66,12 +53,28 @@ namespace pwiz.Skyline.Model.Results
 
             if (valueLists.Count == 0)
             {
-                return EMPTY;
+                return IndexedMultiArray<T>.EMPTY;
             }
 
-            return FromCounts(valueLists.Select(valueList => valueList?.Count ?? 0),
+            return IndexedMultiArray<T>.FromCounts(valueLists.Select(valueList => valueList?.Count ?? 0),
                 valueLists.Where(valueList => valueList != null).SelectMany(valueList => valueList).ToArray());
         }
+    }
+
+    /// <summary>
+    /// A list of values for each of a range of indexes starting at zero, laid out by the positions
+    /// of a <see cref="Results.ReplicatePositions"/>: the values are held in one flat list, and
+    /// indexing gives the range of that list which belongs to one index.
+    /// <para>
+    /// This costs two objects rather than one per index, which is what an array per index costs.
+    /// The tradeoff is that the space used is proportional to the highest index which has any
+    /// values, whether or not the lower indexes have any, so the indexes have to be small numbers.
+    /// </para>
+    /// </summary>
+    public class IndexedMultiArray<T> : IReadOnlyList<IList<T>>
+    {
+        public static readonly IndexedMultiArray<T> EMPTY
+            = new IndexedMultiArray<T>(ReplicatePositions.FromCounts(Array.Empty<int>()), ImmutableList<T>.EMPTY);
 
         /// <summary>
         /// Constructs from the number of values at each index, and all of the values in index
@@ -152,7 +155,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Returns one entry per value, which is the shape that <see cref="FromValues"/> takes.
+        /// Returns one entry per value, which is the shape that
+        /// <see cref="IndexedMultiArray.ToIndexedMultiArray{T}"/> takes.
         /// </summary>
         public IEnumerable<KeyValuePair<int, T>> GetIndexValuePairs()
         {
@@ -162,7 +166,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IndexedMultiArray<T> MergeWith(IEnumerable<IndexedMultiArray<T>> others)
         {
-            return FromValues(others.Prepend(this).SelectMany(item => item.GetIndexValuePairs()));
+            return others.Prepend(this).SelectMany(item => item.GetIndexValuePairs()).ToIndexedMultiArray();
         }
 
         public IEnumerator<IList<T>> GetEnumerator()

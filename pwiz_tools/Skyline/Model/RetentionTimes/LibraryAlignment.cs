@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public IEnumerable<double> GetNormalizedRetentionTimes(ICollection<string> spectrumSourceFiles, IList<Target> targets)
         {
-            var times = Library.GetRetentionTimesWithSequences(Alignments.LibraryFiles, targets);
+            var times = Library.GetRetentionTimesWithSequences(targets);
             if (times == null)
             {
                 yield break;

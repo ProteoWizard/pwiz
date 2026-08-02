@@ -624,7 +624,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new Dictionary<Target, double>();
             }
 
-            return library.GetAllRetentionTimes(new[] { retentionTimeSource.Name })?[0] ?? new Dictionary<Target, double>();
+            int fileIndex = library.LibraryFiles.IndexOfFilePath(retentionTimeSource.Name);
+            if (fileIndex < 0)
+            {
+                return new Dictionary<Target, double>();
+            }
+
+            return library.GetAllRetentionTimes(fileIndex) ?? new Dictionary<Target, double>();
         }
 
         #region Functional test support
