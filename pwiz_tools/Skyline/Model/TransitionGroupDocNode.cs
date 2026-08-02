@@ -1707,7 +1707,7 @@ namespace pwiz.Skyline.Model
                 for (int iTran = 0; iTran < Children.Count; iTran++)
                 {
                     resultsCalc.AddTransitionChromInfo(iTran,
-                        AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, chromatograms));
+                        AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, iResultOld));
                 }
 
                 return;
@@ -1743,7 +1743,7 @@ namespace pwiz.Skyline.Model
                 for (int iTran = 0; iTran < Children.Count; iTran++)
                 {
                     resultsCalc.AddTransitionChromInfo(iTran,
-                        useOldResults ? AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, chromatograms) : null);
+                        useOldResults ? AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, iResultOld) : null);
                 }
 
                 return;

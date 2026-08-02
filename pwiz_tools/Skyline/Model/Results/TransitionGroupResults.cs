@@ -375,6 +375,15 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// How many transitions of the precursor these belong to have an entry, which is all of
+        /// them once any of them has results. Zero when none does.
+        /// </summary>
+        public int TransitionCount
+        {
+            get { return Transitions?.Count ?? 0; }
+        }
+
+        /// <summary>
         /// These results with their transitions put in a new order, where
         /// <paramref name="oldIndexes"/> gives the index each transition used to be at, or -1 for
         /// one which was not there before. See
@@ -513,46 +522,43 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// One transition's unconverted chrom infos for a single replicate, or null when it has
-        /// none there. Every optimization step, which is what a results calculation needs.
+        /// none there. Optimization step zero only, which is all that is kept.
         /// <para>
-        /// The chrom infos know their file rather than their replicate, so the replicate is given
-        /// as the chromatogram set whose files they would have to be among. This is how a results
-        /// pass which is not going to read the .skyd - because nothing it cares about changed, or
-        /// because the chromatograms are not loaded yet - gets back what the document already
-        /// knows, without a transition node having to keep a second copy of it.
+        /// This is how a results pass which is not going to read the .skyd - because nothing it
+        /// cares about changed, or because the chromatograms are not loaded yet - gets back what
+        /// the document already knows, without a transition node having to keep a second copy.
         /// </para>
         /// </summary>
-        public IList<TransitionChromInfo> GetTransitionLegacyChromInfos(int transitionIndex,
-            ChromatogramSet chromatograms)
+        public IList<TransitionChromInfo> GetTransitionLegacyChromInfos(int transitionIndex, int replicateIndex)
         {
             var legacyChromInfos = GetTransitionResults(transitionIndex)?.LegacyChromInfos;
-            if (legacyChromInfos == null)
+            if (legacyChromInfos == null || replicateIndex < 0 ||
+                replicateIndex >= legacyChromInfos.ReplicatePositions.ReplicateCount)
             {
                 return null;
             }
 
-            var chromInfos = legacyChromInfos
-                .Where(chromInfo => chromatograms.IndexOfId(chromInfo.FileId) >= 0).ToList();
+            var chromInfos = legacyChromInfos.Values[replicateIndex].ToList();
             return chromInfos.Count == 0 ? null : chromInfos;
         }
 
         /// <summary>
         /// How many unconverted chrom infos one transition's results are still carrying, which is
-        /// every optimization step of every file. Zero once they have been worked out.
+        /// one per file. Zero once they have been worked out.
         /// </summary>
         public int GetTransitionLegacyChromInfoCount(int transitionIndex)
         {
-            return GetTransitionResults(transitionIndex)?.LegacyChromInfos?.Count ?? 0;
+            return GetTransitionResults(transitionIndex)?.LegacyChromInfos?.FlatValues.Count ?? 0;
         }
 
         /// <summary>
-        /// One transition's chrom info for a file and optimization step which has not been
-        /// converted yet, or null. See <see cref="TransitionResults.FindChromInfo"/>.
+        /// One transition's chrom info for a file which has not been converted yet, or null. See
+        /// <see cref="TransitionResults.FindChromInfo"/>.
         /// </summary>
-        public TransitionChromInfo FindTransitionChromInfo(int transitionIndex, ChromFileInfoId fileId,
-            int optimizationStep)
+        public TransitionChromInfo FindTransitionChromInfo(int transitionIndex, int replicateIndex,
+            ChromFileInfoId fileId)
         {
-            return GetTransitionResults(transitionIndex)?.FindChromInfo(fileId, optimizationStep);
+            return GetTransitionResults(transitionIndex)?.FindChromInfo(replicateIndex, fileId);
         }
 
         /// <summary>
@@ -761,10 +767,10 @@ namespace pwiz.Skyline.Model.Results
         /// peak the user set keeps its boundaries whether or not they match a candidate peak, and
         /// when they do the index says the same thing for nothing.
         /// </summary>
-        public TransitionGroupResults DropTransitionPeakBounds(int transitionCount, ChromFileInfoId fileId)
+        public TransitionGroupResults DropTransitionPeakBounds(ChromFileInfoId fileId)
         {
             var results = this;
-            for (int iTran = 0; iTran < transitionCount; iTran++)
+            for (int iTran = 0; iTran < TransitionCount; iTran++)
             {
                 var transitionResults = results.GetTransitionResults(iTran);
                 var newResults = transitionResults?.DropCustomPeakBounds(fileId);
@@ -1282,14 +1288,14 @@ namespace pwiz.Skyline.Model.Results
                     int count = 0;
                     foreach (var chromInfo in chromInfoList)
                     {
-                        // Every step is kept, because the ones which are not step zero can only be got
-                        // back from the .skyd, and this is the state of not having looked at it yet.
-                        chromInfos?.Add(chromInfo);
+                        // Only step zero, the same as everything else here. The other steps say
+                        // nothing which is not read back from the .skyd along with them.
                         if (chromInfo.OptimizationStep != 0)
                         {
                             continue;
                         }
 
+                        chromInfos?.Add(chromInfo);
                         customPeaks.Add(MakeCustomPeak(chromInfo));
                         fileIds.Add(chromInfo.FileId);
                         peaks.Add(new TransitionPeak(chromInfo.Area, chromInfo.UserSet, chromInfo.IsTruncated,
@@ -1309,6 +1315,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 return chromInfos == null ? transitionResults : transitionResults.ChangeLegacyChromInfos(chromInfos);
+
             }
 
             /// <summary>
@@ -1385,7 +1392,13 @@ namespace pwiz.Skyline.Model.Results
             /// is available.
             /// </para>
             /// </summary>
-            public ImmutableList<TransitionChromInfo> LegacyChromInfos { get; private set; }
+            /// <para>
+            /// Over the same positions as <see cref="Peaks"/>, since both are optimization step
+            /// zero of each file, so a chrom info is found by replicate and file rather than by
+            /// walking the list.
+            /// </para>
+            /// </summary>
+            public ChromFileIdMap<TransitionChromInfo> LegacyChromInfos { get; private set; }
 
             public bool IsConverted
             {
@@ -1394,29 +1407,23 @@ namespace pwiz.Skyline.Model.Results
 
             public TransitionResults ChangeLegacyChromInfos(IEnumerable<TransitionChromInfo> value)
             {
-                return ChangeProp(ImClone(this), im => im.LegacyChromInfos = ImmutableList.ValueOf(value));
+                return ChangeProp(ImClone(this), im => im.LegacyChromInfos =
+                    value == null ? null : new ChromFileIdMap<TransitionChromInfo>(ChromFileIds, value));
             }
 
             /// <summary>
-            /// The chrom info for one file and optimization step which has not been converted, or null.
-            /// A file belongs to one replicate, so the file and the step identify it on their own.
+            /// The chrom info of one file which has not been converted, or null. Optimization step
+            /// zero, which is the only one kept: the rest are read back from the .skyd with it.
             /// </summary>
-            public TransitionChromInfo FindChromInfo(ChromFileInfoId fileId, int optimizationStep)
+            public TransitionChromInfo FindChromInfo(int replicateIndex, ChromFileInfoId fileId)
             {
-                if (LegacyChromInfos == null)
+                if (LegacyChromInfos == null ||
+                    !LegacyChromInfos.TryGetValue(replicateIndex, fileId, out var chromInfo))
                 {
                     return null;
                 }
 
-                foreach (var chromInfo in LegacyChromInfos)
-                {
-                    if (ReferenceEquals(chromInfo.FileId, fileId) && chromInfo.OptimizationStep == optimizationStep)
-                    {
-                        return chromInfo;
-                    }
-                }
-
-                return null;
+                return chromInfo;
             }
 
             public TransitionResults ChangePeaks(IEnumerable<TransitionPeak> value)

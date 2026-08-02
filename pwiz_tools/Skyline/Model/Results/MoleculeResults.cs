@@ -428,7 +428,6 @@ namespace pwiz.Skyline.Model.Results
         public TransitionGroupDocNode ConvertResults(TransitionGroupDocNode nodeGroup)
         {
             var groupResults = nodeGroup.AbbreviatedResults;
-            int transitionCount = nodeGroup.Children.Count;
             if (groupResults == null || !NeedsConverting(nodeGroup))
             {
                 return nodeGroup;
@@ -450,9 +449,10 @@ namespace pwiz.Skyline.Model.Results
                     var chromGroupInfo = isLoaded
                         ? FindChromatogramGroupInfo(nodeGroup, replicateIndex, fileId)
                         : null;
+                    
                     chosenPeakIndexes[position] = chromGroupInfo == null
                         ? -1
-                        : FindChosenPeakIndex(resultsNew, transitionCount, chromGroupInfo, fileId);
+                        : FindChosenPeakIndex(resultsNew, chromGroupInfo, replicateIndex, fileId);
                     if (chosenPeakIndexes[position] < 0)
                     {
                         // Anything which could not be matched to a candidate peak - because the
@@ -460,14 +460,14 @@ namespace pwiz.Skyline.Model.Results
                         // against - keeps its boundaries instead, and is reproduced by integrating
                         // between them. That is what lets the chrom infos go in every case rather
                         // than only when every file could be read.
-                        resultsNew = CarryPeakBounds(transitionCount, resultsNew, fileId);
+                        resultsNew = CarryPeakBounds(resultsNew, replicateIndex, fileId);
                     }
                     else
                     {
                         // A peak the user set is given boundaries whether or not they match a
                         // candidate peak, and here they did: the index reproduces it, so the
                         // boundaries are a second copy of the same thing.
-                        resultsNew = resultsNew.DropTransitionPeakBounds(transitionCount, fileId);
+                        resultsNew = resultsNew.DropTransitionPeakBounds(fileId);
                     }
                 }
             }
@@ -519,15 +519,15 @@ namespace pwiz.Skyline.Model.Results
         /// than once per transition.
         /// </para>
         /// </summary>
-        private static int FindChosenPeakIndex(TransitionGroupResults groupResults, int transitionCount,
-            ChromatogramGroupInfo chromGroupInfo, ChromFileInfoId fileId)
+        private static int FindChosenPeakIndex(TransitionGroupResults groupResults,
+            ChromatogramGroupInfo chromGroupInfo, int replicateIndex, ChromFileInfoId fileId)
         {
             float startTime = 0, endTime = 0;
             bool anyPeak = false;
-            for (int iTran = 0; iTran < transitionCount; iTran++)
+            for (int iTran = 0; iTran < groupResults.TransitionCount; iTran++)
             {
                 // A transition with no peak in this file says nothing about which one was chosen.
-                var chromInfo = groupResults.FindTransitionChromInfo(iTran, fileId, 0);
+                var chromInfo = groupResults.FindTransitionChromInfo(iTran, replicateIndex, fileId);
                 if (chromInfo == null || chromInfo.IsEmpty)
                 {
                     continue;
@@ -553,12 +553,12 @@ namespace pwiz.Skyline.Model.Results
         /// the peaks are not all the same candidate peak. Integrating between them is then the only
         /// way any of them comes back.
         /// </summary>
-        private static TransitionGroupResults CarryPeakBounds(int transitionCount,
-            TransitionGroupResults groupResults, ChromFileInfoId fileId)
+        private static TransitionGroupResults CarryPeakBounds(TransitionGroupResults groupResults,
+            int replicateIndex, ChromFileInfoId fileId)
         {
-            for (int iTran = 0; iTran < transitionCount; iTran++)
+            for (int iTran = 0; iTran < groupResults.TransitionCount; iTran++)
             {
-                var chromInfo = groupResults.FindTransitionChromInfo(iTran, fileId, 0);
+                var chromInfo = groupResults.FindTransitionChromInfo(iTran, replicateIndex, fileId);
                 if (chromInfo == null || chromInfo.IsEmpty)
                 {
                     continue;

@@ -475,12 +475,14 @@ namespace pwiz.SkylineTestData.Results
             // rather than where the transition sits.
             var unconverted = TransitionGroupResults.Empty.ChangeTransitionFromChromInfos(0, rebuilt);
             Assert.IsFalse(unconverted.IsTransitionConverted(0));
-            Assert.AreEqual(rebuilt.Sum(chromInfoList => chromInfoList.Count),
+            // Optimization step zero only, which is all that is kept: the rest are read back from
+            // the .skyd along with it.
+            Assert.AreEqual(
+                rebuilt.Sum(chromInfoList => chromInfoList.Count(chromInfo => chromInfo.OptimizationStep == 0)),
                 unconverted.GetTransitionLegacyChromInfoCount(0));
-            foreach (var chromInfo in rebuilt[0])
+            foreach (var chromInfo in rebuilt[0].Where(chromInfo => chromInfo.OptimizationStep == 0))
             {
-                Assert.AreSame(chromInfo,
-                    unconverted.FindTransitionChromInfo(0, chromInfo.FileId, chromInfo.OptimizationStep));
+                Assert.AreSame(chromInfo, unconverted.FindTransitionChromInfo(0, 0, chromInfo.FileId));
             }
 
             // What the document keeps has been converted: which candidate peak each peak is has
