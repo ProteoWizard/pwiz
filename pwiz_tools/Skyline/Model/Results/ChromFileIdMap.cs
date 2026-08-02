@@ -398,7 +398,7 @@ namespace pwiz.Skyline.Model.Results
             return new ChromFileIdMap<T?>(map.ChromFileIds, map.FlatValues.Cast<T?>().Nullables());
         }
 
-        public static ChromFileIdMap<T> FromNullables<T>(this ChromFileIdMap<T?> map, T defaultValue) where T : struct
+        public static ChromFileIdMap<T> FromNullables<T>(this ChromFileIdMap<T?> map, T defaultValue = default) where T : struct
         {
             return new ChromFileIdMap<T>(map.ChromFileIds, map.FlatValues.Select(value => value ?? defaultValue));
         }

@@ -830,7 +830,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
             bool wasExcluded = peptideDocNode.IsExcludeFromCalibration(resultsIndex);
             return (SrmDocument)document.ReplaceChild(peptideIdPath.Parent,
-                peptideDocNode.ChangeExcludeFromCalibration(document.Settings, resultsIndex, !wasExcluded));
+                peptideDocNode.ChangeExcludeFromCalibration(resultsIndex, !wasExcluded));
         }
 
         private void logXAxisContextMenuItem_Click(object sender, EventArgs e)

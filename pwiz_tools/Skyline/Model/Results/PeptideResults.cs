@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
@@ -39,18 +38,24 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class PeptideResults : Immutable
     {
+        public static readonly PeptideResults EMPTY = new PeptideResults();
+
+        private PeptideResults()
+        {
+        }
+
         /// <summary>
         /// Whether the user left a replicate out of the calibration curve. Almost always nothing at
         /// all: only the files a value was actually set for have an entry, so a document which
         /// excludes no replicate keeps a null map rather than a list of falses.
         /// </summary>
-        public ChromFileIdMap<bool> ExcludeFromCalibration { get; private set; }
+        public ChromFileIdMap<bool> ExcludeFromCalibration { get; private set; } = ChromFileIdMap<bool>.Empty;
 
         /// <summary>
         /// The concentration the user entered, for the files they entered one for. Null where they
         /// entered none, and a null map when they entered none anywhere.
         /// </summary>
-        public ChromFileIdMap<double?> AnalyteConcentrations { get; private set; }
+        public ChromFileIdMap<double> AnalyteConcentrations { get; private set; } = ChromFileIdMap<double>.Empty;
 
         /// <summary>
         /// Whether there is nothing here at all, which is what a molecule with neither value has and
@@ -62,17 +67,22 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public PeptideResults NullIfEmpty()
         {
-            return ExcludeFromCalibration == null && AnalyteConcentrations == null ? null : this;
+            return Equals(EMPTY) ? null : this;
         }
 
         public PeptideResults ChangeExcludeFromCalibration(ChromFileIdMap<bool> value)
         {
-            return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = value);
+            return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = value.WithoutDefault());
+        }
+
+        public PeptideResults ChangeAnalyteConcentrations(ChromFileIdMap<double> value)
+        {
+            return ChangeProp(ImClone(this), im => im.AnalyteConcentrations = value);
         }
 
         public PeptideResults ChangeAnalyteConcentrations(ChromFileIdMap<double?> value)
         {
-            return ChangeProp(ImClone(this), im => im.AnalyteConcentrations = value);
+            return ChangeAnalyteConcentrations(value.FromNullables());
         }
 
         public bool GetExcludeFromCalibration(int replicateIndex, ChromFileInfoId fileId)
@@ -112,8 +122,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public double? GetAnalyteConcentrationForReplicate(int replicateIndex)
         {
-            return GetReplicateValues(AnalyteConcentrations, replicateIndex)
-                .FirstOrDefault(concentration => concentration.HasValue);
+            return GetReplicateValues(AnalyteConcentrations, replicateIndex).Cast<double?>().FirstOrDefault();
         }
 
         private static IEnumerable<T> GetReplicateValues<T>(ChromFileIdMap<T> map, int replicateIndex)

@@ -1482,17 +1482,13 @@ namespace pwiz.Skyline.Model
         /// entries are keyed by.
         /// </para>
         /// </summary>
-        public PeptideDocNode ChangeExcludeFromCalibration(SrmSettings settings, int replicateIndex, bool excluded)
+        public PeptideDocNode ChangeExcludeFromCalibration(int replicateIndex, bool excluded)
         {
-            if (settings.MeasuredResults == null)
-                return this;
-            var results = AbbreviatedResults ?? new PeptideResults();
+            var results = AbbreviatedResults ?? PeptideResults.EMPTY;
             var map = results.ExcludeFromCalibration;
             foreach (var fileId in GetResultFileIds(replicateIndex))
             {
-                map = excluded
-                    ? (map ?? ChromFileIdMap<bool>.Empty).Set(replicateIndex, fileId, true)
-                    : map?.Remove(replicateIndex, fileId);
+                map = map.Set(replicateIndex, fileId, excluded);
             }
 
             return ChangeAbbreviatedResults(results.ChangeExcludeFromCalibration(map).NullIfEmpty());

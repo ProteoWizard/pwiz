@@ -1415,11 +1415,9 @@ namespace pwiz.Skyline.Model.Serialization
             // Two independent maps, each keeping only the files something was set for, and null when
             // that is none of them.
             var chromFileIds = new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
-            var results = new PeptideResults()
-                .ChangeExcludeFromCalibration(
-                    new ChromFileIdMap<bool>(chromFileIds, excludeFromCalibration).WithoutDefault())
-                .ChangeAnalyteConcentrations(
-                    new ChromFileIdMap<double?>(chromFileIds, analyteConcentrations).WithoutDefault());
+            var results = PeptideResults.EMPTY
+                .ChangeExcludeFromCalibration(new ChromFileIdMap<bool>(chromFileIds, excludeFromCalibration))
+                .ChangeAnalyteConcentrations(new ChromFileIdMap<double?>(chromFileIds, analyteConcentrations));
             return results.NullIfEmpty();
         }
 

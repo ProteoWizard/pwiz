@@ -186,8 +186,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangePeptideResults(EditColumnDescription(nameof(ExcludeFromCalibration), value),
-                    results => results.ChangeExcludeFromCalibration(
-                        SetOrRemove(results.ExcludeFromCalibration, value, false)));
+                    results => results.ChangeExcludeFromCalibration(results.ExcludeFromCalibration
+                        .Set(ResultFile.Replicate.ReplicateIndex, ResultFile.ChromFileInfoId, value)));
             }
         }
 
@@ -199,22 +199,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             Func<PeptideResults, PeptideResults> change)
         {
             Peptide.ChangeDocNode(editDescription, docNode => docNode.ChangeAbbreviatedResults(
-                change(docNode.AbbreviatedResults ?? new PeptideResults()).NullIfEmpty()));
-        }
-
-        /// <summary>
-        /// The map with this row's file given a value, or without its entry when the value is the
-        /// one which means nothing was set. A row is one replicate and one file, so this touches
-        /// only that file - unlike excluding a whole replicate from the calibration curve.
-        /// </summary>
-        private ChromFileIdMap<TValue> SetOrRemove<TValue>(ChromFileIdMap<TValue> map, TValue value,
-            TValue defaultValue)
-        {
-            int replicateIndex = ResultFile.Replicate.ReplicateIndex;
-            var fileId = ResultFile.ChromFileInfoId;
-            return Equals(value, defaultValue)
-                ? map?.Remove(replicateIndex, fileId)
-                : (map ?? ChromFileIdMap<TValue>.Empty).Set(replicateIndex, fileId, value);
+                change(docNode.AbbreviatedResults ?? PeptideResults.EMPTY).NullIfEmpty()));
         }
 
         public QuantificationResult GetQuantificationResult()
@@ -301,8 +286,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangePeptideResults(EditColumnDescription(@"ExplicitAnalyteConcentration", value),
-                    results => results.ChangeAnalyteConcentrations(
-                        SetOrRemove(results.AnalyteConcentrations, value, null)));
+                    results => results.ChangeAnalyteConcentrations(results.AnalyteConcentrations.ToNullables().Set(
+                            ResultFile.Replicate.ReplicateIndex, ResultFile.ChromFileInfoId, value).WithoutDefault()
+                        .FromNullables()));
             }
         }
 
