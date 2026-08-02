@@ -867,7 +867,7 @@ namespace pwiz.Skyline.Model.Lib
                         libraryEntry = libraryEntry.ChangeIonMobilities(driftTimes.ValueFromCache(valueCache));
                     }
 
-                    if (peakBoundsBySpectraId.TryGetValue(libraryEntry.Id, out var peakBounds) && peakBounds.Count > 0)
+                    if (peakBoundsBySpectraId.TryGetValue(libraryEntry.Id, out var peakBounds) && !peakBounds.IsEmpty)
                     {
                         _anyExplicitPeakBounds = true;
                         peakBounds = peakBounds.ValueFromCache(valueCache);
@@ -1234,13 +1234,13 @@ namespace pwiz.Skyline.Model.Lib
             bool anySequenceMatch = false;
             foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
-                ExplicitPeakBounds peakBoundaries;
-                if (item.PeakBoundariesByFileIndex.TryGetValue(iFile, out peakBoundaries))
+                var peakBoundaries = item.PeakBoundariesByFileIndex[iFile];
+                if (peakBoundaries != null)
                 {
                     return peakBoundaries;
                 }
 
-                if (item.PeakBoundariesByFileIndex.Count > 0)
+                if (!item.PeakBoundariesByFileIndex.IsEmpty)
                 {
                     // If the library has peak boundaries for this sequence in some other file, assume
                     // that the peptide was just not found in this file.
@@ -2191,7 +2191,9 @@ namespace pwiz.Skyline.Model.Lib
                 var refSpectraId = rows[0].RefSpectraID;
                 var retentionTimes = new List<KeyValuePair<int, float>>();
                 var ionMobilities = new List<KeyValuePair<int, IonMobilityAndCCS>>();
-                var explicitPeakBounds = new List<KeyValuePair<int, ExplicitPeakBounds>>();
+                // One entry per file index, holding null for the files which have no boundaries
+                var explicitPeakBounds = new List<ExplicitPeakBounds>();
+                bool anyPeakBounds = false;
                 foreach (var row in rows)
                 {
                     if (row.RedundantRefSpectraID.GetValueOrDefault() != 0)
@@ -2226,7 +2228,14 @@ namespace pwiz.Skyline.Model.Lib
                     var peakBounds = ReadPeakBounds(row);
                     if (peakBounds != null)
                     {
-                        explicitPeakBounds.Add(new KeyValuePair<int, ExplicitPeakBounds>(fileIndex, peakBounds));
+                        while (explicitPeakBounds.Count <= fileIndex)
+                        {
+                            explicitPeakBounds.Add(null);
+                        }
+
+                        // A file can only have one set of boundaries, so the first row wins
+                        explicitPeakBounds[fileIndex] = explicitPeakBounds[fileIndex] ?? peakBounds;
+                        anyPeakBounds = true;
                     }
                 }
 
@@ -2262,15 +2271,17 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                if (explicitPeakBounds.Count > 0)
+                if (anyPeakBounds)
                 {
-                    var explicitPeakBoundsDict = new ExplicitPeakBoundsDict(explicitPeakBounds.Distinct());
+                    var explicitPeakBoundsDict = new ExplicitPeakBoundsDict(explicitPeakBounds);
                     lock (_explicitPeakBounds)
                     {
                         if (_explicitPeakBounds.TryGetValue(refSpectraId.Value, out var existing))
                         {
-                            _explicitPeakBounds[refSpectraId.Value] =
-                                new ExplicitPeakBoundsDict(existing.GetEntries().Concat(explicitPeakBounds));
+                            int fileCount = Math.Max(existing.Count, explicitPeakBoundsDict.Count);
+                            _explicitPeakBounds[refSpectraId.Value] = new ExplicitPeakBoundsDict(
+                                Enumerable.Range(0, fileCount)
+                                    .Select(fileIndex => existing[fileIndex] ?? explicitPeakBoundsDict[fileIndex]));
                         }
                         else
                         {

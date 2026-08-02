@@ -163,11 +163,6 @@ namespace pwiz.Skyline.Model.Results
             return ReplicatePositions.GetCount(index);
         }
 
-        public IEnumerable<int> GetCounts()
-        {
-            return Enumerable.Range(0, Count).Select(GetCount);
-        }
-
         /// <summary>
         /// Returns an equivalent instance which shares its <see cref="Results.ReplicatePositions"/>
         /// with the others in the cache. Instances which hold values at the same indexes have equal
@@ -183,26 +178,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return new IndexedMultiArray<T>(replicatePositions, FlatValues);
-        }
-
-        /// <summary>
-        /// Returns each index which has any values, along with those values. Use this rather than
-        /// enumerating when the indexes with no values are to be skipped rather than seen as empty.
-        /// </summary>
-        public IEnumerable<KeyValuePair<int, IList<T>>> GetNonEmptyEntries()
-        {
-            return Enumerable.Range(0, Count).Where(index => ReplicatePositions.GetCount(index) > 0)
-                .Select(index => new KeyValuePair<int, IList<T>>(index, this[index]));
-        }
-
-        /// <summary>
-        /// Returns one entry per value, which is the shape that
-        /// <see cref="IndexedMultiArray.ToIndexedMultiArray{T}"/> takes.
-        /// </summary>
-        public IEnumerable<KeyValuePair<int, T>> GetIndexValuePairs()
-        {
-            return GetNonEmptyEntries().SelectMany(entry =>
-                entry.Value.Select(value => new KeyValuePair<int, T>(entry.Key, value)));
         }
 
         /// <summary>

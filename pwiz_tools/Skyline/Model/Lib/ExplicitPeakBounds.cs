@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.PeakFinding;
@@ -88,70 +89,85 @@ namespace pwiz.Skyline.Model.Lib
 
     /// <summary>
     /// The explicit peak boundaries that a library holds for one spectrum, at most one per file,
-    /// keyed by the index of the file in the library's <see cref="LibraryFiles"/> list.
+    /// indexed by the position of the file in the library's <see cref="LibraryFiles"/> list. A
+    /// file which has none reads as null, as does an index which is out of range.
     /// The <see cref="Results.ReplicatePositions"/> says which file indexes have boundaries, and
-    /// is shared between spectra which have them in the same files.
+    /// is shared between the spectra which have them in the same files.
     /// </summary>
-    public class ExplicitPeakBoundsDict : Immutable
+    public class ExplicitPeakBoundsDict : Immutable, IReadOnlyList<ExplicitPeakBounds>
     {
         public static readonly ExplicitPeakBoundsDict EMPTY =
-            new ExplicitPeakBoundsDict(Array.Empty<KeyValuePair<int, ExplicitPeakBounds>>());
+            new ExplicitPeakBoundsDict(Array.Empty<ExplicitPeakBounds>());
         private ReplicatePositions _positions;
         private float[] _startTimes;
         private float[] _endTimes;
         private float[] _scores;
 
-        public ExplicitPeakBoundsDict(IEnumerable<KeyValuePair<int, ExplicitPeakBounds>> entriesByFileIndex)
+        /// <summary>
+        /// Takes the boundaries of each file in file index order, with a null for each file which
+        /// has none.
+        /// </summary>
+        public ExplicitPeakBoundsDict(IEnumerable<ExplicitPeakBounds> peakBoundsByFileIndex)
         {
-            var list = entriesByFileIndex.OrderBy(entry => entry.Key).ToList();
-            var counts = new int[list.Count == 0 ? 0 : list[list.Count - 1].Key + 1];
-            foreach (var entry in list)
+            var list = peakBoundsByFileIndex.ToList();
+            // Trailing files with no boundaries say nothing, and leaving them out lets spectra
+            // which have boundaries in the same files share their positions.
+            while (list.Count > 0 && list[list.Count - 1] == null)
             {
-                counts[entry.Key]++;
+                list.RemoveAt(list.Count - 1);
             }
 
-            _positions = ReplicatePositions.FromCounts(counts);
-            _startTimes = list.Select(e => (float) e.Value.StartTime).ToArray();
-            _endTimes = list.Select(e => (float)e.Value.EndTime).ToArray();
-            if (list.Any(entry=>!ExplicitPeakBounds.UNKNOWN_SCORE.Equals(entry.Value.Score)))
+            _positions = ReplicatePositions.FromCounts(list.Select(peakBounds => peakBounds == null ? 0 : 1));
+            var peakBoundsList = list.Where(peakBounds => peakBounds != null).ToList();
+            _startTimes = peakBoundsList.Select(peakBounds => (float) peakBounds.StartTime).ToArray();
+            _endTimes = peakBoundsList.Select(peakBounds => (float) peakBounds.EndTime).ToArray();
+            if (peakBoundsList.Any(peakBounds => !ExplicitPeakBounds.UNKNOWN_SCORE.Equals(peakBounds.Score)))
             {
-                _scores = list.Select(e => (float) e.Value.Score).ToArray();
+                _scores = peakBoundsList.Select(peakBounds => (float) peakBounds.Score).ToArray();
             }
         }
 
+        /// <summary>
+        /// One more than the highest file index which has boundaries. Indexing past this returns
+        /// null, the same as a file in range which has none.
+        /// </summary>
         public int Count
         {
-            get { return _startTimes.Length; }
+            get { return _positions.ReplicateCount; }
         }
 
-        public bool TryGetValue(int fileIndex, out ExplicitPeakBounds value)
+        public bool IsEmpty
         {
-            if (_positions.GetCount(fileIndex) == 0)
+            get { return _startTimes.Length == 0; }
+        }
+
+        /// <summary>
+        /// The boundaries in a file, or null if it has none. Indexes which are out of range
+        /// return null rather than throwing.
+        /// </summary>
+        public ExplicitPeakBounds this[int fileIndex]
+        {
+            get
             {
-                value = null;
-                return false;
-            }
-
-            value = GetExplicitPeakBoundsAt(_positions.GetStart(fileIndex));
-            return true;
-        }
-
-        private ExplicitPeakBounds GetExplicitPeakBoundsAt(int index)
-        {
-            return new ExplicitPeakBounds(_startTimes[index], _endTimes[index],
-                _scores == null ? ExplicitPeakBounds.UNKNOWN_SCORE : _scores[index]);
-        }
-
-        public IEnumerable<KeyValuePair<int, ExplicitPeakBounds>> GetEntries()
-        {
-            for (int fileIndex = 0; fileIndex < _positions.ReplicateCount; fileIndex++)
-            {
-                if (_positions.GetCount(fileIndex) > 0)
+                if (_positions.GetCount(fileIndex) == 0)
                 {
-                    yield return new KeyValuePair<int, ExplicitPeakBounds>(fileIndex,
-                        GetExplicitPeakBoundsAt(_positions.GetStart(fileIndex)));
+                    return null;
                 }
+
+                int index = _positions.GetStart(fileIndex);
+                return new ExplicitPeakBounds(_startTimes[index], _endTimes[index],
+                    _scores == null ? ExplicitPeakBounds.UNKNOWN_SCORE : _scores[index]);
             }
+        }
+
+        public IEnumerator<ExplicitPeakBounds> GetEnumerator()
+        {
+            return Enumerable.Range(0, Count).Select(fileIndex => this[fileIndex]).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         public ExplicitPeakBoundsDict ValueFromCache(ValueCache valueCache)
