@@ -24,6 +24,19 @@ internal sealed class WatersRawFile : IDisposable
     /// <summary>Name of the key file staged next to MassLynxRaw.dll by Waters.csproj.</summary>
     private const string LICENSE_KEY_FILE = "license.key";
 
+    /// <summary>
+    /// CP1252 mappings for 0x80-0x9F, the only range where it differs from Latin-1. Written as
+    /// escapes rather than literals to keep the source ASCII-only. Undefined CP1252 positions
+    /// (0x81, 0x8D, 0x8F, 0x90, 0x9D) pass through unchanged, matching what iconv does.
+    /// </summary>
+    private static readonly char[] Cp1252HighRange =
+    {
+        '\u20AC', '\u0081', '\u201A', '\u0192', '\u201E', '\u2026', '\u2020', '\u2021',
+        '\u02C6', '\u2030', '\u0160', '\u2039', '\u0152', '\u008D', '\u017D', '\u008F',
+        '\u0090', '\u2018', '\u2019', '\u201C', '\u201D', '\u2022', '\u2013', '\u2014',
+        '\u02DC', '\u2122', '\u0161', '\u203A', '\u0153', '\u009D', '\u017E', '\u0178',
+    };
+
     private static readonly Lazy<string> _licenseKey = new(LoadLicenseKey);
 
     /// <summary>
@@ -311,11 +324,36 @@ internal sealed class WatersRawFile : IDisposable
 
     private static string Cp1252OrAnsiAndRelease(IntPtr ansiPtr)
     {
-        // pwiz C++ converts the SDK strings from CP1252 to UTF-8 before storing. We use
-        // PtrToStringAnsi which respects the local ANSI code page; for Latin-1 channel names
-        // this matches CP1252 in practice. SDK retains ownership of the string buffer.
+        // pwiz C++ converts the SDK strings from CP1252 to UTF-8 before storing, and so do we.
+        // Decoding via PtrToStringAnsi instead would be platform-dependent: "Ansi" means the
+        // process ANSI code page, CP1252 on Windows but UTF-8 on Linux. The analog channel unit
+        // for temperature is "°C", and 0xB0 is not a valid UTF-8 lead byte, so on Linux it
+        // decoded to U+FFFD; the degree strip in ChromatogramList_Waters then failed to match
+        // and the channel was typed as EMR radiation instead of temperature.
+        // SDK retains ownership of the string buffer.
+        return Cp1252ToString(ansiPtr);
+    }
+
+    /// <summary>
+    /// Decodes a NUL-terminated CP1252 buffer. CP1252 agrees with Latin-1 everywhere except
+    /// 0x80-0x9F, which Latin-1 leaves as C1 controls and CP1252 maps to typographic
+    /// characters; that range is spelled out below so the result is identical on every
+    /// platform without depending on System.Text.Encoding.CodePages.
+    /// </summary>
+    private static string Cp1252ToString(IntPtr ansiPtr)
+    {
         if (ansiPtr == IntPtr.Zero) return string.Empty;
-        return Marshal.PtrToStringAnsi(ansiPtr) ?? string.Empty;
+        int len = 0;
+        while (Marshal.ReadByte(ansiPtr, len) != 0) len++;
+        if (len == 0) return string.Empty;
+
+        var chars = new char[len];
+        for (int i = 0; i < len; i++)
+        {
+            byte b = Marshal.ReadByte(ansiPtr, i);
+            chars[i] = b >= 0x80 && b <= 0x9F ? Cp1252HighRange[b - 0x80] : (char)b;
+        }
+        return new string(chars);
     }
 
     /// <summary>
@@ -893,7 +931,9 @@ internal sealed class WatersRawFile : IDisposable
         if (ansiPtr == IntPtr.Zero) return string.Empty;
         try
         {
-            return Marshal.PtrToStringAnsi(ansiPtr) ?? string.Empty;
+            // CP1252 for the same reason as Cp1252OrAnsiAndRelease: PtrToStringAnsi would
+            // decode as UTF-8 off-Windows and mangle any byte above 0x7F.
+            return Cp1252ToString(ansiPtr);
         }
         finally
         {
