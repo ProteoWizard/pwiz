@@ -68,8 +68,15 @@
     <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
          '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
     <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerTimsLib)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerBafLib)&quot;" StandardOutputImportance="low" />
+    <!-- The copyright file travels with libgomp: it is GPLv3 with the GCC Runtime Library
+         Exception, and that exception is what permits shipping it beside a non-GPL application,
+         so redistributing the binary without it would not be compliant. -->
     <Exec Condition="'$(BrukerOpenMpLib)' != ''"
-          Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerOpenMpLib)&quot;" StandardOutputImportance="low" />
+          Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerOpenMpLib)&quot; &quot;vendor_api/Bruker/libgomp-COPYRIGHT.txt&quot;" StandardOutputImportance="low" />
+    <Copy Condition="'$(BrukerOpenMpLib)' != ''"
+          SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\libgomp-COPYRIGHT.txt"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
     <!-- Flatten the extracted layout. -->
     <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerBafLib)"
           DestinationFolder="$(BrukerAssembliesDir)"
@@ -98,6 +105,11 @@
     <Content Condition="'$(BrukerOpenMpLib)' != ''" Include="$(BrukerAssembliesDir)\$(BrukerOpenMpLib)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>$(BrukerOpenMpLib)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Condition="'$(BrukerOpenMpLib)' != ''" Include="$(BrukerAssembliesDir)\libgomp-COPYRIGHT.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libgomp-COPYRIGHT.txt</Link>
       <Visible>false</Visible>
     </Content>
   </ItemGroup>

@@ -180,6 +180,17 @@ for proj in "${BUILD_TARGET[@]}" "${TEST_TARGET[@]}"; do
         || { echo "##teamcity[message text='dotnet build $proj failed' status='ERROR']"; exit 1; }
 done
 
+# Linux package build, mirroring build.bat's installer step. Vendor-only for the same reason:
+# the payload ships with the vendor binaries STRIPPED and fetches them at runtime, but the
+# managed readers still have to be compiled WITH vendor support or Read() throws regardless.
+# A packaging failure is a warning rather than a build failure, matching how a missing Inno
+# Setup degrades on Windows - the test run below is still worth having.
+if [ "$IAGREE" = 1 ]; then
+    echo "##teamcity[progressMessage 'installer/build-linux.sh']"
+    bash "$SCRIPT_DIR/installer/build-linux.sh" \
+        || echo "##teamcity[message text='Linux package build failed' status='WARNING']"
+fi
+
 TC_TEST_RESULTS="$SCRIPT_DIR/TestResults"
 rm -rf "$TC_TEST_RESULTS"
 mkdir -p "$TC_TEST_RESULTS"

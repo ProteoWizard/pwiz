@@ -46,6 +46,25 @@ internal static class Program
             return 1;
         }
 
+        // Pins are derived from git history, so a source tree without usable git history cannot
+        // regenerate them. That is a normal situation, not a broken one: a distribution building
+        // from a source tarball has no .git at all, and a git worktree whose gitdir points at a
+        // path the current OS cannot see (a Windows worktree entered from WSL) fails the same
+        // way. Keep an existing generated file and carry on; only fail when there is nothing to
+        // fall back to, because then the build really would produce a binary with no pins.
+        if (!IsGitUsable(pwizRoot))
+        {
+            if (File.Exists(outPath))
+            {
+                Console.WriteLine($"VendorPinsGenerator: git unusable in {pwizRoot}; " +
+                                  $"keeping the existing {OUTPUT_CS}");
+                return 0;
+            }
+            Console.Error.WriteLine($"VendorPinsGenerator: git unusable in {pwizRoot} and no " +
+                                    $"previously generated {OUTPUT_CS} to fall back on");
+            return 1;
+        }
+
         using var doc = JsonDocument.Parse(File.ReadAllText(jsonPath));
         string repo = doc.RootElement.GetProperty("repo").GetString();
 
@@ -128,6 +147,38 @@ internal static class Program
     /// The commit the pin URL points at: the most recent one that touched this archive, so the
     /// URL stays valid and byte-immutable even as the branch moves on.
     /// </summary>
+    /// <summary>
+    /// True when git can actually read history for <paramref name="pwizRoot"/>. Checks by asking
+    /// for HEAD rather than by looking for a .git entry, because the failure this guards against
+    /// is a .git that exists but cannot be followed.
+    /// </summary>
+    private static bool IsGitUsable(string pwizRoot)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo("git")
+            {
+                WorkingDirectory = pwizRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            psi.ArgumentList.Add("rev-parse");
+            psi.ArgumentList.Add("HEAD");
+            using var proc = Process.Start(psi);
+            if (proc is null) return false;
+            proc.StandardOutput.ReadToEnd();
+            proc.StandardError.ReadToEnd();
+            proc.WaitForExit();
+            return proc.ExitCode == 0;
+        }
+        catch (Exception)
+        {
+            // git not on PATH at all.
+            return false;
+        }
+    }
+
     private static string ResolvePinningCommit(string pwizRoot, string relPath)
     {
         var psi = new ProcessStartInfo("git")
