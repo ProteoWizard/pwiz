@@ -160,10 +160,14 @@ internal sealed class WatersRawFile : IDisposable
         // glob *.DAT, parse the function number, and check for the .cdt sibling. Note that for
         // function numbers >= 100 the filename grows to _FUNC0100.DAT (4 digits), so we strip
         // the leading zeros before parsing.
+        //
+        // Both lookups are case-insensitive via WatersRawDirectory: MassLynx writes the frames
+        // as _FUNC001.DAT but the mobility sibling as _func001.cdt, so deriving the .cdt name
+        // from the .DAT path finds nothing on a case-sensitive filesystem.
         var indices = new List<int>();
         var cdtMap = new Dictionary<int, bool>();
         if (!Directory.Exists(rawPath)) return (indices, cdtMap);
-        foreach (var path in Directory.EnumerateFiles(rawPath, "_FUNC*.DAT"))
+        foreach (var path in WatersRawDirectory.FunctionDataFiles(rawPath))
         {
             string name = Path.GetFileName(path);
             // _FUNC<digits>.DAT — strip "_FUNC" and ".DAT", parse remaining as int.
@@ -172,8 +176,7 @@ internal sealed class WatersRawFile : IDisposable
             if (!int.TryParse(digits, NumberStyles.Integer, CultureInfo.InvariantCulture, out int n) || n <= 0) continue;
             int idx = n - 1;
             indices.Add(idx);
-            string cdt = Path.ChangeExtension(path, ".cdt");
-            cdtMap[idx] = File.Exists(cdt);
+            cdtMap[idx] = WatersRawDirectory.Exists(rawPath, Path.GetFileNameWithoutExtension(name) + ".cdt");
         }
         indices.Sort();
         return (indices, cdtMap);
@@ -185,8 +188,8 @@ internal sealed class WatersRawFile : IDisposable
         // by the part between "$$ " and ": "; the value is everything after ": ". We tolerate
         // missing files (some test fixtures don't ship one) by returning an empty map.
         var map = new Dictionary<string, string>(StringComparer.Ordinal);
-        string headerPath = Path.Combine(rawPath, "_HEADER.TXT");
-        if (!File.Exists(headerPath)) return map;
+        string? headerPath = WatersRawDirectory.Find(rawPath, "_HEADER.TXT");
+        if (headerPath is null) return map;
         foreach (var raw in File.ReadAllLines(headerPath))
         {
             if (!raw.StartsWith("$$ ", StringComparison.Ordinal)) continue;
@@ -735,7 +738,7 @@ internal sealed class WatersRawFile : IDisposable
     /// on <see cref="HasSonar"/> too — matches pwiz C++ <c>RawData::HasCcsCalibration</c>.
     /// </summary>
     public bool HasCcsCalibration =>
-        !HasSonar && File.Exists(Path.Combine(RawPath, "mob_cal.csv"));
+        !HasSonar && WatersRawDirectory.Exists(RawPath, "mob_cal.csv");
 
     /// <summary>
     /// Converts a drift time (ms) + neutral mass (Da) + charge to a collisional cross

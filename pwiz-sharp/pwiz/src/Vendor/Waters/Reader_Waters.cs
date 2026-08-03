@@ -36,8 +36,7 @@ public sealed class Reader_Waters : IReader
         if (!Directory.Exists(filename)) return CVID.CVID_Unknown;
         try
         {
-            using var e = Directory.EnumerateFiles(filename, "_FUNC*.DAT").GetEnumerator();
-            return e.MoveNext() ? CvType : CVID.CVID_Unknown;
+            return WatersRawDirectory.FunctionDataFiles(filename).Count > 0 ? CvType : CVID.CVID_Unknown;
         }
         catch
         {
@@ -152,7 +151,7 @@ public sealed class Reader_Waters : IReader
         // raw format CV; everything else (including header.txt, lmgt.inf, ...) is listed as
         // "no native id format" — except lmgt.inf (lockmass garbage trap log) which is skipped.
         var location = "file://" + analysisDir;
-        var funcFiles = Directory.GetFiles(analysisDir, "_FUNC*.DAT").OrderBy(p => p).ToArray();
+        var funcFiles = WatersRawDirectory.FunctionDataFiles(analysisDir);
 
         foreach (var path in funcFiles)
         {
