@@ -128,6 +128,22 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, decoys.Count, @"the cycling fallback should still supply a decoy");
             Assert.IsFalse(decoys.Any(d => d.Sequence == ISOBARIC_REVERSAL),
                 @"The fragment-overlap gate must reject the isobaric reversal");
+
+            // SCOPE LIMIT, stated so this test is not read as more than it is. Since the I/L
+            // collision check landed, THIS fixture no longer exercises the overlap gate at
+            // generation time: ISOBARIC_TARGET and ISOBARIC_REVERSAL both normalise to the same
+            // I/L form, so the collision check rejects the reversal first and short-circuits
+            // past IsCandidateAcceptable. What this test still proves is that generation emits
+            // neither - which is its stated purpose - and the overlap gate's own behaviour is
+            // covered by the predicate assertions above.
+            //
+            // A fixture that reaches the overlap gate at generation time needs a reversal with
+            // ladder overlap > 0.40 that is NOT an I/L twin, and that is not trivial to build:
+            // for a C-terminus-preserving reversal, high overlap essentially requires a
+            // near-palindrome or an isobaric-symmetric sequence. Worth adding with the
+            // decoy-gate work rather than guessed at here.
+            Assert.IsFalse(DecoyGenerator.IsCandidateAcceptable(ISOBARIC_TARGET, ISOBARIC_REVERSAL),
+                @"the overlap gate must independently reject the isobaric reversal");
         }
 
         [TestMethod]

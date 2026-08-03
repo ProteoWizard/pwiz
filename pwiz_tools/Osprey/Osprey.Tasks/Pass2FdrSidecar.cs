@@ -587,6 +587,10 @@ namespace pwiz.Osprey.Tasks
                     survivors.Add((kvp.Key, e.EntryId));
 
             var fileKeys = new List<string>(perFileEntries.Count);
+            // Pass-1 experiment q for the OFF-STRATUM peaks Stage 6 changed, read from the
+            // sidecar because the post-rescore overlay already zeroed the in-memory value. Only
+            // that set is stashed, so this stays small however many files there are.
+            var pass1ExpQByKey = new Dictionary<(string, uint), (double prec, double pep)>();
             var sidecarByKey = new Dictionary<string, string>(perFileEntries.Count, StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
@@ -692,8 +696,37 @@ namespace pwiz.Osprey.Tasks
                 (uint[] entryIds, double[] scores) ReadFile(string fileKey)
                 {
                     FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                    if (stratumBaseIds != null)
+                        StashOffStratumPass1ExperimentQ(fileKey, sidecarByKey[fileKey], eids, scs);
                     progress.Report(++nRead);
                     return (eids, scs);
+                }
+
+                // Capture the pass-1 experiment q of the off-stratum peaks Stage 6 changed, so
+                // the map-back can carry it. "Changed" is the same bit-exact test the admission
+                // uses: the recomputed frozen-model score differs from the sidecar score. The
+                // set is small, and the second sidecar pass is skipped entirely when it is empty.
+                void StashOffStratumPass1ExperimentQ(string fileKey, string sidecarPath,
+                    uint[] eids, double[] scs)
+                {
+                    var wanted = new HashSet<uint>();
+                    for (int i = 0; i < eids.Length; i++)
+                    {
+                        if (!stratumBaseIds.Contains(eids[i] & 0x7FFFFFFFu) &&
+                            survivorScore.TryGetValue((fileKey, eids[i]), out double ov) &&
+                            ov != scs[i])
+                            wanted.Add(eids[i]);
+                    }
+                    if (wanted.Count == 0)
+                        return;
+                    FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
+                    {
+                        if (wanted.Contains(rec.EntryId))
+                        {
+                            pass1ExpQByKey[(fileKey, rec.EntryId)] =
+                                (rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
+                        }
+                    });
                 }
 
                 StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
@@ -709,15 +742,33 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in perFileEntries)
                 foreach (var e in kvp.Value)
                 {
-                    // Off-stratum survivors keep their 1st-pass q (report = pass1 U stratum
-                    // passers), EXCEPT where Stage 6 changed the peak. A changed peak competed
-                    // above on its recalculated score, so it has an earned q here; skipping it
-                    // would leave it on the q=1 sentinel the post-rescore overlay wrote, which
-                    // reads as a confident rejection rather than "not yet computed".
-                    if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu) &&
-                        !survivorScore.ContainsKey((kvp.Key, e.EntryId)))
-                        continue;
                     var key = (kvp.Key, e.EntryId);
+                    if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu))
+                    {
+                        // Off-stratum survivors keep their 1st-pass q (report = pass1 U stratum
+                        // passers). Only the RUN-level q of a peak Stage 6 changed is refreshed:
+                        // that peak competed above on its recalculated score, and leaving it on
+                        // the q=1 sentinel the overlay wrote would read as a confident rejection
+                        // rather than "not yet computed". An unchanged one never competed, so it
+                        // is absent from runQ and keeps everything.
+                        //
+                        // The EXPERIMENT q is never recomputed here. It is a pass-1 property
+                        // anchored on the best-scoring peak, and reconciliation corrects peaks
+                        // TOWARD that anchor rather than moving it, so a changed peak was not the
+                        // one that set the maximum and cannot become it. Carrying the pass-1
+                        // value is therefore exact, and it is what keeps the re-scoping additive.
+                        if (!runQ.TryGetValue(key, out double rqOff))
+                            continue;
+                        e.RunPrecursorQvalue = rqOff;
+                        e.RunPeptideQvalue = rqOff;
+                        if (pass1ExpQByKey.TryGetValue(key, out var q1))
+                        {
+                            e.ExperimentPrecursorQvalue = q1.prec;
+                            e.ExperimentPeptideQvalue = q1.pep;
+                        }
+                        nMapped++;
+                        continue;
+                    }
                     if (!runQ.TryGetValue(key, out double rq))
                         continue;
                     e.RunPrecursorQvalue = rq;

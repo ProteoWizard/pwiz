@@ -278,14 +278,26 @@ namespace pwiz.Osprey.FDR
                     if (!minRunQ.TryGetValue(eid, out double cur) || qv < cur) minRunQ[eid] = qv;
                 }
 
-                // Experiment-level: fold every observation into the per-base_id bests
-                // (stratum members plus changed peaks when stratified -> the experiment
-                // competition below runs over exactly the admitted base_ids).
+                // Experiment-level: fold every observation into the per-base_id bests. When
+                // stratified this is the STRATUM ONLY - deliberately NOT the run-level admitted
+                // set, which also carries the changed off-stratum peaks.
+                //
+                // Two reasons an off-stratum peak must not enter a cross-file maximum here.
+                // First, it would be admitted only in the files that CHANGED it, so its best
+                // would be a max over that subset while every stratum member maxes over all
+                // files - and because reconciliation anchors on the best-scoring peak and
+                // corrects the others toward it, a changed peak is never the one that supplied
+                // the maximum. Maxing over changed observations alone is therefore GUARANTEED to
+                // understate the precursor's experiment-wide score, not merely to skew it.
+                // Second, the correct value is already known: the pass-1 experiment q, which by
+                // that same anchor argument reconciliation cannot have invalidated. The caller
+                // carries it through rather than recomputing it, which is what keeps the
+                // re-scoping additive - see Pass2FdrSidecar's map-back.
                 for (int i = 0; i < m; i++)
                 {
                     uint eid = entryIds[i];
                     uint bid = eid & PercolatorEntry.BASE_ID_MASK;
-                    if (!Admit(bid)) continue;
+                    if (stratumBaseIds != null && !stratumBaseIds.Contains(bid)) continue;
                     double s = scores[i];
                     if (labels[i])
                     {
