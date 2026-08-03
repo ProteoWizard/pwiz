@@ -72,6 +72,40 @@ public static class Filesystem
         return result.ToString();
     }
 
+    /// <summary>
+    /// Full path of <paramref name="fileName"/> directly inside <paramref name="directory"/>,
+    /// or null when absent. Falls back to a case-insensitive match when the exact spelling is
+    /// not on disk.
+    /// </summary>
+    /// <remarks>
+    /// Vendor formats routinely disagree with themselves about casing, and pwiz's metadata
+    /// records a canonical spelling rather than the on-disk one: a Bruker <c>.d</c> holds
+    /// <c>analysis.baf</c> while the mzML <c>sourceFile</c> names it <c>Analysis.baf</c>
+    /// (Reader_Bruker.cpp hardcodes the capital A, and probes both spellings when opening).
+    /// Windows resolves either spelling; Linux does not, so a literal <c>File.Exists</c> quietly
+    /// reports "missing" and whatever depended on it - the source-file SHA-1, here - is silently
+    /// dropped rather than failing loudly. Same class of bug as the Waters <c>_func001.cdt</c>
+    /// lookup; see <c>WatersRawDirectory</c>.
+    /// </remarks>
+    public static string? FindFileIgnoringCase(string directory, string fileName)
+    {
+        ArgumentNullException.ThrowIfNull(directory);
+        ArgumentNullException.ThrowIfNull(fileName);
+
+        // Fast path: the exact spelling, which is all that is ever needed on Windows and is
+        // also the common case on Linux. Only pay for enumeration when it misses.
+        string exact = Path.Combine(directory, fileName);
+        if (File.Exists(exact)) return exact;
+        if (!Directory.Exists(directory)) return null;
+
+        foreach (string path in Directory.EnumerateFiles(directory))
+        {
+            if (string.Equals(Path.GetFileName(path), fileName, StringComparison.OrdinalIgnoreCase))
+                return path;
+        }
+        return null;
+    }
+
     private static bool TryGetShortPathName(string longPath, out string? shortPath)
     {
         shortPath = null;

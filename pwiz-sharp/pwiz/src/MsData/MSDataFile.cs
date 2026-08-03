@@ -33,9 +33,9 @@ public static class MSDataFile
         string location = sourceFile.Location;
         if (!location.StartsWith(uriPrefix, StringComparison.OrdinalIgnoreCase)) return;
         location = location[uriPrefix.Length..].TrimStart('/');
-        string path = Path.Combine(location, sourceFile.Name);
+        string? path = Filesystem.FindFileIgnoringCase(location, sourceFile.Name);
 
-        if (!File.Exists(path)) return;
+        if (path is null) return;
         sourceFile.Set(CVID.MS_SHA_1, Sha1Calculator.HashFile(path));
     }
 

@@ -90,6 +90,21 @@ public class ReaderBrukerTests
         ctx.Check();
     }
 
+    [TestMethod]
+    public void Reader_Bruker_CsI_Pos_0_G1_000003()
+    {
+        // BAF fixture (analysis.baf), read through baf2sql rather than timsdata - the only
+        // coverage of the Baf2SqlData path, and the only Bruker fixture that does not need
+        // the timsdata native library.
+        // Coverage: base. (No centroid reference mzMLs ship for this fixture.)
+        var ctx = SetUp("CsI_Pos_0_G1_000003.d");
+        if (ctx is null) return;
+
+        ctx.Run(new ReaderTestConfig());
+
+        ctx.Check();
+    }
+
     /// <summary>
     /// Locates the fixture and returns a per-test <see cref="FixtureRunContext"/>; records an
     /// Inconclusive on the test (and returns null) when the fixture isn't on disk.

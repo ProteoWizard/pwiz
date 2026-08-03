@@ -125,20 +125,23 @@ echo "##teamcity[progressMessage 'dotnet --version']"
 dotnet --version || { echo "##teamcity[message text='dotnet --version failed' status='ERROR']"; exit 1; }
 
 # Build targets. Without vendor support, msconvert alone covers the core
-# stack. With it, MsConvert plus the Thermo reader (the one native-free vendor
-# SDK) — deliberately NOT Pwiz.sln, which pulls in the Windows-only vendors.
+# stack. With it, MsConvert plus the vendor readers whose SDKs exist off-Windows
+# (Thermo, Waters, Bruker) — deliberately NOT Pwiz.sln, which pulls in the
+# Windows-only vendors.
 if [ "$IAGREE" = 1 ]; then
     BUILD_TARGET=(
         "Tools/Commandline/MsConvert/src/MsConvert.csproj"
         "pwiz/src/Vendor/Thermo/Thermo.csproj"
+        "pwiz/src/Vendor/Bruker/Bruker.csproj"
     )
 else
     BUILD_TARGET=("Tools/Commandline/MsConvert/src/MsConvert.csproj")
 fi
 
-# Test projects: the platform-agnostic suites, plus Thermo when vendor support
-# is on. The native-Windows vendor suites (Agilent/Bruker/Sciex/Shimadzu/
-# Waters/UIMF/Mobilion/UNIFI) and Installer.Tests are excluded by design.
+# Test projects: the platform-agnostic suites, plus the vendors whose SDKs ship
+# an off-Windows build (Thermo/Waters/Bruker). The remaining native-Windows
+# vendor suites (Agilent/Sciex/Shimadzu/UIMF/Mobilion/UNIFI) and
+# Installer.Tests are excluded by design.
 TEST_TARGET=(
     "pwiz/test/Util.Tests/Util.Tests.csproj"
     "pwiz/test/Common.Tests/Common.Tests.csproj"
@@ -155,6 +158,10 @@ TEST_TARGET=(
 # the load fails with "libMassLynxRaw.so: cannot open shared object file", which is dlopen
 # reporting an unmet dependency rather than a missing file. Ubuntu 22.04 satisfies both.
 [ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/test/Waters.Tests/Waters.Tests.csproj")
+# Bruker likewise: Bruker's tdf-sdk 2.21 ships linux64/libtimsdata.so, and baf2sql has a
+# matching .so, so TDF/TSF and BAF all read off-Windows. Both are far less demanding than
+# the Waters .so -- libtimsdata.so needs only GLIBC_2.14 and links no libstdc++ at all.
+[ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/test/Bruker.Tests/Bruker.Tests.csproj")
 
 # The test projects have to be restored and built here too, not just the product ones.
 # `dotnet test --no-build` below does no building, and when the test assembly is missing

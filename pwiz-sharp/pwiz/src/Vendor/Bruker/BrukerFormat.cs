@@ -11,7 +11,7 @@ public enum BrukerFormat
     Tdf,
     /// <summary>timsTOF without ion-mobility (<c>analysis.tsf</c> + <c>analysis.tsf_bin</c>).</summary>
     Tsf,
-    /// <summary>Bruker Analysis format (<c>analysis.baf</c>). Not ported yet.</summary>
+    /// <summary>Bruker Analysis format (<c>analysis.baf</c>), read through baf2sql.</summary>
     Baf,
     /// <summary>Bruker/Agilent YEP format (<c>analysis.yep</c>). Not ported yet.</summary>
     Yep,

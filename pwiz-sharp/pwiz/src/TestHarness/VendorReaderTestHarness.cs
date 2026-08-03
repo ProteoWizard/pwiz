@@ -11,6 +11,7 @@ using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Mgf;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Util;
+using Pwiz.Util.Misc;
 using System.Runtime.CompilerServices;
 
 namespace Pwiz.TestHarness;
@@ -835,8 +836,8 @@ public static class VendorReaderTestHarness
                 ? trimmed                          // drive-letter path: already absolute
                 : "/" + trimmed;                   // POSIX absolute path: restore one slash
 
-            string localPath = Path.Combine(localDir, sf.Name);
-            if (!File.Exists(localPath)) continue;
+            string? localPath = Filesystem.FindFileIgnoringCase(localDir, sf.Name);
+            if (localPath is null) continue;
             sf.Set(CVID.MS_SHA_1, Sha1Calculator.HashFile(localPath));
         }
     }

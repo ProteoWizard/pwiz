@@ -6,12 +6,31 @@
     <Description>Bruker timsTOF (.d) reader. P/Invoke bindings for Bruker's native timsdata.dll.</Description>
 
     <!--
-      timsdata.dll ships in pwiz_aux/msrc/utility/vendor_api_Bruker.7z. The ExtractBrukerAssemblies
-      target below unpacks it into $(BrukerAssembliesDir) on every build (idempotent). Only the x64
-      DLL is extracted; msconvert-sharp targets x64 exclusively.
+      The Bruker SDKs ship in pwiz_aux/msrc/utility/. The ExtractBrukerAssemblies target below
+      unpacks them into $(BrukerAssembliesDir) on every build (idempotent). Only x64 is extracted;
+      msconvert-sharp targets x64 exclusively.
+
+      One archive per OS rather than a single dual-OS archive, so nobody downloads 32 MB of
+      binaries for a platform they are not building for: vendor_api_Bruker.7z holds the Windows
+      DLLs (and is shared with the cpp tree, which extracts it wholesale), while
+      vendor_api_Bruker_linux.7z holds only the Linux .so files. The internal layout matches -
+      vendor_api/Bruker/x64 vs vendor_api/Bruker/linux_x64.
+
+      The Linux libtimsdata.so is the exact sibling of the Windows timsdata.dll we already
+      shipped: both come from Bruker's tdf-sdk 2.21 download, and the DLL in the Windows archive
+      is byte-identical to that download's win64 copy. Bruker's redist.txt permits redistributing
+      the shared libraries as long as THIRD-PARTY-LICENSE-README.txt accompanies them, so the
+      Linux archive carries a copy of it.
       -->
-    <BrukerArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
+    <BrukerArchive Condition="'$(OS)' == 'Windows_NT'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
+    <BrukerArchive Condition="'$(OS)' != 'Windows_NT'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker_linux.7z</BrukerArchive>
     <BrukerAssembliesDir>$(PwizVendorAssembliesPath)\Bruker</BrukerAssembliesDir>
+    <BrukerArchiveDir Condition="'$(OS)' == 'Windows_NT'">x64</BrukerArchiveDir>
+    <BrukerArchiveDir Condition="'$(OS)' != 'Windows_NT'">linux_x64</BrukerArchiveDir>
+    <BrukerTimsLib Condition="'$(OS)' == 'Windows_NT'">timsdata.dll</BrukerTimsLib>
+    <BrukerTimsLib Condition="'$(OS)' != 'Windows_NT'">libtimsdata.so</BrukerTimsLib>
+    <BrukerBafLib Condition="'$(OS)' == 'Windows_NT'">baf2sql_c.dll</BrukerBafLib>
+    <BrukerBafLib Condition="'$(OS)' != 'Windows_NT'">libbaf2sql_c.so</BrukerBafLib>
     <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
          7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>
@@ -23,43 +42,44 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
-  <!-- Without $(NativeVendorsAvailable) (-p:IAgreeToVendorLicenses=true AND Windows; this SDK
-       is Windows-only), the encrypted vendor archive is not extracted
-       and the native DLL Content entries below are dropped. NO_VENDOR_SUPPORT compiles
-       Reader_Bruker without the P/Invoke surface so Read() throws but Identify() still works. -->
-  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the native library Content entries below are dropped. NO_VENDOR_SUPPORT compiles
+       Reader_Bruker without the P/Invoke surface so Read() throws but Identify() still works.
+       This gates on $(IAgreeToVendorLicenses) rather than $(NativeVendorsAvailable) because
+       Bruker's SDK is no longer Windows-only - see the archive comment above. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
 
   <Target Name="ExtractBrukerAssemblies"
-          Condition="'$(NativeVendorsAvailable)' == 'true'"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(BrukerArchive)"
-          Outputs="$(BrukerAssembliesDir)\timsdata.dll;$(BrukerAssembliesDir)\baf2sql_c.dll">
+          Outputs="$(BrukerAssembliesDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\$(BrukerBafLib)">
     <MakeDir Directories="$(BrukerAssembliesDir)" />
-    <!-- timsdata.dll is the TDF/TSF reader; baf2sql_c.dll is the SQL-cached BAF reader. -->
+    <!-- timsdata is the TDF/TSF reader; baf2sql_c is the SQL-cached BAF reader. -->
     <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
          '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/x64/timsdata.dll&quot; &quot;vendor_api/Bruker/x64/baf2sql_c.dll&quot;" StandardOutputImportance="low" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerTimsLib)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerBafLib)&quot;" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout. -->
-    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\timsdata.dll;$(BrukerAssembliesDir)\vendor_api\Bruker\x64\baf2sql_c.dll"
+    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerBafLib)"
           DestinationFolder="$(BrukerAssembliesDir)"
           SkipUnchangedFiles="true" />
   </Target>
 
   <!--
-    Copy the native DLLs into the build output directory so DllImport can find them at runtime.
-    Content files keep them out of the managed assembly metadata.
+    Copy the native libraries into the build output directory so DllImport can find them at
+    runtime. Content files keep them out of the managed assembly metadata.
     -->
-  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
-    <Content Include="$(BrukerAssembliesDir)\timsdata.dll">
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Content Include="$(BrukerAssembliesDir)\$(BrukerTimsLib)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>timsdata.dll</Link>
+      <Link>$(BrukerTimsLib)</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="$(BrukerAssembliesDir)\baf2sql_c.dll">
+    <Content Include="$(BrukerAssembliesDir)\$(BrukerBafLib)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>baf2sql_c.dll</Link>
+      <Link>$(BrukerBafLib)</Link>
       <Visible>false</Visible>
     </Content>
   </ItemGroup>

@@ -116,7 +116,7 @@ public sealed class Reader_Bruker : IReader
         if (preferOnlyMsLevel != 2 && data.HasMs1Frames) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
         if (preferOnlyMsLevel != 1 && data.HasMsNFrames) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
 
-        _ = AddTimsSdkSoftware(result);
+        _ = AddApiSoftware(result, data.Format);
         var acqSoftware = AddAcquisitionSoftware(result, data.GlobalMetadata);
         var pwizSoftware = GetOrAddPwizSoftware(result, "pwiz_Reader_Bruker");
 
@@ -166,7 +166,13 @@ public sealed class Reader_Bruker : IReader
         string baseName, CVID nativeIdFormat, CVID fileFormat)
     {
         string dirName = Path.GetFileName(analysisDir);
-        string location = "file://" + analysisDir.Replace('/', '\\');
+        // C++ builds this from bfs::path::string(), which is the NATIVE spelling - backslashes
+        // on Windows, forward slashes elsewhere. Forcing backslashes unconditionally turned a
+        // POSIX path into one long unusable filename, so nothing downstream could resolve the
+        // source file back to disk (the SHA-1 was silently skipped).
+        string location = "file://" + (Path.DirectorySeparatorChar == '\\'
+            ? analysisDir.Replace('/', '\\')
+            : analysisDir);
 
         foreach (var fname in new[] { baseName, baseName + "_bin" })
         {
@@ -181,11 +187,25 @@ public sealed class Reader_Bruker : IReader
         }
     }
 
-    private static Software AddTimsSdkSoftware(MSData result)
+    /// <summary>
+    /// Names whichever vendor SDK actually read the file. Port of the <c>format</c> switch at the
+    /// top of <c>fillInMetadata</c> in <c>Reader_Bruker.cpp</c>. The versions are hardcoded there
+    /// too - neither SDK exposes a version accessor.
+    /// </summary>
+    private static Software AddApiSoftware(MSData result, BrukerFormat format)
     {
-        var s = new Software("TIMS_SDK") { Version = "2.21.104.32" };
-        s.Set(CVID.MS_Bruker_software);
-        s.UserParams.Add(new UserParam("software name", "TIMS SDK"));
+        (string id, CVID cv, string? softwareName, string version) = format switch
+        {
+            BrukerFormat.Baf => ("BAF2SQL", CVID.MS_Bruker_software, "BAF2SQL", "2.7.300.20-112"),
+            BrukerFormat.Tdf or BrukerFormat.Tsf => ("TIMS_SDK", CVID.MS_Bruker_software, "TIMS SDK", "2.21.104.32"),
+            // YEP / FID go through CompassXtract, which is COM and Windows-only; not ported.
+            _ => ("CompassXtract", CVID.MS_CompassXtract, null, "3.1.7"),
+        };
+
+        var s = new Software(id) { Version = version };
+        s.Set(cv);
+        if (softwareName is not null)
+            s.UserParams.Add(new UserParam("software name", softwareName));
         result.Software.Add(s);
         return s;
     }
@@ -246,14 +266,16 @@ public sealed class Reader_Bruker : IReader
 
     private static void FillInstrumentMetadata(MSData result, IBrukerData data, Software acqSoftware)
     {
+        var family = TranslateInstrumentFamily(data.GlobalMetadata);
+
         CVID sourceCv;
         CVID? inletCv = null;
         if (data.IsMaldiSource)
             sourceCv = CVID.MS_matrix_assisted_laser_desorption_ionization;
         else
-            (sourceCv, inletCv) = TranslateInstrumentSource(data.GlobalMetadata);
+            (sourceCv, inletCv) = TranslateInstrumentSource(data.GlobalMetadata, family);
 
-        var ic = BuildTimsTofInstrumentConfiguration(result, data.GlobalMetadata, acqSoftware, sourceCv, inletCv);
+        var ic = BuildInstrumentConfiguration(result, data.GlobalMetadata, acqSoftware, family, sourceCv, inletCv);
 
         // DIA-PASEF window groups are a TDF-only annotation on the instrument config.
         if (data is TdfData tdf)
@@ -262,14 +284,14 @@ public sealed class Reader_Bruker : IReader
         result.InstrumentConfigurations.Add(ic);
     }
 
-    private static InstrumentConfiguration BuildTimsTofInstrumentConfiguration(
+    private static InstrumentConfiguration BuildInstrumentConfiguration(
         MSData result, IReadOnlyDictionary<string, string> globalMetadata, Software acqSoftware,
-        CVID sourceCv, CVID? inletCv)
+        InstrumentFamily family, CVID sourceCv, CVID? inletCv)
     {
         string serial = globalMetadata.GetValueOrDefault("InstrumentSerialNumber", "");
 
         var common = new ParamGroup("CommonInstrumentParams");
-        common.Set(CVID.MS_Bruker_Daltonics_timsTOF_series);
+        common.Set(TranslateInstrumentSeries(family));
         result.ParamGroups.Add(common);
 
         var ic = new InstrumentConfiguration("IC1");
@@ -282,18 +304,107 @@ public sealed class Reader_Bruker : IReader
         if (inletCv.HasValue)
             source.Set(inletCv.Value);
         ic.ComponentList.Add(source);
-        ic.ComponentList.Add(new Component(CVID.MS_quadrupole, 2));
-        ic.ComponentList.Add(new Component(CVID.MS_time_of_flight, 3));
-        ic.ComponentList.Add(new Component(CVID.MS_microchannel_plate_detector, 4));
-        ic.ComponentList.Add(new Component(CVID.MS_photomultiplier, 5));
+        foreach (var analyzerOrDetector in AnalyzerAndDetectorComponents(family))
+            ic.ComponentList.Add(new Component(analyzerOrDetector, ic.ComponentList.Count + 1));
         return ic;
+    }
+
+    /// <summary>
+    /// The analyzer / detector chain that follows the ion source, keyed by instrument family.
+    /// Port of the second <c>getInstrumentFamily</c> switch in
+    /// <c>Reader_Bruker_Detail::createInstrumentConfigurations</c>.
+    /// </summary>
+    private static CVID[] AnalyzerAndDetectorComponents(InstrumentFamily family) => family switch
+    {
+        InstrumentFamily.Trap =>
+            new[] { CVID.MS_radial_ejection_linear_ion_trap, CVID.MS_electron_multiplier },
+
+        InstrumentFamily.Otof or InstrumentFamily.MaldiTof =>
+            new[] { CVID.MS_time_of_flight, CVID.MS_microchannel_plate_detector, CVID.MS_photomultiplier },
+
+        InstrumentFamily.OtofQ or InstrumentFamily.BioTofQ or InstrumentFamily.Maxis
+            or InstrumentFamily.Impact or InstrumentFamily.Compact or InstrumentFamily.TimsTof =>
+            new[] { CVID.MS_quadrupole, CVID.MS_time_of_flight, CVID.MS_microchannel_plate_detector, CVID.MS_photomultiplier },
+
+        InstrumentFamily.Ftms or InstrumentFamily.SolariX =>
+            new[] { CVID.MS_FT_ICR, CVID.MS_inductive_detector },
+
+        // Unknown family - C++ leaves the configuration with just the source component.
+        _ => Array.Empty<CVID>(),
+    };
+
+    /// <summary>
+    /// Maps the raw <c>InstrumentFamily</c> code stored in the analysis metadata onto the SDK
+    /// enum. Port of <c>translateInstrumentFamily</c>, which appears verbatim in
+    /// <c>Baf2Sql.cpp</c>, <c>TimsData.cpp</c> and <c>TsfData.cpp</c>. (The BAF copy omits the
+    /// timsTOF case, but no timsTOF instrument writes BAF, so one table serves all three.)
+    /// </summary>
+    private static InstrumentFamily TranslateInstrumentFamily(IReadOnlyDictionary<string, string> globalMetadata)
+    {
+        if (!globalMetadata.TryGetValue("InstrumentFamily", out var v)
+            || !int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out int raw))
+            return InstrumentFamily.Unknown;
+
+        return raw switch
+        {
+            1 => InstrumentFamily.Otof,
+            2 => InstrumentFamily.OtofQ,
+            6 => InstrumentFamily.Maxis,
+            7 => InstrumentFamily.Impact,
+            8 => InstrumentFamily.Compact,
+            9 => InstrumentFamily.TimsTof,
+            512 => InstrumentFamily.Ftms,
+            513 => InstrumentFamily.SolariX,
+            _ => InstrumentFamily.Unknown,
+        };
+    }
+
+    /// <summary>
+    /// The instrument-model CV term that goes into the <c>CommonInstrumentParams</c> group.
+    /// Port of <c>Reader_Bruker_Detail::translateAsInstrumentSeries</c>.
+    /// </summary>
+    private static CVID TranslateInstrumentSeries(InstrumentFamily family) => family switch
+    {
+        InstrumentFamily.Trap => CVID.MS_Bruker_Daltonics_HCT_Series,
+        InstrumentFamily.Otof or InstrumentFamily.OtofQ => CVID.MS_Bruker_Daltonics_micrOTOF_series,
+        InstrumentFamily.BioTof or InstrumentFamily.BioTofQ => CVID.MS_Bruker_Daltonics_BioTOF_series,
+        InstrumentFamily.MaldiTof => CVID.MS_Bruker_Daltonics_flex_series,
+        InstrumentFamily.Ftms => CVID.MS_Bruker_Daltonics_apex_series,
+        InstrumentFamily.SolariX => CVID.MS_Bruker_Daltonics_solarix_series,
+        InstrumentFamily.TimsTof => CVID.MS_Bruker_Daltonics_timsTOF_series,
+        InstrumentFamily.Maxis or InstrumentFamily.Compact or InstrumentFamily.Impact =>
+            CVID.MS_Bruker_Daltonics_maXis_series,
+        _ => CVID.MS_Bruker_Daltonics_instrument_model,
+    };
+
+    /// <summary>
+    /// Bruker instrument families. Port of <c>InstrumentFamily</c> in
+    /// <c>CompassDataEnums.hpp</c>; the values match the C++ enum, which is not the same as the
+    /// raw codes stored in the analysis metadata - see <see cref="TranslateInstrumentFamily"/>.
+    /// </summary>
+    private enum InstrumentFamily
+    {
+        Trap = 0,
+        Otof = 1,
+        OtofQ = 2,
+        BioTof = 3,
+        BioTofQ = 4,
+        MaldiTof = 5,
+        Ftms = 6,
+        Maxis = 7,
+        TimsTof = 9,
+        Impact = 90,
+        Compact = 91,
+        SolariX = 92,
+        Unknown = 255,
     }
 
     /// <summary>
     /// Port of <c>Reader_Bruker_Detail::createInstrumentConfigurations</c> for the source /
     /// inlet pair. Maps Bruker's <c>InstrumentSourceType</c> numeric code to CVIDs.
     /// </summary>
-    private static (CVID Source, CVID? Inlet) TranslateInstrumentSource(IReadOnlyDictionary<string, string> globalMetadata)
+    private static (CVID Source, CVID? Inlet) TranslateInstrumentSource(
+        IReadOnlyDictionary<string, string> globalMetadata, InstrumentFamily family)
     {
         int sourceType = 255; // Unknown
         if (globalMetadata.TryGetValue("InstrumentSourceType", out var v)
@@ -310,11 +421,30 @@ public sealed class Reader_Bruker : IReader
             2 or 17 or 19 => (CVID.MS_atmospheric_pressure_chemical_ionization, null),             // APCI / GC_APCI / VIP_APCI
             5 => (CVID.MS_atmospheric_pressure_photoionization, null),                             // APPI
             16 => (CVID.MS_electron_ionization, null),                                             // EI
-            // Fallback for AlsoUnknown/Unknown: C++ uses instrument family to decide. For the
-            // timsTOF family (9) that's ESI; match that.
-            _ => (CVID.MS_electrospray_ionization, CVID.MS_electrospray_inlet),
+            // AlsoUnknown (0) / Unknown (255): C++ decides on the instrument family instead.
+            _ => TranslateInstrumentSourceFromFamily(family),
         };
     }
+
+    /// <summary>
+    /// Source term for instruments that do not report a source type. Port of the
+    /// <c>InstrumentSource_Unknown</c> branch of <c>createInstrumentConfigurations</c>.
+    /// </summary>
+    /// <remarks>
+    /// C++ additionally promotes FTMS / solariX to MALDI when the first spectrum's
+    /// "Mobile Hexapole Position" parameter reads "MALDI" (its own comment calls that a hack).
+    /// Here that case is already covered upstream by <see cref="IBrukerData.IsMaldiSource"/>,
+    /// which <see cref="FillInstrumentMetadata"/> checks before calling this.
+    /// </remarks>
+    private static (CVID Source, CVID? Inlet) TranslateInstrumentSourceFromFamily(InstrumentFamily family) => family switch
+    {
+        InstrumentFamily.MaldiTof or InstrumentFamily.BioTof or InstrumentFamily.BioTofQ =>
+            (CVID.MS_matrix_assisted_laser_desorption_ionization, null),
+
+        // Trap / OTOF / OTOFQ / maXis / compact / impact / FTMS / solariX all default to ESI, as
+        // does timsTOF - which C++ does not list here only because it always reports a source.
+        _ => (CVID.MS_electrospray_ionization, CVID.MS_electrospray_inlet),
+    };
 
     /// <summary>
     /// For diaPASEF acquisitions, pwiz C++ attaches the DiaFrameMsMsWindows table as userParams on
