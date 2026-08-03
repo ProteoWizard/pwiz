@@ -24,6 +24,9 @@ using System;
 
 namespace pwiz.Skyline.Model.Databinding
 {
+    /// <summary>The formats that "--report-format" can name on the command-line.</summary>
+    public enum ReportFormat { csv, tsv, parquet }
+
     public static class ReportExporters
     {
         /// <summary>
@@ -58,6 +61,25 @@ namespace pwiz.Skyline.Model.Databinding
         public static IReportExporter ForSeparator(DataSchemaLocalizer dataSchemaLocalizer, char separator)
         {
             return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
+        }
+
+        /// <summary>
+        /// Returns an IReportExporter for an explicitly requested format, ignoring the
+        /// extension of the file being written.
+        /// </summary>
+        public static IReportExporter ForFormat(DataSchemaLocalizer dataSchemaLocalizer, ReportFormat reportFormat)
+        {
+            switch (reportFormat)
+            {
+                case ReportFormat.csv:
+                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.CsvSeparator));
+                case ReportFormat.tsv:
+                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
+                case ReportFormat.parquet:
+                    return new ParquetReportExporter();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(reportFormat));
+            }
         }
 
         private static DsvWriter CreateDsvWriter(DataSchemaLocalizer dataSchemaLocalizer, char separator)

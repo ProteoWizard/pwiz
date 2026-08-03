@@ -57,6 +57,8 @@ using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
 // compiling unchanged against the Skyline-typed instantiations.
 using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
 using ArgumentGroup = pwiz.Common.CommandLine.ArgumentGroup<pwiz.Skyline.CommandArgs>;
+// Aliased rather than importing the namespace, which collides with types used here
+using ReportFormat = pwiz.Skyline.Model.Databinding.ReportFormat;
 
 namespace pwiz.Skyline
 {
@@ -1088,12 +1090,8 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_REPORT_FILE = new DocArgument(@"report-file", PATH_TO_CSV,
             (c, p) => c.ReportFile = p.ValueFullPath);
         public static readonly Argument ARG_REPORT_FORMAT = new DocArgument(@"report-format",
-            new []{ARG_VALUE_CSV, ARG_VALUE_TSV},
-            (c, p) => c.ReportColumnSeparator = p.IsValue(ARG_VALUE_TSV)
-                    ? TextUtil.SEPARATOR_TSV
-                    : TextUtil.CsvSeparator);
-        public const string ARG_VALUE_CSV = "csv";
-        public const string ARG_VALUE_TSV = "tsv";
+            Helpers.GetEnumValues<ReportFormat>().Select(f => f.ToString()).ToArray(),
+            (c, p) => c.ReportFormat = (ReportFormat) Enum.Parse(typeof(ReportFormat), p.Value, true));
         public static readonly Argument ARG_REPORT_INVARIANT = new DocArgument(@"report-invariant",
             (c, p) => c.IsReportInvariant = true);
 
@@ -1103,7 +1101,7 @@ namespace pwiz.Skyline
             ARG_REPORT_INVARIANT);
 
         public string ReportName { get; private set; }
-        public char? ReportColumnSeparator { get; private set; }
+        public ReportFormat? ReportFormat { get; private set; }
         public string ReportFile { get; private set; }
         public bool IsReportInvariant { get; private set; }
         public bool ExportingReport

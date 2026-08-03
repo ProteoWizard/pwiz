@@ -3614,7 +3614,6 @@ namespace pwiz.Skyline
 
         private bool ExportLiveReport(CommandArgs commandArgs)
         {
-            char? reportColSeparator = commandArgs.ReportColumnSeparator;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, commandArgs.IsReportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
@@ -3643,10 +3642,10 @@ namespace pwiz.Skyline
                     IProgressMonitor broker = CreateProgressMonitor(status);
 
                     IReportExporter rowItemExporter;
-                    if (reportColSeparator.HasValue)
+                    if (commandArgs.ReportFormat.HasValue)
                     {
                         rowItemExporter =
-                            ReportExporters.ForSeparator(dataSchema.DataSchemaLocalizer, reportColSeparator.Value);
+                            ReportExporters.ForFormat(dataSchema.DataSchemaLocalizer, commandArgs.ReportFormat.Value);
                     }
                     else
                     {
