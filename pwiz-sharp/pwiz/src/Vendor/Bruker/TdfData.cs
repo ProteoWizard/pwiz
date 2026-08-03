@@ -572,8 +572,14 @@ internal sealed class TdfData : IBrukerData
         precursor.SelectedIons.Add(selected);
 
         precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
-        if (frame.CollisionEnergy.HasValue && frame.CollisionEnergy.Value > 0)
-            precursor.Activation.Set(CVID.MS_collision_energy, frame.CollisionEnergy.Value, CVID.UO_electronvolt);
+        // No collision energy here, deliberately. For a plain MS2 frame - one with neither PASEF
+        // nor DIA-PASEF precursor info - C++ builds its IsolationInfo with the energy hardcoded
+        // to 0 (TimsData.cpp:1180) and then only emits the cvParam when it is non-zero
+        // (SpectrumList_Bruker.cpp:367), so no collision energy reaches the mzML even though
+        // FrameMsMsInfo.CollisionEnergy holds a real value. That looks like an oversight in C++
+        // rather than a decision, but the reference mzMLs encode it, so matching it is what keeps
+        // the two readers interchangeable. The PASEF and DIA-PASEF paths above DO emit it,
+        // because there C++ carries the energy through into IsolationInfo.
         spec.Precursors.Add(precursor);
     }
 

@@ -91,6 +91,37 @@ public class ReaderBrukerTests
     }
 
     [TestMethod]
+    public void Reader_Bruker_ThyroglobMRM000003()
+    {
+        // PASEF TDF fixture acquired with an MRM method.
+        //
+        // Runs exactly the configs C++ still runs for a TDF, and no others. Every narrowed config
+        // here carries PeakPicking because Reader_Bruker_Test.cpp:131 sets config.peakPicking and
+        // never clears it, so the only narrowed references C++ writes today are the -centroid
+        // ones. Those six are also precisely the Thyroglob references that were force-added to
+        // git; the rest of the data directory is gitignored (.gitignore:409).
+        //
+        // The archive additionally contains -ms1, -ms2, -combineIMS, -combineIMS-ms1 and
+        // -combineIMS-ms2 references. Those are leftovers from an older revision of the C++ test
+        // - nothing generates or checks them now, which is why C++ master stays green despite
+        // their contents disagreeing with their own tracked siblings. Asserting against them
+        // would be asserting our own output back at us, so they are deliberately not run.
+        var ctx = SetUp("ThyroglobMRM000003.d");
+        if (ctx is null) return;
+
+        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { PreferOnlyMsLevel = 1, PeakPicking = true });
+        ctx.Run(new ReaderTestConfig { PreferOnlyMsLevel = 2, PeakPicking = true });
+
+        var combineIms = new ReaderTestConfig { CombineIonMobilitySpectra = true, PeakPicking = true };
+        ctx.Run(combineIms);
+        ctx.Run(combineIms with { PreferOnlyMsLevel = 1 });
+        ctx.Run(combineIms with { PreferOnlyMsLevel = 2 });
+
+        ctx.Check();
+    }
+
+    [TestMethod]
     public void Reader_Bruker_CsI_Pos_0_G1_000003()
     {
         // BAF fixture (analysis.baf), read through baf2sql rather than timsdata - the only

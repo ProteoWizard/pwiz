@@ -417,7 +417,10 @@ public static class VendorReaderTestHarness
         diffConfig.IgnoreVersions = true; // tolerate minor pwiz version drift
         string diff = MSDataDiff.Describe(msd, referenceMsd, diffConfig);
         if (diff.Length > 0)
-            throw new InvalidOperationException(diff);
+            // Name the reference. A fixture can be run under a dozen configs in one test method,
+            // and without this the failure only identifies the .d directory - which config
+            // diverged is left to guesswork.
+            throw new InvalidOperationException($"[{referenceFilename}] {diff}");
 
         // 6. mzXML round-trip: write to mzXML, parse it back, verify the spectrum data made the
         // round trip. mzXML loses most metadata (instrument config, multi-scan combineIMS,
