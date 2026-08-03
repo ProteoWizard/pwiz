@@ -68,6 +68,10 @@ namespace pwiz.SkylineTestConnected
                 DoActualWebAccess = true; // Actually go to the web
                 RunFunctionalTest();
             }
+            else
+            {
+                Console.Error.WriteLine("NOTE: skipping TestPanoramaDownloadFileWeb because AllowInternetAccess is off");
+            }
         }
 
         protected override void DoTest()
