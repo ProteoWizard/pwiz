@@ -601,7 +601,15 @@ namespace pwiz.SkylineTestUtil
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
             MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
-            RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
+            // Repeat the mouse move and do the click in a single UI action. The clicked time comes
+            // from the full-scan tracking dot rather than from these coordinates, and a graph update
+            // landing between the move and the click recreates the curve holding that dot, which
+            // resets its position and causes the click to be silently discarded.
+            RunUI(() =>
+            {
+                graphChromatogram.TestMouseMove(x, y, paneKey);
+                graphChromatogram.TestMouseDown(x, y, paneKey);
+            });
             WaitForGraphs();
             CheckFullScanSelection(graphName, x, y, paneKey, titleTime);
         }
