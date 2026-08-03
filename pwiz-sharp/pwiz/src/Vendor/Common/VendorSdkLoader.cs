@@ -105,10 +105,28 @@ public static class VendorSdkLoader
         }
     }
 
+    /// <summary>
+    /// The pin whose prefixes match <paramref name="requested"/>, narrowed to this OS.
+    /// </summary>
+    /// <remarks>
+    /// An OS-specific entry wins over a generic one, so a vendor can add a per-OS archive
+    /// without the existing entry having to be relabelled: on Linux, Bruker's linux_x64 pin
+    /// beats the unlabelled one that carries the Windows DLLs, while on Windows the linux entry
+    /// is filtered out entirely and the unlabelled one is all that is left.
+    /// </remarks>
+    private static VendorSdkPin? FindPin(string requested)
+    {
+        string os = OperatingSystem.IsWindows() ? "windows" : "linux";
+        var matches = VendorSdkPins.All
+            .Where(v => v.AssemblyPrefixes.Any(p => requested.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+            .Where(v => v.Os is null || v.Os.Equals(os, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        return matches.FirstOrDefault(v => v.Os is not null) ?? matches.FirstOrDefault();
+    }
+
     private static IntPtr ResolveNativeLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
-        var entry = VendorSdkPins.All.FirstOrDefault(v =>
-            v.AssemblyPrefixes.Any(p => libraryName.StartsWith(p, StringComparison.OrdinalIgnoreCase)));
+        var entry = FindPin(libraryName);
         if (entry is null) return IntPtr.Zero; // not a vendor library — default probing
 
         // Already staged beside the managed output, which is what every dev and CI build does.
@@ -158,11 +176,11 @@ public static class VendorSdkLoader
 
     private static Assembly? OnAssemblyResolving(AssemblyLoadContext context, AssemblyName name)
     {
-        // Pick the vendor whose AssemblyPrefixes match the requested simple-name. The first
-        // match wins; the pin table keeps prefix sets disjoint.
+        // Pick the vendor whose AssemblyPrefixes match the requested simple-name. The pin table
+        // keeps prefix sets disjoint across vendors, so at most one vendor matches; FindPin
+        // narrows the remaining per-OS ambiguity within a vendor.
         string requested = name.Name ?? string.Empty;
-        var entry = VendorSdkPins.All.FirstOrDefault(v =>
-            v.AssemblyPrefixes.Any(p => requested.StartsWith(p, StringComparison.OrdinalIgnoreCase)));
+        var entry = FindPin(requested);
         if (entry is null) return null;
 
         try
@@ -337,9 +355,24 @@ public static class VendorSdkLoader
 
 /// <summary>One vendor SDK pin entry. Populated by the generated
 /// <see cref="VendorSdkPins.All"/> array.</summary>
+/// <param name="Name">Vendor identifier; also names the per-version cache directory.</param>
+/// <param name="Version">Short SHA of the commit the archive is pinned to.</param>
+/// <param name="Url">Byte-immutable raw.githubusercontent.com URL containing that SHA.</param>
+/// <param name="Sha256">Expected hash of the archive; defence in depth over the pinned URL.</param>
+/// <param name="AssemblyPrefixes">Simple-name prefixes this archive answers to, for both
+/// managed binds and <c>DllImport</c> names.</param>
+/// <param name="Os">
+/// Which OS this archive is for: <c>"windows"</c>, <c>"linux"</c>, or null when it applies to
+/// any. Most vendors need only one archive, because a managed SDK is portable and the
+/// Windows-only vendors are never resolved elsewhere; those entries leave this null. Bruker
+/// needs two, because its Windows and Linux native libraries live in separate archives and both
+/// answer to the same <paramref name="AssemblyPrefixes"/> - so a match has to be narrowed by OS,
+/// or Linux would fetch 10.7 MB of Windows DLLs and still fail to find libtimsdata.so.
+/// </param>
 public sealed record VendorSdkPin(
     string Name,
     string Version,
     string Url,
     string Sha256,
-    string[] AssemblyPrefixes);
+    string[] AssemblyPrefixes,
+    string? Os = null);

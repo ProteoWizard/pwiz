@@ -56,6 +56,9 @@ internal static class Program
             string relPath = vendor.GetProperty("path").GetString();
             string[] prefixes = vendor.GetProperty("prefixes").EnumerateArray()
                                       .Select(p => p.GetString()).ToArray();
+            // Optional. Only vendors that need a separate archive per OS set it (Bruker), so
+            // that a prefix match can be narrowed - see VendorSdkPin.Os.
+            string os = vendor.TryGetProperty("os", out var osProp) ? osProp.GetString() : null;
 
             string absPath = Path.Combine(pwizRoot, relPath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(absPath))
@@ -76,7 +79,7 @@ internal static class Program
             string sha256 = Sha256Hex(absPath);
             string url = $"https://raw.githubusercontent.com/{repo}/{commit}/{relPath}";
 
-            body.Add(FormatPin(name, commit, sha256, url, prefixes));
+            body.Add(FormatPin(name, commit, sha256, url, prefixes, os));
             Console.WriteLine($"{name,-10}  {commit.AsSpan(0, 12)}  {sha256.AsSpan(0, 16)}...");
         }
 
@@ -162,7 +165,8 @@ internal static class Program
     /// Formats one vendor entry as a C# array-initializer element. Layout is kept aligned with
     /// the runtime source so diffs stay readable.
     /// </summary>
-    private static string FormatPin(string name, string commit, string sha256, string url, string[] prefixes)
+    private static string FormatPin(string name, string commit, string sha256, string url,
+        string[] prefixes, string os)
     {
         string prefixCsv = string.Join(", ", prefixes.Select(p => $"\"{p}\""));
         var sb = new StringBuilder();
@@ -171,7 +175,17 @@ internal static class Program
         sb.Append(CultureInfo.InvariantCulture, $"        Version: \"{commit.AsSpan(0, 12)}\",\r\n");
         sb.Append(CultureInfo.InvariantCulture, $"        Url: \"{url}\",\r\n");
         sb.Append(CultureInfo.InvariantCulture, $"        Sha256: \"{sha256}\",\r\n");
-        sb.Append(CultureInfo.InvariantCulture, $"        AssemblyPrefixes: new[] {{ {prefixCsv} }}),");
+        // Os is optional on the record, so emit it only when the vendor declares one - that
+        // keeps the generated file unchanged for the vendors that need a single archive.
+        if (!string.IsNullOrEmpty(os))
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"        AssemblyPrefixes: new[] {{ {prefixCsv} }},\r\n");
+            sb.Append(CultureInfo.InvariantCulture, $"        Os: \"{os}\"),");
+        }
+        else
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"        AssemblyPrefixes: new[] {{ {prefixCsv} }}),");
+        }
         return sb.ToString();
     }
 }

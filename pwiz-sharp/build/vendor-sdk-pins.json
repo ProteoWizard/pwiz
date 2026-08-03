@@ -25,6 +25,19 @@
       ]
     },
     {
+      "name": "Bruker-linux",
+      "$comment": [
+        "Bruker is the one vendor whose Windows and Linux native libraries live in separate",
+        "archives (see Bruker.csproj: one archive per OS so nobody downloads binaries for a",
+        "platform they are not building for). Both answer to the same prefixes, so 'os' narrows",
+        "the match - without it Linux would fetch the 10.7 MB Windows archive and still not find",
+        "libtimsdata.so. Waters needs no equivalent: its single archive carries both platforms."
+      ],
+      "os": "linux",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Bruker_linux.7z",
+      "prefixes": [ "timsdata", "baf2sql" ]
+    },
+    {
       "name": "Waters",
       "path": "pwiz-sharp/vendor-archives/vendor_api_Waters.7z",
       "prefixes": [ "MassLynxRaw", "libMassLynxRaw", "MassLynx" ]
