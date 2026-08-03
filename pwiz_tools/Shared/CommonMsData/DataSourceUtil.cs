@@ -96,9 +96,15 @@ namespace pwiz.CommonMsData
         {
             try
             {
-                return GetSourceType(dirInfo.FullName,
+                var sourceType = GetSourceType(dirInfo.FullName,
                     dirInfo.GetFiles().Select(f => f.Name).ToArray(),
                     dirInfo.GetDirectories().Select(d => d.Name).ToArray());
+                // Directory formats with no distinguishing extension, Bruker FID among them,
+                // can only be told apart by looking inside. MSConvertGUI asked the reader
+                // about every folder until it moved to this shared dialog.
+                if (Equals(sourceType, FOLDER_TYPE))
+                    return GetSourceTypeFromReader(dirInfo.FullName);
+                return sourceType;
             }
             catch (Exception) // Probably dirInfo was constructed with a file path rather than an actual directory
             {
@@ -209,6 +215,24 @@ namespace pwiz.CommonMsData
         public static bool IsUnknownType(string type)
         {
             return Equals(type, UNKNOWN_TYPE);
+        }
+
+        /// <summary>
+        /// Asks the reader what it makes of a directory, for the formats that cannot be
+        /// recognized from names alone. Returns <see cref="FOLDER_TYPE"/> when it makes
+        /// nothing of it, which is what callers expect for "not a data source".
+        /// </summary>
+        private static string GetSourceTypeFromReader(string directoryPath)
+        {
+            try
+            {
+                var readerType = MsDataFileImpl.IdentifySourceType(directoryPath);
+                return string.IsNullOrEmpty(readerType) ? FOLDER_TYPE : readerType;
+            }
+            catch (Exception)
+            {
+                return FOLDER_TYPE; // Reader could not make sense of the path
+            }
         }
 
         private static string GetSourceTypeFromXML(string filepath)

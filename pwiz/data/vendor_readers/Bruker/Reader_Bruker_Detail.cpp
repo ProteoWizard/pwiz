@@ -36,6 +36,15 @@ namespace Bruker {
 
 using namespace pwiz::util;
 
+// A fid is a file, so test for that rather than for mere existence - otherwise a directory
+// named "fid" makes every directory containing it look like Bruker data. Deliberately not
+// is_regular_file(), which would also reject a fid reached through a reparse point, as
+// cloud storage placeholders and compressed files are.
+bool is_fid_file(const bfs::path& fidPath)
+{
+    return bfs::exists(fidPath) && !bfs::is_directory(fidPath);
+}
+
 Reader_Bruker_Format format(const string& path)
 {
     bfs::path sourcePath(path);
@@ -88,16 +97,16 @@ Reader_Bruker_Format format(const string& path)
         {
             if (BFS_STRING(itr->path().filename())[0] == '.') // HACK: skip ".svn"
                 continue;
-            else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
-                     bfs::exists(itr->path() / "1SRef/fid") ||
-                     bfs::exists(itr->path() / "1/1SLin/fid") ||
-                     bfs::exists(itr->path() / "1SLin/fid") ||
-                     bfs::exists(itr->path() / "1/1Ref/fid") ||
-                     bfs::exists(itr->path() / "1Ref/fid") ||
-                     bfs::exists(itr->path() / "1/1Lin/fid") ||
-                     bfs::exists(itr->path() / "1Lin/fid") ||
-                     (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
-                     (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
+            else if (is_fid_file(itr->path() / "1/1SRef/fid") ||
+                     is_fid_file(itr->path() / "1SRef/fid") ||
+                     is_fid_file(itr->path() / "1/1SLin/fid") ||
+                     is_fid_file(itr->path() / "1SLin/fid") ||
+                     is_fid_file(itr->path() / "1/1Ref/fid") ||
+                     is_fid_file(itr->path() / "1Ref/fid") ||
+                     is_fid_file(itr->path() / "1/1Lin/fid") ||
+                     is_fid_file(itr->path() / "1Lin/fid") ||
+                     (is_fid_file(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
+                     (is_fid_file(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
                     return Reader_Bruker_Format_FID;
             else
                 break;

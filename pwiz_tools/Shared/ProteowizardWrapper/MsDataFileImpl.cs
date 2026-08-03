@@ -134,6 +134,17 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
+        /// <summary>
+        /// Returns the name of the reader that recognizes the file or directory at the given
+        /// path, e.g. "Bruker FID", or an empty string if none of them do. Throws if the path
+        /// cannot be examined at all. Recognizing a directory format that carries no
+        /// distinguishing extension takes looking inside it, which is what this does.
+        /// </summary>
+        public static string IdentifySourceType(string path)
+        {
+            return FULL_READER_LIST.identify(path);
+        }
+
         public static bool SupportsMultipleSamples(string path)
         {
             path = path.ToLowerInvariant();
