@@ -53,12 +53,15 @@ namespace pwiz.SkylineTest
             // no way to reach the acquisition in the first place.
             AssertNotDataSource(root);
 
-            // A fid is a file. A directory named "fid" must not make the folder holding it
-            // look like an acquisition - lower case is what separates testing for a file
-            // from testing for existence, upper case additionally covers Windows, where
-            // paths are compared case insensitively.
-            AssertFolderHoldingFidDirectory(root, @"HoldsLowerCaseFid", @"fid");
-            AssertFolderHoldingFidDirectory(root, @"HoldsUpperCaseFid", @"FID");
+            // A fid is a file, as is every other vendor file the reader looks for. A
+            // directory of one of those names must not make the folder holding it look like
+            // an acquisition - lower case is what separates testing for a file from testing
+            // for mere existence, and upper case additionally covers Windows, where paths
+            // are compared case insensitively.
+            AssertFolderHoldingVendorDirectory(root, @"HoldsLowerCaseFid", @"fid");
+            AssertFolderHoldingVendorDirectory(root, @"HoldsUpperCaseFid", @"FID");
+            AssertFolderHoldingVendorDirectory(root, @"HoldsTdfDirectory", @"analysis.tdf");
+            AssertFolderHoldingVendorDirectory(root, @"HoldsBafDirectory", @"analysis.baf");
 
             // An ordinary folder is still an ordinary folder
             var plainFolder = Path.Combine(root, @"PlainFolder");
@@ -66,11 +69,11 @@ namespace pwiz.SkylineTest
             AssertNotDataSource(plainFolder);
         }
 
-        private void AssertFolderHoldingFidDirectory(string root, string folderName, string fidDirectoryName)
+        private void AssertFolderHoldingVendorDirectory(string root, string folderName, string vendorDirectoryName)
         {
-            var holdsFidFolder = Path.Combine(root, folderName);
-            Directory.CreateDirectory(Path.Combine(holdsFidFolder, fidDirectoryName));
-            AssertNotDataSource(holdsFidFolder);
+            var holdsVendorFolder = Path.Combine(root, folderName);
+            Directory.CreateDirectory(Path.Combine(holdsVendorFolder, vendorDirectoryName));
+            AssertNotDataSource(holdsVendorFolder);
         }
 
         /// <summary>
