@@ -67,6 +67,25 @@ namespace pwiz.CommonMsData
         public const string UNKNOWN_TYPE = "unknown";
         public const string EDIT_ACCOUNT = "edit account";
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
+
+        /// <summary>
+        /// The reader names each vendor format separately where the types above lump them
+        /// together, so its answers have to be translated before they reach a caller. The
+        /// types are matched by equality - to filter what the open dialogs list, and to
+        /// decide vendor specific behavior - so an untranslated name reads as neither a
+        /// known type nor a folder, and the source disappears from the dialog. Names that
+        /// already agree, "Waters RAW" for one, are left out.
+        /// </summary>
+        private static readonly IDictionary<string, string> READER_TYPES_TO_TYPES = new Dictionary<string, string>
+        {
+            { "Bruker FID", TYPE_BRUKER },
+            { "Bruker YEP", TYPE_BRUKER },
+            { "Bruker BAF", TYPE_BRUKER },
+            { "Bruker U2", TYPE_BRUKER },
+            { "Bruker TDF", TYPE_BRUKER },
+            { "Bruker TSF", TYPE_BRUKER },
+            { "Agilent MassHunter", TYPE_AGILENT }
+        };
         // ReSharper restore LocalizableElement
 
         public static bool IsDataSource(string path)
@@ -100,8 +119,7 @@ namespace pwiz.CommonMsData
                     dirInfo.GetFiles().Select(f => f.Name).ToArray(),
                     dirInfo.GetDirectories().Select(d => d.Name).ToArray());
                 // Directory formats with no distinguishing extension, Bruker FID among them,
-                // can only be told apart by looking inside. MSConvertGUI asked the reader
-                // about every folder until it moved to this shared dialog.
+                // can only be told apart by looking inside, which is what the reader does.
                 if (Equals(sourceType, FOLDER_TYPE))
                     return GetSourceTypeFromReader(dirInfo.FullName);
                 return sourceType;
@@ -227,7 +245,9 @@ namespace pwiz.CommonMsData
             try
             {
                 var readerType = MsDataFileImpl.IdentifySourceType(directoryPath);
-                return string.IsNullOrEmpty(readerType) ? FOLDER_TYPE : readerType;
+                if (string.IsNullOrEmpty(readerType))
+                    return FOLDER_TYPE;
+                return READER_TYPES_TO_TYPES.TryGetValue(readerType, out var sourceType) ? sourceType : readerType;
             }
             catch (Exception)
             {

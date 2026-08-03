@@ -40,8 +40,8 @@ namespace {
 
 // A fid is a file, so test for that rather than for mere existence - otherwise a directory
 // named "fid" makes every directory containing it look like Bruker data. Deliberately not
-// is_regular_file(), which would also reject a fid reached through a reparse point, as
-// cloud storage placeholders and compressed files are.
+// is_regular_file(), which would also reject a fid reached through a reparse point, as a
+// cloud storage placeholder is.
 bool is_fid_file(const bfs::path& fidPath)
 {
     return bfs::exists(fidPath) && !bfs::is_directory(fidPath);

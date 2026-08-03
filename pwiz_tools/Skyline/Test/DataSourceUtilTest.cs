@@ -46,8 +46,8 @@ namespace pwiz.SkylineTest
             var spotDir = Path.Combine(fidSource, @"0_A5");
             CreateDataFile(Path.Combine(spotDir, @"1", @"1SLin", @"fid"));
             CreateDataFile(Path.Combine(spotDir, @"1", @"1SLin", @"acqus"));
-            AssertDataSource(fidSource);
-            AssertDataSource(spotDir);
+            AssertDataSource(DataSourceUtil.TYPE_BRUKER, fidSource);
+            AssertDataSource(DataSourceUtil.TYPE_BRUKER, spotDir);
 
             // The folder holding the acquisition has to stay navigable, or there would be
             // no way to reach the acquisition in the first place.
@@ -74,12 +74,14 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// The reader names the format, so rather than pin the exact string, check what the
-        /// dialogs actually act on - whether the directory can be picked as a data source.
+        /// Checks both that the directory can be picked as a data source and that it is
+        /// reported as one of the types the dialogs know. A type they do not know reads as
+        /// neither a known format nor a folder, and their "Sources of type" filter then
+        /// drops the directory from the list altogether.
         /// </summary>
-        private void AssertDataSource(string path)
+        private void AssertDataSource(string expectedType, string path)
         {
-            AssertEx.IsFalse(DataSourceUtil.IsFolderType(DataSourceUtil.GetSourceType(path)), path);
+            AssertEx.AreEqual(expectedType, DataSourceUtil.GetSourceType(path), path);
             AssertEx.IsTrue(DataSourceUtil.IsDataSource(path), path);
         }
 
