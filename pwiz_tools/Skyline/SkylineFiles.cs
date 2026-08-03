@@ -4303,10 +4303,13 @@ namespace pwiz.Skyline
             // Opening a document gets these from UpdateGraphUI after it loads the layout.
             // An imported layout has to close its own inapplicable windows, because it may
             // have been saved for a document with different group comparisons or lists.
-            FoldChangeForm.CloseInapplicableForms(this);
+            // Fold change forms are restored before their group comparison is checked, so
+            // the ones that get closed here are counted as windows the file did not get.
+            foreach (var windowName in FoldChangeForm.CloseInapplicableForms(this))
+                _layoutProblems?.Add(windowName, LayoutProblemType.not_applicable);
             ListGridForm.CloseInapplicableForms(this);
             UpdateGraphPanes();
-            ShowLayoutProblems(viewFilePath);
+            ShowLayoutProblems(viewFilePath, false);
         }
 
 

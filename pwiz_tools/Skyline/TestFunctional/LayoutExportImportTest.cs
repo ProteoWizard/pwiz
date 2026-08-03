@@ -34,11 +34,12 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Tests File > Export > Layout and File > Import > Layout, including importing a
-    /// layout which was saved for a different document than the one now open.
+    /// Tests File > Export > Window Layout and File > Import > Window Layout, including
+    /// importing a layout which was saved for a different document than the one now open,
+    /// and the different strictness of the two ways a layout gets loaded.
     /// </summary>
     [TestClass]
-    public class LayoutExportImportTest : AbstractFunctionalTest
+    public class LayoutExportImportTest : AbstractFunctionalTestEx
     {
         private const string LIST_NAME = "TestLayoutList";
 
@@ -55,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
             TestLayoutRoundTrip();
             TestUnrecognizedWindowSkipped();
             TestListWindowNotInDocument();
+            TestOpenDocumentStrictness();
         }
 
         /// <summary>
@@ -167,11 +169,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var viewPath = TestContext.GetTestResultsPath("ListWindow.sky.view");
 
-            RunUI(() => SkylineWindow.ModifyDocument("Add list", doc => doc.ChangeSettings(
-                doc.Settings.ChangeDataSettings(doc.Settings.DataSettings.ChangeListDefs(
-                    new[] { new ListData(new ListDef(LIST_NAME)) })))));
-            RunUI(() => SkylineWindow.ShowList(LIST_NAME));
-            WaitForConditionUI(() => FindOpenForm<ListGridForm>() != null);
+            AddListWithWindow();
             RunUI(() => SkylineWindow.ExportLayout(viewPath));
 
             // Start a document which does not have the list, and import the layout anyway
@@ -181,6 +179,60 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForGraphs();
             Assert.IsNull(FindOpenForm<ListGridForm>());
+        }
+
+        /// <summary>
+        /// Opening a document is deliberately more forgiving than importing a layout. The
+        /// layout beside a document describes that same document, so a window which does not
+        /// apply is not worth interrupting for, while a window Skyline does not recognize at
+        /// all means the file is wrong. Importing complains about both, because the user just
+        /// picked the file and every window left out is something they asked for.
+        /// </summary>
+        private void TestOpenDocumentStrictness()
+        {
+            var docPath = TestContext.GetTestResultsPath("NoList.sky");
+            var docViewPath = SkylineWindow.GetViewFile(docPath);
+
+            // Save a document whose layout has a list window, then a document without the list
+            RunUI(() => SkylineWindow.NewDocument(true));
+            AddListWithWindow();
+            RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("WithList.sky")));
+            var withListViewPath = SkylineWindow.GetViewFile(TestContext.GetTestResultsPath("WithList.sky"));
+
+            RunUI(() => SkylineWindow.NewDocument(true));
+            RunUI(() => SkylineWindow.SaveDocument(docPath));
+
+            // Give the list-free document the layout that names the list window
+            File.Copy(withListViewPath, docViewPath, true);
+
+            // Opening says nothing: the list window simply does not apply to this document
+            RunUI(() => SkylineWindow.NewDocument(true));
+            OpenDocument(docPath);
+            WaitForGraphs();
+            Assert.IsNull(FindOpenForm<ListGridForm>());
+
+            // Importing the very same file does complain
+            var messageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.ImportLayout(docViewPath));
+            AssertLayoutProblemMessage(messageDlg, docViewPath, LIST_NAME);
+            OkDialog(messageDlg, messageDlg.OkDialog);
+
+            // A window Skyline does not recognize is severe enough to report on open too
+            File.WriteAllText(docViewPath, File.ReadAllText(docViewPath)
+                .Replace(typeof(ListGridForm).ToString(), @"pwiz.Skyline.Controls.NoSuchWindow"));
+            RunUI(() => SkylineWindow.NewDocument(true));
+            var openMessageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.OpenFile(docPath));
+            AssertLayoutProblemMessage(openMessageDlg, docViewPath, @"pwiz.Skyline.Controls.NoSuchWindow");
+            OkDialog(openMessageDlg, openMessageDlg.OkDialog);
+            WaitForDocumentLoaded();
+        }
+
+        private void AddListWithWindow()
+        {
+            RunUI(() => SkylineWindow.ModifyDocument("Add list", doc => doc.ChangeSettings(
+                doc.Settings.ChangeDataSettings(doc.Settings.DataSettings.ChangeListDefs(
+                    new[] { new ListData(new ListDef(LIST_NAME)) })))));
+            RunUI(() => SkylineWindow.ShowList(LIST_NAME));
+            WaitForConditionUI(() => FindOpenForm<ListGridForm>() != null);
         }
 
         /// <summary>

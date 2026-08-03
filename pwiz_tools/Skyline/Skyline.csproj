@@ -1334,6 +1334,7 @@
     <Compile Include="Controls\Databinding\ChooseFormatDlg.Designer.cs">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\LayoutProblems.cs" />
     <Compile Include="Controls\Lists\ListGridForm.cs">
       <SubType>Form</SubType>
     </Compile>

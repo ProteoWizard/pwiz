@@ -345,8 +345,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return null;
         }
 
-        public static void CloseInapplicableForms(IDocumentContainer documentContainer)
+        /// <summary>
+        /// Closes the fold change forms whose group comparison no longer exists in the
+        /// document, and returns their persist strings. A layout import needs those, because
+        /// these forms are restored before it is known whether they apply.
+        /// </summary>
+        public static IList<string> CloseInapplicableForms(IDocumentContainer documentContainer)
         {
+            var closed = new List<string>();
             var groupComparisonNames = new HashSet<string>(
                 documentContainer.Document.Settings.DataSettings.GroupComparisonDefs.Select(def => def.Name));
             foreach (var form in FormUtil.OpenForms.OfType<FoldChangeForm>())
@@ -358,9 +364,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (!string.IsNullOrEmpty(form._groupComparisonName) &&
                     !groupComparisonNames.Contains(form._groupComparisonName))
                 {
+                    closed.Add(form.GetPersistentString());
                     form.BeginInvoke(new Action(form.Close));
                 }
             }
+            return closed;
         }
         private void FoldChangeForm_KeyDown(object sender, KeyEventArgs e)
         {

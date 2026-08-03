@@ -77,7 +77,7 @@ namespace pwiz.Skyline
         private readonly List<GraphSummary> _listGraphMassError = new List<GraphSummary>();
         private readonly List<GraphSummary> _listGraphDetections = new List<GraphSummary>();
 
-        private List<string> _layoutProblemWindows;
+        private LayoutProblems _layoutProblems;
         private LiveResultsGrid _resultsGridForm;
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
@@ -465,7 +465,7 @@ namespace pwiz.Skyline
             FoldChangeForm.CloseInapplicableForms(this);
             ListGridForm.CloseInapplicableForms(this);
             if (deserialized)
-                ShowLayoutProblems(GetViewFile(DocumentFilePath));
+                ShowLayoutProblems(GetViewFile(DocumentFilePath), true);
         }
 
         public void UpdateGraphSpectrumEnabled()
@@ -484,7 +484,7 @@ namespace pwiz.Skyline
         // Load view layout from the given stream.
         public void LoadLayout(Stream layoutStream)
         {
-            _layoutProblemWindows = new List<string>();
+            _layoutProblems = new LayoutProblems();
             using (new DockPanelLayoutLock(dockPanel, true))
             {
                 if (Program.SkylineOffscreen)
@@ -496,21 +496,27 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Reports the windows which the last <see cref="LoadLayout"/> could not restore, so
-        /// that opening a document and File > Import > Window Layout complain the same way.
+        /// Reports the windows which the last <see cref="LoadLayout"/> could not restore.
         /// Must be called after the dock panel layout lock has been released.
         /// </summary>
-        private void ShowLayoutProblems(string viewFilePath)
+        /// <param name="viewFilePath">The layout file to name in the message</param>
+        /// <param name="severeOnly">True to stay quiet about windows which merely do not
+        /// apply to the current document. See <see cref="LayoutProblems"/> for why opening a
+        /// document is more forgiving than importing a layout.</param>
+        private void ShowLayoutProblems(string viewFilePath, bool severeOnly)
         {
-            var windows = _layoutProblemWindows;
-            _layoutProblemWindows = null;
-            if (windows == null || windows.Count == 0)
+            var problems = _layoutProblems;
+            _layoutProblems = null;
+            if (problems == null || severeOnly && !problems.AnySevere)
+                return;
+            var windowNames = problems.GetWindowNames(severeOnly);
+            if (windowNames.Count == 0)
                 return;
 
             MessageDlg.Show(this, TextUtil.LineSeparate(
                 string.Format(SkylineResources.SkylineWindow_ShowLayoutProblems_The_following_windows_in_the_window_layout_file__0__could_not_be_restored_, viewFilePath),
                 string.Empty,
-                TextUtil.LineSeparate(windows)));
+                TextUtil.LineSeparate(windowNames)));
         }
 
         // Load view layout from the given stream.
@@ -708,33 +714,34 @@ namespace pwiz.Skyline
         private IDockableForm DeserializeForm(string persistentString)
         {
             IDockableForm form = null;
+            bool recognized = true;
             try
             {
-                form = RestoreDockableForm(persistentString);
+                form = RestoreDockableForm(persistentString, out recognized);
             }
             catch (Exception x)
             {
                 Debug.WriteLine($@"Failed to restore window '{persistentString}' from the layout: {x.Message}");
+                _layoutProblems?.Add(persistentString, LayoutProblemType.error);
+                return null;
             }
-            if (form == null && !IsExpectedMissingWindow(persistentString))
-                _layoutProblemWindows?.Add(persistentString);
+            if (form == null)
+            {
+                _layoutProblems?.Add(persistentString,
+                    recognized ? LayoutProblemType.not_applicable : LayoutProblemType.unrecognized);
+            }
             return form;
         }
 
         /// <summary>
-        /// Returns true for a window Skyline deliberately declines to restore, which should
-        /// not be reported to the user as a problem with the layout file.
+        /// Restores the window named by a persist string, returning null when there is no such
+        /// window to show. <paramref name="recognized"/> tells the two reasons for a null apart:
+        /// true means Skyline knows this kind of window but it does not apply to the current
+        /// document, false means the persist string matched nothing Skyline knows at all.
         /// </summary>
-        private bool IsExpectedMissingWindow(string persistentString)
+        private IDockableForm RestoreDockableForm(string persistentString, out bool recognized)
         {
-            // Chromatogram graphs are capped to conserve Win32 handles. Reaching the cap is a
-            // deliberate limit rather than anything wrong with the layout file.
-            return persistentString.StartsWith(typeof(GraphChromatogram).ToString()) &&
-                   _listGraphChrom.Count >= MAX_GRAPH_CHROM;
-        }
-
-        private IDockableForm RestoreDockableForm(string persistentString)
-        {
+            recognized = true;
             if (persistentString.StartsWith(typeof(SequenceTreeForm).ToString()))
             {
                 return _sequenceTreeForm ?? CreateSequenceTreeForm(persistentString);
@@ -854,6 +861,9 @@ namespace pwiz.Skyline
                     if (hasName)
                         return GetGraphChrom(name) ?? CreateGraphChrom(name);
                 }
+                // No later case can match a chromatogram persist string, so stop here rather
+                // than falling through to the unrecognized case at the end.
+                return null;
             }
 
             var databoundForm = (IDockableForm) FoldChangeForm.RestoreFoldChangeForm(this, persistentString)
@@ -867,6 +877,7 @@ namespace pwiz.Skyline
             {
                 return _graphFullScan ?? CreateGraphFullScan();
             }
+            recognized = false;
             return null;
         }
 
