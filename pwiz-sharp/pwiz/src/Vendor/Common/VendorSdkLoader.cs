@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Pwiz.Vendor.Common;
 
@@ -38,18 +40,120 @@ public static class VendorSdkLoader
     private static bool _registered;
     private static string? _cacheRoot;
     private static readonly Dictionary<string, string> _vendorExtractDir = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly HashSet<Assembly> _nativeRegistered = new();
     private const string ArchivePassword = "i-agree-to-the-vendor-licenses";
 
     /// <summary>Hooks the default load context's <see cref="AssemblyLoadContext.Resolving"/>
-    /// event. Safe to call multiple times — only the first registers the handler.</summary>
+    /// event, and native (<c>DllImport</c>) resolution for every vendor assembly. Safe to call
+    /// multiple times — only the first registers the handlers.</summary>
     public static void RegisterAssemblyResolver()
     {
         lock (_registerLock)
         {
             if (_registered) return;
             AssemblyLoadContext.Default.Resolving += OnAssemblyResolving;
+
+            // Native resolution has to be hooked per-assembly, and it must be hooked before that
+            // assembly's first DllImport runs. Doing it on AssemblyLoad (plus a sweep of what is
+            // already loaded) means a new vendor reader is covered the day it is added -- nobody
+            // has to remember to register it. That matters here: this whole hook exists because
+            // the native half of vendor loading was overlooked for years.
+            AppDomain.CurrentDomain.AssemblyLoad += (_, e) => TryRegisterNativeResolver(e.LoadedAssembly);
+            foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+                TryRegisterNativeResolver(loaded);
+
             _registered = true;
         }
+    }
+
+    /// <summary>
+    /// Hooks native-library (<c>DllImport</c>) resolution for <paramref name="assembly"/> so a
+    /// vendor's native SDK is fetched on demand exactly like its managed one. Idempotent.
+    /// </summary>
+    /// <remarks>
+    /// <para><see cref="RegisterAssemblyResolver"/> alone is not enough.
+    /// <see cref="AssemblyLoadContext.Resolving"/> fires only for <b>managed</b> binds, while
+    /// Bruker's <c>timsdata</c> / <c>baf2sql_c</c> and Waters' <c>MassLynxRaw</c> are native
+    /// libraries reached through <c>DllImport</c> — which goes straight to the OS loader and
+    /// never passes through <see cref="AssemblyLoadContext"/>. The installer strips those files
+    /// from the MSI using the same prefix table this class matches on, so without this hook the
+    /// installed product raises <c>DllNotFoundException</c> for every native vendor while the
+    /// managed ones (Thermo, Sciex, Agilent) work fine.</para>
+    /// </remarks>
+    public static void RegisterNativeResolver(Assembly assembly)
+    {
+        ArgumentNullException.ThrowIfNull(assembly);
+        lock (_registerLock)
+        {
+            if (!_nativeRegistered.Add(assembly)) return;
+            NativeLibrary.SetDllImportResolver(assembly, ResolveNativeLibrary);
+        }
+    }
+
+    private static void TryRegisterNativeResolver(Assembly assembly)
+    {
+        if (assembly.IsDynamic) return;
+        string name = assembly.GetName().Name ?? string.Empty;
+        if (!name.StartsWith("Pwiz.Vendor.", StringComparison.Ordinal)) return;
+        try
+        {
+            RegisterNativeResolver(assembly);
+        }
+        catch (InvalidOperationException)
+        {
+            // Something else already set a resolver on this assembly; leave it alone.
+        }
+    }
+
+    private static IntPtr ResolveNativeLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    {
+        var entry = VendorSdkPins.All.FirstOrDefault(v =>
+            v.AssemblyPrefixes.Any(p => libraryName.StartsWith(p, StringComparison.OrdinalIgnoreCase)));
+        if (entry is null) return IntPtr.Zero; // not a vendor library — default probing
+
+        // Already staged beside the managed output, which is what every dev and CI build does.
+        // Returning zero hands back to default probing instead of loading a second copy by
+        // absolute path.
+        foreach (string candidate in NativeFileNames(libraryName))
+            if (File.Exists(Path.Combine(AppContext.BaseDirectory, candidate)))
+                return IntPtr.Zero;
+
+        try
+        {
+            string dir = EnsureExtracted(entry);
+            foreach (string candidate in NativeFileNames(libraryName))
+            {
+                string path = Path.Combine(dir, candidate);
+                if (File.Exists(path))
+                    return NativeLibrary.Load(path);
+            }
+            Trace.TraceError($"[VendorSdkLoader] {entry.Name} archive contains no native library " +
+                             $"for '{libraryName}' (looked for {string.Join(", ", NativeFileNames(libraryName))} in {dir})");
+        }
+        catch (Exception ex)
+        {
+            // Don't throw from the resolver — that surfaces as a confusing loader-level failure.
+            // Returning zero lets the normal DllNotFoundException carry the original message.
+            Trace.TraceError($"[VendorSdkLoader] failed to resolve native '{libraryName}' from {entry.Name}: {ex}");
+        }
+        return IntPtr.Zero;
+    }
+
+    /// <summary>Platform spellings of a <c>DllImport</c> name, in probe order.</summary>
+    private static IEnumerable<string> NativeFileNames(string libraryName)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            yield return libraryName + ".dll";
+        }
+        else
+        {
+            // The archives ship the vendor's own spelling, which is normally libfoo.so, but the
+            // DllImport name is "foo" — try both rather than assume.
+            yield return "lib" + libraryName + ".so";
+            yield return libraryName + ".so";
+        }
+        yield return libraryName;
     }
 
     private static Assembly? OnAssemblyResolving(AssemblyLoadContext context, AssemblyName name)
@@ -179,15 +283,24 @@ public static class VendorSdkLoader
             CreateNoWindow = true,
         };
         using var proc = Process.Start(psi)!;
+
+        // Drain both pipes WHILE the child runs. Waiting first and reading afterwards deadlocks:
+        // 7za prints a line per extracted file, and once that fills the OS pipe buffer (a few KB)
+        // it blocks on write while we block in WaitForExit, and neither side ever moves. The
+        // small archives hide it - Thermo and Waters hold a handful of files each - but Bruker's
+        // holds 89 and hangs every time. Event-driven reads keep the pipes empty; no async/await.
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
+        proc.OutputDataReceived += (_, e) => { if (e.Data is not null) stdout.AppendLine(e.Data); };
+        proc.ErrorDataReceived += (_, e) => { if (e.Data is not null) stderr.AppendLine(e.Data); };
+        proc.BeginOutputReadLine();
+        proc.BeginErrorReadLine();
         proc.WaitForExit();
+
         if (proc.ExitCode != 0)
-        {
-            string err = proc.StandardError.ReadToEnd();
-            string @out = proc.StandardOutput.ReadToEnd();
             throw new InvalidOperationException(
                 $"[VendorSdkLoader] 7za.exe failed extracting {archivePath} (exit {proc.ExitCode}). " +
-                $"stdout: {@out.Trim()}, stderr: {err.Trim()}");
-        }
+                $"stdout: {stdout.ToString().Trim()}, stderr: {stderr.ToString().Trim()}");
 
         // The vendor archives typically extract into a nested vendor_api/<Vendor>/ structure.
         // Flatten it so subsequent Assembly.LoadFromAssemblyPath sees the DLLs at the top level

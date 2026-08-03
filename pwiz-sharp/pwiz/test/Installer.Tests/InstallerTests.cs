@@ -380,13 +380,54 @@ public class InstallerTests
     /// Skips with Inconclusive if the Thermo test data isn't available — keeps
     /// the test usable on machines without the full vendor data tree.
     /// </summary>
+    /// <summary>
+    /// Converts one fixture per vendor SDK resolution path the installed product has.
+    /// </summary>
+    /// <remarks>
+    /// The MSI deliberately ships without vendor binaries - <c>installer/build.ps1</c> strips
+    /// every <c>.dll</c>/<c>.exe</c> whose name matches a prefix in
+    /// <c>build/vendor-sdk-pins.json</c> - so each conversion here is really a test that
+    /// <c>VendorSdkLoader</c> fetches and loads the right SDK at runtime.
+    /// <para>Covering more than one vendor matters because the two halves of that loader are
+    /// separate mechanisms. Thermo is a <b>managed</b> SDK, resolved through
+    /// <c>AssemblyLoadContext.Resolving</c>. Waters (<c>MassLynxRaw</c>) and Bruker
+    /// (<c>timsdata</c>, <c>baf2sql_c</c>) are <b>native</b>, resolved through
+    /// <c>NativeLibrary.SetDllImportResolver</c> - a hook that did not exist while this test
+    /// only ever ran a Thermo fixture, which is exactly why the native gap went unnoticed. Both
+    /// Bruker fixtures are needed: a TSF file exercises timsdata, a BAF file baf2sql_c, and the
+    /// prefix table strips both.</para>
+    /// </remarks>
     private static void AssertMsconvertSmokes(string installDir)
     {
-        if (!TryFindThermoFixture(out string fixturePath, out string fixtureReason))
+        var fixtures = new[]
         {
-            Assert.Inconclusive(fixtureReason);
-            return;
+            ("Thermo", "FT-HCD-MSX.raw"),                   // managed SDK
+            ("Waters", "Minimal_DDA.raw"),                  // native: MassLynxRaw
+            ("Bruker", "20percLaser_100fold_1_0_H6_MS.d"),  // native: timsdata (TSF)
+            ("Bruker", "CsI_Pos_0_G1_000003.d"),            // native: baf2sql_c (BAF)
+        };
+
+        var skipped = new List<string>();
+        int converted = 0;
+        foreach ((string vendor, string name) in fixtures)
+        {
+            if (!TryFindVendorFixture(vendor, name, out string path, out string reason))
+            {
+                skipped.Add(reason);
+                continue;
+            }
+            AssertMsconvertConverts(installDir, path);
+            converted++;
         }
+
+        // Inconclusive only when nothing at all could run. Skipping an individual vendor whose
+        // data is not checked out must not silently pass off the others as unverified.
+        if (converted == 0)
+            Assert.Inconclusive("No vendor fixtures available:\n  " + string.Join("\n  ", skipped));
+    }
+
+    private static void AssertMsconvertConverts(string installDir, string fixturePath)
+    {
         string exe = Path.Combine(installDir, "msconvert.exe");
         string outDir = Path.Combine(
             Path.GetTempPath(),
@@ -410,22 +451,23 @@ public class InstallerTests
             string stderr = proc.StandardError.ReadToEnd();
             // 3 min wall-clock: cold-cache vendor SDK fetch + extract usually finishes in
             // ~3-10s but we leave headroom for slow networks on CI.
+            string what = Path.GetFileName(fixturePath.TrimEnd('/', '\\'));
             Assert.IsTrue(proc.WaitForExit(milliseconds: 3 * 60_000),
-                $"msconvert.exe did not exit within 3 minutes. " +
+                $"msconvert.exe did not exit within 3 minutes converting {what}. " +
                 $"stdout=<{stdout}> stderr=<{stderr}>");
             Assert.AreEqual(0, proc.ExitCode,
-                $"msconvert.exe exited with code {proc.ExitCode}. " +
+                $"msconvert.exe exited with code {proc.ExitCode} converting {what}. " +
                 $"stdout=<{stdout}> stderr=<{stderr}>");
 
             string outFile = Path.Combine(outDir, "out.mzML");
             Assert.IsTrue(File.Exists(outFile),
-                $"msconvert reported success but no mzML was written at {outFile}. " +
+                $"msconvert reported success but no mzML was written at {outFile} for {what}. " +
                 $"stdout=<{stdout}> stderr=<{stderr}>");
             string mzml = File.ReadAllText(outFile);
             StringAssert.Contains(mzml, "<mzML",
-                "Output file exists but doesn't contain an <mzML> root element.");
+                $"Output for {what} exists but doesn't contain an <mzML> root element.");
             StringAssert.Contains(mzml, "<spectrum ",
-                "Output mzML has no <spectrum> elements — the conversion produced an empty file.");
+                $"Output mzML for {what} has no <spectrum> elements — the conversion produced an empty file.");
         }
         finally
         {
@@ -434,31 +476,26 @@ public class InstallerTests
     }
 
     /// <summary>
-    /// Locate <c>FT-HCD-MSX.raw</c> (the smallest Thermo fixture in
-    /// <c>pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data/</c>). The
-    /// pwiz-sharp checkout sits at <c>pwiz-msconvert-pr/pwiz-sharp/</c>;
-    /// vendor test data is in the sibling <c>pwiz/</c> checkout. Override
-    /// path with <c>PWIZ_THERMO_FIXTURE</c> for non-standard layouts.
+    /// Locate <paramref name="fixtureName"/> under
+    /// <c>pwiz/data/vendor_readers/&lt;vendor&gt;/Reader_&lt;vendor&gt;_Test.data/</c>. The
+    /// pwiz-sharp checkout sits beside the <c>pwiz/</c> checkout that holds vendor test data;
+    /// point <c>PWIZ_&lt;VENDOR&gt;_TEST_DATA</c> at that <c>.data</c> directory for
+    /// non-standard layouts.
     /// </summary>
-    private static bool TryFindThermoFixture(out string fixturePath, out string reason)
+    /// <remarks>
+    /// Checks for a directory as well as a file: Waters <c>.raw</c> and Bruker <c>.d</c>
+    /// fixtures are directories, only Thermo's is a single file.
+    /// </remarks>
+    private static bool TryFindVendorFixture(string vendor, string fixtureName,
+        out string fixturePath, out string reason)
     {
-        const string fixtureName = "FT-HCD-MSX.raw";
-        string? overridePath = Environment.GetEnvironmentVariable("PWIZ_THERMO_FIXTURE");
-        if (!string.IsNullOrEmpty(overridePath))
-        {
-            if (File.Exists(overridePath))
-            {
-                fixturePath = overridePath;
-                reason = string.Empty;
-                return true;
-            }
-            fixturePath = string.Empty;
-            reason = $"PWIZ_THERMO_FIXTURE={overridePath} but the file doesn't exist.";
-            return false;
-        }
+        string envVar = $"PWIZ_{vendor.ToUpperInvariant()}_TEST_DATA";
+        string? overrideDir = Environment.GetEnvironmentVariable(envVar);
+        string candidate = string.IsNullOrEmpty(overrideDir)
+            ? PwizSharpPaths.CppVendorTestData(vendor, fixtureName)
+            : Path.Combine(overrideDir, fixtureName);
 
-        string candidate = PwizSharpPaths.CppVendorTestData("Thermo", fixtureName);
-        if (File.Exists(candidate))
+        if (File.Exists(candidate) || Directory.Exists(candidate))
         {
             fixturePath = candidate;
             reason = string.Empty;
@@ -466,8 +503,8 @@ public class InstallerTests
         }
 
         fixturePath = string.Empty;
-        reason = $"Thermo fixture {fixtureName} not found at {candidate}. " +
-                 "Set PWIZ_THERMO_FIXTURE to its absolute path, or check out the " +
+        reason = $"{vendor} fixture {fixtureName} not found at {candidate}. " +
+                 $"Set {envVar} to the directory holding it, or check out the " +
                  "pwiz repo as a sibling of pwiz-sharp.";
         return false;
     }

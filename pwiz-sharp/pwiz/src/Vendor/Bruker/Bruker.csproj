@@ -31,6 +31,13 @@
     <BrukerTimsLib Condition="'$(OS)' != 'Windows_NT'">libtimsdata.so</BrukerTimsLib>
     <BrukerBafLib Condition="'$(OS)' == 'Windows_NT'">baf2sql_c.dll</BrukerBafLib>
     <BrukerBafLib Condition="'$(OS)' != 'Windows_NT'">libbaf2sql_c.so</BrukerBafLib>
+    <!-- libbaf2sql_c.so links libgomp.so.1 (libtimsdata.so does not) and not every distro or
+         container ships it. The Linux archive carries a copy, which NativeInit preloads by
+         absolute path - the vendor's RPATH has no $ORIGIN, so an app-local copy is otherwise
+         never found. Note the bundled build needs GLIBC 2.34, higher than either Bruker library
+         asks for; on an older distro the preload simply fails and the system libgomp is used
+         instead, so bundling can only help. -->
+    <BrukerOpenMpLib Condition="'$(OS)' != 'Windows_NT'">libgomp.so.1</BrukerOpenMpLib>
     <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
          7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>
@@ -61,8 +68,14 @@
     <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
          '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
     <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerTimsLib)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerBafLib)&quot;" StandardOutputImportance="low" />
+    <Exec Condition="'$(BrukerOpenMpLib)' != ''"
+          Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerOpenMpLib)&quot;" StandardOutputImportance="low" />
     <!-- Flatten the extracted layout. -->
     <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerBafLib)"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="'$(BrukerOpenMpLib)' != ''"
+          SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerOpenMpLib)"
           DestinationFolder="$(BrukerAssembliesDir)"
           SkipUnchangedFiles="true" />
   </Target>
@@ -80,6 +93,11 @@
     <Content Include="$(BrukerAssembliesDir)\$(BrukerBafLib)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>$(BrukerBafLib)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Condition="'$(BrukerOpenMpLib)' != ''" Include="$(BrukerAssembliesDir)\$(BrukerOpenMpLib)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>$(BrukerOpenMpLib)</Link>
       <Visible>false</Visible>
     </Content>
   </ItemGroup>

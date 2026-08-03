@@ -13,6 +13,11 @@ namespace Pwiz.Vendor.Bruker;
 /// </remarks>
 internal static class NativeMethods
 {
+    // Declaring a static constructor (rather than relying on beforefieldinit) is what makes the
+    // CLR run this immediately before the first P/Invoke below - which is when libbaf2sql_c.so's
+    // OpenMP dependency has to already be loaded. See NativeInit.
+    static NativeMethods() => NativeInit.PreloadOpenMpRuntime();
+
     /// <summary>DLL name. The x64 timsdata.dll ships alongside our managed output.</summary>
     public const string TimsDataDll = "timsdata";
 
