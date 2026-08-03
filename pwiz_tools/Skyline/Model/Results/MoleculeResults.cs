@@ -298,9 +298,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Works out which candidate peak each of a precursor's peaks is, and gets rid of the
-        /// chrom infos which <see cref="TransitionResults.LegacyChromInfos"/> was holding on to because
-        /// nothing yet knew. Returns the precursor unchanged when there is nothing to convert.
+        /// Works out which candidate peak each of a precursor's peaks is, and gets rid of what the
+        /// peaks were keeping because nothing yet knew. Returns the precursor unchanged when there
+        /// is nothing to convert.
         /// <para>
         /// A file is converted only when the boundaries of every one of its transition peaks match
         /// a candidate peak, and the same one. If any of them does not, all of them are treated as
@@ -316,8 +316,14 @@ namespace pwiz.Skyline.Model.Results
         public static bool NeedsConverting(TransitionGroupDocNode nodeGroup)
         {
             var groupResults = nodeGroup.AbbreviatedResults;
-            return groupResults != null && Enumerable.Range(0, nodeGroup.Children.Count)
-                .Any(iTran => !groupResults.IsTransitionConverted(iTran));
+            if (groupResults == null)
+            {
+                return false;
+            }
+
+            // Either a document read without them, or a results pass which has just worked the
+            // peaks out again. Both leave peaks which have not been matched to a candidate peak.
+            return groupResults.NeedsPeakIndexes;
         }
 
         /// <summary>
@@ -453,29 +459,21 @@ namespace pwiz.Skyline.Model.Results
                     chosenPeakIndexes[position] = chromGroupInfo == null
                         ? -1
                         : FindChosenPeakIndex(resultsNew, chromGroupInfo, replicateIndex, fileId);
-                    if (chosenPeakIndexes[position] < 0)
+                    if (chosenPeakIndexes[position] >= 0)
                     {
-                        // Anything which could not be matched to a candidate peak - because the
-                        // peak is not one of them, or because there was nothing to match it
-                        // against - keeps its boundaries instead, and is reproduced by integrating
-                        // between them. That is what lets the chrom infos go in every case rather
-                        // than only when every file could be read.
-                        resultsNew = CarryPeakBounds(resultsNew, replicateIndex, fileId);
-                    }
-                    else
-                    {
-                        // A peak the user set keeps whatever integrating again could not find,
-                        // whether or not it matches a candidate peak, and here it did: the index
-                        // reproduces the peak, so all of that is a second copy of the .skyd.
+                        // The peak is one of the candidate peaks after all, so the index reproduces
+                        // it and everything it was keeping for itself is a second copy of the .skyd.
+                        // Anything which could not be matched - because the peak is not one of them,
+                        // or because there was nothing to match it against - keeps what it has, and
+                        // is reproduced by integrating between its boundaries.
                         resultsNew = resultsNew.DropTransitionCustomPeaks(replicateIndex, fileId);
                     }
                 }
             }
 
-            // The precursor's chrom infos go the same way its transitions' do. Everything they said
-            // is either in the columnar results now or rebuilt by GetTransitionGroupChromInfos,
-            // which drives the same calculator the settings pass does - the aggregates, the ranks
-            // and the dot products alike.
+            // The precursor's chrom infos go now too. Everything they said is either in the columnar
+            // results or rebuilt by GetTransitionGroupChromInfos, which drives the same calculator
+            // the settings pass does - the aggregates, the ranks and the dot products alike.
             //
             // Unconditional, because every peak above came away with either the index of the
             // candidate peak it is or the boundaries to integrate between. Letting them go only
@@ -483,7 +481,8 @@ namespace pwiz.Skyline.Model.Results
             // TransitionGroupResultsCalculator.UpdateTransitionGroupNode - and then could not give
             // them up left the document holding more than it started with.
             var groupResultsNew = resultsNew.ChangeChosenPeakIndexes(chosenPeakIndexes)
-                .ClearTransitionLegacyChromInfos().ChangeLegacyChromInfos(null);
+                .ChangeNeedsPeakIndexes(false)
+                .ChangeLegacyChromInfos(null);
 
             return nodeGroup.ChangeAbbreviatedResults(groupResultsNew);
         }
@@ -504,76 +503,33 @@ namespace pwiz.Skyline.Model.Results
         /// Which of the candidate peaks in the .skyd the precursor's peak in one file is, or -1 when
         /// it is not one of them.
         /// <para>
-        /// Every peak of a peak group was integrated between the group's boundaries, so the
-        /// transitions have to agree on those before there is a single candidate peak to look for.
-        /// One which disagrees means the peak is not a candidate peak at all - the user moved it -
-        /// and its boundaries have to be kept instead. See <see cref="CarryPeakBounds"/>.
+        /// Every peak of a peak group was integrated between the group's boundaries, which are the
+        /// precursor's own. A transition whose peak is somewhere else has boundaries of its own,
+        /// and then there is no single candidate peak to look for at all.
         /// </para>
         /// <para>
-        /// The boundaries are all this needs, so it reads no transition chromatogram at all. That
-        /// is where the cost is - <see cref="ChromatogramGroupInfo.GetTransitionInfo"/> and
-        /// <see cref="ChromatogramGroupInfo.GetAllTransitionInfo"/> match an m/z and build a
-        /// <see cref="ChromatogramInfo"/> - while
-        /// <see cref="TransitionGroupResults.FindTransitionChromInfo"/> is cheap. So every
-        /// transition is asked for its boundaries, and the group's peaks are searched once rather
-        /// than once per transition.
+        /// The boundaries are all this needs, so it reads no transition chromatogram: that is where
+        /// the cost is, in <see cref="ChromatogramGroupInfo.GetTransitionInfo"/> and
+        /// <see cref="ChromatogramGroupInfo.GetAllTransitionInfo"/>, which match an m/z and build a
+        /// <see cref="ChromatogramInfo"/>. The group's peaks are searched once rather than once per
+        /// transition.
         /// </para>
         /// </summary>
         private static int FindChosenPeakIndex(TransitionGroupResults groupResults,
             ChromatogramGroupInfo chromGroupInfo, int replicateIndex, ChromFileInfoId fileId)
         {
-            float startTime = 0, endTime = 0;
-            bool anyPeak = false;
             for (int iTran = 0; iTran < groupResults.TransitionCount; iTran++)
             {
-                // A transition with no peak in this file says nothing about which one was chosen.
-                var chromInfo = groupResults.FindTransitionChromInfo(iTran, replicateIndex, fileId);
-                if (chromInfo == null || chromInfo.IsEmpty)
-                {
-                    continue;
-                }
-
-                if (!anyPeak)
-                {
-                    startTime = chromInfo.StartRetentionTime;
-                    endTime = chromInfo.EndRetentionTime;
-                    anyPeak = true;
-                }
-                else if (chromInfo.StartRetentionTime != startTime || chromInfo.EndRetentionTime != endTime)
+                if (groupResults.FindTransitionCustomPeakBounds(iTran, replicateIndex, fileId).HasValue)
                 {
                     return -1;
                 }
             }
 
-            return anyPeak ? chromGroupInfo.FindPeakIndex(startTime, endTime) : -1;
-        }
-
-        /// <summary>
-        /// Records what every transition's peak in one file has to keep, which is what happens when
-        /// the peaks are not all the same candidate peak. Integrating between the boundaries is then
-        /// the only way any of them comes back, and what integrating cannot find has to be stored.
-        /// <para>
-        /// Only the transitions whose boundaries are not the precursor's own end up keeping any:
-        /// see <see cref="TransitionGroupResults.CarryTransitionPeak"/>.
-        /// </para>
-        /// </summary>
-        private static TransitionGroupResults CarryPeakBounds(TransitionGroupResults groupResults,
-            int replicateIndex, ChromFileInfoId fileId)
-        {
-            for (int iTran = 0; iTran < groupResults.TransitionCount; iTran++)
-            {
-                var chromInfo = groupResults.FindTransitionChromInfo(iTran, replicateIndex, fileId);
-                if (chromInfo == null || chromInfo.IsEmpty)
-                {
-                    continue;
-                }
-
-                groupResults = groupResults.CarryTransitionPeak(iTran, replicateIndex, fileId,
-                    chromInfo.StartRetentionTime, chromInfo.EndRetentionTime, chromInfo.MassError,
-                    chromInfo.Identified);
-            }
-
-            return groupResults;
+            var peakBounds = groupResults.FindPrecursorPeakBounds(replicateIndex, fileId);
+            return peakBounds.HasValue
+                ? chromGroupInfo.FindPeakIndex(peakBounds.Value.StartTime, peakBounds.Value.EndTime)
+                : -1;
         }
 
         /// <summary>

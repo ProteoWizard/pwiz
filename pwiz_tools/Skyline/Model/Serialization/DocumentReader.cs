@@ -88,97 +88,13 @@ namespace pwiz.Skyline.Model.Serialization
             return null;
         }
 
-        private TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, ChromFileInfo fileInfo)
-        {
-            int optimizationStep = reader.GetIntAttribute(ATTR.step);
-            float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
-            float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
-            float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
-            float? endTime = reader.GetNullableFloatAttribute(ATTR.end_time);
-            float? ccs = reader.GetNullableFloatAttribute(ATTR.ccs);
-            float? ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
-            float? ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
-            float? ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
-            var ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
-            if (!ionMobilityWindow.HasValue)
-            {
-                ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
-                ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.ion_mobility_window);
-                ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.ion_mobility_ms1);
-                ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.ion_mobility_fragment);
-            }
-            float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
-            float? area = reader.GetNullableFloatAttribute(ATTR.area);
-            float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
-            float? height = reader.GetNullableFloatAttribute(ATTR.height);
-            float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
-            int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
-            PeakIdentification identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
-                PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
-            float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
-            float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
-            float? qvalue = reader.GetNullableFloatAttribute(ATTR.qvalue);
-            float? zscore = reader.GetNullableFloatAttribute(ATTR.zscore);
-            float? originalScore = reader.GetNullableFloatAttribute(ATTR.original_score);
-            var annotations = Annotations.EMPTY;
-            if (!reader.IsEmptyElement)
-            {
-                reader.ReadStartElement();
-                annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor_result);
-                // Convert q value and mProphet score annotations to numbers for the ChromInfo object
-                annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.AnnotationName, ref qvalue);
-                annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.MAnnotationName, ref zscore);
-            }
-            // Ignore userSet during load, since all values are still calculated
-            // from the child transitions.  Otherwise inconsistency is possible.
-//            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
-            const UserSet userSet = UserSet.FALSE;
-            var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
-                ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
-            var transitionGroupChromInfo = new TransitionGroupChromInfo(fileInfo.FileId,
-                optimizationStep,
-                peakCountRatio,
-                retentionTime,
-                startTime,
-                endTime,
-                transitionGroupIonMobilityInfo,
-                fwhm,
-                area, null, null, // Ms1 and Fragment values calculated later
-                backgroundArea, null, null, // Ms1 and Fragment values calculated later
-                height,
-                massError,
-                truncated,
-                identified,
-                libraryDotProduct,
-                isotopeDotProduct,
-                qvalue,
-                zscore,
-                annotations,
-                userSet);
-            var originalPeak = ReadScoredPeak(reader, EL.original_peak);
-            var reintegratedPeak = ReadScoredPeak(reader, EL.reintegrated_peak);
-            if (originalScore != null)
-            {
-                originalPeak ??= new ScoredPeakBounds(transitionGroupChromInfo.RetentionTime.Value,
-                    transitionGroupChromInfo.StartRetentionTime.Value, transitionGroupChromInfo.EndRetentionTime.Value,
-                    originalScore.Value);
-            }
-            transitionGroupChromInfo = transitionGroupChromInfo.ChangeOriginalPeak(originalPeak)
-                .ChangeReintegratedPeak(reintegratedPeak);
-            return transitionGroupChromInfo;
-        }
-
-        private ScoredPeakBounds ReadScoredPeak(XmlReader reader, string el)
-        {
-            if (!reader.IsStartElement(el))
-            {
-                return null;
-            }
-
-            var scoredPeak = new ScoredPeakBounds(reader.GetFloatAttribute(ATTR.retention_time), reader.GetFloatAttribute(ATTR.start_time), reader.GetFloatAttribute(ATTR.end_time), reader.GetFloatAttribute(ATTR.score));
-            reader.Skip();
-            return scoredPeak;
-        }
+        /// <summary>
+        /// Whether the precursor whose transitions are being read was written before the chosen
+        /// peak indexes were part of the format, which is the only thing that says which of the
+        /// two things a transition's element holds. Set from the precursor's own element, which is
+        /// always read first.
+        /// </summary>
+        private bool _precursorNeedsPeakIndexes;
 
         private static eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
         {
@@ -337,10 +253,11 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                         else if (reader.IsStartElement(EL.transition_lib_info))
                             LibInfo = ReadTransitionLibInfo(reader);
-                        else if (reader.IsStartElement(EL.transition_results) || reader.IsStartElement(EL.results_data))
+                        else if (reader.IsStartElement(EL.results_data))
                             Results = ReadTransitionResults(reader);
-                        else if (reader.IsStartElement(EL.transition_results_columnar))
-                            ColumnarResults = _documentReader.ReadColumnarTransitionResults(reader);
+                        else if (reader.IsStartElement(EL.transition_results))
+                            ColumnarResults = _documentReader.ReadColumnarTransitionResults(reader,
+                                _documentReader._precursorNeedsPeakIndexes);
                         // Discard informational elements.  These values are always
                         // calculated from the settings to ensure consistency.
                         // Note that we do use product_mz for sanity checks and to disambiguate some older mass-only small molecule documents.
@@ -453,6 +370,11 @@ namespace pwiz.Skyline.Model.Serialization
                 return null;
             }
 
+            /// <summary>
+            /// The chrom infos of the compact format, which is the one encoding still read as
+            /// chrom infos. They are not kept either: <see cref="TransitionResultsData"/> turns
+            /// them into the columnar results and lets them go.
+            /// </summary>
             private Results<TransitionChromInfo> ReadTransitionResults(XmlReader reader)
             {
                 if (reader.IsStartElement(EL.results_data))
@@ -463,147 +385,8 @@ namespace pwiz.Skyline.Model.Serialization
                     protoTransitionResults.MergeFrom(data);
                     return TransitionChromInfo.FromProtoTransitionResults(_documentReader._annotationScrubber, Settings, protoTransitionResults);
                 }
-                if (reader.IsStartElement(EL.transition_results))
-                    return _documentReader.ReadResults(reader, EL.transition_peak, ReadTransitionPeak);
                 return null;
             }
-
-            private TransitionChromInfo ReadTransitionPeak(XmlReader reader, ChromFileInfo fileInfo)
-            {
-                int optimizationStep = reader.GetIntAttribute(ATTR.step);
-                float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
-                float retentionTime = reader.GetFloatAttribute(ATTR.retention_time);
-                float startRetentionTime = reader.GetFloatAttribute(ATTR.start_time);
-                float endRetentionTime = reader.GetFloatAttribute(ATTR.end_time);
-                // Protect against negative areas, since they can cause real problems
-                // for ratio calculations.
-                float area = Math.Max(0, reader.GetFloatAttribute(ATTR.area));
-                float backgroundArea = Math.Max(0, reader.GetFloatAttribute(ATTR.background));
-                float height = reader.GetFloatAttribute(ATTR.height);
-                float fwhm = reader.GetFloatAttribute(ATTR.fwhm);
-                // Strange issue where fwhm got set to NaN
-                if (Single.IsNaN(fwhm))
-                    fwhm = 0;
-                bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
-                short rank = (short) reader.GetIntAttribute(ATTR.rank);
-                short rankByLevel = (short) reader.GetIntAttribute(ATTR.rank_by_level, rank);
-                bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
-                short? pointsAcross = (short?) reader.GetNullableIntAttribute(ATTR.points_across);
-                var identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
-                    PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
-                UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
-                    UserSet.FALSE, XmlUtil.EnumCase.upper);
-                double? ionMobility = reader.GetNullableDoubleAttribute(ATTR.drift_time);
-                eIonMobilityUnits ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
-                if (!ionMobility.HasValue)
-                {
-                    ionMobility = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
-                    ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
-                }
-                double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
-                                            reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
-                double? ccs = reader.GetNullableDoubleAttribute(ATTR.ccs);
-                var annotations = Annotations.EMPTY;
-                bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
-                if (!reader.IsEmptyElement)
-                {
-                    reader.ReadStartElement();
-                    annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
-                }
-
-                float? stdDev = reader.GetNullableFloatAttribute(ATTR.std_dev);
-                float? skewness = reader.GetNullableFloatAttribute(ATTR.skewness);
-                float? kurtosis = reader.GetNullableFloatAttribute(ATTR.kurtosis);
-                float? shapeCorrelation = reader.GetNullableFloatAttribute(ATTR.shape_correlation);
-                PeakShapeValues? peakShapeValues = null;
-                if (stdDev.HasValue && skewness.HasValue && kurtosis.HasValue)
-                {
-                    peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value, shapeCorrelation??1);
-                }
-
-                return new TransitionChromInfo(fileInfo.FileId,
-                    optimizationStep,
-                    massError,
-                    retentionTime,
-                    startRetentionTime,
-                    endRetentionTime,
-                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, ccs), 
-                    area,
-                    backgroundArea,
-                    height,
-                    fwhm,
-                    fwhmDegenerate,
-                    truncated,
-                    pointsAcross,
-                    identified,
-                    rank,
-                    rankByLevel,
-                    annotations,
-                    userSet,
-                    forcedIntegration,
-                    peakShapeValues);
-            }
-        }
-
-        private Results<TItem> ReadResults<TItem>(XmlReader reader, string start,
-            Func<XmlReader, ChromFileInfo, TItem> readInfo)
-            where TItem : ChromInfo
-        {
-            // If the results element is empty, then there are no results to read.
-            if (reader.IsEmptyElement)
-            {
-                reader.Read();
-                return null;
-            }
-
-            MeasuredResults results = Settings.MeasuredResults;
-            if (results == null)
-                throw new InvalidDataException(SerializationResources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
-
-            reader.ReadStartElement();
-            var arrayListChromInfos = new List<TItem>[results.Chromatograms.Count];
-            ChromatogramSet chromatogramSet = null;
-            int index = -1;
-            while (reader.IsStartElement(start))
-            {
-                string name = reader.GetAttribute(ATTR.replicate);
-                if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
-                {
-                    if (!results.TryGetChromatogramSet(name, out chromatogramSet, out index))
-                        throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
-                }
-                string fileId = reader.GetAttribute(ATTR.file);
-                var fileInfoId = (fileId != null
-                    ? chromatogramSet.FindFileById(fileId)
-                    : chromatogramSet.MSDataFileInfos[0].FileId);
-                if (fileInfoId == null)
-                    throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
-                var fileInfo = chromatogramSet.GetFileInfo(fileInfoId);
-
-                TItem chromInfo = readInfo(reader, fileInfo);
-                // Consume the tag
-                reader.Read();
-
-                if (!ReferenceEquals(chromInfo, default(TItem)))
-                {
-                    if (arrayListChromInfos[index] == null)
-                        arrayListChromInfos[index] = new List<TItem>();
-                    // Deal with cache corruption issue where the same results info could
-                    // get written multiple times for the same precursor.
-                    var listChromInfos = arrayListChromInfos[index];
-                    if (listChromInfos.Count == 0 || !Equals(chromInfo, listChromInfos[listChromInfos.Count - 1]))
-                        arrayListChromInfos[index].Add(chromInfo);
-                }
-            }
-            reader.ReadEndElement();
-
-            var arrayChromInfoLists = new ChromInfoList<TItem>[arrayListChromInfos.Length];
-            for (int i = 0; i < arrayListChromInfos.Length; i++)
-            {
-                if (arrayListChromInfos[i] != null)
-                    arrayChromInfoLists[i] = new ChromInfoList<TItem>(arrayListChromInfos[i]);
-            }
-            return new Results<TItem>(arrayChromInfoLists);
         }
 
         /// <summary>
@@ -1496,11 +1279,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
                 var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
-                var results = ReadTransitionGroupResults(reader);
-                SharedTransitionAreas sharedTransitionAreas = null;
-                var columnarResults = reader.IsStartElement(EL.precursor_results_columnar)
-                    ? ReadColumnarTransitionGroupResults(reader, out sharedTransitionAreas)
-                    : null;
+                var columnarResults = ReadPrecursorResults(reader, out var sharedTransitionAreas);
 
                 nodeGroup = new TransitionGroupDocNode(group,
                                                   annotations,
@@ -1508,13 +1287,21 @@ namespace pwiz.Skyline.Model.Serialization
                                                   mods,
                                                   libInfo,
                                                   explicitTransitionGroupValues,
-                                                  results,
+                                                  // Empty, and only for the replicate count: a
+                                                  // precursor keeps no chrom infos of its own.
+                                                  columnarResults == null
+                                                      ? null
+                                                      : Settings.MeasuredResults.EmptyTransitionGroupResults,
                                                   children,
                                                   autoManageChildren);
                 if (!spectrumClassFilter.IsEmpty)
                 {
                     nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
                 }
+
+                // Which of the two things a transition's element can hold, which only its
+                // precursor's element says. See ReadColumnarTransitionResults.
+                _precursorNeedsPeakIndexes = columnarResults?.NeedsPeakIndexes ?? false;
                 children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues,
                     out var transitionResults);
                 transitionResults = ApplySharedTransitionAreas(transitionResults, sharedTransitionAreas);
@@ -1551,19 +1338,81 @@ namespace pwiz.Skyline.Model.Serialization
             return typedMods;
         }
 
-        private Results<TransitionGroupChromInfo> ReadTransitionGroupResults(XmlReader reader)
+        /// <summary>
+        /// The precursor's columnar results, or null when it has none. Read out of the same
+        /// element a document has always had, in either of the two things which can be on it.
+        /// <para>
+        /// A document written before <see cref="ATTR.chosen_peak_index"/> was part of the format
+        /// carries everything about each peak here. Nearly all of it is read back from the .skyd
+        /// once the peak has been matched to a candidate peak there, so only what the .skyd cannot
+        /// give back is kept, and <see cref="TransitionGroupResults.NeedsPeakIndexes"/> says the
+        /// matching still has to be done. Nothing becomes a
+        /// <see cref="TransitionGroupChromInfo"/>: the peaks are treated as though their
+        /// boundaries were set by hand until the .skyd says otherwise.
+        /// </para>
+        /// </summary>
+        private TransitionGroupResults ReadPrecursorResults(XmlReader reader,
+            out SharedTransitionAreas sharedTransitionAreas)
         {
-            if (reader.IsStartElement(EL.precursor_results))
-                return ReadResults(reader, EL.precursor_peak, ReadTransitionGroupChromInfo);
-            return null;
+            sharedTransitionAreas = null;
+            if (!reader.IsStartElement(EL.precursor_results))
+            {
+                return null;
+            }
+
+            var areasByPosition = new List<float[]>();
+            var peaks = new List<PrecursorPeak>();
+            var qValues = new List<float>();
+            var zScores = new List<float>();
+            var userSets = new List<UserSet>();
+            var annotations = new List<Annotations>();
+            bool needsPeakIndexes = false;
+            var chromFileIds = ReadColumnarResults(reader, EL.precursor_peak, r =>
+            {
+                int? chosenPeakIndex = r.GetNullableIntAttribute(ATTR.chosen_peak_index);
+                needsPeakIndexes = needsPeakIndexes || !chosenPeakIndex.HasValue;
+                peaks.Add(new PrecursorPeak(r.GetFloatAttribute(ATTR.retention_time),
+                    r.GetNullableFloatAttribute(ATTR.start_time) ?? 0,
+                    r.GetNullableFloatAttribute(ATTR.end_time) ?? 0,
+                    chosenPeakIndex ?? PrecursorPeak.NO_PEAK_INDEX));
+                float? qValue = r.GetNullableFloatAttribute(ATTR.qvalue);
+                float? zScore = r.GetNullableFloatAttribute(ATTR.zscore);
+                userSets.Add(ReadUserSet(r));
+                areasByPosition.Add(ReadTransitionAreas(r));
+
+                var peakAnnotations = ReadPositionAnnotations(r, AnnotationDef.AnnotationTarget.precursor_result);
+                // The scores were annotations before they were attributes, and a document old
+                // enough to have them that way is exactly one being upgraded here.
+                peakAnnotations = ReadAndRemoveScoreAnnotation(peakAnnotations,
+                    MProphetResultsHandler.AnnotationName, ref qValue);
+                peakAnnotations = ReadAndRemoveScoreAnnotation(peakAnnotations,
+                    MProphetResultsHandler.MAnnotationName, ref zScore);
+                annotations.Add(peakAnnotations);
+                qValues.Add(qValue ?? float.NaN);
+                zScores.Add(zScore ?? float.NaN);
+            });
+            sharedTransitionAreas = areasByPosition.Any(positionAreas => positionAreas != null)
+                ? new SharedTransitionAreas(chromFileIds, areasByPosition)
+                : null;
+            return new TransitionGroupResults(chromFileIds, peaks)
+                .ChangeUserSets(userSets)
+                .ChangeQValues(qValues)
+                .ChangeZScores(zScores)
+                .ChangeAnnotations(annotations)
+                .ChangeNeedsPeakIndexes(needsPeakIndexes);
         }
 
         /// <summary>
-        /// Reads the columnar results, which a document written without the chrom infos has
-        /// instead of them. One entry per replicate and file, in that order, which is what makes
-        /// the flat positions.
+        /// Reads the columnar results out of the peak elements a document has always had. One entry
+        /// per replicate and file, in that order, which is what makes the flat positions.
+        /// <para>
+        /// One entry per file, not per element. A document written before the chosen peak indexes
+        /// were part of the format has an element for every optimization step, and a cache
+        /// corruption issue could write the same one twice. Nothing kept here can differ between
+        /// the steps of one file, so the first element a file has is the one that counts.
+        /// </para>
         /// </summary>
-        private ChromFileIds ReadColumnarResults(XmlReader reader, Action<XmlReader, int> readPeak)
+        private ChromFileIds ReadColumnarResults(XmlReader reader, string peakStart, Action<XmlReader> readPeak)
         {
             var results = Settings.MeasuredResults;
             if (results == null)
@@ -1580,13 +1429,15 @@ namespace pwiz.Skyline.Model.Serialization
             reader.ReadStartElement();
             ChromatogramSet chromatogramSet = null;
             int index = -1;
-            while (reader.IsStartElement(EL.columnar_peak))
+            int replicateStart = 0;
+            while (reader.IsStartElement(peakStart))
             {
                 string name = reader.GetAttribute(ATTR.replicate);
                 if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
                 {
                     if (!results.TryGetChromatogramSet(name, out chromatogramSet, out index))
                         throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
+                    replicateStart = fileIds.Count;
                 }
 
                 string fileId = reader.GetAttribute(ATTR.file);
@@ -1596,7 +1447,24 @@ namespace pwiz.Skyline.Model.Serialization
                 if (fileInfoId == null)
                     throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
 
-                readPeak(reader, fileIds.Count);
+                if (reader.GetIntAttribute(ATTR.step) != 0 || HasFile(fileIds, replicateStart, fileInfoId))
+                {
+                    reader.Skip();
+                    continue;
+                }
+
+                bool isEmptyElement = reader.IsEmptyElement;
+                readPeak(reader);
+                if (!isEmptyElement)
+                {
+                    // Whatever the element still holds that nothing here wanted: the original and
+                    // reintegrated peaks of the older format are read back from the .skyd instead.
+                    while (reader.IsStartElement())
+                    {
+                        reader.Skip();
+                    }
+                }
+
                 fileIds.Add(fileInfoId);
                 counts[index]++;
                 // Consume the tag
@@ -1605,6 +1473,23 @@ namespace pwiz.Skyline.Model.Serialization
 
             reader.ReadEndElement();
             return new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
+        }
+
+        /// <summary>
+        /// Whether one replicate's entries, which start at <paramref name="replicateStart"/>,
+        /// already include a file.
+        /// </summary>
+        private static bool HasFile(IList<ChromFileInfoId> fileIds, int replicateStart, ChromFileInfoId fileInfoId)
+        {
+            for (int i = replicateStart; i < fileIds.Count; i++)
+            {
+                if (ReferenceEquals(fileIds[i], fileInfoId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1644,6 +1529,9 @@ namespace pwiz.Skyline.Model.Serialization
             public TransitionGroupResults AddTo(TransitionGroupResults groupResults, int transitionIndex)
             {
                 return ChromInfos != null
+                    // The chrom infos are not kept: everything a peak would lose with them goes on
+                    // the transition's results instead, until the .skyd says which candidate peak
+                    // it is and gives the rest back.
                     ? groupResults.ChangeTransitionFromChromInfos(transitionIndex, ChromInfos)
                     : groupResults.ChangeTransitionResults(transitionIndex, ChromFileIds, Peaks, Annotations,
                         PeakBounds, PeakMetrics);
@@ -1651,33 +1539,55 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// The three sparse values are read as one entry per position alongside the peaks, and it
-        /// is <see cref="TransitionGroupResults"/> which turns each of them into a map of its own
+        /// One transition's peaks, out of the same element a document has always had. The three
+        /// sparse values are read as one entry per position alongside the peaks, and it is
+        /// <see cref="TransitionGroupResults"/> which turns each of them into a map of its own
         /// holding only the entries which say something.
+        /// <para>
+        /// The two formats put different things on the element. A document written knowing the
+        /// chosen peak indexes writes an entry only for what its precursor does not already say, so
+        /// boundaries here are ones the transition does not share. A document written before that
+        /// writes everything about the peak, so its boundaries are just where the peak is - which
+        /// is the precursor's own unless this transition disagrees, and
+        /// <see cref="TransitionGroupResults.ChangeTransitionResults"/> drops the ones which agree.
+        /// </para>
         /// </summary>
-        private TransitionResultsData ReadColumnarTransitionResults(XmlReader reader)
+        private TransitionResultsData ReadColumnarTransitionResults(XmlReader reader, bool needsPeakIndexes)
         {
             var peaks = new List<TransitionPeak>();
             var annotations = new List<Annotations>();
             var peakBounds = new List<CustomPeakBounds>();
             var peakMetrics = new List<CustomPeakMetrics>();
-            var chromFileIds = ReadColumnarResults(reader, (r, position) =>
+            var chromFileIds = ReadColumnarResults(reader, EL.transition_peak, r =>
             {
-                // Only the area and the user set are written. Everything else about a transition
-                // peak is worked out again from the .skyd, and until then reads as not known.
-                peaks.Add(new TransitionPeak(r.GetFloatAttribute(ATTR.area), ReadUserSet(r), null, false,
-                    PeakIdentification.FALSE, false));
-
-                // The boundaries are here only when they are not the precursor's own, which is what
-                // a transition whose peak was moved on its own has.
+                // Protect against negative areas, since they can cause real problems for ratio
+                // calculations.
+                float area = Math.Max(0, r.GetFloatAttribute(ATTR.area));
+                var userSet = ReadUserSet(r);
+                var identified = r.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
+                    PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
                 float? startTime = r.GetNullableFloatAttribute(ATTR.start_time);
                 float? endTime = r.GetNullableFloatAttribute(ATTR.end_time);
+                float? massError = r.GetNullableFloatAttribute(ATTR.mass_error_ppm);
+
+                if (needsPeakIndexes)
+                {
+                    // The flags are here to be read. Once the peak has been matched to a candidate
+                    // peak in the .skyd they are read back from it instead, and a document which
+                    // knew the indexes did not write them at all.
+                    peaks.Add(new TransitionPeak(area, userSet, r.GetNullableBoolAttribute(ATTR.truncated),
+                        endTime.GetValueOrDefault() == 0, identified,
+                        r.GetBoolAttribute(ATTR.forced_integration, false)));
+                }
+                else
+                {
+                    peaks.Add(new TransitionPeak(area, userSet, null, false, PeakIdentification.FALSE, false));
+                }
+
                 peakBounds.Add(startTime.HasValue && endTime.HasValue
                     ? new CustomPeakBounds(startTime.Value, endTime.Value)
                     : default);
-                peakMetrics.Add(CustomPeakMetrics.Create(r.GetNullableFloatAttribute(ATTR.mass_error_ppm),
-                    r.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict, PeakIdentification.FALSE,
-                        XmlUtil.EnumCase.upper)));
+                peakMetrics.Add(CustomPeakMetrics.Create(massError, identified));
 
                 // Last, because these are the element's child elements.
                 annotations.Add(ReadPositionAnnotations(r, AnnotationDef.AnnotationTarget.transition_result));
@@ -1740,37 +1650,6 @@ namespace pwiz.Skyline.Model.Serialization
                         new TransitionPeak(area, UserSet.FALSE, null, false, PeakIdentification.FALSE, false))
                         .ToArray(), null, null, null);
             }
-        }
-
-        private TransitionGroupResults ReadColumnarTransitionGroupResults(XmlReader reader,
-            out SharedTransitionAreas sharedTransitionAreas)
-        {
-            var areasByPosition = new List<float[]>();
-            var peaks = new List<PrecursorPeak>();
-            var qValues = new List<float>();
-            var zScores = new List<float>();
-            var userSets = new List<UserSet>();
-            var annotations = new List<Annotations>();
-            var chromFileIds = ReadColumnarResults(reader, (r, position) =>
-            {
-                peaks.Add(new PrecursorPeak(r.GetFloatAttribute(ATTR.retention_time),
-                    r.GetNullableFloatAttribute(ATTR.start_time) ?? 0,
-                    r.GetNullableFloatAttribute(ATTR.end_time) ?? 0,
-                    r.GetNullableIntAttribute(ATTR.peak_index) ?? PrecursorPeak.NO_PEAK_INDEX));
-                qValues.Add(r.GetNullableFloatAttribute(ATTR.qvalue) ?? float.NaN);
-                zScores.Add(r.GetNullableFloatAttribute(ATTR.zscore) ?? float.NaN);
-                userSets.Add(ReadUserSet(r));
-                areasByPosition.Add(ReadTransitionAreas(r));
-                annotations.Add(ReadPositionAnnotations(r, AnnotationDef.AnnotationTarget.precursor_result));
-            });
-            sharedTransitionAreas = areasByPosition.Any(positionAreas => positionAreas != null)
-                ? new SharedTransitionAreas(chromFileIds, areasByPosition)
-                : null;
-            return new TransitionGroupResults(chromFileIds, peaks)
-                .ChangeUserSets(userSets)
-                .ChangeQValues(qValues)
-                .ChangeZScores(zScores)
-                .ChangeAnnotations(annotations);
         }
 
         /// <summary>

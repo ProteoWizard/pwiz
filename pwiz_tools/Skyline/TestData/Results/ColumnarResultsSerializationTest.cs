@@ -65,7 +65,8 @@ namespace pwiz.SkylineTestData.Results
                 // every transition area rides on its precursor and no transition needs an element
                 // of its own.
                 StringAssert.Contains(compactXml, @"transition_areas=");
-                Assert.IsFalse(compactXml.Contains(@"transition_results_columnar"));
+                StringAssert.Contains(compactXml, @"chosen_peak_index=");
+                Assert.IsFalse(compactXml.Contains(@"<transition_results"));
                 int transitionsChecked = 0;
                 int precursorsChecked = 0;
                 int chosenPeakIndexesChecked = 0;
@@ -201,18 +202,27 @@ namespace pwiz.SkylineTestData.Results
             var peptideGroup = docResults.MoleculeGroups.First();
             var nodePep = peptideGroup.Molecules.First();
             var nodeGroup = nodePep.TransitionGroups.First();
-            var chromInfo = nodeGroup.EmptyResults[0].First();
             var chromatograms = docResults.Settings.MeasuredResults.Chromatograms[0];
-            double width = chromInfo.EndRetentionTime.Value - chromInfo.StartRetentionTime.Value;
+            var fileInfo = chromatograms.MSDataFileInfos[0];
+            // Where the peak is now, from the columnar results. EmptyResults holds nothing: a
+            // precursor does not keep its chrom infos any more.
+            var peakBounds = nodeGroup.AbbreviatedResults.FindPrecursorPeakBounds(0, fileInfo.FileId);
+            Assert.IsTrue(peakBounds.HasValue, @"the first precursor has no peak to move");
+            double width = peakBounds.Value.EndTime - peakBounds.Value.StartTime;
             var docMoved = docResults.ChangePeak(
                 new IdentityPath(peptideGroup.Id, nodePep.Id, nodeGroup.Id), chromatograms.Name,
-                chromatograms.MSDataFileInfos[0].FilePath, null,
-                chromInfo.StartRetentionTime.Value + width / 10, chromInfo.EndRetentionTime.Value - width / 10,
+                fileInfo.FilePath, null,
+                peakBounds.Value.StartTime + width / 10, peakBounds.Value.EndTime - width / 10,
                 UserSet.TRUE, PeakIdentification.FALSE, false);
             Assert.AreNotSame(docResults, docMoved);
+            var movedBounds = docMoved.MoleculeTransitionGroups.First().AbbreviatedResults
+                .FindPrecursorPeakBounds(0, fileInfo.FileId);
+            Assert.AreNotEqual(peakBounds, movedBounds,
+                string.Format(@"the peak did not move: still {0}-{1}", peakBounds.Value.StartTime,
+                    peakBounds.Value.EndTime));
 
             var docRoundTrip = RoundTrip(docMoved, false, out string compactXml);
-            StringAssert.Contains(compactXml, @"transition_results_columnar");
+            StringAssert.Contains(compactXml, @"<transition_results");
 
             var expectedResults = ResultsUtil.EnumerateTransitionResults(docMoved).First();
             var actualResults = ResultsUtil.EnumerateTransitionResults(docRoundTrip).First();

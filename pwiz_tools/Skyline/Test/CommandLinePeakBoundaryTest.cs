@@ -30,6 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -518,9 +519,14 @@ namespace pwiz.SkylineTest
 
         private static SrmDocument ImportFileToDoc(string documentPath, string importFile)
         {
+            return ImportFileToDoc(documentPath, importFile, out _);
+        }
+
+        private static SrmDocument ImportFileToDoc(string documentPath, string importFile, out string outputFile)
+        {
             var documentFolder = Path.GetDirectoryName(documentPath);
             Assert.IsNotNull(documentFolder);
-            string outputFile = Path.Combine(documentFolder, "ImportFileToDoc.sky");
+            outputFile = Path.Combine(documentFolder, "ImportFileToDoc.sky");
             return ImportFileToDocAndSaveAs(documentPath, importFile, outputFile);
         }
 
@@ -550,7 +556,7 @@ namespace pwiz.SkylineTest
             string documentPath, string importFile, int[] chargeList, double?[] minTime, double?[] maxTime, 
             PeakIdentification[] identified, double?[] peakAreas, string[] peptides, int fileId, string[] precursorMzs = null) 
         {
-            SrmDocument docNew = ImportFileToDoc(documentPath, importFile);
+            SrmDocument docNew = ImportFileToDoc(documentPath, importFile, out string savedPath);
             int i = 0;
             // Check peptide nodes are correct
             foreach (PeptideDocNode peptideNode in docNew.Peptides)
@@ -558,30 +564,47 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(peptideNode.Peptide.Sequence, peptides[i]);
                 ++i;
             }
-            int j = 0;
-            foreach (TransitionGroupDocNode groupNode in docNew.PeptideTransitionGroups)
+
+            // The precursor values are worked out from the .skyd now rather than stored, so the
+            // chromatograms have to be loaded before anything can be asked for them.
+            using (var docContainer = new ResultsTestDocumentContainer(null, savedPath))
             {
-                var groupChromInfo = groupNode.ChromInfos.ToList()[fileId];
-                // Make sure charge on each transition group is correct
-                Assert.AreEqual(groupNode.TransitionGroup.PrecursorAdduct.AdductCharge, chargeList[j]);
-                // Make sure imported retention time boundaries, including nulls, are correct
-                AssertEx.AreEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE);
-                AssertEx.AreEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE);
-                // Check that peak areas are updated correctly
-                double peakArea = peakAreas[j] ?? 0;
-                AssertEx.AreEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE * peakArea);
-                // Check that identified values are preserved/updated appropriately
-                Assert.IsTrue(groupChromInfo.Identified == identified[j],
-                    string.Format("No identification match for {0}  ({1})", groupNode.TransitionGroup.Peptide, j));
-                var annotations = groupChromInfo.Annotations;
-                if (precursorMzs != null)
+                docContainer.SetDocument(docNew, null, true);
+                docContainer.AssertComplete();
+                docNew = docContainer.Document;
+
+                int j = 0;
+                foreach (PeptideDocNode peptideNode in docNew.Peptides)
                 {
-                    Assert.AreEqual(annotations.ListAnnotations().Length, 1);
-                    Assert.AreEqual(annotations.GetAnnotation(annote), precursorMzs[j]);
+                    // fileId is the replicate the chrom infos used to be indexed by.
+                    var moleculeResults = new MoleculeResults(docNew.Settings, peptideNode);
+                    foreach (var groupNode in peptideNode.TransitionGroups)
+                    {
+                        var groupChromInfo = moleculeResults
+                            .GetTransitionGroupChromInfos(groupNode.TransitionGroup, fileId).First();
+                        // Make sure charge on each transition group is correct
+                        Assert.AreEqual(groupNode.TransitionGroup.PrecursorAdduct.AdductCharge, chargeList[j]);
+                        // Make sure imported retention time boundaries, including nulls, are correct
+                        AssertEx.AreEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE);
+                        AssertEx.AreEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE);
+                        // Check that peak areas are updated correctly
+                        double peakArea = peakAreas[j] ?? 0;
+                        AssertEx.AreEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE * peakArea);
+                        // Check that identified values are preserved/updated appropriately
+                        Assert.IsTrue(groupChromInfo.Identified == identified[j],
+                            string.Format("No identification match for {0}  ({1})",
+                                groupNode.TransitionGroup.Peptide, j));
+                        var annotations = groupChromInfo.Annotations;
+                        if (precursorMzs != null)
+                        {
+                            Assert.AreEqual(annotations.ListAnnotations().Length, 1);
+                            Assert.AreEqual(annotations.GetAnnotation(annote), precursorMzs[j]);
+                        }
+                        else
+                            Assert.AreEqual(annotations.ListAnnotations().Length, 0);
+                        ++j;
+                    }
                 }
-                else
-                    Assert.AreEqual(annotations.ListAnnotations().Length, 0);
-                ++j;
             }
         }
     }

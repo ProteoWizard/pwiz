@@ -1033,8 +1033,13 @@ namespace pwiz.Skyline.Model.Serialization
         /// Writes one entry per replicate and file, in that order, which is what
         /// <see cref="ChromFileIds"/> is: the reader rebuilds the flat positions from the order
         /// they come back in.
+        /// <para>
+        /// The same element names a document has always used. What tells the two apart is what is
+        /// on them: this leaves out everything the .skyd gives back, and writes
+        /// <see cref="ATTR.chosen_peak_index"/>, which says which candidate peak there to read.
+        /// </para>
         /// </summary>
-        private void WriteColumnarResults(XmlWriter writer, ChromFileIds chromFileIds, string start,
+        private void WriteColumnarResults(XmlWriter writer, ChromFileIds chromFileIds, string start, string peakStart,
             Action<XmlWriter, int, int> writePeak)
         {
             var replicatePositions = chromFileIds?.ReplicatePositions;
@@ -1052,7 +1057,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var chromatogramSet = chromatograms[replicateIndex];
                 foreach (int position in replicatePositions[replicateIndex])
                 {
-                    writer.WriteStartElement(EL.columnar_peak);
+                    writer.WriteStartElement(peakStart);
                     writer.WriteAttribute(ATTR.replicate, chromatogramSet.Name);
                     if (chromatogramSet.FileCount > 1)
                     {
@@ -1069,15 +1074,18 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Each of a transition's values is looked up by replicate and file, because each of them
-        /// is its own map: the boundaries a transition kept, what it kept alongside them, and the
-        /// annotations are each held only where there is one, and none of the three has an entry
-        /// wherever another does.
+        /// A transition's peaks, written only when it has something its precursor does not already
+        /// say: an area which did not ride on <see cref="ATTR.transition_areas"/>, boundaries of
+        /// its own, something integrating between them cannot find again, or an annotation.
+        /// <para>
+        /// Each value is looked up by replicate and file, because each of them is its own map: they
+        /// are held only where there is one, and none of them has an entry wherever another does.
+        /// </para>
         /// </summary>
         private void WriteTransitionResults(XmlWriter writer, TransitionGroupResults results, int transitionIndex)
         {
             var chromFileIds = results.GetTransitionChromFileIds(transitionIndex);
-            WriteColumnarResults(writer, chromFileIds, EL.transition_results_columnar,
+            WriteColumnarResults(writer, chromFileIds, EL.transition_results, EL.transition_peak,
                 (w, replicateIndex, position) =>
                 {
                     var fileId = chromFileIds.FileIds[position].Value;
@@ -1111,7 +1119,7 @@ namespace pwiz.Skyline.Model.Serialization
             var results = nodeGroup.AbbreviatedResults;
             var sharedAreas = results?.GetSharedTransitionAreas(nodeGroup.Children.Count);
             _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
-            WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results_columnar,
+            WriteColumnarResults(writer, results?.ChromFileIds, EL.precursor_results, EL.precursor_peak,
                 (w, replicateIndex, position) =>
             {
                 // No area: a precursor's is the sum of its transitions', which are written below it.
@@ -1120,7 +1128,10 @@ namespace pwiz.Skyline.Model.Serialization
                 // ToString() and so loses digits a float needs to come back the same.
                 w.WriteAttributeNullable(ATTR.start_time, results.GetStartTime(position));
                 w.WriteAttributeNullable(ATTR.end_time, results.GetEndTime(position));
-                w.WriteAttributeNullable(ATTR.peak_index, results.GetChosenPeakIndex(position));
+                // Always, even as -1: its presence is what says this document knows which candidate
+                // peaks its peaks are, and so needs no upgrading when it is read again.
+                w.WriteAttribute(ATTR.chosen_peak_index,
+                    results.GetChosenPeakIndex(position) ?? PrecursorPeak.NO_PEAK_INDEX);
                 w.WriteAttributeNullable(ATTR.qvalue, results.GetQValue(position));
                 w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
                 w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);

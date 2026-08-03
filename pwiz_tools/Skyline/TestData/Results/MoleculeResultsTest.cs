@@ -72,8 +72,9 @@ namespace pwiz.SkylineTestData.Results
                 AssertNoChromInfosKept(docContainer.Document, @"after import");
 
                 // Round tripping writes the chrom infos, which is what every document saved before
-                // the columnar results has, and reads them back into LegacyChromInfos. Done inside
-                // the container so that nothing holding the cache outlives it.
+                // the columnar results has, and reads them back as peaks whose candidate peaks
+                // still have to be worked out. Done inside the container so that nothing holding
+                // the cache outlives it.
                 string expected = null;
                 docReopened = AssertEx.RoundTrip(docContainer.Document, SkylineVersion.CURRENT, ref expected);
             }
@@ -102,11 +103,33 @@ namespace pwiz.SkylineTestData.Results
                     continue;
                 }
 
-                for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
+                Assert.IsFalse(results.NeedsPeakIndexes, when);
+                var chromFileIds = results.ChromFileIds;
+                var replicatePositions = chromFileIds.ReplicatePositions;
+                for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
                 {
-                    transitions++;
-                    kept += results.GetTransitionLegacyChromInfoCount(iTran);
+                    foreach (int position in replicatePositions[replicateIndex])
+                    {
+                        // A peak with no candidate peak in the .skyd is the only one entitled to
+                        // keep anything: everything else is read back from the peak it points at.
+                        if (!results.GetChosenPeakIndex(position).HasValue)
+                        {
+                            continue;
+                        }
+
+                        var fileId = chromFileIds.FileIds[position].Value;
+                        for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
+                        {
+                            if (results.FindTransitionCustomPeakMetrics(iTran, replicateIndex, fileId) != null ||
+                                results.FindTransitionCustomPeakBounds(iTran, replicateIndex, fileId).HasValue)
+                            {
+                                kept++;
+                            }
+                        }
+                    }
                 }
+
+                transitions += nodeGroup.Children.Count;
             }
 
             Assert.AreNotEqual(0, transitions, when);
@@ -291,7 +314,7 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreSame(results,
                 moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition));
 
-            CheckFromChromInfos(abbreviated, iTran, nodeTran, results);
+            CheckFromChromInfos(abbreviated, nodeTran, results);
 
 
             int positionsChecked = 0;
@@ -472,26 +495,36 @@ namespace pwiz.SkylineTestData.Results
         /// works from chrom infos <see cref="MoleculeResults"/> rebuilt rather than from any the
         /// document holds.
         /// </summary>
-        private static void CheckFromChromInfos(TransitionGroupResults abbreviated, int transitionIndex,
+        private static void CheckFromChromInfos(TransitionGroupResults abbreviated,
             TransitionDocNode nodeTran, Results<TransitionChromInfo> rebuilt)
         {
             // Index zero of a precursor of its own, since what is being checked is the conversion
             // rather than where the transition sits.
             var unconverted = TransitionGroupResults.Empty.ChangeTransitionFromChromInfos(0, rebuilt);
-            Assert.IsFalse(unconverted.IsTransitionConverted(0));
+            Assert.IsTrue(unconverted.NeedsPeakIndexes);
             // Optimization step zero only, which is all that is kept: the rest are read back from
             // the .skyd along with it.
             Assert.AreEqual(
                 rebuilt.Sum(chromInfoList => chromInfoList.Count(chromInfo => chromInfo.OptimizationStep == 0)),
-                unconverted.GetTransitionLegacyChromInfoCount(0));
-            foreach (var chromInfo in rebuilt[0].Where(chromInfo => chromInfo.OptimizationStep == 0))
+                unconverted.GetTransitionChromFileIds(0).FileIds.Count);
+
+            // No chrom info is kept anywhere. What survives instead is the handful of values a peak
+            // cannot get back by being integrated between its boundaries again.
+            foreach (var chromInfo in rebuilt[0].Where(chromInfo =>
+                         chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty))
             {
-                Assert.AreSame(chromInfo, unconverted.FindTransitionChromInfo(0, 0, chromInfo.FileId));
+                var peakBounds = unconverted.FindTransitionCustomPeakBounds(0, 0, chromInfo.FileId);
+                Assert.IsTrue(peakBounds.HasValue, @"no boundaries kept");
+                Assert.AreEqual(chromInfo.StartRetentionTime, peakBounds.Value.StartTime);
+                Assert.AreEqual(chromInfo.EndRetentionTime, peakBounds.Value.EndTime);
+                var peakMetrics = unconverted.FindTransitionCustomPeakMetrics(0, 0, chromInfo.FileId);
+                Assert.AreEqual(chromInfo.MassError, peakMetrics?.MassError);
+                Assert.AreEqual(chromInfo.Identified, peakMetrics?.Identified ?? PeakIdentification.FALSE);
             }
 
             // What the document keeps has been converted: which candidate peak each peak is has
-            // been worked out, so the chrom infos are not needed any more.
-            Assert.IsTrue(abbreviated.IsTransitionConverted(transitionIndex));
+            // been worked out, so nothing is kept for the peaks the .skyd can give back.
+            Assert.IsFalse(abbreviated.NeedsPeakIndexes);
 
             // Not derived from the chrom infos, so replacing those leaves them alone. Structural
             // now that the columnar results belong to the precursor: clearing a transition node's

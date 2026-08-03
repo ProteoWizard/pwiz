@@ -1701,12 +1701,11 @@ namespace pwiz.Skyline.Model
 
             if (canUseOldResults)
             {
-                // From the columnar results rather than the transition nodes, which no longer keep
-                // a copy of the chrom infos of their own.
+                // Nothing to carry forward: no chrom info is stored anywhere any more, and the one
+                // place they could be rebuilt from is the .skyd this could not read.
                 for (int iTran = 0; iTran < Children.Count; iTran++)
                 {
-                    resultsCalc.AddTransitionChromInfo(iTran,
-                        AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, iResultOld));
+                    resultsCalc.AddTransitionChromInfo(iTran, null);
                 }
 
                 return;
@@ -1737,12 +1736,12 @@ namespace pwiz.Skyline.Model
             }
             if (chromGroupInfos.Count == 0)
             {
-                bool useOldResults = iResultOld != -1 && !chromatograms.IsLoadedAndAvailable(measuredResults);
-
+                // As above: there is no stored chrom info left to fall back on. The columnar
+                // results the precursor already holds are not touched by a pass which finds
+                // nothing, so a replicate which could not be read keeps what it had.
                 for (int iTran = 0; iTran < Children.Count; iTran++)
                 {
-                    resultsCalc.AddTransitionChromInfo(iTran,
-                        useOldResults ? AbbreviatedResults?.GetTransitionLegacyChromInfos(iTran, iResultOld) : null);
+                    resultsCalc.AddTransitionChromInfo(iTran, null);
                 }
 
                 return;

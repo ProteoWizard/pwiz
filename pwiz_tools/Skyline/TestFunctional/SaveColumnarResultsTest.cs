@@ -81,26 +81,34 @@ namespace pwiz.SkylineTestFunctional
             {
                 var doc = SkylineWindow.Document;
                 var chromatograms = doc.Settings.MeasuredResults.Chromatograms[0];
-                var filePath = chromatograms.MSDataFileInfos[0].FilePath;
+                var fileInfo = chromatograms.MSDataFileInfos[0];
                 foreach (var peptideGroup in doc.MoleculeGroups.Take(2))
                 {
                     foreach (var nodePep in peptideGroup.Molecules.Take(2))
                     {
                         foreach (var nodeGroup in nodePep.TransitionGroups)
                         {
-                            var chromInfo = nodeGroup.EmptyResults[0].FirstOrDefault();
-                            if (chromInfo?.StartRetentionTime == null || chromInfo.EndRetentionTime == null)
+                            // Where the peak is now, from the columnar results. EmptyResults holds
+                            // nothing: a precursor does not keep its chrom infos any more.
+                            var peakBounds = nodeGroup.AbbreviatedResults?.FindPrecursorPeakBounds(0,
+                                fileInfo.FileId);
+                            if (!peakBounds.HasValue)
                             {
                                 continue;
                             }
 
-                            double width = chromInfo.EndRetentionTime.Value - chromInfo.StartRetentionTime.Value;
+                            double width = peakBounds.Value.EndTime - peakBounds.Value.StartTime;
                             var identityPath = new IdentityPath(peptideGroup.Id, nodePep.Id, nodeGroup.Id);
-                            var docNew = doc.ChangePeak(identityPath, chromatograms.Name, filePath, null,
-                                chromInfo.StartRetentionTime.Value + width / 10,
-                                chromInfo.EndRetentionTime.Value - width / 10, UserSet.TRUE,
+                            var docNew = doc.ChangePeak(identityPath, chromatograms.Name, fileInfo.FilePath, null,
+                                peakBounds.Value.StartTime + width / 10,
+                                peakBounds.Value.EndTime - width / 10, UserSet.TRUE,
                                 PeakIdentification.FALSE, false);
-                            if (!ReferenceEquals(docNew, doc))
+                            // A new instance is not enough: what has to change is the peak in the
+                            // columnar results, which is the only place a peak lives now.
+                            var movedGroup = (TransitionGroupDocNode) docNew.FindNode(identityPath);
+                            var movedBounds = movedGroup.AbbreviatedResults?.FindPrecursorPeakBounds(0,
+                                fileInfo.FileId);
+                            if (!Equals(peakBounds, movedBounds))
                             {
                                 doc = docNew;
                                 peaksMoved += nodeGroup.TransitionCount;

@@ -265,7 +265,10 @@ namespace pwiz.Skyline.Model.Results
                     .ChangeUserSets(userSets)
                     .ChangeQValues(qValues)
                     .ChangeZScores(zScores)
-                    .ChangeAnnotations(annotations);
+                    .ChangeAnnotations(annotations)
+                    // Without a caller which read the chromatograms there is no way to know which
+                    // candidate peak any of these is, so that is still to be worked out.
+                    .ChangeNeedsPeakIndexes(getChosenPeakIndex == null);
 
             // Kept whatever the caller knows, because the precursor level still holds values which
             // have no home in the columnar form yet - PeakCountRatio, the ion mobility info, the dot
@@ -515,84 +518,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Whether one transition's results are still carrying chrom infos which have not been
-        /// worked out from the .skyd. False when it has no results at all, which is nothing to
-        /// convert either way.
-        /// </summary>
-        public bool IsTransitionConverted(int transitionIndex)
-        {
-            return GetTransitionResults(transitionIndex)?.IsConverted != false;
-        }
-
-        /// <summary>
-        /// One transition's unconverted chrom infos for a single replicate, or null when it has
-        /// none there. Optimization step zero only, which is all that is kept.
-        /// <para>
-        /// This is how a results pass which is not going to read the .skyd - because nothing it
-        /// cares about changed, or because the chromatograms are not loaded yet - gets back what
-        /// the document already knows, without a transition node having to keep a second copy.
-        /// </para>
-        /// </summary>
-        public IList<TransitionChromInfo> GetTransitionLegacyChromInfos(int transitionIndex, int replicateIndex)
-        {
-            var legacyChromInfos = GetTransitionResults(transitionIndex)?.LegacyChromInfos;
-            if (legacyChromInfos == null || replicateIndex < 0 ||
-                replicateIndex >= legacyChromInfos.ReplicatePositions.ReplicateCount)
-            {
-                return null;
-            }
-
-            var chromInfos = legacyChromInfos.Values[replicateIndex].ToList();
-            return chromInfos.Count == 0 ? null : chromInfos;
-        }
-
-        /// <summary>
-        /// How many unconverted chrom infos one transition's results are still carrying, which is
-        /// one per file. Zero once they have been worked out.
-        /// </summary>
-        public int GetTransitionLegacyChromInfoCount(int transitionIndex)
-        {
-            return GetTransitionResults(transitionIndex)?.LegacyChromInfos?.FlatValues.Count ?? 0;
-        }
-
-        /// <summary>
-        /// One transition's chrom info for a file which has not been converted yet, or null. See
-        /// <see cref="TransitionResults.FindChromInfo"/>.
-        /// </summary>
-        public TransitionChromInfo FindTransitionChromInfo(int transitionIndex, int replicateIndex,
-            ChromFileInfoId fileId)
-        {
-            return GetTransitionResults(transitionIndex)?.FindChromInfo(replicateIndex, fileId);
-        }
-
-        /// <summary>
-        /// Records what one transition's peak in one file has to keep because it is not one of the
-        /// candidate peaks in the .skyd: the boundaries to integrate between, and what integrating
-        /// between them cannot find again.
-        /// <para>
-        /// The boundaries are kept only when they are not the precursor's own. Nearly always the
-        /// whole peak group was integrated between the same two times, and then the precursor's
-        /// peak already says what they were.
-        /// </para>
-        /// </summary>
-        public TransitionGroupResults CarryTransitionPeak(int transitionIndex, int replicateIndex,
-            ChromFileInfoId fileId, float startTime, float endTime, float? massError, PeakIdentification identified)
-        {
-            var results = GetTransitionResults(transitionIndex);
-            if (results == null)
-            {
-                return this;
-            }
-
-            var bounds = new CustomPeakBounds(startTime, endTime);
-            return ChangeTransitionResults(transitionIndex, results
-                .ChangeCustomPeakBounds(replicateIndex, fileId,
-                    IsPrecursorPeakBounds(replicateIndex, fileId, bounds) ? (CustomPeakBounds?) null : bounds)
-                .ChangeCustomPeakMetrics(replicateIndex, fileId,
-                    CustomPeakMetrics.Create(massError, identified)));
-        }
-
-        /// <summary>
         /// Whether boundaries are the precursor's own, which is what a transition's are unless its
         /// peak was moved on its own.
         /// </summary>
@@ -678,15 +603,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// These results with one transition's built from chrom infos, keeping the chrom infos
-        /// themselves until which candidate peak each peak is has been worked out. This is what
-        /// reading a document written the old way does.
+        /// These results with one transition's built from chrom infos, which are let go: what a
+        /// peak needs until the .skyd says which candidate peak it is goes onto the columnar
+        /// results instead. This is what reading the compact encoding does.
         /// </summary>
         public TransitionGroupResults ChangeTransitionFromChromInfos(int transitionIndex,
             Results<TransitionChromInfo> chromInfos)
         {
             return ChangeTransitionResults(transitionIndex,
-                DropSharedPeakBounds(TransitionResults.FromChromInfos(chromInfos)));
+                    DropSharedPeakBounds(TransitionResults.FromChromInfos(chromInfos)))
+                // A chrom info says where its peak is and nothing about which candidate peak in the
+                // .skyd that makes it, so that is still to be worked out.
+                .ChangeNeedsPeakIndexes(true);
         }
 
         /// <summary>
@@ -741,10 +669,13 @@ namespace pwiz.Skyline.Model.Results
         /// calculation produced. Returns this when the transition already says the same, which is
         /// what keeps a pass that changed nothing from making the whole molecule convert again.
         /// <para>
-        /// The two are never equal outright: what is already there has been converted, having had
-        /// its candidate peaks worked out, while what comes out of the chrom infos still carries
-        /// them. Replacing one with the other would make every pass read all of the molecule's
-        /// chromatograms, which is enough to make loading a large document look like a hang.
+        /// What comes out of the chrom infos has every peak keeping its boundaries and its metrics,
+        /// because nothing yet knows which of them the .skyd can give back, while what is already
+        /// there has been through conversion and kept only the ones it could not. So the comparison
+        /// is against what conversion would leave behind, which the chosen peak indexes already on
+        /// hand are enough to work out. Getting this wrong makes every pass read all of the
+        /// molecule's chromatograms, which is enough to make loading a large document look like a
+        /// hang.
         /// </para>
         /// </summary>
         public TransitionGroupResults UpdateTransitionFromChromInfos(int transitionIndex,
@@ -761,13 +692,37 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var existing = GetTransitionResults(transitionIndex);
-            if (existing != null && existing.IsConverted &&
-                Equals(existing, calculated.ChangeLegacyChromInfos(null)))
+            if (existing != null && !NeedsPeakIndexes && Equals(existing, DropChosenPeakCustomPeaks(calculated)))
             {
                 return this;
             }
 
-            return ChangeTransitionResults(transitionIndex, calculated);
+            // The peaks are new, so which candidate peak each of them is has to be worked out again.
+            return ChangeTransitionResults(transitionIndex, calculated).ChangeNeedsPeakIndexes(true);
+        }
+
+        /// <summary>
+        /// One transition's results with what a peak keeps for being integrated again dropped
+        /// wherever the precursor already knows which candidate peak it is. This is what
+        /// <see cref="MoleculeResults.ConvertResults"/> leaves behind, worked out here without
+        /// reading a chromatogram.
+        /// </summary>
+        private TransitionResults DropChosenPeakCustomPeaks(TransitionResults results)
+        {
+            var resultsNew = results;
+            var replicatePositions = ChromFileIds.ReplicatePositions;
+            for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+            {
+                foreach (int position in replicatePositions[replicateIndex])
+                {
+                    if (GetChosenPeakIndex(position).HasValue)
+                    {
+                        resultsNew = resultsNew.DropCustomPeak(replicateIndex, ChromFileIds.FileIds[position].Value);
+                    }
+                }
+            }
+
+            return resultsNew;
         }
 
         /// <summary>
@@ -823,20 +778,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return results;
-        }
-
-        /// <summary>
-        /// These results with every transition's unconverted chrom infos let go, which is what
-        /// there is to do once every one of the precursor's files has been read.
-        /// </summary>
-        public TransitionGroupResults ClearTransitionLegacyChromInfos()
-        {
-            if (Transitions == null)
-            {
-                return this;
-            }
-
-            return ChangeTransitions(Transitions.Select(results => results?.ChangeLegacyChromInfos(null)));
         }
 
         /// <summary>
@@ -908,11 +849,16 @@ namespace pwiz.Skyline.Model.Results
         public ChromFileIdMap<Annotations> Annotations { get; private set; }
 
         /// <summary>
-        /// The chrom infos which have not been worked out from the .skyd file yet. Null once they
-        /// have been. The precursor level counterpart of <see cref="TransitionResults.LegacyChromInfos"/>,
-        /// and kept as a <see cref="Results{TItem}"/> rather than flattened because that is the shape
+        /// The precursor level values which have no home in the columnar form yet - the peak count
+        /// ratio, the ion mobility info, the dot products. Null once they have been given up.
+        /// <para>
+        /// Kept as a <see cref="Results{TItem}"/> rather than flattened because that is the shape
         /// every reader of <see cref="TransitionGroupDocNode.Results"/> still expects: while these
-        /// are here, the node can hand them straight back.
+        /// are here, the node can hand them straight back. There is no transition level
+        /// counterpart - a transition's peaks keep <see cref="CustomPeakMetrics"/> and nothing
+        /// more - and these go the same way once every reader of them goes through
+        /// <see cref="MoleculeResults"/>.
+        /// </para>
         /// </summary>
         public Results<TransitionGroupChromInfo> LegacyChromInfos { get; private set; }
 
@@ -924,6 +870,25 @@ namespace pwiz.Skyline.Model.Results
         public TransitionGroupResults ChangeLegacyChromInfos(Results<TransitionGroupChromInfo> value)
         {
             return ChangeProp(ImClone(this), im => im.LegacyChromInfos = value);
+        }
+
+        /// <summary>
+        /// Whether which candidate peak in the .skyd each of these peaks is has still to be worked
+        /// out, which is what a document written before the chosen peak indexes were part of the
+        /// format leaves behind. Until it is, every peak is treated as one whose boundaries were
+        /// set by hand: the transitions keep what integrating between them cannot find again.
+        /// <para>
+        /// Reading such a document is what sets this, and
+        /// <see cref="MoleculeResults.ConvertResults"/> is what clears it. It cannot be worked out
+        /// from the peaks themselves, because a peak which really is not one of the candidate peaks
+        /// keeps <see cref="PrecursorPeak.NO_PEAK_INDEX"/> for good.
+        /// </para>
+        /// </summary>
+        public bool NeedsPeakIndexes { get; private set; }
+
+        public TransitionGroupResults ChangeNeedsPeakIndexes(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.NeedsPeakIndexes = value);
         }
 
         /// <summary>
@@ -1252,6 +1217,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(ReintegratedPeakIndexes, other.ReintegratedPeakIndexes) &&
                    Equals(UserSets, other.UserSets) && Equals(QValues, other.QValues) &&
                    Equals(ZScores, other.ZScores) && Equals(Annotations, other.Annotations) &&
+                   NeedsPeakIndexes == other.NeedsPeakIndexes &&
                    Results<TransitionGroupChromInfo>.EqualsDeep(LegacyChromInfos, other.LegacyChromInfos);
         }
 
@@ -1282,6 +1248,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (QValues?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (ZScores?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (Annotations?.GetHashCode() ?? 0);
+                result = (result * 397) ^ NeedsPeakIndexes.GetHashCode();
                 result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
@@ -1299,22 +1266,17 @@ namespace pwiz.Skyline.Model.Results
         private class TransitionResults : Immutable
         {
             /// <summary>
-            /// Builds the columnar form from the chrom infos a document already holds, keeping the
-            /// chrom infos themselves in <see cref="LegacyChromInfos"/>. See
-            /// <see cref="TransitionGroupResults.FromChromInfos"/>.
+            /// Builds the columnar form from chrom infos and lets them go. Every peak keeps the
+            /// boundaries it was integrated between and what integrating between them again cannot
+            /// find, because nothing is left to carry any of it: a whole
+            /// <see cref="TransitionChromInfo"/> is around a hundred bytes, and what has to survive
+            /// until the .skyd says which candidate peak the peak is comes to a handful.
+            /// <para>
+            /// <see cref="MoleculeResults.ConvertResults"/> is what gets rid of them again, wherever
+            /// the peak turns out to be one of the candidate peaks after all.
+            /// </para>
             /// </summary>
             public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results)
-            {
-                return FromChromInfos(results, true);
-            }
-
-            /// <summary>
-            /// <paramref name="keepChromInfos"/> false means the caller knows which candidate peak each
-            /// peak is, so the chrom infos can be rebuilt from the .skyd and none of them needs to be
-            /// kept. Only a caller with the chromatograms can know that, which is why the plain
-            /// overload keeps them.
-            /// </summary>
-            public static TransitionResults FromChromInfos(Results<TransitionChromInfo> results, bool keepChromInfos)
             {
                 if (results == null)
                 {
@@ -1324,7 +1286,6 @@ namespace pwiz.Skyline.Model.Results
                 var fileIds = new List<ChromFileInfoId>();
                 var counts = new List<int>();
                 var peaks = new List<TransitionPeak>();
-                var chromInfos = keepChromInfos ? new List<TransitionChromInfo>() : null;
                 var annotations = new List<Annotations>();
                 var peakBounds = new List<CustomPeakBounds>();
                 var peakMetrics = new List<CustomPeakMetrics>();
@@ -1340,34 +1301,29 @@ namespace pwiz.Skyline.Model.Results
                             continue;
                         }
 
-                        chromInfos?.Add(chromInfo);
                         fileIds.Add(chromInfo.FileId);
                         peaks.Add(new TransitionPeak(chromInfo.Area, chromInfo.UserSet, chromInfo.IsTruncated,
                             chromInfo.IsEmpty, chromInfo.Identified, chromInfo.IsForcedIntegration));
                         annotations.Add(chromInfo.Annotations ?? Model.Annotations.EMPTY);
 
-                        // A peak the user set is not one of the candidate peaks Skyline found, so the
-                        // boundaries it was integrated between have to be kept, and so does what
-                        // integrating between them again cannot work out. A peak Skyline chose is one
-                        // of the candidate peaks, and the .skyd has all of it.
-                        bool isUserSet = chromInfo.UserSet != UserSet.FALSE && !chromInfo.IsEmpty;
-                        peakBounds.Add(isUserSet
-                            ? new CustomPeakBounds(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime)
-                            : default);
+                        // The boundaries the peak was integrated between, and what integrating
+                        // between them again cannot work out. An empty peak has neither.
+                        peakBounds.Add(chromInfo.IsEmpty
+                            ? default
+                            : new CustomPeakBounds(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime));
                         // Qualified, because the property of that name here is the map of them.
-                        peakMetrics.Add(isUserSet
-                            ? Model.Results.CustomPeakMetrics.Create(chromInfo.MassError, chromInfo.Identified)
-                            : null);
+                        peakMetrics.Add(chromInfo.IsEmpty
+                            ? null
+                            : Model.Results.CustomPeakMetrics.Create(chromInfo.MassError, chromInfo.Identified));
                         count++;
                     }
 
                     counts.Add(count);
                 }
 
-                var transitionResults = new TransitionResults(
+                return new TransitionResults(
                     new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds), peaks, annotations, peakBounds,
                     peakMetrics);
-                return chromInfos == null ? transitionResults : transitionResults.ChangeLegacyChromInfos(chromInfos);
             }
 
             public TransitionResults(ChromFileIds chromFileIds, IEnumerable<TransitionPeak> peaks)
@@ -1427,58 +1383,13 @@ namespace pwiz.Skyline.Model.Results
             /// What the peaks which are not candidate peaks in the .skyd keep, because integrating
             /// between their boundaries again cannot find it. Null when every peak is one of the
             /// candidate peaks.
+            /// <para>
+            /// This and <see cref="CustomPeakBounds"/> are the whole of what a peak whose candidate
+            /// peak is not known yet costs. No chrom info is kept for it: a document read before
+            /// its .skyd holds a few bytes a peak rather than a hundred.
+            /// </para>
             /// </summary>
             public ChromFileIdMap<CustomPeakMetrics> CustomPeakMetrics { get; private set; }
-
-            /// <summary>
-            /// The chrom infos which have not been worked out from the .skyd file yet, each knowing its
-            /// own file and optimization step. Null once they have been.
-            /// <para>
-            /// A document read from a file arrives with these, because which candidate peak each peak
-            /// is cannot be told without the chromatograms, and until that is known nothing here can be
-            /// rebuilt. Loading the chromatogram cache is what gets rid of them: see
-            /// <see cref="TransitionGroupDocNode.UpdateResults"/>, which works out
-            /// <see cref="TransitionGroupResults.ChosenPeakIndexes"/> and then has no need of them.
-            /// </para>
-            /// <para>
-            /// So this is the whole of what the columnar form costs before conversion, and nothing
-            /// while it is converted. It is the reason a document can be read at all before its .skyd
-            /// is available.
-            /// </para>
-            /// </summary>
-            /// <para>
-            /// Over the same positions as <see cref="Peaks"/>, since both are optimization step
-            /// zero of each file, so a chrom info is found by replicate and file rather than by
-            /// walking the list.
-            /// </para>
-            /// </summary>
-            public ChromFileIdMap<TransitionChromInfo> LegacyChromInfos { get; private set; }
-
-            public bool IsConverted
-            {
-                get { return LegacyChromInfos == null; }
-            }
-
-            public TransitionResults ChangeLegacyChromInfos(IEnumerable<TransitionChromInfo> value)
-            {
-                return ChangeProp(ImClone(this), im => im.LegacyChromInfos =
-                    value == null ? null : new ChromFileIdMap<TransitionChromInfo>(ChromFileIds, value));
-            }
-
-            /// <summary>
-            /// The chrom info of one file which has not been converted, or null. Optimization step
-            /// zero, which is the only one kept: the rest are read back from the .skyd with it.
-            /// </summary>
-            public TransitionChromInfo FindChromInfo(int replicateIndex, ChromFileInfoId fileId)
-            {
-                if (LegacyChromInfos == null ||
-                    !LegacyChromInfos.TryGetValue(replicateIndex, fileId, out var chromInfo))
-                {
-                    return null;
-                }
-
-                return chromInfo;
-            }
 
             /// <summary>
             /// What quantification needs to know about the peaks of one replicate.
@@ -1717,8 +1628,7 @@ namespace pwiz.Skyline.Model.Results
                 return Equals(Peaks, other.Peaks) &&
                        Equals(Annotations, other.Annotations) &&
                        Equals(CustomPeakBounds, other.CustomPeakBounds) &&
-                       Equals(CustomPeakMetrics, other.CustomPeakMetrics) &&
-                       Equals(LegacyChromInfos, other.LegacyChromInfos);
+                       Equals(CustomPeakMetrics, other.CustomPeakMetrics);
             }
 
             public override bool Equals(object obj)
@@ -1744,7 +1654,6 @@ namespace pwiz.Skyline.Model.Results
                     result = (result * 397) ^ (Annotations?.GetHashCode() ?? 0);
                     result = (result * 397) ^ (CustomPeakBounds?.GetHashCode() ?? 0);
                     result = (result * 397) ^ (CustomPeakMetrics?.GetHashCode() ?? 0);
-                    result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                     return result;
                 }
             }
