@@ -600,16 +600,28 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
-            MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
-            // Repeat the mouse move and do the click in a single UI action. The clicked time comes
-            // from the full-scan tracking dot rather than from these coordinates, and a graph update
-            // landing between the move and the click recreates the curve holding that dot, which
-            // resets its position and causes the click to be silently discarded.
-            RunUI(() =>
+            // Move the mouse and click in a single UI action, and click only if that move produced
+            // the tracking dot. The clicked time comes from the dot rather than from these
+            // coordinates, and a graph update landing between the move and the click recreates the
+            // curve holding it, which resets its position and leaves the click nothing to read.
+            bool clicked = false;
+            const int sleepCycles = 20;
+            const int sleepInterval = 100;
+            for (int i = 0; i < sleepCycles && !clicked; i++)
             {
-                graphChromatogram.TestMouseMove(x, y, paneKey);
-                graphChromatogram.TestMouseDown(x, y, paneKey);
-            });
+                RunUI(() =>
+                {
+                    graphChromatogram.TestMouseMove(x, y, paneKey);
+                    if (!graphChromatogram.IsOverHighlightPoint(x, y, paneKey))
+                        return;
+                    graphChromatogram.TestMouseDown(x, y, paneKey);
+                    clicked = true;
+                });
+                if (!clicked)
+                    Thread.Sleep(sleepInterval);
+            }
+            AssertEx.IsTrue(clicked, string.Format("Full-scan dot not present after {0} tries in {1} seconds",
+                sleepCycles, sleepInterval * sleepCycles / 1000.0));
             WaitForGraphs();
             CheckFullScanSelection(graphName, x, y, paneKey, titleTime);
         }

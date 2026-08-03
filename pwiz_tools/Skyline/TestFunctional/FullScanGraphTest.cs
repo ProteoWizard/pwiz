@@ -639,7 +639,7 @@ namespace pwiz.SkylineTestFunctional
             // ion list is checked, and not the labels actually painted on the graph: how many
             // of those survive MSGraphPane's culling depends on the pixel size of the chart,
             // which varies with screen resolution, DPI and font metrics.
-            Assert.AreEqual(70, SkylineWindow.GraphFullScan.SpectrumInfo.PeaksMatched.Count());
+            RunUI(() => AssertEx.AreEqual(70, SkylineWindow.GraphFullScan.SpectrumInfo.PeaksMatched.Count()));
 
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
@@ -665,7 +665,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.GraphFullScan.SetIntensityScale(400);
             });
             WaitForGraphs();
-            Assert.AreEqual(48, SkylineWindow.GraphFullScan.SpectrumInfo.PeaksMatched.Count());
+            TestScale(100, 600, 0, 400);    // The matched ion count below does not depend on the scale
+            RunUI(() => AssertEx.AreEqual(48, SkylineWindow.GraphFullScan.SpectrumInfo.PeaksMatched.Count()));
         }
 
         private void TestPropertySheet(Dictionary<string, object> expectedPropertiesDict)
