@@ -266,9 +266,8 @@ namespace pwiz.SkylineTestConnected
             {
                 SelectNode(remoteDlg, TEST_FOLDER);
                 SelectNode(remoteDlg, PANORAMA_DELETED_FILE_FOLDER);
-                ClickFile(remoteDlg, DELETED_FILE);
             });
-            var errorDlg = ShowDialog<MessageDlg>(remoteDlg.ClickOpen);
+            var errorDlg = ShowDialog<MessageDlg>(() => ClickFile(remoteDlg, DELETED_FILE));
             Assert.IsFalse(File.Exists(path));
             Assert.AreEqual(Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
