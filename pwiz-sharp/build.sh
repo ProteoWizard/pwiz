@@ -149,6 +149,12 @@ TEST_TARGET=(
     "Tools/Commandline/MsConvert/test/MsConvert.Tests.csproj"
 )
 [ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/test/Thermo.Tests/Thermo.Tests.csproj")
+# Waters is the other vendor that builds off-Windows: MassLynx 5.0.0 ships
+# libMassLynxRaw.so. NOTE it needs a reasonably modern distro -- the .so requires
+# GLIBC_2.32 and GLIBCXX_3.4.29, which Ubuntu 20.04 (glibc 2.31) does not provide; there
+# the load fails with "libMassLynxRaw.so: cannot open shared object file", which is dlopen
+# reporting an unmet dependency rather than a missing file. Ubuntu 22.04 satisfies both.
+[ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/test/Waters.Tests/Waters.Tests.csproj")
 
 # The test projects have to be restored and built here too, not just the product ones.
 # `dotnet test --no-build` below does no building, and when the test assembly is missing
