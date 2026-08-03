@@ -1131,7 +1131,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in perFileEntries)
             {
                 string fileName = kvp.Key;
-                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
                     ctx.LogWarning(string.Format(
@@ -1298,7 +1298,7 @@ namespace pwiz.Osprey.Tasks
                 string fileName = kvp.Key;
                 var fileEntries = kvp.Value;
 
-                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
                     ctx.LogWarning(string.Format(
@@ -1335,46 +1335,6 @@ namespace pwiz.Osprey.Tasks
             return failures;
         }
 
-        /// <summary>
-        /// Resolve a path whose stem matches <paramref name="fileName"/>, used
-        /// only as the base for sidecar file naming (the path itself need
-        /// not exist). In normal mode this is the input mzML; in
-        /// --task FirstPassFDR mode where InputFiles is empty we synthesize the
-        /// path from the matching .scores.parquet by replacing the
-        /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
-        /// `synthetic_input_from_parquet` helper.
-        /// </summary>
-        private static string ResolveSidecarBasePath(
-            string fileName,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            OspreyConfig config)
-        {
-            // Normal mode: prefer the actual input mzML path so sidecars
-            // land next to the source mzML.
-            if (config.InputFiles != null)
-            {
-                foreach (string inputPath in config.InputFiles)
-                {
-                    if (string.Equals(
-                        Path.GetFileNameWithoutExtension(inputPath),
-                        fileName,
-                        StringComparison.Ordinal))
-                    {
-                        return inputPath;
-                    }
-                }
-            }
-            // --task FirstPassFDR fallback: derive a synthetic mzML path from the
-            // matching parquet stem so all the existing sidecar path
-            // helpers keep working without conditional branches.
-            if (perFileParquetPaths != null
-                && perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
-            {
-                string parent = Path.GetDirectoryName(parquetPath) ?? ".";
-                return Path.Combine(parent, fileName + ".mzML");
-            }
-            return null;
-        }
 
         /// <summary>
         /// Convert pre-grouped reconciliation actions for one file into
@@ -1817,7 +1777,7 @@ namespace pwiz.Osprey.Tasks
             // StopAfterStage5 gate. Phase 2 patches [52..60] after protein FDR (below).
             int FlushPartialSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
             {
-                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
                     ctx.LogWarning(string.Format(
@@ -2107,7 +2067,7 @@ namespace pwiz.Osprey.Tasks
             {
                 patchProgress.Report(++proteinPatchFiles);
                 string fileName = kvp.Key;
-                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
                     continue;  // no on-disk sidecar to patch (phase 1 already counted it)
                 string parquetPath = perFileParquetPaths[fileName];  // present: pass 1 read it
@@ -2172,7 +2132,7 @@ namespace pwiz.Osprey.Tasks
                 ctx.ExitCode = 1;
                 return false;
             }
-            string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+            string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
             if (string.IsNullOrEmpty(sidecarBase))
             {
                 ctx.LogError(string.Format(
@@ -2252,7 +2212,7 @@ namespace pwiz.Osprey.Tasks
             {
                 compactProgress.Report(++compactFiles);
                 string fileName = kvp.Key;
-                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
                     ctx.LogError(string.Format(
@@ -2291,19 +2251,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Reload full <see cref="FdrEntry"/> survivors for the projection path. For
-        /// each file: load the full stub set from the ORIGINAL parquet
-        /// (<see cref="ParquetScoreCache.LoadFdrStubsFromParquet"/>, which re-assigns
-        /// <see cref="FdrEntry.ParquetIndex"/> = row -- risk #9), overlay the
-        /// just-written 1st-pass sidecar onto that superset (the loader's TryRead
-        /// requires the stub list to be a superset of the sidecar records), drop
-        /// non-survivors with the same base_id predicate <c>RemoveAll</c> the legacy
-        /// path uses, and canonicalize the order with the full
-        /// (EntryId, Charge, ScanNumber, ParquetIndex) comparer so the survivor
-        /// buffer is byte-order-identical to the legacy post-Percolator-sort +
-        /// compaction buffer. Returns <c>null</c> (ExitCode set) on any missing
-        /// parquet path or failed sidecar overlay -- both genuine faults here, since
-        /// this task just wrote the sidecar.
+        /// Reload full <see cref="FdrEntry"/> survivors for the projection path, one
+        /// file at a time through <see cref="FirstPassSurvivorLoader"/>, and collect
+        /// them into the all-files buffer Stage 6 and Stage 7 read today.
+        ///
+        /// <para>The per-file load is the reusable half and lives on the loader; the
+        /// collection into one list is the O(files) half this method still performs.
+        /// Keeping them separate is what lets a consumer take the loader alone and
+        /// never build the buffer - the direction issue #4526 is headed.</para>
+        ///
+        /// <para>Returns <c>null</c> (ExitCode set) on any missing parquet path or
+        /// failed sidecar overlay - both genuine faults here, since this task just
+        /// wrote the sidecar.</para>
         /// </summary>
         private List<KeyValuePair<string, List<FdrEntry>>> ReloadFirstPassSurvivors(
             FdrProjectionSet projections,
@@ -2312,6 +2271,7 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             PipelineContext ctx)
         {
+            var loader = new FirstPassSurvivorLoader(perFileParquetPaths, config, firstPassBaseIds);
             var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
             // Per-file progress: reloading each file's survivor stubs from parquet + the 1st-pass
             // sidecar was the ~70 s silent "First-pass compaction" gap at 82 files. Console-only.
@@ -2323,53 +2283,13 @@ namespace pwiz.Osprey.Tasks
             {
                 reloadProgress.Report(++reloadDone);
                 string fileName = kvp.Key;
-                if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
+                var stubs = loader.Load(fileName, out string error);
+                if (stubs == null)
                 {
-                    ctx.LogError(string.Format(
-                        @"Projection survivor reload: no scores parquet path for {0}", fileName));
+                    ctx.LogError(error);
                     ctx.ExitCode = 1;
                     return null;
                 }
-
-                List<FdrEntry> stubs;
-                try
-                {
-                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogError(string.Format(
-                        @"Projection survivor reload: failed to load stubs from {0}: {1}",
-                        parquetPath, ex.Message));
-                    ctx.ExitCode = 1;
-                    return null;
-                }
-
-                // Overlay the 1st-pass sidecar onto the FULL stub set (superset
-                // contract) BEFORE filtering to survivors.
-                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
-                string pass1Path = FdrScoresSidecar.Pass1Path(sidecarBase);
-                if (!FdrScoresSidecar.TryRead(pass1Path, stubs, FdrScoresSidecar.Pass.FirstPass))
-                {
-                    ctx.LogError(string.Format(
-                        @"Projection survivor reload: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
-                        @"(expected at {1})", fileName, pass1Path));
-                    ctx.ExitCode = 1;
-                    return null;
-                }
-
-                stubs.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
-                stubs.TrimExcess();
-                stubs.Sort((a, b) => // Array.Sort OK: terminal key ParquetIndex is unique per reloaded stub, so the comparator never ties.
-                {
-                    int c = a.EntryId.CompareTo(b.EntryId);
-                    if (c != 0) return c;
-                    c = a.Charge.CompareTo(b.Charge);
-                    if (c != 0) return c;
-                    c = a.ScanNumber.CompareTo(b.ScanNumber);
-                    if (c != 0) return c;
-                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
-                });
                 survivors.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
             }
             reloadProgress.Dispose();
