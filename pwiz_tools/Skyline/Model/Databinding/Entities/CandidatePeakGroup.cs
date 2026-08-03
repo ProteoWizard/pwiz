@@ -100,15 +100,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                             EntitiesResources.CandidatePeakGroup_Chosen_Choose_peak),
                         doc =>
                         {
-                            // The same index in every comparable precursor: they had their peaks
-                            // picked together, so entry N of the peak list is the same peak group
-                            // in all of them. See PeptideChromDataSets.ComparableDataSets.
-                            foreach (var precursor in GetComparableGroup())
-                            {
-                                doc = _data.PeakIndex.HasValue
-                                    ? ChoosePeak(doc, precursor, _data.PeakIndex.Value)
-                                    : RemovePeak(doc, precursor);
-                            }
+                            // ChoosePeak puts the same index on every comparable precursor: they
+                            // had their peaks picked together, so entry N of the peak list is the
+                            // same peak group in all of them.
+                            var precursorDocNode = PrecursorResult.Precursor.DocNode;
+                            doc = _data.PeakIndex.HasValue
+                                ? ChoosePeak(doc, precursorDocNode, _data.PeakIndex.Value)
+                                : GetComparableGroup().Aggregate(doc,
+                                    (document, precursor) => RemovePeak(document, precursor));
 
                             return doc;
                         });

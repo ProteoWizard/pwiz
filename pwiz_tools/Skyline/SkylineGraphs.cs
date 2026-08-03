@@ -2079,45 +2079,20 @@ namespace pwiz.Skyline
                 document = document.BeginDeferSettingsChanges();
             }
 
-            var peptideChanges = new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>>();
+            // One call per change. The molecule's other precursors take the same boundaries inside
+            // ChangePeakBounds, which is the only place that partition is decided now - and it is
+            // wider than the RelativeRT.Matching test this used to make for itself: a precursor
+            // whose relative retention time is unknown still goes with the other charge states of
+            // its own label type. Naming a transition changes it alone and synchronizes nothing.
             foreach (var change in changesArr)
             {
                 var find = new SrmDocument.FindChromInfos(document, change.GroupPath, change.NameSet, change.FilePath);
                 if (find.IndexInfo == -1)
                     continue;
 
-                document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
-                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, false);
-
-
-
-                var peptidePath = change.GroupPath.Parent;
-                if (!peptideChanges.TryGetValue(peptidePath, out var changesByFile))
-                {
-                    changesByFile = new Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>();
-                    peptideChanges[peptidePath] = changesByFile;
-                }
-                if (!changesByFile.ContainsKey(change.FilePath))
-                {
-                    var transitionGroup = (TransitionGroupDocNode) document.FindNode(change.GroupPath);
-                    if (transitionGroup.RelativeRT == RelativeRT.Matching)
-                    {
-                        changesByFile.Add(change.FilePath, change);
-                    }
-                }
-            }
-
-            // The molecule's other precursors take the same boundaries. Which of them count is
-            // MoleculeResults.GetComparableGroups, the partition their peaks were picked by, which
-            // is more than the ones whose RelativeRT matches: a precursor whose relative retention
-            // time is unknown still goes with the other charge states of its own label type.
-            foreach (var entry in peptideChanges)
-            {
-                foreach (var change in entry.Value.Select(v => v.Value))
-                {
-                    document = document.ChangeComparablePeakBounds(change.GroupPath, change.NameSet, change.FilePath,
-                        change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, change.Identified, UserSet.TRUE);
-                }
+                document = document.ChangePeakBounds(change.GroupPath, change.NameSet, change.FilePath,
+                    change.Transition, change.StartTime.MeasuredTime, change.EndTime.MeasuredTime,
+                    change.Identified, UserSet.TRUE);
             }
             return beforeDefer == null ? document : document.EndDeferSettingsChanges(beforeDefer, null);
         }

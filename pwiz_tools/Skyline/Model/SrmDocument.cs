@@ -1799,15 +1799,15 @@ namespace pwiz.Skyline.Model
         /// it drew the labels - rather than naming a retention time and having it matched back.
         /// </summary>
         /// <summary>
-        /// The document with the same peak boundaries put on every precursor of the molecule which
-        /// was picked alongside this one. See
-        /// <see cref="MoleculeResults.ChangeComparablePeakBounds"/>.
+        /// The document with a peak moved, and the same boundaries put on every precursor of the
+        /// molecule which was picked alongside it. Naming a transition changes that one alone.
+        /// See <see cref="MoleculeResults.ChangePeakBounds"/>.
         /// </summary>
-        public SrmDocument ChangeComparablePeakBounds(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
-            double startTime, double endTime, PeakIdentification? identified, UserSet userSet)
+        public SrmDocument ChangePeakBounds(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
+            Transition transition, double startTime, double endTime, PeakIdentification? identified, UserSet userSet)
         {
             return ChangePeak(groupPath, nameSet, filePath, (moleculeResults, transitionGroup, iSet, fileId) =>
-                moleculeResults.ChangeComparablePeakBounds(transitionGroup, iSet, fileId, (float) startTime,
+                moleculeResults.ChangePeakBounds(transitionGroup, transition, iSet, fileId, (float) startTime,
                     (float) endTime, identified, userSet));
         }
 
@@ -1850,7 +1850,9 @@ namespace pwiz.Skyline.Model
                 // A null identification is worked out from the settings - see
                 // MoleculeResults.FindPeakIdentification - which is where the retention times it
                 // takes to answer are already to hand.
-                return moleculeResults.ChangePeakBounds(transitionGroup, transition, iSet, fileId,
+                // This precursor alone. The callers of this overload - importing boundaries from a
+                // file, peak imputation, peak matching - walk the precursors they mean themselves.
+                return moleculeResults.ChangePrecursorPeakBounds(transitionGroup, transition, iSet, fileId,
                     (float) startTime.Value, (float) endTime.Value, identified, userSet,
                     preserveMissingPeaks);
             });

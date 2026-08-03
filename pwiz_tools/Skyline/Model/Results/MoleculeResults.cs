@@ -623,12 +623,17 @@ namespace pwiz.Skyline.Model.Results
         /// <paramref name="transition"/> null moves the whole peak group, which is the usual case.
         /// Returns the molecule unchanged when there is no chromatogram to read.
         /// </summary>
+        /// <summary>
+        /// The molecule with one precursor's peak in one file integrated between new boundaries,
+        /// and nothing else touched. Callers which walk the precursors themselves use this;
+        /// <see cref="ChangePeakBounds"/> is what moving a peak in the graph does.
+        /// </summary>
         /// <param name="identified">Null to work it out from the settings, which is what a caller
         /// which is not carrying an identification from somewhere else wants. See
         /// <see cref="FindPeakIdentification"/>.</param>
-        public PeptideDocNode ChangePeakBounds(TransitionGroup transitionGroup, [CanBeNull] Transition transition,
-            int replicateIndex, ChromFileInfoId fileId, float startTime, float endTime,
-            PeakIdentification? identified, UserSet userSet, bool preserveMissingPeaks = false)
+        public PeptideDocNode ChangePrecursorPeakBounds(TransitionGroup transitionGroup,
+            [CanBeNull] Transition transition, int replicateIndex, ChromFileInfoId fileId, float startTime,
+            float endTime, PeakIdentification? identified, UserSet userSet, bool preserveMissingPeaks = false)
         {
             return ChangePeak(transitionGroup, replicateIndex, new PeakChange(fileId, transition, userSet)
             {
@@ -640,8 +645,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The precursors of this molecule whose peaks were picked together with one of them, and
-        /// so are meant to sit at the same retention time.
+        /// The molecule's <i>other</i> precursors whose peaks were picked together with this one,
+        /// and so are meant to sit at the same retention time. The one asked about is left out,
+        /// since a caller changing it has done that already.
         /// <para>
         /// A precursor whose <see cref="RelativeRT"/> is known to match goes with every other one
         /// which also matches, whatever its charge. One whose relative retention time is unknown
@@ -658,46 +664,85 @@ namespace pwiz.Skyline.Model.Results
                 return Array.Empty<TransitionGroupDocNode>();
             }
 
+            var others = PeptideDocNode.TransitionGroups
+                .Where(other => !ReferenceEquals(other.TransitionGroup, transitionGroup));
             if (nodeGroup.RelativeRT == RelativeRT.Unknown)
             {
-                return PeptideDocNode.TransitionGroups.Where(other => Equals(other.LabelType, nodeGroup.LabelType));
+                return others.Where(other => Equals(other.LabelType, nodeGroup.LabelType));
             }
 
-            return PeptideDocNode.TransitionGroups.Where(other => other.RelativeRT != RelativeRT.Unknown);
+            return others.Where(other => other.RelativeRT != RelativeRT.Unknown);
         }
 
         /// <summary>
-        /// The molecule with the same peak boundaries put on every precursor which was picked
-        /// alongside this one, which is what moving a peak in the chromatogram graph does: the
-        /// precursors of a molecule are meant to sit at the same retention time.
+        /// The molecule with a peak moved, and the same boundaries put on every precursor which was
+        /// picked alongside it: the precursors of a molecule are meant to sit at the same retention
+        /// time. This is what moving a peak in the chromatogram graph does.
+        /// <para>
+        /// Naming a <paramref name="transition"/> changes that transition alone and synchronizes
+        /// nothing, which is the point of it - Skyline makes moving one transition's boundaries
+        /// reachable only by dragging while its chromatogram is the only one shown, and fanning
+        /// that out to the other precursors would undo the asking.
+        /// </para>
         /// <para>
         /// A precursor with no peak in this file is left alone, and so is one whose peak is
         /// missing, since giving it these boundaries would invent a peak the document never had.
         /// </para>
         /// </summary>
-        public PeptideDocNode ChangeComparablePeakBounds(TransitionGroup transitionGroup, int replicateIndex,
-            ChromFileInfoId fileId, float startTime, float endTime, PeakIdentification? identified, UserSet userSet)
+        public PeptideDocNode ChangePeakBounds(TransitionGroup transitionGroup, [CanBeNull] Transition transition,
+            int replicateIndex, ChromFileInfoId fileId, float startTime, float endTime,
+            PeakIdentification? identified, UserSet userSet)
         {
-            var moleculeResults = this;
-            foreach (var other in GetComparableGroups(transitionGroup).ToArray())
+            // Before anything changes, since it reads the precursors as they are now.
+            var others = transition == null ? GetOtherComparableGroups(transitionGroup) : new TransitionGroup[0];
+            var moleculeResults = WithMolecule(ChangePrecursorPeakBounds(transitionGroup, transition, replicateIndex,
+                fileId, startTime, endTime, identified, userSet));
+            foreach (var other in others)
             {
-                if (ReferenceEquals(other.TransitionGroup, transitionGroup))
-                {
-                    continue;
-                }
-
-                var nodePepNew = moleculeResults.ChangePeakBounds(other.TransitionGroup, null, replicateIndex,
-                    fileId, startTime, endTime, identified, userSet, true);
-                if (!ReferenceEquals(nodePepNew, moleculeResults.PeptideDocNode))
-                {
-                    // A new molecule each turn, and the chromatograms are read again with it. Each
-                    // turn changes a different precursor, so none of them changes what the next one
-                    // reads, but the results it works from have to be the ones being changed.
-                    moleculeResults = new MoleculeResults(Settings, nodePepNew);
-                }
+                moleculeResults = moleculeResults.WithMolecule(moleculeResults.ChangePrecursorPeakBounds(other, null,
+                    replicateIndex, fileId, startTime, endTime, identified, userSet, true));
             }
 
             return moleculeResults.PeptideDocNode;
+        }
+
+        /// <summary>
+        /// The molecule with a candidate peak chosen, and the same one chosen for every precursor
+        /// which was picked alongside it. The index carries across because they were picked
+        /// together - see <see cref="GetComparableGroups"/>.
+        /// </summary>
+        public PeptideDocNode ChoosePeak(TransitionGroup transitionGroup, int replicateIndex,
+            ChromFileInfoId fileId, int peakIndex, UserSet userSet)
+        {
+            var others = GetOtherComparableGroups(transitionGroup);
+            var moleculeResults =
+                WithMolecule(ChoosePrecursorPeak(transitionGroup, replicateIndex, fileId, peakIndex, userSet));
+            foreach (var other in others)
+            {
+                moleculeResults = moleculeResults.WithMolecule(
+                    moleculeResults.ChoosePrecursorPeak(other, replicateIndex, fileId, peakIndex, userSet));
+            }
+
+            return moleculeResults.PeptideDocNode;
+        }
+
+        /// <summary>
+        /// The identities of <see cref="GetComparableGroups"/>, taken before anything changes: the
+        /// doc nodes are replaced as each precursor is changed, while these stay put.
+        /// </summary>
+        private TransitionGroup[] GetOtherComparableGroups(TransitionGroup transitionGroup)
+        {
+            return GetComparableGroups(transitionGroup).Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
+        }
+
+        /// <summary>
+        /// These results for a molecule which has just been changed, or this when it has not.
+        /// </summary>
+        private MoleculeResults WithMolecule(PeptideDocNode peptideDocNode)
+        {
+            return ReferenceEquals(peptideDocNode, PeptideDocNode)
+                ? this
+                : new MoleculeResults(Settings, peptideDocNode);
         }
 
         /// <summary>
@@ -752,7 +797,7 @@ namespace pwiz.Skyline.Model.Results
         /// reachable only by dragging while its chromatogram is the only one shown.
         /// </para>
         /// </summary>
-        public PeptideDocNode ChoosePeak(TransitionGroup transitionGroup, int replicateIndex,
+        public PeptideDocNode ChoosePrecursorPeak(TransitionGroup transitionGroup, int replicateIndex,
             ChromFileInfoId fileId, int peakIndex, UserSet userSet)
         {
             return ChangePeak(transitionGroup, replicateIndex,
