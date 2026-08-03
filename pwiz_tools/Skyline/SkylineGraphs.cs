@@ -77,6 +77,7 @@ namespace pwiz.Skyline
         private readonly List<GraphSummary> _listGraphMassError = new List<GraphSummary>();
         private readonly List<GraphSummary> _listGraphDetections = new List<GraphSummary>();
 
+        private List<string> _layoutProblemWindows;
         private LiveResultsGrid _resultsGridForm;
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
@@ -301,9 +302,9 @@ namespace pwiz.Skyline
                     listUpdateGraphs.Add(_graphSpectrum);
             }
 
+            bool deserialized = false;
             using (var layoutLock = new DockPanelLayoutLock(dockPanel))
             {
-                bool deserialized = false;
                 string layoutFile = GetViewFile(DocumentFilePath);
                 if (docIdChanged && File.Exists(layoutFile))
                 {
@@ -463,6 +464,8 @@ namespace pwiz.Skyline
             UpdateGraphPanes(listUpdateGraphs);
             FoldChangeForm.CloseInapplicableForms(this);
             ListGridForm.CloseInapplicableForms(this);
+            if (deserialized)
+                ShowLayoutProblems(GetViewFile(DocumentFilePath));
         }
 
         public void UpdateGraphSpectrumEnabled()
@@ -481,6 +484,7 @@ namespace pwiz.Skyline
         // Load view layout from the given stream.
         public void LoadLayout(Stream layoutStream)
         {
+            _layoutProblemWindows = new List<string>();
             using (new DockPanelLayoutLock(dockPanel, true))
             {
                 if (Program.SkylineOffscreen)
@@ -489,6 +493,24 @@ namespace pwiz.Skyline
                 }
                 LoadLayoutLocked(layoutStream);
             }
+        }
+
+        /// <summary>
+        /// Reports the windows which the last <see cref="LoadLayout"/> could not restore, so
+        /// that opening a document and File > Import > Window Layout complain the same way.
+        /// Must be called after the dock panel layout lock has been released.
+        /// </summary>
+        private void ShowLayoutProblems(string viewFilePath)
+        {
+            var windows = _layoutProblemWindows;
+            _layoutProblemWindows = null;
+            if (windows == null || windows.Count == 0)
+                return;
+
+            MessageDlg.Show(this, TextUtil.LineSeparate(
+                string.Format(SkylineResources.SkylineWindow_ShowLayoutProblems_The_following_windows_in_the_window_layout_file__0__could_not_be_restored_, viewFilePath),
+                string.Empty,
+                TextUtil.LineSeparate(windows)));
         }
 
         // Load view layout from the given stream.
@@ -680,19 +702,35 @@ namespace pwiz.Skyline
         /// <summary>
         /// Restores a single window named in a .view file. A layout may have been saved for a
         /// different document than the one now open, so failing to restore one window must not
-        /// abort the rest of the layout. Returning null simply leaves that window closed.
+        /// abort the rest of the layout. Any window left out is remembered for
+        /// <see cref="ShowLayoutProblems"/> to report.
         /// </summary>
         private IDockableForm DeserializeForm(string persistentString)
         {
+            IDockableForm form = null;
             try
             {
-                return RestoreDockableForm(persistentString);
+                form = RestoreDockableForm(persistentString);
             }
             catch (Exception x)
             {
                 Debug.WriteLine($@"Failed to restore window '{persistentString}' from the layout: {x.Message}");
-                return null;
             }
+            if (form == null && !IsExpectedMissingWindow(persistentString))
+                _layoutProblemWindows?.Add(persistentString);
+            return form;
+        }
+
+        /// <summary>
+        /// Returns true for a window Skyline deliberately declines to restore, which should
+        /// not be reported to the user as a problem with the layout file.
+        /// </summary>
+        private bool IsExpectedMissingWindow(string persistentString)
+        {
+            // Chromatogram graphs are capped to conserve Win32 handles. Reaching the cap is a
+            // deliberate limit rather than anything wrong with the layout file.
+            return persistentString.StartsWith(typeof(GraphChromatogram).ToString()) &&
+                   _listGraphChrom.Count >= MAX_GRAPH_CHROM;
         }
 
         private IDockableForm RestoreDockableForm(string persistentString)

@@ -23,6 +23,8 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Lists;
@@ -49,6 +51,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             TestMenuItems();
+            TestFileDialogFilters();
             TestLayoutRoundTrip();
             TestUnrecognizedWindowSkipped();
             TestListWindowNotInDocument();
@@ -87,6 +90,19 @@ namespace pwiz.SkylineTestFunctional
                     return found;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Saving a layout must offer only the .sky.view extension. With an all-files entry
+        /// the file name Windows suggests as the user types could be a document, which the
+        /// layout would then overwrite.
+        /// </summary>
+        private static void TestFileDialogFilters()
+        {
+            AssertEx.Contains(SkylineWindow.FILTER_SKY_VIEW, @"*" + SkylineWindow.EXT_SKY_VIEW);
+            AssertEx.IsFalse(SkylineWindow.FILTER_SKY_VIEW.Contains(@"*.*"));
+            // Opening also matches the p01.view files that ship with the tutorial tests
+            AssertEx.Contains(SkylineWindow.FILTER_VIEW, @"*" + SkylineWindow.EXT_VIEW);
         }
 
         /// <summary>
@@ -134,7 +150,9 @@ namespace pwiz.SkylineTestFunctional
             File.WriteAllText(editedViewPath,
                 layoutXml.Replace(typeof(ImmediateWindow).ToString(), @"pwiz.Skyline.Controls.NoSuchWindow"));
 
-            RunUI(() => SkylineWindow.ImportLayout(editedViewPath));
+            var messageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.ImportLayout(editedViewPath));
+            AssertLayoutProblemMessage(messageDlg, editedViewPath, @"pwiz.Skyline.Controls.NoSuchWindow");
+            OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForGraphs();
             // The unknown window is skipped, but the rest of the layout is restored
             Assert.IsNull(FindOpenForm<ImmediateWindow>());
@@ -158,9 +176,22 @@ namespace pwiz.SkylineTestFunctional
 
             // Start a document which does not have the list, and import the layout anyway
             RunUI(() => SkylineWindow.NewDocument(true));
-            RunUI(() => SkylineWindow.ImportLayout(viewPath));
+            var messageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.ImportLayout(viewPath));
+            AssertLayoutProblemMessage(messageDlg, viewPath, LIST_NAME);
+            OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForGraphs();
             Assert.IsNull(FindOpenForm<ListGridForm>());
+        }
+
+        /// <summary>
+        /// Verifies the warning names the layout file and every window left out of it.
+        /// </summary>
+        private static void AssertLayoutProblemMessage(MessageDlg messageDlg, string viewFilePath, string windowName)
+        {
+            AssertEx.Contains(messageDlg.Message, string.Format(
+                SkylineResources.SkylineWindow_ShowLayoutProblems_The_following_windows_in_the_window_layout_file__0__could_not_be_restored_,
+                viewFilePath));
+            AssertEx.Contains(messageDlg.Message, windowName);
         }
 
         /// <summary>

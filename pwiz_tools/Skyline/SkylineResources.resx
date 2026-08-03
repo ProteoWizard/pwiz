@@ -1100,8 +1100,8 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>The document must contain targets for which to export features.</value>
   </data>
-  <data name="SkylineWindow_ShowExportLayoutDlg_Export_Layout" xml:space="preserve">
-    <value>Export Layout</value>
+  <data name="SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout" xml:space="preserve">
+    <value>Export Window Layout</value>
   </data>
   <data name="SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__" xml:space="preserve">
     <value>Failure attempting to save the window layout file {0}.</value>
@@ -1118,8 +1118,11 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
     <value>Failed exporting spectral library to {0}.</value>
   </data>
-  <data name="SkylineWindow_ShowImportLayoutDlg_Import_Layout" xml:space="preserve">
-    <value>Import Layout</value>
+  <data name="SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout" xml:space="preserve">
+    <value>Import Window Layout</value>
+  </data>
+  <data name="SkylineWindow_ShowLayoutProblems_The_following_windows_in_the_window_layout_file__0__could_not_be_restored_" xml:space="preserve">
+    <value>The following windows in the window layout file {0} could not be restored:</value>
   </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>

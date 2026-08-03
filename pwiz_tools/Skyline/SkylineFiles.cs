@@ -73,11 +73,31 @@ namespace pwiz.Skyline
     public partial class SkylineWindow
     {
         /// <summary>
-        /// Extension of the window layout file. It is appended to the full document
-        /// file name, so that "Doc.sky" gets the layout file "Doc.sky.view".
+        /// Suffix appended to the full document file name to get its window layout file,
+        /// so that "Doc.sky" gets the layout file "Doc.sky.view".
         /// </summary>
         public const string EXT_VIEW = ".view";
 
+        /// <summary>
+        /// The extension a window layout file gets when it is saved on its own.
+        /// </summary>
+        public const string EXT_SKY_VIEW = SrmDocument.EXT + EXT_VIEW;
+
+        /// <summary>
+        /// Filter for saving a layout. It offers only <see cref="EXT_SKY_VIEW"/>, and no
+        /// all-files entry, so that a layout cannot be saved over a document or any other
+        /// file that is not a layout. Windows suggests matching existing file names as the
+        /// user types, and an unrestricted filter makes those suggestions dangerous.
+        /// </summary>
+        public static string FILTER_SKY_VIEW
+        {
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_VIEW_Skyline_Window_Layouts, EXT_SKY_VIEW); }
+        }
+
+        /// <summary>
+        /// Filter for opening a layout. It matches any ".view" file, which includes the
+        /// ".sky.view" files saved beside documents.
+        /// </summary>
         public static string FILTER_VIEW
         {
             get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_VIEW_Skyline_Window_Layouts, EXT_VIEW); }
@@ -4210,11 +4230,11 @@ namespace pwiz.Skyline
         {
             using (var dlg = new SaveFileDialog())
             {
-                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Layout;
+                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
                 dlg.OverwritePrompt = true;
-                dlg.DefaultExt = EXT_VIEW;
+                dlg.DefaultExt = EXT_SKY_VIEW;
                 dlg.SupportMultiDottedExtensions = true;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(FILTER_VIEW);
+                dlg.Filter = FILTER_SKY_VIEW;
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                     dlg.FileName = GetViewFile(Path.GetFileName(DocumentFilePath));
@@ -4247,10 +4267,10 @@ namespace pwiz.Skyline
         {
             using (var dlg = new OpenFileDialog())
             {
-                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Layout;
+                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
                 dlg.DefaultExt = EXT_VIEW;
                 dlg.SupportMultiDottedExtensions = true;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(FILTER_VIEW);
+                dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
@@ -4286,6 +4306,7 @@ namespace pwiz.Skyline
             FoldChangeForm.CloseInapplicableForms(this);
             ListGridForm.CloseInapplicableForms(this);
             UpdateGraphPanes();
+            ShowLayoutProblems(viewFilePath);
         }
 
 

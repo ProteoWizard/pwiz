@@ -596,7 +596,7 @@
     <value>170, 22</value>
   </data>
   <data name="importLayoutMenuItem.Text" xml:space="preserve">
-    <value>&amp;Layout...</value>
+    <value>&amp;Window Layout...</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
@@ -662,7 +662,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportLayoutMenuItem.Text" xml:space="preserve">
-    <value>&amp;Layout...</value>
+    <value>&amp;Window Layout...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>

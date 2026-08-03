@@ -3296,11 +3296,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export Layout.
+        ///   Looks up a localized string similar to Export Window Layout.
         /// </summary>
-        public static string SkylineWindow_ShowExportLayoutDlg_Export_Layout {
+        public static string SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout {
             get {
-                return ResourceManager.GetString("SkylineWindow_ShowExportLayoutDlg_Export_Layout", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout", resourceCulture);
             }
         }
 
@@ -3333,11 +3333,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import Layout.
+        ///   Looks up a localized string similar to Import Window Layout.
         /// </summary>
-        public static string SkylineWindow_ShowImportLayoutDlg_Import_Layout {
+        public static string SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout {
             get {
-                return ResourceManager.GetString("SkylineWindow_ShowImportLayoutDlg_Import_Layout", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout", resourceCulture);
             }
         }
 
@@ -3381,6 +3381,16 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The following windows in the window layout file {0} could not be restored:.
+        /// </summary>
+        public static string SkylineWindow_ShowLayoutProblems_The_following_windows_in_the_window_layout_file__0__could_not_be_restored_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowLayoutProblems_The_following_windows_in_the_window_layout_file_" +
+                        "_0__could_not_be_restored_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The document must contain targets for which to export features..
         /// </summary>
