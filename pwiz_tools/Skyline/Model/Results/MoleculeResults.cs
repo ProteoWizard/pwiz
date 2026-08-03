@@ -656,22 +656,20 @@ namespace pwiz.Skyline.Model.Results
         /// This is the same partition <see cref="PeptideChromDataSets"/> picks peaks by.
         /// </para>
         /// </summary>
-        public IEnumerable<TransitionGroupDocNode> GetComparableGroups(TransitionGroup transitionGroup)
+        public IEnumerable<TransitionGroup> GetComparableGroups(TransitionGroup transitionGroup)
         {
             var nodeGroup = FindTransitionGroup(transitionGroup);
             if (nodeGroup == null)
             {
-                return Array.Empty<TransitionGroupDocNode>();
+                return Array.Empty<TransitionGroup>();
             }
 
             var others = PeptideDocNode.TransitionGroups
                 .Where(other => !ReferenceEquals(other.TransitionGroup, transitionGroup));
-            if (nodeGroup.RelativeRT == RelativeRT.Unknown)
-            {
-                return others.Where(other => Equals(other.LabelType, nodeGroup.LabelType));
-            }
-
-            return others.Where(other => other.RelativeRT != RelativeRT.Unknown);
+            others = nodeGroup.RelativeRT == RelativeRT.Unknown
+                ? others.Where(other => Equals(other.LabelType, nodeGroup.LabelType))
+                : others.Where(other => other.RelativeRT != RelativeRT.Unknown);
+            return others.Select(other => other.TransitionGroup);
         }
 
         /// <summary>
@@ -693,14 +691,15 @@ namespace pwiz.Skyline.Model.Results
             int replicateIndex, ChromFileInfoId fileId, float startTime, float endTime,
             PeakIdentification? identified, UserSet userSet)
         {
-            // Before anything changes, since it reads the precursors as they are now.
-            var others = transition == null ? GetOtherComparableGroups(transitionGroup) : new TransitionGroup[0];
             var moleculeResults = WithMolecule(ChangePrecursorPeakBounds(transitionGroup, transition, replicateIndex,
                 fileId, startTime, endTime, identified, userSet));
-            foreach (var other in others)
+            if (transition == null)
             {
-                moleculeResults = moleculeResults.WithMolecule(moleculeResults.ChangePrecursorPeakBounds(other, null,
-                    replicateIndex, fileId, startTime, endTime, identified, userSet, true));
+                foreach (var other in GetComparableGroups(transitionGroup))
+                {
+                    moleculeResults = moleculeResults.WithMolecule(moleculeResults.ChangePrecursorPeakBounds(other, null,
+                        replicateIndex, fileId, startTime, endTime, identified, userSet, true));
+                }
             }
 
             return moleculeResults.PeptideDocNode;
@@ -714,25 +713,15 @@ namespace pwiz.Skyline.Model.Results
         public PeptideDocNode ChoosePeak(TransitionGroup transitionGroup, int replicateIndex,
             ChromFileInfoId fileId, int peakIndex, UserSet userSet)
         {
-            var others = GetOtherComparableGroups(transitionGroup);
             var moleculeResults =
                 WithMolecule(ChoosePrecursorPeak(transitionGroup, replicateIndex, fileId, peakIndex, userSet));
-            foreach (var other in others)
+            foreach (var other in GetComparableGroups(transitionGroup))
             {
                 moleculeResults = moleculeResults.WithMolecule(
                     moleculeResults.ChoosePrecursorPeak(other, replicateIndex, fileId, peakIndex, userSet));
             }
 
             return moleculeResults.PeptideDocNode;
-        }
-
-        /// <summary>
-        /// The identities of <see cref="GetComparableGroups"/>, taken before anything changes: the
-        /// doc nodes are replaced as each precursor is changed, while these stay put.
-        /// </summary>
-        private TransitionGroup[] GetOtherComparableGroups(TransitionGroup transitionGroup)
-        {
-            return GetComparableGroups(transitionGroup).Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
         }
 
         /// <summary>
