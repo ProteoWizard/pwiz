@@ -188,12 +188,25 @@ namespace pwiz.Osprey.FDR
                 var (entryIds, scores) = readFileScalars(fileKey);
                 int m = entryIds.Length;
                 var labels = new bool[m];
+                // Non-null only when stratified: marks the observations Stage 6 actually CHANGED.
+                var changedFlags = stratumBaseIds != null ? new bool[m] : null;
                 for (int i = 0; i < m; i++)
                 {
                     uint eid = entryIds[i];
                     labels[i] = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u; // decoy high bit set
                     if (survivorScoreOverride.TryGetValue((fileKey, eid), out double ov))
+                    {
+                        // BIT-EXACT inequality is the "changed" discriminator, the same one
+                        // Pass2FdrSidecar.AssignPerRunQ uses to separate Moved from Unchanged: an
+                        // unchanged survivor's reconciled features ARE its original Stage-4
+                        // features (ReconciledParquetWriter streams unchanged rows through
+                        // untouched) and the sidecar score came from those same features under
+                        // this same averaged model, so the recomputation reproduces it exactly.
+                        // A moved peak carries rescored features, so its score differs.
+                        if (changedFlags != null && ov != scores[i])
+                            changedFlags[i] = true;
                         scores[i] = ov; // swap in the reconciled survivor's frozen-model score
+                    }
                 }
 
                 // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
@@ -202,10 +215,17 @@ namespace pwiz.Osprey.FDR
                 // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
                 // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
                 // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
-                // answer for it. Presence in survivorScoreOverride IS the "changed" signal: the
-                // override exists only for peaks re-scored against the reconciled features, and
-                // it is keyed by entry_id, so it means the same thing in-process and on a
-                // distributed merge node (an index-keyed source does NOT - see #4484).
+                // answer for it. The "changed" signal is a frozen-model score that DIFFERS from
+                // the entry's 1st-pass sidecar score, computed above - NOT mere presence in
+                // survivorScoreOverride. That map holds every post-reconciliation survivor whose
+                // identity resolves in the effective parquet, including files Stage 6 never
+                // touched (the effective path falls back to the ORIGINAL parquet), so keying on
+                // presence admitted most of the survivor pool and quietly widened the very
+                // stratum this mode exists to enforce.
+                //
+                // The score comparison is keyed by entry_id, so it means the same thing
+                // in-process and on a distributed merge node (an index-keyed source does NOT -
+                // see #4484), and it needs no extra plumbing: both scores are already in hand.
                 //
                 // Admitted BY BASE_ID so a target and its paired decoy always enter together.
                 // Admitting a lone target would let it auto-win its competition and inflate the
@@ -216,7 +236,7 @@ namespace pwiz.Osprey.FDR
                     changedBaseIds = new HashSet<uint>();
                     for (int i = 0; i < m; i++)
                     {
-                        if (survivorScoreOverride.ContainsKey((fileKey, entryIds[i])))
+                        if (changedFlags[i])
                             changedBaseIds.Add(entryIds[i] & PercolatorEntry.BASE_ID_MASK);
                     }
                 }
