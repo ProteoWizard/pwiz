@@ -196,7 +196,40 @@ namespace pwiz.Osprey.FDR
                         scores[i] = ov; // swap in the reconciled survivor's frozen-model score
                 }
 
-                // Run-level: compete within this file (only stratum members when
+                // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
+                // created it) carries a NEW composite score and no longer has a valid pass-1
+                // run q -- the old q described a peak that no longer exists, and
+                // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
+                // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
+                // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
+                // answer for it. Presence in survivorScoreOverride IS the "changed" signal: the
+                // override exists only for peaks re-scored against the reconciled features, and
+                // it is keyed by entry_id, so it means the same thing in-process and on a
+                // distributed merge node (an index-keyed source does NOT - see #4484).
+                //
+                // Admitted BY BASE_ID so a target and its paired decoy always enter together.
+                // Admitting a lone target would let it auto-win its competition and inflate the
+                // null, the cross-validation grouping invariant this file depends on.
+                HashSet<uint> changedBaseIds = null;
+                if (stratumBaseIds != null)
+                {
+                    changedBaseIds = new HashSet<uint>();
+                    for (int i = 0; i < m; i++)
+                    {
+                        if (survivorScoreOverride.ContainsKey((fileKey, entryIds[i])))
+                            changedBaseIds.Add(entryIds[i] & PercolatorEntry.BASE_ID_MASK);
+                    }
+                }
+
+                bool Admit(uint baseId)
+                {
+                    if (stratumBaseIds == null)
+                        return true;
+                    return stratumBaseIds.Contains(baseId) ||
+                           (changedBaseIds != null && changedBaseIds.Contains(baseId));
+                }
+
+                // Run-level: compete within this file (stratum members plus changed peaks when
                 // stratified), conservative q on the winners.
                 int[] allIdx;
                 if (stratumBaseIds == null)
@@ -208,7 +241,7 @@ namespace pwiz.Osprey.FDR
                 {
                     var idxList = new List<int>(m);
                     for (int i = 0; i < m; i++)
-                        if (stratumBaseIds.Contains(entryIds[i] & PercolatorEntry.BASE_ID_MASK)) idxList.Add(i);
+                        if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK)) idxList.Add(i);
                     allIdx = idxList.ToArray();
                 }
                 TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
@@ -226,13 +259,13 @@ namespace pwiz.Osprey.FDR
                 }
 
                 // Experiment-level: fold every observation into the per-base_id bests
-                // (stratum members only when stratified -> the experiment competition
-                // below runs over exactly the stratum's base_ids).
+                // (stratum members plus changed peaks when stratified -> the experiment
+                // competition below runs over exactly the admitted base_ids).
                 for (int i = 0; i < m; i++)
                 {
                     uint eid = entryIds[i];
                     uint bid = eid & PercolatorEntry.BASE_ID_MASK;
-                    if (stratumBaseIds != null && !stratumBaseIds.Contains(bid)) continue;
+                    if (!Admit(bid)) continue;
                     double s = scores[i];
                     if (labels[i])
                     {

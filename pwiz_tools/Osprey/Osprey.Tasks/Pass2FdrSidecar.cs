@@ -709,7 +709,13 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in perFileEntries)
                 foreach (var e in kvp.Value)
                 {
-                    if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu))
+                    // Off-stratum survivors keep their 1st-pass q (report = pass1 U stratum
+                    // passers), EXCEPT where Stage 6 changed the peak. A changed peak competed
+                    // above on its recalculated score, so it has an earned q here; skipping it
+                    // would leave it on the q=1 sentinel the post-rescore overlay wrote, which
+                    // reads as a confident rejection rather than "not yet computed".
+                    if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu) &&
+                        !survivorScore.ContainsKey((kvp.Key, e.EntryId)))
                         continue;
                     var key = (kvp.Key, e.EntryId);
                     if (!runQ.TryGetValue(key, out double rq))
