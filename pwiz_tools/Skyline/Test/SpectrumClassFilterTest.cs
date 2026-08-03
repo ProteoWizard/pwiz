@@ -239,11 +239,12 @@ namespace pwiz.SkylineTest
 
             // A numeric filter that meets a present but non-numeric value hard-fails with filter context
             // (user decision), so chromatogram extraction reports a clear error rather than skipping it.
-            // The predicate reconstructs the column from the persisted filter path, which carries the
-            // accession but not the friendly name (that is resolved from imported data on the interactive
-            // surfaces), so the error names the property by its accession.
+            // The column is reconstructed from the persisted filter path, whose friendly name is resolved
+            // from the compiled-in ontology catalog, so the error names the property the same way the
+            // interactive surfaces do.
             var nonNumeric = CvSpectrum(@"bad", accession, name, @"not a number", unit);
-            var columnDisplay = accession;
+            var columnDisplay = SpectrumClassColumn.FindColumn(numericColumn.PropertyPath)
+                .GetLocalizedColumnName(CultureInfo.CurrentCulture);
             AssertEx.ThrowsException<InvalidDataException>(
                 () => Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(nonNumeric),
                 string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,

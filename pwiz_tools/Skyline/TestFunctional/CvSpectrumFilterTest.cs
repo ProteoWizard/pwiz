@@ -115,6 +115,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyEditorOffersCvColumns();
             VerifyEditorPreservesUnofferedCvClause();
             VerifyEditorAcceptsStringOperatorOnNumericCvColumn();
+            VerifyCvFilterReconstructsFriendlyName();
         }
 
         /// <summary>
@@ -228,6 +229,23 @@ namespace pwiz.SkylineTestFunctional
                 { new FilterSpec(discovered.PropertyPath, FilterOperations.OP_CONTAINS, @"e05") }));
             Assert.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => Equals(tg.SpectrumClassFilter, expected)),
                 @"a Contains filter on a numeric-discovered CV column was not accepted by the editor");
+        }
+
+        /// <summary>
+        /// A CV filter reconstructed from its saved encoded path (with no discovery context) resolves its
+        /// friendly name from the ontology catalog, so it reads the same in the document tree / filter
+        /// summaries as in the editor, rather than as a bare accession.
+        /// </summary>
+        private void VerifyCvFilterReconstructsFriendlyName()
+        {
+            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
+            var catalogEntry = SpectrumClassColumn.GetCvColumnCatalog()
+                .First(c => Equals(c.PropertyPath, bpiColumn.PropertyPath));
+            var reconstructed = SpectrumClassColumn.FindColumn(bpiColumn.PropertyPath);
+            Assert.IsNotNull(reconstructed);
+            Assert.AreEqual(catalogEntry.GetLocalizedColumnName(CultureInfo.CurrentCulture),
+                reconstructed.GetLocalizedColumnName(CultureInfo.CurrentCulture),
+                @"a reconstructed CV column should display the same friendly name as the catalog entry");
         }
 
         private static SpectrumClassFilter StringCvFilter(string containsText)

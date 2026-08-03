@@ -158,7 +158,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
             if (propertyPath.IsProperty && propertyPath.Parent.IsRoot &&
                 TryDecodeCvParamColumnName(propertyPath.Name, out var accession))
             {
-                return new CvParamColumn(accession, null, false);
+                // Recover the friendly name from the compiled-in ontology catalog so a saved CV filter reads
+                // the same in the document tree/summaries as in the editor (e.g. "base peak intensity
+                // (MS:1000505)"). A term not in the catalog (a userParam, or a non-spectrum-level term) has
+                // no catalog name, so it keeps the accession as its display name.
+                CatalogNameHolder.NamesByAccession.TryGetValue(accession, out var name);
+                return new CvParamColumn(accession, name, false);
             }
 
             return null;
@@ -271,6 +276,26 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return byColumnName.Values
                 .OrderBy(column => column.GetLocalizedColumnName(CultureInfo.CurrentCulture), StringComparer.CurrentCulture)
                 .ToList();
+        }
+
+        /// <summary>
+        /// The friendly name of each catalog CV term, keyed by accession, built once from the compiled-in
+        /// ontology. Used by <see cref="FindColumn"/> to give a CV column reconstructed from a saved filter
+        /// path the same display name it has in the editor.
+        /// </summary>
+        private static class CatalogNameHolder
+        {
+            public static readonly IDictionary<string, string> NamesByAccession = BuildNamesByAccession();
+
+            private static IDictionary<string, string> BuildNamesByAccession()
+            {
+                var namesByAccession = new Dictionary<string, string>();
+                foreach (var term in MsDataFileImpl.GetSpectrumCvTermCatalog())
+                {
+                    namesByAccession[term.Accession] = term.Name;
+                }
+                return namesByAccession;
+            }
         }
 
         /// <summary>
