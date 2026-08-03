@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -533,6 +535,239 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// What one file's peak is being changed to. Held as an object rather than a delegate so
+        /// that the two things which have to travel with it - which transitions it touches, and
+        /// what the peak becomes for a given optimization step - stay together.
+        /// </summary>
+        private class PeakChange
+        {
+            /// <summary>
+            /// <paramref name="transition"/> null changes every transition of the precursor, which
+            /// is what moving a peak group does.
+            /// </summary>
+            public PeakChange(ChromFileInfoId fileId, Transition transition, UserSet userSet)
+            {
+                FileId = fileId;
+                Transition = transition;
+                UserSet = userSet;
+            }
+
+            private ChromFileInfoId FileId { get; }
+            private Transition Transition { get; }
+            public UserSet UserSet { get; }
+
+            /// <summary>
+            /// Set to integrate between these boundaries, which is what a peak the user moved is
+            /// reproduced by. Null when the peak is being taken from the .skyd or removed.
+            /// </summary>
+            public CustomPeakBounds? PeakBounds { get; set; }
+            public PeakIdentification Identified { get; set; }
+
+            /// <summary>
+            /// Which of the candidate peaks in the .skyd to take, or -1 to remove the peak.
+            /// Ignored when <see cref="PeakBounds"/> says to integrate instead.
+            /// </summary>
+            public int PeakIndex { get; set; } = -1;
+
+            /// <summary>
+            /// Leaves alone a transition which has no peak here, so that importing boundaries does
+            /// not invent peaks where the document says there were none.
+            /// </summary>
+            public bool PreserveMissingPeaks { get; set; }
+
+            public bool AppliesToFile(ChromFileInfoId fileId)
+            {
+                return ReferenceEquals(FileId, fileId);
+            }
+
+            public bool AppliesToTransition(Transition transition)
+            {
+                return Transition == null || ReferenceEquals(Transition, transition);
+            }
+
+            public ChromPeak GetChromPeak(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
+                TransitionDocNode nodeTran, int replicateIndex, ChromFileInfoId fileId, int step,
+                ChromatogramInfo chromatogramInfo)
+            {
+                if (!PeakBounds.HasValue)
+                {
+                    return PeakIndex < 0 || chromatogramInfo == null || PeakIndex >= chromatogramInfo.NumPeaks
+                        ? ChromPeak.EMPTY
+                        : chromatogramInfo.GetPeak(PeakIndex);
+                }
+
+                var integrator = moleculeResults.GetIntegrator(nodeGroup, replicateIndex, fileId);
+                if (integrator == null)
+                {
+                    return ChromPeak.EMPTY;
+                }
+
+                var flags = default(ChromPeak.FlagValues);
+                if (Identified != PeakIdentification.FALSE)
+                {
+                    flags |= ChromPeak.FlagValues.contains_id;
+                }
+
+                if (Identified == PeakIdentification.ALIGNED)
+                {
+                    flags |= ChromPeak.FlagValues.used_id_alignment;
+                }
+
+                return integrator.CalcPeak(nodeTran.Transition, step, PeakBounds.Value.StartTime,
+                    PeakBounds.Value.EndTime, flags);
+            }
+        }
+
+        /// <summary>
+        /// The molecule with one precursor's peak in one file integrated between new boundaries.
+        /// <paramref name="transition"/> null moves the whole peak group, which is the usual case.
+        /// Returns the molecule unchanged when there is no chromatogram to read.
+        /// </summary>
+        public PeptideDocNode ChangePeakBounds(TransitionGroup transitionGroup, [CanBeNull] Transition transition,
+            int replicateIndex, ChromFileInfoId fileId, float startTime, float endTime,
+            PeakIdentification identified, UserSet userSet, bool preserveMissingPeaks = false)
+        {
+            return ChangePeak(transitionGroup, replicateIndex, new PeakChange(fileId, transition, userSet)
+            {
+                PeakBounds = new CustomPeakBounds(Math.Min(startTime, endTime), Math.Max(startTime, endTime)),
+                Identified = identified,
+                PreserveMissingPeaks = preserveMissingPeaks
+            });
+        }
+
+        /// <summary>
+        /// The molecule with one precursor's peak in one file set to one of the candidate peaks in
+        /// the .skyd. See <see cref="FindPeakIndex"/> for how a caller which has a retention time
+        /// rather than an index gets one.
+        /// <para>
+        /// Every transition of the precursor, always. A candidate peak index is a precursor level
+        /// thing - see <see cref="PrecursorPeak.ChosenPeakIndex"/> - and one transition sitting on
+        /// a different candidate peak has no way to be written down as an index at all. Moving a
+        /// single transition is <see cref="ChangePeakBounds"/>, which Skyline deliberately makes
+        /// reachable only by dragging while its chromatogram is the only one shown.
+        /// </para>
+        /// </summary>
+        public PeptideDocNode ChoosePeak(TransitionGroup transitionGroup, int replicateIndex,
+            ChromFileInfoId fileId, int peakIndex, UserSet userSet)
+        {
+            return ChangePeak(transitionGroup, replicateIndex,
+                new PeakChange(fileId, null, userSet) { PeakIndex = peakIndex });
+        }
+
+        /// <summary>
+        /// The molecule with one precursor's peak in one file taken away, which leaves an empty
+        /// peak rather than no entry: a file the precursor was measured in still has a result.
+        /// </summary>
+        public PeptideDocNode RemovePeak(TransitionGroup transitionGroup, [CanBeNull] Transition transition,
+            int replicateIndex, ChromFileInfoId fileId, UserSet userSet)
+        {
+            return ChangePeak(transitionGroup, replicateIndex, new PeakChange(fileId, transition, userSet));
+        }
+
+        /// <summary>
+        /// Which of the candidate peaks in the .skyd has its apex at a retention time, or -1 when
+        /// none of them does. This is how a caller which knows where the user clicked rather than
+        /// which peak they meant gets an index for <see cref="ChoosePeak"/>.
+        /// <para>
+        /// Every transition is asked, because each has an apex of its own and the time came off one
+        /// of them. <see cref="ChromatogramInfo.IndexOfPeak"/> allows a thousandth of a minute,
+        /// which is float precision on a time that came out of the .skyd rather than any real
+        /// tolerance - this is matching a peak, not searching near one.
+        /// </para>
+        /// </summary>
+        public int FindPeakIndex(TransitionGroup transitionGroup, int replicateIndex, ChromFileInfoId fileId,
+            double retentionTime)
+        {
+            var nodeGroup = FindTransitionGroup(transitionGroup);
+            var chromGroupInfo = nodeGroup == null
+                ? null
+                : FindChromatogramGroupInfo(nodeGroup, replicateIndex, fileId);
+            if (chromGroupInfo == null)
+            {
+                return -1;
+            }
+
+            int peakIndexBest = -1;
+            double minDeltaRT = double.MaxValue;
+            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+            {
+                var chromatogramInfo = chromGroupInfo.GetTransitionInfo(nodeTran, MzMatchTolerance);
+                int peakIndex = chromatogramInfo?.IndexOfPeak(retentionTime) ?? -1;
+                if (peakIndex == -1)
+                {
+                    continue;
+                }
+
+                double deltaRT = Math.Abs(retentionTime - chromatogramInfo.GetPeak(peakIndex).RetentionTime);
+                if (deltaRT < minDeltaRT)
+                {
+                    minDeltaRT = deltaRT;
+                    peakIndexBest = peakIndex;
+                }
+            }
+
+            return peakIndexBest;
+        }
+
+        /// <summary>
+        /// The molecule with one file's peak changed on one of its precursors.
+        /// <para>
+        /// The change goes in where the chrom infos are made, so the peak it produces is ranked and
+        /// aggregated exactly as a peak read from the .skyd would be, and then both levels go back
+        /// through the columnar results the way a results pass puts them. Conversion follows, so
+        /// the new peak comes away either with the index of the candidate peak it turned out to be
+        /// or with the boundaries to integrate between.
+        /// </para>
+        /// </summary>
+        private PeptideDocNode ChangePeak(TransitionGroup transitionGroup, int replicateIndex, PeakChange peakChange)
+        {
+            var nodeGroup = FindTransitionGroup(transitionGroup);
+            if (nodeGroup == null || replicateIndex < 0 || replicateIndex >= ReplicateCount ||
+                GetTransitionGroupChromInfos(transitionGroup) == null)
+            {
+                return PeptideDocNode;
+            }
+
+            var chromInfoLists =
+                CalcTransitionChromInfos(nodeGroup, replicateIndex, peakChange, out var correlations);
+            var groupChromInfos =
+                CalcTransitionGroupChromInfos(nodeGroup, replicateIndex, chromInfoLists, correlations);
+
+            // The precursor's first, since replacing them is what discards the columnar results
+            // derived from the ones being replaced. Only this replicate is worked out again: the
+            // rest are the ones already read.
+            var nodeGroupNew = nodeGroup.ChangeResults(new Results<TransitionGroupChromInfo>(
+                ReplaceReplicate(GetTransitionGroupChromInfos(transitionGroup), replicateIndex, groupChromInfos)));
+
+            var groupResults = nodeGroupNew.AbbreviatedResults ?? TransitionGroupResults.Empty;
+            for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
+            {
+                var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
+                var transitionChromInfos = GetTransitionChromInfos(transitionGroup, nodeTran.Transition);
+                groupResults = groupResults.UpdateTransitionFromChromInfos(iTran,
+                    new Results<TransitionChromInfo>(ReplaceReplicate(transitionChromInfos, replicateIndex,
+                        new ChromInfoList<TransitionChromInfo>(chromInfoLists[iTran]))));
+            }
+
+            nodeGroupNew = ConvertResults(nodeGroupNew.ChangeAbbreviatedResults(groupResults));
+            return ReferenceEquals(nodeGroup, nodeGroupNew)
+                ? PeptideDocNode
+                : (PeptideDocNode) PeptideDocNode.ReplaceChild(nodeGroupNew);
+        }
+
+        /// <summary>
+        /// One replicate's entries replaced, the rest left as they were.
+        /// </summary>
+        private IList<ChromInfoList<TItem>> ReplaceReplicate<TItem>(Results<TItem> results, int replicateIndex,
+            ChromInfoList<TItem> replicateResults) where TItem : ChromInfo
+        {
+            return Enumerable.Range(0, ReplicateCount)
+                .Select(i => i == replicateIndex
+                    ? replicateResults
+                    : results != null && i < results.Count ? results[i] : default).ToList();
+        }
+
+        /// <summary>
         /// The chromatograms which were read, kept because code such as GraphChromatogram and the
         /// on demand feature calculator needs the chromatogram itself and not only the peaks
         /// taken from it.
@@ -592,6 +827,16 @@ namespace pwiz.Skyline.Model.Results
         private IList<TransitionChromInfo>[] CalcTransitionChromInfos(TransitionGroupDocNode nodeGroup,
             int replicateIndex, out List<FileStepCorrelation> correlations)
         {
+            return CalcTransitionChromInfos(nodeGroup, replicateIndex, null, out correlations);
+        }
+
+        /// <summary>
+        /// <paramref name="peakChange"/> replaces the peak of the one file it names, so that a peak
+        /// the user moved goes through the same ranking and aggregation as one which was read.
+        /// </summary>
+        private IList<TransitionChromInfo>[] CalcTransitionChromInfos(TransitionGroupDocNode nodeGroup,
+            int replicateIndex, PeakChange peakChange, out List<FileStepCorrelation> correlations)
+        {
             int transitionCount = nodeGroup.Children.Count;
             var chromInfoLists = new IList<TransitionChromInfo>[transitionCount];
             var lists = new List<TransitionChromInfo>[transitionCount];
@@ -607,7 +852,8 @@ namespace pwiz.Skyline.Model.Results
                 var fileId = chromatograms.FindFile(chromGroupInfo);
                 if (fileId != null)
                 {
-                    ReadFile(nodeGroup, lists, chromGroupInfo, fileId, replicateIndex);
+                    ReadFile(nodeGroup, lists, chromGroupInfo, fileId, replicateIndex,
+                        peakChange?.AppliesToFile(fileId) == true ? peakChange : null);
                 }
             }
 
@@ -633,7 +879,8 @@ namespace pwiz.Skyline.Model.Results
         /// transition has no chromatogram.
         /// </summary>
         private void ReadFile(TransitionGroupDocNode nodeGroup, List<TransitionChromInfo>[] lists,
-            ChromatogramGroupInfo chromGroupInfo, ChromFileInfoId fileId, int replicateIndex)
+            ChromatogramGroupInfo chromGroupInfo, ChromFileInfoId fileId, int replicateIndex,
+            PeakChange peakChange = null)
         {
             var chromatograms = Settings.MeasuredResults.Chromatograms[replicateIndex];
             var groupResults = nodeGroup.AbbreviatedResults;
@@ -673,20 +920,35 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
+                var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
                 var annotations = groupResults?.FindTransitionAnnotations(iTran, replicateIndex, fileId) ??
                                   Annotations.EMPTY;
                 var userSet = transitionPeaks[iTran]?.UserSet ?? UserSet.FALSE;
                 var peakBounds = groupResults?.FindTransitionCustomPeakBounds(iTran, replicateIndex, fileId) ??
                                  precursorBounds;
                 var peakMetrics = groupResults?.FindTransitionCustomPeakMetrics(iTran, replicateIndex, fileId);
+
+                // The peak being changed is put here rather than after the fact, so that the ranks
+                // and the dot products which come from all of the transitions together are worked
+                // out from the peak the caller asked for.
+                bool isChanging = peakChange?.AppliesToTransition(nodeTran.Transition) == true &&
+                                  !(peakChange.PreserveMissingPeaks && transitionPeaks[iTran]?.IsEmpty != false);
+                if (isChanging)
+                {
+                    userSet = peakChange.UserSet;
+                }
+
                 int stepCount = optStepChromatograms[iTran].StepCount;
                 for (int step = -stepCount; step <= stepCount; step++)
                 {
                     // A chrom info gets added for every step even when there is no chromatogram
                     // for it, because ChangeResults adds an empty peak there.
                     var chromatogramInfo = optStepChromatograms[iTran].GetChromatogramForStep(step);
-                    var chromPeak = GetChromPeak(nodeGroup, (TransitionDocNode) nodeGroup.Children[iTran],
-                        replicateIndex, fileId, step, chromatogramInfo, chosenPeakIndex, peakBounds, peakMetrics);
+                    var chromPeak = isChanging
+                        ? peakChange.GetChromPeak(this, nodeGroup, nodeTran, replicateIndex, fileId, step,
+                            chromatogramInfo)
+                        : GetChromPeak(nodeGroup, nodeTran, replicateIndex, fileId, step, chromatogramInfo,
+                            chosenPeakIndex, peakBounds, peakMetrics);
                     lists[iTran].Add(new TransitionChromInfo(fileId, step, chromPeak,
                         chromatogramInfo?.GetIonMobilityFilter() ?? IonMobilityFilter.EMPTY, annotations, userSet));
                 }

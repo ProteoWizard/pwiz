@@ -1859,7 +1859,11 @@ namespace pwiz.Skyline
         /// </summary>
         private SrmDocument PickPeak(SrmDocument document, PickedPeakEventArgs e)
         {
-            document = document.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime.MeasuredTime, UserSet.TRUE);
+            // The graph drew the peak labels, so it knows which candidate peak was clicked outright.
+            // Only a caller which has nothing but a time has to have it matched back to a peak.
+            document = e.PeakIndex >= 0
+                ? document.ChoosePeak(e.GroupPath, e.NameSet, e.FilePath, e.PeakIndex, UserSet.TRUE)
+                : document.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.RetentionTime.MeasuredTime, UserSet.TRUE);
 
             var activeTransitionGroup = (TransitionGroupDocNode) document.FindNode(e.GroupPath);
             var moleculeResults = new MoleculeResults(document.Settings,

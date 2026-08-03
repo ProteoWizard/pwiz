@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestUtil
         {
             Select(modifiedSequence, precursorMz, resultsName, out var path, out var chromSet);
             Program.MainWindow.ModifyDocument("change peak", document =>
-                document.ChangePeak(path, chromSet.Name, chromSet.MSDataFilePaths.First(), null, rt, UserSet.TRUE));
+                document.ChangePeak(path, chromSet.Name, chromSet.MSDataFilePaths.First(), rt, UserSet.TRUE));
         }
 
         public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, bool group, double rt)

@@ -100,71 +100,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                             EntitiesResources.CandidatePeakGroup_Chosen_Choose_peak),
                         doc =>
                         {
+                            // The same index in every comparable precursor: they had their peaks
+                            // picked together, so entry N of the peak list is the same peak group
+                            // in all of them. See PeptideChromDataSets.ComparableDataSets.
                             foreach (var precursor in GetComparableGroup())
                             {
-                                var retentionTime = GetChromPeakRetentionTime(precursor);
-                                if (retentionTime.HasValue)
-                                {
-                                    doc = ChoosePeak(doc, precursor, retentionTime.Value);
-                                }
-                                else
-                                {
-                                    doc = RemovePeak(doc, precursor);
-                                }
+                                doc = _data.PeakIndex.HasValue
+                                    ? ChoosePeak(doc, precursor, _data.PeakIndex.Value)
+                                    : RemovePeak(doc, precursor);
                             }
 
                             return doc;
                         });
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns the retention time of one of the ChromPeak's in this peak group.
-        /// </summary>
-        private double? GetChromPeakRetentionTime(TransitionGroupDocNode transitionGroupDocNode)
-        {
-            if (!_data.PeakIndex.HasValue)
-            {
-                return null;
-            }
-            float tolerance = (float)SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var peptideDocNode = PrecursorResult.Precursor.Peptide.DocNode;
-            var chromatogramSet = PrecursorResult.GetResultFile().Replicate.ChromatogramSet;
-            var filePath = PrecursorResult.GetResultFile().ChromFileInfo.FilePath;
-            ChromatogramGroupInfo[] chromatogramGroupInfos = null;
-            SrmDocument.Settings.MeasuredResults?.TryLoadChromatogram(chromatogramSet,
-                peptideDocNode, transitionGroupDocNode, tolerance,
-                out chromatogramGroupInfos);
-            chromatogramGroupInfos = chromatogramGroupInfos ?? Array.Empty<ChromatogramGroupInfo>();
-            var chromatogramGroupInfo = chromatogramGroupInfos.FirstOrDefault(info =>
-                Equals(info.FilePath, filePath));
-            if (chromatogramGroupInfo == null)
-            {
-                return null;
-            }
-            foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
-            {
-                var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance);
-                if (chromatogramInfo != null)
-                {
-                    ChromPeak peak;
-                    try
-                    {
-                        peak = chromatogramInfo.GetPeak(_data.PeakIndex.Value);
-                    }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
-                    if (!peak.IsEmpty)
-                    {
-                        return peak.RetentionTime;
-                    }
-                }
-            }
-
-            return null;
         }
 
         public override string ToString()
@@ -231,13 +180,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 resultFile.ChromFileInfo.FilePath, null, null, null, UserSet.TRUE, null, false);
         }
 
-        private SrmDocument ChoosePeak(SrmDocument document, TransitionGroupDocNode precursor, double retentionTime)
+        private SrmDocument ChoosePeak(SrmDocument document, TransitionGroupDocNode precursor, int peakIndex)
         {
             var identityPath =
                 new IdentityPath(PrecursorResult.Precursor.Peptide.IdentityPath, precursor.TransitionGroup);
             var resultFile = PrecursorResult.GetResultFile();
-            return document.ChangePeak(identityPath, resultFile.Replicate.Name,
-                resultFile.ChromFileInfo.FilePath, null, retentionTime, UserSet.TRUE);
+            return document.ChoosePeak(identityPath, resultFile.Replicate.Name,
+                resultFile.ChromFileInfo.FilePath, peakIndex, UserSet.TRUE);
         }
 
         public PrecursorResult GetPrecursorResult()

@@ -925,15 +925,36 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public ScaledRetentionTime FindPeakRetentionTime(TextObj label)
         {
+            return FindPeakRetentionTime(label, out _);
+        }
+
+        public ScaledRetentionTime FindPeakRetentionTime(TextObj label, out int peakIndex)
+        {
+            peakIndex = -1;
             var tag = label.Tag as GraphObjTag;
             if (null != tag || !ReferenceEquals(FontSpec, label.FontSpec))
             {
                 return ScaledRetentionTime.ZERO;
             }
-            return FindPeakRetentionTime(label.Location.X);
+            return FindPeakRetentionTime(label.Location.X, out peakIndex);
         }
 
         public ScaledRetentionTime FindPeakRetentionTime(double time)
+        {
+            return FindPeakRetentionTime(time, out _);
+        }
+
+        /// <summary>
+        /// Which of the candidate peaks in the .skyd has a label near a time, and where its apex
+        /// is.
+        /// <para>
+        /// <paramref name="peakIndex"/> is what the caller wants when it is going to change a peak:
+        /// it is the same index for every transition and every optimization step of the
+        /// chromatogram group, while the apex is one curve's own. Working the index back out of the
+        /// apex is a float round trip which loses by exactly as much as it gains.
+        /// </para>
+        /// </summary>
+        public ScaledRetentionTime FindPeakRetentionTime(double time, out int peakIndex)
         {
             // Search for a time that corresponds with a label
             int closestLabelIndex = -1;
@@ -950,11 +971,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     closestLabelDeltaTime = deltaTime;
                 }
             }
+            peakIndex = closestLabelIndex;
             if (closestLabelIndex == -1)
                 return ScaledRetentionTime.ZERO;
 
-            var peak = Chromatogram.GetPeak(closestLabelIndex);
-            float rt = peak.RetentionTime;
+            return ScaleRetentionTimeToMeasured(Chromatogram.GetPeak(closestLabelIndex).RetentionTime);
+        }
+
+        /// <summary>
+        /// A time on the chromatogram, snapped to the measured time nearest it for display.
+        /// </summary>
+        private ScaledRetentionTime ScaleRetentionTimeToMeasured(float rt)
+        {
             int iTime = Array.BinarySearch(_measuredTimes, rt);
             if (iTime < 0)
             {
@@ -966,6 +994,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             return new ScaledRetentionTime(rt, _displayTimes[iTime]);
+        }
+
+        /// <summary>
+        /// Where one of the candidate peaks has its apex on this curve, or zero when there is no
+        /// such peak. How a caller which has an index gets back a time to show.
+        /// </summary>
+        public ScaledRetentionTime GetPeakRetentionTime(int peakIndex)
+        {
+            if (peakIndex < 0 || peakIndex >= Chromatogram.NumPeaks)
+            {
+                return ScaledRetentionTime.ZERO;
+            }
+
+            return ScaleRetentionTimeToMeasured(Chromatogram.GetPeak(peakIndex).RetentionTime);
         }
 
         public ScaledRetentionTime FindSpectrumRetentionTime(GraphObj graphObj)

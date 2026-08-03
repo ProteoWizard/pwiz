@@ -437,7 +437,7 @@ namespace pwiz.Skyline.Model
                 var groupPath = new IdentityPath(peptideGroup, peptideDocNode.Peptide, nodeTranGroup.Id);
 
                 doc = _retentionTime.HasValue
-                    ? doc.ChangePeak(groupPath, nameSet, filePath, null, _retentionTime.Value, UserSet.TRUE)
+                    ? doc.ChangePeak(groupPath, nameSet, filePath, _retentionTime.Value, UserSet.TRUE)
                     : doc.ChangePeak(groupPath, nameSet, filePath, null, StartTime, EndTime, UserSet.TRUE, null, false);
 
                 var activeTransitionGroup = (TransitionGroupDocNode) doc.FindNode(groupPath);

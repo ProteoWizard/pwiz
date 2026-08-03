@@ -355,7 +355,10 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="nodeGroup">The transition group for which the peak was picked</param>
         /// <param name="nodeTran">The transition no which the time was chosen</param>
         /// <param name="peakTime">The retention time at which the peak was picked</param>
-        public void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, ScaledRetentionTime peakTime)
+        /// <param name="peakIndex">Which of the candidate peaks in the .skyd was picked, which is
+        /// what changing the peak needs, or -1 when the caller only knows a time</param>
+        public void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
+            ScaledRetentionTime peakTime, int peakIndex = -1)
         {
             if (PickedPeak != null)
             {
@@ -368,7 +371,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 nodeTran != null ? nodeTran.Id : null,
                                                 _nameChromatogramSet,
                                                 filePath,
-                                                peakTime);
+                                                peakTime,
+                                                peakIndex);
                 PickedPeak(this, e);
             }
         }
@@ -2960,33 +2964,18 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                    out TransitionGroupDocNode nodeGroup,
                                                                    out TransitionDocNode nodeTran)
         {
-            foreach (var graphItem in GraphItems)
-            {
-                var peakRT = graphItem.FindPeakRetentionTime(time);
-                if (!peakRT.IsZero)
-                {
-                    nodeGroup = graphItem.TransitionGroupNode;
-                    nodeTran = graphItem.TransitionNode;
-                    return peakRT;
-                }
-            }
-            nodeGroup = null;
-            nodeTran = null;
-            return ScaledRetentionTime.ZERO;
+            return FindAnnotatedPeakRetentionTime(time, out nodeGroup, out nodeTran, out _);
         }
 
-        private ScaledRetentionTime FindAnnotatedPeakRetentionTime(TextObj label,
+        public ScaledRetentionTime FindAnnotatedPeakRetentionTime(double time,
                                                                    out TransitionGroupDocNode nodeGroup,
-                                                                   out TransitionDocNode nodeTran)
+                                                                   out TransitionDocNode nodeTran,
+                                                                   out int peakIndex)
         {
             foreach (var graphItem in GraphItems)
             {
-                var peakRT = graphItem.FindPeakRetentionTime(label);
+                var peakRT = graphItem.FindPeakRetentionTime(time, out peakIndex);
                 if (!peakRT.IsZero)
-                {
-                    peakRT = GetRetentionTimeOfZeroOptStep(graphItem, peakRT);
-                }
-                if (!peakRT.IsZero) 
                 {
                     nodeGroup = graphItem.TransitionGroupNode;
                     nodeTran = graphItem.TransitionNode;
@@ -2995,26 +2984,62 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             nodeGroup = null;
             nodeTran = null;
+            peakIndex = -1;
             return ScaledRetentionTime.ZERO;
         }
 
-        private ScaledRetentionTime GetRetentionTimeOfZeroOptStep(ChromGraphItem graphItem, ScaledRetentionTime peakTime)
+        /// <summary>
+        /// The peak a label belongs to: which candidate peak in the .skyd it is, and where its
+        /// apex is. The index is what a caller which is going to change the peak wants - it is the
+        /// same for every transition and optimization step of the group - and the apex is only for
+        /// showing.
+        /// </summary>
+        private ScaledRetentionTime FindAnnotatedPeakRetentionTime(TextObj label,
+                                                                   out TransitionGroupDocNode nodeGroup,
+                                                                   out TransitionDocNode nodeTran,
+                                                                   out int peakIndex)
+        {
+            foreach (var graphItem in GraphItems)
+            {
+                var peakRT = graphItem.FindPeakRetentionTime(label, out peakIndex);
+                if (!peakRT.IsZero)
+                {
+                    peakRT = GetRetentionTimeOfZeroOptStep(graphItem, peakIndex);
+                }
+                if (!peakRT.IsZero)
+                {
+                    nodeGroup = graphItem.TransitionGroupNode;
+                    nodeTran = graphItem.TransitionNode;
+                    return peakRT;
+                }
+            }
+            nodeGroup = null;
+            nodeTran = null;
+            peakIndex = -1;
+            return ScaledRetentionTime.ZERO;
+        }
+
+        /// <summary>
+        /// Where the same candidate peak has its apex on the step zero curve, which is the one the
+        /// peak is shown and changed on. The index carries across unchanged: a chromatogram group's
+        /// candidate peaks are the same peaks whatever the optimization step.
+        /// </summary>
+        private ScaledRetentionTime GetRetentionTimeOfZeroOptStep(ChromGraphItem graphItem, int peakIndex)
         {
             if ((graphItem.OptimizationStep ?? 0) == 0)
             {
-                return peakTime;
+                return graphItem.GetPeakRetentionTime(peakIndex);
             }
             ChromGraphItem mainGraphItem = GraphItems.FirstOrDefault(item =>
-                0 == item.OptimizationStep 
+                0 == item.OptimizationStep
                 && ReferenceEquals(item.TransitionNode, graphItem.TransitionNode)
                 && ReferenceEquals(item.TransitionGroupNode, graphItem.TransitionGroupNode));
             if (mainGraphItem == null)
             {
                 return ScaledRetentionTime.ZERO;
             }
-            int iPeak = graphItem.Chromatogram.IndexOfPeak(peakTime.MeasuredTime);
-            ChromPeak mainPeak = mainGraphItem.Chromatogram.GetPeak(iPeak);
-            return mainGraphItem.ScaleRetentionTime(mainPeak.RetentionTime);
+
+            return mainGraphItem.GetPeakRetentionTime(peakIndex);
         }
 
         private ScaledRetentionTime FindAnnotatedSpectrumRetentionTime(TextObj label)
@@ -3254,7 +3279,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         doFullScanTracking = false;
                         if (_showPeptideTotals ||
-                            (!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out _, out _).IsZero) ||
+                            (!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out _, out _, out _).IsZero) ||
                             !FindAnnotatedSpectrumRetentionTime(label).IsZero)
                         {
                             graphControl.Cursor = Cursors.Hand;
@@ -3419,10 +3444,10 @@ namespace pwiz.Skyline.Controls.Graphs
                             {
                                 TransitionGroupDocNode nodeGroup;
                                 TransitionDocNode nodeTran;
-                                var peakTime = FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran);
+                                var peakTime = FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran, out int peakIndex);
                                 if (!peakTime.IsZero)
                                 {
-                                    FirePickedPeak(nodeGroup, nodeTran, peakTime);
+                                    FirePickedPeak(nodeGroup, nodeTran, peakTime, peakIndex);
                                     graphControl.Cursor = Cursors.Hand; // ZedGraph changes to crosshair without this
                                     return true;
                                 }
@@ -3991,15 +4016,25 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class PickedPeakEventArgs : PeakEventArgs
     {
         public PickedPeakEventArgs(IdentityPath groupPath, Identity transitionId,
-                                   string nameSet, MsDataFileUri filePath, ScaledRetentionTime retentionTime)
+                                   string nameSet, MsDataFileUri filePath, ScaledRetentionTime retentionTime,
+                                   int peakIndex = -1)
             : base(groupPath, nameSet, filePath)
         {
             TransitionId = transitionId;
             RetentionTime = retentionTime;
+            PeakIndex = peakIndex;
         }
 
         public Identity TransitionId { get; private set; }
         public ScaledRetentionTime RetentionTime { get; private set; }
+
+        /// <summary>
+        /// Which of the candidate peaks in the .skyd was picked, or -1 when only the time is known.
+        /// The graph knows this outright, and it is what changing the peak takes: one index covers
+        /// every transition and optimization step of the group, while a retention time is one
+        /// curve's own apex and has to be matched back to a peak to be of any use.
+        /// </summary>
+        public int PeakIndex { get; private set; }
     }
 
     public sealed class ClickedChromatogramEventArgs : EventArgs

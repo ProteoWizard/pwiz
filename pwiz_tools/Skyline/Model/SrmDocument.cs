@@ -1787,12 +1787,41 @@ namespace pwiz.Skyline.Model
             return (SrmDocument) ReplaceChild(groupPath.Parent, groupNodeNew);
         }
 
-        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
-            Identity tranId, double retentionTime, UserSet userSet)
+        /// <summary>
+        /// The document with the candidate peak whose apex is at <paramref name="retentionTime"/>
+        /// chosen for one precursor. Which transition the user clicked is not a parameter: a
+        /// candidate peak index covers every transition of the precursor, and the clicked time is
+        /// one of that transition's own apexes, so it matches exactly whichever one is asked.
+        /// </summary>
+        /// <summary>
+        /// The document with one of the candidate peaks in the .skyd chosen for one precursor. This
+        /// is what a caller which already knows the peak uses - the chromatogram graph does, since
+        /// it drew the labels - rather than naming a retention time and having it matched back.
+        /// </summary>
+        public SrmDocument ChoosePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
+            int peakIndex, UserSet userSet)
         {
-            return ChangePeak(groupPath, nameSet, filePath,
-                (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, tranId, retentionTime, userSet));
+            return ChangePeak(groupPath, nameSet, filePath, (moleculeResults, transitionGroup, iSet, fileId) =>
+                moleculeResults.ChoosePeak(transitionGroup, iSet, fileId, peakIndex, userSet));
+        }
+
+        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
+            double retentionTime, UserSet userSet)
+        {
+            return ChangePeak(groupPath, nameSet, filePath, (moleculeResults, transitionGroup, iSet, fileId) =>
+            {
+                // The retention time says where the user clicked, so the candidate peak whose apex
+                // is there is the one they meant. Which transition they clicked does not come into
+                // it: choosing a candidate peak is a precursor level change either way.
+                int peakIndex = moleculeResults.FindPeakIndex(transitionGroup, iSet, fileId, retentionTime);
+                if (peakIndex < 0)
+                {
+                    throw new ArgumentOutOfRangeException(string.Format(
+                        ModelResources.TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__, retentionTime));
+                }
+
+                return moleculeResults.ChoosePeak(transitionGroup, iSet, fileId, peakIndex, userSet);
+            });
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
@@ -1827,10 +1856,17 @@ namespace pwiz.Skyline.Model
                         : PeakIdentification.FALSE;
                 }
             }
-            return ChangePeak(groupPath, nameSet, filePath,
-                (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, iSet, fileId, reg, transition, startTime, 
-                                    endTime, identified.Value, userSet, preserveMissingPeaks));
+            return ChangePeak(groupPath, nameSet, filePath, (moleculeResults, transitionGroup, iSet, fileId) =>
+            {
+                if (!startTime.HasValue)
+                {
+                    return moleculeResults.RemovePeak(transitionGroup, transition, iSet, fileId, userSet);
+                }
+
+                return moleculeResults.ChangePeakBounds(transitionGroup, transition, iSet, fileId,
+                    (float) startTime.Value, (float) endTime.Value, identified.Value, userSet,
+                    preserveMissingPeaks);
+            });
         }
 
         private bool ContainsTime(double[] times, double startTime, double endTime)
@@ -1838,10 +1874,23 @@ namespace pwiz.Skyline.Model
             return times != null && times.Any(time => startTime <= time && time <= endTime);
         }
 
-        private delegate DocNode ChangeNodePeak(TransitionGroupDocNode nodeGroup,
-            ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet,
-            ChromFileInfoId indexFile, OptimizableRegression regression);
+        /// <summary>
+        /// One of the peak changing methods on <see cref="MoleculeResults"/>, which is where the
+        /// work happens now: a peak lives in the columnar results, and those are reachable only
+        /// through the molecule which owns them.
+        /// </summary>
+        private delegate PeptideDocNode ChangeNodePeak(MoleculeResults moleculeResults,
+            TransitionGroup transitionGroup, int indexSet, ChromFileInfoId indexFile);
 
+        /// <summary>
+        /// Makes a <see cref="MoleculeResults"/> for the molecule being changed and hands the work
+        /// to it.
+        /// <para>
+        /// Making one per call reads the molecule's chromatograms, which a caller that already has
+        /// one has already paid for. Callers are to be moved onto <see cref="MoleculeResults"/>
+        /// themselves, at which point these overloads go.
+        /// </para>
+        /// </summary>
         private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath, ChangeNodePeak change)
         {
             var find = new FindChromInfos(this, groupPath, nameSet, filePath);
@@ -1869,11 +1918,11 @@ namespace pwiz.Skyline.Model
                     TransitionGroupDocNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), filePath));
             }
 
-            var nodeGroupNew = change(find.NodeGroup, find.ChromInfo, Settings.TransitionSettings.Instrument.MzMatchTolerance, find.IndexSet, find.FileId,
-                find.OptimizationFunction);
-            if (ReferenceEquals(find.NodeGroup, nodeGroupNew))
+            var moleculeResults = new MoleculeResults(Settings, find.NodePep);
+            var nodePepNew = change(moleculeResults, find.TransitionGroup, find.IndexSet, find.FileId);
+            if (ReferenceEquals(find.NodePep, nodePepNew))
                 return this;
-            return (SrmDocument)ReplaceChild(groupPath.Parent, nodeGroupNew);
+            return (SrmDocument) ReplaceChild(groupPath.Parent.Parent, nodePepNew);
         }
 
         public class FindChromInfos
