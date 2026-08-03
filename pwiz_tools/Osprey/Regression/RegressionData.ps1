@@ -174,3 +174,40 @@ function Get-RegressionData {
     & $Log ("data ready: {0}" -f $t.ExtractedRoot)
     return $t.ExtractedRoot
 }
+
+<#
+.SYNOPSIS
+    Invalidate the Stage 5 join + blib so a re-run resumes (the rehydrate
+    paths fire) rather than recomputing from spectra.
+
+.DESCRIPTION
+    Shared by regression.ps1 (mode 2) and the ai-side cumulative-coverage
+    harness so there is ONE definition of what "resume" invalidates. The
+    patterns key off the task Name values the C# tasks stamp into their
+    validity sidecars -- FirstJoinTask.Name is "FirstPassFDR" and
+    MergeNodeTask.Name is "SecondPassFDR", NOT the class names. A private
+    copy of this function once used the class names, matched zero files,
+    and silently produced a run that never resumed.
+
+    Deleting nothing is therefore treated as a hard failure: if the tokens
+    ever drift from the C# Name values again, this throws instead of
+    yielding a green "resume" leg that only re-ran the merge.
+
+.PARAMETER WorkDir
+    The straight-through run directory to invalidate in place.
+#>
+function Invoke-ResumeInvalidation {
+    param([Parameter(Mandatory=$true)][string]$WorkDir)
+
+    $targets = Get-ChildItem -Path $WorkDir -File | Where-Object {
+        $_.Name -like '*.FirstPassFDR.osprey.task' -or
+        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
+    }
+    if (-not $targets) {
+        throw (("Invoke-ResumeInvalidation matched no files in '{0}'. The resume leg " +
+                "would not have resumed. Expected '*.FirstPassFDR.osprey.task' (FirstJoinTask.Name) " +
+                "and 'output.blib' + 'output.blib.SecondPassFDR.osprey.task' (MergeNodeTask.Name); " +
+                "check those Name values have not changed.") -f $WorkDir)
+    }
+    $targets | Remove-Item -Force
+}

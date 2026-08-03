@@ -119,9 +119,9 @@ namespace SkylineAiConnector
             this.checkGeminiCli.AutoSize = true;
             this.checkGeminiCli.Location = new System.Drawing.Point(10, 74);
             this.checkGeminiCli.Name = "checkGeminiCli";
-            this.checkGeminiCli.Size = new System.Drawing.Size(83, 19);
+            this.checkGeminiCli.Size = new System.Drawing.Size(130, 19);
             this.checkGeminiCli.TabIndex = 2;
-            this.checkGeminiCli.Text = "&Gemini CLI";
+            this.checkGeminiCli.Text = "&Gemini / Antigravity";
             this.checkGeminiCli.CheckedChanged += new System.EventHandler(this.checkGeminiCli_CheckedChanged);
             //
             // checkVSCode

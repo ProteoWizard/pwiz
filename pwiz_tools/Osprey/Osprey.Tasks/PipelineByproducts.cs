@@ -182,6 +182,22 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
+    /// Base_ids of the protein-compact stratum (OSPREY_PASS2_QVALUE=protein-compact):
+    /// every library precursor whose peptide maps to a protein detected in the 1st pass
+    /// by &gt;=2 DISTINCT peptides (the honest anchor -- single-hit proteins break the
+    /// independent-filtering assumption; the entrapment prototype showed &gt;=2 restores
+    /// FDP control at full gain). Built in FirstJoin (which has the full library + the
+    /// 1st-pass detected-peptide set) and consumed by the pass-2 stratified competition.
+    /// Bounded by the library (not the observation count) -> flat in file count. Only
+    /// published when the mode is set.
+    /// </summary>
+    internal sealed class ProteinCompactStratum
+    {
+        public HashSet<uint> BaseIds { get; }
+        public ProteinCompactStratum(HashSet<uint> baseIds) { BaseIds = baseIds; }
+    }
+
+    /// <summary>
     /// The pipeline's working per-file FDR entry buffer. UNLIKE every other
     /// byproduct here, this is a deliberately MUTABLE shared buffer: the same
     /// inner <see cref="Value"/> list reference is created once by PerFileScoring,
@@ -256,5 +272,20 @@ namespace pwiz.Osprey.Tasks
     internal sealed class FirstPassPercolatorModel
     {
         public PercolatorResults Results { get; set; }
+
+        /// <summary>
+        /// The normalized OSPREY_EXPERIMENT_AGG arm that the FIRST pass actually ran under
+        /// (<see cref="OspreyEnvironment.ExperimentAgg"/> as of that process), or null when the
+        /// model came from a sidecar written before this was recorded.
+        ///
+        /// Recorded rather than re-read, because the 2nd pass may not be the same process: a
+        /// distributed <c>--task SecondPassFDR</c> merge node reloads this model from disk
+        /// (<see cref="FirstPassModelIO"/>) and never trained pass 1, so ITS environment says
+        /// nothing about which aggregation produced the q-values it is about to rewrite.
+        /// Inferring from the live process was wrong in both directions - a merge node with the
+        /// variable unset would emit a mixed q column with no refusal, and a consistent run
+        /// could be aborted by a stale exported variable. Provenance travels with the artifact.
+        /// </summary>
+        public string ExperimentAgg { get; set; }
     }
 }

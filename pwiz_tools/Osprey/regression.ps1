@@ -34,6 +34,18 @@
               is never touched); per-stage parquet/sidecar bisection of a red gate
               lives in ai/scripts/Osprey/Compare (Compare-Stage7-Rehydration-
               Strict-CSharp.ps1).
+      mode 4  warm re-run cache-hit assertion - re-runs the IDENTICAL command a
+              second time into the already-populated straight-through dir with
+              NOTHING invalidated, and asserts that every canonical task reports a
+              cache hit, that no per-file recompute line appears, and that the blib
+              is byte-identical. Output comparison ALONE is blind to a
+              cache-invalidation regression: a re-run that ignores every cache and
+              recomputes the whole pipeline from spectra emits exactly the same
+              output as one that resumes, so modes 1-3 stay green through a totally
+              broken warm resume. Mode 2 does re-run in place, but it invalidates
+              Stage 5 first, so it never exercises the all-cached case; it now
+              carries the same skip assertion for the tasks its invalidation leaves
+              valid. See Test-TaskCacheHits for the driver log lines both key on.
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -42,8 +54,21 @@
     mismatch.
 
 .PARAMETER Dataset
-    Stellar, Astral, or All (default). Stellar is unit-resolution + fast; Astral
-    is hram + larger.
+    One dataset name or All (default). Four exist, and they cover deliberately
+    different failure classes:
+
+      Stellar               unit-resolution, generated decoys, no entrapment.
+                            The fast local pre-commit loop.
+      StellarLibDecoy       the same mzML with a library that SUPPLIES its own
+                            decoys plus entrapment peptides. The path we
+                            recommend, and the only one that never calls
+                            DecoyGenerator.
+      StellarGenDecoyEntrap the same entrapment library with the decoy rows
+                            stripped, so Osprey GENERATES decoys while the
+                            entrapment peptides remain. The only dataset that can
+                            measure a decoy-construction regression against a
+                            true-FDP oracle.
+      Astral                hram, generated decoys, larger and slower.
 
 .PARAMETER CreateGolden
     Capture/refresh the committed golden from this run instead of comparing
@@ -51,6 +76,12 @@
 
 .PARAMETER SkipResume
     Skip the mode-2 resume self-consistency leg (mode 1 only).
+
+.PARAMETER SkipWarmRerun
+    Skip the mode-4 warm re-run cache-hit leg. The overnight gate leaves it on: it
+    is the only leg that can see a cache-invalidation regression, and a fully
+    cached re-run costs seconds because it runs no task at all. This switch exists
+    for the same fast-local-iteration reason as -SkipHpcChain.
 
 .PARAMETER SkipHpcChain
     Skip the mode-3 HPC 4-task worker-chain leg. The overnight gate leaves it on
@@ -100,9 +131,11 @@
     .\regression.ps1 -TeamCity -Dataset All
 #>
 param(
-    [ValidateSet('Stellar', 'Astral', 'All')] [string]$Dataset = 'All',
+    [ValidateSet('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral', 'All')]
+    [string]$Dataset = 'All',
     [switch]$CreateGolden,
     [switch]$SkipResume,
+    [switch]$SkipWarmRerun,
     [switch]$SkipHpcChain,
     [string]$DownloadsPath,
     [int]$Threads = 16,
@@ -132,16 +165,99 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 # osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
+# Every Osprey invocation in this run is timestamped and mem-stamped, so each leg's log
+# doubles as a memory-band trace: `[yyyy/MM/dd HH:mm:ss]<TAB>managedMB<TAB>privateMB<TAB>`.
+# That makes a red-or-slow gate diagnosable after the fact - the log shows whether the
+# per-file memory floor climbed (an O(files) regression) and where the tool went silent -
+# without re-running anything. Read it with ai/scripts/perfviz.py (numbers: peak, floor
+# drift per file, every reporting gap) or ai/scripts/perfviz.html (plot). The prefix costs
+# a GC.GetTotalMemory(false) + a process query per emitted line, which is noise next to the
+# pipeline itself. See ai/docs/memory-band-guide.md, including why this trace shows SHAPE
+# but not live-set MAGNITUDE.
+$memStampArgs = @('--timestamp', '--memstamp')
+
 # The mzML data zip on panorama (raw-data zip is future work). The URL's
 # second-to-last segment ("perftests") maps to <Downloads>\Perftests.
-$dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML.zip'
+#
+# -v2 adds the stellar-libdecoy library WITHOUT disturbing the v1 zip: acquisition
+# is skip-if-present on the EXTRACTED ROOT, so re-publishing under the same name
+# would never reach a machine that already has the tree. A new name also leaves
+# older branches pinned to the v1 URL working exactly as before.
+$dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML-v2.zip'
 
 # --- Dataset table (standalone; mirrors ai/ Dataset-Config.ps1) --------------
-# Subfolder under the extracted root + resolution mode. Input mzML files and the
-# .tsv library are discovered from the folder so filenames are not hard-coded.
+# Folder = mzML subfolder under the extracted root; Resolution = instrument mode.
+# Input mzML files and the .tsv library are discovered from the folder so
+# filenames are not hard-coded. Optional keys (absent = today's behavior):
+#   LibraryFolder    library lives in a DIFFERENT subfolder than the mzML, so a
+#                    second dataset can reuse one copy of the mzML instead of
+#                    duplicating gigabytes of it in the zip.
+#   GoldenFolder     golden subfolder name; defaults to Folder. Required when two
+#                    datasets share a Folder, or their goldens collide.
+#   NestedZip        zip inside LibraryFolder holding the library, extracted on
+#                    demand so datasets that are not selected cost nothing.
+#   Library          explicit library filename; bypasses the exactly-one-.tsv
+#                    discovery rule (the libdecoy folder also holds a manifest).
+#   Manifest         FDRBench pairing manifest -> --decoy-pairing-manifest.
+#   DecoysInLibrary  -> --decoys-in-library (library-supplied decoys; Osprey
+#                    identifies them by protein-accession prefix, NOT the Decoy
+#                    column, which is 0 throughout Carafe entrapment libraries).
+#   ModelDiagnostics -> --model-diagnostics --fdrbench-pass both, plus the
+#                    diagnostics spot-check golden.
+#   MaxPass1Fdp      Tier-2 sanity ceiling on Pass-1 true FDP at a reported 1% q
+#                    (default 0.02). Committed here and deliberately NOT
+#                    regenerated by -CreateGolden -- a rebaseline is exactly how
+#                    a calibration regression gets blessed into the baseline, so
+#                    this bound must not come from the run. Per-dataset because
+#                    the honest range differs by decoy source: library decoys
+#                    measure 0.86-1.47%, generated decoys ~2.03% even with the
+#                    b<->y swap removed.
+#   MaxAbsTilt       Tier-2 ceiling on |null-alignment tilt| (default 1.0), same
+#                    do-not-regenerate rule. Also per-dataset.
+#   CoinTolerance    Tier-2 tolerance on |entrapment paired-win fraction - 0.5|
+#                    (default 0.05), same do-not-regenerate rule. Only bites on a
+#                    dataset that carries entrapment.
 $datasets = [ordered]@{
     Stellar = @{ Folder = 'stellar'; Resolution = 'unit' }
-    Astral  = @{ Folder = 'astral';  Resolution = 'hram' }
+    StellarLibDecoy = @{
+        Folder           = 'stellar'
+        LibraryFolder    = 'stellar-libdecoy'
+        GoldenFolder     = 'stellar-libdecoy'
+        NestedZip        = 'libdecoy-entrapment.zip'
+        Library          = 'carafe_spectral_library.tsv'
+        Manifest         = 'osprey_library_db_pairing.tsv'
+        Resolution       = 'unit'
+        DecoysInLibrary  = $true
+        ModelDiagnostics = $true
+    }
+    # The dataset that actually guards DecoyGenerator. Same entrapment library as
+    # StellarLibDecoy with the decoy rows stripped, so Osprey GENERATES the decoys
+    # while the entrapment peptides remain -- generated decoys measured against a
+    # true-FDP oracle. Neither of the other entrapment-free gendecoy datasets nor the
+    # library-decoy dataset can catch a decoy-construction regression: the former have
+    # nothing to measure FDP against, the latter never calls DecoyGenerator at all.
+    #
+    # 2.0% ceiling: generated decoys measure ~1.5% on unit-resolution Stellar with the
+    # b<->y swap removed, against 0.86% for library decoys. The pre-fix construction
+    # measured 11.81% here and would have blown through this by 6x.
+    StellarGenDecoyEntrap = @{
+        Folder           = 'stellar'
+        LibraryFolder    = 'stellar-libdecoy'
+        GoldenFolder     = 'stellar-gendecoy-entrap'
+        NestedZip        = 'libdecoy-entrapment.zip'
+        Library          = 'carafe_spectral_library.tsv'
+        StripDecoys      = $true
+        Resolution       = 'unit'
+        ModelDiagnostics = $true
+        MaxPass1Fdp      = 0.02
+    }
+    # Astral carries no entrapment, so its tier-2 bound is the null-alignment tilt.
+    # 0.5 is an honest ceiling with the b<->y swap removed (this branch measures
+    # ~0.25); the pre-fix code measured 1.408 with a real paired-win coin of 0.397,
+    # i.e. decoys losing 60% of head-to-head pairs against their own targets. This
+    # bound would have failed the old construction, which is the point.
+    Astral  = @{ Folder = 'astral';  Resolution = 'hram'; ModelDiagnostics = $true
+                 MaxAbsTilt = 0.5 }
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
 
@@ -157,6 +273,26 @@ function Write-Progress-Tc([string]$msg) {
 function Write-Problem-Tc([string]$msg) {
     if ($TeamCity) { Write-Host ("##teamcity[buildProblem description='{0}']" -f (Format-TcMessage $msg)) }
     Write-Host "ERROR: $msg" -ForegroundColor Red
+}
+
+# --- Dataset table self-check -------------------------------------------------
+# Two datasets writing the same golden folder would have the second silently
+# overwrite the first under -CreateGolden, and compare against the wrong baseline
+# otherwise. GoldenFolder defaults to Folder, so this is one forgotten key away and
+# is exactly the collision StellarLibDecoy would have hit. Checked over the WHOLE
+# table, not just $selected, so -Dataset Stellar cannot hide a bad table. Placed
+# after the service-message helpers so a bad table reports as a buildProblem like
+# every other failure rather than as a bare stack trace.
+$goldenNames = @($datasets.Keys | ForEach-Object {
+    $d = $datasets[$_]
+    if ($d.GoldenFolder) { $d.GoldenFolder } else { $d.Folder }
+})
+$dupGolden = @($goldenNames | Group-Object | Where-Object { $_.Count -gt 1 })
+if ($dupGolden.Count -gt 0) {
+    Write-Problem-Tc ("Dataset table is invalid: golden folder(s) used by more than " +
+        "one dataset: {0}. Give each dataset its own GoldenFolder." -f
+        (($dupGolden | ForEach-Object { $_.Name }) -join ', '))
+    exit 1
 }
 
 # --- Reclaim disk: prune orphaned TestResults run dirs ------------------------
@@ -212,6 +348,7 @@ if (-not (Test-Path $ospreyExe)) {
 # --- Load standalone helpers + SQLite ----------------------------------------
 . (Join-Path $regressionDir 'RegressionData.ps1')
 . (Join-Path $regressionDir 'BlibGolden.ps1')
+. (Join-Path $regressionDir 'DiagnosticsGolden.ps1')
 Initialize-Sqlite -OspreyBinDir $ospreyBinDir
 
 # --- Acquire data (download + unzip + skip-if-present) ------------------------
@@ -230,10 +367,46 @@ $runStamp = (Get-Date).ToString('yyyyMMdd_HHmmss')
 $runRoot  = Join-Path $scriptRoot ("TestResults\regression-$runStamp")
 New-Item -ItemType Directory -Path $runRoot -Force | Out-Null
 
+# Dataset-specific CLI flags, shared by the straight-through, resume, and HPC
+# legs so every leg of a dataset runs the SAME search. Absent keys add nothing,
+# which is why the gendecoy datasets keep their exact historical command line.
+# Tier-2 sanity bounds for one dataset, as a splattable hashtable. One place, because
+# the bounds are read twice (the -CreateGolden refusal and the mode-1b check) and two
+# copies of the fallback chain is two chances for a bound to be enforced on one path
+# and not the other -- which is precisely the failure tier 2 exists to prevent.
+# A key is emitted only when the dataset overrides it, so Test-DiagnosticsSanity's own
+# parameter defaults stay the single source of the default values.
+function Get-SanityBounds {
+    param([hashtable]$Spec)
+    $bounds = @{}
+    if ($null -ne $Spec.MaxPass1Fdp)  { $bounds['MaxPass1Fdp']  = $Spec.MaxPass1Fdp }
+    if ($null -ne $Spec.MaxAbsTilt)   { $bounds['MaxAbsTilt']   = $Spec.MaxAbsTilt }
+    if ($null -ne $Spec.CoinTolerance) { $bounds['CoinTolerance'] = $Spec.CoinTolerance }
+    return $bounds
+}
+
+function Get-DatasetCliArgs {
+    param([hashtable]$Spec, [string]$Manifest)
+    $extra = @()
+    if ($null -eq $Spec) { return $extra }
+    if ($Spec.DecoysInLibrary) { $extra += '--decoys-in-library' }
+    if ($Manifest) { $extra += @('--decoy-pairing-manifest', $Manifest) }
+    # --model-diagnostics is verified output-neutral (it routes the 2nd pass down
+    # the resident path instead of the FDR projection, and the two agree
+    # byte-for-byte), so it can ride on the golden-compared run rather than
+    # needing a second invocation. It populates the Pass 1 AND Pass 2 FDP views on
+    # its own: --fdrbench-pass selects which pass an FDRBench INPUT FILE is written
+    # for and does nothing at all without --fdrbench (OspreyCommandArgs warns, and
+    # FdrBenchInputWriter returns early on an empty output path), so passing it here
+    # only produced a warning on every invocation.
+    if ($Spec.ModelDiagnostics) { $extra += '--model-diagnostics' }
+    return $extra
+}
+
 # --- Run one Osprey invocation (no input copies) -------------------------
 function Invoke-OspreyRun {
     param([string[]]$Mzmls, [string]$Library, [string]$Resolution, [string]$WorkDir,
-          [string]$LogName, [switch]$DumpProteinFdr)
+          [string]$LogName, [switch]$DumpProteinFdr, [hashtable]$Spec, [string]$Manifest)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
     $logPath = Join-Path $WorkDir $LogName
     $cliArgs = @()
@@ -241,6 +414,8 @@ function Invoke-OspreyRun {
     $cliArgs += @('-l', $Library, '-o', 'output.blib',
                   '--resolution', $Resolution, '--protein-fdr', '0.01',
                   '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
+    $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
+    $cliArgs += $memStampArgs
     if ($DumpProteinFdr) { $env:OSPREY_DUMP_STAGE7_PROTEIN_FDR = '1' }
     # Run with CWD = work dir so the -o blib and the Stage 7 protein-FDR dump
     # (both CWD-relative, NOT --work-dir-relative -- only derived artifacts +
@@ -261,23 +436,124 @@ function Invoke-OspreyRun {
 }
 
 # Resolve a dataset's inputs from the extracted read-only data folder.
+# The mzML folder and the library folder can differ, so a second dataset can
+# reuse one copy of the mzML rather than duplicating gigabytes of it in the zip.
 function Resolve-DatasetInputs {
-    param([string]$Folder)
-    $dir = Join-Path $extractedRoot $Folder
+    param([hashtable]$Spec)
+    $dir = Join-Path $extractedRoot $Spec.Folder
     if (-not (Test-Path $dir)) { throw "Dataset folder not found in data: $dir" }
     $mzmls = @(Get-ChildItem -Path $dir -Filter '*.mzML' -File | Sort-Object Name | ForEach-Object { $_.FullName })
     if ($mzmls.Count -eq 0) { throw "No .mzML files in $dir" }
-    $libs = @(Get-ChildItem -Path $dir -Filter '*.tsv' -File | ForEach-Object { $_.FullName })
-    if ($libs.Count -ne 1) { throw "Expected exactly one .tsv library in $dir, found $($libs.Count)" }
-    return @{ Dir = $dir; Mzmls = $mzmls; Library = $libs[0] }
+
+    $libDir = if ($Spec.LibraryFolder) { Join-Path $extractedRoot $Spec.LibraryFolder } else { $dir }
+    if (-not (Test-Path $libDir)) { throw "Library folder not found in data: $libDir" }
+
+    # Nested zip: the library ships compressed inside the outer zip and is
+    # extracted only when its dataset is actually selected, so a run that does
+    # not use it never pays the multi-GB extraction. Skip-if-present, like the
+    # outer acquisition.
+    if ($Spec.NestedZip) {
+        $expected = Join-Path $libDir $Spec.Library
+        if (-not (Test-Path $expected)) {
+            $nested = Join-Path $libDir $Spec.NestedZip
+            if (-not (Test-Path $nested)) { throw "Nested library zip not found: $nested" }
+            Write-Host "  extracting nested library zip $($Spec.NestedZip) (one time)..."
+            Expand-ZipNoOverwrite -ZipPath $nested -DestFolder $libDir
+            if (-not (Test-Path $expected)) { throw "Nested zip did not yield $($Spec.Library): $nested" }
+        }
+    }
+
+    if ($Spec.Library) {
+        # Explicit name: the libdecoy folder also holds the pairing manifest, so
+        # the exactly-one-.tsv discovery rule below cannot apply.
+        $library = Join-Path $libDir $Spec.Library
+        if (-not (Test-Path $library)) { throw "Library not found: $library" }
+    } else {
+        $libs = @(Get-ChildItem -Path $libDir -Filter '*.tsv' -File | ForEach-Object { $_.FullName })
+        if ($libs.Count -ne 1) { throw "Expected exactly one .tsv library in $libDir, found $($libs.Count)" }
+        $library = $libs[0]
+    }
+
+    # StripDecoys: derive a decoy-free copy of the library so Osprey GENERATES the
+    # decoys while the entrapment peptides survive. That combination is what lets the
+    # true-FDP bound guard DecoyGenerator: the library-decoy dataset carries entrapment
+    # but never calls DecoyGenerator, and the plain gendecoy datasets call it but have
+    # no entrapment to measure against, so neither can catch a decoy-construction
+    # regression on its own.
+    #
+    # Derived into gitignored scratch, NOT into the read-only data dir (which the
+    # run-level assertion watches). Cached across runs and rebuilt when the source
+    # library is newer.
+    #
+    # Rows are dropped on the decoy_ PREFIX of ProteinID. The Decoy column is 0 on
+    # every row of these Carafe libraries, so filtering on it is a silent no-op that
+    # yields a byte-identical "stripped" file.
+    if ($Spec.StripDecoys) {
+        $derivedDir = Join-Path $scriptRoot 'TestResults\_derived'
+        New-Item -ItemType Directory -Path $derivedDir -Force | Out-Null
+        $stripped = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.nodecoy.tsv')
+        $srcInfo = Get-Item $library
+        if ((-not (Test-Path $stripped)) -or ((Get-Item $stripped).LastWriteTimeUtc -lt $srcInfo.LastWriteTimeUtc)) {
+            Write-Host "  deriving decoy-free library (one time, ~1 min)..."
+            # Write to a temp file and rename into place, so the final path only ever
+            # holds a complete derivation. An interrupted run (Ctrl-C, a cancelled
+            # TeamCity build, an agent reboot) otherwise leaves a TRUNCATED file whose
+            # mtime is newer than the source library, so the staleness check above
+            # accepts it and EVERY later run fails deep inside the library parse with
+            # "Missing PrecursorCharge at row N" - an error naming the library rather
+            # than the interruption that caused it. Observed 2026-07-29.
+            $tmp = "$stripped.tmp"
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+            $kept = 0; $dropped = 0
+            $reader = [IO.StreamReader]::new($library)
+            $writer = [IO.StreamWriter]::new($tmp, $false, [Text.UTF8Encoding]::new($false))
+            try {
+                $header = $reader.ReadLine()
+                if ($null -eq $header) { throw "Empty library: $library" }
+                $writer.WriteLine($header)
+                $protCol = [array]::IndexOf(($header -split "`t"), 'ProteinID')
+                if ($protCol -lt 0) { throw "No ProteinID column in $library" }
+                while ($null -ne ($line = $reader.ReadLine())) {
+                    $fields = $line -split "`t"
+                    if ($fields.Length -gt $protCol -and $fields[$protCol].StartsWith('decoy_', [StringComparison]::Ordinal)) {
+                        $dropped++
+                    } else {
+                        $writer.WriteLine($line); $kept++
+                    }
+                }
+            } finally { $writer.Dispose(); $reader.Dispose() }
+            if ($dropped -eq 0) { throw "StripDecoys removed nothing from $library -- the decoy_ convention changed" }
+            # Only now is the derivation known good, so publish it atomically.
+            Move-Item $tmp $stripped -Force
+            Write-Host ("  derived {0}: kept {1:N0} rows, dropped {2:N0} decoy rows" -f (Split-Path -Leaf $stripped), $kept, $dropped)
+        }
+        $library = $stripped
+    }
+
+    $manifest = $null
+    if ($Spec.Manifest) {
+        $manifest = Join-Path $libDir $Spec.Manifest
+        if (-not (Test-Path $manifest)) { throw "Pairing manifest not found: $manifest" }
+    }
+    return @{ Dir = $dir; LibDir = $libDir; Mzmls = $mzmls; Library = $library; Manifest = $manifest }
 }
 
 # Snapshot file sizes + mtimes of the read-only data dir, to assert no-copy
 # leaves it untouched after the run.
 function Get-DirFingerprint {
+    <#
+    Size + mtime of every file under Dir, keyed by path RELATIVE to Dir so
+    subfolders are covered too. Recursive: a run that drops artifacts into a
+    subfolder of a read-only data dir is just as much a violation as one that
+    drops them at the top level.
+    #>
     param([string]$Dir)
     $fp = @{}
-    foreach ($f in Get-ChildItem -Path $Dir -File) { $fp[$f.Name] = "$($f.Length):$($f.LastWriteTimeUtc.Ticks)" }
+    $root = (Resolve-Path $Dir).Path.TrimEnd('\', '/')
+    foreach ($f in Get-ChildItem -Path $Dir -File -Recurse -ErrorAction SilentlyContinue) {
+        $rel = $f.FullName.Substring($root.Length).TrimStart('\', '/')
+        $fp[$rel] = "$($f.Length):$($f.LastWriteTimeUtc.Ticks)"
+    }
     return $fp
 }
 function Compare-DirFingerprint {
@@ -292,15 +568,138 @@ function Compare-DirFingerprint {
     return $changed
 }
 
-# Invalidate the Stage 5 join + blib so a re-run resumes (rehydrate paths fire)
-# rather than recomputing from spectra. Mirrors the proven repro from
+# Invoke-ResumeInvalidation (invalidate the Stage 5 join + blib so a re-run
+# resumes rather than recomputing from spectra) now lives in
+# Regression\RegressionData.ps1, dot-sourced above, so the ai-side
+# cumulative-coverage harness shares one definition instead of keeping a copy
+# that can drift. Mirrors the proven repro from
 # TODO-20260605_ospreysharp_resume_reconciled_rt.
-function Invoke-ResumeInvalidation {
-    param([string]$WorkDir)
-    Get-ChildItem -Path $WorkDir -File | Where-Object {
-        $_.Name -like '*.FirstPassFDR.osprey.task' -or
-        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
-    } | Remove-Item -Force
+
+# --- Warm-rerun cache assertions (modes 2 and 4) ------------------------------
+# Comparing output can never establish that a re-run RESUMED. A run that ignores
+# every cache and recomputes the whole pipeline from spectra emits byte-identical
+# output, so every leg here stays green through a total cache-invalidation
+# regression - which has now happened twice. The only evidence of a cache hit is
+# the driver's own log, so these helpers read it.
+#
+# The canonical four-task pipeline, in execution order. These are the
+# OspreyTask.Name values (AnalysisPipeline.CanonicalPipeline): the same tokens
+# Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
+# [TASK] log lines and the .<Name>.osprey.task validity sidecars.
+$pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
+
+# The driver's own per-task markers: the cache-hit skip at the top of the task
+# loop (AnalysisPipeline.CanRehydrate arm) and RunTask's start line. An included
+# task emits exactly one of the two, so a task showing NEITHER is classified
+# 'absent' and fails the assertion. That is deliberate. If this wording ever drifts
+# from the C#, the leg goes red and names the token it could not find, rather than
+# degrading into the silent pass that is the whole failure mode being closed here.
+$taskSkipMarker = ':skipping (outputs valid)'
+$taskRunMarker  = ':starting'
+
+# The expensive per-file recompute lines: Stage 1-4 reading spectra
+# (PerFileScoringTask) and Stage 6 rescoring (PerFileRescoreTask). Matched
+# case-SENSITIVELY below, because 'Re-scoring file ' would otherwise also satisfy a
+# 'Scoring file ' probe under PowerShell's default case-insensitive comparison and
+# a re-run that redid every Stage 1-4 file would look clean.
+$coldScoreMarker   = 'Scoring file '
+$coldRescoreMarker = 'Re-scoring file '
+
+function Get-TaskCacheMap {
+    <#
+    Classify every canonical task in one run log as 'skipped' (cache hit), 'ran'
+    (recomputed), or 'absent' (neither marker present). Osprey runs here with
+    --timestamp --memstamp, so every line carries a prefix and the markers are
+    matched ANYWHERE in the line. String.Contains is ordinal and case-sensitive,
+    which is what the marker comments above rely on. The trailing ':' in each
+    marker is what keeps PerFileScoring from matching PerFileRescoring.
+    #>
+    param([string[]]$Lines)
+    $map = [ordered]@{}
+    foreach ($t in $pipelineTaskNames) {
+        $skipText = "[TASK] $t$taskSkipMarker"
+        $runText  = "[TASK] $t$taskRunMarker"
+        $skipped = $false
+        $ran     = $false
+        foreach ($line in $Lines) {
+            if ($line.Contains($skipText)) { $skipped = $true }
+            elseif ($line.Contains($runText)) { $ran = $true }
+        }
+        $map[$t] = if ($skipped -and $ran) { 'skipped+ran' }
+                   elseif ($skipped) { 'skipped' }
+                   elseif ($ran) { 'ran' }
+                   else { 'absent' }
+    }
+    return $map
+}
+
+function Test-TaskCacheHits {
+    <#
+    Assert that a re-run into an already-populated work dir actually resumed.
+
+    -ExpectSkipped names the tasks whose outputs the leg left valid on disk: each
+    must report a cache hit. -ExpectRan names the tasks the leg deliberately
+    invalidated: each must recompute, which is what proves the invalidation still
+    bites (a cache hit there would make the leg vacuous). -NoColdScoring and
+    -NoColdRescoring additionally require that the matching per-file recompute
+    lines are absent, so a task-level cache hit cannot hide per-file work.
+
+    Returns the { Pass; Issues } shape the blib and diagnostics comparators use, so
+    a caller reports it exactly like any other leg.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$LogPath,
+        [string[]]$ExpectSkipped = @(),
+        [string[]]$ExpectRan = @(),
+        [switch]$NoColdScoring,
+        [switch]$NoColdRescoring
+    )
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) {
+        $issues.Add("run log not found: $LogPath")
+        return @{ Pass = $false; Issues = $issues }
+    }
+    $logName = Split-Path -Leaf $LogPath
+    $lines = @(Get-Content -LiteralPath $LogPath)
+    $map = Get-TaskCacheMap -Lines $lines
+    foreach ($t in $ExpectSkipped) {
+        if ($map[$t] -eq 'skipped') { continue }
+        # Extra parens around each concatenation: -f binds TIGHTER than +, so without
+        # them only the LAST fragment is formatted and the placeholders in the earlier
+        # fragments survive verbatim into the failure message.
+        if ($map[$t] -eq 'absent') {
+            # Neither marker present. Either the task was not included in this run, or
+            # the C# log wording drifted from the tokens above. Say so rather than
+            # reporting it as a recompute, because the fix is different.
+            $issues.Add((("{0}: task {1} logged NEITHER '{2}' nor '{3}' - it was not " +
+                "included in this run, or the driver's log wording has drifted from " +
+                "AnalysisPipeline.cs and this assertion is no longer reading anything") -f
+                $logName, $t, $taskSkipMarker, $taskRunMarker))
+        } else {
+            $issues.Add((("{0}: task {1} is '{2}', expected 'skipped' - no '[TASK] {1}{3}' " +
+                "line, so the re-run recomputed a task whose cached outputs were valid") -f
+                $logName, $t, $map[$t], $taskSkipMarker))
+        }
+    }
+    foreach ($t in $ExpectRan) {
+        if ($map[$t] -ne 'ran') {
+            $issues.Add((("{0}: task {1} is '{2}', expected 'ran' - this leg invalidated its " +
+                "outputs, so anything else means the invalidation no longer bites and the " +
+                "leg proves nothing") -f $logName, $t, $map[$t]))
+        }
+    }
+    $coldChecks = @()
+    if ($NoColdScoring)   { $coldChecks += $coldScoreMarker }
+    if ($NoColdRescoring) { $coldChecks += $coldRescoreMarker }
+    foreach ($marker in $coldChecks) {
+        $hits = @($lines | Where-Object { $_.Contains($marker) })
+        if ($hits.Count -gt 0) {
+            $issues.Add((("{0}: {1} per-file recompute line(s) containing '{2}' - the re-run " +
+                "redid work it already had cached; first: {3}") -f
+                $logName, $hits.Count, $marker, $hits[0].Trim()))
+        }
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
 
 # --- mode 3: HPC 4-task worker chain ------------------------------------------
@@ -324,10 +723,13 @@ function Invoke-OspreyTaskRun {
 
 # Stage the library (+ its .libcache when present) into a phase dir.
 function Copy-LibraryInto {
-    param([string]$Library, [string]$Dir)
+    param([string]$Library, [string]$Dir, [string]$Manifest)
     Copy-Item $Library (Join-Path $Dir (Split-Path -Leaf $Library))
     $libCache = $Library + '.libcache'
     if (Test-Path $libCache) { Copy-Item $libCache (Join-Path $Dir (Split-Path -Leaf $libCache)) }
+    # The pairing manifest is an input like the library: each phase runs with its
+    # own dir as CWD and references it by leaf name, so it must be staged too.
+    if ($Manifest) { Copy-Item $Manifest (Join-Path $Dir (Split-Path -Leaf $Manifest)) }
 }
 
 # Run the distributed --task pipeline end to end against copied inputs under
@@ -336,8 +738,15 @@ function Copy-LibraryInto {
 # nothing is held in memory across phases. All inputs/sidecars are copied (never
 # referenced in place), so the read-only data dir is untouched.
 function Invoke-HpcChain {
-    param([string[]]$Mzmls, [string]$Library, [string]$Resolution, [string]$ChainRoot)
+    param([string[]]$Mzmls, [string]$Library, [string]$Resolution, [string]$ChainRoot,
+          [hashtable]$Spec, [string]$Manifest)
     $libName = Split-Path -Leaf $Library
+    # Every phase gets the SAME dataset flags as the straight-through run -- the
+    # chain is only a self-consistency oracle if both sides run the same search.
+    # The manifest is referenced by leaf name because each phase runs with its own
+    # staged dir as CWD.
+    $manifestName = if ($Manifest) { Split-Path -Leaf $Manifest } else { $null }
+    $extraArgs = Get-DatasetCliArgs -Spec $Spec -Manifest $manifestName
     # Stable, file-order stem list (NOT hashtable key order) so the --input-scores
     # argument order matches the straight-through's file order deterministically.
     $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
@@ -349,11 +758,13 @@ function Invoke-HpcChain {
     $ph1 = Join-Path $ChainRoot 'phase1_scoring'
     New-Item -ItemType Directory -Path $ph1 -Force | Out-Null
     foreach ($m in $Mzmls) { Copy-Item $m (Join-Path $ph1 (Split-Path -Leaf $m)) }
-    Copy-LibraryInto -Library $Library -Dir $ph1
+    Copy-LibraryInto -Library $Library -Dir $ph1 -Manifest $Manifest
     $a1 = @()
     foreach ($m in $Mzmls) { $a1 += @('-i', (Split-Path -Leaf $m)) }
     $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
+    $a1 += $extraArgs
+    $a1 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
@@ -373,11 +784,13 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph1 "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
         New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
     }
-    Copy-LibraryInto -Library $Library -Dir $ph2
+    Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
     $a2 = @('--task', 'FirstPassFDR')
     foreach ($s in $stemList) { $a2 += @('--input-scores', "$s.scores.parquet") }
     $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+    $a2 += $extraArgs
+    $a2 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
 
     # Phase 3: per-file rescore workers (Stage 6), one independent worker per
@@ -398,10 +811,19 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
-        Copy-LibraryInto -Library $Library -Dir $ph3
+        # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
+        # phase2 -> phase3 -> phase4 relay as the other Stage-5 sidecars: $ph2 is
+        # deleted below (before the merge node), so the merge node can only reach it
+        # via a phase-3 hop. Present only for the SVM/percolator framework; absent for
+        # the GBDT golden, so guard with Test-Path.
+        $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
+        if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
+        Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
         $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+        $a3 += $extraArgs
+        $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
         # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
         # consumes only those plus the calibration / reconciliation / 1st-pass
@@ -435,6 +857,13 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
+        # Ship the persisted 1st-pass model so the merge node can run the frozen 2nd-pass
+        # modes (transfer / transfer-compete) without re-training. Written by the
+        # FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
+        # deleted by now). Present for the SVM/percolator framework, so guard with
+        # Test-Path. (protein-compact additionally needs the protein stratum, not yet persisted.)
+        $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
+        if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
         $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
         if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
         New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
@@ -442,11 +871,13 @@ function Invoke-HpcChain {
     # The merge node now has every worker's reconciled output copied in; the phase-3
     # worker dirs are done.
     foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
-    Copy-LibraryInto -Library $Library -Dir $ph4
+    Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
     $a4 = @('--task', 'SecondPassFDR')
     foreach ($s in $stemList) { $a4 += @('--input-scores', "$s.scores-reconciled.parquet") }
     $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+    $a4 += $extraArgs
+    $a4 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
 
     return (Join-Path $ph4 'output.blib')
@@ -456,6 +887,29 @@ function Invoke-HpcChain {
 $overallFail = $false
 $summaryLines = [System.Collections.Generic.List[string]]::new()
 
+# Resolve every selected dataset UP FRONT, then fingerprint the read-only data
+# folders once for the whole run. Two reasons for doing it here rather than
+# per-dataset:
+#
+#   * Resolution is what extracts a nested library zip, so the fingerprint has to
+#     be taken after it -- otherwise the legitimate one-time extraction would
+#     look like a violation on a first run.
+#   * The per-dataset check below fires right after the straight-through leg,
+#     which leaves the resume and HPC-chain legs unguarded. Comparing at the very
+#     END of the run covers every leg of every dataset.
+#
+# This mirrors the equivalent Skyline test-harness assertion: code under test
+# must not write into folders that are supposed to be read-only inputs. It also
+# gives attribution -- a green check here means whatever is dropping artifacts
+# into the data dirs is NOT this harness.
+$resolvedInputs = [ordered]@{}
+foreach ($name in $selected) { $resolvedInputs[$name] = Resolve-DatasetInputs -Spec $datasets[$name] }
+$watchedDirs = @($resolvedInputs.Values | ForEach-Object { $_.Dir; $_.LibDir } |
+                 Where-Object { $_ } | Sort-Object -Unique)
+$runStartFp = @{}
+foreach ($d in $watchedDirs) { $runStartFp[$d] = Get-DirFingerprint -Dir $d }
+Write-Host ("Watching {0} read-only data folder(s) for changes across the run." -f $watchedDirs.Count)
+
 # Self-cleaning: each dataset's scratch is removed as soon as its legs finish, and
 # the whole run root in the finally below -- so the run leaves no multi-GB output
 # behind to starve the next run on a shared agent. -KeepOutput (honored by
@@ -464,19 +918,22 @@ try {
 foreach ($name in $selected) {
     $cfg = $datasets[$name]
     Write-Progress-Tc "Dataset $name"
-    $inputs = Resolve-DatasetInputs -Folder $cfg.Folder
+    $inputs = $resolvedInputs[$name]
     $dataFp = Get-DirFingerprint -Dir $inputs.Dir
 
     $straightDir = Join-Path $runRoot "$name\straight"
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
-    $goldenDir   = Join-Path $goldenRoot $cfg.Folder
+    # GoldenFolder, not Folder: StellarLibDecoy shares the stellar mzML folder,
+    # so keying the golden on Folder alone would collide with Stellar's.
+    $goldenFolder = if ($cfg.GoldenFolder) { $cfg.GoldenFolder } else { $cfg.Folder }
+    $goldenDir   = Join-Path $goldenRoot $goldenFolder
 
     # ---- Straight-through ----
     # (The per-run timestamped $runRoot guarantees $straightDir is fresh, so the
     # straight-through leg always runs clean -- no prior-run state to inherit.)
     Write-Progress-Tc "${name}: straight-through run ($($inputs.Mzmls.Count) files, $($cfg.Resolution))"
     $rStraight = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-        -WorkDir $straightDir -LogName 'straight.log' -DumpProteinFdr
+        -WorkDir $straightDir -LogName 'straight.log' -DumpProteinFdr -Spec $cfg -Manifest $inputs.Manifest
     $straightBlib = Join-Path $straightDir 'output.blib'
     Write-Host ("  straight-through wall {0:mm\:ss}; blib {1:N0} bytes" -f $rStraight.Wall, (Get-Item $straightBlib).Length)
 
@@ -487,9 +944,30 @@ foreach ($name in $selected) {
         Write-Problem-Tc "${name}: read-only data dir was modified by the run: $($changed -join '; ')"
     }
 
+    # Model-diagnostics report, written beside the blib (CWD-relative, stem from -o).
+    $diagHtml = Join-Path $straightDir 'output.model-diagnostics.html'
+
     if ($CreateGolden) {
+        # Tier 2 runs BEFORE anything is written, and a failure writes NOTHING.
+        # Order matters: capturing first and then reporting "refusing to bless" would
+        # leave a full set of updated golden files on disk, which is indistinguishable
+        # from a legitimate rebaseline in git status -- so the poisoned baseline gets
+        # committed anyway and tier 2 protects nothing. Tier 2 is never captured; it
+        # is a fixed bound whose whole purpose is that a rebaseline cannot move it.
+        if ($cfg.ModelDiagnostics) {
+            $bounds = Get-SanityBounds $cfg
+            $sane = Test-DiagnosticsSanity -HtmlPath $diagHtml @bounds
+            if (-not $sane.Pass) {
+                $overallFail = $true
+                Write-Problem-Tc "${name}: REFUSED to capture golden -- diagnostics sanity failed (nothing written)"
+                $sane.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                $summaryLines.Add("$name golden REFUSED (sanity failed; no files written)")
+                continue
+            }
+        }
         Write-Progress-Tc "${name}: capturing golden"
         Save-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump
+        if ($cfg.ModelDiagnostics) { Save-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir }
         $summaryLines.Add("$name golden CAPTURED -> $goldenDir")
         continue
     }
@@ -506,6 +984,34 @@ foreach ($name in $selected) {
         $summaryLines.Add("$name mode1 (vs golden): FAIL ($($m1.Issues.Count) issues)")
     }
 
+    # ---- mode 1b: FDR-calibration spot checks -------------------------------
+    # Two independent tiers. The golden compare catches drift; the sanity bounds
+    # catch a regression that a -CreateGolden rebaseline would otherwise bless
+    # into the baseline. The blib golden cannot cover this: a calibration failure
+    # can leave the ranking intact and only wreck the reported q-values.
+    if ($cfg.ModelDiagnostics) {
+        Write-Progress-Tc "${name}: diagnostics spot checks (mode 1b)"
+        $md = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir -Tolerance $Tolerance
+        if ($md.Pass) {
+            $summaryLines.Add("$name mode1b (diagnostics vs golden): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode1b (diagnostics vs golden): FAIL -- $($md.Issues.Count) issue(s)"
+            $md.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode1b (diagnostics vs golden): FAIL ($($md.Issues.Count) issues)")
+        }
+        $bounds = Get-SanityBounds $cfg
+        $ms = Test-DiagnosticsSanity -HtmlPath $diagHtml @bounds
+        if ($ms.Pass) {
+            $summaryLines.Add("$name mode1b (FDR sanity bounds): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode1b (FDR sanity bounds): FAIL -- calibration is out of bounds"
+            $ms.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode1b (FDR sanity bounds): FAIL ($($ms.Issues.Count) issues)")
+        }
+    }
+
     # ---- mode 3: HPC 4-task worker chain vs straight-through ----
     # Runs BEFORE mode 2: mode 2 invalidates + re-runs $straightDir in place, so
     # $straightBlib is the pristine straight-through output only until then.
@@ -513,19 +1019,15 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # mode 3's SecondPassFDR merge legitimately uses the RESIDENT first-pass pool
-        # (ExpectReconciledInput), which the OSPREY_ALLOW_UNBOUNDED_MEMORY guard otherwise blocks as
-        # an O(files) path. Opt in for the chain ONLY -- this is our own testing -- so modes 1/2 run
-        # with the guard armed, proving the default straight-through + resume paths stay lean. The
-        # HPC resident/rehydrate path is tracked for streaming in
-        # ai/todos/backlog/brendanx67/TODO-osprey_stage6_rescored_buffer_streaming.md.
-        $env:OSPREY_ALLOW_UNBOUNDED_MEMORY = '1'
-        try {
-            $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
-                -Resolution $cfg.Resolution -ChainRoot $chainRoot
-        } finally {
-            Remove-Item Env:OSPREY_ALLOW_UNBOUNDED_MEMORY -ErrorAction SilentlyContinue
-        }
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR merge does
+        # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
+        # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
+        # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
+        # it wrapped the whole chain and would mask a genuine guard regression on any
+        # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
+        # what mode 3 exists to exercise.
+        $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
+            -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest
         $sw3.Stop()
         Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
@@ -539,16 +1041,120 @@ foreach ($name in $selected) {
         }
     }
 
+    # ---- mode 4: warm re-run cache-hit assertion ----
+    # The gate's structural blind spot, closed. Modes 1 and 3 compare output produced
+    # in FRESH dirs, and mode 2 invalidates Stage 5 before it re-runs, so no leg here
+    # ever exercised the all-cached path and no leg asserted that anything was skipped
+    # at all. Comparing output cannot do it: a re-run that ignores every cache and
+    # recomputes from spectra emits a byte-identical blib, which is exactly how a
+    # broken warm resume passed a fully green gate.
+    #
+    # Placed BEFORE mode 2, which invalidates $straightDir in place. This leg needs the
+    # pristine post-straight-through state, where every task's outputs sit on disk
+    # under a valid sidecar, so re-running the IDENTICAL command must be a no-op. It is
+    # nearly free on a healthy build (measured 35 ms on Stellar against a ~4 min
+    # straight-through leg): a fully cached run checks its sidecars and exits without
+    # reading spectra or even loading the library.
+    if (-not $SkipWarmRerun) {
+        Write-Progress-Tc "${name}: warm re-run cache hits (mode 4)"
+        $warmBefore = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
+        # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, for mode 3's reason: a healthy warm
+        # re-run runs NO task, so it can reach no resident path, and pre-setting the
+        # opt-in could only mask the regression this leg exists to catch.
+        $rWarm = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest
+        $warmAfter = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
+        Write-Host ("  warm re-run wall {0:N1}s (a fully cached run does no work)" -f $rWarm.Wall.TotalSeconds)
+        $m4 = Test-TaskCacheHits -LogPath $rWarm.Log -ExpectSkipped $pipelineTaskNames `
+            -NoColdScoring -NoColdRescoring
+        # Byte identity on top of the cache assertion. A fully cached run never rewrites
+        # the blib, so this normally hashes an untouched file; it is here to catch a
+        # partial regression that re-runs the merge node and writes a DIFFERENT blib
+        # while the upstream tasks still report cache hits.
+        #
+        # A raw sha256 is legitimate ONLY under this leg's nothing-was-rewritten
+        # premise. Do not copy it to mode 2: a genuine recompute produces a
+        # semantically identical blib that is NOT byte-identical (measured on Stellar,
+        # cold vs resume differ in the file bytes while comparing equal at 1e-9), which
+        # is why every other leg goes through Compare-BlibFull. Here, a rewritten blib
+        # necessarily means SecondPassFDR ran, which the skip assertion above already
+        # catches, so this can only add signal, never a false red.
+        if ($warmAfter -ne $warmBefore) {
+            $m4.Issues.Add((("output.blib is not byte-identical across the warm re-run: " +
+                "sha256 {0} -> {1}") -f $warmBefore.Substring(0, 16), $warmAfter.Substring(0, 16)))
+            $m4.Pass = $false
+        }
+        if ($m4.Pass) {
+            $summaryLines.Add("$name mode4 (warm re-run all cached): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode4 (warm re-run all cached): FAIL - $($m4.Issues.Count) issue(s)"
+            $m4.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode4 (warm re-run all cached): FAIL ($($m4.Issues.Count) issues)")
+        }
+    }
+
     # ---- mode 2: resume vs straight-through self-consistency ----
     if (-not $SkipResume) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
         $coldBlib = Join-Path $straightDir 'output_cold.blib'
         Copy-Item $straightBlib $coldBlib -Force
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'resume.log'
+        # Scoped opt-in, and ONLY for this leg. A FULL resume with --model-diagnostics is a
+        # genuinely O(files) path that is not fixed yet: the invalidation leaves every
+        # <stem>.1st-pass.fdr_scores.bin on disk, so FirstJoin skips the first-pass score
+        # pass and emits the report through the batch ModelDiagnosticsReport.Write, which
+        # reads the RESIDENT per-file entries (PerFileScoringTask.cs, needsResidentPool at
+        # the --input-files rehydrate). The guard is therefore RIGHT to throw here, and
+        # suppressing it is the honest thing to do only because these are 3-file datasets.
+        #
+        # This is NOT the scale case. --model-diagnostics over --input-scores streams the
+        # report off ModelDiagnosticsData.Accumulator one file at a time and needs no opt-in
+        # at any file count. What remains is the full-resume batch report, tracked in #4505;
+        # the fix is to feed the same accumulator during the resume's per-file load and
+        # report from it, and it is already written and verified on the closed #4437 branch.
+        #
+        # mode 3 above deliberately has NO opt-in: its old one wrapped the entire HPC chain
+        # and would mask a guard regression on any --input-scores worker.
+        # Names the ONE path it needs, so what CI depends on is visible rather than ambient.
+        # The former blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 would also have waved through any
+        # OTHER resident path this leg happened to take - which is how a transfer regression
+        # rode along unnoticed. An unlisted path now fails here even with this set.
+        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = 'mdiag-full-resume'
+        try {
+            $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+                -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
+        } finally {
+            Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
+        }
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
+
+        # The resume run has to have RESUMED, and this is the only place that can say
+        # so. The blib compare below passes just as happily on a re-run that ignored
+        # every cache and recomputed the whole pipeline from spectra, so on its own it
+        # cannot tell a working warm resume from a completely broken one.
+        #
+        # Invoke-ResumeInvalidation deletes only the Stage 5 join sidecars, the blib,
+        # and the blib's own sidecar. So PerFileScoring's per-file parquets and
+        # PerFileRescoring's reconciled parquets stay valid and must report cache hits,
+        # while FirstPassFDR and SecondPassFDR lost their sidecars and must recompute.
+        # Asserting the ran side too is what keeps the leg from going vacuous: if the
+        # invalidation ever stopped biting, every task would skip and the "resume"
+        # would be comparing the straight-through blib against itself.
+        $m2cache = Test-TaskCacheHits -LogPath $rResume.Log `
+            -ExpectSkipped @('PerFileScoring', 'PerFileRescoring') `
+            -ExpectRan @('FirstPassFDR', 'SecondPassFDR') `
+            -NoColdScoring -NoColdRescoring
+        if ($m2cache.Pass) {
+            $summaryLines.Add("$name mode2 (resume cache hits): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode2 (resume cache hits): FAIL - $($m2cache.Issues.Count) issue(s)"
+            $m2cache.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode2 (resume cache hits): FAIL ($($m2cache.Issues.Count) issues)")
+        }
+
         $m2 = Compare-BlibFull -BlibExpected $coldBlib -BlibActual $resumeBlib -Tolerance $Tolerance
         if ($m2.Pass) {
             $summaryLines.Add("$name mode2 (resume==straight): PASS")
@@ -565,10 +1171,43 @@ foreach ($name in $selected) {
     Remove-Scratch (Join-Path $runRoot $name)
 }
 }
+catch {
+    # A throw from any leg (a nonzero Osprey exit, a missing input, a comparator
+    # blowing up) used to escape straight past the summary and the buildProblem
+    # line, so a red CI gate surfaced as a bare stack trace with no statement of
+    # WHAT failed. Record it as a failure like any other and fall through to the
+    # normal reporting below. Deliberately not per-dataset: a throw is usually the
+    # environment or the binary, and running the remaining datasets against a
+    # broken build would only bury the real message.
+    $overallFail = $true
+    $failMsg = $_.Exception.Message
+    Write-Problem-Tc "Osprey regression aborted: $failMsg"
+    $summaryLines.Add("ABORTED: $failMsg")
+    # The stack trace is diagnosis, not the verdict, so it goes to the log under
+    # the verdict rather than replacing it.
+    Write-Host ($_.ScriptStackTrace) -ForegroundColor DarkGray
+}
 finally {
     # Safety net for a dataset that threw before its own cleanup -- drop the whole
     # run root. Raw input data lives outside $runRoot and is untouched.
     Remove-Scratch $runRoot
+}
+
+# --- Read-only data folders unchanged across the WHOLE run --------------------
+# Compared against the fingerprint taken before the first dataset ran, so this
+# covers every leg of every dataset (the per-dataset check above only sees the
+# straight-through leg). Deliberately outside the try/finally cleanup: the run
+# root is gone by now, and the data dirs are the only thing still being asserted.
+foreach ($d in $watchedDirs) {
+    $changed = Compare-DirFingerprint -Before $runStartFp[$d] -Dir $d
+    if ($changed.Count -eq 0) {
+        $summaryLines.Add("data dir unchanged across run: $d")
+    } else {
+        $overallFail = $true
+        Write-Problem-Tc "read-only data dir CHANGED across the run: $d -- $($changed.Count) file(s)"
+        $changed | Select-Object -First 20 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+        $summaryLines.Add("data dir CHANGED across run ($($changed.Count) files): $d")
+    }
 }
 
 # --- Summary + exit -----------------------------------------------------------

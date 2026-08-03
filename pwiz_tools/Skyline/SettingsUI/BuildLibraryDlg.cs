@@ -532,6 +532,17 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddFile_Click(object sender, EventArgs e)
         {
+            ClickAddFile();
+        }
+
+        /// <summary>
+        /// Shows the "Add Input Files" Open dialog and adds whatever files are selected -- the "Add File..."
+        /// button's action, exposed so a test can drive the real native dialog. OrbiPrmTutorialTest uses it to
+        /// select multiple files through the native multiselect Open dialog, exercising the connector's
+        /// native-dialog automation end to end.
+        /// </summary>
+        public void ClickAddFile()
+        {
             string[] addFiles = ShowAddFile(this, Settings.Default.LibraryResultsDirectory);
             if (addFiles != null)
             {
@@ -572,6 +583,16 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void btnAddDirectory_Click(object sender, EventArgs e)
+        {
+            ClickAddDirectory();
+        }
+
+        /// <summary>
+        /// Shows the "Add Input Directory" folder browser and adds the library input files found under the chosen
+        /// folder -- the "Add Directory..." button's action, exposed so a test can drive the real native
+        /// folder-browser dialog (see LibraryBuildTest).
+        /// </summary>
+        public void ClickAddDirectory()
         {
             using (var dlg = new FolderBrowserDialog())
             {

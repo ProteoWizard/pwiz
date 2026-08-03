@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
 {
@@ -41,6 +42,12 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public static class PercolatorEngine
     {
+        /// <summary>The <c>passLabel</c> value that marks the FIRST pass. Named rather than
+        /// repeated as a literal because OSPREY_EXPERIMENT_AGG now gates on it: a drift between
+        /// the default and the comparison would silently re-enable the aggregation on the 2nd
+        /// pass, which is the defect this constant exists to stop recurring.</summary>
+        public const string FIRST_PASS_LABEL = @"First-pass";
+
         /// <summary>
         /// Run Percolator-based FDR control. Builds PercolatorEntry objects from
         /// FdrEntry stubs and runs Percolator, then maps results back onto the
@@ -63,9 +70,10 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             out FeatureContributions contributions,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass",
+            string passLabel = FIRST_PASS_LABEL,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
-            Action<PercolatorResults> captureModel = null)
+            Action<PercolatorResults> captureModel = null,
+            PercolatorResults frozenModel = null)
         {
             contributions = null;
             int numFeatures = featureInfos.Length;
@@ -117,7 +125,7 @@ namespace pwiz.Osprey.FDR
 
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             PercolatorResults results = DispatchSvm(
-                percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
+                percEntries, percConfig, logInfo, passLabel, loadFileFeatures, frozenModel);
 
             // Surface the trained model's feature contributions to the caller
             // (the --model-diagnostics report reads them). Computed already; this
@@ -215,7 +223,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass",
+            string passLabel = FIRST_PASS_LABEL,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
@@ -299,7 +307,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// projection overload for the lean 1st-pass case, it builds the same parity-locked
         /// <see cref="PercolatorConfig"/> and delegates to
-        /// <see cref="PercolatorFdr.RunStreamingFirstPass"/>, which streams every row's identity +
+        /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>, which streams every row's identity +
         /// features from the caller-supplied row source instead of a resident
         /// <see cref="FdrProjectionSet"/>. The caller (Tasks layer) wires
         /// <paramref name="streamFileRows"/> to the per-file parquet scalar reader and
@@ -315,7 +323,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass",
+            string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
         {
@@ -326,7 +334,7 @@ namespace pwiz.Osprey.FDR
                     @"RunFirstPassStreaming always streams features per file; a per-file feature " +
                     @"loader is required.");
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
-            return PercolatorFdr.RunStreamingFirstPass(
+            return PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
                 captureContributions, captureModel);
         }
@@ -345,13 +353,46 @@ namespace pwiz.Osprey.FDR
             OspreyFeatureInfo[] featureInfos,
             PercolatorDiagnosticsConfig diagnostics)
         {
+            // Start from the validated GbtParams defaults and apply any env overrides
+            // (OSPREY_GBT_*), so a regularization / capacity sweep runs without a recompile
+            // per setting. Unset vars leave the default in place. Tree-only: this object is
+            // ignored on the SVM path. The chosen values are echoed to the run log.
+            var gbtParams = new GbtParams();
+            if (OspreyEnvironment.GbtGamma.HasValue) gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
+            if (OspreyEnvironment.GbtRegLambda.HasValue) gbtParams.RegLambda = OspreyEnvironment.GbtRegLambda.Value;
+            if (OspreyEnvironment.GbtRegAlpha.HasValue) gbtParams.RegAlpha = OspreyEnvironment.GbtRegAlpha.Value;
+            if (OspreyEnvironment.GbtMaxDepth.HasValue) gbtParams.MaxDepth = OspreyEnvironment.GbtMaxDepth.Value;
+            if (OspreyEnvironment.GbtNTrees.HasValue) gbtParams.NTrees = OspreyEnvironment.GbtNTrees.Value;
+            if (OspreyEnvironment.GbtMinChildWeight.HasValue) gbtParams.MinChildWeight = OspreyEnvironment.GbtMinChildWeight.Value;
+            if (OspreyEnvironment.GbtLearningRate.HasValue) gbtParams.LearningRate = OspreyEnvironment.GbtLearningRate.Value;
+            if (OspreyEnvironment.GbtSubsample.HasValue) gbtParams.Subsample = OspreyEnvironment.GbtSubsample.Value;
+            if (OspreyEnvironment.GbtColSample.HasValue) gbtParams.ColSample = OspreyEnvironment.GbtColSample.Value;
+
             return new PercolatorConfig
             {
                 TrainFdr = config.RunFdr,
                 TestFdr = config.RunFdr,
-                MaxIterations = 10,
+                // The SVM's 10 is unchanged. Trees converge far more slowly and were
+                // still improving when they hit 10, so they get their own (higher) cap --
+                // both loops still early-stop on convergence, so this only binds when the
+                // model genuinely has further to go. See OspreyEnvironment.GbtMaxIterations.
+                MaxIterations = config.FdrMethod == FdrMethod.Gbdt
+                    ? OspreyEnvironment.GbtMaxIterations
+                    : 10,
                 NFolds = 3,
                 FeatureInfos = featureInfos,
+                // --fdr-method gbdt: swap the linear SVM for gradient-boosted trees.
+                // This is the ONLY knob that differs between the two methods -- the
+                // dedup, fold assignment, semi-supervised iteration, competition, and
+                // q-value/PEP math are the same shared code either way, which is what
+                // makes them comparable at matched entrapment FDP.
+                UseGradientBoostedTrees = config.FdrMethod == FdrMethod.Gbdt,
+                GbtParams = gbtParams,
+                // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
+                // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
+                MaxTrainSize = OspreyEnvironment.MaxTrainSizeOverride ?? 300000,
+                // Honors --threads; drives only the tree score pass (see NThreads).
+                NThreads = config.NThreads,
                 // Collect per-feature target/decoy score histograms only for the
                 // model-diagnostics report (#4377); off the production path otherwise,
                 // so byte-neutral when --model-diagnostics is not requested.
@@ -373,7 +414,8 @@ namespace pwiz.Osprey.FDR
             PercolatorConfig percConfig,
             Action<string> logInfo,
             string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            PercolatorResults frozenModel = null)
         {
             // Section header (full input population). The cross-validation fold count and the
             // actual training-subset size are reported by RunPercolator once the subsample is
@@ -388,7 +430,7 @@ namespace pwiz.Osprey.FDR
             // different standardizer-fit population; removed so C# and Rust train
             // identically at every scale (mirrors Rust run_percolator_fdr, now stream-only).
             return RunPercolatorStreaming(
-                percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
+                percEntries, percConfig, logInfo, passLabel, loadFileFeatures, frozenModel);
         }
 
         /// <summary>
@@ -440,7 +482,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="PercolatorEntry"/> per stub in nested (file, entry) order,
         /// and both SVM paths return <see cref="PercolatorResults.Entries"/>
         /// index-aligned to that input (the direct and streaming result assembly
-        /// in <see cref="PercolatorFdr"/>). Walking <paramref name="perFileEntries"/>
+        /// in <see cref="PercolatorScorer"/>). Walking <paramref name="perFileEntries"/>
         /// in that same nested order therefore pairs each stub with its own result,
         /// which is why the former psm_id string + resultMap re-join was pure
         /// redundancy (issue #4355 step (b)): it re-joined by a key that position
@@ -507,8 +549,8 @@ namespace pwiz.Osprey.FDR
         /// compute PEP and per-run / experiment q-values on that flat
         /// score array.</item>
         /// </list>
-        /// The selection uses <see cref="PercolatorFdr.SelectBestPerPrecursor"/>
-        /// and <see cref="PercolatorFdr.SubsampleByPeptideGroup"/> to build the
+        /// The selection uses <see cref="PercolatorSampling.SelectBestPerPrecursor"/>
+        /// and <see cref="PercolatorSampling.SubsampleByPeptideGroup"/> to build the
         /// best-per-precursor training subsample -- the same helpers (and the same
         /// 300K cap) Rust's streaming path uses, so the subsets match given
         /// identical input.
@@ -523,10 +565,27 @@ namespace pwiz.Osprey.FDR
             PercolatorConfig percConfig,
             Action<string> logInfo,
             string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            PercolatorResults frozenModel = null)
         {
             int n = percEntries.Count;
             int maxTrain = percConfig.MaxTrainSize;
+
+            // OSPREY_PASS2_QVALUE=transfer-compete: do NOT retrain. Score the full
+            // population (all reconciled targets + decoys) with the FROZEN 1st-pass
+            // model, then recompute q + PEP by the standard global target-decoy
+            // competition over that non-depleted population. This is the frozen-weights
+            // path but with a real competition null instead of a co-monotone score->q
+            // table -- the fix for the anti-conservative retrain AND the stepped table.
+            if (frozenModel != null)
+            {
+                logInfo(string.Format(
+                    "{0}: applying FROZEN 1st-pass model to all {1} entries (no retrain) + " +
+                    "target-decoy competition for q/PEP.", passLabel, n));
+                return PercolatorScorer.ScorePopulationAndComputeFdr(
+                    percEntries, frozenModel, percConfig, loadFileFeatures,
+                    applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
+            }
 
             // Pull labels / entry IDs / peptides into flat arrays for the
             // subset helpers. On the streaming build the stubs carry no feature
@@ -550,11 +609,11 @@ namespace pwiz.Osprey.FDR
 
             // 1. Best-per-precursor dedup, then 2. peptide-grouped subsample when
             //    the dedup count still exceeds MaxTrainSize. Both steps are owned
-            //    by PercolatorFdr.BuildTrainingSubset so every caller (this projection
+            //    by PercolatorSampling.BuildTrainingSubset so every caller (this projection
             //    streaming path and the FdrEntry path) selects identical subsets for
             //    identical input.
             int[] bestIdx;
-            int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
+            int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, percEntries, maxTrain, percConfig.Seed,
                 out bestIdx, bestScores);
             int dedupTargets = 0, dedupDecoys = 0;
@@ -591,34 +650,22 @@ namespace pwiz.Osprey.FDR
             // held-out CV scoring inside RunPercolator.
             if (loadFileFeatures != null)
             {
-                var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+                var subsetByFile = PercolatorScorer.GroupIndicesByFileName(subsetEntries);
                 foreach (var kvp in subsetByFile)
                 {
                     IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
                     foreach (int k in kvp.Value)
                     {
                         var entry = subsetEntries[k];
-                        entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                        entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
                             rows, entry.ParquetIndex, entry.CoelutionSum,
                             percConfig.FeatureInfos.Length).Clone();
                     }
                 }
             }
 
-            var trainConfig = new PercolatorConfig
-            {
-                TrainFdr = percConfig.TrainFdr,
-                TestFdr = percConfig.TestFdr,
-                MaxIterations = percConfig.MaxIterations,
-                NFolds = percConfig.NFolds,
-                Seed = percConfig.Seed,
-                CValues = percConfig.CValues,
-                MaxTrainSize = percConfig.MaxTrainSize,
-                FeatureInfos = percConfig.FeatureInfos,
-                TrainOnly = true,
-                Diagnostics = percConfig.Diagnostics
-            };
-            PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+            var trainConfig = percConfig.CloneForTrainOnly();
+            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
 
             // A diagnostic-only (*Only) dump can fire during the train-only pass
             // (standardizer / subsample / SVM-weights dumps all run there);
@@ -629,8 +676,12 @@ namespace pwiz.Osprey.FDR
             // 4. Apply averaged model to ALL entries and compute q-values. The
             //    score pass reloads features one file at a time via loadFileFeatures
             //    (issue #4355 Phase 4), keeping only the scalar scores resident.
-            return PercolatorFdr.ScorePopulationAndComputeFdr(
-                percEntries, trainResults, percConfig, loadFileFeatures);
+            //    applyExperimentAgg mirrors RunStreamingIntoProjection's gate exactly -
+            //    the resident and projection passes are each other's byte-identity
+            //    oracle, so OSPREY_EXPERIMENT_AGG must engage on the same pass in both.
+            return PercolatorScorer.ScorePopulationAndComputeFdr(
+                percEntries, trainResults, percConfig, loadFileFeatures,
+                applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
         }
 
         /// <summary>
@@ -695,11 +746,11 @@ namespace pwiz.Osprey.FDR
         /// objects are built ONLY for the &lt;= MaxTrainSize subset;</item>
         /// <item>the score + competition pass runs over the projection rows and writes
         /// the Score + five q-values straight back onto them via
-        /// <see cref="PercolatorFdr.ScoreProjectionAndComputeFdrInPlace"/>, reusing the
+        /// <see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/>, reusing the
         /// same flat identity arrays.</item>
         /// </list>
-        /// Every parity-locked primitive (<see cref="PercolatorFdr.BuildTrainingSubset"/>,
-        /// <see cref="PercolatorFdr.RunPercolator"/> on the subset, and the shared
+        /// Every parity-locked primitive (<see cref="PercolatorSampling.BuildTrainingSubset"/>,
+        /// <see cref="PercolatorTrainer.RunPercolator"/> on the subset, and the shared
         /// competition/q-value math) is called UNCHANGED, so the trained model and the
         /// resulting q-values are byte-identical to the <see cref="PercolatorEntry"/>
         /// streaming path on the same input order. Returns <c>true</c> on a
@@ -778,7 +829,7 @@ namespace pwiz.Osprey.FDR
             // silent span on an 82-file join; announce it so the console is not blank.
             logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
             int[] bestIdx;
-            int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
+            int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
                 percConfig.Seed, out bestIdx, bestScores);
 
@@ -826,7 +877,7 @@ namespace pwiz.Osprey.FDR
                 });
             }
 
-            var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+            var subsetByFile = PercolatorScorer.GroupIndicesByFileName(subsetEntries);
             // Per-file progress: loading the training-subset feature vectors from every file
             // ran ~5 min silent before cross-validation. Console-only, never touches the
             // loaded features, so training is byte-identical.
@@ -842,34 +893,24 @@ namespace pwiz.Osprey.FDR
                     foreach (int k in kvp.Value)
                     {
                         var entry = subsetEntries[k];
-                        entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                        entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
                             rows, entry.ParquetIndex, entry.CoelutionSum,
                             percConfig.FeatureInfos.Length).Clone();
                     }
                 }
             }
 
-            var trainConfig = new PercolatorConfig
-            {
-                TrainFdr = percConfig.TrainFdr,
-                TestFdr = percConfig.TestFdr,
-                MaxIterations = percConfig.MaxIterations,
-                NFolds = percConfig.NFolds,
-                Seed = percConfig.Seed,
-                CValues = percConfig.CValues,
-                MaxTrainSize = percConfig.MaxTrainSize,
-                FeatureInfos = percConfig.FeatureInfos,
-                TrainOnly = true,
-                Diagnostics = percConfig.Diagnostics
-            };
-            PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+            var trainConfig = percConfig.CloneForTrainOnly();
+            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
 
             if (trainResults.DiagnosticAbort)
                 return true;
 
-            // Publish the frozen first-pass model (fold weights + biases + standardizer) for the
-            // OSPREY_PASS2_QVALUE=transfer pass-2 step. No-op (null) on the default path, so this
-            // projection first pass stays byte-identical. See TODO-osprey_pass2_per_run_only_qvalue.
+            // Publish the trained 1st-pass model (the frozen fold weights + biases +
+            // standardizer) for the OSPREY_PASS2_QVALUE=transfer / transfer-compete / protein-
+            // compact pass-2 steps, which re-score reconciled features with this FROZEN model
+            // (transfer-compete / protein-compact then run a fresh target-decoy competition). A
+            // no-op (null) on every default run, so this projection first pass stays byte-identical.
             captureModel?.Invoke(trainResults);
 
             // Release the subset-only working sets before the score pass so only the
@@ -885,9 +926,16 @@ namespace pwiz.Osprey.FDR
             //    straight onto the projection rows and streaming the q-value outputs
             //    to the sink (no PercolatorResult list). Reuses the flat identity
             //    arrays already built above.
-            PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
+            // OSPREY_EXPERIMENT_AGG applies to the FIRST pass only. The 2nd pass re-runs this same
+            // projection scorer over the post-reconciliation survivor pool, where the aggregation's
+            // premises no longer hold (appended gap-fill rows inflate a group's run count with
+            // fabricated detections; the decoy floor would come from the compaction-depleted
+            // survivor decoys rather than the full null). Before this gate the shared QMap
+            // primitives re-aggregated there silently.
+            PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
-                loadFileFeatures, sink, captureContributions);
+                loadFileFeatures, sink, captureContributions,
+                applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
             return false;
         }
 
@@ -921,7 +969,7 @@ namespace pwiz.Osprey.FDR
         /// -- intended, matching blib fidelity rather than the run-precursor gate alone.
         ///
         /// NOTE (issue #4378): the IN-PASS clamp (first/second-pass Percolator) now runs in the
-        /// memory-bounded FLAT form -- <see cref="PercolatorFdr.ClampExperimentQToBestRunFlat"/>
+        /// memory-bounded FLAT form -- <see cref="PercolatorQValues.ClampExperimentQToBestRunFlat"/>
         /// over the score-pass scalar arrays -- so the full FdrEntry buffer need not be resident
         /// on the streaming path. This resident overload remains for the post-Stage-6 pre-blib
         /// re-clamp (<c>MergeNodeTask</c>), which runs on the already-compacted survivor buffer.
