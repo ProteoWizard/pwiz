@@ -677,7 +677,25 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// Restores a single window named in a .view file. A layout may have been saved for a
+        /// different document than the one now open, so failing to restore one window must not
+        /// abort the rest of the layout. Returning null simply leaves that window closed.
+        /// </summary>
         private IDockableForm DeserializeForm(string persistentString)
+        {
+            try
+            {
+                return RestoreDockableForm(persistentString);
+            }
+            catch (Exception x)
+            {
+                Debug.WriteLine($@"Failed to restore window '{persistentString}' from the layout: {x.Message}");
+                return null;
+            }
+        }
+
+        private IDockableForm RestoreDockableForm(string persistentString)
         {
             if (persistentString.StartsWith(typeof(SequenceTreeForm).ToString()))
             {

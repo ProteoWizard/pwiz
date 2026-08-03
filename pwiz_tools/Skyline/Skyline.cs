@@ -4378,6 +4378,8 @@ namespace pwiz.Skyline
                 return;
             }
             listForm = CreateListForm(listName);
+            if (listForm == null)
+                return;
             var rectFloat = GetFloatingRectangleForNewWindow();
             listForm.Show(dockPanel, rectFloat);
         }
@@ -4397,7 +4399,13 @@ namespace pwiz.Skyline
                     return null;
                 listName = listDefault.ListName;
             }
-            return FindListForm(listName) ?? new ListGridForm(this, listName);
+            var listForm = FindListForm(listName);
+            if (listForm != null)
+                return listForm;
+            // A layout imported from another document may name a list this document does not have
+            if (Document.Settings.DataSettings.FindList(listName) == null)
+                return null;
+            return new ListGridForm(this, listName);
         }
 
         public void SelectElement(ElementRef elementRef)

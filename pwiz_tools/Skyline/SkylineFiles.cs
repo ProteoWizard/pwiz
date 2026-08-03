@@ -38,6 +38,8 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
@@ -70,9 +72,20 @@ namespace pwiz.Skyline
 {
     public partial class SkylineWindow
     {
+        /// <summary>
+        /// Extension of the window layout file. It is appended to the full document
+        /// file name, so that "Doc.sky" gets the layout file "Doc.sky.view".
+        /// </summary>
+        public const string EXT_VIEW = ".view";
+
+        public static string FILTER_VIEW
+        {
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_VIEW_Skyline_Window_Layouts, EXT_VIEW); }
+        }
+
         public static string GetViewFile(string fileName)
         {
-            return fileName + @".view";
+            return fileName + EXT_VIEW;
         }
 
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
@@ -1460,9 +1473,21 @@ namespace pwiz.Skyline
             }, (int) SrmDocument.Level.TransitionGroups);
         }
 
+        /// <summary>
+        /// Saves the current window layout beside the document with the given file name.
+        /// </summary>
         private void SaveLayout(string fileName)
         {
-            using (var saverUser = new FileSaver(GetViewFile(fileName)))
+            SaveLayoutToFile(GetViewFile(fileName));
+        }
+
+        /// <summary>
+        /// Saves the current window layout to an exact path, which is expected to already
+        /// end in <see cref="EXT_VIEW"/>.
+        /// </summary>
+        private void SaveLayoutToFile(string viewFilePath)
+        {
+            using (var saverUser = new FileSaver(viewFilePath))
             {
                 if (saverUser.CanSave())
                 {
@@ -4170,6 +4195,97 @@ namespace pwiz.Skyline
                 }
                 ImportAnnotations(dlg.FileName);
             }
+        }
+
+        private void exportLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportLayoutDlg();
+        }
+
+        /// <summary>
+        /// Asks for a file name and writes the arrangement of the open windows to it, so that
+        /// a layout can be saved without saving the document it was arranged for.
+        /// </summary>
+        public void ShowExportLayoutDlg()
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Layout;
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = EXT_VIEW;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(FILTER_VIEW);
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.FileName = GetViewFile(Path.GetFileName(DocumentFilePath));
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ExportLayout(dlg.FileName);
+            }
+        }
+
+        public void ExportLayout(string viewFilePath)
+        {
+            try
+            {
+                SaveLayoutToFile(viewFilePath);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(
+                    string.Format(SkylineResources.SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__, viewFilePath),
+                    x.Message), x);
+            }
+        }
+
+        private void importLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportLayoutDlg();
+        }
+
+        public void ShowImportLayoutDlg()
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Layout;
+                dlg.DefaultExt = EXT_VIEW;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(FILTER_VIEW);
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ImportLayout(dlg.FileName);
+            }
+        }
+
+        /// <summary>
+        /// Replaces the arrangement of the open windows with the one stored in the given
+        /// .view file. The layout may have been saved for a different document, in which case
+        /// the windows it names that do not apply to the current document are left closed.
+        /// </summary>
+        public void ImportLayout(string viewFilePath)
+        {
+            try
+            {
+                using (var stream = File.OpenRead(viewFilePath))
+                {
+                    LoadLayout(stream);
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(
+                    string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath),
+                    x.Message), x);
+                return;
+            }
+
+            // Opening a document gets these from UpdateGraphUI after it loads the layout.
+            // An imported layout has to close its own inapplicable windows, because it may
+            // have been saved for a document with different group comparisons or lists.
+            FoldChangeForm.CloseInapplicableForms(this);
+            ListGridForm.CloseInapplicableForms(this);
+            UpdateGraphPanes();
         }
 
 
