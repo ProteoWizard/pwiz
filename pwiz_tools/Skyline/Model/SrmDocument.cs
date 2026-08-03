@@ -1798,6 +1798,19 @@ namespace pwiz.Skyline.Model
         /// is what a caller which already knows the peak uses - the chromatogram graph does, since
         /// it drew the labels - rather than naming a retention time and having it matched back.
         /// </summary>
+        /// <summary>
+        /// The document with the same peak boundaries put on every precursor of the molecule which
+        /// was picked alongside this one. See
+        /// <see cref="MoleculeResults.ChangeComparablePeakBounds"/>.
+        /// </summary>
+        public SrmDocument ChangeComparablePeakBounds(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
+            double startTime, double endTime, PeakIdentification? identified, UserSet userSet)
+        {
+            return ChangePeak(groupPath, nameSet, filePath, (moleculeResults, transitionGroup, iSet, fileId) =>
+                moleculeResults.ChangeComparablePeakBounds(transitionGroup, iSet, fileId, (float) startTime,
+                    (float) endTime, identified, userSet));
+        }
+
         public SrmDocument ChoosePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
             int peakIndex, UserSet userSet)
         {
@@ -1827,51 +1840,20 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
             Transition transition, double? startTime, double? endTime, UserSet userSet, PeakIdentification? identified, bool preserveMissingPeaks)
         {
-            // If start or end time is null, just assign an arbitrary value to identified -- peak will be deleted anyway
-            if (!startTime.HasValue || !endTime.HasValue)
-                identified = PeakIdentification.FALSE;
-            // If a null identification is passed in (currently only happens from the PeakBoundaryImport function),
-            // look up the identification status directly
-            if (!identified.HasValue)
-            {
-                IdentityPath peptidePath = groupPath.Parent;
-                var nodePep = (PeptideDocNode) FindNode(peptidePath);
-                var nodeGroup = (TransitionGroupDocNode) FindNode(groupPath);
-                if (nodeGroup == null)
-                    throw new IdentityNotFoundException(groupPath.Child);
-                var targets = Settings.GetTargets(nodePep).ToList();
-                var retentionTimes = Settings.GetRetentionTimes(filePath, targets);
-                Settings.TryGetRetentionTimes(nodePep, nodeGroup.TransitionGroup.PrecursorAdduct, filePath, out _, out retentionTimes);
-                if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
-                {
-                    identified = PeakIdentification.TRUE;
-                }
-                else
-                {
-                    ChromatogramSet chromatogramSet = null;
-                    MeasuredResults?.TryGetChromatogramSet(nameSet, out chromatogramSet, out _);
-                    var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(chromatogramSet, filePath, Settings.GetTargets(nodePep).ToList());
-                    identified = ContainsTime(alignedRetentionTimes, startTime.Value, endTime.Value)
-                        ? PeakIdentification.ALIGNED
-                        : PeakIdentification.FALSE;
-                }
-            }
             return ChangePeak(groupPath, nameSet, filePath, (moleculeResults, transitionGroup, iSet, fileId) =>
             {
-                if (!startTime.HasValue)
+                if (!startTime.HasValue || !endTime.HasValue)
                 {
                     return moleculeResults.RemovePeak(transitionGroup, transition, iSet, fileId, userSet);
                 }
 
+                // A null identification is worked out from the settings - see
+                // MoleculeResults.FindPeakIdentification - which is where the retention times it
+                // takes to answer are already to hand.
                 return moleculeResults.ChangePeakBounds(transitionGroup, transition, iSet, fileId,
-                    (float) startTime.Value, (float) endTime.Value, identified.Value, userSet,
+                    (float) startTime.Value, (float) endTime.Value, identified, userSet,
                     preserveMissingPeaks);
             });
-        }
-
-        private bool ContainsTime(double[] times, double startTime, double endTime)
-        {
-            return times != null && times.Any(time => startTime <= time && time <= endTime);
         }
 
         /// <summary>

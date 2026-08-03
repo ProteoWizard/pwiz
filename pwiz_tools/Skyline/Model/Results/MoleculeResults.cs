@@ -623,16 +623,121 @@ namespace pwiz.Skyline.Model.Results
         /// <paramref name="transition"/> null moves the whole peak group, which is the usual case.
         /// Returns the molecule unchanged when there is no chromatogram to read.
         /// </summary>
+        /// <param name="identified">Null to work it out from the settings, which is what a caller
+        /// which is not carrying an identification from somewhere else wants. See
+        /// <see cref="FindPeakIdentification"/>.</param>
         public PeptideDocNode ChangePeakBounds(TransitionGroup transitionGroup, [CanBeNull] Transition transition,
             int replicateIndex, ChromFileInfoId fileId, float startTime, float endTime,
-            PeakIdentification identified, UserSet userSet, bool preserveMissingPeaks = false)
+            PeakIdentification? identified, UserSet userSet, bool preserveMissingPeaks = false)
         {
             return ChangePeak(transitionGroup, replicateIndex, new PeakChange(fileId, transition, userSet)
             {
                 PeakBounds = new CustomPeakBounds(Math.Min(startTime, endTime), Math.Max(startTime, endTime)),
-                Identified = identified,
+                Identified = identified ??
+                             FindPeakIdentification(transitionGroup, replicateIndex, fileId, startTime, endTime),
                 PreserveMissingPeaks = preserveMissingPeaks
             });
+        }
+
+        /// <summary>
+        /// The precursors of this molecule whose peaks were picked together with one of them, and
+        /// so are meant to sit at the same retention time.
+        /// <para>
+        /// A precursor whose <see cref="RelativeRT"/> is known to match goes with every other one
+        /// which also matches, whatever its charge. One whose relative retention time is unknown
+        /// goes only with the precursors of its own label type - a different charge state of the
+        /// same label still counts, which is what makes this more than an isotope label check.
+        /// This is the same partition <see cref="PeptideChromDataSets"/> picks peaks by.
+        /// </para>
+        /// </summary>
+        public IEnumerable<TransitionGroupDocNode> GetComparableGroups(TransitionGroup transitionGroup)
+        {
+            var nodeGroup = FindTransitionGroup(transitionGroup);
+            if (nodeGroup == null)
+            {
+                return Array.Empty<TransitionGroupDocNode>();
+            }
+
+            if (nodeGroup.RelativeRT == RelativeRT.Unknown)
+            {
+                return PeptideDocNode.TransitionGroups.Where(other => Equals(other.LabelType, nodeGroup.LabelType));
+            }
+
+            return PeptideDocNode.TransitionGroups.Where(other => other.RelativeRT != RelativeRT.Unknown);
+        }
+
+        /// <summary>
+        /// The molecule with the same peak boundaries put on every precursor which was picked
+        /// alongside this one, which is what moving a peak in the chromatogram graph does: the
+        /// precursors of a molecule are meant to sit at the same retention time.
+        /// <para>
+        /// A precursor with no peak in this file is left alone, and so is one whose peak is
+        /// missing, since giving it these boundaries would invent a peak the document never had.
+        /// </para>
+        /// </summary>
+        public PeptideDocNode ChangeComparablePeakBounds(TransitionGroup transitionGroup, int replicateIndex,
+            ChromFileInfoId fileId, float startTime, float endTime, PeakIdentification? identified, UserSet userSet)
+        {
+            var moleculeResults = this;
+            foreach (var other in GetComparableGroups(transitionGroup).ToArray())
+            {
+                if (ReferenceEquals(other.TransitionGroup, transitionGroup))
+                {
+                    continue;
+                }
+
+                var nodePepNew = moleculeResults.ChangePeakBounds(other.TransitionGroup, null, replicateIndex,
+                    fileId, startTime, endTime, identified, userSet, true);
+                if (!ReferenceEquals(nodePepNew, moleculeResults.PeptideDocNode))
+                {
+                    // A new molecule each turn, and the chromatograms are read again with it. Each
+                    // turn changes a different precursor, so none of them changes what the next one
+                    // reads, but the results it works from have to be the ones being changed.
+                    moleculeResults = new MoleculeResults(Settings, nodePepNew);
+                }
+            }
+
+            return moleculeResults.PeptideDocNode;
+        }
+
+        /// <summary>
+        /// Whether a peak between two boundaries contains an identification, which is a question
+        /// for the settings rather than the chromatogram: a retention time this molecule was
+        /// identified at, from a library or a search result, falling between them.
+        /// <para>
+        /// <see cref="PeakIdentification.ALIGNED"/> when only a time aligned from another replicate
+        /// lands there, which is a weaker claim than a time measured in this file.
+        /// </para>
+        /// </summary>
+        public PeakIdentification FindPeakIdentification(TransitionGroup transitionGroup, int replicateIndex,
+            ChromFileInfoId fileId, double startTime, double endTime)
+        {
+            var chromatogramSet = replicateIndex >= 0 && replicateIndex < ReplicateCount
+                ? Settings.MeasuredResults.Chromatograms[replicateIndex]
+                : null;
+            var filePath = chromatogramSet?.GetFileInfo(fileId)?.FilePath;
+            if (filePath == null)
+            {
+                return PeakIdentification.FALSE;
+            }
+
+            Settings.TryGetRetentionTimes(PeptideDocNode, transitionGroup.PrecursorAdduct, filePath, out _,
+                out var retentionTimes);
+            if (ContainsTime(retentionTimes, startTime, endTime))
+            {
+                return PeakIdentification.TRUE;
+            }
+
+            var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(chromatogramSet, filePath,
+                Settings.GetTargets(PeptideDocNode).ToList());
+            return ContainsTime(alignedRetentionTimes, startTime, endTime)
+                ? PeakIdentification.ALIGNED
+                : PeakIdentification.FALSE;
+        }
+
+        private static bool ContainsTime(double[] times, double startTime, double endTime)
+        {
+            return times != null && times.Any(time => startTime <= time && time <= endTime);
         }
 
         /// <summary>

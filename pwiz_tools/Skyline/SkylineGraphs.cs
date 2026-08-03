@@ -1870,41 +1870,14 @@ namespace pwiz.Skyline
                 (PeptideDocNode) document.FindNode(e.GroupPath.Parent));
             var activeChromInfo = FindChromInfo(document, moleculeResults, activeTransitionGroup, e.NameSet, e.FilePath);
 
-            document = ChangePeakBounds(document, GetSynchronizedPeakBoundChanges(document,
+            // ChangePeakBounds puts the same boundaries on the molecule's other precursors, so
+            // there is nothing to do for them here. This is only fanning the change out to the
+            // other replicates when integration is synchronized.
+            return ChangePeakBounds(document, GetSynchronizedPeakBoundChanges(document,
                 new ChangedPeakBoundsEventArgs(e.GroupPath, null, e.NameSet, e.FilePath,
                     new ScaledRetentionTime(activeChromInfo.StartRetentionTime.GetValueOrDefault()),
                     new ScaledRetentionTime(activeChromInfo.EndRetentionTime.GetValueOrDefault()), null,
                     PeakBoundsChangeType.both), false));
-
-            if (activeTransitionGroup.RelativeRT != RelativeRT.Matching)
-            {
-                return document;
-            }
-            var peptide = (PeptideDocNode) document.FindNode(e.GroupPath.Parent);
-            // Read once for the whole molecule. Each turn of the loop changes a different precursor,
-            // so no turn changes whether a later one has a peak in this file.
-            var peptideResults = new MoleculeResults(document.Settings, peptide);
-            // See if there are any other transition groups that should have their peak bounds set to the same value
-            foreach (var transitionGroup in peptide.TransitionGroups)
-            {
-                if (transitionGroup.RelativeRT != RelativeRT.Matching)
-                {
-                    continue;
-                }
-                var groupPath = new IdentityPath(e.GroupPath.Parent, transitionGroup.TransitionGroup);
-                if (Equals(groupPath, e.GroupPath))
-                {
-                    continue;
-                }
-                var chromInfo = FindChromInfo(document, peptideResults, transitionGroup, e.NameSet, e.FilePath);
-                if (null == chromInfo)
-                {
-                    continue;
-                }
-                document = document.ChangePeak(groupPath, e.NameSet, e.FilePath, null, 
-                    activeChromInfo.StartRetentionTime, activeChromInfo.EndRetentionTime, UserSet.TRUE, activeChromInfo.Identified, true);
-            }
-            return document;
         }
 
         /// <summary>
@@ -2106,7 +2079,6 @@ namespace pwiz.Skyline
                 document = document.BeginDeferSettingsChanges();
             }
 
-            var changedGroupIds = new HashSet<Tuple<IdentityPath, MsDataFileUri>>();
             var peptideChanges = new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>>();
             foreach (var change in changesArr)
             {
@@ -2117,7 +2089,7 @@ namespace pwiz.Skyline
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
                     change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, false);
 
-                changedGroupIds.Add(Tuple.Create(change.GroupPath, change.FilePath));
+
 
                 var peptidePath = change.GroupPath.Parent;
                 if (!peptideChanges.TryGetValue(peptidePath, out var changesByFile))
@@ -2135,34 +2107,16 @@ namespace pwiz.Skyline
                 }
             }
 
-            // See if there are any other TransitionGroups that also have RelativeRT matching,
-            // and set their peak boundaries to the same.
+            // The molecule's other precursors take the same boundaries. Which of them count is
+            // MoleculeResults.GetComparableGroups, the partition their peaks were picked by, which
+            // is more than the ones whose RelativeRT matches: a precursor whose relative retention
+            // time is unknown still goes with the other charge states of its own label type.
             foreach (var entry in peptideChanges)
             {
-                var peptide = (PeptideDocNode)document.FindNode(entry.Key);
-                // One read for this molecule, reused for every change and every precursor of it.
-                var moleculeResults = new MoleculeResults(document.Settings, peptide);
                 foreach (var change in entry.Value.Select(v => v.Value))
                 {
-                    foreach (var transitionGroup in peptide.TransitionGroups)
-                    {
-                        if (transitionGroup.RelativeRT != RelativeRT.Matching)
-                        {
-                            continue;
-                        }
-                        var groupId = new IdentityPath(entry.Key, transitionGroup.TransitionGroup);
-                        if (changedGroupIds.Contains(Tuple.Create(groupId, change.FilePath)))
-                        {
-                            continue;
-                        }
-                        if (null == FindChromInfo(document, moleculeResults, transitionGroup, change.NameSet,
-                                change.FilePath))
-                        {
-                            continue;
-                        }
-                        document = document.ChangePeak(groupId, change.NameSet, change.FilePath, null,
-                            change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, true);
-                    }
+                    document = document.ChangeComparablePeakBounds(change.GroupPath, change.NameSet, change.FilePath,
+                        change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, change.Identified, UserSet.TRUE);
                 }
             }
             return beforeDefer == null ? document : document.EndDeferSettingsChanges(beforeDefer, null);
