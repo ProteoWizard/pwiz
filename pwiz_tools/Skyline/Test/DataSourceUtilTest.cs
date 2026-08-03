@@ -91,7 +91,9 @@ namespace pwiz.SkylineTest
 
         private void CreateDataFile(string path)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path) ?? string.Empty);
+            var directoryPath = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directoryPath))
+                Directory.CreateDirectory(directoryPath);
             File.WriteAllText(path, string.Empty);
         }
     }

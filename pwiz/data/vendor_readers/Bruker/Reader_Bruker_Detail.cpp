@@ -36,6 +36,8 @@ namespace Bruker {
 
 using namespace pwiz::util;
 
+namespace {
+
 // A fid is a file, so test for that rather than for mere existence - otherwise a directory
 // named "fid" makes every directory containing it look like Bruker data. Deliberately not
 // is_regular_file(), which would also reject a fid reached through a reparse point, as
@@ -44,6 +46,8 @@ bool is_fid_file(const bfs::path& fidPath)
 {
     return bfs::exists(fidPath) && !bfs::is_directory(fidPath);
 }
+
+} // namespace
 
 Reader_Bruker_Format format(const string& path)
 {
