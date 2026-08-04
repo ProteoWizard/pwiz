@@ -1977,10 +1977,12 @@ namespace pwiz.Osprey.Tasks
                     @"be unfixed. Something that was streamed is resident again - fix that rather " +
                     @"than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this path.";
             }
-            // Case-insensitive to match how the rest of the CLI parses tokens (ParseFdrBenchPass):
-            // the error names the exact token to set, so rejecting it for capitalization would
-            // read as the guard ignoring what the operator just did.
-            if (string.Equals(trigger, allowUnfixedResident, StringComparison.OrdinalIgnoreCase))
+            // Membership, not equality: the setting may name SEVERAL paths, because a run can
+            // legitimately trip more than one at once. Case-insensitive, matching how the rest of
+            // the CLI parses tokens (ParseFdrBenchPass): the error names the exact token to set,
+            // so rejecting it for capitalization would read as the guard ignoring what the
+            // operator just did.
+            if (OspreyEnvironment.NamesResidentPath(allowUnfixedResident, trigger))
                 return null;
             // Name the offending value when one was supplied, so a typo or a shell-quoted token
             // does not produce the identical message the unset case produces.
@@ -2017,8 +2019,8 @@ namespace pwiz.Osprey.Tasks
         {
             if (!streamingAvailable || streamingEnabled)
                 return null;
-            if (string.Equals(ResidentPaths.COMPACTED_ENTRIES_BUFFER, allowUnfixedResident,
-                    StringComparison.OrdinalIgnoreCase))
+            if (OspreyEnvironment.NamesResidentPath(
+                    allowUnfixedResident, ResidentPaths.COMPACTED_ENTRIES_BUFFER))
             {
                 return null;
             }

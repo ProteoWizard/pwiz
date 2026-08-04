@@ -213,6 +213,25 @@ namespace pwiz.Osprey.Test
             // It is already resident for a reason carrying its own token, and demanding a
             // second one would make a single decision need two environment variables.
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(false, false, null));
+
+            // SEVERAL paths may be named at once. A run can legitimately trip more than one,
+            // and a single-value variable made that run impossible: regression.ps1 mode 2 needs
+            // mdiag-full-resume while the arm under test needs compacted-entries-buffer, so the
+            // A/B that proves this very change bounded aborted on its own guard. Both guards
+            // read the list, and every admitted path is still named individually.
+            string both = ResidentPaths.MDIAG_FULL_RESUME + "," +
+                          ResidentPaths.COMPACTED_ENTRIES_BUFFER;
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, both));
+            var mdiagCfg = new OspreyConfig { ModelDiagnostics = true };
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(mdiagCfg, true, both, true,
+                mdiagFullResume: true));
+            // Separators are interchangeable and surrounding whitespace is tolerated - an
+            // operator composing the value in a shell should not have to match a spelling.
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, false, " projection-off ; compacted-entries-buffer "));
+            // A list still admits ONLY what it names: an unnamed path is refused as before.
+            Assert.IsNotNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, false, ResidentPaths.MDIAG_FULL_RESUME + "," + ResidentPaths.HPC_MERGE));
         }
     }
 }
