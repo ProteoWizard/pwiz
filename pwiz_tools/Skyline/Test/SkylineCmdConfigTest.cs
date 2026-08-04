@@ -47,6 +47,12 @@ namespace pwiz.SkylineTest
         private static readonly string[] SKYLINE_CONFIGS = { @"Skyline.exe.config", @"Skyline-daily.exe.config" };
 
         /// <summary>
+        /// A Test Explorer run uses the test assembly's own config rather than
+        /// TestRunner.exe.config, so these need the same binding policy.
+        /// </summary>
+        private static readonly string[] TEST_CONFIGS = { @"TestData.dll.config", @"TestFunctional.dll.config" };
+
+        /// <summary>
         /// The reflection-only loader cannot read every file, and a silent skip would stop
         /// this test checking anything. Each of these is a referrer that needs a redirect.
         /// </summary>
@@ -64,7 +70,7 @@ namespace pwiz.SkylineTest
             string configPath = Path.Combine(binDir, SKYLINE_CMD_CONFIG);
             AssertEx.IsTrue(File.Exists(configPath),
                 string.Format(
-                    @"Expected {0} in the build output folder {1}. It is produced by the CopyConfigToSkylineCmd target in Skyline.csproj.",
+                    @"Expected {0} in the build output folder {1}. It is the linked Content item in Skyline.csproj.",
                     SKYLINE_CMD_CONFIG, binDir));
 
             VerifyCopiedFromSkylineConfig(binDir, configPath);
@@ -73,10 +79,19 @@ namespace pwiz.SkylineTest
             var references = new List<AssemblyDependency>();
             ScanBuildOutput(binDir, onDisk, references);
 
-            var dependentAssemblies = XDocument.Load(configPath)
-                .Descendants(ASM_NS + @"dependentAssembly").ToArray();
-            VerifyCodeBases(binDir, dependentAssemblies, onDisk);
-            VerifyBindingRedirects(dependentAssemblies, onDisk, references);
+            foreach (string configName in new[] { SKYLINE_CMD_CONFIG }.Concat(TEST_CONFIGS))
+            {
+                string path = Path.Combine(binDir, configName);
+                if (!File.Exists(path))
+                {
+                    continue;   // Not every configuration builds every test project
+                }
+
+                var dependentAssemblies = XDocument.Load(path)
+                    .Descendants(ASM_NS + @"dependentAssembly").ToArray();
+                VerifyCodeBases(binDir, configName, dependentAssemblies, onDisk);
+                VerifyBindingRedirects(configName, dependentAssemblies, onDisk, references);
+            }
         }
 
         /// <summary>
@@ -101,8 +116,8 @@ namespace pwiz.SkylineTest
         /// A codeBase is how an assembly whose file name differs from its simple name gets
         /// found, so the file it names must exist and must be that assembly.
         /// </summary>
-        private void VerifyCodeBases(string binDir, IEnumerable<XElement> dependentAssemblies,
-            IDictionary<string, Version> onDisk)
+        private void VerifyCodeBases(string binDir, string configName,
+            IEnumerable<XElement> dependentAssemblies, IDictionary<string, Version> onDisk)
         {
             foreach (var dependentAssembly in dependentAssemblies)
             {
@@ -115,11 +130,11 @@ namespace pwiz.SkylineTest
                 string name = GetAssemblyIdentityName(dependentAssembly);
                 string href = (string) codeBase.Attribute(@"href") ?? string.Empty;
                 AssertEx.IsTrue(File.Exists(Path.Combine(binDir, href)),
-                    string.Format(@"The codeBase for {0} points at {1}, which is not in {2}.",
-                        name, href, binDir));
+                    string.Format(@"The codeBase for {0} in {1} points at {2}, which is not in {3}.",
+                        name, configName, href, binDir));
                 AssertEx.IsTrue(onDisk.ContainsKey(name),
-                    string.Format(@"The codeBase for {0} points at {1}, which is not the assembly {0}.",
-                        name, href));
+                    string.Format(@"The codeBase for {0} in {1} points at {2}, which is not the assembly {0}.",
+                        name, configName, href));
             }
         }
 
@@ -128,7 +143,7 @@ namespace pwiz.SkylineTest
         /// wants at a version other than the one shipping. MSBuild generates these from its
         /// own view of the reference graph, so this checks the deployed result.
         /// </summary>
-        private void VerifyBindingRedirects(IEnumerable<XElement> dependentAssemblies,
+        private void VerifyBindingRedirects(string configName, IEnumerable<XElement> dependentAssemblies,
             IDictionary<string, Version> onDisk, IEnumerable<AssemblyDependency> references)
         {
             var mismatched = references
@@ -151,13 +166,13 @@ namespace pwiz.SkylineTest
                     .Select(r => string.Format(@"{0} wants {1}", r.Referrer, r.Version)).Distinct());
                 AssertEx.IsTrue(redirected.ContainsKey(dependency.Key),
                     string.Format(
-                        @"The binding policy has no bindingRedirect for {0} to {1}. Without it these loads fail at run time: {2}.",
-                        dependency.Key, onDisk[dependency.Key], wantedBy));
+                        @"{0} has no bindingRedirect for {1} to {2}. Without it these loads fail at run time: {3}.",
+                        configName, dependency.Key, onDisk[dependency.Key], wantedBy));
                 AssertEx.AreEqual(onDisk[dependency.Key].ToString(),
                     (string) redirected[dependency.Key].Attribute(@"newVersion"),
                     string.Format(
-                        @"The bindingRedirect for {0} does not point at the version shipping in the build output.",
-                        dependency.Key));
+                        @"The bindingRedirect for {0} in {1} does not point at the version shipping in the build output.",
+                        dependency.Key, configName));
             }
         }
 
