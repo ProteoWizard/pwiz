@@ -7180,6 +7180,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\add-pro32.bmp" />
+    <!-- Skyline runs inside the SkylineCmd.exe process, so the CLR uses SkylineCmd.exe.config
+         for binding policy. Publish a copy of the config MSBuild generates for Skyline rather
+         than maintaining a second one by hand, which silently went stale and broke .parquet
+         export from the command line. SkylineCmdConfigTest checks the copy. -->
+    <Content Include="obj\$(Platform)\$(Configuration)\$(AssemblyName).exe.config">
+      <Link>SkylineCmd.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\$(Configuration)\SkylineCmd.exe">
       <Link>SkylineCmd.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -7546,20 +7554,6 @@
     <Folder Include="Model\Carafe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- Skyline runs inside the SkylineCmd.exe process, so the CLR uses SkylineCmd.exe.config
-       for binding policy. Copy the generated config instead of maintaining a second one by
-       hand, which silently went stale and broke .parquet export from the command-line.
-       SkylineCmdConfigTest checks the copy. -->
-  <Target Name="CopyConfigToSkylineCmd" AfterTargets="_CopyAppConfigFile"
-          Inputs="$(TargetPath).config" Outputs="$(TargetDir)SkylineCmd.exe.config">
-    <Copy SourceFiles="$(TargetPath).config"
-          DestinationFiles="$(TargetDir)SkylineCmd.exe.config"
-          SkipUnchangedFiles="true">
-      <!-- Record as a build output so Clean removes it and IncrementalClean does not
-           delete it as an orphan on the next build. -->
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
-  </Target>
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
