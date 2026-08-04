@@ -85,39 +85,79 @@ public class PrecursorAndChargeFilterTests
     // ============================================================================
 
     /// <summary>
-    /// Table-driven charge-state prediction across a representative grid of
-    /// (input mz/intensity, existing charges, precursor position, override flag, charge range,
-    /// fraction threshold, expected charges, makeMS2 flag).
+    /// All 43 rows of cpp's testChargeStateCalculators[] table, in cpp's order.
     /// </summary>
+    /// <remarks>
+    /// <para>The expected column holds what cpp's binary actually <em>emits</em> - captured from an
+    /// instrumented run - not cpp's own expected column, which is a permissive superset that its
+    /// subset-only assertion never tightens. Rows 06/07 are the clearest example: cpp's table says
+    /// "3 4 5" and cpp emits only p3 p4. Terms are prefixed (z = charge state, p = possible charge
+    /// state) and order is significant, because cpp emits p1 last in the no-override rows and emits
+    /// p2 twice in row 31.</para>
+    /// <para>Rows whose expectation is prefixed <c>SVM:</c> are the ETD cases cpp resolves with a
+    /// libsvm model the port deliberately does not carry (see
+    /// SpectrumList_ChargeStateCalculator's remarks). The value after the prefix is what cpp
+    /// emits; the assertion checks the port's documented fall-through instead, so the gap stays
+    /// visible and this table already holds the answer if the SVM path is ever ported.</para>
+    /// </remarks>
     [TestMethod]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "1",     5.0,   true,  2, 3, 0.9, "1",     0, false, DisplayName = "case01_overrideExistingSinglyChargedKeepsSinglyCharged")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "1 2 3", 5.0,   true,  2, 3, 0.9, "1",     0, false, DisplayName = "case02_overridePossibleChargesAllBelowPrecursor")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "2 3",   5.0,   true,  2, 3, 0.9, "1",     0, false, DisplayName = "case03_overrideSubsetPossiblesAllBelowPrecursor")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "",      2.5,   true,  2, 3, 0.9, "2 3",   0, false, DisplayName = "case04_emptyMultiplyCharged")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "0",     2.5,   true,  2, 3, 0.9, "2 3",   0, false, DisplayName = "case05_bogusZeroTreatedAsNoCharge")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "2",     2.5,   true,  3, 4, 0.9, "3 4 5", 0, false, DisplayName = "case06_overrideRaisesChargeRange")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "3 4 5", 2.5,   true,  3, 4, 0.9, "3 4 5", 0, false, DisplayName = "case07_overrideAllPossibles")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "3",     2.5,   true,  2, 2, 0.9, "2",     0, false, DisplayName = "case08_singleMultiplyCharge")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "",      5.0,   false, 2, 3, 0.9, "1",     0, false, DisplayName = "case09_noOverrideEmptySinglyCharged")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "",      2.5,   false, 2, 3, 0.9, "2 3",   0, false, DisplayName = "case10_noOverrideEmptyMultiplyCharged")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "0",     2.5,   false, 2, 3, 0.9, "2 3",   0, false, DisplayName = "case11_noOverrideBogusZero")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "1",     2.5,   false, 2, 3, 0.9, "1",     0, false, DisplayName = "case12_noOverrideKeepsExistingCharge")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "2 3",   5.0,   false, 2, 3, 0.9, "1 2 3", 0, false, DisplayName = "case13_noOverrideAddsToPossibleCharges")]
-    [DataRow("1 2 3 4 5", "10 20 30 40 50", "2 3",   2.5,   false, 2, 4, 0.9, "2 3 4", 0, false, DisplayName = "case14_noOverrideExtendsPossibleRange")]
-    [DataRow("1218.258 1244.477 1354.132 1391.253", "29.83101 15.71422 9.135175 6.936273",
-             "", 1390.47, false, 2, 3, 0.2, "1", 0, true, DisplayName = "case15_makeMs2_singlyCharged")]
-    [DataRow("1218.258 1244.477 1354.132 1391.253", "29.83101 15.71422 9.135175 6.936273",
-             "", 1390.47, false, 2, 3, 0.00001, "1", 0, true, DisplayName = "case16_makeMs2_singlyChargedTinyFraction")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "1", "CID", 5, true, 2, 3, 0.9, "z1", 0, false, DisplayName = "case01")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "1 2 3", "CID", 5, true, 2, 3, 0.9, "z1", 0, false, DisplayName = "case02")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "2 3", "CID", 5, true, 2, 3, 0.9, "z1", 0, false, DisplayName = "case03")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "", "CID", 2.5, true, 2, 3, 0.9, "p2 p3", 0, false, DisplayName = "case04")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "0", "CID", 2.5, true, 2, 3, 0.9, "p2 p3", 0, false, DisplayName = "case05")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "2", "CID", 2.5, true, 3, 4, 0.9, "p3 p4", 0, false, DisplayName = "case06")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "3 4 5", "CID", 2.5, true, 3, 4, 0.9, "p3 p4", 0, false, DisplayName = "case07")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "3", "CID", 2.5, true, 2, 2, 0.9, "z2", 0, false, DisplayName = "case08")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "", "CID", 5, false, 2, 3, 0.9, "z1", 0, false, DisplayName = "case09")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "", "CID", 2.5, false, 2, 3, 0.9, "p2 p3", 0, false, DisplayName = "case10")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "0", "CID", 2.5, false, 2, 3, 0.9, "p2 p3", 0, false, DisplayName = "case11")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "1", "CID", 2.5, false, 2, 3, 0.9, "z1", 0, false, DisplayName = "case12")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "2 3", "CID", 5, false, 2, 3, 0.9, "p2 p3 p1", 0, false, DisplayName = "case13")]
+    [DataRow("", "1 2 3 4 5", "10 20 30 40 50", "2 3", "CID", 2.5, false, 2, 4, 0.9, "p2 p3 p4", 0, false, DisplayName = "case14")]
+    [DataRow("spectrum_bebfc4e8", "", "", "7", "ETD", 529.7, true, 2, 4, 0.9, "SVM: z7", 0, false, DisplayName = "case15")]
+    [DataRow("spectrum_3463efdc", "", "", "6", "ETD", 695.04, true, 2, 4, 0.9, "SVM: p3 p6", 0, false, DisplayName = "case16")]
+    [DataRow("spectrum_2d9b08d4", "", "", "5", "ETD", 771.98, true, 2, 4, 0.9, "SVM: z5", 0, false, DisplayName = "case17")]
+    [DataRow("spectrum_cd3da363", "", "", "3", "ETD", 754.26, true, 2, 4, 0.9, "SVM: p2 p3 p4 p6", 0, false, DisplayName = "case18")]
+    [DataRow("spectrum_e6830e14", "", "", "4", "ETD", 896.93, true, 2, 4, 0.9, "SVM: z4", 0, false, DisplayName = "case19")]
+    [DataRow("spectrum_5224d69c", "", "", "2", "CID ETD", 617.86, true, 2, 4, 0.9, "SVM: z2", 0, false, DisplayName = "case20")]
+    [DataRow("spectrum_e95ad20a", "", "", "2", "CID ETD", 828.69, true, 2, 4, 0.9, "SVM: z2", 0, false, DisplayName = "case21")]
+    [DataRow("spectrum_51f826c3", "", "", "3", "CID ETD", 515.67, true, 2, 4, 0.9, "SVM: z3", 0, false, DisplayName = "case22")]
+    [DataRow("spectrum_2df0cd62", "", "", "4", "CID ETD", 665.96, true, 2, 4, 0.9, "SVM: p2 p3 p4 p6", 0, false, DisplayName = "case23")]
+    [DataRow("spectrum_8a704408", "", "", "2", "CID ETD", 1066.72, true, 2, 4, 0.9, "SVM: p2 p3 p4 p6", 0, false, DisplayName = "case24")]
+    [DataRow("spectrum_000a1bff", "", "", "1", "CID", 429.03, false, 2, 4, 0.2, "z1", 0, true, DisplayName = "case25")]
+    [DataRow("spectrum_000a1bff", "", "", "2 3", "CID", 429.03, false, 2, 4, 0.2, "p2 p3 p1", 0, true, DisplayName = "case26")]
+    [DataRow("spectrum_000a1bff", "", "", "2 3", "ETD", 429.03, false, 2, 4, 0.2, "p2 p3 p1", 0, true, DisplayName = "case27")]
+    [DataRow("spectrum_000a1bff", "", "", "2 3", "CID", 429.03, false, 2, 2, 0.2, "p2 p3 p1", 0, true, DisplayName = "case28")]
+    [DataRow("spectrum_000a1bff", "", "", "2 3", "CID", 429.03, false, 2, 4, 0.00001, "p2 p3 p4", 0, true, DisplayName = "case29")]
+    [DataRow("spectrum_000a1bff", "", "", "2 3 4", "CID", 429.03, false, 2, 3, 0.00001, "p2 p3 p4", 0, true, DisplayName = "case30")]
+    [DataRow("spectrum_000a1bff", "", "", "2 3", "CID", 429.03, false, 2, 2, 0.00001, "p2 p3 p2", 0, true, DisplayName = "case31")]
+    [DataRow("spectrum_000a1bff", "", "", "1", "CID", 429.03, false, 2, 4, 0.00001, "z1", 0, true, DisplayName = "case32")]
+    [DataRow("spectrum_000a1bff", "", "", "1", "ETD", 429.03, false, 2, 4, 0.00001, "z1", 0, true, DisplayName = "case33")]
+    [DataRow("spectrum_000a1bff", "", "", "", "CID", 429.03, false, 2, 3, 0.2, "z1", 0, true, DisplayName = "case34")]
+    [DataRow("spectrum_000a1bff", "", "", "", "ETD", 429.03, true, 2, 3, 0.2, "z1", 0, true, DisplayName = "case35")]
+    [DataRow("spectrum_000a1bff", "", "", "2 3", "CID", 429.03, true, 2, 4, 0.2, "z1", 0, true, DisplayName = "case36")]
+    [DataRow("spectrum_000a1bff", "", "", "", "CID", 429.03, false, 2, 4, 0.2, "z1", 0, true, DisplayName = "case37")]
+    [DataRow("spectrum_000a1bff", "", "", "", "CID", 429.03, false, 2, 4, 0.00001, "p2 p3 p4", 0, true, DisplayName = "case38")]
+    [DataRow("spectrum_000a1bff", "", "", "", "CID", 429.03, true, 2, 3, 0.00001, "p2 p3", 0, true, DisplayName = "case39")]
+    [DataRow("spectrum_000a1bff", "", "", "", "ETD", 429.03, true, 2, 3, 0.00001, "p2 p3", 0, true, DisplayName = "case40")]
+    [DataRow("spectrum_000a1bff", "", "", "1", "CID", 429.03, true, 2, 4, 0.00001, "p2 p3 p4", 0, true, DisplayName = "case41")]
+    [DataRow("", "1218.258 1244.477 1354.132 1391.253", "29.83101 15.71422 9.135175 6.936273", "", "CID", 1390.47, false, 2, 3, 0.2, "z1", 0, true, DisplayName = "case42")]
+    [DataRow("", "1218.258 1244.477 1354.132 1391.253", "29.83101 15.71422 9.135175 6.936273", "", "CID", 1390.47, false, 2, 3, 0.00001, "z1", 0, true, DisplayName = "case43")]
     public void ChargeStatePredictor(
-        string mzArray, string intensityArray, string inputCharges,
-        double precursorMz,
+        string spectrumKey, string mzArray, string intensityArray, string inputCharges,
+        string activationTypes, double precursorMz,
         bool overrideExisting, int minCharge, int maxCharge,
-        double singleChargeFraction, string expectedCharges,
+        double singleChargeFraction, string expectedEmission,
         int maxKnownCharge, bool makeMs2)
     {
+        double[] mz, intensity;
+        if (spectrumKey.Length > 0)
+            (mz, intensity) = LoadChargeStateSpectrum(spectrumKey);
+        else
+            (mz, intensity) = (ParseDoubleArray(mzArray), ParseDoubleArray(intensityArray));
+
         var inner = new MemorySpectrumList();
-        var mz = ParseDoubleArray(mzArray);
-        var intensity = ParseDoubleArray(intensityArray);
         var s = MakeMs2(id: "scan=1", precursorMz: precursorMz, mz: mz, intensity: intensity);
 
         // Existing charge CVs — pick possible-vs-single by input count: >1 → possible.
@@ -130,29 +170,68 @@ public class PrecursorAndChargeFilterTests
                     z.ToString(System.Globalization.CultureInfo.InvariantCulture)));
         }
 
-        s.Precursors[0].Activation.Set(CVID.MS_collision_induced_dissociation);
+        foreach (var token in activationTypes.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            s.Precursors[0].Activation.Set(token switch
+            {
+                "CID" => CVID.MS_collision_induced_dissociation,
+                "ETD" => CVID.MS_electron_transfer_dissociation,
+                _ => throw new ArgumentException($"unhandled activation '{token}'"),
+            });
+        }
         inner.Add(s);
 
         var calc = new SpectrumList_ChargeStateCalculator(inner, overrideExisting, maxCharge,
             minCharge, singleChargeFraction, maxKnownCharge, makeMs2);
         var result = calc.GetSpectrum(0, getBinaryData: true);
 
-        var expectedZ = new HashSet<int>(ParseDoubleArray(expectedCharges).Select(v => (int)v));
-        var expectedTerm = expectedZ.Count > 1 ? CVID.MS_possible_charge_state : CVID.MS_charge_state;
+        var actual = result.Precursors[0].SelectedIons[0].CVParams
+            .Where(p => p.Cvid is CVID.MS_charge_state or CVID.MS_possible_charge_state)
+            .Select(p => (p.Cvid == CVID.MS_charge_state ? "z" : "p") + p.ValueAs<int>())
+            .ToList();
 
-        // Every produced charge CV must use the expected term and its int value must appear in
-        // the expected list. (Permissive: subset is fine.)
-        foreach (var cv in result.Precursors[0].SelectedIons[0].CVParams)
+        if (expectedEmission.StartsWith("SVM:", StringComparison.Ordinal))
         {
-            if (cv.Cvid != CVID.MS_charge_state && cv.Cvid != CVID.MS_possible_charge_state)
-                continue;
-            Assert.AreEqual(expectedTerm, cv.Cvid,
-                $"CV term mismatch — got {cv.Cvid} value={cv.Value}, expected {expectedTerm}.");
-            int actualZ = cv.ValueAs<int>();
-            Assert.IsTrue(expectedZ.Contains(actualZ),
-                $"Produced charge {actualZ} not in expected set {{{string.Join(", ", expectedZ)}}}.");
+            // cpp picks a single charge here via its libsvm model; the port has no SVM and falls
+            // through to enumerating [minCharge, maxCharge]. Assert the fall-through, and keep
+            // cpp's answer in the row so the divergence is documented rather than invisible.
+            string cppAnswer = expectedEmission["SVM:".Length..].Trim();
+            var fallThrough = Enumerable.Range(minCharge, maxCharge - minCharge + 1)
+                .Select(z => "p" + z).ToList();
+            CollectionAssert.AreEqual(fallThrough, actual,
+                $"SVM-dependent row: expected the port's fall-through [{string.Join(" ", fallThrough)}], "
+                + $"got [{string.Join(" ", actual)}]. cpp emits [{cppAnswer}] via libsvm.");
+            return;
         }
+
+        // Exact sequence, not a set: cpp emits p1 last in the no-override rows and emits p2 twice
+        // in case 31, and both are behaviours a set comparison would silently accept.
+        CollectionAssert.AreEqual(
+            expectedEmission.Split(' ', StringSplitOptions.RemoveEmptyEntries), actual,
+            $"expected [{expectedEmission}], got [{string.Join(" ", actual)}]");
     }
+
+    private static (double[] mz, double[] intensity) LoadChargeStateSpectrum(string key)
+    {
+        string? dir = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(dir))
+        {
+            string d = Path.Combine(dir, "test", "Analysis.Tests", "SpectrumProcessing",
+                "SpectrumList_ChargeStateCalculatorTest.data");
+            if (Directory.Exists(d))
+                return (LoadDoubleFile(Path.Combine(d, key + ".mz.txt")),
+                        LoadDoubleFile(Path.Combine(d, key + ".intensity.txt")));
+            dir = Path.GetDirectoryName(dir);
+        }
+        Assert.Inconclusive("SpectrumList_ChargeStateCalculatorTest.data not found");
+        throw new InvalidOperationException("unreachable");
+    }
+
+    private static double[] LoadDoubleFile(string path) =>
+        File.ReadAllText(path)
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => double.Parse(t, System.Globalization.CultureInfo.InvariantCulture))
+            .ToArray();
 
     [TestMethod]
     public void ChargeStatePredictor_FactoryDispatch()
