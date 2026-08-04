@@ -698,9 +698,19 @@ namespace pwiz.Osprey.Tasks
             }
             finally
             {
-                // Drop this file's entries before the next one loads its own.
-                file.Value.Clear();
-                file.Value.TrimExcess();
+                // Drop this file's entries before the next one loads its own - but ONLY when
+                // its reconciled parquet is actually on disk, because that file is what the
+                // end-of-loop rebuild restores them from. RescoreOneFile makes the same call
+                // about the heavy payload for the same reason (see the wroteReconciled gate
+                // it applies to ReleaseRescoredPayload): when the write no-opped or failed,
+                // these entries are the ONLY copy of the rescore, and dropping them would
+                // discard it on a warning. Keeping one file's entries resident is the right
+                // trade against silently losing its precursors.
+                if (ReconciledParquetOnDisk(file.Key, inputs))
+                {
+                    file.Value.Clear();
+                    file.Value.TrimExcess();
+                }
             }
         }
 
@@ -1463,6 +1473,16 @@ namespace pwiz.Osprey.Tasks
                     // pass-1 q. On Stellar that was 110,541 of 994,509 survivors missing an
                     // override and 31,583 spectra reported against the golden 29,364.
                     entry.ScanNumber = r.ScanNumber;
+                    // Same class of omission as ScanNumber, and the same consequence. A cold
+                    // rescore swaps the whole entry, so CoelutionSum becomes the new peak's
+                    // feature 0; it IS persisted (fragment_coelution_sum) and IS loaded into
+                    // r, but not copying it leaves every reconciled peak on its 1st-pass
+                    // value - and ReleaseRescoredPayload then nulls Features, destroying the
+                    // only fresh copy. Stage 7 reads it straight off the buffer
+                    // (PercolatorEntryBuilder's basic-feature fallback, and best-per-precursor
+                    // selection), so the streamed default would train on a different subset
+                    // than the resident oracle.
+                    entry.CoelutionSum = r.CoelutionSum;
                 }
                 entry.ApexRt = r.ApexRt;
                 entry.StartRt = r.StartRt;
@@ -1517,6 +1537,20 @@ namespace pwiz.Osprey.Tasks
             // file in the resume path, not only files with a reconciled parquet.
         }
 
+
+        /// <summary>
+        /// True when this file's <c>.scores-reconciled.parquet</c> is on disk, i.e. the
+        /// end-of-loop rebuild can restore its rescored state from it.
+        /// </summary>
+        private static bool ReconciledParquetOnDisk(string fileName, RescorePassInputs inputs)
+        {
+            if (inputs.ParquetPaths == null ||
+                !inputs.ParquetPaths.TryGetValue(fileName, out string scoresPath))
+            {
+                return false;
+            }
+            return File.Exists(ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath));
+        }
 
         /// <summary>
         /// The loader Stage 6 refills from, or null when this run keeps the resident
