@@ -12,12 +12,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Bundled 7za.exe for decrypting the password-protected vendor archives. Same
-         binary the build-time ExtractXxxAssemblies targets use. ~750 KB; small price
-         for not depending on a managed 7z library that handles AES encryption. -->
-    <None Include="$(PwizLibrariesPath)\7za.exe">
+    <!-- Bundled 7-Zip for decrypting the password-protected vendor archives at runtime. Same
+         binaries the build-time ExtractXxxAssemblies targets use via $(SevenZaExe); ~750 KB,
+         a small price for not depending on a managed 7z library that handles AES encryption.
+
+         Per-OS, and it has to be: 7za.exe is a Windows PE, so shipping it in a Linux payload
+         gives VendorSdkLoader a file that exists and cannot execute - the download and hash
+         check both succeed and only the extraction fails. Nothing caught this before because
+         until native SDK resolution existed, no Linux process ever extracted a vendor archive
+         at runtime; the Linux build stages its native libraries at build time instead. -->
+    <None Condition="'$(OS)' == 'Windows_NT'" Include="$(PwizLibrariesPath)\7za.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>7za.exe</Link>
+    </None>
+    <None Condition="'$(OS)' != 'Windows_NT'" Include="$(PwizLibrariesPath)\7zz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>7zz</Link>
     </None>
   </ItemGroup>
 

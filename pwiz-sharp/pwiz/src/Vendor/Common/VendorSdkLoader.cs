@@ -41,6 +41,7 @@ public static class VendorSdkLoader
     private static string? _cacheRoot;
     private static readonly Dictionary<string, string> _vendorExtractDir = new(StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<Assembly> _nativeRegistered = new();
+    private static readonly HashSet<string> _reportedFailures = new(StringComparer.OrdinalIgnoreCase);
     private const string ArchivePassword = "i-agree-to-the-vendor-licenses";
 
     /// <summary>Hooks the default load context's <see cref="AssemblyLoadContext.Resolving"/>
@@ -106,6 +107,44 @@ public static class VendorSdkLoader
     }
 
     /// <summary>
+    /// Reports why a vendor SDK could not be supplied, once per library.
+    /// </summary>
+    /// <remarks>
+    /// Both resolvers deliberately return "not handled" on failure so the runtime's own
+    /// <c>DllNotFoundException</c> / <c>FileNotFoundException</c> surfaces with its normal
+    /// message - throwing from a resolver produces a confusing loader-level error instead. The
+    /// cost is that the message the user actually sees describes the wrong layer: "Unable to
+    /// load shared library 'timsdata'" followed by a probe list, when the real cause was a
+    /// failed download, a hash mismatch, or an extraction error. Twice during development that
+    /// sent the reader hunting for a missing file when the archive had downloaded perfectly and
+    /// only the unpack had failed. <see cref="Trace"/> alone does not fix it: console apps have
+    /// no listener attached, so the explanation goes nowhere. Write one line to stderr as well,
+    /// immediately before the misleading exception, so the two are read together.
+    /// </remarks>
+    private static void ReportResolveFailure(string requested, VendorSdkPin entry, string detail)
+    {
+        // Our own exceptions already carry the tag; adding a second one reads like a bug.
+        const string tag = "[VendorSdkLoader] ";
+        if (detail.StartsWith(tag, StringComparison.Ordinal))
+            detail = detail[tag.Length..];
+
+        string message =
+            $"[VendorSdkLoader] could not supply '{requested}' from the {entry.Name} vendor SDK: {detail}\n" +
+            $"    archive: {entry.Url}\n" +
+            $"    cache:   {Path.Combine(GetCacheRoot(), $"{entry.Name}-{entry.Version}")}\n" +
+            $"    The load error reported below is a consequence of this, not the cause.";
+        Trace.TraceError(message);
+        lock (_registerLock)
+        {
+            // One report per library; the resolver can be consulted more than once for the same
+            // name, and repeating this drowns the real error that follows it.
+            if (!_reportedFailures.Add(requested)) return;
+        }
+        try { Console.Error.WriteLine(message); }
+        catch (IOException) { /* stderr redirected to something closed; Trace still has it */ }
+    }
+
+    /// <summary>
     /// The pin whose prefixes match <paramref name="requested"/>, narrowed to this OS.
     /// </summary>
     /// <remarks>
@@ -145,14 +184,15 @@ public static class VendorSdkLoader
                 if (File.Exists(path))
                     return NativeLibrary.Load(path);
             }
-            Trace.TraceError($"[VendorSdkLoader] {entry.Name} archive contains no native library " +
-                             $"for '{libraryName}' (looked for {string.Join(", ", NativeFileNames(libraryName))} in {dir})");
+            ReportResolveFailure(libraryName, entry,
+                $"the archive extracted cleanly but contains no library matching " +
+                $"{string.Join(" / ", NativeFileNames(libraryName))}");
         }
         catch (Exception ex)
         {
             // Don't throw from the resolver — that surfaces as a confusing loader-level failure.
             // Returning zero lets the normal DllNotFoundException carry the original message.
-            Trace.TraceError($"[VendorSdkLoader] failed to resolve native '{libraryName}' from {entry.Name}: {ex}");
+            ReportResolveFailure(libraryName, entry, ex.Message);
         }
         return IntPtr.Zero;
     }
@@ -187,14 +227,18 @@ public static class VendorSdkLoader
         {
             string extractDir = EnsureExtracted(entry);
             string candidate = Path.Combine(extractDir, requested + ".dll");
-            return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
+            if (File.Exists(candidate))
+                return context.LoadFromAssemblyPath(candidate);
+            ReportResolveFailure(requested, entry,
+                $"the archive extracted cleanly but contains no {requested}.dll");
+            return null;
         }
         catch (Exception ex)
         {
             // Don't throw from the resolver — that surfaces as a confusing CLR-level
-            // "loader exception" without context. Log + return null so the original
+            // "loader exception" without context. Report + return null so the original
             // assembly-load failure propagates with its normal message.
-            Trace.TraceError($"[VendorSdkLoader] failed to resolve {requested} from {entry.Name}: {ex}");
+            ReportResolveFailure(requested, entry, ex.Message);
             return null;
         }
     }
@@ -284,12 +328,18 @@ public static class VendorSdkLoader
 
     private static void ExtractArchive(string archivePath, string extractDir)
     {
-        // 7za.exe sits next to Pwiz.Vendor.Common.dll (csproj <None Include> at build time).
-        string sevenZip = Path.Combine(AppContext.BaseDirectory, "7za.exe");
+        // 7-Zip sits next to Pwiz.Vendor.Common.dll (csproj <None Include> at build time), and
+        // which binary that is depends on the platform: 7za.exe is a Windows PE and 7zz is the
+        // Linux build. Hardcoding the former made extraction the one step of runtime SDK
+        // resolution that could not work off-Windows - and it failed late, after the download
+        // and hash check had already succeeded.
+        string toolName = OperatingSystem.IsWindows() ? "7za.exe" : "7zz";
+        string sevenZip = Path.Combine(AppContext.BaseDirectory, toolName);
         if (!File.Exists(sevenZip))
             throw new FileNotFoundException(
-                $"[VendorSdkLoader] 7za.exe not found alongside Pwiz.Vendor.Common.dll. " +
+                $"[VendorSdkLoader] {toolName} not found alongside Pwiz.Vendor.Common.dll. " +
                 $"Looked at: {sevenZip}");
+        EnsureExecutable(sevenZip);
 
         var psi = new ProcessStartInfo
         {
@@ -324,6 +374,29 @@ public static class VendorSdkLoader
         // Flatten it so subsequent Assembly.LoadFromAssemblyPath sees the DLLs at the top level
         // of extractDir.
         FlattenVendorArchiveLayout(extractDir);
+    }
+
+    /// <summary>
+    /// Adds the owner-execute bit on Unix when it is missing. The bundled 7zz is committed
+    /// executable, but a payload can lose the mode in transit - unzipped from a .zip, restored
+    /// from a NuGet package, or copied through a filesystem with no permission model - and the
+    /// resulting failure ("Permission denied" from Process.Start) reads nothing like the vendor
+    /// SDK problem it actually causes. No-op on Windows.
+    /// </summary>
+    private static void EnsureExecutable(string path)
+    {
+        if (OperatingSystem.IsWindows()) return;
+        try
+        {
+            var mode = File.GetUnixFileMode(path);
+            if ((mode & UnixFileMode.UserExecute) == 0)
+                File.SetUnixFileMode(path, mode | UnixFileMode.UserExecute);
+        }
+        catch (Exception ex)
+        {
+            // Read-only install dir, say. Let Process.Start produce the real error.
+            Trace.TraceWarning($"[VendorSdkLoader] could not mark {path} executable: {ex.Message}");
+        }
     }
 
     private static void FlattenVendorArchiveLayout(string extractDir)
