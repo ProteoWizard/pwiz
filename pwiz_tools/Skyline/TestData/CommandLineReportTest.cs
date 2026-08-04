@@ -39,13 +39,6 @@ namespace pwiz.SkylineTestData
     public class CommandLineReportTest : AbstractUnitTestEx
     {
         /// <summary>
-        /// The column name that the invariant language setting produces. Unlike the localized
-        /// caption this is a stable identifier, since it is what scripts reading the exported
-        /// file have to refer to.
-        /// </summary>
-        private const string INVARIANT_RETENTION_TIME = "PeptideRetentionTime";
-
-        /// <summary>
         /// Exports the "Peptide Ratio Results" report to parquet with each form of the
         /// "--report-invariant" argument, and checks the column names in the resulting file.
         /// Parquet is written to be read by other programs, so it is invariant unless asked
@@ -61,7 +54,6 @@ namespace pwiz.SkylineTestData
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[0]);
             string docPath = TestFilesDir.GetTestPath(@"Rat_plasma.sky");
             AssertEx.FileExists(docPath);
-
             ExportAndVerifyColumnNames(docPath, @"default", null, true);
             ExportAndVerifyColumnNames(docPath, @"bare", @"--report-invariant", true);
             ExportAndVerifyColumnNames(docPath, @"true", @"--report-invariant=true", true);
@@ -95,16 +87,13 @@ namespace pwiz.SkylineTestData
             // which replaces the spaces in it
             string localizedName = ParquetReportExporter
                 .MakeValidColumnNames(new[] { ColumnCaptions.PeptideRetentionTime }).Single();
-            string expected = expectInvariant ? INVARIANT_RETENTION_TIME : localizedName;
-            string unexpected = expectInvariant ? localizedName : INVARIANT_RETENTION_TIME;
+            string invariantName = nameof(ColumnCaptions.PeptideRetentionTime);
 
             var columnNames = GetParquetColumnNames(outPath);
             string message = string.Format(@"Columns of {0} were: {1}",
                 Path.GetFileName(outPath), string.Join(@", ", columnNames));
-            AssertEx.IsTrue(columnNames.Contains(expected),
-                string.Format(@"Expected a column named {0}. {1}", expected, message));
-            AssertEx.IsFalse(columnNames.Contains(unexpected),
-                string.Format(@"Did not expect a column named {0}. {1}", unexpected, message));
+            Assert.AreEqual(expectInvariant, columnNames.Contains(invariantName), message);
+            Assert.AreEqual(!expectInvariant, columnNames.Contains(localizedName), message);
         }
 
         private static IList<string> GetParquetColumnNames(string path)
