@@ -500,17 +500,21 @@ That makes the second-pass q-value mode
 | `OSPREY_PASS2_QVALUE` | Behavior after a mean(best-N) first pass |
 |---|---|
 | `transfer` | **The compatible mode.** Carries the first-pass q through unchanged, so the reported experiment q stays mean(best-N). |
-| `percolator` (default) | Allowed, but it retrains and recomputes the reported experiment q from a MAX competition over the reconciled pool, so the mean(best-N) statistic survives only in the first-pass outputs. |
 | `transfer-compete` | **Refused** (`Pass2FdrSidecar` throws). It rewrites every survivor's experiment q from a MAX-aggregated competition, making a reproducibility-weighted run indistinguishable from a default run in its own output. |
-| `protein-compact` | **Refused** (but see the caveat below). Worse than uniform: on-stratum survivors would get the MAX-aggregated value while off-stratum survivors keep their first-pass mean(best-N) q, giving one reported column with two statistics and no way for a consumer to tell which row used which. |
+| `protein-compact` (default) | **Refused** (but see the caveat below). Worse than uniform: on-stratum survivors would get the MAX-aggregated value while off-stratum survivors keep their first-pass mean(best-N) q, giving one reported column with two statistics and no way for a consumer to tell which row used which. |
+
+**Because `protein-compact` is the DEFAULT, a mean(best-N) arm must set
+`OSPREY_PASS2_QVALUE=transfer` explicitly or the run aborts at the merge node.** This is
+deliberate: the alternative - silently using `transfer` whenever the first pass was mean(best-N) -
+would make the effective default depend on another variable, which is harder to reason about than
+a loud failure whose message names the fix.
 
 > **Caveat: `protein-compact` + `OSPREY_PROTEIN_COMPACT_RETRAIN=1` is NOT refused.** The refusal
 > lives in the frozen-model recompute, and that A/B lever deliberately bypasses it to retrain
-> instead - so the combination falls through to the same `percolator` retrain described above and
-> silently reports a MAX-aggregated experiment q. This is left as-is rather than guarded because
-> the combination is a three-way diagnostic opt-in, and these environment variables are
-> development instrumentation rather than a supported interface (see
-> `ai/docs/osprey-development-guide.md`). Do not read the "Refused" row above as covering it.
+> instead - so the combination retrains and silently reports a MAX-aggregated experiment q. This is
+> left as-is rather than guarded because the combination is a three-way diagnostic opt-in, and
+> these environment variables are development instrumentation rather than a supported interface
+> (see `ai/docs/osprey-development-guide.md`). Do not read the "Refused" row above as covering it.
 
 The refusal gates on the arm the **first pass recorded** - persisted as
 `ExperimentAgg` in the per-file `<stem>.1st-pass.model.json` sidecar

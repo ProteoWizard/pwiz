@@ -198,9 +198,15 @@ namespace pwiz.Osprey.Tasks
             // are part of it: they feed the aggregate written into this task's own Pass1Path
             // output, so a floor sweep in one directory would otherwise reuse the previous arm's
             // q as the new arm's measurement.
+            // The 2nd-pass mode belongs here even though pass 2 runs later: protein-compact is
+            // the only mode that needs the >=2-peptide stratum, and this task is where the
+            // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
+            // under transfer carries no stratum, so a protein-compact re-run that adopted it
+            // would be reading an artifact that cannot answer its question.
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix();
+                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)
@@ -1037,13 +1043,21 @@ namespace pwiz.Osprey.Tasks
             // sidecar is absent). Save() is a no-op for the GBDT / degenerate model.
             if (ctx.TryGet<FirstPassPercolatorModel>(out var firstPassModel) && firstPassModel.Results != null)
             {
+                // protein-compact needs the stratum as well as the model, and the merge node
+                // cannot rebuild it (that takes the full library plus the 1st-pass detected
+                // peptides). It rides in the same sidecar, so it reaches the merge node by the
+                // relay that already carries the model. Null under every other mode.
+                HashSet<uint> stratumBaseIds = null;
+                if (ctx.TryGet<ProteinCompactStratum>(out var stratum))
+                    stratumBaseIds = stratum?.BaseIds;
+
                 int modelWrites = 0;
                 foreach (var kvp in perFileParquetPaths)
                 {
                     try
                     {
                         if (FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key),
-                                firstPassModel.Results, firstPassModel.ExperimentAgg))
+                                firstPassModel.Results, firstPassModel.ExperimentAgg, stratumBaseIds))
                             modelWrites++;
                     }
                     catch (Exception ex)
