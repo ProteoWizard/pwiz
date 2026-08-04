@@ -247,6 +247,37 @@ namespace pwiz.Osprey
                     config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));
                 LogInfo(string.Format("Run FDR: {0:P1}", config.RunFdr));
                 LogInfo(string.Format("Experiment FDR: {0:P1}", config.ExperimentFdr));
+                // Always print which experiment-wide aggregation is in force, active or not.
+                // Reported HERE and not from Stage 5 because FirstJoinTask.Run is skipped on
+                // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
+                // whose q-values an operator is most likely to attribute to the wrong arm.
+                LogInfo(OspreyEnvironment.DescribeExperimentAgg());
+                if (OspreyEnvironment.ExperimentAggUnrecognized)
+                {
+                    LogWarning(string.Format(
+                        "OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
+                        "'{0}'. Recognized values: '{0}', or '{1}<N>' with N in [2, {2}] (e.g. '{1}2').",
+                        OspreyEnvironment.EXPERIMENT_AGG_MAX,
+                        OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
+                        OspreyEnvironment.MEAN_BEST_N_MAX));
+                }
+                // Abort, do not fall back. A run that asked for a mode it did not get would
+                // report q-values the caller never requested, under whatever output name the
+                // caller chose - and 'percolator' was removed, so existing sweep scripts still
+                // pass it. Checked here rather than at the merge node so it costs seconds
+                // instead of a full Stage 1-5.
+                if (OspreyEnvironment.Pass2QValueUnrecognized)
+                {
+                    LogError(string.Format(
+                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}', " +
+                        "'{2}'. Unset it for the default ('{2}'). The 'percolator' mode was " +
+                        "REMOVED: it retrained the 2nd-pass SVM on a compaction-depleted decoy " +
+                        "pool, which reports anti-conservative q-values.",
+                        OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                        OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
+                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
+                    return 1;
+                }
                 LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
@@ -365,6 +396,15 @@ namespace pwiz.Osprey
             bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
             bool hasInputFiles = config.InputFiles != null && config.InputFiles.Count > 0;
 
+            // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
+            // Stage-5 consuming site so a bad combination costs a second instead of the hours a
+            // large run spends reaching FirstJoin, and so a warm resume - which skips
+            // FirstJoinTask.Run entirely - is still checked.
+            string aggErr = OspreyEnvironment.ValidateExperimentAggSettings(
+                ExperimentAggFileCount(config, hasInputScores, hasInputFiles));
+            if (aggErr != null)
+                return aggErr;
+
             if (config.SelectedTask.HasValue)
             {
                 switch (config.SelectedTask.Value)
@@ -455,6 +495,28 @@ namespace pwiz.Osprey
             if (string.IsNullOrEmpty(config.OutputBlib))
                 return "No output path specified. Use -o <output.blib>";
             return null;
+        }
+
+        /// <summary>
+        /// How many runs this invocation will aggregate across for the experiment-wide
+        /// competition, or 0 when that is not a property of this invocation. The per-file HPC
+        /// workers (SpectraCache / PerFileScoring / PerFileRescoring) each see ONE input and
+        /// never compute an experiment-wide score, so reporting their input count would refuse
+        /// every worker of a legitimate distributed mean(best-N) run.
+        /// </summary>
+        private static int ExperimentAggFileCount(
+            OspreyConfig config, bool hasInputScores, bool hasInputFiles)
+        {
+            switch (config.SelectedTask)
+            {
+                case HpcTask.SpectraCache:
+                case HpcTask.PerFileScoring:
+                case HpcTask.PerFileRescore:
+                    return 0;
+            }
+            if (hasInputScores)
+                return config.InputScores.Count;
+            return hasInputFiles ? config.InputFiles.Count : 0;
         }
 
         /// <summary>

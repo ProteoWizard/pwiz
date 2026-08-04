@@ -65,13 +65,21 @@ namespace pwiz.Osprey.FDR
         /// The five outputs are returned as parallel arrays (index-aligned to the
         /// inputs); the caller either packs them into <see cref="PercolatorResult"/>s
         /// or writes them straight onto the projection rows.
+        ///
+        /// <paramref name="applyExperimentAgg"/> is false on the 2nd pass, mirroring the
+        /// projection score pass
+        /// (<see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/>); see
+        /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/> for why
+        /// OSPREY_EXPERIMENT_AGG is a first-pass score by definition. The two score passes are
+        /// each other's byte-identity oracle, so this flag must be threaded from the same
+        /// pass label on both.
         /// </summary>
         internal static void ComputeStreamingCompetitionQvalues(
             double[] finalScores, bool[] labels, uint[] entryIds,
             string[] peptides, string[] fileNames,
             out double[] peps, out double[] runPrecursorQvalues,
             out double[] runPeptideQvalues, out double[] expPrecursorQvalues,
-            out double[] expPeptideQvalues)
+            out double[] expPeptideQvalues, bool applyExperimentAgg = true)
         {
             int n = finalScores.Length;
 
@@ -104,9 +112,9 @@ namespace pwiz.Osprey.FDR
             else
             {
                 expPrecursorQvalues = PercolatorQValues.ComputeExperimentPrecursorQvalues(
-                    finalScores, labels, entryIds);
+                    finalScores, labels, entryIds, applyExperimentAgg);
                 expPeptideQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
-                    finalScores, labels, entryIds, peptides);
+                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
             }
 
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
@@ -180,15 +188,67 @@ namespace pwiz.Osprey.FDR
                 var (entryIds, scores) = readFileScalars(fileKey);
                 int m = entryIds.Length;
                 var labels = new bool[m];
+                // Non-null only when stratified: the base_ids whose observations Stage 6 actually
+                // CHANGED. Filled in the scoring pass below rather than recorded positionally in a
+                // parallel bool[m] and re-read afterwards. Two reasons beyond the saved pass: the
+                // bool[] and this set used to be live at the same time, so dropping it lowers the
+                // peak; and a base_id-keyed set needs no materialized per-entry array, which is
+                // the shape that survives if this ever streams entries instead of reading them
+                // into arrays. See the admission rationale below for what "changed" means here.
+                var changedBaseIds = stratumBaseIds != null ? new HashSet<uint>() : null;
                 for (int i = 0; i < m; i++)
                 {
                     uint eid = entryIds[i];
                     labels[i] = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u; // decoy high bit set
                     if (survivorScoreOverride.TryGetValue((fileKey, eid), out double ov))
+                    {
+                        // BIT-EXACT inequality is the "changed" discriminator, the same one
+                        // Pass2FdrSidecar.AssignPerRunQ uses to separate Moved from Unchanged: an
+                        // unchanged survivor's reconciled features ARE its original Stage-4
+                        // features (ReconciledParquetWriter streams unchanged rows through
+                        // untouched) and the sidecar score came from those same features under
+                        // this same averaged model, so the recomputation reproduces it exactly.
+                        // A moved peak carries rescored features, so its score differs.
+                        if (changedBaseIds != null && ov != scores[i])
+                            changedBaseIds.Add(eid & PercolatorEntry.BASE_ID_MASK);
                         scores[i] = ov; // swap in the reconciled survivor's frozen-model score
+                    }
                 }
 
-                // Run-level: compete within this file (only stratum members when
+                // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
+                // created it) carries a NEW composite score and no longer has a valid pass-1
+                // run q -- the old q described a peak that no longer exists, and
+                // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
+                // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
+                // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
+                // answer for it. The "changed" signal is a frozen-model score that DIFFERS from
+                // the entry's 1st-pass sidecar score, computed above - NOT mere presence in
+                // survivorScoreOverride. That map holds every post-reconciliation survivor whose
+                // identity resolves in the effective parquet, including files Stage 6 never
+                // touched (the effective path falls back to the ORIGINAL parquet), so keying on
+                // presence admitted most of the survivor pool and quietly widened the very
+                // stratum this mode exists to enforce.
+                //
+                // The score comparison is keyed by entry_id, so it means the same thing
+                // in-process and on a distributed merge node (an index-keyed source does NOT -
+                // see #4484), and it needs no extra plumbing: both scores are already in hand.
+                //
+                // Admitted BY BASE_ID so a target and its paired decoy always enter together.
+                // Admitting a lone target would let it auto-win its competition and inflate the
+                // null, the cross-validation grouping invariant this file depends on. The set is
+                // complete before this point: it is filled by the scoring pass above, and every
+                // entry of this file has been through that pass. That ordering matters, because a
+                // base_id changed at a LATER entry still admits an earlier one.
+
+                // Called only from the stratified branch below, where both sets are non-null -
+                // the unstratified path builds allIdx directly and never asks. The null guards
+                // this started with were therefore dead, and ReSharper reported them as such.
+                bool Admit(uint baseId)
+                {
+                    return stratumBaseIds.Contains(baseId) || changedBaseIds.Contains(baseId);
+                }
+
+                // Run-level: compete within this file (stratum members plus changed peaks when
                 // stratified), conservative q on the winners.
                 int[] allIdx;
                 if (stratumBaseIds == null)
@@ -200,7 +260,7 @@ namespace pwiz.Osprey.FDR
                 {
                     var idxList = new List<int>(m);
                     for (int i = 0; i < m; i++)
-                        if (stratumBaseIds.Contains(entryIds[i] & PercolatorEntry.BASE_ID_MASK)) idxList.Add(i);
+                        if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK)) idxList.Add(i);
                     allIdx = idxList.ToArray();
                 }
                 TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
@@ -217,9 +277,21 @@ namespace pwiz.Osprey.FDR
                     if (!minRunQ.TryGetValue(eid, out double cur) || qv < cur) minRunQ[eid] = qv;
                 }
 
-                // Experiment-level: fold every observation into the per-base_id bests
-                // (stratum members only when stratified -> the experiment competition
-                // below runs over exactly the stratum's base_ids).
+                // Experiment-level: fold every observation into the per-base_id bests. When
+                // stratified this is the STRATUM ONLY - deliberately NOT the run-level admitted
+                // set, which also carries the changed off-stratum peaks.
+                //
+                // Two reasons an off-stratum peak must not enter a cross-file maximum here.
+                // First, it would be admitted only in the files that CHANGED it, so its best
+                // would be a max over that subset while every stratum member maxes over all
+                // files - and because reconciliation anchors on the best-scoring peak and
+                // corrects the others toward it, a changed peak is never the one that supplied
+                // the maximum. Maxing over changed observations alone is therefore GUARANTEED to
+                // understate the precursor's experiment-wide score, not merely to skew it.
+                // Second, the correct value is already known: the pass-1 experiment q, which by
+                // that same anchor argument reconciliation cannot have invalidated. The caller
+                // carries it through rather than recomputing it, which is what keeps the
+                // re-scoping additive - see Pass2FdrSidecar's map-back.
                 for (int i = 0; i < m; i++)
                 {
                     uint eid = entryIds[i];
@@ -526,6 +598,27 @@ namespace pwiz.Osprey.FDR
                 return map;
             }
 
+            /// <summary>The missing-run floor this builder would apply, or 0 outside mean(best-N)
+            /// mode. Exposed so the parity test can hold the bounded histogram estimator directly
+            /// against the resident sorted-quantile one
+            /// (<see cref="TargetDecoyCompetition.ComputeFloorFromDecoyScores"/>): they are
+            /// deliberately different estimators of the same statistic, agreeing only to about the
+            /// histogram bin width, and that bound is not observable through the q-values (q comes
+            /// from the competition RANKING, which a sub-bin shift normally leaves untouched).
+            /// </summary>
+            internal double ComputeDecoyFloor()
+            {
+                return _floor?.ComputeFloor() ?? 0.0;
+            }
+
+            /// <summary>The bin width of the streaming floor histogram - the bound within which
+            /// <see cref="ComputeDecoyFloor"/> is expected to track the resident estimator, and the
+            /// documented magnitude of this approximation.</summary>
+            internal static double FloorBinWidth
+            {
+                get { return StreamingDecoyFloor.BIN_WIDTH; }
+            }
+
             /// <summary>Reduce a per-base_id top-N accumulator dict to the <c>base_id -&gt;
             /// (min-ordinal, mean(best-N) score)</c> best map the target/decoy competition consumes.
             /// The stored ordinal is each base_id's earliest row (MinG), matching the resident
@@ -642,25 +735,58 @@ namespace pwiz.Osprey.FDR
                 private const double RANGE_MIN = -100.0;
                 private const double RANGE_MAX = 100.0;
                 private const int BIN_COUNT = 200000; // Bin width 0.001 over [-100, 100].
-                private const double BIN_WIDTH = (RANGE_MAX - RANGE_MIN) / BIN_COUNT;
+                internal const double BIN_WIDTH = (RANGE_MAX - RANGE_MIN) / BIN_COUNT;
 
                 private readonly long[] _bins = new long[BIN_COUNT];
                 private long _underflow;
                 private long _count;
                 private double _sum;
+                // Smallest / largest ADMITTED score. The resident twin's PercentileOfSorted
+                // answers every out-of-histogram case with sorted[0] or sorted[Count-1] - always
+                // a real observed score. Keeping the two extremes lets this estimator return the
+                // same kind of value instead of a range constant, which is what makes the two
+                // paths agree in the tails (see PercentileFromHistogram).
+                private double _min = double.MaxValue;
+                private double _max = double.MinValue;
 
                 public void Add(double score)
                 {
+                    // Reject non-finite BEFORE _count/_sum, matching the resident floor sample.
+                    // NaN: every NaN comparison below is false, so it would reach the cast and
+                    // produce int.MinValue on net472 (throwing on _bins[-2147483648] mid-Stage 5)
+                    // or 0 on net8.0 (silently counting it as a score of RANGE_MIN). Infinity:
+                    // the range checks below would route it to the overflow bucket correctly, but
+                    // it would already have entered _sum - and the MEAN branch of ComputeFloor
+                    // returns _sum / _count, so a single infinite decoy score makes the floor
+                    // infinite. AggregateScore's (n - _len) * floor is then 0 * Infinity == NaN for
+                    // even a FULLY detected group, poisoning every base_id through the shared
+                    // floor. Counting it and excluding it from the histogram would also make the
+                    // quantile rank disagree with the bins.
+                    if (!TargetDecoyCompetition.MeanBestNAcc.IsUsable(score))
+                        return;
                     _count++;
                     _sum += score;
+                    if (score < _min)
+                        _min = score;
+                    if (score > _max)
+                        _max = score;
                     if (score < RANGE_MIN)
                     {
                         _underflow++;
                         return;
                     }
                     if (score >= RANGE_MAX)
-                        return; // Overflow: above any central quantile, so it only shifts the tail.
+                    {
+                        // Counted (in _count and _max above), not binned. It MUST still be counted,
+                        // because the quantile rank is taken over _count: dropping it silently
+                        // shifted every quantile toward the low end. A quantile that lands in this
+                        // region makes the bin walk fall off the end, which PercentileFromHistogram
+                        // answers with _max - a real observed score.
+                        return;
+                    }
                     int bin = (int)((score - RANGE_MIN) / BIN_WIDTH);
+                    if (bin < 0)
+                        bin = 0;
                     if (bin >= BIN_COUNT)
                         bin = BIN_COUNT - 1;
                     _bins[bin]++;
@@ -679,16 +805,43 @@ namespace pwiz.Osprey.FDR
                 // Linear-interpolated quantile at rank = pct/100 * (count - 1), matching
                 // PercentileOfSorted's rank convention but computed from bin cumulative counts
                 // (uniform interpolation within the straddling bin).
+                //
+                // Every degenerate case MIRRORS the resident TargetDecoyCompetition.
+                // PercentileOfSorted rather than diverging from it, because the two estimators are
+                // supposed to be the same statistic computed two ways. Two rules follow, and both
+                // were previously broken:
+                //
+                //  * The answer is always a real OBSERVED score, never a range constant. The
+                //    earlier pct >= 100 arm returned RANGE_MAX (+100), a floor ABOVE every real
+                //    score, which inverts the feature: under-detected units would be PROMOTED
+                //    instead of demoted. _max cannot do that, and it is exactly what
+                //    PercentileOfSorted's sorted[Count-1] returns.
+                //  * Nothing here throws. The resident twin clamps or short-circuits in each of
+                //    these cases (its Count == 1 early return, its two boundary returns), so a
+                //    throw would abort a multi-hour run at the very end of Stage 5 on input the
+                //    other path handles - and would still leave the two paths disagreeing.
+                //
+                // The percentile RANGE itself is validated once at startup
+                // (OspreyEnvironment.ValidateExperimentAggSettings), which is where an operator
+                // error belongs; by the time execution reaches here pct is known to be in [0,100].
+                // Tail answers are coarser than the resident interpolation between two neighbours,
+                // which is the same deliberate bin-width approximation this estimator already
+                // documents - bounded by the observed range, and never sign-inverting.
                 private double PercentileFromHistogram(double pct)
                 {
-                    if (pct <= 0.0)
-                        return RANGE_MIN;
+                    // Count == 1 short-circuits FIRST, mirroring PercentileOfSorted: with one
+                    // observation every percentile is that observation (and rank below is 0).
+                    if (_count == 1 || pct <= 0.0)
+                        return _min;
                     if (pct >= 100.0)
-                        return RANGE_MAX;
+                        return _max;
                     double rank = pct / 100.0 * (_count - 1);
                     double cum = _underflow;
+                    // The quantile lies among the scores below RANGE_MIN, which the histogram
+                    // counted but did not bin. _min is the smallest of them - the same end of the
+                    // distribution PercentileOfSorted would return from its sorted[0] side.
                     if (rank < cum)
-                        return RANGE_MIN;
+                        return _min;
                     for (int b = 0; b < BIN_COUNT; b++)
                     {
                         long c = _bins[b];
@@ -701,7 +854,10 @@ namespace pwiz.Osprey.FDR
                         }
                         cum += c;
                     }
-                    return RANGE_MAX;
+                    // Falling off the end means the quantile lies in the overflow region (scores
+                    // at or above RANGE_MAX, counted but unbinned). _max is the largest observed
+                    // decoy score, so the floor stays inside the data.
+                    return _max;
                 }
             }
 

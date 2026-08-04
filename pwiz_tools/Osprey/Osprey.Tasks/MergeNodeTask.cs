@@ -96,8 +96,18 @@ namespace pwiz.Osprey.Tasks
 
         public override string ValidityKey(PipelineContext ctx)
         {
+            // The experiment-wide aggregation reaches this task's outputs (the .blib and the
+            // 2nd-pass FDR sidecars) through the experiment q it changes upstream, so it has to
+            // invalidate them too. Without it, flipping the arm re-ran Stage 5 - FirstJoinTask
+            // did carry the suffix - while THIS task's .blib and sidecars were reused from the
+            // other arm, leaving one output directory holding two arms' results.
+            // The 2nd-pass mode decides the q this task writes into the .blib and the 2nd-pass
+            // sidecars, so it invalidates them by exactly the argument the aggregation suffix
+            // makes above - one arm's .blib must never be reused as another's.
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix();
         }
 
         /// <summary>
