@@ -1452,6 +1452,18 @@ namespace pwiz.Osprey.Tasks
                 existingIds.Add(entry.EntryId);
                 if (!byId.TryGetValue(entry.EntryId, out FdrEntry r))
                     continue;
+                if (appendedTailStart >= 0)
+                {
+                    // Reproducing a fresh rescore: a MOVED peak's ScanNumber changes, because
+                    // the rescore replaces the buffer entry with the newly scored one. The
+                    // pass-2 frozen-model override is looked up by (EntryId, Charge,
+                    // ScanNumber) (Pass2FdrSidecar), so leaving the 1st-pass ScanNumber here
+                    // makes every moved peak miss that lookup: it gets no override, reads as
+                    // UNCHANGED, never earns a fresh run q, and is reported on its stale
+                    // pass-1 q. On Stellar that was 110,541 of 994,509 survivors missing an
+                    // override and 31,583 spectra reported against the golden 29,364.
+                    entry.ScanNumber = r.ScanNumber;
+                }
                 entry.ApexRt = r.ApexRt;
                 entry.StartRt = r.StartRt;
                 entry.EndRt = r.EndRt;
