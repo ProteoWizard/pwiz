@@ -25,7 +25,12 @@ public sealed class SpectrumListSorter : SpectrumListWrapper
     /// Extracts the sort key for spectrum at the given index. Receives the inner list and an index;
     /// returns a comparable key.
     /// </param>
-    public SpectrumListSorter(ISpectrumList inner, Func<ISpectrumList, int, IComparable> keyOf)
+    /// <param name="stable">
+    /// When true, entries with equal keys keep their original relative order. Mirrors cpp's
+    /// third <c>SpectrumList_Sorter</c> constructor argument, which also defaults to false.
+    /// </param>
+    public SpectrumListSorter(ISpectrumList inner, Func<ISpectrumList, int, IComparable> keyOf,
+        bool stable = false)
         : base(inner)
     {
         ArgumentNullException.ThrowIfNull(keyOf);
@@ -37,7 +42,12 @@ public sealed class SpectrumListSorter : SpectrumListWrapper
             keys[i] = keyOf(inner, i);
             indices[i] = i;
         }
-        Array.Sort(indices, (a, b) => keys[a].CompareTo(keys[b]));
+        // Array.Sort is introsort - not stable - so the stable case breaks ties on the original
+        // position instead. Both orders are cpp-faithful; only the flag selects between them.
+        if (stable)
+            Array.Sort(indices, (a, b) => keys[a].CompareTo(keys[b]) is var c && c != 0 ? c : a.CompareTo(b));
+        else
+            Array.Sort(indices, (a, b) => keys[a].CompareTo(keys[b]));
         _permutation = indices;
     }
 
@@ -60,7 +70,11 @@ public sealed class SpectrumListSorter : SpectrumListWrapper
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
     {
-        var spec = Inner.GetSpectrum(_permutation[index], getBinaryData);
+        // Copy before renumbering (cpp does the same): stamping in place would leave the inner
+        // list's own spectra carrying sorted positions, so the unsorted list would report the
+        // sorted order. SpectrumListSimple hands out its stored instances, so this is not
+        // hypothetical.
+        var spec = Inner.GetSpectrum(_permutation[index], getBinaryData).ShallowCopy();
         spec.Index = index;
         return spec;
     }

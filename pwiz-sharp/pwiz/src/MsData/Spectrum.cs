@@ -90,6 +90,20 @@ public sealed class Spectrum : SpectrumIdentity
         && BinaryDataArrays.Count == 0
         && IntegerDataArrays.Count == 0;
 
+    /// <summary>
+    /// Shallow copy: a new <see cref="Spectrum"/> whose scalar fields (notably
+    /// <see cref="SpectrumIdentity.Index"/>) are independent, while params, scan list,
+    /// precursors, products and binary arrays are shared with the original.
+    /// </summary>
+    /// <remarks>
+    /// For list wrappers that reorder or subset an inner list and must hand out a spectrum
+    /// carrying its new position. cpp copies the whole Spectrum for exactly this reason
+    /// (<c>SpectrumList_Filter.cpp:150-151</c>); mutating the inner list's instance instead
+    /// would corrupt the unwrapped list, whose spectra a caller can still hold. Sharing the
+    /// heavy sub-objects keeps the copy cheap - only the identity is being changed.
+    /// </remarks>
+    public Spectrum ShallowCopy() => (Spectrum)MemberwiseClone();
+
     /// <summary>True iff the spectrum has any populated binary data.</summary>
     public bool HasBinaryData =>
         BinaryDataArrays.Count > 0 || IntegerDataArrays.Count > 0;

@@ -62,10 +62,11 @@ public sealed class SpectrumListFilter : SpectrumListWrapper
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
     {
-        // cpp copies the spectrum before renumbering (SpectrumList_Filter.cpp:150-151); we set
-        // it in place, as SpectrumListSorter does, so a lazy reader's per-call instance is
-        // stamped without an extra deep copy.
-        var spec = Inner.GetSpectrum(_acceptedIndices[index], getBinaryData);
+        // Copy before renumbering, as cpp does (SpectrumList_Filter.cpp:150-151). Stamping the
+        // index in place would corrupt the inner list for any implementation that hands out its
+        // stored instance - SpectrumListSimple does - leaving the *unfiltered* list reporting
+        // filtered positions.
+        var spec = Inner.GetSpectrum(_acceptedIndices[index], getBinaryData).ShallowCopy();
         spec.Index = index;
         return spec;
     }

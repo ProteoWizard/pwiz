@@ -93,6 +93,114 @@ public class SpectrumListWrapperTests
         Assert.AreEqual(2, sorted.SpectrumIdentity(2).Index);
     }
 
+    // ============================================================================
+    //   cpp SpectrumList_SorterTest, ported. It drives the sorter over the tiny example with
+    //   two custom predicates (defaultArrayLength and msLevel), in stable and unstable modes
+    //   and nested one inside the other, and asserts the original list is left alone.
+    // ============================================================================
+
+    private static IComparable ByDefaultArrayLength(ISpectrumList list, int index) =>
+        list.GetSpectrum(index, getBinaryData: false).DefaultArrayLength;
+
+    private static IComparable ByMsLevel(ISpectrumList list, int index) =>
+        list.GetSpectrum(index, getBinaryData: false).Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
+
+    private static (MSData msd, ISpectrumList list) TinyList()
+    {
+        var msd = new MSData();
+        Examples.InitializeTiny(msd);
+        return (msd, msd.Run.SpectrumList!);
+    }
+
+    private static string[] IdsOf(ISpectrumList list) =>
+        Enumerable.Range(0, list.Count).Select(i => list.SpectrumIdentity(i).Id).ToArray();
+
+    /// <summary>cpp: "assert that the original list is unmodified". Enumerating a sorted view
+    /// must not renumber the spectra of the list underneath it.</summary>
+    [TestMethod]
+    public void Sorter_LeavesOriginalListUnmodified()
+    {
+        var (_, original) = TinyList();
+        var sorted = new SpectrumListSorter(original, ByDefaultArrayLength);
+        for (int i = 0; i < sorted.Count; i++) _ = sorted.GetSpectrum(i);
+
+        CollectionAssert.AreEqual(
+            new[] { "scan=19", "scan=20", "scan=21", "scan=22", "sample=1 period=1 cycle=23 experiment=1" },
+            IdsOf(original), "original ids");
+        for (int i = 0; i < original.Count; i++)
+        {
+            Assert.AreEqual(i, original.SpectrumIdentity(i).Index, $"original identity {i}");
+            Assert.AreEqual(i, original.GetSpectrum(i).Index, $"original spectrum {i}");
+        }
+    }
+
+    /// <summary>cpp's defaultArrayLength scenario: ascending order, renumbered, and the
+    /// monotonicity check it closes with.</summary>
+    [TestMethod]
+    public void Sorter_ByDefaultArrayLength_AscendingAndRenumbered()
+    {
+        var (_, original) = TinyList();
+        var sorted = new SpectrumListSorter(original, ByDefaultArrayLength);
+        Assert.AreEqual(original.Count, sorted.Count);
+
+        // The two positions cpp pins by id; the rest it checks only for the ordering property,
+        // since spectra with equal lengths are interchangeable under an unstable sort.
+        Assert.AreEqual("scan=21", sorted.SpectrumIdentity(0).Id);
+        Assert.AreEqual("scan=20", sorted.SpectrumIdentity(1).Id);
+
+        for (int i = 0; i < sorted.Count; i++)
+        {
+            Assert.AreEqual(i, sorted.SpectrumIdentity(i).Index, $"identity {i} renumbered");
+            Assert.AreEqual(i, sorted.GetSpectrum(i).Index, $"spectrum {i} renumbered");
+        }
+        for (int i = 1; i < sorted.Count; i++)
+            Assert.IsTrue(sorted.GetSpectrum(i).DefaultArrayLength >= sorted.GetSpectrum(i - 1).DefaultArrayLength,
+                $"defaultArrayLength not ascending at {i}");
+    }
+
+    /// <summary>cpp's stable-vs-unstable pair. Only the stable run pins an order, because cpp
+    /// notes the equal-msLevel spectra are interchangeable when sorting unstably.</summary>
+    [TestMethod]
+    public void Sorter_ByMsLevel_StableKeepsOriginalOrderAmongEquals()
+    {
+        var (_, original) = TinyList();
+
+        var stable = new SpectrumListSorter(original, ByMsLevel, stable: true);
+        Assert.AreEqual(original.Count, stable.Count);
+        // msLevels are 1,2,1,2,1, so stable sorting gives the three MS1s in their original
+        // relative order followed by the two MS2s in theirs. cpp pins the first four positions
+        // (its own comment about scan=22 being interchangeable is stale - scan=22 is MS2).
+        CollectionAssert.AreEqual(
+            new[] { "scan=19", "scan=21", "sample=1 period=1 cycle=23 experiment=1", "scan=20", "scan=22" },
+            IdsOf(stable), "stable msLevel order");
+
+        var unstable = new SpectrumListSorter(original, ByMsLevel);
+        Assert.AreEqual(original.Count, unstable.Count);
+        // Unstable only guarantees the ordering property, not which equal element lands where.
+        for (int i = 1; i < unstable.Count; i++)
+            Assert.IsTrue(MsLevelOf(unstable, i) >= MsLevelOf(unstable, i - 1),
+                $"msLevel not ascending at {i}");
+    }
+
+    /// <summary>cpp's "silly (nested) sorted list": a sorter wrapping a sorter.</summary>
+    [TestMethod]
+    public void Sorter_NestedSorters_ApplyOuterOrdering()
+    {
+        var (_, original) = TinyList();
+        var byMsLevel = new SpectrumListSorter(original, ByMsLevel, stable: true);
+        var nested = new SpectrumListSorter(byMsLevel, ByDefaultArrayLength);
+
+        Assert.AreEqual(original.Count, nested.Count);
+        for (int i = 0; i < nested.Count; i++)
+            Assert.AreEqual(i, nested.SpectrumIdentity(i).Index, $"identity {i} renumbered");
+        for (int i = 1; i < nested.Count; i++)
+            Assert.IsTrue(nested.GetSpectrum(i).DefaultArrayLength >= nested.GetSpectrum(i - 1).DefaultArrayLength,
+                $"defaultArrayLength not ascending at {i}");
+    }
+
+    private static int MsLevelOf(ISpectrumList list, int index) =>
+        list.GetSpectrum(index, getBinaryData: false).Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
+
     [TestMethod]
     public void TitleMaker_SubstitutesPlaceholdersFromMsdAndSpectrum()
     {
