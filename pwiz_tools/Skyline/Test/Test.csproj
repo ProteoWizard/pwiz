@@ -286,7 +286,6 @@
     <Compile Include="Reporting\PersistedViewsTest.cs" />
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
     <Compile Include="SignedMzTest.cs" />
-    <Compile Include="SkylineCmdConfigTest.cs" />
     <Compile Include="SmallMoleculesMzOnlyTest.cs" />
     <Compile Include="SrmDocEditTest.cs" />
     <Compile Include="SrmDocumentTest.cs" />
