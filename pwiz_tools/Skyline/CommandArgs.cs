@@ -1092,8 +1092,8 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_REPORT_FORMAT = new DocArgument(@"report-format",
             Helpers.GetEnumValues<ReportFormat>().Select(f => f.ToString()).ToArray(),
             (c, p) => c.ReportFormat = (ReportFormat) Enum.Parse(typeof(ReportFormat), p.Value, true));
-        public static readonly Argument ARG_REPORT_INVARIANT = new DocArgument(@"report-invariant",
-            (c, p) => c.IsReportInvariant = true);
+        public static readonly Argument ARG_REPORT_INVARIANT = new DocArgument(@"report-invariant", BOOL_VALUE,
+            (c, p) => c.IsReportInvariant = p.ValueBool) { OptionalValue = true };
 
         private static readonly ArgumentGroup GROUP_REPORT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REPORT_Exporting_reports, false,
@@ -1103,7 +1103,10 @@ namespace pwiz.Skyline
         public string ReportName { get; private set; }
         public ReportFormat? ReportFormat { get; private set; }
         public string ReportFile { get; private set; }
-        public bool IsReportInvariant { get; private set; }
+        // Null when --report-invariant was not given, which lets the default depend on the
+        // report format: parquet is written for other programs to read, so it defaults to
+        // invariant, while the text formats stay localized.
+        public bool? IsReportInvariant { get; private set; }
         public bool ExportingReport
         {
             get { return !string.IsNullOrEmpty(ReportName); }

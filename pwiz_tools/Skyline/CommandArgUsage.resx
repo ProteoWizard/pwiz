@@ -373,7 +373,7 @@
     <value>CSV for comma-separated reports (or semicolon separated, depending on your localization), TSV for tab separated reports, or PARQUET for Apache Parquet files. When this argument is omitted, the format is chosen from the file name extension of --report-file [default CSV]</value>
   </data>
   <data name="_report_invariant" xml:space="preserve">
-    <value>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment.</value>
+    <value>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment. Specify --report-invariant=False to get localized text instead. When this argument is omitted, PARQUET reports are invariant and the other formats are localized.</value>
   </data>
   <data name="_report_name" xml:space="preserve">
     <value>The name of a report to export as it appears in the Skyline Export Report form.</value>

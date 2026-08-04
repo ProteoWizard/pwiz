@@ -3614,7 +3614,13 @@ namespace pwiz.Skyline
 
         private bool ExportLiveReport(CommandArgs commandArgs)
         {
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, commandArgs.IsReportInvariant
+            // The format has to be known before the localizer, because parquet defaults to
+            // invariant. It is written to be read by other programs, which do better with
+            // stable column names and round-trip numbers than with localized ones.
+            var reportFormat = commandArgs.ReportFormat ?? ReportExporters.FormatForFilenameExtension(
+                Path.GetExtension(commandArgs.ReportFile), TextUtil.EXT_CSV);
+            bool invariant = commandArgs.IsReportInvariant ?? reportFormat == ReportFormat.parquet;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, invariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
@@ -3641,17 +3647,7 @@ namespace pwiz.Skyline
                     IProgressStatus status = new ProgressStatus(string.Empty);
                     IProgressMonitor broker = CreateProgressMonitor(status);
 
-                    IReportExporter rowItemExporter;
-                    if (commandArgs.ReportFormat.HasValue)
-                    {
-                        rowItemExporter =
-                            ReportExporters.ForFormat(dataSchema.DataSchemaLocalizer, commandArgs.ReportFormat.Value);
-                    }
-                    else
-                    {
-                        rowItemExporter = ReportExporters.ForFilenameExtension(dataSchema.DataSchemaLocalizer,
-                            Path.GetExtension(commandArgs.ReportFile), TextUtil.EXT_CSV);
-                    }
+                    var rowItemExporter = ReportExporters.ForFormat(dataSchema.DataSchemaLocalizer, reportFormat);
                     rowFactories.ExportReport(saver.Stream, PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName), rowItemExporter, broker, ref status);
 
                     broker.UpdateProgress(status.Complete());

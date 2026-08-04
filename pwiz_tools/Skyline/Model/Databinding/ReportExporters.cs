@@ -41,21 +41,30 @@ namespace pwiz.Skyline.Model.Databinding
         /// </list></param>
         public static IReportExporter ForFilenameExtension(DataSchemaLocalizer dataSchemaLocalizer, params string[] extensionsToTry)
         {
+            return ForFormat(dataSchemaLocalizer, FormatForFilenameExtension(extensionsToTry));
+        }
+
+        /// <summary>
+        /// The format <see cref="ForFilenameExtension"/> would use. Callers that have to know
+        /// the format before they can choose a <see cref="DataSchemaLocalizer"/> need this,
+        /// since the localizer is what <see cref="ForFilenameExtension"/> takes.
+        /// </summary>
+        public static ReportFormat FormatForFilenameExtension(params string[] extensionsToTry)
+        {
             foreach (var extension in extensionsToTry)
             {
                 if (TextUtil.EXT_CSV.Equals(extension, StringComparison.OrdinalIgnoreCase))
                 {
-                    var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
-                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
+                    return ReportFormat.csv;
                 }
 
                 if (TextUtil.EXT_PARQUET.Equals(extension, StringComparison.OrdinalIgnoreCase))
                 {
-                    return new ParquetReportExporter();
+                    return ReportFormat.parquet;
                 }
             }
 
-            return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
+            return ReportFormat.tsv;
         }
 
         public static IReportExporter ForSeparator(DataSchemaLocalizer dataSchemaLocalizer, char separator)
