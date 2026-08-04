@@ -17,8 +17,8 @@ pass1.experiment.combinedFdp	0.015352043258528474
 pass1.experiment.pairedFdp	0.015364339472132626
 pass1.experiment.accepted	28612
 pass1.experiment.entrapmentRatio	0.9970878570505364
-pass2.experiment.reportedQ	0.009433081161856729
-pass2.experiment.combinedFdp	0.026064468340751677
-pass2.experiment.pairedFdp	0.026057519100565252
-pass2.experiment.accepted	31779
+pass2.experiment.reportedQ	0.00996401882092444
+pass2.experiment.combinedFdp	0.013340754608125758
+pass2.experiment.pairedFdp	0.01332130119032272
+pass2.experiment.accepted	23116
 pass2.experiment.entrapmentRatio	0.9970878570505364
