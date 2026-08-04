@@ -1538,12 +1538,10 @@ namespace pwiz.Osprey.Tasks
                 entry.EndRt = r.EndRt;
                 entry.BoundsArea = r.BoundsArea;
                 entry.BoundsSnr = r.BoundsSnr;
-                entry.Features = r.Features;
-                entry.CwtCandidates = r.CwtCandidates;
-                entry.FragmentMzs = r.FragmentMzs;
-                entry.FragmentIntensities = r.FragmentIntensities;
-                entry.ReferenceXicRts = r.ReferenceXicRts;
-                entry.ReferenceXicIntensities = r.ReferenceXicIntensities;
+                // The heavy payload is deliberately NOT copied. The load above is scalar-only,
+                // so those fields are null on r, and assigning them would only overwrite the
+                // entry's own payload with nulls - inert while every caller releases the
+                // payload immediately afterwards, but a trap the moment one does not.
             }
 
             // Append gap-fill rows. A fresh run appends one stub per gap-fill
@@ -1579,9 +1577,23 @@ namespace pwiz.Osprey.Tasks
                         continue;
                     if (!byId.TryGetValue(gid, out var gapRows) || gapRows.Count == 0)
                         continue;
-                    var g = gapRows[0];
-                    g.ParquetIndex = uint.MaxValue;
-                    fileEntries.Add(g);
+                    // EVERY row for this target, not just the first. Gap fill is the one place
+                    // a duplicate EntryId can actually arise: the survivor rows come from
+                    // .scores.parquet, which Stage 4 wrote AFTER DeduplicatePairs, but
+                    // RunGapFillTwoPass calls RunCoelutionScoring with neither
+                    // DeduplicatePairs nor DeduplicateDoubleCounting, and ScoreWindow admits a
+                    // candidate per isolation window. With overlapping windows one target
+                    // yields two stubs, and a cold rescore appends both. Taking only the first
+                    // silently dropped a survivor from the buffer Stage 7 competes over.
+                    //
+                    // Parquet order within an EntryId is canonical (entry_id, charge, scan),
+                    // which is the order the cold path's sorted block puts them in too, so the
+                    // two agree row for row.
+                    foreach (var g in gapRows)
+                    {
+                        g.ParquetIndex = uint.MaxValue;
+                        fileEntries.Add(g);
+                    }
                     existingIds.Add(gid);
                 }
             }
@@ -1999,12 +2011,16 @@ namespace pwiz.Osprey.Tasks
             // positional indices address the survivors as loaded, so anything inserted before
             // them shifts every index after it.
             //
-            // EntryId alone decides the order here, so the shared comparison's terminal
-            // ParquetIndex key being the uint.MaxValue sentinel on every one of these rows
-            // does not matter: the CWT pass emits at most one row per library entry and the
-            // forced pass runs only for the targets CWT missed, so the two blocks are disjoint
-            // and no two rows in this list share an EntryId. The comparison never ties.
-            gapFillAppended.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: the CWT and forced blocks are disjoint, so EntryId is unique here and the comparison never ties
+            // The CWT and forced blocks are disjoint (forced runs only for the targets CWT
+            // missed), but EntryId is NOT unique within this list: neither pass runs
+            // DeduplicatePairs or DeduplicateDoubleCounting, and ScoreWindow admits a candidate
+            // per isolation window, so one target scored in two overlapping windows emits two
+            // rows. Charge and ScanNumber separate them, and every row carries the same
+            // uint.MaxValue ParquetIndex sentinel - so the comparison can only tie on rows that
+            // agree on all four keys, which are indistinguishable anyway. The rebuild-from-disk
+            // reproduces this by appending EVERY reconciled row for a target, in the parquet's
+            // canonical (entry_id, charge, scan) order, which is the order this sort produces.
+            gapFillAppended.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: a tie needs equal (EntryId, Charge, ScanNumber), and such rows are indistinguishable
             fdrEntries.AddRange(gapFillAppended);
 
             return (nGapCwt, nGapForced);

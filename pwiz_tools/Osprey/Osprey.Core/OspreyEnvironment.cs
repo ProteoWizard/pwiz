@@ -511,7 +511,7 @@ namespace pwiz.Osprey.Core
         private static IEnumerable<string> SplitResidentTokens(string allowValue)
         {
             if (string.IsNullOrEmpty(allowValue))
-                return new string[0];
+                return Array.Empty<string>();
             return allowValue
                 .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(v => v.Trim())
