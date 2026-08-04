@@ -252,8 +252,25 @@ namespace pwiz.Osprey.Tasks
                     }
                 }
             }
+            // Non-null only when FirstJoin released the survivor contents after planning
+            // (issue #4526). Every exit from here on has to leave the RescoredEntries
+            // milestone holding a full buffer, because that is what MergeNode reads -
+            // so each return below refills it first.
+            var survivorLoader = StreamedSurvivorLoader(ctx);
+
             if (!didPlan && (rescoreBundle == null || anyPass2Present))
+            {
+                // No rescore to run, so the post-rescore state is just the survivors plus
+                // whatever reconciled parquets are already on disk - the same thing the
+                // resume Rehydrate reconstructs.
+                if (survivorLoader != null)
+                {
+                    if (!MaterializeAllSurvivors(survivorLoader, ctx))
+                        return false;
+                    OverlayReconciledIntoAllFiles(_perFileEntries, ctx);
+                }
                 return true;
+            }
 
             // Per-file sidecar lifecycle (delete-before / write-after) is
             // handled inside ExecuteRescore's loop so a per-file skip can
@@ -295,10 +312,23 @@ namespace pwiz.Osprey.Tasks
                 ctx.Get<FullLibrary>().Value,
                 ctx.Config,
                 ctx,
-                joinFileStems);
+                joinFileStems,
+                survivorLoader);
             ctx.LogInfo(string.Format(
                 @"Reconciliation rescore: {0} entries re-scored ({1} reconciliation actions executed)",
                 rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
+
+            // The streamed loop emptied every file's list again as it went, so rebuild the
+            // buffer MergeNode reads. Reading it back from the reconciled parquets - rather
+            // than keeping it live through the loop - is the whole point: it is resident
+            // from here to the end of Stage 7 instead of for the entire rescore. Identical
+            // to what the resume path reconstructs, which regression.ps1 mode 2 gates.
+            if (survivorLoader != null)
+            {
+                if (!MaterializeAllSurvivors(survivorLoader, ctx))
+                    return false;
+                OverlayReconciledIntoAllFiles(_perFileEntries, ctx);
+            }
 
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
@@ -383,38 +413,14 @@ namespace pwiz.Osprey.Tasks
                 // RTs into the final blib instead of the Stage 6 reconciled values.
                 // Files with no reconciled sibling on disk are no-work files; a fresh
                 // run leaves their entries at 1st-pass too, so they are left unchanged.
-                var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
-                var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
-                foreach (var kv in _perFileEntries)
-                {
-                    // Overlay each file's reconciled boundaries when its
-                    // .scores-reconciled.parquet is present; no-work files (none on
-                    // disk) keep their 1st-pass boundaries, matching a fresh run.
-                    if (parquetPaths != null &&
-                        parquetPaths.TryGetValue(kv.Key, out string scoresPath))
-                    {
-                        string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
-                        if (File.Exists(reconciledPath))
-                        {
-                            IReadOnlyList<GapFillTarget> gapFillForFile = null;
-                            if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
-                                gapFillForFile = gfList;
-                            OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
-                        }
-                    }
-                    // Canonical sort for EVERY file (incl. no-work files) so the WARM
-                    // buffer order matches the order COLD establishes in
-                    // RunPercolatorFdr, independent of whether the file was rescored.
-                    SortFileEntriesCanonical(kv.Value);
-                    // Same release the rescore path does once a file's reconciled parquet is
-                    // on disk: the overlay above re-fattened this file's entries straight
-                    // from that parquet, and holding those arrays for every file is the
-                    // O(files) Stage-6 growth term. A no-work file was never fattened, so
-                    // this is a no-op there. Nothing downstream reads them off the buffer -
-                    // MergeNode's 2nd pass reloads PIN features from the reconciled parquet
-                    // by identity - and this leaves the same buffer shape COLD leaves.
-                    ReleaseRescoredPayload(kv.Value);
-                }
+                //
+                // Refill first when Stage 5 released the survivors (issue #4526). A resume
+                // that re-runs Stage 5 lands here with an EMPTY buffer, and overlaying onto
+                // empty lists produces an almost-empty blib instead of failing.
+                var resumeLoader = StreamedSurvivorLoader(ctx);
+                if (resumeLoader != null && !MaterializeAllSurvivors(resumeLoader, ctx))
+                    return false;
+                OverlayReconciledIntoAllFiles(_perFileEntries, ctx);
 
                 ctx.Publish(new RescoredEntries(_perFileEntries));
                 return true;
@@ -516,7 +522,8 @@ namespace pwiz.Osprey.Tasks
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx,
-            IReadOnlyList<string> joinFileStems = null)
+            IReadOnlyList<string> joinFileStems = null,
+            FirstPassSurvivorLoader survivorLoader = null)
         {
             // Pre-group reconciliation actions by file so the per-file loop
             // below just looks up its slice.
@@ -567,10 +574,9 @@ namespace pwiz.Osprey.Tasks
             if (nTotalFiles == 1 || parallelism == 1)
             {
                 for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
-                    counts[fileNum] = RescoreOneFile(
-                        fileNum, nTotalFiles,
-                        perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,
-                        inputs, ctx);
+                    counts[fileNum] = RescoreOneFileStreamed(
+                        fileNum, nTotalFiles, perFileEntries[fileNum],
+                        inputs, survivorLoader, ctx);
             }
             else
             {
@@ -593,10 +599,9 @@ namespace pwiz.Osprey.Tasks
                 Parallel.For(0, nTotalFiles, parallelOpts, fileNum =>
                 {
                     using (multi.BeginFile(fileNum, RESCORE_FILE_SEGMENTS))
-                        counts[fileNum] = RescoreOneFile(
-                            fileNum, nTotalFiles,
-                            perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,
-                            inputs, ctx);
+                        counts[fileNum] = RescoreOneFileStreamed(
+                            fileNum, nTotalFiles, perFileEntries[fileNum],
+                            inputs, survivorLoader, ctx);
                 });
             }
 
@@ -647,6 +652,51 @@ namespace pwiz.Osprey.Tasks
             public Dictionary<string, int> FileNameToIdx;
             public string TaskValidityKey;
             public IReadOnlyList<string> JoinFileStems;
+        }
+
+        /// <summary>
+        /// Bracket one file's <see cref="RescoreOneFile"/> with the survivor refill and
+        /// release when Stage 6 is streaming (issue #4526), or call straight through when
+        /// the resident buffer is in use.
+        ///
+        /// <para>The refill targets the file's EXISTING list object rather than replacing
+        /// it, because that list is the shared backing store every
+        /// <see cref="PerFileEntries"/> milestone wraps - swapping the reference would
+        /// leave the published milestones pointing at the old one. Contents are transient;
+        /// identity is not.</para>
+        ///
+        /// <para>Safe under the parallel file loop: each call touches only its own file's
+        /// list, and the loader holds no per-file state.</para>
+        /// </summary>
+        private (int Rescored, int GapCwt, int GapForced) RescoreOneFileStreamed(
+            int fileNum, int nTotalFiles, KeyValuePair<string, List<FdrEntry>> file,
+            RescorePassInputs inputs, FirstPassSurvivorLoader survivorLoader, PipelineContext ctx)
+        {
+            if (survivorLoader == null)
+                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx);
+
+            var stubs = survivorLoader.Load(file.Key, out string error);
+            if (stubs == null)
+            {
+                // Stage 5 wrote both artifacts, so this is a fault. Throwing (rather than
+                // returning zero counts) keeps a file that could not be rescored from
+                // silently contributing nothing to the totals.
+                throw new InvalidDataException(error);
+            }
+            ctx.LogInfo(string.Format(@"[4526-DBG] refill {0}: {1} entries", file.Key, stubs.Count));
+            file.Value.Clear();
+            file.Value.AddRange(stubs);
+            try
+            {
+                return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx);
+            }
+            finally
+            {
+                // Drop this file's entries before the next one loads its own. The rebuild
+                // after the loop reads them back from the reconciled parquet.
+                file.Value.Clear();
+                file.Value.TrimExcess();
+            }
         }
 
         /// <summary>
@@ -1428,6 +1478,96 @@ namespace pwiz.Osprey.Tasks
             // The canonical (EntryId, Charge, ScanNumber, ParquetIndex) re-sort is
             // applied by the CALLER via SortFileEntriesCanonical -- it runs for every
             // file in the resume path, not only files with a reconciled parquet.
+        }
+
+        /// <summary>
+        /// The loader Stage 6 refills from, or null when this run keeps the resident
+        /// buffer. Non-null requires BOTH that FirstJoin published a source (only the
+        /// projection path computes the passing base_id set it needs) and that streaming
+        /// is enabled, which is what <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> turns off to
+        /// get the resident A/B oracle back.
+        /// </summary>
+        private static FirstPassSurvivorLoader StreamedSurvivorLoader(PipelineContext ctx)
+        {
+            if (!OspreyEnvironment.Stage6StreamSurvivors)
+                return null;
+            return ctx.TryGet<FirstPassSurvivorSource>(out var source) ? source?.Value : null;
+        }
+
+        /// <summary>
+        /// Refill every file whose survivor list was released, leaving files that already
+        /// hold entries untouched so a second call is a no-op. Returns false (ExitCode
+        /// set) if any file's parquet or 1st-pass sidecar cannot be read - Stage 5 wrote
+        /// both, so a failure here is a fault rather than an absence.
+        /// </summary>
+        private bool MaterializeAllSurvivors(FirstPassSurvivorLoader loader, PipelineContext ctx)
+        {
+            foreach (var kv in _perFileEntries)
+            {
+                if (kv.Value.Count > 0)
+                    continue;
+                var stubs = loader.Load(kv.Key, out string error);
+                if (stubs == null)
+                {
+                    ctx.LogError(error);
+                    ctx.ExitCode = 1;
+                    return false;
+                }
+                kv.Value.AddRange(stubs);
+                ctx.LogInfo(string.Format(@"[4526-DBG] rebuild {0}: {1} entries", kv.Key, stubs.Count));
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Bring EVERY file's list to its post-rescore state by overlaying that file's
+        /// <c>.scores-reconciled.parquet</c>, canonicalizing the order, and releasing the
+        /// re-fattened payload. This is the state a fresh <see cref="ExecuteRescore"/>
+        /// leaves behind, rebuilt from disk.
+        ///
+        /// <para>Two callers, one body. The resume <see cref="Rehydrate"/> uses it because
+        /// the driver skipped <see cref="Run"/> when the reconciled parquets were already
+        /// valid. The streamed rescore uses it because it deliberately dropped each file's
+        /// entries after writing that file's parquet, so the
+        /// <see cref="RescoredEntries"/> milestone MergeNode reads has to be rebuilt at
+        /// the end (issue #4526). Sharing the body is what makes the streamed buffer
+        /// identical to the resumed one, which mode 2 of regression.ps1 already gates.</para>
+        /// </summary>
+        private void OverlayReconciledIntoAllFiles(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, PipelineContext ctx)
+        {
+            var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
+            var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            foreach (var kv in perFileEntries)
+            {
+                // Overlay each file's reconciled boundaries when its
+                // .scores-reconciled.parquet is present; no-work files (none on
+                // disk) keep their 1st-pass boundaries, matching a fresh run.
+                if (parquetPaths != null &&
+                    parquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                {
+                    string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
+                    if (File.Exists(reconciledPath))
+                    {
+                        IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                        if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
+                            gapFillForFile = gfList;
+                        OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
+                    }
+                }
+                // Canonical sort for EVERY file (incl. no-work files) so the WARM
+                // buffer order matches the order COLD establishes in
+                // RunPercolatorFdr, independent of whether the file was rescored.
+                SortFileEntriesCanonical(kv.Value);
+                // Same release the rescore path does once a file's reconciled parquet is
+                // on disk: the overlay above re-fattened this file's entries straight
+                // from that parquet, and holding those arrays for every file is the
+                // O(files) Stage-6 growth term. A no-work file was never fattened, so
+                // this is a no-op there. Nothing downstream reads them off the buffer -
+                // MergeNode's 2nd pass reloads PIN features from the reconciled parquet
+                // by identity - and this leaves the same buffer shape COLD leaves.
+                ReleaseRescoredPayload(kv.Value);
+            }
         }
 
         /// <summary>

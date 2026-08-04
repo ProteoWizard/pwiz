@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Tasks
             typeof(PerFileConsensusTargets), typeof(ReconciliationActions),
             typeof(RefinedCalibrations), typeof(PerFileGapFillForRescore),
             typeof(CompactedEntries), typeof(PlanningPerformed),
-            typeof(ProteinCompactStratum)
+            typeof(ProteinCompactStratum), typeof(FirstPassSurvivorSource)
         };
 
         // Stage 6 planning state. Set by PlanStage6 (Run) and published into the
@@ -124,6 +124,13 @@ namespace pwiz.Osprey.Tasks
         // protein peptides that did not individually pass 1st-pass FDR (so they get
         // reconciled + rescored + reported). Null unless OSPREY_PASS2_QVALUE=protein-compact.
         private HashSet<uint> _proteinCompactStratum;
+
+        // Rebuilds any one file's survivors from its .scores.parquet + finalized
+        // 1st-pass sidecar, so a per-file consumer never needs the all-files buffer
+        // (issue #4526). Set on the projection path, which is the only one that
+        // computes the passing base_id set here; null on the legacy resident and
+        // rehydrate paths, whose consumers fall back to CompactedEntries.
+        private FirstPassSurvivorLoader _survivorLoader;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
         private IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions
@@ -470,6 +477,26 @@ namespace pwiz.Osprey.Tasks
                     return false;
             }
 
+            // Reconciliation planning was the last consumer that needs every file's
+            // survivors at once. Drop the CONTENTS now, keeping the outer per-file list
+            // (the shared buffer identity every milestone wraps) so nothing downstream
+            // has to learn a new shape: Stage 6 refills one file at a time from the
+            // survivor source and empties it again after that file's reconciled parquet
+            // is written. Without this the 88.9 M entries stay live for the whole rescore
+            // - 28 GB across 5.5 hours at 163 files, issue #4526.
+            if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && !config.StopAfterStage5)
+            {
+                foreach (var kvp in perFileEntries)
+                {
+                    ctx.LogInfo(string.Format(@"[4526-DBG] release {0}: {1} entries", kvp.Key, kvp.Value.Count));
+                    kvp.Value.Clear();
+                    kvp.Value.TrimExcess();
+                }
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage5-handoff-released",
+                    string.Format(@"(post-GC, survivors released after planning, files={0})",
+                        perFileEntries.Count));
+            }
+
             // Publish the Stage 6 planning byproducts (computed values, or the
             // empty defaults when PlanStage6 was skipped / stopped after Stage
             // 5), plus the CompactedEntries milestone of the shared buffer that
@@ -480,6 +507,9 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
             ctx.Publish(new CompactedEntries(perFileEntries));
+            // Null off the projection path (legacy resident / rehydrate), where a
+            // consumer falls back to the buffer above.
+            ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
             // PlanStage6 (above) sets _didPlan only when the planning block ran;
             // publish it so PerFileRescore reads the gate from the registry
             // instead of reaching for this concrete task.
@@ -554,6 +584,9 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
             ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
             ctx.Publish(new CompactedEntries(perFileEntries));
+            // Null off the projection path (legacy resident / rehydrate), where a
+            // consumer falls back to the buffer above.
+            ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
             // The bundle-adopt / resume path never plans, so the rescore gate is
             // false (PerFileRescore falls back to the no-op unless a worker
             // RescoreBundle is present). Mirrors the old "FirstJoin rehydrates ->
@@ -2271,7 +2304,11 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             PipelineContext ctx)
         {
-            var loader = new FirstPassSurvivorLoader(perFileParquetPaths, config, firstPassBaseIds);
+            // Keep the loader for the byproduct: Stage 6 and Stage 7 use it to rebuild a
+            // file's survivors on demand rather than reading them off a buffer somebody
+            // had to hold for the whole run.
+            var loader = _survivorLoader =
+                new FirstPassSurvivorLoader(perFileParquetPaths, config, firstPassBaseIds);
             var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
             // Per-file progress: reloading each file's survivor stubs from parquet + the 1st-pass
             // sidecar was the ~70 s silent "First-pass compaction" gap at 82 files. Console-only.

@@ -174,6 +174,22 @@ namespace pwiz.Osprey.Core
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
 
         /// <summary>
+        /// Stage 6 rebuilds each file's post-compaction survivors from that file's
+        /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
+        /// them again once its reconciled parquet is on disk - so the all-files survivor
+        /// buffer is not resident across the rescore loop.
+        ///
+        /// DEFAULT ON. That buffer is 88.9 M entries / 28 GB live at 163 files, held for
+        /// the 5.5 hours of Stage 6, and it grows super-linearly in file count because the
+        /// passing base_id set grows too (issue #4526). Set
+        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 to keep the resident buffer as the A/B
+        /// byte-identity oracle, the same role OSPREY_FDR_PROJECTION=0 plays for Stage 5.
+        /// A settable property (not a readonly field) so unit tests can A/B both paths.
+        /// </summary>
+        public static bool Stage6StreamSurvivors { get; set; } =
+            IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
+
+        /// <summary>
         /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
         /// row per CWT candidate peak of every precursor (targets AND decoys) scored in the
         /// first-pass main search to a per-input-file TSV
