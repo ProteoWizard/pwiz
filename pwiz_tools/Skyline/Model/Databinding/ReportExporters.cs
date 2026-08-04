@@ -72,7 +72,11 @@ namespace pwiz.Skyline.Model.Databinding
             switch (reportFormat)
             {
                 case ReportFormat.csv:
-                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.CsvSeparator));
+                    // The localizer's separator, not TextUtil.CsvSeparator, so that
+                    // --report-invariant gets a comma whatever the OS culture is, and
+                    // --report-format=csv agrees with exporting to a .csv file name.
+                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer,
+                        TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider)));
                 case ReportFormat.tsv:
                     return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
                 case ReportFormat.parquet:
