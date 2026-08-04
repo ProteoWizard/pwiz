@@ -23,32 +23,33 @@ replicate (it frees ~21 GB on a 240-file experiment). That compacted pool is
 **decoy-depleted** — many decoys were dropped with the non-passing targets — so
 simply *retraining* a Percolator SVM on it estimates the null from a thin,
 biased decoy population and reports **anti-conservative** (optimistic) q-values.
-The frozen modes below avoid retraining on the depleted pool.
+
+That is why the `percolator` mode was **removed** rather than demoted. It was
+measured at 1.57% true FDP against a nominal 1% on Stellar libdecoy entrapment
+(the first-pass q gives 0.92% on the same data), and around 9% on an 82-file
+SEA-AD set — the error grows with run count. **The linear model trained by the
+first-pass SVM is now the model for the second pass in every mode**; only the
+`OSPREY_PROTEIN_COMPACT_RETRAIN` diagnostic A/B still retrains.
 
 ## `OSPREY_PASS2_QVALUE` modes
 
-`OspreyEnvironment` parses the flag; an unrecognized token normalizes to
-`percolator` with a warning.
+`OspreyEnvironment` parses the flag. An unrecognized token is a **startup
+error**, not a fallback: a run that silently substituted the default would
+report q-values the caller never asked for. This is checked in `Program` before
+the pipeline starts, so a script still passing the removed `percolator` token
+fails in seconds rather than after Stage 1-5.
 
 | Mode | Retrain? | Null population | Level |
 |------|----------|-----------------|-------|
-| `percolator` (default) | **yes** | reconciled + compacted pool | precursor + peptide |
+| `protein-compact` (default) | no (frozen model) | competition constrained to the protein stratum | precursor |
 | `transfer` | no | pass-1 q carried through; only moved peaks re-mapped | precursor + peptide |
 | `transfer-compete` | no (frozen model) | fresh full-population target-decoy competition | precursor |
-| `protein-compact` | no (frozen model) | competition constrained to the protein stratum | precursor |
 
 **Interaction with `OSPREY_EXPERIMENT_AGG`**: after a first pass run under the
 experimental `mean-best-<N>` aggregation, `transfer-compete` and `protein-compact` are
 **refused** - both would rewrite the reported experiment q from a MAX-aggregated
 competition. `transfer` is the compatible mode. See
 [Experiment-wide aggregation](07-fdr-control.md#experiment-wide-aggregation-osprey_experiment_agg).
-
-### `percolator` (default)
-
-Retrains the second-pass Percolator SVM and recomputes a target/decoy null on the
-reconciled + compacted pool (`ComputePass2Resident` → `FirstJoinTask.RunPercolatorFdr`).
-This is the historical path; the decoy-depletion caveat above applies, which is
-why the frozen modes were added.
 
 ### `transfer`
 
@@ -88,8 +89,9 @@ Bourgon 2010).
   through `PercolatorFdr.ScoreStandardizedRow`, so it is classifier-agnostic and
   works for `--fdr-method gbdt` too). The model is captured on the streaming
   first pass via the `captureModel` hook.
-- **Retrain** trains a fresh SVM/GBDT on the post-reconciliation pool (the default
-  `percolator` mode, or the `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle).
+- **Retrain** trains a fresh SVM/GBDT on the post-reconciliation pool. Since the
+  `percolator` mode was removed, the `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle
+  is the ONLY way to reach it.
 
 `OSPREY_PROTEIN_COMPACT_RETRAIN` is a diagnostic A/B lever: with `protein-compact`
 it **skips** the frozen-model + stratum competition and instead retrains the
@@ -103,14 +105,27 @@ anti-conservative retrain. If the frozen model, the required sidecars, or the
 protein stratum are absent (e.g. a warm rerun that loaded cached SVM scores and
 skipped first-pass training, or a present-but-corrupt first-pass sidecar),
 `Pass2FdrSidecar` aborts with a `ConfigError` and actionable guidance rather than
-reporting looser FDR than a cold run under the same flag. The default
-(`percolator`) path is unaffected.
+reporting looser FDR than a cold run under the same flag.
+
+Because `protein-compact` is now the DEFAULT, this fail-fast reaches ordinary
+runs, not just explicitly flagged ones. That is why the first-pass model sidecar
+also carries the protein stratum: a distributed `--task SecondPassFDR` merge node
+never trained pass 1 and cannot rebuild the stratum (that needs the full library
+plus the first-pass detected peptides), so both are reloaded from the sidecar.
+
+**Interaction with `mean-best-<N>`, worth knowing before a sweep**: a first pass
+run under `OSPREY_EXPERIMENT_AGG=mean-best-<N>` is REFUSED by the default mode,
+because the reported column would carry two statistics — on-stratum precursors
+max-aggregated, off-stratum precursors on their first-pass mean(best-N) q. Set
+`OSPREY_PASS2_QVALUE=transfer` for those arms. The failure is deliberate: an
+effective default that silently depended on the first pass's aggregation arm
+would be harder to reason about than an explicit variable.
 
 ## Flags and switches
 
 | Flag / env var | Default | Effect |
 |---|---|---|
-| `OSPREY_PASS2_QVALUE` | `percolator` | Selects the second-pass q-value mode: `percolator` \| `transfer` \| `transfer-compete` \| `protein-compact`. Unrecognized → `percolator` + warning. |
+| `OSPREY_PASS2_QVALUE` | `protein-compact` | Selects the second-pass q-value mode: `transfer` \| `transfer-compete` \| `protein-compact`. Unrecognized → startup error. |
 | `OSPREY_PROTEIN_COMPACT_RETRAIN` | off (frozen) | With `protein-compact`, retrain the second pass instead of using the frozen model + stratum competition (A/B lever). |
 | `OSPREY_FDR_PROJECTION` | on | Streams the FDR peak via the thin `FdrProjection` slice; the frozen modes stream one file at a time so routing them does not hold all features resident. |
 
@@ -120,7 +135,8 @@ reporting looser FDR than a cold run under the same flag. The default
   algorithm doc set has no second-pass-FDR document because these modes
   (`transfer`, `transfer-compete`, `protein-compact`, and the frozen-model
   machinery) were developed in the C# implementation first; the Rust reference is
-  porting them back in maccoss/osprey#57. The default `percolator` mode matches the
-  long-standing two-pass behavior both implementations share. Parity for the frozen
+  porting them back in maccoss/osprey#57. Both implementations have since removed
+  the `percolator` mode and defaulted to `protein-compact` together, so the shipped
+  defaults agree. Parity for the frozen
   modes is therefore tracked **C# → Rust** rather than Rust → C#. Evidence:
   `Osprey.Tasks/Pass2FdrSidecar.cs`, `Osprey.FDR/FrozenModelScorer.cs`. Severity: info.

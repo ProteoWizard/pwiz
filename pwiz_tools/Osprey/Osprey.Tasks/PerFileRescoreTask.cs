@@ -183,9 +183,12 @@ namespace pwiz.Osprey.Tasks
             // the experiment-wide aggregation changes, so the reconciled parquets this task
             // writes differ across arms and must be invalidated alongside FirstJoinTask's Stage-5
             // outputs. Same shared suffix, so the two cannot disagree.
+            // Same shared suffix for the 2nd-pass mode, for the same reason: this task writes the
+            // per-file 2nd-pass sidecar, whose q-values ARE the mode's output.
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix();
+                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)
