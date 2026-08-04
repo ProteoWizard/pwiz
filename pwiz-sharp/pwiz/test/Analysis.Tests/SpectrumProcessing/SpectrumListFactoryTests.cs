@@ -43,12 +43,18 @@ public class SpectrumListFactoryTests
     [TestMethod]
     public void Wrap_IdentityFilters_IndexScanNumberAndId()
     {
-        // index 1 3-4 → keep indices 1, 3, 4 in order.
+        // index 1 3-4 -> keep indices 1, 3, 4 in order. Assert on the native id: the filter
+        // renumbers Index to the position in the filtered list (cpp parity), so the ids are
+        // what identify which inputs survived. Ids are "scan={index+1}".
         var byIndex = SpectrumListFactory.Wrap(BuildMixedList(), "index 1 3-4");
         Assert.AreEqual(3, byIndex.Count);
         CollectionAssert.AreEqual(
-            new[] { 1, 3, 4 },
-            Enumerable.Range(0, byIndex.Count).Select(i => byIndex.SpectrumIdentity(i).Index).ToList());
+            new[] { "scan=2", "scan=4", "scan=5" },
+            Enumerable.Range(0, byIndex.Count).Select(i => byIndex.SpectrumIdentity(i).Id).ToList());
+        CollectionAssert.AreEqual(
+            new[] { 0, 1, 2 },
+            Enumerable.Range(0, byIndex.Count).Select(i => byIndex.SpectrumIdentity(i).Index).ToList(),
+            "filtered list renumbers Index densely from 0");
 
         // scanNumber matches the "scan=N" attribute on the spectrum id.
         Assert.AreEqual(2, SpectrumListFactory.Wrap(BuildMixedList(), "scanNumber 2 5").Count);

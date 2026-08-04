@@ -41,10 +41,34 @@ public sealed class SpectrumListFilter : SpectrumListWrapper
     public override int Count => _acceptedIndices.Length;
 
     /// <inheritdoc/>
-    public override SpectrumIdentity SpectrumIdentity(int index) =>
-        Inner.SpectrumIdentity(_acceptedIndices[index]);
+    public override SpectrumIdentity SpectrumIdentity(int index)
+    {
+        // Renumber Index to the position in the *filtered* list, matching cpp
+        // (SpectrumList_Filter.cpp:112, which rewrites the copied identity's index) and the
+        // sibling SpectrumListSorter. Consumers key off it - mzML writes it as
+        // <spectrum index="...">, which has to be dense and ascending. Copy rather than mutate:
+        // SpectrumIdentity is a reference type, so writing to the inner list's instance would
+        // corrupt the unfiltered list.
+        var orig = Inner.SpectrumIdentity(_acceptedIndices[index]);
+        return new ProxiedSpectrumIdentity
+        {
+            Index = index,
+            Id = orig.Id,
+            SpotId = orig.SpotId,
+            SourceFilePosition = orig.SourceFilePosition,
+        };
+    }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        Inner.GetSpectrum(_acceptedIndices[index], getBinaryData);
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    {
+        // cpp copies the spectrum before renumbering (SpectrumList_Filter.cpp:150-151); we set
+        // it in place, as SpectrumListSorter does, so a lazy reader's per-call instance is
+        // stamped without an extra deep copy.
+        var spec = Inner.GetSpectrum(_acceptedIndices[index], getBinaryData);
+        spec.Index = index;
+        return spec;
+    }
+
+    private sealed class ProxiedSpectrumIdentity : SpectrumIdentity { }
 }

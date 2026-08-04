@@ -140,8 +140,156 @@ public class SpectrumListFilterTests
         return list;
     }
 
+    /// <summary>Original indices of the surviving spectra, recovered from the native id.
+    /// <see cref="SpectrumListFilter.SpectrumIdentity"/> renumbers Index to the position in the
+    /// filtered list (cpp parity), so it can no longer be read as "which input survived" - and
+    /// ids are what cpp's own filter tests assert on.</summary>
     private static List<int> KeptIndices(SpectrumListFilter f) =>
-        Enumerable.Range(0, f.Count).Select(i => f.SpectrumIdentity(i).Index).ToList();
+        Enumerable.Range(0, f.Count)
+            .Select(i => int.Parse(f.SpectrumIdentity(i).Id.Split('=')[^1], CultureInfo.InvariantCulture) - 100)
+            .ToList();
+
+    // ============================================================================
+    //   Predicate-interface scenarios (cpp testEven / testEvenMS2 / testSelectedIndices /
+    //   testHasBinaryData). Everything else here drives the filter through a built-in
+    //   predicate; these four exercise ISpectrumPredicate itself - the identity-only path,
+    //   the NeedSpectrum deferral, the Done short-circuit, and SuggestedDetailLevel.
+    // ============================================================================
+
+    /// <summary>cpp <c>testEven</c>: an identity-only predicate, plus the renumbering the
+    /// filtered list is expected to apply to both the identity and the spectrum.</summary>
+    [TestMethod]
+    public void Predicate_IdentityOnly_KeepsEvenIndicesAndRenumbers()
+    {
+        var f = new SpectrumListFilter(BuildSyntheticList(), new EvenPredicate());
+        Assert.AreEqual(6, f.Count);
+
+        for (int i = 0; i < f.Count; i++)
+        {
+            // cpp asserts the filtered identity reports its NEW index while keeping the
+            // original native id (SpectrumList_Filter.cpp:112).
+            var id = f.SpectrumIdentity(i);
+            Assert.AreEqual(i, id.Index, $"identity {i}: Index");
+            Assert.AreEqual($"scan={100 + i * 2}", id.Id, $"identity {i}: Id");
+
+            var spectrum = f.GetSpectrum(i);
+            Assert.AreEqual(i, spectrum.Index, $"spectrum {i}: Index");
+            Assert.AreEqual($"scan={100 + i * 2}", spectrum.Id, $"spectrum {i}: Id");
+        }
+    }
+
+    /// <summary>cpp <c>testEvenMS2</c>: the identity check defers with NeedSpectrum, so the
+    /// filter must load the spectrum and consult the deep overload.</summary>
+    [TestMethod]
+    public void Predicate_DefersToSpectrum_KeepsEvenMs2()
+    {
+        var f = new SpectrumListFilter(BuildSyntheticList(), new EvenMs2Predicate());
+        Assert.AreEqual(3, f.Count);
+        CollectionAssert.AreEqual(new[] { "scan=102", "scan=104", "scan=108" },
+            Enumerable.Range(0, f.Count).Select(i => f.SpectrumIdentity(i).Id).ToArray());
+    }
+
+    /// <summary>cpp <c>testSelectedIndices</c>: Done short-circuits iteration once the
+    /// predicate knows nothing further can match.</summary>
+    [TestMethod]
+    public void Predicate_Done_ShortCircuitsIteration()
+    {
+        var predicate = new SelectedIndexPredicate();
+        var f = new SpectrumListFilter(BuildSyntheticList(), predicate);
+        Assert.AreEqual(3, f.Count);
+        CollectionAssert.AreEqual(new[] { "scan=101", "scan=103", "scan=105" },
+            Enumerable.Range(0, f.Count).Select(i => f.SpectrumIdentity(i).Id).ToArray());
+
+        // The short-circuit is the point of the scenario: iteration must stop once index 6 is
+        // seen, not walk the whole list.
+        Assert.AreEqual(7, predicate.IdentitiesSeen,
+            "iteration should stop right after the index that trips Done");
+    }
+
+    /// <summary>cpp <c>testHasBinaryData</c>: SuggestedDetailLevel decides whether peaks are
+    /// loaded before the deep predicate runs, so the same predicate accepts nothing at
+    /// FullMetadata and everything peak-bearing at FullData.</summary>
+    [TestMethod]
+    public void Predicate_SuggestedDetailLevel_GatesBinaryData()
+    {
+        // Has to run against a *lazy* list: SpectrumListSimple holds fully-populated spectra and
+        // ignores DetailLevel entirely, so the gate would be invisible. cpp round-trips its tiny
+        // example through mzML for exactly this reason; the file + adapter is how the port gets
+        // a SpectrumList_Mzml (its constructors are internal).
+        var tiny = new MSData();
+        Examples.InitializeTiny(tiny);
+        string path = Path.Combine(Path.GetTempPath(), $"filter-detail-{System.Guid.NewGuid():N}.mzML");
+        try
+        {
+            File.WriteAllText(path, new Pwiz.Data.MsData.Mzml.MzmlWriter().Write(tiny));
+            using var rt = new MSData();
+            new Pwiz.Data.MsData.Readers.MzmlReaderAdapter().Read(path, rt);
+            var sl = rt.Run.SpectrumList!;
+
+            Assert.AreEqual(0, new SpectrumListFilter(sl,
+                new HasBinaryDataPredicate(DetailLevel.FullMetadata)).Count,
+                "FullMetadata: peaks aren't loaded, so nothing can be accepted");
+
+            Assert.AreEqual(4, new SpectrumListFilter(sl,
+                new HasBinaryDataPredicate(DetailLevel.FullData)).Count,
+                "FullData: the tiny example's four peak-bearing spectra are accepted");
+        }
+        finally { try { File.Delete(path); } catch { /* best effort */ } }
+    }
+
+    private sealed class EvenPredicate : ISpectrumPredicate
+    {
+        public PredicateDecision Accept(SpectrumIdentity identity) =>
+            identity.Index % 2 == 0 ? PredicateDecision.Accept : PredicateDecision.Reject;
+        public string Describe() => string.Empty;
+    }
+
+    private sealed class EvenMs2Predicate : ISpectrumPredicate
+    {
+        public PredicateDecision Accept(SpectrumIdentity identity) =>
+            identity.Index % 2 != 0 ? PredicateDecision.Reject : PredicateDecision.NeedSpectrum;
+
+        public bool Accept(Spectrum spectrum)
+        {
+            var type = spectrum.Params.CvParamChild(CVID.MS_spectrum_type);
+            if (type.Cvid == CVID.CVID_Unknown) return false;
+            if (!CvLookup.CvIsA(type.Cvid, CVID.MS_mass_spectrum)) return false;
+            var level = spectrum.Params.CvParam(CVID.MS_ms_level);
+            return level.Cvid != CVID.CVID_Unknown && level.ValueAs<int>() == 2;
+        }
+
+        public string Describe() => string.Empty;
+    }
+
+    private sealed class SelectedIndexPredicate : ISpectrumPredicate
+    {
+        private bool _pastMaxIndex;
+        public int IdentitiesSeen { get; private set; }
+
+        public PredicateDecision Accept(SpectrumIdentity identity)
+        {
+            IdentitiesSeen++;
+            if (identity.Index > 5) _pastMaxIndex = true;
+            return identity.Index is 1 or 3 or 5 ? PredicateDecision.Accept : PredicateDecision.Reject;
+        }
+
+        public bool Done => _pastMaxIndex;
+        public string Describe() => string.Empty;
+    }
+
+    private sealed class HasBinaryDataPredicate : ISpectrumPredicate
+    {
+        private readonly DetailLevel _detailLevel;
+        public HasBinaryDataPredicate(DetailLevel detailLevel) => _detailLevel = detailLevel;
+
+        public DetailLevel SuggestedDetailLevel => _detailLevel;
+        public PredicateDecision Accept(SpectrumIdentity identity) => PredicateDecision.NeedSpectrum;
+
+        public bool Accept(Spectrum spectrum) =>
+            spectrum.BinaryDataArrays.Count > 0 && spectrum.BinaryDataArrays[0].Data.Count > 0;
+
+        public string Describe() => string.Empty;
+    }
 
     [TestMethod]
     public void IndexSet_KeepsListedIndices()
@@ -210,10 +358,12 @@ public class SpectrumListFilterTests
         neg.Params.Set(CVID.MS_negative_scan);
         mixed.Spectra.Add(pos);
         mixed.Spectra.Add(neg);
-        Assert.AreEqual(0, new SpectrumListFilter(mixed,
-            new PolarityPredicate(CVID.MS_positive_scan)).SpectrumIdentity(0).Index);
-        Assert.AreEqual(1, new SpectrumListFilter(mixed,
-            new PolarityPredicate(CVID.MS_negative_scan)).SpectrumIdentity(0).Index);
+        // Assert on the native id, not Index: the filter renumbers Index to the filtered
+        // position, so both survivors report 0 and only the id says which one survived.
+        Assert.AreEqual("scan=1", new SpectrumListFilter(mixed,
+            new PolarityPredicate(CVID.MS_positive_scan)).SpectrumIdentity(0).Id);
+        Assert.AreEqual("scan=2", new SpectrumListFilter(mixed,
+            new PolarityPredicate(CVID.MS_negative_scan)).SpectrumIdentity(0).Id);
     }
 
     [TestMethod]
