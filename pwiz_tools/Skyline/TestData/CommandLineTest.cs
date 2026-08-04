@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -913,12 +912,13 @@ namespace pwiz.SkylineTestData
         /// The parquet exporter is the only report exporter that evaluates row values on more
         /// than one thread (ParquetReportExporter.PopulateChunk uses ParallelEx.For), and the
         /// databinding layer it calls into is not thread safe. The export then spins forever
-        /// with every core busy. It reproduced on roughly one run in six, so repeat the export
-        /// enough times that a miss is unlikely.
+        /// with every core busy. It reproduced on roughly one run in six in Debug and one in
+        /// three in Release, so repeat the export enough times that a miss is unlikely.
         ///
-        /// This runs SkylineCmd.exe rather than exporting in process on purpose. The failure
-        /// is a spin, not a deadlock, so an in-process export that hangs leaves threads burning
-        /// every core for the rest of the test run. In a separate process it can be killed.
+        /// The export runs in process, which means a regression leaves threads spinning for
+        /// the rest of the run: they are stuck inside a corrupted Dictionary lookup and never
+        /// reach a cancellation check, so nothing can stop them. That is accepted here in
+        /// exchange for being able to debug the hang in the test process.
         /// </summary>
         [TestMethod]
         public void ConsoleParquetReportExportTest()
@@ -943,34 +943,20 @@ namespace pwiz.SkylineTestData
         private void ExportParquetReport(string docPath, string reportName, int iteration)
         {
             string outPath = TestFilesDir.GetTestPath(string.Format(@"Rat_plasma_{0}.parquet", iteration));
-            string skylineCmdPath = Path.Combine(
-                Path.GetDirectoryName(GetType().Assembly.Location) ?? string.Empty, @"SkylineCmd.exe");
-            AssertEx.IsTrue(File.Exists(skylineCmdPath), string.Format(@"Missing {0}", skylineCmdPath));
+            string output = null;
+            // Export on a worker thread so that a hang fails this test rather than stopping
+            // the run at the point of the hang with no indication of what happened.
+            var exportThread = new Thread(() => output = RunCommand(
+                @"--in=" + docPath,
+                @"--report-name=" + reportName,
+                @"--report-file=" + outPath,
+                @"--report-format=" + ReportFormat.parquet)) { IsBackground = true };
+            exportThread.Start();
 
-            var startInfo = new ProcessStartInfo(skylineCmdPath)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                Arguments = string.Join(@" ",
-                    (@"--in=" + docPath).Quote(),
-                    (@"--report-name=" + reportName).Quote(),
-                    (@"--report-file=" + outPath).Quote(),
-                    @"--report-format=" + ReportFormat.parquet)
-            };
+            AssertEx.IsTrue(exportThread.Join(PARQUET_EXPORT_TIMEOUT_MS), string.Format(
+                @"Export of the {0} report to parquet did not finish within {1} seconds on iteration {2} of {3}. See ParquetReportExporter.PopulateChunk.",
+                reportName, PARQUET_EXPORT_TIMEOUT_MS / 1000, iteration + 1, PARQUET_EXPORT_REPEAT));
 
-            var process = Process.Start(startInfo);
-            Assert.IsNotNull(process);
-            if (!process.WaitForExit(PARQUET_EXPORT_TIMEOUT_MS))
-            {
-                process.Kill();
-                AssertEx.Fail(
-                    @"Export of the {0} report to parquet did not finish within {1} seconds on iteration {2} of {3}. See ParquetReportExporter.PopulateChunk.",
-                    reportName, PARQUET_EXPORT_TIMEOUT_MS / 1000, iteration + 1, PARQUET_EXPORT_REPEAT);
-            }
-
-            string output = process.StandardOutput.ReadToEnd();
-            AssertEx.AreEqual(0, process.ExitCode, output);
             AssertEx.IsTrue(File.Exists(outPath), output);
             FileEx.SafeDelete(outPath);
         }
