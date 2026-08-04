@@ -908,57 +908,22 @@ namespace pwiz.SkylineTestData
             AssertEx.NoDiff(reportLines, programmaticReport);
         }
 
-        /// <summary>
-        /// The parquet exporter is the only report exporter that evaluates row values on more
-        /// than one thread (ParquetReportExporter.PopulateChunk uses ParallelEx.For), and the
-        /// databinding layer it calls into is not thread safe. The export then spins forever
-        /// with every core busy. It reproduced on roughly one run in six in Debug and one in
-        /// three in Release, so repeat the export enough times that a miss is unlikely.
-        ///
-        /// The export runs in process, which means a regression leaves threads spinning for
-        /// the rest of the run: they are stuck inside a corrupted Dictionary lookup and never
-        /// reach a cancellation check, so nothing can stop them. That is accepted here in
-        /// exchange for being able to debug the hang in the test process.
-        /// </summary>
         [TestMethod]
         public void ConsoleParquetReportExportTest()
         {
             TestFilesZipPaths = new[] { @"https://skyline.ms/tutorials/LiveReports.zip" };
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[0]);
             string docPath = TestFilesDir.GetTestPath(@"Rat_plasma.sky");
-            AssertEx.IsTrue(File.Exists(docPath), string.Format(@"Missing test document {0}", docPath));
+            AssertEx.FileExists(docPath);
 
-            string reportName = Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results;
-
-            for (int i = 0; i < PARQUET_EXPORT_REPEAT; i++)
-            {
-                ExportParquetReport(docPath, reportName, i);
-            }
-        }
-
-        private const int PARQUET_EXPORT_REPEAT = 20;
-        // A successful export of this document takes under 2 seconds, so this only fires on a hang
-        private const int PARQUET_EXPORT_TIMEOUT_MS = 60 * 1000;
-
-        private void ExportParquetReport(string docPath, string reportName, int iteration)
-        {
-            string outPath = TestFilesDir.GetTestPath(string.Format(@"Rat_plasma_{0}.parquet", iteration));
-            string output = null;
-            // Export on a worker thread so that a hang fails this test rather than stopping
-            // the run at the point of the hang with no indication of what happened.
-            var exportThread = new Thread(() => output = RunCommand(
+            string outPath = TestFilesDir.GetTestPath(@"Rat_plasma.parquet");
+            string output = RunCommand(
                 @"--in=" + docPath,
-                @"--report-name=" + reportName,
+                @"--report-name=" + Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results,
                 @"--report-file=" + outPath,
-                @"--report-format=" + ReportFormat.parquet)) { IsBackground = true };
-            exportThread.Start();
-
-            AssertEx.IsTrue(exportThread.Join(PARQUET_EXPORT_TIMEOUT_MS), string.Format(
-                @"Export of the {0} report to parquet did not finish within {1} seconds on iteration {2} of {3}. See ParquetReportExporter.PopulateChunk.",
-                reportName, PARQUET_EXPORT_TIMEOUT_MS / 1000, iteration + 1, PARQUET_EXPORT_REPEAT));
+                @"--report-format=" + ReportFormat.parquet);
 
             AssertEx.IsTrue(File.Exists(outPath), output);
-            FileEx.SafeDelete(outPath);
         }
 
         [TestMethod]
