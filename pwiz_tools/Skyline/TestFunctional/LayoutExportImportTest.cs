@@ -95,27 +95,15 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Saving a layout must offer only the .sky.view extension. With an all-files entry
-        /// the file name Windows suggests as the user types could be a document, which the
-        /// layout would then overwrite.
+        /// The layout file dialogs must offer no all-files entry. With one, the file name
+        /// Windows suggests as the user types could be a document, which the save dialog
+        /// would then happily overwrite.
         /// </summary>
         private static void TestFileDialogFilters()
         {
-            // No all-files entry, and the filter also matches the p01.view files that ship
-            // with the tutorial tests
+            // The filter also matches the p01.view files that ship with the tutorial tests
             AssertEx.Contains(SkylineWindow.FILTER_VIEW, @"*" + SkylineWindow.EXT_VIEW);
             AssertEx.IsFalse(SkylineWindow.FILTER_VIEW.Contains(@"*.*"));
-
-            // Whatever name the dialog settles on, the layout is saved as ".sky.view", and
-            // never over a document. The dialog only guarantees the name ends in ".view",
-            // because it cannot tell that a ".sky.view" name already has its extension.
-            const string expected = @"C:\Folder\Doc.sky.view";
-            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(expected));
-            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(@"C:\Folder\Doc.view"));
-            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(@"C:\Folder\Doc"));
-            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(@"C:\Folder\Doc.sky"));
-            AssertEx.AreEqual(@"C:\Folder\My.Study.sky.view",
-                SkylineWindow.EnsureViewFileName(@"C:\Folder\My.Study.sky.view"));
         }
 
         /// <summary>

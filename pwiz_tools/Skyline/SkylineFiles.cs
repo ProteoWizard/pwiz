@@ -79,22 +79,19 @@ namespace pwiz.Skyline
         public const string EXT_VIEW = ".view";
 
         /// <summary>
-        /// The extension a window layout file gets when it is saved on its own.
-        /// </summary>
-        public const string EXT_SKY_VIEW = SrmDocument.EXT + EXT_VIEW;
-
-        /// <summary>
-        /// Filter for the layout file dialogs. It has no all-files entry, so that a layout
-        /// cannot be saved over a document or any other file that is not a layout. Windows
-        /// suggests matching existing file names as the user types, and an unrestricted
-        /// filter makes those suggestions dangerous.
+        /// Filter for the layout file dialogs. It has no all-files entry, which keeps the
+        /// save dialog from making it easy to overwrite something that is not a layout:
+        /// only layout files are listed, so neither the file list nor the name Windows
+        /// suggests as the user types can offer a document. It is not a guarantee - a name
+        /// typed in full is used as typed - but someone who types a document's whole name
+        /// and confirms the overwrite prompt has asked for it.
         /// <para>
-        /// The filter uses the single <see cref="EXT_VIEW"/> and not the full
-        /// <see cref="EXT_SKY_VIEW"/>, because a file dialog only understands the last
-        /// extension of a name: with a ".sky.view" filter it does not recognize that
+        /// The filter uses the single <see cref="EXT_VIEW"/> and not the ".sky.view" that
+        /// <see cref="GetViewFile"/> produces, because a file dialog only understands the
+        /// last extension of a name: with a ".sky.view" filter it does not recognize that
         /// "Doc.sky.view" already ends in the extension, and appends it a second time. Share
-        /// Document has the same two-part extension and works around it the same way. Saving
-        /// still produces a ".sky.view" name, which <see cref="EnsureViewFileName"/> guarantees.
+        /// Document has the same two-part extension and works around it the same way. A name
+        /// typed without an extension therefore gets ".view", which is equally a layout file.
         /// </para>
         /// </summary>
         public static string FILTER_VIEW
@@ -4231,7 +4228,8 @@ namespace pwiz.Skyline
             {
                 dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
                 dlg.OverwritePrompt = true;
-                dlg.DefaultExt = EXT_SKY_VIEW;
+                // No DefaultExt: the dialog takes the extension from the filter, which is
+                // the only filter, so setting one would have no effect
                 dlg.SupportMultiDottedExtensions = true;
                 dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
@@ -4239,23 +4237,8 @@ namespace pwiz.Skyline
                     dlg.FileName = GetViewFile(Path.GetFileName(DocumentFilePath));
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
-                ExportLayout(EnsureViewFileName(dlg.FileName));
+                ExportLayout(dlg.FileName);
             }
-        }
-
-        /// <summary>
-        /// Returns the path a layout gets saved to, which always ends in
-        /// <see cref="EXT_SKY_VIEW"/>. A layout must not be given the name of a document or
-        /// anything else that is not a layout, and the file dialog only guarantees that the
-        /// name ends in <see cref="EXT_VIEW"/>.
-        /// </summary>
-        public static string EnsureViewFileName(string fileName)
-        {
-            if (PathEx.HasExtension(fileName, EXT_SKY_VIEW))
-                return fileName;
-            // Replace whatever last extension the dialog settled on, so that "Doc.view"
-            // becomes "Doc.sky.view" rather than "Doc.view.sky.view"
-            return Path.ChangeExtension(fileName, null) + EXT_SKY_VIEW;
         }
 
         public void ExportLayout(string viewFilePath)
