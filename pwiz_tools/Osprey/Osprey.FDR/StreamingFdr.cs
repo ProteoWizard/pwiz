@@ -188,8 +188,14 @@ namespace pwiz.Osprey.FDR
                 var (entryIds, scores) = readFileScalars(fileKey);
                 int m = entryIds.Length;
                 var labels = new bool[m];
-                // Non-null only when stratified: marks the observations Stage 6 actually CHANGED.
-                var changedFlags = stratumBaseIds != null ? new bool[m] : null;
+                // Non-null only when stratified: the base_ids whose observations Stage 6 actually
+                // CHANGED. Filled in the scoring pass below rather than recorded positionally in a
+                // parallel bool[m] and re-read afterwards. Two reasons beyond the saved pass: the
+                // bool[] and this set used to be live at the same time, so dropping it lowers the
+                // peak; and a base_id-keyed set needs no materialized per-entry array, which is
+                // the shape that survives if this ever streams entries instead of reading them
+                // into arrays. See the admission rationale below for what "changed" means here.
+                var changedBaseIds = stratumBaseIds != null ? new HashSet<uint>() : null;
                 for (int i = 0; i < m; i++)
                 {
                     uint eid = entryIds[i];
@@ -203,8 +209,8 @@ namespace pwiz.Osprey.FDR
                         // untouched) and the sidecar score came from those same features under
                         // this same averaged model, so the recomputation reproduces it exactly.
                         // A moved peak carries rescored features, so its score differs.
-                        if (changedFlags != null && ov != scores[i])
-                            changedFlags[i] = true;
+                        if (changedBaseIds != null && ov != scores[i])
+                            changedBaseIds.Add(eid & PercolatorEntry.BASE_ID_MASK);
                         scores[i] = ov; // swap in the reconciled survivor's frozen-model score
                     }
                 }
@@ -229,17 +235,10 @@ namespace pwiz.Osprey.FDR
                 //
                 // Admitted BY BASE_ID so a target and its paired decoy always enter together.
                 // Admitting a lone target would let it auto-win its competition and inflate the
-                // null, the cross-validation grouping invariant this file depends on.
-                HashSet<uint> changedBaseIds = null;
-                if (stratumBaseIds != null)
-                {
-                    changedBaseIds = new HashSet<uint>();
-                    for (int i = 0; i < m; i++)
-                    {
-                        if (changedFlags[i])
-                            changedBaseIds.Add(entryIds[i] & PercolatorEntry.BASE_ID_MASK);
-                    }
-                }
+                // null, the cross-validation grouping invariant this file depends on. The set is
+                // complete before this point: it is filled by the scoring pass above, and every
+                // entry of this file has been through that pass. That ordering matters, because a
+                // base_id changed at a LATER entry still admits an earlier one.
 
                 // Called only from the stratified branch below, where both sets are non-null -
                 // the unstratified path builds allIdx directly and never asks. The null guards
