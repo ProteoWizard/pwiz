@@ -58,6 +58,8 @@ void PwizReader::openFile(const char* filename, bool mzSort){
                                    filename);
     try {
         fileName_ = filename;
+        // A new file gets its own verdict on whether its writer sorts peaks by m/z
+        mzOrderVerdict_.reset();
         delete fileReader_;
         fileReader_ = new MSData();
         Reader::Config readerConfig;
@@ -435,11 +437,24 @@ void PwizReader::addCharges(BiblioSpec::Spectrum& returnSpectrum,
  * BiblioSpec::Spectrum at all: it goes BuildParser -> getSpectrum(int, SpecData&) -> transferSpec,
  * and hands the raw arrays to insertPeaks, so a library built from a writer that presented some
  * other order would be stored in that order and stay that way for every consumer of the .blib.
+ *
+ * The question is settled from the first few spectra of the file rather than re-asked for every
+ * spectrum, since walking every m/z array of every file to catch the rare writer that does not sort
+ * is a cost the whole world pays for the few. The first spectrum alone will not do: early scans can
+ * precede the sample and carry almost no peaks, and a spectrum with two of them ascends half the
+ * time by chance. So the two verdicts are not symmetric - one spectrum out of order proves the
+ * writer does not sort however few peaks it holds, while peaks found in order are only believed
+ * from a spectrum with enough of them to mean it, and until one arrives the checking continues.
  */
 void PwizReader::ensureMzAscending(SpectrumInfo& specInfo)
 {
-    if (is_sorted(specInfo.data.begin(), specInfo.data.end(),
-                  [](const MZIntensityPair& a, const MZIntensityPair& b) { return a.mz < b.mz; }))
+    if (!mzOrderVerdict_.needsSpectrum())
+        return;
+
+    bool wasInOrder = is_sorted(specInfo.data.begin(), specInfo.data.end(),
+                                [](const MZIntensityPair& a, const MZIntensityPair& b) { return a.mz < b.mz; });
+    mzOrderVerdict_.record(wasInOrder, specInfo.data.size());
+    if (wasInOrder)
         return;
     sort(specInfo.data.begin(), specInfo.data.end(),
          [](const MZIntensityPair& a, const MZIntensityPair& b) { return a.mz < b.mz; });

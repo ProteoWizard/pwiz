@@ -161,6 +161,9 @@ namespace pwiz.SkylineTestData
         /// order the search lands nowhere useful and every chromatogram comes out empty, with no
         /// error. Spectra must therefore arrive m/z sorted whatever order the writer used.
         /// The fixture here is ordered by ascending intensity, one shape this has taken in practice.
+        /// Its first spectrum is short and does happen to ascend, which is the case a probe of the
+        /// first spectrum alone gets wrong: three peaks in order say nothing about the writer, and
+        /// an early scan really can precede the sample and carry almost no peaks.
         /// </summary>
         [TestMethod]
         public void TestUnsortedMzArrays()
@@ -171,20 +174,23 @@ namespace pwiz.SkylineTestData
 
             var path = TestFilesDir.GetTestPath("DataConvert5_unsorted_mz.mzML");
 
-            // Pin that the fixture still exercises the defect. Every assertion below is satisfied by
+            // Pin the shape of the fixture, both halves of it. Every assertion below is satisfied by
             // an already-sorted file, so without this the fixture could be regenerated in m/z order
             // - by an msconvert round trip, say - and the test would stay green covering nothing.
-            AssertEx.IsFalse(IsMzArrayAscendingInFile(path), path);
+            // The leading spectrum being the ordered one is just as essential: reorder the file and
+            // the test stops covering the too-few-peaks-to-mean-anything rule that keeps a short
+            // ordered spectrum from settling the question for the whole file.
+            AssertEx.IsTrue(IsMzArrayAscendingInFile(path, 0), path);
+            AssertEx.IsFalse(IsMzArrayAscendingInFile(path, 1), path);
+            AssertEx.IsFalse(IsMzArrayAscendingInFile(path, 2), path);
 
             using var msDataFile = new MsDataFileImpl(path);
-            AssertEx.AreEqual(2, msDataFile.SpectrumCount);
+            AssertEx.AreEqual(3, msDataFile.SpectrumCount);
 
-            // Sorted by m/z the peaks are the same set in every spectrum, only the intensities differ
-            var expectedMzs = new[] { 200.2, 300.3, 400.4, 500.5, 600.6, 700.7 };
             for (var i = 0; i < msDataFile.SpectrumCount; i++)
             {
                 var spectrum = msDataFile.GetSpectrum(i);
-                CollectionAssert.AreEqual(expectedMzs, spectrum.Mzs, @"spectrum " + i);
+                CollectionAssert.AreEqual(ExpectedMzs(i), spectrum.Mzs, @"spectrum " + i);
 
                 // The intensity paired with each m/z has to travel with it. Sorting the m/z array on
                 // its own would leave every value plausible and every pairing wrong, which is worse
@@ -198,16 +204,20 @@ namespace pwiz.SkylineTestData
         }
 
         /// <summary>
-        /// Read the first m/z array straight out of the mzML text and report whether it ascends.
+        /// Read one m/z array straight out of the mzML text and report whether it ascends.
         /// Deliberately does not go through <see cref="MsDataFileImpl"/>, which now sorts on read -
         /// the point is to see the order the file is actually stored in. The fixture is written
         /// uncompressed 64-bit precisely so this stays a few lines.
         /// </summary>
-        private static bool IsMzArrayAscendingInFile(string path)
+        private static bool IsMzArrayAscendingInFile(string path, int spectrumIndex)
         {
             var text = File.ReadAllText(path);
-            var arrayAt = text.IndexOf(@"name=""m/z array""", StringComparison.Ordinal);
-            AssertEx.IsTrue(arrayAt > 0, path);
+            var arrayAt = -1;
+            for (var i = 0; i <= spectrumIndex; i++)
+            {
+                arrayAt = text.IndexOf(@"name=""m/z array""", arrayAt + 1, StringComparison.Ordinal);
+                AssertEx.IsTrue(arrayAt > 0, path);
+            }
             AssertEx.IsTrue(text.LastIndexOf(@"name=""no compression""", arrayAt, StringComparison.Ordinal) > 0, path);
             AssertEx.IsTrue(text.LastIndexOf(@"name=""64-bit float""", arrayAt, StringComparison.Ordinal) > 0, path);
 
@@ -227,13 +237,34 @@ namespace pwiz.SkylineTestData
         }
 
         /// <summary>
+        /// The m/z values the fixture holds, in the order they have to come back in. The short
+        /// leading spectrum is a set of its own; the two after it share one.
+        /// </summary>
+        private static double[] ExpectedMzs(int spectrumIndex)
+        {
+            return spectrumIndex == 0
+                ? new[] { 150.1, 250.2, 350.3 }
+                : new[] { 200.2, 300.3, 400.4, 500.5, 600.6, 700.7 };
+        }
+
+        /// <summary>
         /// The intensities the fixture pairs with each m/z, independent of the order they are stored in.
         /// </summary>
         private static double ExpectedIntensity(int spectrumIndex, double mz)
         {
-            var byMz = spectrumIndex == 0
-                ? new Dictionary<double, double> { { 500.5, 10 }, { 300.3, 20 }, { 700.7, 30 }, { 200.2, 40 }, { 600.6, 50 }, { 400.4, 60 } }
-                : new Dictionary<double, double> { { 400.4, 15 }, { 700.7, 25 }, { 200.2, 35 }, { 600.6, 45 }, { 300.3, 55 }, { 500.5, 65 } };
+            Dictionary<double, double> byMz;
+            switch (spectrumIndex)
+            {
+                case 0:
+                    byMz = new Dictionary<double, double> { { 150.1, 5 }, { 250.2, 7 }, { 350.3, 9 } };
+                    break;
+                case 1:
+                    byMz = new Dictionary<double, double> { { 500.5, 10 }, { 300.3, 20 }, { 700.7, 30 }, { 200.2, 40 }, { 600.6, 50 }, { 400.4, 60 } };
+                    break;
+                default:
+                    byMz = new Dictionary<double, double> { { 400.4, 15 }, { 700.7, 25 }, { 200.2, 35 }, { 600.6, 45 }, { 300.3, 55 }, { 500.5, 65 } };
+                    break;
+            }
             return byMz[mz];
         }
 
