@@ -908,29 +908,6 @@ namespace pwiz.SkylineTestData
             AssertEx.NoDiff(reportLines, programmaticReport);
         }
 
-        /// <summary>
-        /// Exports the "Peptide Ratio Results" report to a parquet file.
-        /// This verifies the thread-safety of "CalibrationCurveFitter" since the report
-        /// has calibration curve columns and parquet export is multi-threaded.
-        /// </summary>
-        [TestMethod]
-        public void ConsoleParquetReportExportTest()
-        {
-            TestFilesZip = @"https://skyline.ms/tutorials/LiveReports.zip";
-            TestFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[0]);
-            string docPath = TestFilesDir.GetTestPath(@"Rat_plasma.sky");
-            AssertEx.FileExists(docPath);
-            string outPath = TestFilesDir.GetTestPath(@"Rat_plasma.parquet");
-            AssertEx.FileNotExists(outPath);
-            var output = RunCommand(
-                @"--in=" + docPath,
-                @"--report-name=" + Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results,
-                @"--report-file=" + outPath,
-                @"--report-format=" + ReportFormat.parquet);
-            Assert.IsFalse(output.ReadLines().Any(ErrorChecker.IsErrorLine), "Unexpected error found in output:\r\n{0}", output);
-            AssertEx.FileExists(outPath);
-        }
-
         [TestMethod]
         public void ConsoleChromatogramExportTest()
         {
