@@ -241,12 +241,12 @@ namespace pwiz.Osprey.FDR
                     }
                 }
 
+                // Called only from the stratified branch below, where both sets are non-null -
+                // the unstratified path builds allIdx directly and never asks. The null guards
+                // this started with were therefore dead, and ReSharper reported them as such.
                 bool Admit(uint baseId)
                 {
-                    if (stratumBaseIds == null)
-                        return true;
-                    return stratumBaseIds.Contains(baseId) ||
-                           (changedBaseIds != null && changedBaseIds.Contains(baseId));
+                    return stratumBaseIds.Contains(baseId) || changedBaseIds.Contains(baseId);
                 }
 
                 // Run-level: compete within this file (stratum members plus changed peaks when

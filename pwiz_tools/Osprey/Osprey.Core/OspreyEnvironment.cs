@@ -372,11 +372,12 @@ namespace pwiz.Osprey.Core
         /// in every mode; only the <see cref="Pass2ProteinCompactRetrain"/> diagnostic A/B still
         /// retrains. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
         ///
-        /// LIMITATION (experimental mode): use a FRESH <c>--output-dir</c> per mode. The
-        /// per-file 2nd-pass sidecar (.2nd-pass.fdr_scores.bin) is not tagged with the mode,
-        /// so resuming a run in an output dir written under a different mode would reuse the
-        /// other mode's cached q-values. The Part-B work tags the sidecar validity with the
-        /// mode; until then, do not switch modes within one output dir.
+        /// Switching modes within one output directory is now SAFE: the mode participates in
+        /// the resume validity key through <see cref="Pass2QValueValidityKeySuffix()"/>, so a
+        /// re-run under a different mode invalidates the previous mode's outputs instead of
+        /// adopting its cached q-values. That retires the standing "use a FRESH --output-dir
+        /// per mode" limitation, which became far more than an experimental-mode caveat once
+        /// this variable acquired a non-percolator default.
         /// </summary>
         public static readonly string Pass2QValue = NormalizePass2QValue(
             Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
@@ -616,6 +617,69 @@ namespace pwiz.Osprey.Core
                    + @";floormean=" + MeanBest2FloorMean
                    + @";floorpct=" + (MeanBest2FloorPercentile?.ToString(
                        System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
+        }
+
+        /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the peak-pick
+        /// model - which is every task from per-file scoring onward, because the pick decides
+        /// WHICH peak each precursor's row describes.
+        ///
+        /// UNCONDITIONAL, unlike <see cref="ExperimentAggValidityKeySuffix"/>, and that
+        /// difference is the point. The aggregation suffix is empty for its default arm because
+        /// that arm's output never changed; this arm's DID. The default moved from the
+        /// product-form pick to the learned model (<see cref="PickLda"/>), so "emits nothing"
+        /// already describes every output directory written before the flip. Emitting nothing
+        /// for the new default too would make a post-flip key EQUAL a pre-flip key, and the
+        /// resume driver would adopt product-form parquets as though the learned model had
+        /// produced them.
+        ///
+        /// The one-time cost is real: every output directory written before this shipped is
+        /// invalidated, so a warm re-run or a <c>-LinkFrom</c> adoption re-runs Stage 1-4. That
+        /// is the correct outcome, not a regression - those artifacts were picked by a
+        /// different model, and reusing them reports one model's peaks under the other's name.
+        ///
+        /// The arm can also be passed explicitly, because the environment is read once into a
+        /// static and cannot be flipped at run time - a test would otherwise be able to assert
+        /// only whichever arm the test process happens to be running under.
+        /// </summary>
+        public static string PickValidityKeySuffix()
+        {
+            return PickValidityKeySuffix(PickLda, PickLdaModelPath);
+        }
+
+        /// <summary>
+        /// <see cref="PickValidityKeySuffix()"/> for an explicitly supplied arm. The model PATH
+        /// participates as well as the on/off flag: <see cref="PickLdaModelPath"/> overrides the
+        /// resolution-keyed default outright, so two runs can differ in nothing else.
+        /// </summary>
+        public static string PickValidityKeySuffix(bool pickLda, string pickModelPath)
+        {
+            return @";pick=" + (pickLda ? @"lda" : @"product")
+                   + @";pickmodel=" + (string.IsNullOrEmpty(pickModelPath) ? @"none" : pickModelPath);
+        }
+
+        /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the 2nd-pass
+        /// q-value mode. UNCONDITIONAL for the same reason as
+        /// <see cref="PickValidityKeySuffix()"/>: the default moved from the removed
+        /// <c>percolator</c> retrain to <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>, so an empty
+        /// suffix would let a run adopt the other mode's cached q-values.
+        ///
+        /// This is the tagging the <see cref="Pass2QValue"/> remarks used to defer, and it
+        /// retires the "use a FRESH --output-dir per mode" limitation they carried.
+        /// </summary>
+        public static string Pass2QValueValidityKeySuffix()
+        {
+            return Pass2QValueValidityKeySuffix(Pass2QValue);
+        }
+
+        /// <summary>
+        /// <see cref="Pass2QValueValidityKeySuffix()"/> for an explicitly supplied mode, in the
+        /// normalized form <see cref="Pass2QValue"/> holds.
+        /// </summary>
+        public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
+        {
+            return @";pass2=" + normalizedPass2QValue;
         }
 
         /// <summary>

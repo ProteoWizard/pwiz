@@ -198,9 +198,15 @@ namespace pwiz.Osprey.Tasks
             // are part of it: they feed the aggregate written into this task's own Pass1Path
             // output, so a floor sweep in one directory would otherwise reuse the previous arm's
             // q as the new arm's measurement.
+            // The 2nd-pass mode belongs here even though pass 2 runs later: protein-compact is
+            // the only mode that needs the >=2-peptide stratum, and this task is where the
+            // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
+            // under transfer carries no stratum, so a protein-compact re-run that adopted it
+            // would be reading an artifact that cannot answer its question.
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
-                + OspreyEnvironment.ExperimentAggValidityKeySuffix();
+                + OspreyEnvironment.ExperimentAggValidityKeySuffix()
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)

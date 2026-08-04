@@ -162,8 +162,11 @@ namespace pwiz.Osprey.Tasks
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
-        // ValidityKey is the default (search + library hashes) -- those
-        // are the only parameters that affect per-file scoring output.
+        // ValidityKey is the default: the search and library hashes, plus
+        // the peak-pick arm the base key carries. The pick belongs to THIS
+        // stage - it chooses which candidate peak each precursor's row
+        // describes - so a re-run under a different pick model must not
+        // adopt these parquets.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
