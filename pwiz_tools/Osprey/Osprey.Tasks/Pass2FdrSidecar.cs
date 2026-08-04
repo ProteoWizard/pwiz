@@ -75,15 +75,8 @@ namespace pwiz.Osprey.Tasks
             FeatureContributions pass2Contributions = null;
 
             // OSPREY_PASS2_QVALUE selects how this 2nd pass assigns reported q-values.
-            // Log the active mode once so a run's provenance is in the log; warn on an
-            // unrecognized token (normalized to the parity-preserving percolator default).
-            if (OspreyEnvironment.Pass2QValueUnrecognized)
-            {
-                ctx.LogWarning(string.Format(
-                    "OSPREY_PASS2_QVALUE was set to an unrecognized value; using the default " +
-                    "'{0}'. Recognized modes: '{0}', '{1}'.",
-                    OspreyEnvironment.PASS2_QVALUE_PERCOLATOR, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
-            }
+            // Log the active mode once so a run's provenance is in the log. An unrecognized
+            // token never reaches here: Program aborts at startup.
             if (OspreyEnvironment.Pass2TransferQ)
             {
                 ctx.LogInfo(string.Format(
@@ -99,26 +92,37 @@ namespace pwiz.Osprey.Tasks
             // publish so the frozen dispatch below finds it instead of fail-fasting. No-op
             // when the model is already present, the mode is the default retrain, or the
             // sidecar is absent (the existing fail-fast then applies).
-            // protein-compact is intentionally NOT here: it also needs the
-            // ProteinCompactStratum, which is not yet persisted to the merge node
-            // (follow-up). Reloading only the model would log a misleading "reloaded"
-            // success and still fail-fast on the missing stratum. transfer /
-            // transfer-compete need the model alone.
+            // protein-compact needs the ProteinCompactStratum too; it rides in the same
+            // sidecar, so one reload serves all three frozen modes.
             bool wantsFrozenModel = OspreyEnvironment.Pass2TransferQ ||
-                                    OspreyEnvironment.Pass2TransferCompete;
+                                    OspreyEnvironment.Pass2TransferCompete ||
+                                    OspreyEnvironment.Pass2ProteinCompact;
             if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
-                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths, out string pass1Agg);
+                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
                 if (reloaded != null)
                 {
-                    // pass1Agg is what the TRAINING process ran under (null on a sidecar written
-                    // before the field existed). This node's own OSPREY_EXPERIMENT_AGG says
-                    // nothing about it, so carry the recorded value rather than re-reading.
-                    ctx.Publish(new FirstPassPercolatorModel { Results = reloaded, ExperimentAgg = pass1Agg });
+                    // ExperimentAgg is what the TRAINING process ran under (null on a sidecar
+                    // written before the field existed). This node's own OSPREY_EXPERIMENT_AGG
+                    // says nothing about it, so carry the recorded value rather than re-reading.
+                    ctx.Publish(new FirstPassPercolatorModel
+                        { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg });
                     ctx.LogInfo(string.Format(
                         @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
                         @"experiment aggregation: {0}).",
-                        pass1Agg ?? @"not recorded"));
+                        reloaded.ExperimentAgg ?? @"not recorded"));
+
+                    // Only publish a stratum the sidecar actually carried. Leaving it absent
+                    // keeps the existing fail-fast, which is the honest outcome: an empty
+                    // stratum would silently constrain the competition to nothing.
+                    if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
+                        !ctx.TryGet<ProteinCompactStratum>(out _))
+                    {
+                        ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
+                        ctx.LogInfo(string.Format(
+                            @"Reloaded the persisted protein-compact stratum ({0} base ids).",
+                            reloaded.StratumBaseIds.Count));
+                    }
                 }
             }
 
@@ -583,6 +587,10 @@ namespace pwiz.Osprey.Tasks
                     survivors.Add((kvp.Key, e.EntryId));
 
             var fileKeys = new List<string>(perFileEntries.Count);
+            // Pass-1 experiment q for the OFF-STRATUM peaks Stage 6 changed, read from the
+            // sidecar because the post-rescore overlay already zeroed the in-memory value. Only
+            // that set is stashed, so this stays small however many files there are.
+            var pass1ExpQByKey = new Dictionary<(string, uint), (double prec, double pep)>();
             var sidecarByKey = new Dictionary<string, string>(perFileEntries.Count, StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
@@ -688,8 +696,37 @@ namespace pwiz.Osprey.Tasks
                 (uint[] entryIds, double[] scores) ReadFile(string fileKey)
                 {
                     FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                    if (stratumBaseIds != null)
+                        StashOffStratumPass1ExperimentQ(fileKey, sidecarByKey[fileKey], eids, scs);
                     progress.Report(++nRead);
                     return (eids, scs);
+                }
+
+                // Capture the pass-1 experiment q of the off-stratum peaks Stage 6 changed, so
+                // the map-back can carry it. "Changed" is the same bit-exact test the admission
+                // uses: the recomputed frozen-model score differs from the sidecar score. The
+                // set is small, and the second sidecar pass is skipped entirely when it is empty.
+                void StashOffStratumPass1ExperimentQ(string fileKey, string sidecarPath,
+                    uint[] eids, double[] scs)
+                {
+                    var wanted = new HashSet<uint>();
+                    for (int i = 0; i < eids.Length; i++)
+                    {
+                        if (!stratumBaseIds.Contains(eids[i] & 0x7FFFFFFFu) &&
+                            survivorScore.TryGetValue((fileKey, eids[i]), out double ov) &&
+                            ov != scs[i])
+                            wanted.Add(eids[i]);
+                    }
+                    if (wanted.Count == 0)
+                        return;
+                    FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
+                    {
+                        if (wanted.Contains(rec.EntryId))
+                        {
+                            pass1ExpQByKey[(fileKey, rec.EntryId)] =
+                                (rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
+                        }
+                    });
                 }
 
                 StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
@@ -705,9 +742,33 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in perFileEntries)
                 foreach (var e in kvp.Value)
                 {
-                    if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu))
-                        continue;
                     var key = (kvp.Key, e.EntryId);
+                    if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu))
+                    {
+                        // Off-stratum survivors keep their 1st-pass q (report = pass1 U stratum
+                        // passers). Only the RUN-level q of a peak Stage 6 changed is refreshed:
+                        // that peak competed above on its recalculated score, and leaving it on
+                        // the q=1 sentinel the overlay wrote would read as a confident rejection
+                        // rather than "not yet computed". An unchanged one never competed, so it
+                        // is absent from runQ and keeps everything.
+                        //
+                        // The EXPERIMENT q is never recomputed here. It is a pass-1 property
+                        // anchored on the best-scoring peak, and reconciliation corrects peaks
+                        // TOWARD that anchor rather than moving it, so a changed peak was not the
+                        // one that set the maximum and cannot become it. Carrying the pass-1
+                        // value is therefore exact, and it is what keeps the re-scoping additive.
+                        if (!runQ.TryGetValue(key, out double rqOff))
+                            continue;
+                        e.RunPrecursorQvalue = rqOff;
+                        e.RunPeptideQvalue = rqOff;
+                        if (pass1ExpQByKey.TryGetValue(key, out var q1))
+                        {
+                            e.ExperimentPrecursorQvalue = q1.prec;
+                            e.ExperimentPeptideQvalue = q1.pep;
+                        }
+                        nMapped++;
+                        continue;
+                    }
                     if (!runQ.TryGetValue(key, out double rq))
                         continue;
                     e.RunPrecursorQvalue = rq;

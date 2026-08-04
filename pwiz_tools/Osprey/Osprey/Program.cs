@@ -261,6 +261,23 @@ namespace pwiz.Osprey
                         OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
                         OspreyEnvironment.MEAN_BEST_N_MAX));
                 }
+                // Abort, do not fall back. A run that asked for a mode it did not get would
+                // report q-values the caller never requested, under whatever output name the
+                // caller chose - and 'percolator' was removed, so existing sweep scripts still
+                // pass it. Checked here rather than at the merge node so it costs seconds
+                // instead of a full Stage 1-5.
+                if (OspreyEnvironment.Pass2QValueUnrecognized)
+                {
+                    LogError(string.Format(
+                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}', " +
+                        "'{2}'. Unset it for the default ('{2}'). The 'percolator' mode was " +
+                        "REMOVED: it retrained the 2nd-pass SVM on a compaction-depleted decoy " +
+                        "pool, which reports anti-conservative q-values.",
+                        OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                        OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
+                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
+                    return 1;
+                }
                 LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
