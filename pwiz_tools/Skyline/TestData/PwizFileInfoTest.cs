@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -153,88 +152,6 @@ namespace pwiz.SkylineTestData
             {
                 AssertEx.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(idWithoutFunction), idWithoutFunction);
             }
-        }
-
-        /// <summary>
-        /// Ascending m/z is nowhere required by the mzML specification, but it is what every consumer
-        /// assumes, and extraction binary searches the m/z axis - so on a file presented in any other
-        /// order the search lands nowhere useful and every chromatogram comes out empty, with no
-        /// error. Spectra must therefore arrive m/z sorted whatever order the writer used.
-        /// The fixture here is ordered by ascending intensity, one shape this has taken in practice.
-        /// </summary>
-        [TestMethod]
-        public void TestUnsortedMzArrays()
-        {
-            // Distinct suffix: TestWatersCalibrationSpectrum extracts this same zip, and the
-            // TestFilesDir constructor deletes the extraction directory it finds
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\WatersLockmassMzml.zip", suffix: "-unsorted");
-
-            var path = TestFilesDir.GetTestPath("DataConvert5_unsorted_mz.mzML");
-
-            // Pin that the fixture still exercises the defect. Every assertion below is satisfied by
-            // an already-sorted file, so without this the fixture could be regenerated in m/z order
-            // - by an msconvert round trip, say - and the test would stay green covering nothing.
-            AssertEx.IsFalse(IsMzArrayAscendingInFile(path), path);
-
-            using var msDataFile = new MsDataFileImpl(path);
-            AssertEx.AreEqual(2, msDataFile.SpectrumCount);
-
-            // Sorted by m/z the peaks are the same set in every spectrum, only the intensities differ
-            var expectedMzs = new[] { 200.2, 300.3, 400.4, 500.5, 600.6, 700.7 };
-            for (var i = 0; i < msDataFile.SpectrumCount; i++)
-            {
-                var spectrum = msDataFile.GetSpectrum(i);
-                CollectionAssert.AreEqual(expectedMzs, spectrum.Mzs, @"spectrum " + i);
-
-                // The intensity paired with each m/z has to travel with it. Sorting the m/z array on
-                // its own would leave every value plausible and every pairing wrong, which is worse
-                // than the defect being fixed.
-                for (var j = 0; j < spectrum.Mzs.Length; j++)
-                {
-                    AssertEx.AreEqual(ExpectedIntensity(i, spectrum.Mzs[j]), spectrum.Intensities[j],
-                        string.Format(@"spectrum {0} m/z {1}", i, spectrum.Mzs[j]));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Read the first m/z array straight out of the mzML text and report whether it ascends.
-        /// Deliberately does not go through <see cref="MsDataFileImpl"/>, which now sorts on read -
-        /// the point is to see the order the file is actually stored in. The fixture is written
-        /// uncompressed 64-bit precisely so this stays a few lines.
-        /// </summary>
-        private static bool IsMzArrayAscendingInFile(string path)
-        {
-            var text = File.ReadAllText(path);
-            var arrayAt = text.IndexOf(@"name=""m/z array""", StringComparison.Ordinal);
-            AssertEx.IsTrue(arrayAt > 0, path);
-            AssertEx.IsTrue(text.LastIndexOf(@"name=""no compression""", arrayAt, StringComparison.Ordinal) > 0, path);
-            AssertEx.IsTrue(text.LastIndexOf(@"name=""64-bit float""", arrayAt, StringComparison.Ordinal) > 0, path);
-
-            var open = text.IndexOf(@"<binary>", arrayAt, StringComparison.Ordinal) + @"<binary>".Length;
-            var close = text.IndexOf(@"</binary>", open, StringComparison.Ordinal);
-            var bytes = Convert.FromBase64String(text.Substring(open, close - open));
-
-            var previous = double.NegativeInfinity;
-            for (var i = 0; i < bytes.Length; i += sizeof(double))
-            {
-                var mz = BitConverter.ToDouble(bytes, i);
-                if (mz < previous)
-                    return false;
-                previous = mz;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// The intensities the fixture pairs with each m/z, independent of the order they are stored in.
-        /// </summary>
-        private static double ExpectedIntensity(int spectrumIndex, double mz)
-        {
-            var byMz = spectrumIndex == 0
-                ? new Dictionary<double, double> { { 500.5, 10 }, { 300.3, 20 }, { 700.7, 30 }, { 200.2, 40 }, { 600.6, 50 }, { 400.4, 60 } }
-                : new Dictionary<double, double> { { 400.4, 15 }, { 700.7, 25 }, { 200.2, 35 }, { 600.6, 45 }, { 300.3, 55 }, { 500.5, 65 } };
-            return byMz[mz];
         }
 
         private static void VerifyLockmassSpectrum(string path, bool expectLabeled)

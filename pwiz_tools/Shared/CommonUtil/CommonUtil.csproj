@@ -129,7 +129,6 @@
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />
     <Compile Include="Collections\IntegerList.cs" />
-    <Compile Include="Collections\ParallelDoubleSort.cs" />
     <Compile Include="Collections\MappedList.cs" />
     <Compile Include="Collections\NameValueParameters.cs" />
     <Compile Include="CommonApplicationSettings.cs" />

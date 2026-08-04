@@ -29,7 +29,6 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -690,10 +689,17 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool Sort(double[] keys, params double[][] secondaryArrays)
         {
-            // Assumes keys contains no NaN - see ParallelDoubleSort.Sort, which this defers to,
-            // for what NaN input does. If a future caller cannot guarantee NaN-free input, route
-            // through the generic Sort<TItem> overload instead - it goes through
-            // Comparer<double>.Default and orders NaN consistently with Array.Sort.
+            // Assumes keys contains no NaN. IsSorted and IntrosortDouble below both use
+            // raw < and > comparisons, which return false on any NaN-involved pair. The
+            // partition loop still terminates (no hang, no OOB), but on NaN input the
+            // result is silently wrong: either IsSorted returns a false positive and we
+            // skip the sort entirely, or a NaN pivot makes the partition meaningless
+            // and the recursion returns an incorrectly ordered array. Today's callers
+            // sort m/z arrays during chromatogram extraction, where any NaN would have
+            // aborted the import well upstream (vendor reader, centroider, peak picker).
+            // If a future caller cannot guarantee NaN-free input, route through the
+            // generic Sort<TItem> overload instead - it goes through Comparer<double>.
+            // Default and orders NaN consistently with Array.Sort.
             if (keys == null || keys.Length < 2)
                 return true;
             if (IsSorted(keys))
@@ -721,7 +727,8 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            return ParallelDoubleSort.Sort(keys, sec0, sec1);
+            IntrosortDouble(keys, sec0, sec1, 0, keys.Length - 1);
+            return false;
         }
 
         /// <summary>
@@ -746,7 +753,110 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool IsSorted(double[] array)
         {
-            return ParallelDoubleSort.IsSorted(array);
+            if (array == null || array.Length < 2)
+                return true;
+            for (int i = 1; i < array.Length; i++)
+            {
+                if (array[i - 1] > array[i])
+                    return false;
+            }
+            return true;
+        }
+
+        private const int INSERTION_SORT_THRESHOLD = 16;
+
+        // Classic introsort-shaped quicksort over up to three parallel double[] arrays.
+        // Iterative on the larger partition to bound stack depth; insertion sort for small
+        // subranges. a and b may be null (handled with a branch per swap; predictable since
+        // null-ness is loop-invariant).
+        private static void IntrosortDouble(double[] keys, double[] a, double[] b, int lo, int hi)
+        {
+            while (hi - lo >= INSERTION_SORT_THRESHOLD)
+            {
+                int mid = lo + ((hi - lo) >> 1);
+
+                // Median-of-three: arrange keys at lo, mid, hi so keys[lo] <= keys[mid] <= keys[hi].
+                if (keys[mid] < keys[lo])
+                    Swap3(keys, a, b, lo, mid);
+                if (keys[hi] < keys[lo])
+                    Swap3(keys, a, b, lo, hi);
+                if (keys[hi] < keys[mid])
+                    Swap3(keys, a, b, mid, hi);
+
+                double pivot = keys[mid];
+                // Move pivot out of the way to hi-1.
+                Swap3(keys, a, b, mid, hi - 1);
+
+                int i = lo;
+                int j = hi - 1;
+                while (true)
+                {
+                    while (keys[++i] < pivot) { }
+                    while (keys[--j] > pivot) { }
+                    if (i >= j)
+                        break;
+                    Swap3(keys, a, b, i, j);
+                }
+                // Restore pivot.
+                Swap3(keys, a, b, i, hi - 1);
+
+                // Recurse on smaller side, loop on larger (limits stack depth to O(log N)).
+                if (i - lo < hi - i)
+                {
+                    IntrosortDouble(keys, a, b, lo, i - 1);
+                    lo = i + 1;
+                }
+                else
+                {
+                    IntrosortDouble(keys, a, b, i + 1, hi);
+                    hi = i - 1;
+                }
+            }
+            InsertionSortDouble(keys, a, b, lo, hi);
+        }
+
+        private static void InsertionSortDouble(double[] keys, double[] a, double[] b, int lo, int hi)
+        {
+            for (int i = lo + 1; i <= hi; i++)
+            {
+                double kv = keys[i];
+                double av = a != null ? a[i] : 0;
+                double bv = b != null ? b[i] : 0;
+                int j = i - 1;
+                while (j >= lo && keys[j] > kv)
+                {
+                    keys[j + 1] = keys[j];
+                    if (a != null)
+                        a[j + 1] = a[j];
+                    if (b != null)
+                        b[j + 1] = b[j];
+                    j--;
+                }
+                keys[j + 1] = kv;
+                if (a != null)
+                    a[j + 1] = av;
+                if (b != null)
+                    b[j + 1] = bv;
+            }
+        }
+
+        private static void Swap3(double[] keys, double[] a, double[] b, int i, int j)
+        {
+            double t = keys[i];
+            keys[i] = keys[j];
+            keys[j] = t;
+            if (a != null)
+            {
+                t = a[i];
+                a[i] = a[j];
+                a[j] = t;
+            }
+            if (b != null)
+            {
+                t = b[i];
+                b[i] = b[j];
+                b[j] = t;
+            }
         }
 
         /// <summary>

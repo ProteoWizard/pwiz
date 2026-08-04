@@ -274,23 +274,7 @@ double Spectrum::getSignalToNoise() {
 
 // deletes existing peaks
 void Spectrum::setRawPeaks(const vector<PEAK_T>& newpeaks) {
-    rawPeaks_.assign(newpeaks.begin(), newpeaks.end());
-
-    // Ascending m/z is nowhere required of a writer, but everything downstream assumes it:
-    // binPeaks() merges a peak into the previous bin only when the two are adjacent in the array,
-    // and removePrecursorPeaks() binary searches the m/z axis. Peaks presented in some other order
-    // therefore leave same-bin peaks unmerged and erase the wrong range around the precursor, with
-    // nothing reported either way.
-    // This covers spectra arriving from a .blib and from Spectrum copies. Spectra read through
-    // PwizReader are ordered there instead, on the SpectrumInfo, because BlibBuild never builds a
-    // Spectrum at all - see PwizReader::ensureMzAscending.
-    // The check is a single pass; the sort only runs for a writer that did not present m/z order.
-    if (!is_sorted(rawPeaks_.begin(), rawPeaks_.end(),
-                   [](const PEAK_T& a, const PEAK_T& b) { return a.mz < b.mz; }))
-    {
-        sort(rawPeaks_.begin(), rawPeaks_.end(),
-             [](const PEAK_T& a, const PEAK_T& b) { return a.mz < b.mz; });
-    }
+    rawPeaks_.assign(newpeaks.begin(), newpeaks.end()); 
 }
 
 void Spectrum::setProcessedPeaks(const vector<PEAK_T>& newpeaks) {

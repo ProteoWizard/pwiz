@@ -150,11 +150,7 @@ class PwizReader : public BiblioSpec::SpecFileReader {
      * Copy the information from the Pwiz spectrum to the BiblioSpec
      * SpecData.
      */
-    // Ascending m/z is nowhere required of a writer but is assumed everywhere downstream; both
-    // transfer paths below share the SpectrumInfo, so it is corrected there.
-    static void ensureMzAscending(SpectrumInfo& specInfo);
-
-    void transferSpec(BiblioSpec::SpecData& returnData,
+    void transferSpec(BiblioSpec::SpecData& returnData, 
                       unique_ptr<SpectrumInfo>& specInfo);
 
     /**
