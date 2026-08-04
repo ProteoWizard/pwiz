@@ -48,6 +48,8 @@ using pwiz.Skyline.Util.Extensions;
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 [assembly: InternalsVisibleTo("Test")]
+[assembly: InternalsVisibleTo("TestFunctional")]
+[assembly: InternalsVisibleTo("TestTutorial")]
 
 namespace pwiz.Skyline
 {
@@ -68,9 +70,15 @@ namespace pwiz.Skyline
         public const int EXIT_CODE_FAILURE_TO_START = 1;
         public const int EXIT_CODE_RAN_WITH_ERRORS = 2;
         public const string OPEN_DOCUMENT_ARG = "--opendoc";
+        public const string START_PAGE_ARG = "--start-page";
+
+        // Set by --start-page=true|false on the command line. Null when the flag
+        // was not specified. When set, overrides Settings.Default.ShowStartupForm and
+        // (when true) can also surface the StartPage modally after --opendoc.
+        public static bool? StartPageOverride { get; private set; }
 
         public static string MainToolServiceName { get; private set; }
-        
+
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
@@ -178,10 +186,23 @@ namespace pwiz.Skyline
             SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
-            // For testing and debugging Skyline command-line interface
-            bool openDoc = args != null && args.Length > 0 &&
-                           (args[0] == OPEN_DOCUMENT_ARG || args[0].StartsWith(OPEN_DOCUMENT_ARG + @"="));
-            if (args != null && args.Length > 0 && !openDoc) 
+            // For testing and debugging Skyline command-line interface.
+            // Scan every arg, not just args[0], so --opendoc composes order-independently
+            // with --start-page (and any future GUI-launch flag).
+            bool openDoc = args != null && args.Any(a =>
+                a == OPEN_DOCUMENT_ARG || a.StartsWith(OPEN_DOCUMENT_ARG + @"="));
+            try
+            {
+                StartPageOverride = ParseStartPageArg(args);
+            }
+            catch (ArgumentException ex)
+            {
+                Common.SystemUtil.PInvoke.Kernel32.AttachConsoleToParentProcess();
+                Console.Error.WriteLine(ex.Message);
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+            bool isGuiLaunch = openDoc || StartPageOverride.HasValue;
+            if (args != null && args.Length > 0 && !isGuiLaunch)
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {
@@ -310,17 +331,35 @@ namespace pwiz.Skyline
                     }
                 }
                 SystemEvents.DisplaySettingsChanged += SystemEventsOnDisplaySettingsChanged;
+
+                // Start the tool service before the main window is created, so the JSON/MCP server can
+                // introspect and drive the StartPage too (the main window does not exist while the
+                // StartPage is showing). UI-thread marshaling goes through InvokeOnUiThread /
+                // BeginInvokeOnUiThread, which target whichever of those windows is currently up. Only the JSON
+                // server actually comes up here: with no main window yet there is nothing for the legacy
+                // ToolService to bind to, and nothing needs it until an external tool is run.
+                MainToolServiceName = Guid.NewGuid().ToString();
+                if (Settings.Default.EnableMcpAutoConnect)
+                {
+                    StartToolService();
+                    MainJsonToolServer.WriteConnectionInfo();
+                }
+
                 // Careful, a throw out of the SkylineWindow constructor without this
                 // catch causes Skyline just to appear to silently never start.  Makes for
                 // some difficult debugging.
                 try
                 {
                     var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
-                    if ((activationArgs != null &&
-                        activationArgs.ActivationData != null &&
-                        activationArgs.ActivationData.Length != 0) ||
-                        openDoc ||
-                        !Settings.Default.ShowStartupForm)
+                    bool activationDataPresent = activationArgs != null &&
+                                                 activationArgs.ActivationData != null &&
+                                                 activationArgs.ActivationData.Length != 0;
+                    // Activation data and --opendoc always go straight to MainWindow.
+                    // Otherwise, --start-page=true|false overrides the user preference,
+                    // and without the flag the existing ShowStartupForm setting wins.
+                    bool showStartPage = !activationDataPresent && !openDoc &&
+                                         (StartPageOverride ?? Settings.Default.ShowStartupForm);
+                    if (!showStartPage)
                     {
                         MainWindow = new SkylineWindow(args);
                     }
@@ -357,12 +396,6 @@ namespace pwiz.Skyline
                 if (!UnitTest)  // Covers Unit and Functional tests
                     SendAnalyticsHitAsync();
 
-                MainToolServiceName = Guid.NewGuid().ToString();
-                if (Settings.Default.EnableMcpAutoConnect)
-                {
-                    StartToolService();
-                    MainJsonToolServer.WriteConnectionInfo();
-                }
                 // NOTE: Nothing after Application.Run() reliably executes.
                 // SkylineWindow.OnHandleDestroyed calls Process.Kill() to avoid native
                 // vendor DLL errors. All shutdown cleanup must happen before that point.
@@ -379,6 +412,33 @@ namespace pwiz.Skyline
             MainWindow = null;
             SystemEvents.DisplaySettingsChanged -= SystemEventsOnDisplaySettingsChanged;
             return EXIT_CODE_SUCCESS;
+        }
+
+        // Returns null when --start-page is absent, true/false for --start-page=true|false.
+        // Throws ArgumentException for --start-page with no value or an unparseable value.
+        internal static bool? ParseStartPageArg(string[] args)
+        {
+            if (args == null)
+                return null;
+            bool? result = null;
+            foreach (var a in args)
+            {
+                if (a.Equals(START_PAGE_ARG, StringComparison.OrdinalIgnoreCase) ||
+                    a.StartsWith(START_PAGE_ARG + @"=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var eq = a.IndexOf('=');
+                    var val = eq >= 0 ? a.Substring(eq + 1) : string.Empty;
+                    if (val.Equals(@"true", StringComparison.OrdinalIgnoreCase))
+                        result = true;
+                    else if (val.Equals(@"false", StringComparison.OrdinalIgnoreCase))
+                        result = false;
+                    else
+                        throw new ArgumentException(string.Format(
+                            SkylineResources.Program_ParseStartPageArg_Invalid_argument__0___Use__start_page_true_or__start_page_false,
+                            a));
+                }
+            }
+            return result;
         }
 
         private static void SystemEventsOnDisplaySettingsChanged(object sender, EventArgs eventArgs)
@@ -518,30 +578,43 @@ namespace pwiz.Skyline
             return SendGa4AnalyticsHit(out _, useDebugUrl);
         }
 
+        /// <summary>
+        /// Starts the JSON tool server -- the connector / MCP surface -- and, when there is a main window, the
+        /// legacy BinaryFormatter <see cref="ToolService"/> alongside it. The two are independent: the JSON server
+        /// needs nothing from the legacy one, so it can run BEFORE the main window exists (while the StartPage is
+        /// showing), which is what lets the MCP introspect and drive the StartPage.
+        ///
+        /// <para>The legacy service, by contrast, is inseparable from the main window -- it pushes that window's
+        /// document-change notifications -- so it starts if and only if the window is there to subscribe to. That
+        /// is no restriction in practice: the only thing that needs it is an external tool with a
+        /// $(SkylineConnection) argument (see ToolDescriptionRunUI), which is run from the main window.</para>
+        /// </summary>
         public static void StartToolService()
         {
-            if (MainToolService == null)
+            if (MainJsonToolServer == null)
+            {
+                MainJsonToolServer = new JsonToolServer(MainToolServiceName);
+                MainJsonToolServer.Start();
+            }
+            if (MainWindow != null && MainToolService == null)
             {
                 MainToolService = new ToolService(MainToolServiceName, MainWindow);
-                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
                 MainToolService.RunAsync();
-
-                MainJsonToolServer = new JsonToolServer(MainToolService, MainToolServiceName);
-                MainJsonToolServer.Start();
+                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
             }
         }
 
         public static void StopToolService()
         {
+            if (MainJsonToolServer != null)
+            {
+                MainJsonToolServer.Dispose();
+                MainJsonToolServer = null;
+            }
             if (MainToolService != null)
             {
-                if (MainJsonToolServer != null)
-                {
-                    MainJsonToolServer.Dispose();
-                    MainJsonToolServer = null;
-                }
-
-                MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                if (MainWindow != null)
+                    MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
                 MainToolService.Stop();
                 MainToolService = null;
             }
@@ -654,6 +727,16 @@ namespace pwiz.Skyline
                 {
                     Settings.Default.Upgrade();
                     Settings.Default.SettingsUpgradeRequired = false;
+                    Settings.Default.Save();
+                }
+
+                // Seed ShowHeatmapFullScan from the pre-3-button SumScansFullScan on
+                // first run so existing users who had stick-only (SumScansFullScan=true)
+                // don't get a jarring 4-pane default.
+                if (!Settings.Default.ShowHeatmapFullScanSeeded)
+                {
+                    Settings.Default.ShowHeatmapFullScan = !Settings.Default.SumScansFullScan;
+                    Settings.Default.ShowHeatmapFullScanSeeded = true;
                     Settings.Default.Save();
                 }
             }
@@ -798,6 +881,9 @@ namespace pwiz.Skyline
 
         public static SkylineWindow MainWindow { get; private set; }
         public static StartPage StartWindow { get; private set; }
+
+        // The UI-thread marshaling primitives (UiThreadWindow, InvokeOnUiThread, BeginInvokeOnUiThread) moved
+        // to pwiz.Skyline.ToolsUI.JsonUiService, which now owns the connector's UI-thread machinery.
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
         

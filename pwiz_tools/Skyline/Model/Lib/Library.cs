@@ -370,12 +370,33 @@ namespace pwiz.Skyline.Model.Lib
 
         public void ReleaseLibraries(params LibrarySpec[] specs)
         {
+            // Collect streams to close inside the lock, then close OUTSIDE the lock.
+            // CloseStream() drops into the ConnectionPool, which has its own lock —
+            // doing that while holding _loadedLibraries widens the lock scope across an
+            // unbounded operation and creates an A/B deadlock risk with any caller that
+            // takes the pool lock first.
+            List<IPooledStream> streamsToClose = null;
             lock (_loadedLibraries)
             {
                 foreach (var spec in specs)
                 {
-                    _loadedLibraries.Remove(GetKey(spec));
+                    var key = GetKey(spec);
+                    if (_loadedLibraries.TryGetValue(key, out var library))
+                    {
+                        streamsToClose ??= new List<IPooledStream>();
+                        streamsToClose.AddRange(library.ReadStreams);
+                    }
+                    _loadedLibraries.Remove(key);
                 }
+            }
+            if (streamsToClose != null)
+            {
+                // Close pooled streams (e.g. SQLite connections held by BiblioSpec) so
+                // callers that delete the underlying file right after release don't have
+                // to fall back to GC.Collect to drop the unreferenced PooledSqliteConnection's
+                // finalizer-only handle.
+                foreach (var stream in streamsToClose)
+                    stream.CloseStream();
             }
         }
 
@@ -862,6 +883,38 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
         /// <returns>True if ion mobility information was retrieved successfully</returns>
         public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities);
+
+        private ReadOnlyCollection<eIonMobilityUnits> _distinctIonMobilityUnits;
+
+        /// <summary>
+        /// Returns the distinct non-none ion mobility units present anywhere in this library,
+        /// lazy-computed and cached on first call. Used when deducing units for an explicit
+        /// ion mobility value that lacks them. Default implementation scans via
+        /// <see cref="TryGetIonMobilityInfos(LibKey[], int, out LibraryIonMobilityInfo)"/> with
+        /// null targets (skipping the per-key index lookup); subclasses may override to query
+        /// the underlying store more efficiently. The cache is wrapped in a
+        /// <see cref="ReadOnlyCollection{T}"/> so callers cannot mutate it via downcast.
+        /// </summary>
+        public virtual IReadOnlyCollection<eIonMobilityUnits> GetDistinctIonMobilityUnits()
+        {
+            if (_distinctIonMobilityUnits != null)
+                return _distinctIonMobilityUnits;
+            var result = new HashSet<eIonMobilityUnits>();
+            for (var i = 0; TryGetIonMobilityInfos(null, i, out var infos); i++)
+            {
+                if (infos == null)
+                    continue;
+                foreach (var entries in infos.GetIonMobilityDict().Values)
+                {
+                    foreach (var im in entries)
+                    {
+                        if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(im.IonMobility.Units))
+                            result.Add(im.IonMobility.Units);
+                    }
+                }
+            }
+            return _distinctIonMobilityUnits = new ReadOnlyCollection<eIonMobilityUnits>(result.ToArray());
+        }
 
         /// <summary>
         /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This

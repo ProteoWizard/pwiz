@@ -23,10 +23,11 @@ using System.Linq;
 using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -249,19 +250,19 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// If the spectrum has only one collision energy, then return that collision energy.
-        /// Otherwise, return null.
+        /// Returns the collision energies found across the spectrum's precursor levels as a list (one
+        /// entry per level, so the same value can repeat), or null if the spectrum reports none.
         /// </summary>
-        private static double? GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
+        private static FormattableList<PositiveNumber> GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
         {
-            var collisionEnergies = spectrumMetadata.GetPrecursors(1).Select(precursor => precursor.CollisionEnergy)
-                .OfType<double>().Distinct().ToList();
-            if (collisionEnergies.Count == 1)
+            var collisionEnergies = GetMsLevelValues(spectrumMetadata, precursor => precursor.CollisionEnergy)
+                .OfType<double>().Select(ce => new PositiveNumber(ce)).ToList();
+            if (collisionEnergies.Count == 0)
             {
-                return collisionEnergies[0];
+                return null;
             }
 
-            return null;
+            return new FormattableList<PositiveNumber>(collisionEnergies);
         }
 
         private static double? GetIsolationWindowWidth(IEnumerable<SpectrumPrecursor> precursors)
@@ -300,26 +301,42 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return null;
         }
         
-        private static string GetDissociationMethod(SpectrumMetadata spectrumMetadata)
+        /// <summary>
+        /// Returns a list of the dissociation methods for the spectrum. This will typically be one dissociation method per MS Level.
+        /// So, if the MS1 dissociation method was CID and the MS2 dissociation method was HCD, this would return ["CID", "HCD"]
+        /// If the MS1 and MS2 levels both had "CID" dissociation method, then this would return ["CID", "CID"].
+        /// In the rare situation where a particular MS Level had more than one dissociation method, the list returned would be a flattened list
+        /// of the unique dissociation methods found at each level.
+        /// </summary>
+        private static ListColumnValue<string> GetDissociationMethod(SpectrumMetadata spectrumMetadata)
         {
             if (spectrumMetadata.MsLevel <= 1)
             {
                 return null;
             }
 
-            var dissociationMethods  = Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
-                .SelectMany(spectrumMetadata.GetPrecursors).Select(precursor => precursor.DissociationMethod)
-                .Where(method => !string.IsNullOrEmpty(method)).Distinct().ToList();
+            var dissociationMethods = GetMsLevelValues(spectrumMetadata, precursor => precursor.DissociationMethod);
             if (dissociationMethods.Count == 0)
             {
                 return null;
             }
+            return ListColumnValue.FromItems(dissociationMethods);
+        }
 
-            if (dissociationMethods.Count == 1)
-            {
-                return dissociationMethods[0];
-            }
-            return TextUtil.SpaceSeparate(dissociationMethods);
+
+        /// <summary>
+        /// Returns a list of the unique values of a property at each MS Level.
+        /// </summary>
+        private static IList<T> GetMsLevelValues<T>(SpectrumMetadata spectrumMetadata,
+            Func<SpectrumPrecursor, T> getValueFunc)
+        {
+            return Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
+                .Select(level =>
+                    spectrumMetadata.GetPrecursors(level).Select(getValueFunc).Where(value =>
+                            value is string str ? !string.IsNullOrEmpty(str) : value != null)
+                        .Distinct())
+                .SelectMany(list => list)
+                .ToList();
         }
 
         /// <summary>

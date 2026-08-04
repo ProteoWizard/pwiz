@@ -437,8 +437,19 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
                 var variableTargetPeptides = validPoints.Select(pt =>
                     new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y ?? 0, true)).ToList();
-                var variableOrigPeptides =
-                    validPoints.Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.X.Value, true)).ToList();
+                IList<MeasuredRetentionTime> variableOrigPeptides;
+                if (IsRunToRun)
+                {
+                    // For run-to-run regression, pass in the points from the X-axis so that FindThreshold can identify the missing
+                    // points whose retention time is zero
+                    variableOrigPeptides = validPoints
+                        .Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.X.Value, true)).ToList();
+                }
+                else
+                {
+                    // In score-to-run mode, zero is not a missing value, so pass null for variableOrigPeptides
+                    variableOrigPeptides = null;
+                }
 
                 var outlierIndexes = new HashSet<int>();
                 RetentionTimeStatistics statisticsRefined = null;

@@ -25,7 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Net;
-using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -127,6 +127,8 @@ namespace pwiz.Skyline.Util
         ICollection<TItem> CreateEmptyList();
 
         bool ContainsKey(string key);
+
+        string FileExtension { get; }
     }
 
     /// <summary>
@@ -656,16 +658,205 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Use when you have more than just one other array to sort. Otherwise, consider using Linq
+        /// Use when you have more than just one other array to sort. Otherwise, consider using Linq.
+        /// Returns true if the already-sorted fast path was taken (no sort needed).
         /// </summary>
-        public static void Sort<TItem>(TItem[] array, params TItem[][] secondaryArrays)
+        public static bool Sort<TItem>(TItem[] array, params TItem[][] secondaryArrays)
         {
+            // Fast path: many spectra arrive in m/z order and need no sort.
+            if (IsSorted(array))
+                return true;
+
             int[] sortIndexes;
             Sort(array, out sortIndexes);
             int len = array.Length;
             TItem[] buffer = new TItem[len];
-            foreach (var secondaryArray in secondaryArrays.Where(a => a != null))
-                ApplyOrder(sortIndexes, secondaryArray, buffer);
+            if (secondaryArrays != null)
+            {
+                foreach (var secondaryArray in secondaryArrays.Where(a => a != null))
+                    ApplyOrder(sortIndexes, secondaryArray, buffer);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Sort a key array and up to two parallel secondary arrays together, in place,
+        /// with no intermediate index array and no LINQ allocations. Replaces the generic
+        /// SortWithOrderBy path on the chromatogram-extraction hot path (Bruker TIMS etc.),
+        /// which allocated two index arrays, a key-array clone, and a LINQ OrderedEnumerable
+        /// per spectrum.
+        /// Returns true if the already-sorted fast path was taken (no sort needed).
+        /// </summary>
+        public static bool Sort(double[] keys, params double[][] secondaryArrays)
+        {
+            // Assumes keys contains no NaN. IsSorted and IntrosortDouble below both use
+            // raw < and > comparisons, which return false on any NaN-involved pair. The
+            // partition loop still terminates (no hang, no OOB), but on NaN input the
+            // result is silently wrong: either IsSorted returns a false positive and we
+            // skip the sort entirely, or a NaN pivot makes the partition meaningless
+            // and the recursion returns an incorrectly ordered array. Today's callers
+            // sort m/z arrays during chromatogram extraction, where any NaN would have
+            // aborted the import well upstream (vendor reader, centroider, peak picker).
+            // If a future caller cannot guarantee NaN-free input, route through the
+            // generic Sort<TItem> overload instead - it goes through Comparer<double>.
+            // Default and orders NaN consistently with Array.Sort.
+            if (keys == null || keys.Length < 2)
+                return true;
+            if (IsSorted(keys))
+                return true;
+
+            double[] sec0 = null, sec1 = null;
+            int nsec = 0;
+            if (secondaryArrays != null)
+            {
+                foreach (var sa in secondaryArrays)
+                {
+                    if (sa == null)
+                        continue;
+                    if (nsec == 0)
+                        sec0 = sa;
+                    else if (nsec == 1)
+                        sec1 = sa;
+                    else
+                    {
+                        // Rare: more than two non-null secondary arrays. Fall back to the
+                        // generic index-based path for correctness.
+                        return Sort<double>(keys, secondaryArrays);
+                    }
+                    nsec++;
+                }
+            }
+
+            IntrosortDouble(keys, sec0, sec1, 0, keys.Length - 1);
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="array"/> is in non-decreasing order.
+        /// </summary>
+        public static bool IsSorted<TItem>(TItem[] array)
+        {
+            if (array == null || array.Length < 2)
+                return true;
+            var comparer = Comparer<TItem>.Default;
+            for (int i = 1; i < array.Length; i++)
+            {
+                if (comparer.Compare(array[i - 1], array[i]) > 0)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="array"/> is in non-decreasing order. Typed overload
+        /// avoids the <see cref="Comparer{T}.Default"/> virtual call per element in the hot path.
+        /// </summary>
+        public static bool IsSorted(double[] array)
+        {
+            if (array == null || array.Length < 2)
+                return true;
+            for (int i = 1; i < array.Length; i++)
+            {
+                if (array[i - 1] > array[i])
+                    return false;
+            }
+            return true;
+        }
+
+        private const int INSERTION_SORT_THRESHOLD = 16;
+
+        // Classic introsort-shaped quicksort over up to three parallel double[] arrays.
+        // Iterative on the larger partition to bound stack depth; insertion sort for small
+        // subranges. a and b may be null (handled with a branch per swap; predictable since
+        // null-ness is loop-invariant).
+        private static void IntrosortDouble(double[] keys, double[] a, double[] b, int lo, int hi)
+        {
+            while (hi - lo >= INSERTION_SORT_THRESHOLD)
+            {
+                int mid = lo + ((hi - lo) >> 1);
+
+                // Median-of-three: arrange keys at lo, mid, hi so keys[lo] <= keys[mid] <= keys[hi].
+                if (keys[mid] < keys[lo])
+                    Swap3(keys, a, b, lo, mid);
+                if (keys[hi] < keys[lo])
+                    Swap3(keys, a, b, lo, hi);
+                if (keys[hi] < keys[mid])
+                    Swap3(keys, a, b, mid, hi);
+
+                double pivot = keys[mid];
+                // Move pivot out of the way to hi-1.
+                Swap3(keys, a, b, mid, hi - 1);
+
+                int i = lo;
+                int j = hi - 1;
+                while (true)
+                {
+                    while (keys[++i] < pivot) { }
+                    while (keys[--j] > pivot) { }
+                    if (i >= j)
+                        break;
+                    Swap3(keys, a, b, i, j);
+                }
+                // Restore pivot.
+                Swap3(keys, a, b, i, hi - 1);
+
+                // Recurse on smaller side, loop on larger (limits stack depth to O(log N)).
+                if (i - lo < hi - i)
+                {
+                    IntrosortDouble(keys, a, b, lo, i - 1);
+                    lo = i + 1;
+                }
+                else
+                {
+                    IntrosortDouble(keys, a, b, i + 1, hi);
+                    hi = i - 1;
+                }
+            }
+            InsertionSortDouble(keys, a, b, lo, hi);
+        }
+
+        private static void InsertionSortDouble(double[] keys, double[] a, double[] b, int lo, int hi)
+        {
+            for (int i = lo + 1; i <= hi; i++)
+            {
+                double kv = keys[i];
+                double av = a != null ? a[i] : 0;
+                double bv = b != null ? b[i] : 0;
+                int j = i - 1;
+                while (j >= lo && keys[j] > kv)
+                {
+                    keys[j + 1] = keys[j];
+                    if (a != null)
+                        a[j + 1] = a[j];
+                    if (b != null)
+                        b[j + 1] = b[j];
+                    j--;
+                }
+                keys[j + 1] = kv;
+                if (a != null)
+                    a[j + 1] = av;
+                if (b != null)
+                    b[j + 1] = bv;
+            }
+        }
+
+        private static void Swap3(double[] keys, double[] a, double[] b, int i, int j)
+        {
+            double t = keys[i];
+            keys[i] = keys[j];
+            keys[j] = t;
+            if (a != null)
+            {
+                t = a[i];
+                a[i] = a[j];
+                a[j] = t;
+            }
+            if (b != null)
+            {
+                t = b[i];
+                b[i] = b[j];
+                b[j] = t;
+            }
         }
 
         /// <summary>
@@ -1703,14 +1894,12 @@ namespace pwiz.Skyline.Util
         /// from disk.
         /// Exception such as these should be displayed to the user with <see cref="Alerts.ReportErrorDlg"/>
         /// so that they can report them as bugs.
-        /// If you add anything to the list of exceptions, you will want to add it also to
-        /// the WrapAndThrow() function below.
         /// </summary>
         public static bool IsProgrammingDefect(Exception exception)
         {
             // User-actionable exceptions with friendly messages
-            if (exception is InvalidDataException 
-                || exception is IOException 
+            if (exception is InvalidDataException
+                || exception is IOException
                 || exception is OperationCanceledException
                 || exception is UnauthorizedAccessException
                 || exception is UserMessageException)  // Covers all custom user-facing exceptions
@@ -1722,26 +1911,15 @@ namespace pwiz.Skyline.Util
         }
 
 
+        /// <summary>
+        /// Rethrows an exception which was caught on another thread (or otherwise stored for
+        /// later) without losing its type or its original stack trace.  Both matter: existing
+        /// code catches specific exception types, and the stack trace from the throw site is
+        /// what makes a reported error diagnosable.
+        /// </summary>
         public static void WrapAndThrowException(Exception x)
         {
-            // The thrown exception needs to be preserved to preserve
-            // the original stack trace from which it was thrown.  In some cases,
-            // its type must also be preserved, because existing code handles certain
-            // exception types.  If this case threw only TargetInvocationException,
-            // then more frequently the code would just have to have a blanket catch
-            // of the base exception type, which could hide coding errors.
-            if (x is InvalidDataException)
-                throw new InvalidDataException(x.Message, x);
-            if (x is IOException)
-                throw new IOException(x.Message, x);
-            if (x is OperationCanceledException)
-                throw new OperationCanceledException(x.Message, x);
-            if (x is UnauthorizedAccessException)
-                throw new UnauthorizedAccessException(x.Message, x);
-            if (x is UserMessageException)
-                throw new UserMessageException(x.Message, x);
-            Assume.IsTrue(IsProgrammingDefect(x));  // At least by IsProgrammingDefect's assessment it should be considered a defect
-            throw new TargetInvocationException(x.Message, x);
+            ExceptionDispatchInfo.Capture(x).Throw();
         }
 
         /// <summary>

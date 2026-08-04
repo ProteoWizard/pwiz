@@ -26,7 +26,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -266,13 +265,18 @@ namespace pwiz.Skyline
             }
             if (args != null && args.Length != 0)
             {
+                _wasOpenDocLaunch = args.Any(a =>
+                    a.Equals(Program.OPEN_DOCUMENT_ARG) ||
+                    a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="));
                 // Support both --opendoc path/to/file and --opendoc=path/to/file
                 _fileToOpen = args.Select(a =>
                 {
                     if (a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="))
                         return a.Substring(Program.OPEN_DOCUMENT_ARG.Length + 1);
                     return a;
-                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
+                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG) &&
+                              !a.StartsWith(Program.START_PAGE_ARG + @"=", StringComparison.OrdinalIgnoreCase) &&
+                              !a.Equals(Program.START_PAGE_ARG, StringComparison.OrdinalIgnoreCase)).LastOrDefault();
             }
 
             var defaultUIMode = Settings.Default.UIMode;
@@ -321,6 +325,14 @@ namespace pwiz.Skyline
             _fileToOpen = null;
 
             EnsureUIModeSet();
+
+            // --start-page=true combined with --opendoc surfaces the StartPage as a
+            // modal dialog over the MainWindow (loaded with the document or empty if
+            // --opendoc had no path). The flag alone (no --opendoc) is handled by the
+            // startup-time StartPage route in Program.cs, where the SkylineWindow is
+            // constructed with no args and _wasOpenDocLaunch stays false.
+            if (_wasOpenDocLaunch && Program.StartPageOverride == true)
+                OpenStartPage();
         }
 
         private bool HasFileToOpen()
@@ -1156,6 +1168,10 @@ namespace pwiz.Skyline
                     MessageDlg.Show(this, SkylineResources.SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved);
                 }
 
+                foreach (var graph in _listGraphPeakArea)
+                {
+                    graph.GraphPanes.OfType<SummaryRelativeAbundanceGraphPane>().FirstOrDefault()?.OnClose(EventArgs.Empty);
+                }
                 // System.Xml swallows too many exceptions, so we can't catch them in the usual way.
                 // Instead we save exceptions thrown at a lower level, then rethrow them here.  These
                 // will generate reportable errors so we can see what might be going wrong in the field.
@@ -1163,8 +1179,7 @@ namespace pwiz.Skyline
                 {
                     e.Cancel = true;
                     Program.NoSaveSettings = true;  // let the user close the window without errors next time
-                    var x = Settings.Default.SaveException;
-                    throw new TargetInvocationException(x.Message, x);
+                    ExceptionUtil.WrapAndThrowException(Settings.Default.SaveException);
                 }
             }
 
@@ -1352,6 +1367,7 @@ namespace pwiz.Skyline
 
         private Control _activeClipboardControl;
         private string _fileToOpen;
+        private bool _wasOpenDocLaunch;
 
         public void ClipboardControlGotFocus(Control clipboardControl)
         {

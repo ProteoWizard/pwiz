@@ -244,6 +244,27 @@ public $classname$ Change$PROP$($TYPE$ value) {&#xD;
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/MatchCatchClauseWithoutExceptionFilter/@EntryValue">False</s:Boolean>
 	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/SearchPattern/@EntryValue">this.$controlId$.ImageScalingSize = new System.Drawing.Size($args$);</s:String>
 	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/Severity/@EntryValue">ERROR</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/Comment/@EntryValue">Boolean.ToString ignores the format provider; the result is always the invariant "True"/"False". For display, use a localized resource string instead.</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=boolExpr/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=boolExpr/Properties/=ExactType/@EntryIndexedValue">True</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=boolExpr/Properties/=ExpressionType/@EntryIndexedValue">System.Boolean</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=boolExpr/Type/@EntryValue">ExpressionPlaceholder</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=member/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=member/Properties/=CaseSensitive/@EntryIndexedValue">True</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=member/Properties/=ExactType/@EntryIndexedValue">False</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=member/Properties/=ExpressionType/@EntryIndexedValue"></s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=member/Properties/=RegEx/@EntryIndexedValue">Current(UI)?Culture</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=member/Type/@EntryValue">IdentifierPlaceholder</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=qualifier/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=qualifier/Properties/=ExactType/@EntryIndexedValue">False</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=qualifier/Properties/=ExpressionType/@EntryIndexedValue"></s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/CustomPatternPlaceholder/=qualifier/Type/@EntryValue">ExpressionPlaceholder</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/IsReplacePattern/@EntryValue">False</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/LanguageName/@EntryValue">CSHARP</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/MatchCatchClauseWithoutExceptionFilter/@EntryValue">False</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/SearchPattern/@EntryValue">$boolExpr$.ToString($qualifier$.$member$)</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=D7B3F0E14C2A4B6E8F1D5A9C3B7E2D40/Severity/@EntryValue">WARNING</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=adduct/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=adducts/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Agilent/@EntryIndexedValue">True</s:Boolean>
@@ -335,6 +356,7 @@ public $classname$ Change$PROP$($TYPE$ value) {&#xD;
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=maxhg/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Metabolomics/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=mfung/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Mobilogram/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=monoisotopic/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=mslevel/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=msrc/@EntryIndexedValue">True</s:Boolean>

@@ -192,6 +192,7 @@
     <Compile Include="Results\ResultFileMetaDataTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />
+    <Compile Include="Results\ShimadzuSrmDuplicateQ1Test.cs" />
     <Compile Include="Results\ShimadzuSrmTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\StructSerializerTest.cs" />
@@ -207,6 +208,10 @@
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
       <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
       <Name>CommonMsData</Name>
@@ -218,6 +223,10 @@
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
@@ -278,6 +287,7 @@
     <EmbeddedResource Include="Results\PeptideQuantifierTest.sky" />
     <None Include="Results\MultiplePeptidesSameMz.zip" />
     <None Include="Results\ShimadzuSrm.zip" />
+    <None Include="Results\ShimadzuSrmDuplicateQ1.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />
     <None Include="Results\WatersCalcurve.zip" />

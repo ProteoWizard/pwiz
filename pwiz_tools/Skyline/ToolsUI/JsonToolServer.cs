@@ -17,35 +17,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections;
-using System.ComponentModel;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Xml;
-using System.Xml.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Xml;
+using System.Xml.Serialization;
 using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 
 namespace pwiz.Skyline.ToolsUI
@@ -118,19 +122,48 @@ namespace pwiz.Skyline.ToolsUI
             public JsonRpcException(int code, string message) : base(message) { Code = code; }
         }
 
-        private readonly ToolService _toolService;
         private readonly string _pipeName;
         private readonly Thread _serverThread;
         private readonly Dictionary<string, MethodInfo> _methods;
         private volatile bool _stopping;
         private ToolLog _currentLog;
 
+        // ===== Client-disconnect cancellation =====
+
+        // The cancellation of the request being served ON THIS THREAD. Thread-local, not one field for the server,
+        // because the server assumes it is called in a multi-threaded way: several clients may be in flight at once,
+        // and cancelling one must not touch the others. Each request installs its own source (and disposes it when it
+        // finishes); everything the request builds -- every UiElement -- carries the token, so the whole call tree can
+        // be abandoned when that one client disconnects.
+        private static readonly ThreadLocal<CancellationTokenSource> _requestCancellation =
+            new ThreadLocal<CancellationTokenSource>();
+
+        /// <summary>The cancellation of the request being served on the calling thread, or
+        /// <see cref="CancellationToken.None"/> when the caller is not a request (in-process, no client to
+        /// disconnect). Every IJsonToolService method here reads this FIRST and hands it to whatever it builds, so
+        /// the token travels with the work instead of being looked up from a static deep inside it.
+        ///
+        /// <para>PRIVATE on purpose, and it must stay that way: it is only meaningful on the thread serving the
+        /// request. Read from anywhere else -- a UI thread, a worker a verb spun up -- it quietly returns None, and
+        /// the work it guards would silently become uncancellable. Only the verbs below may read it; everything
+        /// deeper takes the token as a parameter.</para></summary>
+        private static CancellationToken RequestCancellation =>
+            _requestCancellation.Value?.Token ?? CancellationToken.None;
+
+        // How often the watchdog peeks the pipe while a request is in flight: free enough to run continuously, quick
+        // enough that a client which gave up does not wait noticeably for the server to notice it is gone.
+        private const int DISCONNECT_POLL_MILLIS = 200;
+
         public string PipeName { get { return _pipeName; } }
 
-        public JsonToolServer(ToolService toolService, string legacyToolServiceName)
+        /// <summary>
+        /// The JSON server stands alone: it needs no <see cref="ToolService"/> (the legacy BinaryFormatter
+        /// service), only the name the two of them derive their pipe names from -- so it can be started by
+        /// itself, before the main window exists (see Program.StartToolService).
+        /// </summary>
+        public JsonToolServer(string toolServiceName)
         {
-            _toolService = toolService;
-            _pipeName = JsonToolConstants.GetJsonPipeName(legacyToolServiceName);
+            _pipeName = JsonToolConstants.GetJsonPipeName(toolServiceName);
             _serverThread = new Thread(ServerLoop) { IsBackground = true };
 
             // Build method dictionary from IJsonToolService interface, mapped to
@@ -251,7 +284,7 @@ namespace pwiz.Skyline.ToolsUI
                             if (requestBytes.Length == 0)
                                 break;
 
-                            string responseJson = HandleRequest(requestBytes);
+                            var responseJson = HandleRequestWatchingForDisconnect(pipe, requestBytes);
                             var responseBytes = Encoding.UTF8.GetBytes(responseJson);
                             pipe.Write(responseBytes, 0, responseBytes.Length);
                             pipe.Flush();
@@ -268,6 +301,77 @@ namespace pwiz.Skyline.ToolsUI
                     if (!_stopping)
                         Thread.Sleep(100); // Brief pause before retrying
                 }
+            }
+        }
+
+        /// <summary>
+        /// Serves one request with a fresh cancellation, watching the pipe for the whole call so a client that gives
+        /// up and disconnects abandons it. Without this the server thread stays parked in a long verb (a document
+        /// load riding its LongWaitDlg) and -- being the single instance's only thread -- nothing else can get in,
+        /// not even the request that would cancel the dialog.
+        /// </summary>
+        private string HandleRequestWatchingForDisconnect(NamedPipeServerStream pipe, byte[] requestBytes)
+        {
+            using var cancellation = new CancellationTokenSource();
+            // The watchdog runs on ANOTHER thread, so it is given the source directly rather than reading it below.
+            var watchdog = new Thread(() => WatchForDisconnect(pipe, cancellation))
+            {
+                Name = @"JsonToolServerDisconnectWatchdog-" + _pipeName,
+                IsBackground = true
+            };
+            watchdog.Start();
+            try
+            {
+                // Publish it for this thread: the verbs read it (RequestCancellation) and hand it to every element
+                // they build. Set and cleared inside the try/finally, so a verb that throws leaves nothing behind.
+                _requestCancellation.Value = cancellation;
+                return HandleRequest(requestBytes);
+            }
+            finally
+            {
+                _requestCancellation.Value = null;
+                // Cancelling is ALSO how the watchdog is told the request is over -- on every path, not just a
+                // disconnect. Nothing reads the token by now (the call has returned), so cancelling it costs nothing
+                // and saves a second signal. Then WAIT for the watchdog before the source is disposed: it may be in
+                // the middle of cancelling, and cancelling a disposed source throws, on a thread with no one to catch it.
+                cancellation.Cancel();
+                watchdog.Join();
+            }
+        }
+
+        // Peeks the pipe until the client goes away (abandoning the request) or the request ends -- which the request
+        // thread signals by cancelling the source, so this parks on the token itself and wakes the moment either
+        // happens. Takes the source as an argument: it runs on its own thread, so it cannot read the request thread's
+        // thread-local.
+        private static void WatchForDisconnect(NamedPipeServerStream pipe, CancellationTokenSource cancellation)
+        {
+            while (!cancellation.Token.WaitHandle.WaitOne(DISCONNECT_POLL_MILLIS))
+            {
+                if (IsClientConnected(pipe))
+                    continue;
+                cancellation.Cancel();
+                return;
+            }
+        }
+
+        // Reliable "client still connected" check for a server thread busy in a verb (no read in progress).
+        // NamedPipeServerStream.IsConnected does not detect a disconnect without I/O, so peek the pipe --
+        // PeekNamedPipe returns false once the client has closed its end.
+        private static bool IsClientConnected(NamedPipeServerStream pipe)
+        {
+            try
+            {
+                if (!pipe.IsConnected)
+                    return false;
+                var handle = pipe.SafePipeHandle;
+                if (handle.IsInvalid || handle.IsClosed)
+                    return false;
+                return Kernel32.PeekNamedPipe(handle.DangerousGetHandle(),
+                    IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception)
+            {
+                return false; // A dead handle is a dead client
             }
         }
 
@@ -370,7 +474,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetDocumentPath()
         {
-            return _toolService.GetDocumentPath().ToForwardSlashPath();
+            return JsonUiService.GetDocumentPath().ToForwardSlashPath();
         }
 
         public string GetVersion()
@@ -380,7 +484,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSelectionText()
         {
-            return _toolService.GetDocumentLocationName();
+            return JsonUiService.GetSelectionText();
         }
 
         public SelectionInfo GetSelection()
@@ -390,7 +494,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetReplicateName()
         {
-            return _toolService.GetReplicateName();
+            return JsonUiService.GetReplicateName();
         }
 
         public string[] GetReplicateNames()
@@ -404,7 +508,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetProcessId()
         {
-            return _toolService.GetProcessId().ToString();
+            return Process.GetCurrentProcess().Id.ToString();
         }
 
         public string[] GetSettingsListTypes()
@@ -414,8 +518,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public DocumentStatus GetDocumentStatus()
         {
-            var doc = Program.MainWindow.Document;
-            string docPath = _toolService.GetDocumentPath();
+            var doc = Program.MainWindow?.Document;
+            if (doc == null)
+            {
+                return null;
+            }
+            string docPath = JsonUiService.GetDocumentPath();
 
             string groupsLabel, moleculesLabel;
             if (doc.DocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
@@ -446,12 +554,14 @@ namespace pwiz.Skyline.ToolsUI
             };
         }
 
+        // The form whose UI-mode control is live: the main window, or -- before it exists -- the start
+        // page, which has its own UI-mode buttons. So get_ui_mode / set_ui_mode work while the start page
+        // is showing, not only once the main window is open.
+        private static FormEx ActiveModeUiForm => (FormEx) Program.MainWindow ?? Program.StartWindow;
+
         public string GetUiMode()
         {
-            // Access on UI thread since Program.ModeUI may read Settings.Default
-            string mode = null;
-            Program.MainWindow.Invoke(new Action(() => mode = Program.ModeUI.ToString()));
-            return mode;
+            return DialogWatcher.CallFunction(IntPtr.Zero, ()=>ActiveModeUiForm?.ModeUI.ToString(), RequestCancellation);
         }
 
         public void SetUiMode(string mode)
@@ -462,21 +572,28 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Invalid UI mode '{0}'. Must be 'proteomic', 'small_molecules', or 'mixed'.", mode));
             }
-            Program.MainWindow.Invoke(new Action(() =>
+
+            DialogWatcher.PerformAction(IntPtr.Zero, () =>
             {
-                Program.MainWindow.SetUIMode(docType);
-            }));
+                if (ActiveModeUiForm == null)
+                {
+                    throw new InvalidOperationException(new LlmInstruction(@"No window found"));
+                }
+
+                ActiveModeUiForm.SetUIMode(docType);
+            }, RequestCancellation);
         }
 
         public UndoRedoEntry[] GetUndoRedo()
         {
+            JsonUiService.RequireMainWindow();
             // Capture undo/redo descriptions on the UI thread to avoid concurrent
             // enumeration of the UndoManager stacks which are not thread-safe.
             List<string> undoDescriptions = null;
             List<string> redoDescriptions = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            EnsureCompleted(InvokeOnMainWindow(mainWindow =>
             {
-                var undoMgr = Program.MainWindow.GetUndoManager();
+                var undoMgr = mainWindow.SkylineWindow.GetUndoManager();
                 undoDescriptions = undoMgr.UndoDescriptions.ToList();
                 redoDescriptions = undoMgr.RedoDescriptions.ToList();
             }));
@@ -498,33 +615,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void SetUndoRedoPosition(int index)
         {
-            if (index == 0)
-                return; // Already at current state
-
-            Program.MainWindow.Invoke(new Action(() =>
-            {
-                var undoMgr = Program.MainWindow.GetUndoManager();
-                if (index < 0)
-                {
-                    // Undo: index -1 = undo top (stack index 0), -2 = undo 2 deep, etc.
-                    int stackIndex = -index - 1;
-                    if (stackIndex >= undoMgr.UndoCount)
-                        throw new ArgumentOutOfRangeException(nameof(index),
-                            LlmInstruction.Format(@"Undo index {0} is out of range. Only {1} undo steps available.",
-                                index, undoMgr.UndoCount));
-                    undoMgr.UndoRestore(stackIndex);
-                }
-                else
-                {
-                    // Redo: index +1 = redo top (stack index 0), +2 = redo 2 deep, etc.
-                    int stackIndex = index - 1;
-                    if (stackIndex >= undoMgr.RedoCount)
-                        throw new ArgumentOutOfRangeException(nameof(index),
-                            LlmInstruction.Format(@"Redo index {0} is out of range. Only {1} redo steps available.",
-                                index, undoMgr.RedoCount));
-                    undoMgr.RedoRestore(stackIndex);
-                }
-            }));
+            InvokeOnMainWindow(mainWindow => mainWindow.SetUndoRedoPosition(index));
         }
 
         public TutorialListItem[] GetAvailableTutorials()
@@ -546,7 +637,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSelectedElementLocator(string elementType)
         {
-            return _toolService.GetSelectedElementLocator(elementType);
+            return JsonUiService.GetSelectedElementLocator(elementType);
         }
 
         string IJsonToolService.RunCommand(string[] args) => RunCommandImpl(args, false);
@@ -750,18 +841,18 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ReorderElements(string[] elementLocators)
         {
-            JsonUiService.InvokeOnUiThread(() =>
+            InvokeOnMainWindow(mainWindow =>
             {
                 var orderedElements = elementLocators.Select(locator =>
                     ElementRefs.FromObjectReference(ElementLocator.Parse(locator))).ToList();
-                lock (Program.MainWindow.GetDocumentChangeLock())
+                lock (mainWindow.SkylineWindow.GetDocumentChangeLock())
                 {
-                    var originalDocument = Program.MainWindow.Document;
+                    var originalDocument = mainWindow.SkylineWindow.Document;
                     var reorderer = new ElementReorderer(CancellationToken.None, originalDocument);
                     var newDocument = reorderer.SetNewOrder(orderedElements);
                     if (!ReferenceEquals(newDocument, originalDocument))
                     {
-                        Program.MainWindow.ModifyDocument(
+                        mainWindow.SkylineWindow.ModifyDocument(
                             ToolsUIResources.ToolService_ReorderElements_Elements_reordered_by_external_tool,
                             doc =>
                             {
@@ -781,29 +872,83 @@ namespace pwiz.Skyline.ToolsUI
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            JsonUiService.InvokeOnUiThread(() =>
-                Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
-                    @"Insert small molecule transition list"));
+            InvokeOnMainWindow(mainWindow =>
+            {
+                mainWindow.SkylineWindow.InsertSmallMoleculeTransitionList(textCSV,
+                    @"Insert small molecule transition list");
+            });
         }
 
-        public void ImportFasta(string textFasta, string keepEmptyProteins = null)
+        /// <summary>
+        /// Imports FASTA text. Reports the empty-protein prompt (raised when <paramref name="keepEmptyProteins"/>
+        /// is null) rather than blocking on it: the import runs under a LongWaitDlg, which the wait rides through,
+        /// and any dialog left for the user comes back in the <see cref="ActionResult"/> for the caller to drive.
+        /// </summary>
+        public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
             bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
-            JsonUiService.InvokeOnUiThread(() =>
-                Program.MainWindow.ImportFasta(new StringReader(textFasta),
+            return InvokeOnMainWindow(mainWindow =>
+                mainWindow.SkylineWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
                     @"Import FASTA from MCP",
                     new SkylineWindow.ImportFastaInfo(false, textFasta),
                     keepEmpty));
         }
 
-        public void ImportProperties(string csvText)
+        /// <summary>
+        /// Imports annotation/property values. Like <see cref="ImportFasta"/>, runs its work under a LongWaitDlg
+        /// and reports any dialog it leaves open instead of blocking the connection on it.
+        /// </summary>
+        public ActionResult ImportProperties(string csvText)
         {
-            JsonUiService.InvokeOnUiThread(() =>
-                Program.MainWindow.ImportAnnotations(new StringReader(csvText),
+            return InvokeOnMainWindow(mainWindow =>
+                mainWindow.SkylineWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations,
-                        Program.MainWindow.Document.DocumentType,
+                        mainWindow.SkylineWindow.Document.DocumentType,
                         @"Import properties from MCP")));
+        }
+
+        private StandaloneWindow ResolveForm(string formId)
+        {
+            return JsonUiService.ResolveForm(formId, _requestCancellation.Value?.Token ?? CancellationToken.None);
+        }
+
+        private ActionResult InvokeOnMainWindow(Action<SkylineStandaloneForm> action)
+        {
+            return JsonUiService.InvokeOnMainWindow(action, RequestCancellation);
+        }
+
+        private T CallOnMainWindow<T>(Func<SkylineStandaloneForm, T> function)
+        {
+            T result = default;
+            EnsureCompleted(InvokeOnMainWindow(mainWindow=>result = function(mainWindow)));
+            return result;
+        }
+
+        private static void EnsureCompleted(ActionResult actionResult)
+        {
+            DialogWatcher.EnsureCompleted(actionResult);
+        }
+
+        private ActionResult InvokeOnForm<TForm>(string formId, Action<TForm> action)
+        {
+            return JsonUiService.InvokeOnForm(formId, standaloneWindow =>
+            {
+                if (!(standaloneWindow is TForm form))
+                {
+                    throw new ArgumentException(new LlmInstruction(
+                        $@"{formId} is a {standaloneWindow.GetType().Name} but needs to be a {typeof(TForm).Name}"));
+                }
+
+                action(form);
+            }, RequestCancellation);
+        }
+
+        private TResult CallOnForm<TForm, TResult>(string formId, Func<TForm, TResult> func)
+        {
+            TResult result = default;
+            EnsureCompleted(InvokeOnForm<TForm>(formId, form=>result = func(form)));
+            return result;
         }
 
         public void SetSelectedElement(string elementLocatorString, string additionalLocators = null)
@@ -816,14 +961,128 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.SetReplicate(replicateName);
         }
 
+        public int ModalNestingCount()
+        {
+            return DialogWatcher.ModalNestingCount;
+        }
+
         public FormInfo[] GetOpenForms()
         {
-            return JsonUiService.GetOpenForms();
+            return JsonUiService.GetOpenForms(RequestCancellation);
+        }
+
+        public ControlInfo[] GetControls(string formId)
+        {
+            return ResolveForm(formId).GetControls();
+        }
+
+        /// <summary>
+        /// The most general way to interact with a control, menu item, or list item (see
+        /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to, then perform
+        /// <paramref name="action"/> on it. The action determines the value and return types: "get_actions" ->
+        /// ActionInfo[] (name + description + the value it takes); "get_children" -> ControlInfo[] (each Path already
+        /// parented onto this element, so it can be used as-is); "click" -> null; "set_value" -> null; "get_value" ->
+        /// the value (null, bool, double, or string).
+        /// </summary>
+        public object PerformAction(UiElementPath path, string action, object value)
+        {
+            if (path == null)
+                throw new ArgumentException(new LlmInstruction(@"A path is required."));
+            var uiAction = UiActions.ByName(action) ?? throw new ArgumentException(LlmInstruction.Format(
+                @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
+            // The path's root names a form; resolve it (managed or native) and let it perform the action in its own
+            // thread context (a managed form on the UI thread inside the dialog-watch; a native dialog on this calling
+            // thread). get_actions/get_children are ordinary reads -- the action's Invoke returns the element's
+            // SupportedActions / GetChildren(), whose child paths are parented onto the resolved element (its Path was
+            // recorded in ResolvePath) so the caller can use them directly.
+            return ResolveForm(path.GetRoot().Text).PerformAction(path, uiAction, value);
+        }
+
+        public ActionResult ClickMainMenuItem(string menuPath)
+        {
+            return InvokeOnMainWindow(mainWindow => mainWindow.MainMenuStrip.ClickMenuItemNow(menuPath));
+        }
+
+        public ActionResult ClickFormButton(string formId, string button)
+        {
+            return ResolveForm(formId).ClickButton(button);
+        }
+
+        public ActionResult ClickControlMenuItem(string formId, string control, string menuPath)
+        {
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+            {
+                // Which menu is meant follows from what "control" names, and MainToolStrip is exactly that dispatch:
+                // the form itself gives its menu bar (else its first toolbar, else its right-click menu), a toolstrip
+                // gives itself, and any other control gives its right-click menu -- the only menu it has. Look the
+                // control up by GetChildren, not Click: what OWNS a menu (a grid, a tree, a graph) need not itself
+                // be clickable.
+                var element = string.IsNullOrEmpty(control)
+                    ? form
+                    : form.FindElement(control, UiActions.GetChildren);
+                var menuStrip = element.MainToolStrip;
+                if (menuStrip == null)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"'{0}' has no menu to click an item on.", element.Label ?? element.ElementType.Name));
+                }
+                menuStrip.ClickMenuItemNow(menuPath);
+            });
+        }
+
+        public ActionResult SetFormValue(string formId, string controlId, string value)
+        {
+            return ResolveForm(formId).SetValue(controlId, value);
+        }
+
+        public string GetFormValue(string formId, string controlId)
+        {
+            return ResolveForm(formId).GetFormValue(controlId);
+        }
+
+        public string[] GetOptions(string formId, string controlId)
+        {
+            return ResolveForm(formId).GetOptions(controlId);
+        }
+
+        public ActionResult SetGridText(string formId, string controlId, string text)
+        {
+            // Inside InvokeOnForm this already runs ON the grid's UI thread, so it goes straight to InvokeNow --
+            // which gates the grid on the way through.
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+                UiActions.SetGridText.InvokeNow(form.FindGrid(controlId), text ?? string.Empty));
+        }
+
+        public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row)
+        {
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+                UiActions.SetCurrentCellAddress.InvokeNow(form.FindGrid(controlId), new[] { column, row }));
+        }
+
+        public string GetGridText(string formId, string gridId)
+        {
+            return CallOnForm(formId, (StandaloneForm form) => form.FindGrid(gridId).GetGridText());
+        }
+
+
+        public ActionResult DismissWithAcceptButton(string formId)
+        {
+            return ResolveForm(formId).DismissWithAcceptButton();
+        }
+
+        public ActionResult DismissWithButton(string formId, string button)
+        {
+            return ResolveForm(formId).DismissWithButton(button);
+        }
+
+        public ActionResult DismissWithCancelButton(string formId)
+        {
+            return ResolveForm(formId).DismissWithCancelButton();
         }
 
         public string GetGraphData(string graphId, string filePath = null)
         {
-            return JsonUiService.GetGraphData(graphId, filePath);
+            return JsonUiService.GetGraphData(graphId, filePath, RequestCancellation);
         }
 
         public string GetGraphImage(string graphId, string filePath = null)
@@ -831,9 +1090,19 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.GetGraphImage(graphId, filePath);
         }
 
+        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        {
+            return JsonUiService.GetGraphImageBytes(graphId);
+        }
+
         public string GetFormImage(string formId, string filePath = null)
         {
-            return JsonUiService.GetFormImage(formId, filePath);
+            return JsonUiService.GetFormImage(formId, filePath, RequestCancellation);
+        }
+
+        public ImageBytesMetadata GetFormImageBytes(string formId)
+        {
+            return JsonUiService.GetFormImageBytes(formId, RequestCancellation);
         }
 
         // Multi-arg methods
@@ -846,6 +1115,62 @@ namespace pwiz.Skyline.ToolsUI
         public ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture)
         {
             return ExportJsonDefinitionReport(definition, filePath, ParseCulture(culture));
+        }
+
+        public ReportRowsResult GetReportRows(string reportName, int offset, int count,
+            string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)
+        {
+            ValidateWindow(offset, count);
+            var localizer = ParseCulture(culture);
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+
+            var viewName = FindReportViewName(reportName);
+            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(viewName.GroupId);
+            var viewSpec = viewSpecList.GetView(viewName.Name);
+            var layout = viewSpecList.GetViewLayouts(viewName.Name).DefaultLayout;
+
+            if (filter != null && filter.Length > 0)
+                viewSpec = ApplyFilterToNamedReport(viewSpec, filter, dataSchema);
+
+            return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
+                offset, count, includeMaxLength, columns, reportName, localizer);
+        }
+
+        public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
+            int offset, int count, bool includeMaxLength, string culture)
+        {
+            ValidateWindow(offset, count);
+            var localizer = ParseCulture(culture);
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+
+            var viewSpec = ResolveReportDefinition(definition, dataSchema);
+            var sortSpecs = ParseSortSpecs(definition);
+            var rowTransforms = new List<IRowTransform>();
+            if (sortSpecs != null && sortSpecs.Count > 0)
+                rowTransforms.Add(RowFilter.Empty.SetColumnSorts(sortSpecs));
+            if (viewSpec.HasTotals && rowTransforms.Count == 0)
+            {
+                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
+                if (groupByCol != null)
+                {
+                    rowTransforms.Add(RowFilter.Empty.SetColumnSorts(new[]
+                    {
+                        new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
+                            ListSortDirection.Ascending)
+                    }));
+                }
+            }
+            ViewLayout layout = rowTransforms.Count > 0
+                ? new ViewLayout(string.Empty).ChangeRowTransforms(rowTransforms)
+                : null;
+
+            string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
+            return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
+                offset, count, includeMaxLength, null, reportName, localizer);
         }
 
         public string GetSettingsListItem(string listType, string itemName)
@@ -926,7 +1251,11 @@ namespace pwiz.Skyline.ToolsUI
             return selector.GetSelectedItems(settings);
         }
 
-        public void SelectSettingsListItems(string listType, string[] itemNames)
+        /// <summary>
+        /// Selects items in a settings list. Like <see cref="ImportFasta"/>, reports any dialog the change
+        /// raises instead of blocking the connection on it.
+        /// </summary>
+        public ActionResult SelectSettingsListItems(string listType, string[] itemNames)
         {
             var selector = ResolveDocumentSelector(listType);
 
@@ -936,11 +1265,11 @@ namespace pwiz.Skyline.ToolsUI
                     @"{0} requires exactly one item.", listType));
             }
 
-            JsonUiService.InvokeOnUiThread(() =>
+            return InvokeOnMainWindow(mainWindow =>
             {
                 try
                 {
-                    Program.MainWindow.ModifyDocument(
+                    mainWindow.SkylineWindow.ModifyDocument(
                         LlmInstruction.Format(@"Select {0} items", listType),
                         doc => doc.ChangeSettings(selector.SetSelectedItems(doc.Settings, itemNames)),
                         docPair => AuditLogEntry.CreateSimpleEntry(
@@ -979,6 +1308,11 @@ namespace pwiz.Skyline.ToolsUI
         public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = @"en", string filePath = null)
         {
             return JsonTutorialCatalog.FetchTutorialImage(name, imageFilename, language, filePath);
+        }
+
+        public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = @"en")
+        {
+            return JsonTutorialCatalog.FetchTutorialImageBytes(name, imageFilename, language);
         }
 
         public string GetDocumentSettings(string filePath)
@@ -1184,6 +1518,437 @@ namespace pwiz.Skyline.ToolsUI
             return metadata;
         }
 
+        // --- Inline rows materialization ---
+
+        // Cell text longer than this is truncated with an explicit "..." suffix so a
+        // misjudged window cannot blow caller context on a single long-text cell.
+        // internal (not const) so tests can drive the truncation path with smaller caps.
+        internal static int MaxCellLength = 200;
+
+        // Hard cap on the serialized row payload. ~4 chars/token gives a ~25K token
+        // budget, matching what the LLM caller can absorb without losing context to a
+        // single tool response. Rows past this cap are dropped and truncated_at is set
+        // so the caller can resume at offset = truncated_at.
+        internal static int MaxResponseChars = 100_000;
+
+        // Number of rows sampled when include_max_length is requested on a large
+        // dataset. Beyond this, max_length_sampled is set to true on string columns to
+        // tell the caller the value is a lower bound estimate.
+        internal static int MaxLengthSampleRows = 200;
+
+        // Upper bound on count to keep a single request from materializing an
+        // unbounded list of rows in memory and to avoid the (offset + count) overflow
+        // that would silently shift the window to negative range.
+        internal static int MaxRowCount = 10_000;
+
+        // String marker appended to a truncated cell value so the caller can detect
+        // truncation without parsing the response wrapper.
+        private const string CELL_TRUNCATION_MARKER = @"...";
+
+        private static void ValidateWindow(int offset, int count)
+        {
+            if (offset < 0)
+                throw new ArgumentException(new LlmInstruction(@"offset must be >= 0."));
+            if (count < 0)
+                throw new ArgumentException(new LlmInstruction(@"count must be >= 0. Use count = 0 for shape-only introspection."));
+            if (count > MaxRowCount)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"count {0} exceeds the per-request maximum of {1}. Paginate with offset/count.",
+                    count.ToString(), MaxRowCount.ToString()));
+            }
+        }
+
+        private ViewSpec ApplyFilterToNamedReport(ViewSpec viewSpec, ReportFilter[] filters,
+            SkylineDataSchema dataSchema)
+        {
+            // Resolve filter columns against the report's row source type. The named
+            // report has fixed RowSource and viewSpec.Columns; filter columns may
+            // reference any column in the data model, not just selected ones.
+            if (string.IsNullOrEmpty(viewSpec.RowSource))
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"Cannot apply additional filters to a report without a row source."));
+            }
+
+            // Find the row source type via the registered factories.
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+            if (!rowFactories.TryGetRowSource(viewSpec.RowSource, out _, out var rowType))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Cannot apply additional filters: unknown row source {0}.",
+                    viewSpec.RowSource.SingleQuote()));
+            }
+
+            var resolver = new ColumnResolver(dataSchema);
+            var availableColumns = resolver.GetAvailableColumns(rowType);
+            var columnsByName = new Dictionary<string, PropertyPath>(StringComparer.OrdinalIgnoreCase);
+            foreach (var col in availableColumns)
+                columnsByName[col.InvariantName] = col.PropertyPath;
+
+            var filterSpecs = new List<FilterSpec>(viewSpec.Filters);
+            foreach (var f in filters)
+            {
+                if (string.IsNullOrWhiteSpace(f.Column))
+                {
+                    throw new ArgumentException(new LlmInstruction(
+                        @"Each filter must have a 'column' field."));
+                }
+                if (!columnsByName.TryGetValue(f.Column, out var propertyPath))
+                {
+                    var suggestions = ColumnResolver.FindSuggestions(f.Column, columnsByName.Keys);
+                    string hint = suggestions.Count > 0
+                        ? @" Did you mean: " + string.Join(@", ", suggestions.Select(s => s.SingleQuote())) + @"?"
+                        : string.Empty;
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown filter column {0}.{1}", f.Column.SingleQuote(), hint));
+                }
+                if (string.IsNullOrWhiteSpace(f.Op))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Filter on column {0} must have an 'op' field.", f.Column.SingleQuote()));
+                }
+                var operation = FilterOperations.GetOperation(f.Op);
+                if (operation == null)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown filter operation {0}.", f.Op.SingleQuote()));
+                }
+                bool isUnary = operation == FilterOperations.OP_IS_BLANK ||
+                               operation == FilterOperations.OP_IS_NOT_BLANK;
+                if (!isUnary && string.IsNullOrEmpty(f.Value))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Filter operation {0} on column {1} requires a 'value' field.",
+                        f.Op.SingleQuote(), f.Column.SingleQuote()));
+                }
+                var predicate = FilterPredicate.FromInvariantOperandText(operation, f.Value ?? string.Empty);
+                filterSpecs.Add(new FilterSpec(propertyPath, predicate));
+            }
+            return viewSpec.SetFilters(filterSpecs);
+        }
+
+        private ReportRowsResult MaterializeReportRows(ViewSpec viewSpec, ViewLayout layout,
+            RowFactories rowFactories, SkylineDataSchema dataSchema,
+            int offset, int count, bool includeMaxLength, string[] requestedColumns,
+            string reportName, DataSchemaLocalizer localizer)
+        {
+            if (!rowFactories.TryGetRowSource(viewSpec.RowSource, out var rowSource, out var rowSourceType))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The row type {0} cannot be exported.", viewSpec.RowSource.SingleQuote()));
+            }
+            var viewInfo = new ViewInfo(dataSchema, rowSourceType, viewSpec);
+
+            // Mirror RowFactories.ExportReport: use streaming when there are no
+            // row transforms; otherwise materialize through BindingListSource so
+            // sorts, pivots, and filters get applied uniformly with the file path.
+            // The BindingListSource is held open across the entire materialization
+            // so its ItemProperties and RowItems are guaranteed to be valid for
+            // the duration of BuildReportRowsResult.
+            RowItemEnumerator enumerator = null;
+            BindingListSource bindingListSource = null;
+            try
+            {
+                if (layout == null || layout.RowTransforms.Count == 0)
+                {
+                    enumerator = viewInfo.GetStreamingRowItemEnumerator(CancellationToken.None, rowSource);
+                }
+                if (enumerator == null)
+                {
+                    bindingListSource = new BindingListSource(CancellationToken.None);
+                    if (layout != null)
+                        bindingListSource.ApplyLayout(layout);
+                    bindingListSource.SetView(viewInfo, rowSource);
+                    enumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
+                    {
+                        ItemProperties = bindingListSource.ItemProperties
+                    };
+                }
+                layout?.ApplyFormats(enumerator.ColumnFormats);
+
+                // Total can come from two cheap sources:
+                //  - non-streaming: BindingListSource has materialized the rows already
+                //    (BigList.Count is O(1)).
+                //  - streaming: RowItemEnumerator.Length is populated up front for the
+                //    common "no filter, at most one collection" case, so we still get
+                //    O(1) total without draining the enumerator.
+                // Clamp to int.MaxValue defensively; a single report past that limit is
+                // well outside what the inline tools target.
+                int? knownTotal = null;
+                long? totalLong = bindingListSource?.ReportResults.RowItems.Count
+                                  ?? enumerator.Length;
+                if (totalLong.HasValue)
+                    knownTotal = totalLong.Value > int.MaxValue ? int.MaxValue : (int)totalLong.Value;
+                return BuildReportRowsResult(enumerator, localizer, offset, count,
+                    includeMaxLength, requestedColumns, reportName, knownTotal);
+            }
+            finally
+            {
+                enumerator?.Dispose();
+                bindingListSource?.Dispose();
+            }
+        }
+
+        private static ReportRowsResult BuildReportRowsResult(RowItemEnumerator enumerator,
+            DataSchemaLocalizer localizer, int offset, int count, bool includeMaxLength,
+            string[] requestedColumns, string reportName, int? knownTotalRows)
+        {
+            var allProperties = enumerator.ItemProperties.ToList();
+            // Resolve optional column projection to the indices we will return.
+            // Names match against both DisplayName and InvariantName so the caller can
+            // pass either the localized header value or the invariant column id that
+            // get_report_doc_topic returns.
+            int[] columnIndices = ResolveColumnProjection(allProperties, requestedColumns);
+            int columnCount = columnIndices.Length;
+
+            // Use a DsvWriter purely for its culture-aware GetFormattedValue path. The
+            // separator is irrelevant -- we never feed the writer rows -- but it matches
+            // what the file-export tools produce so values round-trip.
+            var dsvWriter = new DsvWriter(localizer.FormatProvider, localizer.Language, ',')
+            {
+                ColumnFormats = enumerator.ColumnFormats
+            };
+
+            var maxLengths = new int?[columnCount];
+            // Compute column types up front so the scan can target every column whose
+            // serialized value is text-shaped. That covers both raw strings and the
+            // entity wrappers (Peptide, Protein, Replicate, ModifiedSequence, ...) that
+            // map to the "other" bucket -- in named reports the latter are the common
+            // case, so restricting the scan to typeof(string) would silently produce
+            // null max_observed_length on most useful reports.
+            string[] columnTypes = new string[columnCount];
+            bool[] isTextCol = new bool[columnCount];
+            for (int i = 0; i < columnCount; i++)
+            {
+                columnTypes[i] = GetSimpleTypeName(allProperties[columnIndices[i]].PropertyType);
+                isTextCol[i] = columnTypes[i] == @"string" || columnTypes[i] == @"other";
+            }
+
+            // Shape-only fast path: when there is no window and no length scan to perform,
+            // skip per-row work entirely. For non-streaming (BindingListSource) we already
+            // know the total from RowItems.Count; for streaming we still have to walk to
+            // count, but we avoid formatting any cells.
+            bool needRows = count > 0;
+            bool needLengthScan = includeMaxLength;
+
+            var capturedRows = new List<string[]>(Math.Min(count, 1024));
+            // (long) cast in windowEnd guards against int overflow when a caller passes a
+            // count near int.MaxValue together with a large offset.
+            long windowEnd = (long)offset + count;
+            int scanLimit = MaxLengthSampleRows;
+            int rowIndex = 0;
+
+            if (!needRows && !needLengthScan && knownTotalRows.HasValue)
+            {
+                // Shape-only call against the non-streaming path: total is free.
+                rowIndex = knownTotalRows.Value;
+            }
+            else
+            {
+                while (enumerator.MoveNext())
+                {
+                    bool inWindow = rowIndex >= offset && rowIndex < windowEnd;
+                    bool scanThisRow = needLengthScan && rowIndex < scanLimit;
+                    if (inWindow || scanThisRow)
+                    {
+                        var row = inWindow ? new string[columnCount] : null;
+                        for (int c = 0; c < columnCount; c++)
+                        {
+                            var pd = allProperties[columnIndices[c]];
+                            string value = dsvWriter.GetFormattedValue(enumerator.Current, pd);
+                            if (inWindow)
+                                row[c] = TruncateCell(value);
+                            if (scanThisRow && isTextCol[c] && value != null)
+                            {
+                                int len = value.Length;
+                                if (maxLengths[c] == null || len > maxLengths[c].Value)
+                                    maxLengths[c] = len;
+                            }
+                        }
+                        if (inWindow)
+                            capturedRows.Add(row);
+                    }
+                    rowIndex++;
+                    // Once we've passed both the window and the scan range, the only
+                    // remaining work is counting rows. If the total is already known,
+                    // skip the rest of the enumeration entirely. When length scanning
+                    // is off, we have nothing to wait for past the window.
+                    bool windowDone = rowIndex >= windowEnd;
+                    bool scanDone = !needLengthScan || rowIndex >= scanLimit;
+                    if (windowDone && scanDone && knownTotalRows.HasValue)
+                    {
+                        rowIndex = knownTotalRows.Value;
+                        break;
+                    }
+                }
+            }
+            int totalRows = rowIndex;
+
+            // Build column descriptors. Use the column's invariant caption as Name so
+            // callers get the same identifier they'd pass back in the definition language
+            // -- this also matches what filter/projection resolution accepts.
+            var resultColumns = new ReportRowsColumn[columnCount];
+            for (int i = 0; i < columnCount; i++)
+            {
+                var pd = allProperties[columnIndices[i]];
+                resultColumns[i] = new ReportRowsColumn
+                {
+                    Name = pd.DisplayName,
+                    Type = columnTypes[i],
+                };
+                if (includeMaxLength && isTextCol[i])
+                {
+                    resultColumns[i].MaxObservedLength = maxLengths[i] ?? 0;
+                    // Per the spec: max_length_sampled is set to true only when the
+                    // value is approximate (we hit the sample cap). Otherwise the value
+                    // is exact -- the field is omitted so consumers can distinguish
+                    // sampled from exact without an extra comparison.
+                    if (totalRows > scanLimit)
+                        resultColumns[i].MaxLengthSampled = true;
+                }
+            }
+
+            // Cap total payload by dropping rows from the tail. We have already truncated
+            // long cells, so this only fires when the window itself produces too much text.
+            // Per-row sizes are precomputed and we subtract on drop to keep this O(N).
+            int? truncatedAt = null;
+            bool windowTruncated = false;
+            int keptRows = capturedRows.Count;
+            int headerOverhead = EstimateHeaderChars(resultColumns);
+            var rowSizes = new int[capturedRows.Count];
+            int approxSize = headerOverhead;
+            for (int i = 0; i < capturedRows.Count; i++)
+            {
+                rowSizes[i] = EstimateRowChars(capturedRows[i]);
+                approxSize += rowSizes[i];
+            }
+            while (keptRows > 0 && approxSize > MaxResponseChars)
+            {
+                keptRows--;
+                approxSize -= rowSizes[keptRows];
+            }
+            if (keptRows < capturedRows.Count)
+            {
+                windowTruncated = true;
+                truncatedAt = offset + keptRows;
+                capturedRows.RemoveRange(keptRows, capturedRows.Count - keptRows);
+            }
+
+            return new ReportRowsResult
+            {
+                Report = reportName,
+                TotalRows = totalRows,
+                Columns = resultColumns,
+                Rows = capturedRows.ToArray(),
+                Window = new ReportRowsWindow
+                {
+                    Offset = offset,
+                    Count = capturedRows.Count,
+                    Truncated = windowTruncated
+                },
+                TruncatedAt = truncatedAt
+            };
+        }
+
+        private static int[] ResolveColumnProjection(IList<DataPropertyDescriptor> properties,
+            string[] requested)
+        {
+            if (requested == null || requested.Length == 0)
+            {
+                var all = new int[properties.Count];
+                for (int i = 0; i < all.Length; i++)
+                    all[i] = i;
+                return all;
+            }
+            // Index columns by both the localized DisplayName (what the caller sees in
+            // the CSV header) and the invariant column caption (what get_report_doc_topic
+            // returns). Filter resolution keys by InvariantName for the same reason; this
+            // keeps both surfaces consistent for the caller. Two passes so DisplayName
+            // always wins -- a single dict-set loop would let a later column's invariant
+            // caption shadow an earlier column's display name in pivoted / localized
+            // reports where the two namespaces collide.
+            var byName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < properties.Count; i++)
+                byName[properties[i].DisplayName] = i;
+            for (int i = 0; i < properties.Count; i++)
+            {
+                string invariant = properties[i].ColumnCaption?.GetCaption(DataSchemaLocalizer.INVARIANT);
+                if (!string.IsNullOrEmpty(invariant) && !byName.ContainsKey(invariant))
+                    byName[invariant] = i;
+            }
+            var indices = new int[requested.Length];
+            for (int i = 0; i < requested.Length; i++)
+            {
+                if (!byName.TryGetValue(requested[i], out int idx))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown column {0}. Available columns: {1}.",
+                        requested[i].SingleQuote(),
+                        string.Join(@", ", properties.Select(p => p.DisplayName.SingleQuote()))));
+                }
+                indices[i] = idx;
+            }
+            return indices;
+        }
+
+        private static string TruncateCell(string value)
+        {
+            if (value == null)
+                return null;
+            if (value.Length <= MaxCellLength)
+                return value;
+            return value.Substring(0, MaxCellLength) + CELL_TRUNCATION_MARKER;
+        }
+
+        // Per-cell and per-row JSON overhead constants used by the payload-size
+        // estimator. Approximate, not byte-exact: the estimator only decides when
+        // to drop tail rows.
+        private const int PAYLOAD_PER_CELL_OVERHEAD = 4;   // "", + structural punctuation
+        private const int PAYLOAD_PER_ROW_OVERHEAD = 4;    // [], + newline
+        private const int PAYLOAD_PER_COLUMN_HEADER_OVERHEAD = 32; // field names + structural punctuation
+
+        private static int EstimateHeaderChars(ReportRowsColumn[] columns)
+        {
+            int total = 0;
+            foreach (var col in columns)
+                total += (col.Name?.Length ?? 0) + (col.Type?.Length ?? 0) + PAYLOAD_PER_COLUMN_HEADER_OVERHEAD;
+            return total;
+        }
+
+        private static int EstimateRowChars(string[] row)
+        {
+            int total = PAYLOAD_PER_ROW_OVERHEAD;
+            for (int c = 0; c < row.Length; c++)
+            {
+                total += PAYLOAD_PER_CELL_OVERHEAD;
+                if (row[c] != null)
+                    total += row[c].Length;
+            }
+            return total;
+        }
+
+        private static string GetSimpleTypeName(Type type)
+        {
+            Type underlying = Nullable.GetUnderlyingType(type) ?? type;
+            if (underlying == typeof(string))
+                return @"string";
+            if (underlying == typeof(bool))
+                return @"boolean";
+            if (underlying == typeof(int) || underlying == typeof(long) ||
+                underlying == typeof(short) || underlying == typeof(byte))
+                return @"integer";
+            if (underlying == typeof(double) || underlying == typeof(float) ||
+                underlying == typeof(decimal))
+                return @"number";
+            if (underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset))
+                return @"datetime";
+            // Unknown / unmapped types (Guid, Color, enums, custom proteomics types) get
+            // a stable "other" label so callers don't see raw CLR type names that can
+            // shift on refactor.
+            return @"other";
+        }
+
         private static ViewName FindReportViewName(string reportName)
         {
             var persistedViews = Settings.Default.PersistedViews;
@@ -1258,6 +2023,25 @@ namespace pwiz.Skyline.ToolsUI
 
         private string RunCommandImpl(string[] args, bool silent)
         {
+            // A command needs the main window -- its document, file path, and the SkylineWindow document
+            // operations -- which does not exist while only the start page is showing. Fail with a clear
+            // message instead of a NullReferenceException, and do not let the MCP run a command the user
+            // could not run yet.
+            JsonUiService.RequireMainWindow();
+
+            // Refuse while a modal dialog blocks the main window. A command modifies the document through the
+            // SkylineWindow, and DialogWatcher would post it onto the UI thread where the open modal's own message
+            // loop pumps it -- running it re-entrantly under, say, an open Peptide Settings dialog. The transient
+            // LongWaitDlg of a command still running after its client disconnected counts here too, keeping commands
+            // one-at-a-time: cancel that one (drive its progress dialog) or wait for it before starting another.
+            var blockingModals = DialogWatcher.GetOpenModals(RequestCancellation);
+            if (blockingModals.Count > 0)
+            {
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Cannot run a command while a dialog is open ({0}). Close it, or cancel a running command through its progress dialog, before running a command.",
+                    string.Join(@"; ", blockingModals.Select(m => m.DetailedMessage))));
+            }
+
             var capture = new StringWriter();
             string argsDisplay = string.Join(@" ", args);
             TextWriter output;
@@ -1267,29 +2051,48 @@ namespace pwiz.Skyline.ToolsUI
             else
                 output = JsonUiService.CreateImmediateWindowTee(capture, argsDisplay);
 
-            // Run on the current thread (already a background pipe server thread).
-            // The Immediate Window writer handles cross-thread writes via BeginInvoke.
-            var parsedArgs = args;
             var docBefore = Program.MainWindow.Document;
-            var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore,
-                Program.MainWindow.DocumentFilePath);
+            var docFilePath = Program.MainWindow.DocumentFilePath;
 
-            // Override document operations to go through SkylineWindow UI,
-            // so --in/--new/--save/--out show LongWaitDlg progress and properly
-            // update DocumentFilePath and clean state.
-            commandLine.DocumentOperations = new SkylineWindowDocumentOperations();
-
-            commandLine.Run(parsedArgs, true);
-
-            // If the command modified the document, apply it back to SkylineWindow
-            // as a single undo record with a RunCommand audit log entry.
-            // Skip if the host already has the current doc (from --in/--new/--save/--out
-            // going through SkylineWindowDocumentOperations).
-            var docAfter = commandLine.Document;
-            if (!ReferenceEquals(docAfter, docBefore) &&
-                !ReferenceEquals(docAfter, Program.MainWindow.Document))
+            // Run the command on a LongWaitDlg's background thread (so the user sees Skyline is busy and can cancel),
+            // driven from this pipe thread by DialogWatcher.CallFunction: it returns the captured output when the
+            // command finishes, throws if the command leaves an interactive dialog open (EnsureCompleted), and -- if
+            // the client disconnects first (the MCP drops the pipe after ~30s) -- abandons only the WAIT, throwing to
+            // free the pipe while the command keeps running under its dialog for the model to cancel by hand.
+            return DialogWatcher.CallFunction(IntPtr.Zero, () =>
             {
-                Program.MainWindow.Invoke(new Action(() =>
+                SrmDocument docAfter = null;
+                using (var longWaitDlg = new LongWaitDlg())
+                {
+                    longWaitDlg.Text = ToolsUIResources.ToolService_RunCommand_Run_command;
+                    longWaitDlg.Message = argsDisplay;
+
+                    // PerformWork runs the command on its own background thread while pumping the modal here; the
+                    // broker it hands back drives the dialog's progress and reports its Cancel to the command.
+                    longWaitDlg.PerformWork(Program.MainWindow, 500, broker =>
+                    {
+                        var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore, docFilePath)
+                        {
+                            LongWaitBroker = broker,
+                            // Document operations go through SkylineWindow UI, so --in/--new/--save/--out show
+                            // LongWaitDlg progress and update DocumentFilePath and clean state. Cancellation is the
+                            // dialog's Cancel button, NOT the client disconnect -- the command must outlive the drop.
+                            DocumentOperations = new SkylineWindowDocumentOperations(longWaitDlg.CancellationToken)
+                        };
+                        commandLine.Run(args, true);
+                        // Set only after Run returns: a cancel throws out of here, leaving docAfter null so nothing
+                        // is applied to the document below.
+                        docAfter = commandLine.Document;
+                    });
+                }
+
+                // If the command modified the document, apply it back to SkylineWindow as a single undo record with a
+                // RunCommand audit log entry. We are on the UI thread here (CallFunction posted us), so modify directly.
+                // Skip if the host already has the current doc (from --in/--new/--save/--out going through
+                // SkylineWindowDocumentOperations).
+                if (docAfter != null &&
+                    !ReferenceEquals(docAfter, docBefore) &&
+                    !ReferenceEquals(docAfter, Program.MainWindow.Document))
                 {
                     Program.MainWindow.ModifyDocument(
                         ToolsUIResources.ToolService_RunCommand_Run_command,
@@ -1297,10 +2100,10 @@ namespace pwiz.Skyline.ToolsUI
                         docPair => AuditLogEntry.CreateSimpleEntry(
                             MessageType.ran_command_line,
                             docPair.NewDocumentType, args));
-                }));
-            }
+                }
 
-            return capture.ToString();
+                return capture.ToString();
+            }, RequestCancellation);
         }
 
         /// <summary>
@@ -1308,14 +2111,36 @@ namespace pwiz.Skyline.ToolsUI
         /// SkylineWindow UI methods, providing LongWaitDlg progress and proper
         /// DocumentFilePath/clean-state management.
         /// </summary>
+        // Note the command itself must stay OFF the UI thread: it waits here for the background loaders, and a
+        // loader reports progress with a blocking Invoke to the UI thread.
         private class SkylineWindowDocumentOperations : IDocumentOperations
         {
+            private readonly CancellationToken _cancellationToken;
+
+            public SkylineWindowDocumentOperations(CancellationToken cancellationToken)
+            {
+                _cancellationToken = cancellationToken;
+            }
+
+            /// <summary>
+            /// Runs <paramref name="action"/> on the main window through the dialog-watch, so a step that raises a
+            /// dialog -- an --in whose raw files have moved puts up MissingFileDlg -- does not hold the pipe
+            /// server's one thread while it is up. The dialog becomes the error this throws (there is no
+            /// ActionResult to return through <see cref="IDocumentOperations"/>), which leaves the server free to
+            /// take the request that dismisses it.
+            /// </summary>
+            private void InvokeOnMainWindow(Action<SkylineWindow> action)
+            {
+                DialogWatcher.EnsureCompleted(JsonUiService.InvokeOnMainWindow(
+                    standaloneWindow => action(standaloneWindow.SkylineWindow), _cancellationToken));
+            }
+
             public bool Dirty
             {
                 get
                 {
                     bool dirty = false;
-                    Program.MainWindow.Invoke(new Action(() => dirty = Program.MainWindow.Dirty));
+                    InvokeOnMainWindow(mainWindow => dirty = mainWindow.Dirty);
                     return dirty;
                 }
             }
@@ -1323,10 +2148,10 @@ namespace pwiz.Skyline.ToolsUI
             public SrmDocument OpenDocument(string skylineFile)
             {
                 bool success = false;
-                Program.MainWindow.Invoke(new Action(() =>
+                InvokeOnMainWindow(mainWindow =>
                 {
-                    success = Program.MainWindow.OpenFile(skylineFile);
-                }));
+                    success = mainWindow.LoadFile(skylineFile);
+                });
                 if (!success)
                     return null;
                 return WaitForDocumentLoaded();
@@ -1334,7 +2159,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public SrmDocument NewDocument(string skylineFile, bool overwrite)
             {
-                Program.MainWindow.Invoke(new Action(() =>
+                InvokeOnMainWindow(mainWindow =>
                 {
                     if (skylineFile != null && overwrite)
                     {
@@ -1343,14 +2168,14 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     // Forced — dirty check is handled by the CLI layer
                     // before reaching this point via --discard-changes.
-                    Program.MainWindow.NewDocument(true);
+                    mainWindow.NewDocument(true);
                     if (skylineFile != null)
                     {
                         // Save empty document to set DocumentFilePath so subsequent
                         // --save commands know the correct path
-                        Program.MainWindow.SaveDocument(skylineFile);
+                        mainWindow.SaveDocument(skylineFile);
                     }
-                }));
+                });
                 return WaitForDocumentLoaded();
             }
 
@@ -1392,13 +2217,13 @@ namespace pwiz.Skyline.ToolsUI
             public bool SaveDocument(SrmDocument doc, string saveFile)
             {
                 bool success = false;
-                Program.MainWindow.Invoke(new Action(() =>
+                InvokeOnMainWindow(mainWindow =>
                 {
                     // Apply any in-memory modifications (from --refine, etc.) before saving
-                    var currentDoc = Program.MainWindow.Document;
+                    var currentDoc = mainWindow.Document;
                     if (!ReferenceEquals(doc, currentDoc))
                     {
-                        Program.MainWindow.ModifyDocument(
+                        mainWindow.ModifyDocument(
                             ToolsUIResources.ToolService_RunCommand_Run_command,
                             d => doc,
                             docPair => AuditLogEntry.CreateSimpleEntry(
@@ -1408,10 +2233,10 @@ namespace pwiz.Skyline.ToolsUI
                     // Use no-arg SaveDocument when path is null (--save without --in),
                     // which falls back to the window's current DocumentFilePath
                     if (string.IsNullOrEmpty(saveFile))
-                        success = Program.MainWindow.SaveDocument();
+                        success = mainWindow.SaveDocument();
                     else
-                        success = Program.MainWindow.SaveDocument(saveFile);
-                }));
+                        success = mainWindow.SaveDocument(saveFile);
+                });
                 return success;
             }
         }

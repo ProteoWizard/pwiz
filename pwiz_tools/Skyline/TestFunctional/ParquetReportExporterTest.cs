@@ -39,8 +39,10 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestConvertToStorageType()
         {
-            var dateTimeOffset = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTimeOffset));
-            Assert.IsInstanceOfType(dateTimeOffset, typeof(DateTimeOffset));
+            // Boxing a Nullable<T> with HasValue produces a boxed T, so assert
+            // against the underlying value type rather than the nullable wrapper.
+            var nullableDateTime = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTime?));
+            Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime));
             var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
             Assert.IsInstanceOfType(nullableFloat, typeof(float?));
         }
@@ -62,8 +64,14 @@ namespace pwiz.SkylineTestFunctional
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
                 rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;
-            var table = ParquetReader.ReadTableFromStream(stream);
-            Assert.AreEqual(1, table.Schema.Fields.Count);
+            using var reader = ParquetReader.CreateAsync(stream).ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.AreEqual(1, reader.Schema.Fields.Count);
+            // Exercise the data-read path so an array/list write or decode regression
+            // would surface here instead of only in downstream consumers.
+            using var groupReader = reader.OpenRowGroupReader(0);
+            var dataField = reader.Schema.GetDataFields().Single();
+            var col = groupReader.ReadColumnAsync(dataField).ConfigureAwait(false).GetAwaiter().GetResult();
+            Assert.IsNotNull(col.Data);
         }
 
         class MyObject

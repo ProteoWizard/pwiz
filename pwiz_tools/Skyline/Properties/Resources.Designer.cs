@@ -3542,6 +3542,16 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Edit_Item {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Item", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap Edit_Redo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
@@ -5427,6 +5437,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap IonMobilityHeatmap {
+            get {
+                object obj = ResourceManager.GetObject("IonMobilityHeatmap", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to will be deleted because the libraries they depend on have changed. Do you want to continue?.
         /// </summary>
         public static string IonMobilityLibraryList_AcceptList_will_be_deleted_because_the_libraries_they_depend_on_have_changed__Do_you_want_to_continue_ {
@@ -6141,6 +6161,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_ex" +
                         "tension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Mobilogram {
+            get {
+                object obj = ResourceManager.GetObject("Mobilogram", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -7273,6 +7303,27 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The replicate &quot;{0}&quot; on line {1} contains multiple files, so the replicate name alone is ambiguous. Add a SampleName column to select a single file within the replicate, or use a FileName column instead..
+        /// </summary>
+        public static string PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__conta" +
+                        "ins_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName" +
+                        "__and_optionally_a_SampleName__to_identify_a_single_file_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The sample &quot;{0}&quot; on line {1} does not match a single file in the replicate &quot;{2}&quot;..
+        /// </summary>
+        public static string PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not_match_a_single_file_in_the_replicate___2__ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not" +
+                        "_match_a_single_file_in_the_replicate___2__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Failed to find the necessary headers {0} in the first line.
         /// </summary>

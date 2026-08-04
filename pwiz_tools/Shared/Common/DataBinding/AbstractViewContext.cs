@@ -292,17 +292,13 @@ namespace pwiz.Common.DataBinding
         {
             try
             {
-                StringWriter tsvWriter = new StringWriter();
-                if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
-                    {
-                        WriteData(progressMonitor, tsvWriter, bindingListSource, '\t');
-                        progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
-                    }))
+                var text = GetCopyAllText(owner, bindingListSource);
+                if (text == null)
                 {
+                    // cancelled
                     return;
                 }
-
-                SetClipboardText(owner, tsvWriter.ToString());
+                SetClipboardText(owner, text);
             }
             catch (Exception exception)
             {
@@ -310,6 +306,21 @@ namespace pwiz.Common.DataBinding
                     Resources.AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__ + exception.Message, 
                     MessageBoxButtons.OK, exception);
             }
+        }
+
+        public string GetCopyAllText(Control owner, BindingListSource bindingListSource)
+        {
+            StringWriter tsvWriter = new StringWriter();
+            if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
+                {
+                    WriteData(progressMonitor, tsvWriter, bindingListSource, '\t');
+                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
+                }))
+            {
+                return null;
+            }
+
+            return tsvWriter.ToString();
         }
 
         protected virtual void SetClipboardText(Control owner, string text)

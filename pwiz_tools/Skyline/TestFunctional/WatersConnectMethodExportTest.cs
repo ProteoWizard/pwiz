@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -29,6 +30,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
+using pwiz.CommonFileDialogs;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -55,6 +57,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MixedPolarity02.sky")));
             WaitForDocumentLoaded();
 
+            TestTemplateFileToolTipRestore();
+
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             TestTemplateSelection(exportMethodDlg);
@@ -65,6 +69,87 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             WaitForOpenForm<ExportMethodDlg>(1000);
             TestAuthenticationError(exportMethodDlg);
+        }
+
+        /// <summary>
+        /// Verifies that the template-file tooltip is captured once at load time and
+        /// restored verbatim after a temporary override. Guards the refactor that replaced
+        /// per-call ComponentResourceManager.GetString("textTemplateFile.ToolTip") lookups
+        /// (which tripped a ReSharper inspectcode CLI false positive) with a single captured
+        /// field restored via ResetTemplateFileToolTip().
+        /// </summary>
+        private void TestTemplateFileToolTipRestore()
+        {
+            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+
+            const string toolTipKey = "textTemplateFile.ToolTip";
+            string originalToolTip = null;
+            RunUI(() =>
+            {
+                // At load time the tooltip is the localized value the designer applied. The refactor
+                // must capture the genuine localized resource, not a hardcoded or fallback string.
+                // This relies on the dialog opening on a non-Waters-Connect instrument (or WC with no
+                // saved template), so the tooltip is the designer value and not a URL override. That
+                // holds because this runs first, before any test persists a WC instrument/template.
+                originalToolTip = exportMethodDlg.TemplateFileToolTip;
+                Assert.IsFalse(string.IsNullOrEmpty(originalToolTip), "Expected a non-empty designer tooltip.");
+
+                // The tooltip is genuinely localized: Japanese is translated (ExportMethodDlg.ja.resx)
+                // while French has no resx and falls back to invariant English, so the two differ. This
+                // makes the capture assertion below non-vacuous - it proves the captured value tracks
+                // the running culture rather than just echoing a single same-culture resx lookup.
+                var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
+                var frenchToolTip = resources.GetString(toolTipKey, new CultureInfo("fr"));
+                var japaneseToolTip = resources.GetString(toolTipKey, new CultureInfo("ja"));
+                Assert.AreNotEqual(frenchToolTip, japaneseToolTip,
+                    "Expected the template-file tooltip to differ between French and Japanese.");
+
+                // The captured live tooltip must equal the resx value for the culture this test runs in.
+                Assert.AreEqual(resources.GetString(toolTipKey, CultureInfo.CurrentUICulture), originalToolTip,
+                    "Captured tooltip does not match the localized resx value for the current culture.");
+
+                exportMethodDlg.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT;
+                exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                exportMethodDlg.ExportStrategy = ExportStrategy.WcDecide;
+            });
+
+            // Select a Waters Connect template, which overrides the tooltip with the method URL.
+            var templateDlg = ShowDialog<WatersConnectSelectMethodFileDialog>(() => exportMethodDlg.ClickTemplateButton());
+            WaitForConditionUI(1000, () => templateDlg.ListViewItems.Count == 1);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Company", templateDlg.ListViewItems[0].Text);
+                templateDlg.ListViewItems[0].Selected = true;
+                templateDlg.KeyPressHandler(Keys.Enter);
+            });
+            WaitForConditionUI(1000,
+                () => templateDlg.ListViewItems.Count == 1 && templateDlg.ListViewItems[0].Text == @"Skyline");
+            RunUI(() =>
+            {
+                templateDlg.ListViewItems[0].Selected = true;
+                templateDlg.KeyPressHandler(Keys.Enter);
+            });
+            ValidateSkylineFolder(templateDlg);
+            RunUI(() => templateDlg.KeyPressHandler(Keys.Enter));
+
+            RunUI(() =>
+            {
+                Assert.AreEqual("Company/Skyline/Test Method 37", exportMethodDlg.TemplatePathField.Text);
+                // Selecting a template overrides the tooltip with the URL string.
+                var overriddenToolTip = exportMethodDlg.TemplateFileToolTip;
+                Assert.AreNotEqual(originalToolTip, overriddenToolTip,
+                    "Selecting a Waters Connect template should override the template-file tooltip.");
+                Assert.IsFalse(string.IsNullOrEmpty(overriddenToolTip));
+
+                // Switching to a non-Waters-Connect instrument must restore the captured original.
+                // Use MassLynx (local-file export) to avoid the Thermo installation probe dialog.
+                exportMethodDlg.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX;
+                Assert.AreEqual(originalToolTip, exportMethodDlg.TemplateFileToolTip,
+                    "Template-file tooltip was not restored to its original value after reset.");
+            });
+
+            CancelDialog(exportMethodDlg);
         }
 
         /// <summary>

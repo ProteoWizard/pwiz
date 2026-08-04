@@ -331,14 +331,14 @@
     <value>添加诱饵</value>
   </data>
   <data name="EditMenu_ImputePeakBoundaries_" xml:space="preserve">
-    <value>此文档未选择任何插补选项。
-请转到肽段设置中的预测选项卡，选择一些插补选项。</value>
+    <value>此文档未选择任何划定选项。
+请转到肽段设置中的预测选项卡，选择一些划定选项。</value>
   </data>
   <data name="EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries" xml:space="preserve">
-    <value>正在插补峰边界</value>
+    <value>正在划定峰边界</value>
   </data>
   <data name="EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries" xml:space="preserve">
-    <value>插补峰边界</value>
+    <value>划定的峰边界</value>
   </data>
   <data name="RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading" xml:space="preserve">
     <value>正在等待文档加载完成</value>
@@ -371,10 +371,10 @@
     <value>Skyline 提供两种通过键盘访问菜单命令的方式：</value>
   </data>
   <data name="Keyboard_Shortcuts_Explanation_Shortcuts" xml:space="preserve">
-    <value>键盘快捷键是单次按键组合（如 Ctrl+N），可用于直接执行菜单操作。这些快捷键显示在菜单上的菜单文本右侧。</value>
+    <value>键盘快捷键是指只需按一次即可执行菜单操作的组合键（如 Ctrl+N）。这些快捷键显示在菜单文本的右侧。</value>
   </data>
   <data name="Keyboard_Shortcuts_Explanation_Mnemonics" xml:space="preserve">
-    <value>菜单文本中的助记符是带下划线的字母，按下 Alt 键时会显示。使用这些字母可通过键盘浏览菜单，或学习完整的键盘操作序列，无需鼠标即可访问菜单命令。</value>
+    <value>菜单文本中带有下划线的字母称为助记符，按下 Alt 键后这些字母就会显示出来。您可以通过键盘使用这些字母来导航菜单，或者学习完整的按键组合，以便在不使用鼠标的情况下访问任何菜单命令。</value>
   </data>
   <data name="Keyboard_GridView_Table_Title" xml:space="preserve">
     <value>GridView 控件</value>

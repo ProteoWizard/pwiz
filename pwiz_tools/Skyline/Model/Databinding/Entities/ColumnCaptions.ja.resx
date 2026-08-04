@@ -172,7 +172,7 @@
     <value>頂点総イオンカウントMS1</value>
   </data>
   <data name="ApexTransitionIonCount">
-    <value>頂点トランジションイオン数</value>
+    <value>ピーク頂点時のトランジションイオン数</value>
   </data>
   <data name="Area">
     <value>面積</value>
@@ -418,28 +418,28 @@
     <value>校正から除外</value>
   </data>
   <data name="ExemplaryEndTime">
-    <value>例示的終了時間</value>
+    <value>代表ピーク終了時間</value>
   </data>
   <data name="ExemplaryFilePath">
-    <value>例示的ファイルパス</value>
+    <value>代表ファイルのパス</value>
   </data>
   <data name="ExemplaryLibraryName">
-    <value>例示的ライブラリ名</value>
+    <value>代表ライブラリ名</value>
   </data>
   <data name="ExemplaryPeak">
-    <value>例示的ピーク</value>
+    <value>代表ピーク</value>
   </data>
   <data name="ExemplaryReplicateName">
-    <value>例示的繰り返し測定名</value>
+    <value>代表繰り返し測定名</value>
   </data>
   <data name="ExemplaryRetentionTime">
-    <value>例示的保持時間</value>
+    <value>代表保持時間</value>
   </data>
   <data name="ExemplaryScore">
-    <value>例示的スコア</value>
+    <value>代表スコア</value>
   </data>
   <data name="ExemplaryStartTime">
-    <value>例示的開始時間</value>
+    <value>代表開始時間</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>表示されたアナライト濃度</value>
@@ -537,6 +537,9 @@
   <data name="Group">
     <value>グループ</value>
   </data>
+  <data name="GroupComparison">
+    <value>グループ比較</value>
+  </data>
   <data name="Height">
     <value>高さ</value>
   </data>
@@ -547,13 +550,13 @@
     <value>同定済み</value>
   </data>
   <data name="ImputedEndTime">
-    <value>補間された終了時間</value>
+    <value>補完終了時間</value>
   </data>
   <data name="ImputedPeak">
-    <value>補間されたピーク</value>
+    <value>補完ピーク</value>
   </data>
   <data name="ImputedStartTime">
-    <value>補間された開始時間</value>
+    <value>補完開始時間</value>
   </data>
   <data name="InChI">
     <value>InChI</value>
@@ -682,7 +685,7 @@
     <value>LCピーク総イオン電流面積MS1</value>
   </data>
   <data name="LcPeakTransitionIonCount">
-    <value>LCピークトランジションイオン数</value>
+    <value>LCピークにおけるトランジションイオン数</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>ライブラリ衝突断面積</value>
@@ -997,19 +1000,19 @@
     <value>最適ステップ</value>
   </data>
   <data name="OriginalEndTime">
-    <value>元の終了時間</value>
+    <value>初期終了時間</value>
   </data>
   <data name="OriginalPeak">
-    <value>元のピーク</value>
+    <value>初期ピーク</value>
   </data>
   <data name="OriginalRetentionTime">
-    <value>元の保持時間</value>
+    <value>初期保持時間</value>
   </data>
   <data name="OriginalScore">
-    <value>元のスコア</value>
+    <value>初期スコア</value>
   </data>
   <data name="OriginalStartTime">
-    <value>元の開始時間</value>
+    <value>初期開始時間</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>ピークグループ終了時間</value>
@@ -1342,19 +1345,19 @@
     <value>理由</value>
   </data>
   <data name="ReintegratedEndTime">
-    <value>再積分された終了時間</value>
+    <value>再積分後の終了時間</value>
   </data>
   <data name="ReintegratedPeak">
-    <value>再積分されたピーク</value>
+    <value>再積分後のピーク</value>
   </data>
   <data name="ReintegratedRetentionTime">
-    <value>再積分された保持時間</value>
+    <value>再積分後の保持時間</value>
   </data>
   <data name="ReintegratedScore">
-    <value>再積分されたスコア</value>
+    <value>再積分後のスコア</value>
   </data>
   <data name="ReintegratedStartTime">
-    <value>再積分された開始時間</value>
+    <value>再積分後の開始時間</value>
   </data>
   <data name="Replicate">
     <value>繰り返し測定</value>
@@ -1573,7 +1576,7 @@
     <value>トランジション数</value>
   </data>
   <data name="TransitionIonMetrics">
-    <value>トランジションイオンメトリック</value>
+    <value>トランジションイオン指標</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>トランジション同位体デコイ</value>

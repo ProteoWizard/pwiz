@@ -1268,7 +1268,17 @@ rule msparser-path ( properties * )
     }
     else if <toolset>msvc in $(properties)
     {
-        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
+        if <address-model>32 in $(properties)
+        {
+            # Only a 64-bit Mascot Parser library is bundled, so disable Mascot support in 32-bit builds.
+            if ! $(.warn-once-mascot32)
+            {
+                .warn-once-mascot32 = true ;
+                echo "Note: Not using Mascot Parser in 32-bit builds (only a 64-bit msparser library is bundled)." ;
+            }
+            lib-location = "" ;
+        }
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
         {
             lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64\\vs2015" ;
         }
@@ -1749,7 +1759,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/BiblioSpec"
     "exclude:pwiz_tools/Shared/Crawdad"
     "exclude:pwiz_tools/Shared/ProteomeDb"
-    "exclude:pwiz_tools/Shared/ProteowizardWrapper"
+    # ProteowizardWrapper is needed by MSConvertGUI.sln (shared remote dialog refactor)
     "exclude:pwiz_tools/Shared/Lib/Microsoft.Diagnostics.Runtime"
     "exclude:pwiz_tools/Shared/Lib/MSAmanda"
     "exclude:pwiz_tools/Shared/Lib/DotNetZip"

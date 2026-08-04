@@ -1941,7 +1941,67 @@ namespace pwiz.Skyline.Properties {
                 this["SumScansFullScan"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowMobilogramFullScan {
+            get {
+                return ((bool)(this["ShowMobilogramFullScan"]));
+            }
+            set {
+                this["ShowMobilogramFullScan"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowHeatmapFullScan {
+            get {
+                return ((bool)(this["ShowHeatmapFullScan"]));
+            }
+            set {
+                this["ShowHeatmapFullScan"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowHeatmapFullScanSeeded {
+            get {
+                return ((bool)(this["ShowHeatmapFullScanSeeded"]));
+            }
+            set {
+                this["ShowHeatmapFullScanSeeded"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.8")]
+        public float FullScanMobilogramColumnFraction {
+            get {
+                return ((float)(this["FullScanMobilogramColumnFraction"]));
+            }
+            set {
+                this["FullScanMobilogramColumnFraction"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.45")]
+        public float FullScanStickRowFraction {
+            get {
+                return ((float)(this["FullScanStickRowFraction"]));
+            }
+            set {
+                this["FullScanStickRowFraction"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
@@ -3654,6 +3714,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["MaxGridRowCount"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool WarnOnPresetChange {
+            get {
+                return ((bool)(this["WarnOnPresetChange"]));
+            }
+            set {
+                this["WarnOnPresetChange"] = value;
             }
         }
 

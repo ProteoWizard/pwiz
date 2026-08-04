@@ -388,7 +388,7 @@ namespace pwiz.SkylineTestUtil
 
         public void WaitForVolcanoPlotPointCount(FoldChangeGrid grid, int expected)
         {
-            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.DataboundGridControl.IsComplete,
+            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.IsComplete,
                 string.Format("Expecting {0} points found {1}", expected, GetRowCount(grid)));
         }
 

@@ -182,10 +182,22 @@ namespace pwiz.Skyline.Util
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
-            string requiredFilePath = requiredFile.Unzip
-                ? requiredFile.CheckInstalledPath ?? requiredFile.InstallPath
-                : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
-            requiredFilePath = Settings.Default.SearchToolList.GetToolPathOrDefault(requiredFile.ToolType, requiredFilePath);
+            string requiredFilePath;
+            if (requiredFile.CheckInstalledPath != null)
+            {
+                // Caller pinned the exact location to verify (e.g. version-specific
+                // binary). Don't let the SearchToolList registry remap us to a sibling
+                // install of the same ToolType — that's how a registered DIA-NN 2.5.0
+                // entry would mask the absence of a freshly-requested 1.9.1.
+                requiredFilePath = requiredFile.CheckInstalledPath;
+            }
+            else
+            {
+                requiredFilePath = requiredFile.Unzip
+                    ? requiredFile.InstallPath
+                    : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
+                requiredFilePath = Settings.Default.SearchToolList.GetToolPathOrDefault(requiredFile.ToolType, requiredFilePath);
+            }
 
             bool alreadyDownloaded = File.Exists(requiredFilePath) || Directory.Exists(requiredFilePath);
 

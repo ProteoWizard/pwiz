@@ -111,6 +111,24 @@ namespace pwiz.Skyline.Model.Databinding
             return rowSourceName != null && _factoriesByName.ContainsKey(rowSourceName);
         }
 
+        /// <summary>
+        /// Resolves a row source name to its registered <see cref="IRowSource"/> and
+        /// element type. Used by paths that materialize rows in memory rather than
+        /// streaming to a file.
+        /// </summary>
+        public bool TryGetRowSource(string rowSourceName, out IRowSource rowSource, out Type itemType)
+        {
+            if (rowSourceName != null && _factoriesByName.TryGetValue(rowSourceName, out var factory))
+            {
+                rowSource = factory;
+                itemType = factory.ItemType;
+                return true;
+            }
+            rowSource = null;
+            itemType = null;
+            return false;
+        }
+
         private class Factory : IRowSource
         {
             public Factory(string rowSourceName, Type itemType, Func<IEnumerable> listItemsFunc)

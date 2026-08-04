@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Osprey DIA pipeline workflow</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    font-family: system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    color: #212121;
+  }
+  header {
+    max-width: 1200px;
+    margin: 20px auto 10px auto;
+    padding: 0 20px;
+  }
+  header h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  header p.sub {
+    margin: 0;
+    color: #616161;
+    font-size: 13px;
+  }
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 40px 20px;
+  }
+  svg.pipeline {
+    width: 100%;
+    height: auto;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  footer {
+    max-width: 1200px;
+    margin: 20px auto 40px auto;
+    padding: 0 20px;
+    color: #616161;
+    font-size: 12px;
+  }
+  footer code {
+    background: #f5f5f5;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Osprey DIA pipeline workflow</h1>
+  <p class="sub">
+    Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
+    (<code>.blib</code>) output, drawn around the join / per-file-fan-out
+    boundaries that matter for HPC distribution. The four <code>--task</code>
+    workers &mdash; PerFileScoring &#8594; FirstPassFDR &#8594; PerFileRescoring
+    &#8594; SecondPassFDR &mdash; can each run as a separate HPC node; the
+    banner heading each task names the files it reads and writes, including
+    the sidecars the next task rehydrates from. The C# implementation
+    (Osprey) is end-to-end cross-impl bit-identical to the Rust reference
+    (osprey) from Stage 1 through Stage 7 + <code>.blib</code> on the Stellar
+    (<code>--resolution unit</code>) and Astral (<code>--resolution hram</code>)
+    3-file datasets; box color shows per-stage port status. Per-stage parity
+    detail and end-to-end performance are in the tables near the bottom of the
+    page.
+  </p>
+</header>
+
+<main>
+<svg class="pipeline" viewBox="0 0 1200 2700" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- Arrowhead for control flow between stages -->
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#424242"/>
+  </marker>
+  <marker id="arrow-thick" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+  </marker>
+
+  <style>
+    /* Typography */
+    .title       { font-size: 24px; font-weight: 700; fill: #0d1b2a; }
+    .subtitle    { font-size: 12px; font-weight: 400; fill: #607d8b; }
+
+    .phase-label { font-size: 12px; font-weight: 600; fill: #5e35b1;
+                   text-transform: uppercase; letter-spacing: 1.5px; }
+    .phase-title { font-size: 16px; font-weight: 600; fill: #1a237e; }
+    .phase-note  { font-size: 11px; fill: #546e7a; font-style: italic; }
+    .phase-shape-fanout { font-size: 11px; font-weight: 700;
+                          fill: #1565c0; text-transform: uppercase;
+                          letter-spacing: 1px; }
+    .phase-shape-join   { font-size: 11px; font-weight: 700;
+                          fill: #c62828; text-transform: uppercase;
+                          letter-spacing: 1px; }
+
+    .stage-title { font-size: 13px; font-weight: 600; fill: #263238; }
+    .stage-desc  { font-size: 11px; fill: #455a64; }
+    .stage-meta  { font-size: 10px; fill: #78909c; }
+
+    .legend-title { font-size: 11px; font-weight: 600; fill: #455a64;
+                    text-transform: uppercase; letter-spacing: 1px; }
+    .legend-label { font-size: 11px; fill: #455a64; }
+
+    .you-are-here { font-size: 12px; font-weight: 700; fill: #c62828;
+                    letter-spacing: 0.5px; }
+
+    /* Status fills */
+    .st-done    { fill: #c8e6c9; stroke: #2e7d32; stroke-width: 2; }
+    .st-likely  { fill: #dcedc8; stroke: #558b2f; stroke-width: 2;
+                  stroke-dasharray: 5,3; }
+    .st-partial { fill: #fff9c4; stroke: #f9a825; stroke-width: 2; }
+    .st-unverif { fill: #e1f5fe; stroke: #0277bd; stroke-width: 2; }
+    .st-missing { fill: #f5f5f5; stroke: #757575; stroke-width: 2;
+                  stroke-dasharray: 5,3; }
+    .st-na     { fill: #ffffff; stroke: #bdbdbd; stroke-width: 1.5; }
+
+    /* Phase container backgrounds */
+    .phase-bg   { fill: #fbfbfc; stroke: #cfd8dc; stroke-width: 1;
+                  stroke-dasharray: 2,2; }
+    .phase-bg-active { fill: #fff8e1; stroke: #ffc107; stroke-width: 2; }
+
+    /* Arrows */
+    .flow       { stroke: #424242; stroke-width: 2; fill: none; }
+    .flow-loop  { stroke: #6a1b9a; stroke-width: 2; fill: none;
+                  stroke-dasharray: 6,3; }
+    .flow-you   { stroke: #1565c0; stroke-width: 3; fill: none; }
+
+    /* Input pill */
+    .input-pill { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2; }
+
+    /* Test coverage badges */
+    .badge-label { font-size: 11px; font-weight: 700; }
+    .badge-value { font-size: 11px; font-weight: 400; }
+    .badge-test  { fill: #1b5e20; }
+
+    /* HPC --task headers: one banner per distributed worker, naming the   */
+    /* task and the files it reads / writes (incl. rehydration sidecars).  */
+    .task-hdr-bg   { fill: #ede7f6; stroke: #5e35b1; stroke-width: 1.5; }
+    .task-hdr-name { font-family: ui-monospace, SFMono-Regular, monospace;
+                     font-size: 13px; font-weight: 700; fill: #4527a0; }
+    .task-hdr-role { font-size: 10px; font-weight: 700; fill: #5e35b1;
+                     text-transform: uppercase; letter-spacing: 1px; }
+    .task-hdr-io   { font-family: ui-monospace, SFMono-Regular, monospace;
+                     font-size: 10px; fill: #37474f; }
+    .task-hdr-key  { font-weight: 700; fill: #5e35b1; }
+  </style>
+</defs>
+
+<!-- ================================================================= -->
+<!-- TITLE + SUBTITLE                                                   -->
+<!-- ================================================================= -->
+<g transform="translate(40, 40)">
+  <text class="title">Osprey DIA search pipeline</text>
+  <text class="subtitle" y="22">
+    Rust reference (osprey) vs C# implementation (Osprey)  -  end-to-end cross-impl parity from Stage 1 through Stage 7 + .blib on Stellar + Astral 3-file.
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- LEGEND                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(40, 90)">
+  <text class="legend-title">Port status</text>
+  <g transform="translate(0, 16)">
+    <rect class="st-done"    x="0"   y="0" width="16" height="12"/>
+    <text class="legend-label" x="22" y="10">proven bit-identical</text>
+
+    <rect class="st-likely"  x="180" y="0" width="16" height="12"/>
+    <text class="legend-label" x="202" y="10">expected to match (pending diff)</text>
+
+    <rect class="st-partial" x="420" y="0" width="16" height="12"/>
+    <text class="legend-label" x="442" y="10">partially verified</text>
+
+    <rect class="st-unverif" x="600" y="0" width="16" height="12"/>
+    <text class="legend-label" x="622" y="10">ported, not yet cross-checked</text>
+
+    <rect class="st-missing" x="830" y="0" width="16" height="12"/>
+    <text class="legend-label" x="852" y="10">missing / stubbed</text>
+
+    <rect class="st-n/a"     x="980" y="0" width="16" height="12"/>
+    <text class="legend-label" x="1002" y="10">not applicable</text>
+  </g>
+</g>
+
+<!-- ================================================================= -->
+<!-- INPUTS                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(0, 150)">
+  <text class="phase-label" x="40" y="0">inputs</text>
+
+  <rect class="input-pill" x="260"  y="16" width="260" height="48" rx="24"/>
+  <text class="stage-title" x="390" y="38" text-anchor="middle">Spectral library</text>
+  <text class="stage-desc"  x="390" y="54" text-anchor="middle">DIA-NN TSV or .blib</text>
+
+  <rect class="input-pill" x="680" y="16" width="260" height="48" rx="24"/>
+  <text class="stage-title" x="810" y="38" text-anchor="middle">DIA mzML file(s)</text>
+  <text class="stage-desc"  x="810" y="54" text-anchor="middle">one or more replicates</text>
+</g>
+
+<!-- Arrows from inputs into the PerFileScoring task banner -->
+<path class="flow" d="M 390 214 L 390 228" marker-end="url(#arrow)"/>
+<path class="flow" d="M 810 214 L 810 228" marker-end="url(#arrow)"/>
+
+<!-- ================================================================= -->
+<!-- TASK 1 of 4: PerFileScoring (Stages 1-4, per-file fan-out)         -->
+<!-- ================================================================= -->
+<g transform="translate(0, 230)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-file fan-out &#183; N nodes</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>spectral library (.blib / DIA-NN TSV), DIA mzML file(s)  &mdash; via  -i</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json   &#183;   validity sidecar  &lt;out&gt;.PerFileScoring.osprey.task</text>
+</g>
+
+<!-- Arrows from the PerFileScoring banner into Stage 1 and Stage 2 -->
+<path class="flow" d="M 390 296 L 390 338" marker-end="url(#arrow)"/>
+<path class="flow" d="M 810 296 L 810 338" marker-end="url(#arrow)"/>
+
+<!-- ================================================================= -->
+<!-- STAGE 1 + STAGE 2 (parallel: library prep / mzML prep)             -->
+<!-- ================================================================= -->
+<g transform="translate(0, 330)">
+  <!-- Stage 1 container -->
+  <rect class="phase-bg" x="40"  y="10" width="540" height="180" rx="6"/>
+  <text class="phase-label" x="60"  y="30">stage 1</text>
+  <text class="phase-title" x="60"  y="48">Library preparation</text>
+
+  <rect class="st-done" x="80" y="70" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + binary cache</text>
+  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, sequential IDs, .libcache for fast reload</text>
+
+  <rect class="st-done" x="80" y="130" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation (parallel)</text>
+  <text class="stage-desc"  x="310" y="164" text-anchor="middle">enzyme-aware reverse, collision detection, Parallel.For</text>
+
+  <!-- Stage 1 badges (upper right of container) -->
+  <text x="535" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">36 + 2 regression (dedup, collision)</tspan></text>
+
+  <path class="flow" d="M 310 112 L 310 128" marker-end="url(#arrow)"/>
+
+  <!-- Stage 2 container -->
+  <rect class="phase-bg" x="620" y="10" width="540" height="180" rx="6"/>
+  <text class="phase-label" x="640" y="30">stage 2</text>
+  <text class="phase-title" x="640" y="48">mzML processing</text>
+
+  <rect class="st-done" x="660" y="70" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="890" y="90" text-anchor="middle">Parse spectra</text>
+  <text class="stage-desc"  x="890" y="104" text-anchor="middle">Native C# XmlReader (base64 + zlib), not COM bridge</text>
+
+  <rect class="st-done" x="660" y="130" width="460" height="42" rx="4"/>
+  <text class="stage-title" x="890" y="150" text-anchor="middle">Isolation window grouping</text>
+  <text class="stage-desc"  x="890" y="164" text-anchor="middle">deterministic, 125 windows on Stellar</text>
+
+  <!-- Stage 2 badges (upper right of container) -->
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">3 (mzML parsing, isolation windows)</tspan></text>
+
+  <path class="flow" d="M 890 112 L 890 128" marker-end="url(#arrow)"/>
+</g>
+
+<!-- Arrows down into calibration -->
+<path class="flow" d="M 310 540 L 310 570 L 600 570 L 600 600" marker-end="url(#arrow)"/>
+<path class="flow" d="M 890 540 L 890 570 L 600 570" />
+
+<!-- ================================================================= -->
+<!-- STAGE 3 CALIBRATION                                                 -->
+<!-- ================================================================= -->
+<g transform="translate(0, 600)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="540" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 3</text>
+  <text class="phase-title" x="60" y="42">Calibration (a.k.a. recalibration)</text>
+  <text class="phase-note"  x="60" y="58">
+    Goal: fit an RT calibration from the library RT column to the observed spectrum RT,
+    so the main search can trust the per-entry RT window.
+  </text>
+
+  <!-- Pass-1 substages -->
+  <text class="phase-label" x="80" y="90" fill="#2e7d32">pass 1</text>
+
+  <rect class="st-done" x="80" y="100" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="120" text-anchor="middle">2D grid sampling + per-entry calibration windows</text>
+  <text class="stage-desc"  x="600" y="134" text-anchor="middle">100K targets + 100K decoys via stride sampling of a 159x159 (m/z x RT) grid</text>
+
+  <rect class="st-done" x="80" y="160" width="1040" height="62" rx="4"/>
+  <text class="stage-title" x="600" y="180" text-anchor="middle">Pass-1 per-entry scoring</text>
+  <text class="stage-desc"  x="600" y="196" text-anchor="middle">extract top-6 fragment XICs; CWT peaks (with detect-all-peaks fallback); apex = argmax ref XIC</text>
+  <text class="stage-desc"  x="600" y="210" text-anchor="middle">4 features: correlation, libcosine, top6, xcorr (Comet-style) + SNR on reference XIC</text>
+
+  <rect class="st-done" x="80" y="240" width="1040" height="62" rx="4"/>
+  <text class="stage-title" x="600" y="260" text-anchor="middle">Pass-1 LDA (iterative non-negative CV)</text>
+  <text class="stage-desc"  x="600" y="276" text-anchor="middle">3-fold stratified CV by peptide; positive-training-set selection; non-negative consensus weights;</text>
+  <text class="stage-desc"  x="600" y="290" text-anchor="middle">up to 3 iterations with best-iteration tracking and 2-consecutive-no-improve early stop</text>
+
+  <rect class="st-done" x="80" y="320" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="340" text-anchor="middle">Pass-1 S/N quality filter + LOESS fit</text>
+  <text class="stage-desc"  x="600" y="354" text-anchor="middle">keep targets with q &lt;= 1% AND SNR &gt;= 5.0; fit LOESS on (lib_rt, measured_rt) -&gt; expected_rt(lib_rt)</text>
+
+  <!-- Pass-2 substages -->
+  <text class="phase-label" x="80" y="390" fill="#ef6c00">pass 2</text>
+
+  <rect class="st-done" x="80" y="400" width="1040" height="62" rx="4"/>
+  <text class="stage-title" x="600" y="420" text-anchor="middle">Pass-2 re-score with refined RT tolerance</text>
+  <text class="stage-desc"  x="600" y="436" text-anchor="middle">tolerance = clamp(MAD x 1.4826 x 3, [min, max]); expected_rt from pass-1 LOESS; re-extract XICs + peaks</text>
+  <text class="stage-desc"  x="600" y="450" text-anchor="middle">MS2 m/z calibration (offset correction + calibrated fragment tolerance) proven bit-identical</text>
+
+  <rect class="st-done" x="80" y="480" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="500" text-anchor="middle">Pass-2 LDA + LOESS (accept only if R&#178; doesn't degrade &gt;1%)</text>
+  <text class="stage-desc"  x="600" y="514" text-anchor="middle">falls back to pass-1 calibration if the pass-2 fit is worse</text>
+
+  <!-- Flow arrows within stage 3 -->
+  <path class="flow" d="M 600 142 L 600 158" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 222 L 600 238" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 302 L 600 318" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 362 L 600 398" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 462 L 600 478" marker-end="url(#arrow)"/>
+
+  <!-- Stage 3 badges (upper right of container) -->
+  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">31 + 10 regression (xcorr, apex, SNR, LOESS, LDA, f64)</tspan></text>
+</g>
+
+<!-- Arrow from calibration to main search -->
+<path class="flow" d="M 600 1140 L 600 1180" marker-end="url(#arrow)"/>
+
+<!-- ================================================================= -->
+<!-- STAGE 4 MAIN FIRST-PASS SEARCH                                     -->
+<!-- ================================================================= -->
+<g transform="translate(0, 1180)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="200" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 4</text>
+  <text class="phase-title" x="60" y="42">Main first-pass search</text>
+  <text class="phase-note"  x="60" y="58">
+    For EVERY library entry (~485K including decoys), extract XICs and compute
+    21 PIN features. Uses the calibrated RT from Stage 3 to pick the right spectra window.
+  </text>
+
+  <rect class="st-done" x="80" y="80" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="100" text-anchor="middle">Per-entry XIC extraction + CWT candidate peaks</text>
+  <text class="stage-desc"  x="600" y="114" text-anchor="middle">XICs proven bit-identical (9 entries); CWT peaks + boundaries match; 311K entries verified</text>
+
+  <rect class="st-done" x="80" y="140" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="160" text-anchor="middle">21 PIN features per entry (pre-preprocessed XCorr, signal prefilter, CWT fallback)</text>
+  <text class="stage-desc"  x="600" y="174" text-anchor="middle">21/21 features ULP-identical on Stellar (466K entries); 21/21 pass on Astral (19 ULP, xcorr/sg_xcorr ~1e-7 from f32 HRAM cache)</text>
+
+  <!-- Stage 4 badges (upper right of container) -->
+  <text x="1115" y="24" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">2 + 8 regression (bin dedup, coelution, median polish, boundary)</tspan></text>
+
+  <path class="flow" d="M 600 122 L 600 138" marker-end="url(#arrow)"/>
+</g>
+
+<!-- ================================================================= -->
+<!-- TASK 2 of 4: FirstPassFDR (Stage 5, first join / coordinator node)  -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 1380 L 600 1394" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 1396)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; all-file representation</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores.parquet  (every file, via --input-scores)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json (Stage 5&#8594;6 boundary)   &#183;   validity  &lt;out&gt;.FirstPassFDR.osprey.task</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 5 FIRST-PASS FDR + RECONCILIATION PLANNING (FIRST JOIN)      -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 1460 L 600 1478" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 1480)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="500" rx="8"/>
+  <text class="phase-label" x="60" y="24">stage 5</text>
+  <text class="phase-title" x="60" y="42">First-pass FDR + reconciliation planning</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
+  <text class="phase-note"  x="60" y="58">First join in the pipeline. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
+  <text class="phase-note"  x="60" y="72">refits per-file calibration, and emits a per-(file, entry) reconciliation plan. All work that needs all-file representation lives here.</text>
+
+  <!-- Sub-phase 1: first-pass Percolator -->
+  <text class="phase-label" x="80" y="92" fill="#2e7d32">first-pass percolator</text>
+
+  <rect class="st-done" x="80" y="102" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="122" text-anchor="middle">Best-per-precursor subsampling (across files)</text>
+  <text class="stage-desc"  x="600" y="136" text-anchor="middle">subsample + fold dump bit-identical on Stellar 3-file (1,388,872 rows)</text>
+
+  <rect class="st-done" x="80" y="162" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="182" text-anchor="middle">Iterative non-negative SVM (3-fold stratified CV by peptide)</text>
+  <text class="stage-desc"  x="600" y="196" text-anchor="middle">grid search for C; Percolator-style positive training set; per-fold SVM weights match byte-for-byte</text>
+  <text class="stage-desc"  x="600" y="210" text-anchor="middle">cross-fold score calibration (Granholm 2012); standardizer mean/std match within 1e-12</text>
+
+  <rect class="st-done" x="80" y="236" width="1040" height="32" rx="4"/>
+  <text class="stage-title" x="600" y="256" text-anchor="middle">Target-decoy competition + q-values (run + experiment x precursor + peptide) + first-pass compaction + first-pass protein FDR</text>
+
+  <!-- Sub-phase 2: reconciliation planning -->
+  <text class="phase-label" x="80" y="296" fill="#ef6c00">reconciliation planning</text>
+
+  <rect class="st-done" x="80" y="306" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="326" text-anchor="middle">Multi-charge consensus per file (post-compaction)</text>
+  <text class="stage-desc"  x="600" y="340" text-anchor="middle">SelectRescoreTargets dump bit-identical (31,270 rows on Stellar 3-file)</text>
+
+  <rect class="st-done" x="80" y="366" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="386" text-anchor="middle">Cross-run consensus RTs + per-file calibration refit</text>
+  <text class="stage-desc"  x="600" y="400" text-anchor="middle">sigmoid(score)-weighted median, hard run_precursor_qvalue gate, protein-FDR rescue</text>
+  <text class="stage-desc"  x="600" y="414" text-anchor="middle">consensus + inv_predict + loess_fit + refit dumps bit-identical on Stellar + Astral 3-file</text>
+
+  <rect class="st-done" x="80" y="440" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="460" text-anchor="middle">Reconciliation plan: per-(file, entry) {Keep | UseCwtPeak | ForcedIntegration}</text>
+  <text class="stage-desc"  x="600" y="474" text-anchor="middle">reconciliation dump bit-identical on Stellar (172,548 actions) + Astral (248,711 actions)</text>
+
+  <!-- Inter-substep arrows (sub-phase 1) -->
+  <path class="flow" d="M 600 144 L 600 160" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 218 L 600 234" marker-end="url(#arrow)"/>
+  <!-- Inter-substep arrows (sub-phase 2) -->
+  <path class="flow" d="M 600 348 L 600 364" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 422 L 600 438" marker-end="url(#arrow)"/>
+</g>
+
+<!-- ================================================================= -->
+<!-- TASK 3 of 4: PerFileRescoring (Stage 6, second per-file fan-out)    -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 1980 L 600 1994" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 1996)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-file fan-out &#183; N nodes</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores.parquet (via --input-scores) + sidecars &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;stem&gt;.scores-reconciled.parquet  (work-files only)   &#183;   validity  &lt;out&gt;.PerFileRescoring.osprey.task</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 6 PER-FILE RESCORE (SECOND PER-FILE FAN-OUT)                  -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 2060 L 600 2078" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 2080)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 6</text>
+  <text class="phase-title" x="60" y="42">Per-file rescore + gap-fill + parquet write-back</text>
+  <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-file — N nodes</text>
+  <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file independently reloads its mzML, re-invokes the search engine with the reconciled boundary overrides,</text>
+  <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes reconciled scores back to its .scores.parquet. No cross-file work.</text>
+
+  <rect class="st-done" x="80" y="90" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="110" text-anchor="middle">Per-file rescore at reconciled boundaries</text>
+  <text class="stage-desc"  x="600" y="124" text-anchor="middle">consensus + reconciliation overlay; cross-impl byte-parity validated on Stellar + Astral</text>
+
+  <rect class="st-done" x="80" y="148" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="168" text-anchor="middle">Gap-fill (two-pass: CWT with prefilter off, then forced integration)</text>
+  <text class="stage-desc"  x="600" y="182" text-anchor="middle">IdentifyGapFillTargets ported; gap-fill stubs appended with parquet_index = uint.MaxValue</text>
+
+  <rect class="st-done" x="80" y="206" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="226" text-anchor="middle">Reconciled parquet write-back (replace by ParquetIndex, append gap-fill, write reconciliation metadata)</text>
+  <text class="stage-desc"  x="600" y="240" text-anchor="middle">final per-file parquet output of Phase C — feeds Stage 7 second-pass Percolator</text>
+
+  <path class="flow" d="M 600 132 L 600 146" marker-end="url(#arrow)"/>
+  <path class="flow" d="M 600 190 L 600 204" marker-end="url(#arrow)"/>
+</g>
+
+<!-- ================================================================= -->
+<!-- TASK 4 of 4: SecondPassFDR (Stage 7, merge node / second join)      -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 2340 L 600 2354" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 2356)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">merge node &#183; second join</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores-reconciled.parquet (via --input-scores; falls back to &lt;stem&gt;.scores.parquet for no-work files)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;output&gt;.blib, &lt;stem&gt;.2nd-pass.fdr_scores.bin (when Stage 6 rescored)   &#183;   validity  &lt;out&gt;.SecondPassFDR.osprey.task</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- STAGE 7 POST-SECOND-JOIN: PERCOLATOR + PROTEIN FDR + .BLIB OUTPUT   -->
+<!-- ================================================================= -->
+<!-- One stage, three sub-steps. There is no per-file fan-out and no    -->
+<!-- sidecar / rehydration boundary between second-pass Percolator,     -->
+<!-- protein parsimony / picked-protein FDR, and .blib SQLite output;   -->
+<!-- they all run on the merge node in a single process. Mirrors the    -->
+<!-- way Stage 5 already absorbs many sub-steps (first-pass Percolator, -->
+<!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
+<!-- planning) under the first-join phase.                              -->
+<!-- ================================================================= -->
+<path class="flow" d="M 600 2420 L 600 2438" marker-end="url(#arrow)"/>
+
+<g transform="translate(0, 2440)">
+  <rect class="phase-bg" x="40" y="0" width="1120" height="230" rx="6"/>
+  <text class="phase-label" x="60" y="24">stage 7</text>
+  <text class="phase-title" x="60" y="42">Post-join: second-pass Percolator + protein FDR + .blib output</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — final merge-node phase (no further per-file fan-out)</text>
+
+  <rect class="st-done" x="80" y="62" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="82" text-anchor="middle">Single Percolator pass on the reconciled + gap-filled pool</text>
+  <text class="stage-desc"  x="600" y="96" text-anchor="middle">final run + experiment q-values at precursor + peptide levels (cross-impl PASS at 1e-9 via the protein-FDR-dump gate which transitively covers second-pass Percolator scores)</text>
+
+  <path class="flow" d="M 600 104 L 600 118" marker-end="url(#arrow)"/>
+
+  <rect class="st-done" x="80" y="120" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="140" text-anchor="middle">Parsimony + picked-protein FDR (Savitski 2015, TDC on best peptide score)</text>
+  <text class="stage-desc"  x="600" y="154" text-anchor="middle">bipartite graph, identical-set grouping, subset elimination, greedy razor assignment (cross-impl PASS Stellar 6204/6204 + Astral 11779/11779 via Compare-Stage7-Crossimpl.ps1)</text>
+
+  <path class="flow" d="M 600 162 L 600 176" marker-end="url(#arrow)"/>
+
+  <rect class="st-done" x="80" y="178" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="198" text-anchor="middle">BiblioSpecLite .blib (RefSpectra, RetentionTimes, Modifications, Proteins, Osprey fragment tables)</text>
+  <text class="stage-desc"  x="600" y="212" text-anchor="middle">cross-impl PASS Stellar 45153 + Astral 129352 RefSpectra via Compare-Blib-Crossimpl.ps1</text>
+</g>
+
+</svg>
+</main>
+
+<footer>
+  <p>
+    <strong>Cross-impl parity (Stellar <code>--resolution unit</code>, Astral
+    <code>--resolution hram</code>):</strong>
+    Stages 1-4 PIN features bit-identical at ULP on Stellar (466K entries,
+    all 21 features under 1e-10); on Astral 19 of 21 are ULP and xcorr /
+    sg_weighted_xcorr drift at ~1e-7 from the intrinsic f32 HRAM
+    preprocessed-bin cache (matches upstream osprey-scoring). Stages 5 and 6
+    pass byte-equality at every dump on both datasets (3-file). Stage 7
+    protein FDR matches at 1e-9 absolute (Stellar 6204/6204, Astral
+    11779/11779 protein groups); Stage 7 <code>.blib</code> output matches
+    at the SQL row+column level (Stellar 45153 + Astral 129352 RefSpectra,
+    byte-identical <code>RefSpectraPeaks</code> blobs).
+  </p>
+  <p>
+    <strong>End-to-end performance (3-file regression, Windows native,
+    C: SSD source data, AV-scan excluded; 8 cells, median-of-3):</strong>
+    Stage 5/6 boundaries are aligned cross-impl so the per-stage cells
+    compare like-for-like: Rust labels stage5 = percolator + protein FDR
+    and stage6 = reconciliation + rescore + gap-fill, while Osprey
+    logs the reconciliation portion under its <code>[TIMING]</code>
+    markers, which <code>Measure-Pipeline.ps1</code> shifts into stage6.
+    Run-to-run variance is tight on C# (Astral total ~17:44&ndash;17:48,
+    Stellar ~3:32&ndash;3:46) and wider on Rust, mostly in blib write.
+    These figures are the default sequential per-file run; under
+    <code>--parallel-files</code> the per-file scoring and rescore fan
+    out across files and the wall drops further.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">2:05</td><td style="text-align: right; padding: 1px 12px;">1:25</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.68x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">9:46</td><td style="text-align: right; padding: 1px 12px;">8:12</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.84x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR, aligned)</td><td style="text-align: right; padding: 1px 12px;">1:11</td><td style="text-align: right; padding: 1px 12px;">1:01</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.87x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">1:34</td><td style="text-align: right; padding: 1px 12px;">1:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.72x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (reconciliation + rescore, aligned)</td><td style="text-align: right; padding: 1px 12px;">0:38</td><td style="text-align: right; padding: 1px 12px;">0:37</td><td style="text-align: right; padding: 1px 12px;">0.99x (~tied)</td><td style="text-align: right; padding: 1px 12px;">8:59</td><td style="text-align: right; padding: 1px 12px;">5:59</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.67x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:42</td><td style="text-align: right; padding: 1px 12px;">0:34</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.83x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">2:58</td><td style="text-align: right; padding: 1px 12px;">2:08</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.72x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:22</td><td style="text-align: right; padding: 1px 12px;">0:04</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.18x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">1:55</td><td style="text-align: right; padding: 1px 12px;">0:09</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.08x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:57</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>3:42</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.75x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>25:13</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>17:38</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.70x (C# faster)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Per-stage commentary:</strong>
+  </p>
+  <ul>
+    <li>
+      <strong>stage1to4</strong> (per-file scoring): C# faster on both
+      datasets (0.68&times; Stellar, 0.84&times; Astral). The hot path
+      uses an LOH-allocation-free ~100K-bin <code>XcorrScratchPool</code>,
+      a pre-preprocessed XCorr cache with f32 narrowing, a pooled
+      <code>visitedBins</code> for O(n_fragments) clear, per-file thread
+      scaling, and an mzML read gate that serializes disk I/O across
+      concurrent <code>ProcessFile</code> calls.
+    </li>
+    <li>
+      <strong>stage5</strong> (first-pass FDR &mdash; percolator + protein
+      FDR; reconciliation planning is folded into stage6 per the alignment
+      above): C# 14% faster on Stellar, 28% on Astral. The SVM
+      dual-coordinate-descent inner loops are SIMD-vectorized
+      (<code>System.Numerics.Vector&lt;double&gt;</code>), the KDE binning
+      in <code>PepEstimator.Fit</code> is parallelized, and the grid
+      search + folds run under <code>OspreyParallel.For</code> with a
+      per-worker <code>SvmTrainScratch</code> pool. At Astral scale the
+      wall is dominated by the percolator FDR loop itself.
+    </li>
+    <li>
+      <strong>stage6</strong> (per-file rescore + gap-fill + reconciled
+      parquet write-back, aligned to include reconciliation planning):
+      tied on Stellar (0.99&times;), C# 33% faster on Astral. The LOESS
+      planner's per-x-point local regressions run under
+      <code>Parallel.For</code> and the rescore reuses the pooled-scratch
+      XCorr path; in default sequential mode reconciliation planning
+      dominates the Astral wall. Under <code>--parallel-files</code> the
+      per-file rescore (<code>--task PerFileRescoring</code>) fans out
+      across files as well, byte-identically.
+    </li>
+    <li>
+      <strong>stage7</strong> (second-pass Percolator + protein FDR): C#
+      faster than Rust everywhere. Heavily SVM-dominated &mdash; the
+      2nd-pass FDR re-runs Percolator on the reconciled feature pool with
+      the same SIMD <code>LinearSvmClassifier.Train</code> + parallel KDE
+      as stage5. Protein parsimony's subset-elimination uses
+      <code>HashSet&lt;string&gt;</code>; the 2nd-pass FDR sidecar overlay
+      (<code>FdrScoresSidecar.TryReadOverlay</code>) reads only the
+      sidecar and overlays scores by entry_id without re-reading the
+      source parquet. (Osprey emits the 2nd-pass Percolator work
+      under a separate <code>[STAGE-WALL] second-pass-fdr</code> marker;
+      the totals above combine it with <code>stage7</code> so the column
+      compares like-for-like with Rust's single <code>stage7</code> marker.)
+    </li>
+    <li>
+      <strong>blib write</strong>: C# faster on both datasets. Per-spectrum
+      <code>Ionic.Zlib</code> compression runs under
+      <code>Parallel.For</code> (<code>BlibWriter</code> pre-compresses
+      mzs + intensities); the SQLite insert stays sequential and the
+      output is byte-identical to Osprey's blib.
+    </li>
+  </ul>
+  <p>
+    <strong>WSL Linux end-to-end performance &mdash; ext4 inside
+    <code>/home</code> (median-of-3)</strong>:
+    Same workstation as the Windows benchmark above, WSL2 Ubuntu
+    22.04, .NET 8.0.421, Rust 1.95.0.  The WSL
+    <code>ext4.vhdx</code> is on the C: SSD; test data is staged
+    inside the VHDX at <code>/home/brendanx/test/osprey-runs</code>,
+    so every read and write goes through Linux ext4 with no 9P
+    drvfs crossing.  This is the &ldquo;Linux-native&rdquo;
+    configuration.  C# is
+    ahead by 7% on Stellar (3:41 vs 3:58) and 4% on Astral (15:57
+    vs 16:38) at the total wall.  The gap is tighter than the
+    Windows-native or <code>/mnt/c</code> cells because of an
+    asymmetric benefit at stage6 on native Linux ext4: Rust stage6
+    drops from 5:57 (<code>/mnt/c</code>) to 4:05
+    (<code>/home</code>) &ndash;32%; C# stage6 drops from 5:36 to
+    4:39 &ndash;17%.  C#&apos;s stage6 is largely CPU-bound;
+    Rust&apos;s remaining
+    stage6 work is more I/O-heavy and benefits more from the
+    native filesystem.  Stage 5 (aligned) is tied on both datasets
+    (0.97&times; Stellar / 0.91&times; Astral); stage7 is
+    decisively C#-faster (0.93&times; / 0.78&times;).  Cross-OS
+    output parity is gated separately by
+    <code>Test-Snapshot.ps1</code> at 1e-6 tolerance on four
+    median-polish columns (<code>median_polish_cosine</code>,
+    <code>_residual_ratio</code>, <code>_min_fragment_r2</code>,
+    <code>_residual_correlation</code>) because both runtimes
+    delegate <code>Math.Log</code> and <code>Math.Exp</code> to the
+    host libm (Linux glibc vs Windows ucrt), which differ at f64
+    ULP level.  All other Stage 1-4 columns are bit-equal cross-OS,
+    and the cross-OS divergence in stage5 percolator TSV output is
+    bounded to a handful of formatted-float characters per ~200 MB
+    file.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">1:44</td><td style="text-align: right; padding: 1px 12px;">1:20</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.77x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">7:27</td><td style="text-align: right; padding: 1px 12px;">7:32</td><td style="text-align: right; padding: 1px 12px;">1.01x (~tied)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR, aligned)</td><td style="text-align: right; padding: 1px 12px;">1:07</td><td style="text-align: right; padding: 1px 12px;">1:05</td><td style="text-align: right; padding: 1px 12px;">0.97x (~tied)</td><td style="text-align: right; padding: 1px 12px;">1:15</td><td style="text-align: right; padding: 1px 12px;">1:09</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.91x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (reconciliation + rescore, aligned)</td><td style="text-align: right; padding: 1px 12px;">0:22</td><td style="text-align: right; padding: 1px 12px;">0:35</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.61x</td><td style="text-align: right; padding: 1px 12px;">4:05</td><td style="text-align: right; padding: 1px 12px;">4:39</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.14x</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:39</td><td style="text-align: right; padding: 1px 12px;">0:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.93x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">2:52</td><td style="text-align: right; padding: 1px 12px;">2:14</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.78x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.51x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">0:55</td><td style="text-align: right; padding: 1px 12px;">0:11</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.20x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>3:58</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>3:41</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.93x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>16:38</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>15:57</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.96x (C# faster)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>WSL Linux end-to-end performance &mdash; 9P drvfs to
+    Windows <code>/mnt/c</code> (median-of-3)</strong>:
+    Same WSL distro and binaries, but with test data living on the
+    Windows side at <code>C:\test\osprey-runs</code> (accessed as
+    <code>/mnt/c/test/osprey-runs</code> from inside WSL). Every
+    read and write crosses the 9P protocol bridge between Linux and
+    Windows NTFS &mdash; this is the configuration developers get
+    by default when they keep their data on the Windows filesystem
+    and just run the pipeline from a WSL shell.  9P adds substantial
+    per-syscall overhead but the absolute totals are still
+    workable.  C# beats Rust by 23% on Stellar (4:48 vs 6:13) and
+    21% on Astral (19:24 vs 24:31) at the total wall, despite
+    the 9P penalty applying equally to both impls.  Aligned-stage5
+    is essentially tied (0.98&times; Stellar / 0.93&times; Astral),
+    aligned-stage6
+    is also tied to slightly C#-faster (0.94&times; both datasets),
+    and stage7 is
+    decisively C#-faster (0.75&times; Stellar / 0.72&times;
+    Astral).
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Stage</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Stellar C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">Astral C#</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">stage1to4</td><td style="text-align: right; padding: 1px 12px;">3:16</td><td style="text-align: right; padding: 1px 12px;">2:03</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.63x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">13:09</td><td style="text-align: right; padding: 1px 12px;">9:51</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.75x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage5 (1st-pass FDR, aligned)</td><td style="text-align: right; padding: 1px 12px;">1:07</td><td style="text-align: right; padding: 1px 12px;">1:05</td><td style="text-align: right; padding: 1px 12px;">0.98x (~tied)</td><td style="text-align: right; padding: 1px 12px;">1:16</td><td style="text-align: right; padding: 1px 12px;">1:10</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.93x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage6 (reconciliation + rescore, aligned)</td><td style="text-align: right; padding: 1px 12px;">0:56</td><td style="text-align: right; padding: 1px 12px;">0:53</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.94x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">5:57</td><td style="text-align: right; padding: 1px 12px;">5:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.94x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">stage7 (2nd-pass FDR + protein)</td><td style="text-align: right; padding: 1px 12px;">0:48</td><td style="text-align: right; padding: 1px 12px;">0:36</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.75x (C# faster)</td><td style="text-align: right; padding: 1px 12px;">3:08</td><td style="text-align: right; padding: 1px 12px;">2:16</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.72x (C# faster)</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">blib write</td><td style="text-align: right; padding: 1px 12px;">0:06</td><td style="text-align: right; padding: 1px 12px;">0:09</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.54x</td><td style="text-align: right; padding: 1px 12px;">0:54</td><td style="text-align: right; padding: 1px 12px;">0:25</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.47x (C# faster)</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Total</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>6:13</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>4:48</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.77x (C# faster)</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>24:31</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>19:24</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.79x (C# faster)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    A raw 9P / ext4 I/O bench from this session
+    (<code>ai/.tmp/wsl-io-bench/summary.md</code>) explains the
+    spread &mdash; ext4 inside the VHDX is dramatically faster than
+    drvfs for both sequential writes and the small-fsync metadata
+    pattern that stage5/6 dump writers used to hit:
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">WSL target</th>
+        <th style="text-align: left; padding: 2px 12px;">Backing</th>
+        <th style="text-align: right; padding: 2px 12px;">Seq write</th>
+        <th style="text-align: right; padding: 2px 12px;">Seq read (O_DIRECT)</th>
+        <th style="text-align: right; padding: 2px 12px;">500×4KiB fsync</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/mnt/c</code></td><td style="padding: 1px 12px;">C: SSD via 9P drvfs</td><td style="text-align: right; padding: 1px 12px;">356 MB/s</td><td style="text-align: right; padding: 1px 12px;">431 MB/s</td><td style="text-align: right; padding: 1px 12px;">190 files/s</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/mnt/d</code></td><td style="padding: 1px 12px;">D: HDD via 9P drvfs</td><td style="text-align: right; padding: 1px 12px;">215 MB/s</td><td style="text-align: right; padding: 1px 12px;">140 MB/s</td><td style="text-align: right; padding: 1px 12px;">30 files/s</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/home</code></td><td style="padding: 1px 12px;">ext4 / VHDX / C: SSD</td><td style="text-align: right; padding: 1px 12px;">2064 MB/s ‡</td><td style="text-align: right; padding: 1px 12px;">12328 MB/s †</td><td style="text-align: right; padding: 1px 12px;">cached</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;"><code>/dev/shm</code></td><td style="padding: 1px 12px;">tmpfs (RAM)</td><td style="text-align: right; padding: 1px 12px;">3333 MB/s</td><td style="text-align: right; padding: 1px 12px;">10085 MB/s</td><td style="text-align: right; padding: 1px 12px;">cached</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size: 11px;">
+    † Cache-influenced read: the 4 GiB test file is fully cached
+    after the immediately preceding write on a 64 GB workstation;
+    <code>O_DIRECT</code> on 9p drvfs does not always bypass the
+    Windows-side NTFS cache. Sustained read on the underlying HDD
+    platters is ~200 MB/s.
+    ‡ <code>fdatasync</code> forces Linux dirty pages out to
+    <code>/dev/sdd</code> (the VHDX virtual disk), not all the way
+    through the Windows VHDX layer to the underlying SSD; large
+    sustained writes that exceed the page cache would converge to
+    SSD write speed.
+  </p>
+  <p>
+    <strong>Methodology notes.</strong>
+    <em>(1) Storage layout.</em> All numbers in the three tables
+    above are on C: SSD physical media; both Windows
+    <code>C:\test\osprey-runs</code> and the WSL <code>ext4.vhdx</code>
+    (now backing both <code>/home</code> and <code>/mnt/c</code>
+    via different paths) live on the same SK hynix 2 TB NVMe.
+    Defender real-time scan exclusions cover both
+    <code>C:\test</code> and the Windows mount points the WSL distro
+    touches; without those exclusions, every disk-bound stage paid
+    a 5-10% scan overhead.
+    <em>(2) Rust dump-writer patch (still load-bearing).</em> Rust's
+    stage-5/6 diagnostic-dump writers in osprey v26.6.0 use unbuffered
+    <code>std::fs::File::create</code>: each <code>writeln!</code>
+    crosses to the kernel. On WSL drvfs/9P that took ~14 min for
+    the 74 MB stage5 percolator dump alone (vs ~1 min for the
+    percolator algorithm itself); BufWriter eliminates this on either
+    OS. The numbers above reflect that patch (committed via PR #36)
+    plus an explicit <code>f.flush(); drop(f);</code> before
+    <code>exit_if_only</code>.
+    <em>(3) C# Astral file parallelism.</em> C# processes files
+    <em>sequentially by default</em>; the WSL Astral run above is
+    therefore the default configuration and matches Rust, which also
+    processes files sequentially. Concurrency is opt-in via
+    <code>--parallel-files [N]</code> (the legacy
+    <code>OSPREY_MAX_PARALLEL_FILES</code> env var remains only as a
+    back-compat cap). Concurrent stage 1-4 over three files peaks at
+    ~60 GB on Astral, which exceeds the headroom left by the Hyper-V +
+    ext4.vhdx machinery on this 64 GB workstation, so the default
+    sequential path is what fits under WSL.
+  </p>
+  <p>
+    <strong>BLIB writer:</strong> Osprey's <code>BlibWriter</code>
+    uses DotNetZip / Ionic.Zlib level 6 (the same library Skyline's
+    <code>Util/Extensions/UtilDB.Compress</code> has used since 2009).
+    The Osprey side switched its <code>flate2</code> backend from
+    pure-Rust <code>miniz_oxide</code> to vendored stock zlib so both
+    sides emit identical Ionic.Zlib-compatible deflate output. Future
+    work: pull Skyline's <code>Model/Lib/BlibData</code> out to
+    <code>Shared/BiblioSpec</code> so Osprey and Skyline share a
+    single C# BLIB writer.
+  </p>
+  <p>
+    <strong>Source-line audit (per-module, executable code only;
+    measured 2026-06-26 via
+    <code>ai/scripts/Osprey/Compare/archive/Audit-Loc.ps1</code>):</strong>
+    Osprey tracks Osprey at <strong>0.94×</strong> production-code
+    size with the same module split. The Rust side ships its tests
+    inline (<code>#[cfg(test)]</code>); the C# side keeps them in a
+    separate <code>Osprey.Test</code> project. The post-port debt-
+    paydown work (task decomposition into <code>Osprey.Tasks</code>,
+    the per-stage Scoring split, and the <code>Osprey.Core</code>
+    seams) grew the C# production side ~24% over the original port, so
+    the module ratios have moved up toward 1× — Core / IO / FDR now run
+    slightly larger than Rust per module, while Scoring and
+    Chromatography stay well under 1× because XCorr / cosine /
+    median-polish share helpers across resolutions instead of paying the
+    Rust generic-instantiation cost. The <code>Osprey</code> exe,
+    <code>Osprey.Tasks</code>, and <code>Osprey.Diagnostics</code>
+    projects are folded into the <strong>Main</strong> row to compare
+    against Rust's single <code>osprey</code> orchestration crate.
+  </p>
+  <table style="margin: 8px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom: 1px solid #888;">
+        <th style="text-align: left; padding: 2px 12px 2px 0;">Module</th>
+        <th style="text-align: right; padding: 2px 12px;">C# files</th>
+        <th style="text-align: right; padding: 2px 12px;">C# code</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust files</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust code</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust prod (est)</th>
+        <th style="text-align: right; padding: 2px 12px;">Rust test (est)</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/Rust</th>
+        <th style="text-align: right; padding: 2px 12px;">C#/RustProd</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding: 1px 12px 1px 0;">Core</td><td style="text-align: right; padding: 1px 12px;">36</td><td style="text-align: right; padding: 1px 12px;">2,273</td><td style="text-align: right; padding: 1px 12px;">8</td><td style="text-align: right; padding: 1px 12px;">2,540</td><td style="text-align: right; padding: 1px 12px;">1,897</td><td style="text-align: right; padding: 1px 12px;">643</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.89×</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.20×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">IO</td><td style="text-align: right; padding: 1px 12px;">16</td><td style="text-align: right; padding: 1px 12px;">4,602</td><td style="text-align: right; padding: 1px 12px;">13</td><td style="text-align: right; padding: 1px 12px;">5,115</td><td style="text-align: right; padding: 1px 12px;">3,577</td><td style="text-align: right; padding: 1px 12px;">1,538</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.90×</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.29×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Chromatography</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">1,841</td><td style="text-align: right; padding: 1px 12px;">6</td><td style="text-align: right; padding: 1px 12px;">3,759</td><td style="text-align: right; padding: 1px 12px;">2,283</td><td style="text-align: right; padding: 1px 12px;">1,476</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.49×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.81×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Scoring</td><td style="text-align: right; padding: 1px 12px;">28</td><td style="text-align: right; padding: 1px 12px;">4,593</td><td style="text-align: right; padding: 1px 12px;">8</td><td style="text-align: right; padding: 1px 12px;">7,769</td><td style="text-align: right; padding: 1px 12px;">5,744</td><td style="text-align: right; padding: 1px 12px;">2,025</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.59×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.80×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">FDR</td><td style="text-align: right; padding: 1px 12px;">18</td><td style="text-align: right; padding: 1px 12px;">3,730</td><td style="text-align: right; padding: 1px 12px;">5</td><td style="text-align: right; padding: 1px 12px;">5,094</td><td style="text-align: right; padding: 1px 12px;">3,446</td><td style="text-align: right; padding: 1px 12px;">1,648</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.73×</td><td style="text-align: right; padding: 1px 12px; color: #b54708;">1.08×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">ML</td><td style="text-align: right; padding: 1px 12px;">7</td><td style="text-align: right; padding: 1px 12px;">1,139</td><td style="text-align: right; padding: 1px 12px;">8</td><td style="text-align: right; padding: 1px 12px;">1,910</td><td style="text-align: right; padding: 1px 12px;">1,225</td><td style="text-align: right; padding: 1px 12px;">685</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.60×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.93×</td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Main (exe + Tasks + Diagnostics)</td><td style="text-align: right; padding: 1px 12px;">28</td><td style="text-align: right; padding: 1px 12px;">8,002</td><td style="text-align: right; padding: 1px 12px;">9</td><td style="text-align: right; padding: 1px 12px;">14,098</td><td style="text-align: right; padding: 1px 12px;">9,657</td><td style="text-align: right; padding: 1px 12px;">4,441</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.57×</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;">0.83×</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Production TOTAL</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>140</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>26,180</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>57</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>40,285</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>27,829</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>12,456</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.65×</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;"><strong>0.94×</strong></td></tr>
+      <tr><td style="padding: 1px 12px 1px 0;">Osprey.Test</td><td style="text-align: right; padding: 1px 12px;">32</td><td style="text-align: right; padding: 1px 12px;">9,889</td><td style="text-align: right; padding: 1px 12px;" colspan="2" title="Rust tests are inline #[cfg(test)] blocks; no separate files">— (inline)</td><td style="text-align: right; padding: 1px 12px;">—</td><td style="text-align: right; padding: 1px 12px;">12,456</td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;" colspan="2">0.79× vs Rust tests</td></tr>
+      <tr style="border-top: 1px solid #888;"><td style="padding: 1px 12px 1px 0;"><strong>Prod + Tests TOTAL</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>172</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>36,069</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>57</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>40,285</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>27,829</strong></td><td style="text-align: right; padding: 1px 12px;"><strong>12,456</strong></td><td style="text-align: right; padding: 1px 12px; color: #1a7f37;" colspan="2"><strong>0.90× (C# / Rust)</strong></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Grand totals.</strong>
+    Osprey production: <strong>26.2 KLOC</strong> (140 files).
+    Osprey.Test (separate project): <strong>9.9 KLOC</strong>
+    (32 files). Combined: <strong>36.1 KLOC</strong> (172 files).
+    Osprey production (estimated, by stripping inline
+    <code>#[cfg(test)]</code> tails): <strong>27.8 KLOC</strong>.
+    Osprey inline tests (estimated): <strong>12.5 KLOC</strong>. Osprey
+    all code (cloc total, 57 files): <strong>40.3 KLOC</strong>.
+    Apples-to-apples ratios: <strong>production-only 0.94×</strong>
+    (C# / Rust), <strong>production+tests 0.90×</strong>. The C#
+    production side is now close to Rust's size after the debt-paydown
+    growth (more files, smaller average file); the test side is
+    sparser, mostly because the C# pipeline has its own full-stage
+    parity gates (<code>regression.ps1</code>, <code>Test-PerfGate.ps1</code>,
+    and the archived per-stage comparators) that sit outside the
+    unit-test count.
+  </p>
+  <p>
+    Counts come from <code>cloc</code> (executable code only; build
+    artifacts excluded). The Rust prod/test split is a heuristic: per
+    <code>.rs</code> file, the first
+    <code>^\s*#[cfg(test)]</code> line marks the boundary and
+    everything to EOF is treated as test. Matches the standard
+    <code>mod tests { ... }</code> convention but undercounts the
+    test side when a crate intermixes test items in non-trailing
+    positions. Regenerate with
+    <code>pwsh -File ai/scripts/Osprey/Compare/archive/Audit-Loc.ps1 -CSharpRoot &lt;Osprey&gt; -RustRoot &lt;osprey&gt;</code>,
+    then fold the <code>Osprey.Tasks</code> +
+    <code>Osprey.Diagnostics</code> cloc counts into the Main row
+    (the archived script's module list predates those two projects).
+  </p>
+  <p style="font-size: 11px; color: #757575;">
+    Sprint-by-sprint history of the Osprey port — bisection notes,
+    per-issue narrative, and the perf-fix log that backs the figures
+    above — lives in the completed TODOs at
+    <code>pwiz-ai/todos/completed/TODO-*osprey*.md</code>.
+  </p>
+</footer>
+</body>
+</html>

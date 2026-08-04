@@ -80,6 +80,7 @@ namespace pwiz.Skyline
             this.searchStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.runPeptideSearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.encyclopeDiaSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.diannSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importFeatureDetectionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -474,6 +475,7 @@ namespace pwiz.Skyline
             this.searchStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.runPeptideSearchToolStripMenuItem,
             this.encyclopeDiaSearchMenuItem,
+            this.diannSearchMenuItem,
             this.importFeatureDetectionMenuItem});
             this.searchStripMenuItem.Name = "searchStripMenuItem";
             resources.ApplyResources(this.searchStripMenuItem, "searchStripMenuItem");
@@ -491,7 +493,14 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.encyclopeDiaSearchMenuItem, "encyclopeDiaSearchMenuItem");
             this.modeUIHandler.SetUIMode(this.encyclopeDiaSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.encyclopeDiaSearchMenuItem.Click += new System.EventHandler(this.encyclopeDiaSearchMenuItem_Click);
-            // 
+            //
+            // diannSearchMenuItem
+            //
+            this.diannSearchMenuItem.Name = "diannSearchMenuItem";
+            resources.ApplyResources(this.diannSearchMenuItem, "diannSearchMenuItem");
+            this.modeUIHandler.SetUIMode(this.diannSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.diannSearchMenuItem.Click += new System.EventHandler(this.diannSearchMenuItem_Click);
+            //
             // importFeatureDetectionMenuItem
             // 
             this.importFeatureDetectionMenuItem.Name = "importFeatureDetectionMenuItem";
@@ -1131,6 +1140,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem searchStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem runPeptideSearchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem diannSearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ardiaPublishMenuItem;
         private System.Windows.Forms.ToolStripMenuItem searchToolsMenuItem;

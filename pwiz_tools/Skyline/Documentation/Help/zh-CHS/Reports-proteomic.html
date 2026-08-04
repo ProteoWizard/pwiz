@@ -276,16 +276,16 @@ td {
 诱饵质荷比</td><td class="ColumnType">Int32</td></tr>
 <tr><td class="ColumnCaption">自动选择离子对</td><td class="ColumnDescription">如果为“true”，则 Skyline 将根据离子对设置筛选器、谱图库等自动添加或删除母离子中的离子对。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">目标定性离子比</td><td class="ColumnDescription">所有未从校准排除的外部标准重复测定中定性离子比值的平均值。</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">范例峰</td><td class="ColumnDescription">文档中任一重复测定或库中任一明确峰边界中得分最高的峰</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">峰示例</td><td class="ColumnDescription">文档中任一重复测定或库中任一明确峰边界中得分最高的峰</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">范例保留时间</td><td class="ColumnDescription">得分最高的峰顶点的归一化保留时间</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">范例起始时间</td><td class="ColumnDescription">来自得分最高的重复测定或库文件的峰归一化起点保留时间</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">范例结束时间</td><td class="ColumnDescription">来自得分最高的重复测定或库文件的峰归一化结束保留时间</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">范例得分</td><td class="ColumnDescription">重复测定或库中得分最高的峰得分</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">范例重复测定名称</td><td class="ColumnDescription">得分最高的峰重复测定名称</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">范例库名称</td><td class="ColumnDescription">得分最高的峰库名称</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">范例文件路径</td><td class="ColumnDescription">得分最高的峰结果文件路径</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">保留时间示例</td><td class="ColumnDescription">得分最高的峰顶点的归一化保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">起始时间示例</td><td class="ColumnDescription">来自得分最高的重复测定或库文件的峰归一化起点保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">结束时间示例</td><td class="ColumnDescription">得分最高的重复测定或库中文件的峰归一化的结束保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">得分示例</td><td class="ColumnDescription">重复测定或库中得分最高的峰得分</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重复测定名称示例</td><td class="ColumnDescription">得分最高的峰重复测定的名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">库名称示例</td><td class="ColumnDescription">得分最高的峰库名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">文件路径示例</td><td class="ColumnDescription">得分最高的峰对应的结果文件路径</td><td class="ColumnType">String</td></tr>
 </table>
 
 </td></tr>
@@ -425,10 +425,10 @@ td {
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
 <tr><td class="ColumnCaption">蛋白质丰度原始值</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
 通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
-在缺失的数据影响到重复测定之间的比较时仍可获取。</td><td class="ColumnType">Double</td></tr>
+在受缺失数据影响的重复测定之间的比较时仍有效。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">蛋白质丰度精确值</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
 通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
-在缺失的数据影响到重复测定之间的比较时不可获取。</td><td class="ColumnType">Double</td></tr>
+在受缺失数据影响的重复测定之间的比较时无效。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">蛋白质丰度消息</td><td class="ColumnDescription">如果缺失的数据影响到比较重复测定之间的“蛋白质丰度”，则发出警告</td><td class="ColumnType">String</td></tr>
 </table>
 
@@ -451,7 +451,7 @@ td {
 氨基酸残基。（例如 P、M、S、T 等。）</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">丢失中性质量</td><td class="ColumnDescription">此片段中所有中性丢失的总质量。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">损失</td><td class="ColumnDescription">此片段中所有中性丢失的逗号分隔清单</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">损失公式</td><td class="ColumnDescription">此片段中所有中性丢失的逗号分隔化学式列表，或者如果并非所有丢失都具有化学式，则为空</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">损失公式</td><td class="ColumnDescription">A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">定量</td><td class="ColumnDescription">定量肽段时是否应该包含离子对的峰面积。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">明确碰撞能量</td><td class="ColumnDescription">用于目标的 SRM 方法或离子对列表确切所需的碰撞能量，覆盖所有模型或优化库值或根据母离子而定的明确值。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">明示SLens</td><td class="ColumnDescription">用于目标的 SRM 方法或离子对清单确切所需的 SLens 值（仅限 Thermo 仪器）。</td><td class="ColumnType">Double</td></tr>
@@ -639,24 +639,24 @@ td {
 </table>
 
 </td></tr>
-<tr><td class="ColumnCaption">重新合并峰</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">重新整合的峰</td><td class="ColumnDescription">使用训练好的峰评分模型重新整合时，所选峰的边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">重新合并保留时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰顶点保留时间</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">重新合并起始时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰起始保留时间</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">重新合并结束时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰结束保留时间</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">重新合并得分</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时分配的峰得分</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新整合的保留时间</td><td class="ColumnDescription">使用训练好的峰评分模型重新整合时，所选峰值顶点的保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新整合的起始时间</td><td class="ColumnDescription">使用训练好的峰评分模型重新整合时，所选峰的起始保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新整合的结束时间</td><td class="ColumnDescription">使用训练好的峰评分模型重新整合时，所选峰的最终保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新整合的得分</td><td class="ColumnDescription">使用训练好的峰评分模型重新整合时，所选峰的得分</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
 <tr><td class="ColumnCaption">母离子重复测定注释</td><td class="ColumnDescription">与使用结果网格的母离子结果集
 相关的自由文字注释。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">肽段结果</td><td class="ColumnDescription">肽段结果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">肽段结果</a></td></tr>
-<tr><td class="ColumnCaption">插补峰</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
+<tr><td class="ColumnCaption">划定的峰</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">插补起始时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的起始时间</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">插补结束时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的结束时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">划定的起始时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的起始时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">划定的结束时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的结束时间</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
@@ -800,7 +800,7 @@ td {
 <tr><td class="ColumnCaption">原始时间</td><td class="ColumnDescription">原始（未内插）的色谱图中的保留时间。</td><td class="ColumnType">FormattableList`1</td></tr>
 <tr><td class="ColumnCaption">原始强度</td><td class="ColumnDescription">原始（未内插）的色谱图的强度。</td><td class="ColumnType">FormattableList`1</td></tr>
 <tr><td class="ColumnCaption">原始质量误差</td><td class="ColumnDescription">原始（未内插）的色谱图的质量误差。</td><td class="ColumnType">FormattableList`1</td></tr>
-<tr><td class="ColumnCaption">原始谱图 ID</td><td class="ColumnDescription">用于原始（未插入）色谱图中的点的谱图标识符。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">原始谱图 ID</td><td class="ColumnDescription">用于原始（未插入）色谱图中的点的谱图标识符。</td><td class="ColumnType">ListColumnValue`1</td></tr>
 </table>
 
 </td></tr>
@@ -811,7 +811,7 @@ td {
 <tr><td class="ColumnCaption">内插时间</td><td class="ColumnDescription">内插色谱图中的保留时间。</td><td class="ColumnType">FormattableList`1</td></tr>
 <tr><td class="ColumnCaption">内插强度</td><td class="ColumnDescription">内插数据的色谱图强度。</td><td class="ColumnType">FormattableList`1</td></tr>
 <tr><td class="ColumnCaption">内插质量误差</td><td class="ColumnDescription">内插数据的色谱图质量误差。</td><td class="ColumnType">FormattableList`1</td></tr>
-<tr><td class="ColumnCaption">内插谱图 ID</td><td class="ColumnDescription">用于内插色谱图中点的谱图标识符。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">内插谱图 ID</td><td class="ColumnDescription">用于内插色谱图中点的谱图标识符。</td><td class="ColumnType">ListColumnValue`1</td></tr>
 </table>
 
 </td></tr>

@@ -26,11 +26,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml.Serialization;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -42,6 +45,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -72,11 +76,30 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Everything is inside the try so that ANY failure gets the window dump, not just the one call that
+            // has been failing: the stray dialog could just as easily get in the way of a different verb.
+            try
+            {
+                DoTestWork();
+            }
+            catch (Exception)
+            {
+                // Written to the log and the original rethrown UNCHANGED, rather than wrapped. Wrapping would
+                // replace the type (so an assertion failure, a timeout and a hang report would all surface as
+                // InvalidOperationException) and would fold hwnds and a thread dump into the message, which
+                // RunTests uses together with the stack as the key it groups failures by -- making every
+                // occurrence unique. Logging the dump and rethrowing is what HangDetection already does.
+                Console.Out.WriteLine(DescribeWhatIsOnScreen());
+                throw;
+            }
+        }
+
+        private void DoTestWork()
+        {
             OpenDocument(DOCUMENT_NAME);
 
             string testGuid = @"test-" + Guid.NewGuid();
-            var toolService = new ToolService(testGuid, SkylineWindow);
-            var server = new JsonToolServer(toolService, testGuid);
+            var server = new JsonToolServer(testGuid);
 
             // Read-only tools
             TestDispatch(server);
@@ -87,6 +110,8 @@ namespace pwiz.SkylineTestFunctional
             TestReportDocumentation(server);
             TestNamedReports(server);
             TestReportFromDefinition(server);
+            TestReportRows(server);
+            TestReportFromDefinitionRows(server);
             TestDocumentSettings(server);
             TestAvailableTutorials(server);
             TestCliHelp(server);
@@ -110,6 +135,191 @@ namespace pwiz.SkylineTestFunctional
             server.RunCommand(CommandArgs.ARG_NEW, CommandArgs.ARG_DISCARD_CHANGES);
             TestUiMode(server);
             TestUndoRedo(server);
+            TestBlockedAndDisabledUIControls(server);
+            TestClientReadsBoolResult(server);
+        }
+
+        // How long to leave a dialog alone before looking at it a second time. This test fails intermittently in
+        // nightly with "The operation did not complete because this dialog is open: Dialog:" -- the connector found
+        // a native window (class "#32770") whose caption was still EMPTY, which is why the id degenerates to
+        // "Dialog:" and says nothing about which dialog it was. The leading theory is that the window had been
+        // created but not yet populated, so waiting and looking again should show its text.
+        private const int DIALOG_SETTLE_MILLIS = 3000;
+
+        /// <summary>
+        /// Everything that might identify a dialog which got in the way: the windows that are open now, the same
+        /// list again after the window has had time to finish initializing, and the managed call stacks.
+        /// </summary>
+        private static string DescribeWhatIsOnScreen()
+        {
+            var sb = new StringBuilder();
+            // EVERY step is guarded on its own. This runs while the test is already failing, so anything that
+            // throws out of here would destroy the very failure it exists to explain -- and there is a real way
+            // for that to happen: HangDetection's watchdog interrupts the test thread, and the interrupt is
+            // delivered at the next blocking call, which is the sleep below.
+            Collect(sb, @"windows open at the moment of failure", () => AppendTopLevelWindows(sb));
+
+            // A dialog caught part way through initializing has no text yet, so look again once it has settled.
+            Collect(sb, string.Format(@"the same windows {0} ms later", DIALOG_SETTLE_MILLIS), () =>
+            {
+                Thread.Sleep(DIALOG_SETTLE_MILLIS);
+                AppendTopLevelWindows(sb);
+            });
+
+            // Shows whether a UI thread is parked in a modal loop (a message box, Form.ShowDialog, a shell common
+            // dialog) and what put it there -- which names the dialog even when its own window says nothing.
+            Collect(sb, @"managed call stacks", () => sb.AppendLine(GetCallStacks()));
+            return sb.ToString();
+        }
+
+        private static void Collect(StringBuilder sb, string heading, Action collect)
+        {
+            sb.AppendLine();
+            sb.AppendLine(string.Format(@"===== {0} =====", heading));
+            try
+            {
+                collect();
+            }
+            catch (Exception e)
+            {
+                sb.AppendLine(@"Could not collect this section: " + e);
+            }
+        }
+
+        // Reading the call stacks attaches ClrMD to this very process, which can block on locating the DAC or on
+        // walking a live runtime. Left unbounded it could turn a reported failure into a wedged test run, which
+        // costs a whole nightly pass -- so it gets its own background thread and a deadline, and the thread is a
+        // background one so a wedged attach cannot hold the process open.
+        private const int CALL_STACK_TIMEOUT_MILLIS = 30 * 1000;
+
+        private static string GetCallStacks()
+        {
+            string stacks = null;
+            var reader = new Thread(() =>
+            {
+                try
+                {
+                    stacks = TextUtil.LineSeparate(
+                        HangDetection.GetAllThreadsCallstacks(Process.GetCurrentProcess().Id));
+                }
+                catch (Exception e)
+                {
+                    stacks = @"Could not read the call stacks: " + e;
+                }
+            }) { IsBackground = true };
+            reader.Start();
+            return reader.Join(CALL_STACK_TIMEOUT_MILLIS)
+                ? stacks
+                : string.Format(@"Gave up reading the call stacks after {0} ms.", CALL_STACK_TIMEOUT_MILLIS);
+        }
+
+        private static void AppendTopLevelWindows(StringBuilder sb)
+        {
+            var processId = (uint) Process.GetCurrentProcess().Id;
+            int hidden = 0;
+            foreach (var hwnd in User32.EnumWindows())
+            {
+                uint windowProcessId;
+                var threadId = User32.GetWindowThreadProcessId(hwnd, out windowProcessId);
+                if (windowProcessId != processId)
+                    continue;
+
+                var className = User32.GetClassName(hwnd);
+                // WinForms leaves dozens of invisible tooltip, drop-down and message-only windows lying around, and
+                // listing them buries the one window that matters. The window being chased is known to have been
+                // visible -- DialogWatcher only reports a modal it found through IsModalDialogWindow, which
+                // requires IsWindowVisible -- so dropping the invisible ones cannot hide it. An invisible "#32770"
+                // is kept anyway, as cheap insurance against a dialog seen part way through being shown.
+                if (!User32.IsWindowVisible(hwnd) && !Equals(className, @"#32770"))
+                {
+                    hidden++;
+                    continue;
+                }
+
+                // GetWindowTextNoBlock rather than GetWindowText: the owning thread may be sitting in a modal loop,
+                // and a WM_GETTEXT send would park these diagnostics behind it.
+                var caption = User32.GetWindowTextNoBlock(hwnd);
+                var owner = User32.GetOwner(hwnd);
+                var ownerState = owner == IntPtr.Zero
+                    ? string.Empty
+                    : User32.IsWindowEnabled(owner)
+                        ? @" (owner enabled)"
+                        : @" (owner DISABLED, so this window is modal)";
+                var managed = Control.FromHandle(hwnd);
+                sb.AppendLine(string.Format(
+                    @"hwnd=0x{0:X} class={1} visible={2} enabled={3} thread={4} type={5} owner=0x{6:X}{7} caption='{8}'",
+                    hwnd.ToInt64(), className, User32.IsWindowVisible(hwnd), User32.IsWindowEnabled(hwnd),
+                    threadId, managed == null ? @"(native)" : managed.GetType().Name,
+                    owner.ToInt64(), ownerState, caption));
+
+                // For a native dialog the text a user would read lives in its CHILD windows, not its caption --
+                // which is exactly what the nightly failure is missing. Not restricted to "#32770":
+                // StandaloneWindow.NewStandaloneWindow wraps ANY non-managed top-level window as a NativeDialog,
+                // so the window reported as "Dialog:" need not carry the classic dialog class, and restricting
+                // this would leave the culprit as a single line with an empty caption -- no better than the
+                // failure itself. Anything unmanaged, or anything holding its owner disabled (the signature of a
+                // modal), gets its children dumped.
+                bool worthOpening = managed == null || (owner != IntPtr.Zero && !User32.IsWindowEnabled(owner));
+                if (!worthOpening)
+                    continue;
+                foreach (var child in User32.EnumChildWindows(hwnd))
+                {
+                    var childText = User32.GetWindowTextNoBlock(child);
+                    if (string.IsNullOrEmpty(childText))
+                        continue;
+                    sb.AppendLine(string.Format(@"    child id={0} class={1} text='{2}'",
+                        User32.GetDlgCtrlID(child), User32.GetClassName(child), childText));
+                }
+            }
+            sb.AppendLine(string.Format(@"({0} invisible non-dialog windows omitted)", hidden));
+        }
+
+        /// <summary>
+        /// get_value on a check box is the only verb whose result crosses the wire as a JSON bool, and the
+        /// client has to unwrap that kind as well as a string, a number and an object. Every other test drives
+        /// the server in process (Program.MainJsonToolServer), which hands back the raw object and so never
+        /// exercises the client's unwrapping at all -- this one goes through a real pipe client, the way an
+        /// external tool does.
+        /// </summary>
+        private void TestClientReadsBoolResult(JsonToolServer server)
+        {
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
+            string settingsId = server.GetOpenForms()
+                .First(f => f.Type == nameof(PeptideSettingsUI)).Id;
+
+            // Matched on the control Name, which the designer assigns in code, so this does not depend on
+            // the UI language.
+            var raggedEnds = server.GetControls(settingsId).First(c => c.Name == @"cbRaggedEnds").Path;
+
+            // A listening server of its own: the shared one is driven through HandleRequest and never started,
+            // and starting it here would leave a live pipe thread behind for whatever runs next.
+            using (var pipeServer = new JsonToolServer(@"test-client-" + Guid.NewGuid()))
+            {
+                pipeServer.Start();
+                using (var client = SkylineJsonToolClient.Connect(pipeServer.PipeName))
+                {
+                    // Both states, so neither JsonValueKind.True nor False falls through to GetString().
+                    foreach (bool expected in new[] { true, false })
+                    {
+                        server.PerformAction(raggedEnds, @"set_value", expected);
+                        object value = client.PerformAction(raggedEnds, @"get_value", null);
+                        AssertEx.AreEqual(expected, bool.Parse((string) value),
+                            @"The client did not read back the check box's checked state.");
+                    }
+
+                    // An omitted optional argument reaches the server as a trailing JSON null, which Dispatch
+                    // converts to null -- the same value it would have filled in from the parameter's default.
+                    // The client sends every parameter rather than varying the argument count, so this is the
+                    // path every optional argument takes.
+                    var locations = client.GetLocations(@"group");
+                    Assert.IsNotNull(locations, @"GetLocations with an omitted rootLocator returned nothing.");
+                    AssertEx.AreEqual(server.GetLocations(@"group").Length, locations.Length,
+                        @"GetLocations through the client did not match the same call in process.");
+                }
+            }
+
+            OkDialog(peptideSettings, () => peptideSettings.DialogResult = DialogResult.Cancel);
         }
 
         /// <summary>
@@ -589,6 +799,34 @@ namespace pwiz.SkylineTestFunctional
             // The document has replicates, so the header should have more columns than the 2 we selected
             int pivotColCount = pivotHeader.ParseDsvFields(TextUtil.SEPARATOR_CSV).Length;
             Assert.IsTrue(pivotColCount > 2);
+            int replicateCount = pivotColCount - 1;
+
+            // Long format with explicit ReplicateName column: should produce one
+            // row per peptide-replicate with the four selected columns, no
+            // per-replicate pivoted suffixes. Regression for the
+            // report-from-definition bug where adding ReplicateName to the
+            // select caused TotalArea (default) or ReplicateName itself
+            // (pivot_replicate: false) to be pivoted into per-replicate columns.
+            const string COL_REPLICATE_NAME = @"ReplicateName";
+            var longSelect = new[]
+            {
+                COL_PROTEIN_NAME, COL_PEPTIDE_SEQUENCE, COL_REPLICATE_NAME, COL_TOTAL_AREA
+            };
+            int longRowCount = 13 * replicateCount;
+
+            string tempPathLongDefault = TestFilesDir.GetTestPath(@"report_def_long_default.csv");
+            var longDefaultDef = new ReportDefinition { Select = longSelect };
+            var longDefaultMetadata = server.ExportReportFromDefinition(
+                longDefaultDef, tempPathLongDefault, JsonToolConstants.CULTURE_INVARIANT);
+            AssertLongFormat(tempPathLongDefault, longDefaultMetadata, longSelect, longRowCount,
+                @"default pivot_replicate");
+
+            string tempPathLongExplicit = TestFilesDir.GetTestPath(@"report_def_long_explicit.csv");
+            var longExplicitDef = new ReportDefinition { Select = longSelect, PivotReplicate = false };
+            var longExplicitMetadata = server.ExportReportFromDefinition(
+                longExplicitDef, tempPathLongExplicit, JsonToolConstants.CULTURE_INVARIANT);
+            AssertLongFormat(tempPathLongExplicit, longExplicitMetadata, longSelect, longRowCount,
+                @"pivot_replicate: false");
 
             // With sort ascending (exercises "asc" path in ParseSortDirection)
             string tempPathSortAsc = TestFilesDir.GetTestPath(@"report_def_sort_asc.csv");
@@ -689,9 +927,357 @@ namespace pwiz.SkylineTestFunctional
                 server.ExportReportFromDefinition(badSortDef, tempPathBad, JsonToolConstants.CULTURE_INVARIANT));
         }
 
+        private void TestReportRows(JsonToolServer server)
+        {
+            const string culture = JsonToolConstants.CULTURE_INVARIANT;
+
+            // count = 0 returns shape only: total_rows + columns with types + empty rows.
+            // Derive expected total from this introspection call so the test is robust to
+            // report-definition changes that affect row count.
+            var shape = server.GetReportRows(REPORT_AREAS, 0, 0, null, null, false, culture);
+            Assert.AreEqual(REPORT_AREAS, shape.Report);
+            int totalRows = shape.TotalRows;
+            Assert.IsTrue(totalRows > 0,
+                @"Report '{0}' should produce at least one row on this document", REPORT_AREAS);
+            Assert.IsTrue(shape.Columns.Length > 0);
+            Assert.IsTrue(shape.Columns.All(c => !string.IsNullOrEmpty(c.Name) && !string.IsNullOrEmpty(c.Type)));
+            // No length scan when include_max_length=false: no max_observed_length set.
+            Assert.IsTrue(shape.Columns.All(c => c.MaxObservedLength == null && c.MaxLengthSampled == null));
+            Assert.AreEqual(0, shape.Rows.Length);
+            AssertEx.AreEqual(0, shape.Window.Offset);
+            AssertEx.AreEqual(0, shape.Window.Count);
+            Assert.IsFalse(shape.Window.Truncated);
+            Assert.IsNull(shape.TruncatedAt);
+
+            // count < total_rows returns the requested window only, with full totals.
+            int small_n = Math.Min(3, totalRows);
+            var small = server.GetReportRows(REPORT_AREAS, 0, small_n, null, null, false, culture);
+            Assert.AreEqual(small_n, small.Rows.Length);
+            Assert.AreEqual(totalRows, small.TotalRows);
+            Assert.AreEqual(0, small.Window.Offset);
+            Assert.AreEqual(small_n, small.Window.Count);
+            Assert.IsFalse(small.Window.Truncated);
+
+            // count > total_rows clamps to the available rows with truncated=false.
+            var oversize = server.GetReportRows(REPORT_AREAS, 0, totalRows + 100, null, null, false, culture);
+            Assert.AreEqual(totalRows, oversize.Rows.Length);
+            Assert.AreEqual(totalRows, oversize.TotalRows);
+            Assert.IsFalse(oversize.Window.Truncated);
+
+            // Tail pattern: offset = total - N returns the last N rows.
+            int tail_n = Math.Min(2, totalRows);
+            var tail = server.GetReportRows(REPORT_AREAS, totalRows - tail_n, tail_n, null, null, false, culture);
+            Assert.AreEqual(tail_n, tail.Rows.Length);
+            Assert.AreEqual(totalRows - tail_n, tail.Window.Offset);
+            // The last row of the tail window should match the last row of the full result.
+            CollectionAssert.AreEqual(oversize.Rows[totalRows - 1], tail.Rows[tail_n - 1]);
+
+            // include_max_length populates max_observed_length on string columns; non-string
+            // columns omit the field. Rat_plasma is small, so max_length_sampled stays null
+            // (the value is exact, not a sampled estimate).
+            var withLengths = server.GetReportRows(REPORT_AREAS, 0, 3, null, null, true, culture);
+            var stringCols = withLengths.Columns.Where(c => c.Type == @"string").ToArray();
+            Assert.IsTrue(stringCols.Length > 0, @"Report must have at least one string column");
+            foreach (var col in stringCols)
+            {
+                Assert.IsNotNull(col.MaxObservedLength,
+                    @"String column {0} should have max_observed_length when include_max_length=true",
+                    col.Name);
+                Assert.IsTrue(col.MaxObservedLength.Value > 0,
+                    @"Column {0} should have positive max_observed_length", col.Name);
+                Assert.IsNull(col.MaxLengthSampled,
+                    @"With total_rows={0} <= sample limit, max_length_sampled should be omitted (exact)",
+                    withLengths.TotalRows);
+            }
+            // Numeric / boolean / datetime columns omit max_observed_length. Text
+            // columns -- both raw strings and entity wrappers reported as "other" --
+            // are scanned, so they may carry a length.
+            foreach (var col in withLengths.Columns.Where(c => c.Type != @"string" && c.Type != @"other"))
+            {
+                Assert.IsNull(col.MaxObservedLength,
+                    @"Non-text column {0} (type {1}) should omit max_observed_length",
+                    col.Name, col.Type);
+            }
+
+            // Filter on get_report_rows reduces returned rows and the total reflects the
+            // filtered count (not the underlying report's count).
+            var filter = new[]
+            {
+                new ReportFilter { Column = COL_PRECURSOR_MZ, Op = @">", Value = @"500" }
+            };
+            var filtered = server.GetReportRows(REPORT_AREAS, 0, 100, null, filter, false, culture);
+            Assert.IsTrue(filtered.TotalRows < oversize.TotalRows,
+                @"Filtered total rows ({0}) should be less than unfiltered ({1})",
+                filtered.TotalRows, oversize.TotalRows);
+            Assert.AreEqual(filtered.TotalRows, filtered.Rows.Length,
+                @"With count > filtered_total, Rows count should match total_rows");
+
+            // Column projection: subset of the report's columns by display name.
+            // Use a column we know exists in the report (the first column).
+            string firstColName = oversize.Columns[0].Name;
+            var projected = server.GetReportRows(REPORT_AREAS, 0, 1,
+                new[] { firstColName }, null, false, culture);
+            Assert.AreEqual(1, projected.Columns.Length);
+            Assert.AreEqual(firstColName, projected.Columns[0].Name);
+            Assert.AreEqual(1, projected.Rows[0].Length);
+
+            // Cell-cap enforcement: long values are truncated to MaxCellLength characters
+            // plus the "..." marker. Drive the truncation path with a temporarily lowered
+            // cell cap so the assertion is meaningful for any test document.
+            int savedCellLength = JsonToolServer.MaxCellLength;
+            try
+            {
+                JsonToolServer.MaxCellLength = 5;
+                var truncated = server.GetReportRows(REPORT_AREAS, 0, totalRows, null, null, false, culture);
+                bool sawTruncated = false;
+                int expectedCap = JsonToolServer.MaxCellLength + 3; // "..."
+                foreach (var row in truncated.Rows)
+                {
+                    foreach (var cell in row)
+                    {
+                        if (cell == null)
+                            continue;
+                        Assert.IsTrue(cell.Length <= expectedCap,
+                            @"Cell length {0} exceeds cap of {1}", cell.Length, expectedCap);
+                        if (cell.Length == expectedCap)
+                        {
+                            StringAssert.EndsWith(cell, @"...");
+                            sawTruncated = true;
+                        }
+                    }
+                }
+                Assert.IsTrue(sawTruncated,
+                    @"Lowering MaxCellLength to 5 should produce at least one truncated cell");
+            }
+            finally
+            {
+                JsonToolServer.MaxCellLength = savedCellLength;
+            }
+
+            // Row-cap enforcement: when the captured window's payload exceeds
+            // MaxResponseChars, trailing rows are dropped and TruncatedAt is set to the
+            // index the caller should resume at. Lower the cap to force a drop.
+            int savedResponseChars = JsonToolServer.MaxResponseChars;
+            try
+            {
+                JsonToolServer.MaxResponseChars = 200;
+                var rowCapped = server.GetReportRows(REPORT_AREAS, 0, totalRows, null, null, false, culture);
+                Assert.IsTrue(rowCapped.Window.Truncated,
+                    @"Lowered cap should force the row-drop path to run");
+                Assert.IsNotNull(rowCapped.TruncatedAt);
+                Assert.AreEqual(rowCapped.Window.Offset + rowCapped.Window.Count, rowCapped.TruncatedAt.Value);
+                Assert.IsTrue(rowCapped.Window.Count < totalRows);
+                Assert.AreEqual(totalRows, rowCapped.TotalRows,
+                    @"Truncation should not change total_rows");
+            }
+            finally
+            {
+                JsonToolServer.MaxResponseChars = savedResponseChars;
+            }
+
+            // Resume round-trip: when the row-cap drops trailing rows, calling again
+            // with offset = TruncatedAt must return the row that would have been at that
+            // position in an uncapped result. Catches off-by-one in TruncatedAt.
+            int savedResponseCharsForResume = JsonToolServer.MaxResponseChars;
+            try
+            {
+                JsonToolServer.MaxResponseChars = 200;
+                var firstHalf = server.GetReportRows(REPORT_AREAS, 0, totalRows, null, null, false, culture);
+                Assert.IsTrue(firstHalf.Window.Truncated);
+                Assert.IsNotNull(firstHalf.TruncatedAt);
+                int resumeOffset = firstHalf.TruncatedAt.Value;
+                // Restore the cap so the resume call doesn't trim again -- we want the row
+                // at resumeOffset, not a re-truncated window.
+                JsonToolServer.MaxResponseChars = savedResponseCharsForResume;
+                var resumed = server.GetReportRows(REPORT_AREAS, resumeOffset,
+                    totalRows - resumeOffset, null, null, false, culture);
+                Assert.IsTrue(resumed.Rows.Length > 0,
+                    @"Resume at TruncatedAt={0} should return at least one row (totalRows={1})",
+                    resumeOffset, totalRows);
+                CollectionAssert.AreEqual(oversize.Rows[resumeOffset], resumed.Rows[0],
+                    @"Resume row {0} must match the uncapped row at the same offset", resumeOffset);
+            }
+            finally
+            {
+                JsonToolServer.MaxResponseChars = savedResponseCharsForResume;
+            }
+
+            // Entity-wrapper text columns (type "other") populate max_observed_length too.
+            // Regression: an earlier version scanned only typeof(string), so named reports
+            // whose text columns are entity wrappers reported null on every column.
+            var withLengthsWide = server.GetReportRows(REPORT_AREAS, 0, 0, null, null, true, culture);
+            var otherTextCols = withLengthsWide.Columns.Where(c => c.Type == @"other").ToArray();
+            Assert.IsTrue(otherTextCols.Length > 0,
+                @"Report '{0}' should include at least one entity-wrapper column for this regression check",
+                REPORT_AREAS);
+            foreach (var col in otherTextCols)
+            {
+                Assert.IsNotNull(col.MaxObservedLength,
+                    @"Entity-wrapper column {0} should have max_observed_length when include_max_length=true",
+                    col.Name);
+                Assert.IsTrue(col.MaxObservedLength.Value > 0,
+                    @"Entity-wrapper column {0} should have positive max_observed_length", col.Name);
+            }
+
+            // max_length_sampled = true branch: when total rows exceed the sample cap,
+            // text columns are flagged as sampled (lower-bound estimate). Drive the path
+            // by lowering MaxLengthSampleRows so a tiny report still trips the cap.
+            int savedSampleRows = JsonToolServer.MaxLengthSampleRows;
+            try
+            {
+                JsonToolServer.MaxLengthSampleRows = 1;
+                var sampled = server.GetReportRows(REPORT_AREAS, 0, 0, null, null, true, culture);
+                var sampledTextCols = sampled.Columns
+                    .Where(c => (c.Type == @"string" || c.Type == @"other") && c.MaxObservedLength != null)
+                    .ToArray();
+                Assert.IsTrue(sampledTextCols.Length > 0,
+                    @"Lowering MaxLengthSampleRows to 1 should still produce text columns with lengths");
+                foreach (var col in sampledTextCols)
+                {
+                    Assert.AreEqual(true, col.MaxLengthSampled,
+                        @"With totalRows ({0}) > MaxLengthSampleRows (1), column {1} should be flagged sampled=true",
+                        sampled.TotalRows, col.Name);
+                }
+            }
+            finally
+            {
+                JsonToolServer.MaxLengthSampleRows = savedSampleRows;
+            }
+
+            // count cap from ValidateWindow: requests beyond the max are rejected.
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, JsonToolServer.MaxRowCount + 1,
+                    null, null, false, culture));
+
+            // Error: nonexistent report
+            AssertEx.ThrowsException<Exception>(() =>
+                server.GetReportRows(@"NonexistentReport_xyz", 0, 5, null, null, false, culture));
+
+            // Error: negative offset
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, -1, 5, null, null, false, culture));
+
+            // Error: negative count
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, -1, null, null, false, culture));
+
+            // Error: unknown projection column
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, 1,
+                    new[] { @"NotARealColumn_xyz" }, null, false, culture));
+
+            // Error: unknown filter column
+            var badFilter = new[]
+            {
+                new ReportFilter { Column = @"NotARealColumn_xyz", Op = @">", Value = @"1" }
+            };
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportRows(REPORT_AREAS, 0, 1, null, badFilter, false, culture));
+        }
+
+        private void TestReportFromDefinitionRows(JsonToolServer server)
+        {
+            const string culture = JsonToolConstants.CULTURE_INVARIANT;
+
+            var def = BuildSelectDef(COL_PROTEIN_NAME, COL_PEPTIDE_SEQUENCE, COL_PRECURSOR_MZ);
+
+            // count = 0 returns shape only.
+            var shape = server.GetReportFromDefinitionRows(def, 0, 0, false, culture);
+            Assert.AreEqual(13, shape.TotalRows);
+            Assert.AreEqual(3, shape.Columns.Length);
+            Assert.AreEqual(0, shape.Rows.Length);
+            Assert.IsFalse(shape.Window.Truncated);
+            // Column types should match what the report schema reports.
+            Assert.IsTrue(shape.Columns.Any(c => c.Type == @"string"));
+            Assert.IsTrue(shape.Columns.Any(c => c.Type == @"number"));
+
+            // count < total_rows
+            var window = server.GetReportFromDefinitionRows(def, 0, 5, false, culture);
+            Assert.AreEqual(5, window.Rows.Length);
+            Assert.AreEqual(13, window.TotalRows);
+            Assert.AreEqual(0, window.Window.Offset);
+            Assert.AreEqual(5, window.Window.Count);
+            Assert.IsFalse(window.Window.Truncated);
+
+            // Each captured row has one cell per column.
+            foreach (var row in window.Rows)
+                Assert.AreEqual(3, row.Length);
+
+            // include_max_length: string columns get max_observed_length; numeric omit.
+            var withLengths = server.GetReportFromDefinitionRows(def, 0, 3, true, culture);
+            var stringCols = withLengths.Columns.Where(c => c.Type == @"string").ToArray();
+            Assert.IsTrue(stringCols.Length > 0);
+            foreach (var col in stringCols)
+                Assert.IsNotNull(col.MaxObservedLength);
+
+            // Filter applied via the definition reduces totals.
+            var filterDef = new ReportDefinition
+            {
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ },
+                Filter = new[]
+                {
+                    new ReportFilter { Column = COL_PRECURSOR_MZ, Op = @">", Value = @"500" }
+                }
+            };
+            var filtered = server.GetReportFromDefinitionRows(filterDef, 0, 100, false, culture);
+            Assert.AreEqual(11, filtered.TotalRows);
+            Assert.AreEqual(11, filtered.Rows.Length);
+
+            // Sort applied via the definition should produce the same row count.
+            var sortDef = new ReportDefinition
+            {
+                Select = new[] { COL_PROTEIN_NAME, COL_PRECURSOR_MZ },
+                Sort = new[]
+                {
+                    new ReportSort { Column = COL_PRECURSOR_MZ, Direction = JsonToolConstants.SORT_DESC }
+                }
+            };
+            var sorted = server.GetReportFromDefinitionRows(sortDef, 0, 100, false, culture);
+            Assert.AreEqual(13, sorted.TotalRows);
+            int mzIdx = Array.IndexOf(sorted.Columns.Select(c => c.Name).ToArray(), COL_PRECURSOR_MZ);
+            Assert.IsTrue(mzIdx >= 0);
+            double prev = double.MaxValue;
+            foreach (var row in sorted.Rows)
+            {
+                if (string.IsNullOrEmpty(row[mzIdx])) continue;
+                double mz = double.Parse(row[mzIdx], CultureInfo.InvariantCulture);
+                Assert.IsTrue(mz <= prev, @"Rows not descending: {0} after {1}", mz, prev);
+                prev = mz;
+            }
+
+            // Server-side cell truncation: no cell exceeds the cap.
+            const int cellCap = 203; // 200 chars + "..." marker
+            foreach (var row in sorted.Rows)
+                foreach (var cell in row)
+                    if (cell != null)
+                        Assert.IsTrue(cell.Length <= cellCap);
+
+            // Error: negative offset/count
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportFromDefinitionRows(def, -1, 5, false, culture));
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportFromDefinitionRows(def, 0, -1, false, culture));
+
+            // Error: bad definition (empty select)
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetReportFromDefinitionRows(new ReportDefinition { Select = new string[0] },
+                    0, 5, false, culture));
+        }
+
         private static int GetRowCount(ReportMetadata metadata)
         {
             return metadata.RowCount ?? 0;
+        }
+
+        private static void AssertLongFormat(string filePath, ReportMetadata metadata,
+            string[] expectedColumns, int expectedRowCount, string variant)
+        {
+            Assert.AreEqual(expectedRowCount, GetRowCount(metadata),
+                @"Long-format row count mismatch ({0})", variant);
+            var header = File.ReadLines(filePath).First()
+                .ParseDsvFields(TextUtil.SEPARATOR_CSV);
+            CollectionAssert.AreEqual(expectedColumns, header,
+                @"Long-format ({0}) header mismatch", variant);
         }
 
         private static void VerifyRowSource(ColumnResolver resolver, string[] columns,
@@ -861,65 +1447,107 @@ namespace pwiz.SkylineTestFunctional
 
             bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
 
-            // Test Deny - dialog should return denial message
-            // Run server call on a background thread (like the real pipe server thread)
-            // so InvokeOnUiThread marshals to the UI thread correctly.
-            string imagePath = TestFilesDir.GetTestPath(@"deny_test.png");
-            string denyResult = null;
-            ActionUtil.RunAsync(() => denyResult = server.GetFormImage(formId, imagePath));
+            // First call with no permission yet: returns Pending synchronously
+            // and asynchronously opens the confirmation dialog. The previous
+            // implementation blocked the pipe thread inside ShowDialog; the
+            // new flow returns immediately so the test thread does not need
+            // ActionUtil.RunAsync indirection to drive the dialog.
+            string pendingPath = TestFilesDir.GetTestPath(@"pending_test.png");
+            string pendingResult = server.GetFormImage(formId, pendingPath);
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, pendingResult);
+            Assert.IsFalse(File.Exists(pendingPath),
+                @"Pending response must not write a file");
             var dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
+
+            // Second call while the prompt is still pending: returns Pending
+            // again without opening a second dialog.
+            string repeatPendingPath = TestFilesDir.GetTestPath(@"pending_repeat.png");
+            string repeatPendingResult = server.GetFormImage(formId, repeatPendingPath);
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, repeatPendingResult);
+            Assert.IsFalse(File.Exists(repeatPendingPath));
+            AssertEx.AreEqual(1, FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Count());
+
+            // User clicks Cancel: state records denial.
             Assert.IsFalse(dlg.DoNotAskAgain);
             CancelDialog(dlg);
-            WaitForCondition(() => denyResult != null);
-            AssertEx.Contains(denyResult, @"denied");
-            Assert.IsFalse(File.Exists(imagePath));
 
-            // Test Allow - dialog should grant session permission
+            // Subsequent calls return Denied without re-prompting.
+            string deniedPath = TestFilesDir.GetTestPath(@"denied_test.png");
+            string deniedResult = server.GetFormImage(formId, deniedPath);
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_DENIED.Value, deniedResult);
+            Assert.IsFalse(File.Exists(deniedPath));
+            Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any(),
+                @"Session-denied state must not open a second dialog");
+
+            // Input validation must run before the environment check: an invalid
+            // formId throws ArgumentException whether or not screen capture is
+            // currently available. (Regression guard for #4229 - on nightly
+            // machines with disconnected Remote Desktop, IsDesktopAvailable
+            // returned false and short-circuited the form-existence check.)
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetFormImage(@"NonexistentForm:NoTitle",
+                    TestFilesDir.GetTestPath(@"denied_invalid.png")));
+
+            // Reset and walk through the Allow path.
+            RunUI(ScreenCapture.ResetSessionPermission);
             string allowPath = TestFilesDir.GetTestPath(@"allow_test.png");
-            string allowResult = null;
-            ActionUtil.RunAsync(() => allowResult = server.GetFormImage(formId, allowPath));
+            string allowPendingResult = server.GetFormImage(formId, allowPath);
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, allowPendingResult);
             dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             Assert.IsFalse(dlg.DoNotAskAgain);
             OkDialog(dlg);
-            WaitForCondition(() => allowResult != null);
+
+            // After Allow, the next call captures (or surfaces desktop-unavailable
+            // in CI environments without a desktop session).
+            string allowResult = server.GetFormImage(formId, allowPath);
             if (desktopAvailable)
             {
-                // After Allow, file should be created
                 Assert.IsTrue(File.Exists(allowPath));
                 Assert.IsTrue(new FileInfo(allowPath).Length > 0);
             }
             else
             {
-                AssertEx.Contains(allowResult, @"not available");
+                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, allowResult);
             }
 
-            // Session permission is now granted - subsequent calls should not show dialog
+            // Session permission persists: subsequent calls capture without a dialog.
             string sessionPath = TestFilesDir.GetTestPath(@"session_test.png");
             string sessionResult = server.GetFormImage(formId, sessionPath);
             if (desktopAvailable)
                 Assert.IsTrue(File.Exists(sessionPath));
             else
-                AssertEx.Contains(sessionResult, @"not available");
+                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, sessionResult);
+            Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any());
 
-            // Test Allow + DoNotAskAgain - should persist the setting
+            // Malformed formId is rejected on the pipe thread before any
+            // permission prompt fires - an obvious bad-input request must not
+            // interrupt the user with a confirmation dialog. Reset first so we
+            // start from un-granted state.
             RunUI(() =>
             {
                 Settings.Default.AllowMcpScreenCapture = false;
                 ScreenCapture.ResetSessionPermission();
             });
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetFormImage(@"NoColonHere",
+                    TestFilesDir.GetTestPath(@"malformed_test.png")));
+            Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any(),
+                @"Malformed formId must not trigger the permission dialog");
 
+            // Test Allow + DoNotAskAgain - should persist the setting
             string persistPath = TestFilesDir.GetTestPath(@"persist_test.png");
-            string persistResult = null;
-            ActionUtil.RunAsync(() => persistResult = server.GetFormImage(formId, persistPath));
+            string persistPendingResult = server.GetFormImage(formId, persistPath);
+            AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED.Value, persistPendingResult);
             dlg = WaitForOpenForm<ScreenCapturePermissionDlg>();
             RunUI(() => dlg.DoNotAskAgain = true);
             OkDialog(dlg);
-            WaitForCondition(() => persistResult != null);
+            Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
+
+            string persistResult = server.GetFormImage(formId, persistPath);
             if (desktopAvailable)
                 Assert.IsTrue(File.Exists(persistPath));
             else
-                AssertEx.Contains(persistResult, @"not available");
-            Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
+                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, persistResult);
 
             // Clean up setting for other tests
             RunUI(() =>
@@ -1445,9 +2073,25 @@ namespace pwiz.SkylineTestFunctional
                 CommandArgs.ARG_OPEN + newPath,
                 CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100",
                 CommandArgs.ARG_OUT + combinedPath);
-            AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath, combinedResult);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
+
+            // --in with .sky.zip: regression check that the MCP path dispatches
+            // through OpenSharedFile (extract first) rather than feeding the
+            // zip's raw bytes to the XML parser.
+            string sharedZipPath = TestFilesDir.GetTestPath(@"doc_ops_shared.sky.zip");
+            server.RunCommand(
+                CommandArgs.ARG_OPEN + newPath,
+                CommandArgs.ARG_SHARE_ZIP + sharedZipPath);
+            Assert.IsTrue(File.Exists(sharedZipPath));
+            int sharedGroups = SkylineWindow.Document.MoleculeGroupCount;
+
+            string sharedOpenResult = server.RunCommand(CommandArgs.ARG_IN + sharedZipPath);
+            AssertEx.Contains(sharedOpenResult, Path.GetFileName(sharedZipPath));
+            Assert.IsTrue(SkylineWindow.DocumentFilePath.EndsWith(SrmDocument.EXT),
+                @"Expected extracted .sky path after opening .sky.zip, got " + SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(sharedGroups, SkylineWindow.Document.MoleculeGroupCount);
 
             // --new to leave a clean state for subsequent tests
             string tempPath = TestFilesDir.GetTestPath(@"doc_ops_temp.sky");
@@ -1507,6 +2151,83 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             return header + "\n" +
                    "TestSmallMol,Ala,,light,,,225,44,1,1,3\n" +
                    "TestSmallMol,Arg,,light,,,310,217,1,1,19\n";
+        }
+
+        private void TestBlockedAndDisabledUIControls(JsonToolServer server)
+        {
+            var forms = server.GetOpenForms();
+            var treeFormId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
+            var treeForm = FormUtil.OpenForms.OfType<SequenceTreeForm>().First();
+            // The Targets tree has no caption, so it is addressed through a path by its Type.
+            var treeId = new UiElementPath(
+                new UiElementPath(null, treeFormId, null, @"Form"), null, null, @"SequenceTree");
+
+            // 1. Disable the form and verify that interacting with it throws
+            RunUI(() => treeForm.Enabled = false);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.ClickFormButton(treeFormId, @"ok"));
+            }
+            finally
+            {
+                RunUI(() => treeForm.Enabled = true);
+            }
+
+            // 2. Disable a specific control and verify that interacting with it throws.
+            var tree = treeForm.SequenceTree;
+            RunUI(() => tree.Enabled = false);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"select_item", @"Peptides"));
+            }
+            finally
+            {
+                RunUI(() => tree.Enabled = true);
+            }
+
+            // 3. Disable a menu item and verify that invoking it throws
+            // Found by Name, which the designer assigns in code, rather than by Text, which ApplyResources
+            // localizes -- matching on English text fails every non-English run.
+            var fileMenu = SkylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>()
+                .First(i => Equals(i.Name, @"fileToolStripMenuItem"));
+            var saveItem = fileMenu.DropDownItems.OfType<ToolStripMenuItem>()
+                .First(i => Equals(i.Name, @"saveMenuItem"));
+            bool originalEnabled = false;
+            RunUI(() => {
+                originalEnabled = saveItem.Enabled;
+                saveItem.Enabled = false;
+            });
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.ClickMainMenuItem("File > Save"));
+            }
+            finally
+            {
+                RunUI(() => saveItem.Enabled = originalEnabled);
+            }
+
+            // 4. While a modal dialog is open, every other window is blocked at the Win32 level (the
+            // managed Control.Enabled of those forms stays true), so verbs targeting them must throw --
+            // a user could not reach them either until the dialog is handled.
+            var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.ClickMainMenuItem(@"File > Save"));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
+            }
+            finally
+            {
+                OkDialog(transitionSettings, () => transitionSettings.DialogResult = DialogResult.Cancel);
+            }
         }
     }
 }

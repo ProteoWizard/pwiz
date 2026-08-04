@@ -70,8 +70,12 @@ namespace pwiz.Skyline.Util.Extensions
         public const char SEPARATOR_CSV = ',';
         public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales
         public const char SEPARATOR_TSV = '\t';
-        public static readonly string SEPARATOR_TSV_STR = SEPARATOR_TSV.ToString(); 
+        public static readonly string SEPARATOR_TSV_STR = SEPARATOR_TSV.ToString();
         public const char SEPARATOR_SPACE = ' ';
+        // ASCII unit separator (U+001F). Used as an in-memory delimiter for joining
+        // repeated single-arg config values (e.g. DIA-NN --fasta) so the parser can
+        // round-trip multi-occurrence flags through a Dictionary<string,string>.
+        public const char SEPARATOR_UNIT = '';
 
         public const string EXCEL_NA = "#N/A";
 
@@ -603,6 +607,14 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        public static string EscapePipe(string str)
+        {
+            return str.Replace(@"|", @"\pipe");
+        }
+        public static string UnescapePipe(string str)
+        {
+            return str.Replace(@"\pipe", @"|");
+        }
         /// <summary>
         /// Replaces tabs, carriage returns, and newlines with spaces, collapsing
         /// consecutive whitespace into a single space. Useful for embedding

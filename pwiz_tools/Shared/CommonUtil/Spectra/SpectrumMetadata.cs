@@ -218,7 +218,26 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.SourceOffsetVoltage = value);
         }
 
-        
+        private ImmutableList<SpectrumMetadataTerm> _otherParams = ImmutableList<SpectrumMetadataTerm>.EMPTY;
+
+        /// <summary>
+        /// mzML CV/user parameters that Skyline reads but does not interpret into one
+        /// of the typed fields above. Deliberately excluded from <see cref="Equals(SpectrumMetadata)"/>
+        /// and <see cref="GetHashCode"/>: spectrum identity (and therefore class grouping)
+        /// stays defined by the interpreted fields, since many of these terms vary from
+        /// scan to scan and would otherwise explode grouping cardinality.
+        /// </summary>
+        public ImmutableList<SpectrumMetadataTerm> OtherParams
+        {
+            get { return _otherParams; }
+        }
+
+        public SpectrumMetadata ChangeOtherParams(IEnumerable<SpectrumMetadataTerm> otherParams)
+        {
+            return ChangeProp(ImClone(this), im => im._otherParams = ImmutableList.ValueOfOrEmpty(otherParams));
+        }
+
+
 
         protected bool Equals(SpectrumMetadata other)
         {

@@ -279,6 +279,10 @@ namespace pwiz.Skyline.Model.Databinding
         /// (e.g., ReplicateName via Precursors!*.Transitions!*.Results!*.Key vs
         /// Results!*.Value.ResultFile.Replicate). The path with fewer collection
         /// lookups produces cleaner reports that match what the ViewEditor generates.
+        /// On a tie in collection steps, the shorter overall path wins so that
+        /// related columns share a common Results!* sublist (e.g., ReplicateName
+        /// alongside TotalArea both rooted at the row source's own Results
+        /// dictionary, rather than ReplicateName detouring through an ancestor's).
         /// </summary>
         private void IndexColumn(ColumnDescriptor child, Dictionary<string, ColumnInfo> index,
             string group)
@@ -286,7 +290,12 @@ namespace pwiz.Skyline.Model.Databinding
             string invariantName = GetInvariantName(child);
             if (index.TryGetValue(invariantName, out var existing))
             {
-                if (CountCollectionSteps(child.PropertyPath) < CountCollectionSteps(existing.PropertyPath))
+                int newSteps = CountCollectionSteps(child.PropertyPath);
+                int existingSteps = CountCollectionSteps(existing.PropertyPath);
+                bool replace = newSteps < existingSteps ||
+                               (newSteps == existingSteps &&
+                                child.PropertyPath.Length < existing.PropertyPath.Length);
+                if (replace)
                     index[invariantName] = CreateColumnInfo(invariantName, child, group);
             }
             else

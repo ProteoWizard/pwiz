@@ -1,0 +1,36 @@
+table	column	rows_or_sum	min	max
+RefSpectra	<rows>	29364		
+RefSpectra	precursorMZ	18646685.50287928	400.552150712872	900.488161724302
+RefSpectra	retentionTime	352689.7452409328	2.1700894549	23.710414163633
+RefSpectra	startTime	350120.3888770565	2.08057824165	23.647656774383
+RefSpectra	endTime	355606.88103257044	2.2642698787	23.8045278293
+RefSpectra	score	57.55157306588463	9.777082518576456E-05	0.009982346332851869
+RefSpectra	ionMobility	0	0	0
+RetentionTimes	<rows>	88092		
+RetentionTimes	retentionTime	920982.3217615269	2.1700894549	23.710414163633
+RetentionTimes	startTime	1050078.5186617868	2.076404061367	23.647656774383
+RetentionTimes	endTime	1066770.3413853839	2.231765167133	23.8265445647
+RetentionTimes	score	2797.8529172660087	9.624639076034648E-05	1
+OspreyRunScores	<rows>	29364		
+OspreyRunScores	RunQValue	30.66916916369014	9.624639076034648E-05	0.0098796612687565
+OspreyRunScores	DiscriminantScore	0	0	0
+OspreyRunScores	PosteriorErrorProb	0	0	0
+OspreyExperimentScores	<rows>	29364		
+OspreyExperimentScores	ExperimentQValue	57.55157306588463	9.777082518576456E-05	0.009982346332851869
+OspreyPeakBoundaries	<rows>	29364		
+OspreyPeakBoundaries	StartRT	350120.3888770565	2.08057824165	23.647656774383
+OspreyPeakBoundaries	EndRT	355606.88103257044	2.2642698787	23.8045278293
+OspreyPeakBoundaries	ApexRT	352689.7452409328	2.1700894549	23.710414163633
+OspreyPeakBoundaries	ApexIntensity	0	0	0
+OspreyPeakBoundaries	IntegratedArea	377571593.17754245	0	6464214.47692899
+OspreyCoefficients	<rows>	0		
+OspreyCoefficients	RT			
+OspreyCoefficients	Coefficient			
+RefSpectraProteins	<rows>	32761		
+Modifications	<rows>	5559		
+Modifications	mass	316982.31837597326	57.021464	57.021464
+Proteins	<rows>	5084		
+SpectrumSourceFiles	<rows>	3		
+SpectrumSourceFiles	cutoffScore	0.03	0.01	0.01
+OspreyMetadata	<rows>	4		
+PeakDigest	<rows>	29364		

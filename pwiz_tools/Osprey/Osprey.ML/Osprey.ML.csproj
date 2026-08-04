@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.ML</RootNamespace>
+    <AssemblyName>Osprey.ML</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.FDR" />
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+  </ItemGroup>
+
+</Project>

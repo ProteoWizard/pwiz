@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>097</ApplicationRevision>
-    <ApplicationVersion>26.1.1.097</ApplicationVersion>
+    <ApplicationRevision>209</ApplicationRevision>
+    <ApplicationVersion>26.1.1.209</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -162,9 +162,32 @@
     <Reference Include="ParquetNet">
       <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
+    <Reference Include="IronCompress">
+      <HintPath>..\Shared\Lib\Parquet\IronCompress.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reflection.Emit.Lightweight">
       <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Snappier">
+      <HintPath>..\Shared\Lib\Parquet\Snappier.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ZstdSharp">
+      <HintPath>..\Shared\Lib\Parquet\ZstdSharp.dll</HintPath>
+    </Reference>
+    <Content Include="..\Shared\Lib\Parquet\nironcompress.dll">
+      <Link>nironcompress.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -203,6 +226,9 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Accessibility">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
@@ -242,6 +268,12 @@
     </Compile>
     <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.Designer.cs">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
@@ -410,6 +442,7 @@
     <Compile Include="Controls\Databinding\AnnotationValueListDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
+    <Compile Include="Controls\Databinding\SpectrumFilterDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\FilesTree\BackgroundActionService.cs" />
@@ -464,7 +497,11 @@
     <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\ClickThroughToolStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
+    <Compile Include="Controls\Graphs\LabelLayoutRunner.cs" />
     <Compile Include="Controls\Graphs\MatchExpressionListDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -604,6 +641,12 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.Designer.cs">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -629,6 +672,8 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\TideSearchEngine.cs" />
+    <Compile Include="Model\DdaSearch\SearchSettingsParamsFileParser.cs" />
+    <Compile Include="Model\DdaSearch\SearchSettingsPreset.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
@@ -675,6 +720,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
+    <Compile Include="Model\OtherMetadataInfo.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
@@ -896,6 +942,7 @@
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\DiannHelpers.cs" />
     <Compile Include="Model\Lib\EncyclopeDiaHelpers.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
@@ -1049,6 +1096,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\StandaloneWindow.cs" />
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
@@ -1358,6 +1406,9 @@
     <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\WarnOnPresetChangeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.Designer.cs">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </Compile>
@@ -1365,6 +1416,15 @@
     <Compile Include="ToolsUI\JsonToolServer.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
+    <Compile Include="ToolsUI\DialogWatcher.cs" />
+    <Compile Include="ToolsUI\UiElement.cs" />
+    <Compile Include="ToolsUI\NativeFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeControl.cs" />
+    <Compile Include="ToolsUI\UiActions.cs" />
+    <Compile Include="ToolsUI\NativeDialog.cs" />
+    <Compile Include="ToolsUI\NativeFolderBrowserDialog.cs" />
+    <Compile Include="ToolsUI\NativeOpenFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeSaveFileDialog.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
@@ -1839,6 +1899,12 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\MatchModificationsControl.Designer.cs">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\PresetNameDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\PresetNameDlg.Designer.cs">
+      <DependentUpon>PresetNameDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.cs">
       <SubType>UserControl</SubType>
@@ -2541,11 +2607,8 @@
     <Compile Include="FileUI\ExportMethodDlg.Designer.cs">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\BaseFileDialogNE.cs">
+    <Compile Include="FileUI\SkylineFileDialogNE.cs">
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\BaseFileDialogNE.designer.cs">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\DocSettings\Modification.cs" />
     <Compile Include="Model\V01\XmlSrmDocument.cs" />
@@ -2570,6 +2633,9 @@
       <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\EditListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\ShareListDlg.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SettingsUI\EditListDlg.Designer.cs">
@@ -2675,6 +2741,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DiannDownloadDlg.resx">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.ja.resx">
       <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
@@ -3047,6 +3116,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.ja.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphFullScan.zh-CHS.resx">
       <DependentUpon>GraphFullScan.cs</DependentUpon>
@@ -3318,6 +3388,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\DiannSearchDlg.resx">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.ja.resx">
       <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
@@ -3859,14 +3933,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.zh-CHS.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\BaseFileDialogNE.ja.resx">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\BaseFileDialogNE.zh-CHS.resx">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.ja.resx">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
@@ -4517,6 +4583,7 @@
     <None Include="Resources\IrtCalculator.png" />
     <None Include="Resources\OptDB.png" />
     <None Include="Resources\ProtDB.png" />
+    <None Include="Resources\Edit_Item.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -5020,12 +5087,12 @@
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\BaseFileDialogNE.resx">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.resx">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\PresetNameDlg.resx">
+      <DependentUpon>PresetNameDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.resx">
@@ -5350,7 +5417,6 @@
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
-    <Compile Include="Util\ConsoleTable.cs" />
     <Compile Include="Util\CreateHandleDebugBase.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -5374,6 +5440,7 @@
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
+    <Compile Include="Util\ILongWaitForm.cs" />
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
@@ -7165,6 +7232,10 @@
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj">
       <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
       <Name>CommonMsData</Name>
@@ -7180,6 +7251,10 @@
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\PanoramaClient\PanoramaClient.csproj">
       <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>

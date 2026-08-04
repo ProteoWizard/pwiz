@@ -22,7 +22,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections;
@@ -76,6 +75,11 @@ namespace pwiz.Skyline.Model.Results
                 Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0, 0)};
                 SimProductFilters = Ms1ProductFilters;  // We want TIC and BPC for all scans, even if they have narrow machine settings and look like SIM
             }
+
+            if (false == precursorTextId.ChromatogramGroupId?.SpectrumClassFilter.IsEmpty)
+            {
+                SpectrumMetadataPredicate = precursorTextId.ChromatogramGroupId.SpectrumClassFilter.MakePredicate();
+            }
         }
 
         public int Id { get; private set; }
@@ -83,7 +87,8 @@ namespace pwiz.Skyline.Model.Results
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
         public ChromatogramGroupId ChromatogramGroupId { get; }
-        public SpectrumClassFilter SpectrumClassFilter => ChromatogramGroupId?.SpectrumClassFilter ?? default;
+        public Predicate<SpectrumMetadata> SpectrumMetadataPredicate { get; }
+
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
         public double? MinTime
@@ -590,12 +595,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool MatchesSpectrum(SpectrumMetadata spectrumMetadata)
         {
-            if (SpectrumClassFilter.IsEmpty)
-            {
-                return true;
-            }
-
-            return SpectrumClassFilter.MakePredicate()(spectrumMetadata);
+            return false != SpectrumMetadataPredicate?.Invoke(spectrumMetadata);
         }
 
         public override string ToString() // For debug convenience

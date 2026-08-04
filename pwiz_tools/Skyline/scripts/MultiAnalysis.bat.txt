@@ -1,0 +1,30 @@
+@echo off
+SETLOCAL
+
+set ROOT_ANALYSIS_DIR=D:\test\20191010_Bruker_diaPASEF
+set SKYLINE_RUNNER="C:\proj\branches\work\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe"
+set R_Script="C:\Program Files\R\R-3.5.3\bin\x64\RScript.exe"
+set BAT_Script="%ROOT_ANALYSIS_DIR%\scripts\SkylineAnalysis.bat"
+set LOG="%ROOT_ANALYSIS_DIR%\Import.log"
+FOR /F %%A IN ('WMIC OS GET LocalDateTime ^| FINDSTR \.') DO @SET DT=%%A
+set LOG_ROLLOVER="%ROOT_ANALYSIS_DIR%\Import_%DT:~0,8%_%DT:~8,6%.log"
+
+if exist %LOG% move %LOG% %LOG_ROLLOVER%
+
+call %BAT_Script% HYE raw HYE_diaPASEF_rp30hs_rt10hs_nort2_6t 30000 5 6 "Bruker_diaPASEF_HYE-6tran.sky" ""
+if %ERRORLEVEL% NEQ 0 GOTO END
+
+
+GOTO END
+
+call %BAT_Script% HYE raw HYE_diaPASEF_rp30hs_rt10hs_nort2_1p 30000 5 1 "Bruker_diaPASEF_HYE-6tran.sky" ""
+if %ERRORLEVEL% NEQ 0 GOTO END
+call %BAT_Script% HYE raw HYE_diaPASEF_rp30hs_rt10hs_nort2_2t 30000 5 2 "Bruker_diaPASEF_HYE-6tran.sky" ""
+if %ERRORLEVEL% NEQ 0 GOTO END
+call %BAT_Script% HYE raw HYE_diaPASEF_rp30hs_rt10hs_nort2_3t 30000 5 3 "Bruker_diaPASEF_HYE-6tran.sky" ""
+if %ERRORLEVEL% NEQ 0 GOTO END
+
+
+:END
+
+ENDLOCAL

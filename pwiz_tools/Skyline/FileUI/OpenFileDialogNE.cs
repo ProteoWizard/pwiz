@@ -18,13 +18,13 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.CommonMsData;
-using pwiz.Skyline.Alerts;
 using pwiz.CommonMsData.RemoteApi;
+using pwiz.Skyline.Alerts;
 
 
 namespace pwiz.Skyline.FileUI
 {
-    public class OpenFileDialogNE : BaseFileDialogNE
+    public class OpenFileDialogNE : SkylineFileDialogNE
     {
         /// <summary>
         /// File picker which is aware of mass spec "files" that are really directories
