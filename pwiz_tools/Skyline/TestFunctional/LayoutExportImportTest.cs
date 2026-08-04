@@ -101,10 +101,21 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestFileDialogFilters()
         {
-            AssertEx.Contains(SkylineWindow.FILTER_SKY_VIEW, @"*" + SkylineWindow.EXT_SKY_VIEW);
-            AssertEx.IsFalse(SkylineWindow.FILTER_SKY_VIEW.Contains(@"*.*"));
-            // Opening also matches the p01.view files that ship with the tutorial tests
+            // No all-files entry, and the filter also matches the p01.view files that ship
+            // with the tutorial tests
             AssertEx.Contains(SkylineWindow.FILTER_VIEW, @"*" + SkylineWindow.EXT_VIEW);
+            AssertEx.IsFalse(SkylineWindow.FILTER_VIEW.Contains(@"*.*"));
+
+            // Whatever name the dialog settles on, the layout is saved as ".sky.view", and
+            // never over a document. The dialog only guarantees the name ends in ".view",
+            // because it cannot tell that a ".sky.view" name already has its extension.
+            const string expected = @"C:\Folder\Doc.sky.view";
+            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(expected));
+            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(@"C:\Folder\Doc.view"));
+            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(@"C:\Folder\Doc"));
+            AssertEx.AreEqual(expected, SkylineWindow.EnsureViewFileName(@"C:\Folder\Doc.sky"));
+            AssertEx.AreEqual(@"C:\Folder\My.Study.sky.view",
+                SkylineWindow.EnsureViewFileName(@"C:\Folder\My.Study.sky.view"));
         }
 
         /// <summary>

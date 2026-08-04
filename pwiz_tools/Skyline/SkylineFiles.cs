@@ -84,19 +84,18 @@ namespace pwiz.Skyline
         public const string EXT_SKY_VIEW = SrmDocument.EXT + EXT_VIEW;
 
         /// <summary>
-        /// Filter for saving a layout. It offers only <see cref="EXT_SKY_VIEW"/>, and no
-        /// all-files entry, so that a layout cannot be saved over a document or any other
-        /// file that is not a layout. Windows suggests matching existing file names as the
-        /// user types, and an unrestricted filter makes those suggestions dangerous.
-        /// </summary>
-        public static string FILTER_SKY_VIEW
-        {
-            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_VIEW_Skyline_Window_Layouts, EXT_SKY_VIEW); }
-        }
-
-        /// <summary>
-        /// Filter for opening a layout. It matches any ".view" file, which includes the
-        /// ".sky.view" files saved beside documents.
+        /// Filter for the layout file dialogs. It has no all-files entry, so that a layout
+        /// cannot be saved over a document or any other file that is not a layout. Windows
+        /// suggests matching existing file names as the user types, and an unrestricted
+        /// filter makes those suggestions dangerous.
+        /// <para>
+        /// The filter uses the single <see cref="EXT_VIEW"/> and not the full
+        /// <see cref="EXT_SKY_VIEW"/>, because a file dialog only understands the last
+        /// extension of a name: with a ".sky.view" filter it does not recognize that
+        /// "Doc.sky.view" already ends in the extension, and appends it a second time. Share
+        /// Document has the same two-part extension and works around it the same way. Saving
+        /// still produces a ".sky.view" name, which <see cref="EnsureViewFileName"/> guarantees.
+        /// </para>
         /// </summary>
         public static string FILTER_VIEW
         {
@@ -4234,14 +4233,29 @@ namespace pwiz.Skyline
                 dlg.OverwritePrompt = true;
                 dlg.DefaultExt = EXT_SKY_VIEW;
                 dlg.SupportMultiDottedExtensions = true;
-                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                     dlg.FileName = GetViewFile(Path.GetFileName(DocumentFilePath));
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
-                ExportLayout(dlg.FileName);
+                ExportLayout(EnsureViewFileName(dlg.FileName));
             }
+        }
+
+        /// <summary>
+        /// Returns the path a layout gets saved to, which always ends in
+        /// <see cref="EXT_SKY_VIEW"/>. A layout must not be given the name of a document or
+        /// anything else that is not a layout, and the file dialog only guarantees that the
+        /// name ends in <see cref="EXT_VIEW"/>.
+        /// </summary>
+        public static string EnsureViewFileName(string fileName)
+        {
+            if (PathEx.HasExtension(fileName, EXT_SKY_VIEW))
+                return fileName;
+            // Replace whatever last extension the dialog settled on, so that "Doc.view"
+            // becomes "Doc.sky.view" rather than "Doc.view.sky.view"
+            return Path.ChangeExtension(fileName, null) + EXT_SKY_VIEW;
         }
 
         public void ExportLayout(string viewFilePath)
