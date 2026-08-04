@@ -190,6 +190,21 @@ namespace pwiz.Osprey.Core
             IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
 
         /// <summary>
+        /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
+        /// so shipping this does not invalidate a single existing output directory; only the
+        /// resident opt-out adds a term.
+        ///
+        /// <para>Without it an in-place A/B of the two arms is not an A/B at all: the second
+        /// run finds the first run's reconciled parquets valid, skips Stage 6 entirely, and
+        /// reports a clean match it never computed. That is the exact failure mode the two arms
+        /// exist to detect, so leaving it out makes the oracle self-confirming.</para>
+        /// </summary>
+        public static string Stage6StreamSurvivorsValidityKeySuffix()
+        {
+            return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
+        }
+
+        /// <summary>
         /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
         /// row per CWT candidate peak of every precursor (targets AND decoys) scored in the
         /// first-pass main search to a per-input-file TSV

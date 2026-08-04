@@ -32,6 +32,32 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public class FdrEntry
     {
+        /// <summary>
+        /// The canonical survivor order - (EntryId, Charge, ScanNumber, ParquetIndex) - that
+        /// the post-Percolator-sort + compaction buffer establishes and every path which
+        /// rebuilds that buffer from disk has to reproduce. Held in ONE place because four
+        /// separate copies of this comparison had accumulated across the Stage 5 reload, the
+        /// Stage 6 rebuild and the resume overlays, and a buffer built by one copy is compared
+        /// against a buffer built by another.
+        ///
+        /// <para>Safe with the unstable <c>Array.Sort</c> that <c>List.Sort</c> uses: the
+        /// terminal key ParquetIndex is unique per file, so the comparison never ties and the
+        /// result does not depend on the sort's tie handling.</para>
+        /// </summary>
+        public static readonly Comparison<FdrEntry> CANONICAL_ORDER = (a, b) =>
+        {
+            int c = a.EntryId.CompareTo(b.EntryId);
+            if (c != 0)
+                return c;
+            c = a.Charge.CompareTo(b.Charge);
+            if (c != 0)
+                return c;
+            c = a.ScanNumber.CompareTo(b.ScanNumber);
+            if (c != 0)
+                return c;
+            return a.ParquetIndex.CompareTo(b.ParquetIndex);
+        };
+
         public uint EntryId { get; set; }
         public uint ParquetIndex { get; set; }
         public bool IsDecoy { get; set; }
@@ -121,6 +147,28 @@ namespace pwiz.Osprey.Core
 
         public FdrEntry()
         {
+            RunPrecursorQvalue = 1.0;
+            RunPeptideQvalue = 1.0;
+            RunProteinQvalue = 1.0;
+            ExperimentPrecursorQvalue = 1.0;
+            ExperimentPeptideQvalue = 1.0;
+            ExperimentProteinQvalue = 1.0;
+            Pep = 1.0;
+        }
+
+        /// <summary>
+        /// Reset the discriminant fields to the Rust <c>to_fdr_entry</c> defaults: Score 0,
+        /// every q-value and Pep 1.0. This is the state a Stage 6 rescore target is left in
+        /// for the 2nd pass to fill, and the state a fresh gap-fill stub is appended in.
+        ///
+        /// <para>One method because the same eight assignments had been written out five
+        /// times - the rescore overlay, both gap-fill passes, and the rebuild-from-disk - and
+        /// the paths are compared against each other for byte identity. A field added to the
+        /// set in four places out of five is a divergence nothing would catch.</para>
+        /// </summary>
+        public void ResetScores()
+        {
+            Score = 0.0;
             RunPrecursorQvalue = 1.0;
             RunPeptideQvalue = 1.0;
             RunProteinQvalue = 1.0;

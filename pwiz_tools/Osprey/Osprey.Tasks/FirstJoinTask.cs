@@ -484,6 +484,18 @@ namespace pwiz.Osprey.Tasks
             // survivor source and empties it again after that file's reconciled parquet
             // is written. Without this the 88.9 M entries stay live for the whole rescore
             // - 28 GB across 5.5 hours at 163 files, issue #4526.
+            // The post-compaction counterpart of the pre-compaction resident-pool guard: taking
+            // the resident handoff has to be NAMED, exactly as forcing the legacy first-pass
+            // pool does. Checked here because this is where the decision is made, and BEFORE
+            // the release so a refused run fails with an actionable message rather than an OOM
+            // five hours into Stage 6.
+            string handoffError = PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                _survivorLoader != null && !config.StopAfterStage5,
+                OspreyEnvironment.Stage6StreamSurvivors,
+                OspreyEnvironment.AllowUnfixedResident);
+            if (handoffError != null)
+                throw new InvalidOperationException(handoffError);
+
             if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && !config.StopAfterStage5)
             {
                 foreach (var kvp in perFileEntries)

@@ -1997,6 +1997,46 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The same refusal, one stage later: the guard above stops at the compaction line, and
+        /// the POST-compaction survivor handoff is O(files) too - 88.9 M entries / 28 GB at 163
+        /// files, live for the whole Stage 6 rescore (issue #4526). Stage 6 streams that buffer
+        /// by default; <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> restores the resident handoff as
+        /// the A/B byte-identity oracle, and like every other resident path it has to be NAMED
+        /// to be available. Returns the actionable error, or <c>null</c> when the run streams.
+        ///
+        /// <para><paramref name="streamingAvailable"/> is false when this run could not stream
+        /// whatever the flag says - the resident and rehydrate paths never compute the passing
+        /// base_id set the per-file loader needs. Those runs are already resident for a reason
+        /// with its own token (<see cref="ResidentPaths.PROJECTION_OFF"/> above all), so
+        /// demanding a second token on top would tell the operator to set two variables for one
+        /// decision, and would fire on the plain <c>--task SecondPassFDR</c> merge that
+        /// <see cref="ResidentPaths.HPC_MERGE"/> already covers.</para>
+        /// </summary>
+        internal static string Stage6ResidentHandoffGuardError(
+            bool streamingAvailable, bool streamingEnabled, string allowUnfixedResident)
+        {
+            if (!streamingAvailable || streamingEnabled)
+                return null;
+            if (string.Equals(ResidentPaths.COMPACTED_ENTRIES_BUFFER, allowUnfixedResident,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+            string supplied = string.IsNullOrEmpty(allowUnfixedResident)
+                ? string.Empty
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}', which does " +
+                                @"not name this path.", allowUnfixedResident);
+            return string.Format(
+                @"OSPREY_STAGE6_STREAM_SURVIVORS=0 takes the '{0}' RESIDENT path, which holds " +
+                @"every file's post-compaction survivors in memory across the whole Stage 6 " +
+                @"rescore and grows O(files) - 28 GB at 163 files. Set " +
+                @"OSPREY_ALLOW_UNFIXED_RESIDENT={0} to accept it and proceed (it is the A/B " +
+                @"byte-identity oracle for the streamed default); otherwise this path is " +
+                @"unavailable.{1}",
+                ResidentPaths.COMPACTED_ENTRIES_BUFFER, supplied);
+        }
+
+        /// <summary>
         /// The <see cref="ResidentPaths"/> token for the known-unfixed resident path this config
         /// takes, or <c>null</c> when it needs the resident pool for a reason NOT on that list -
         /// which the caller refuses outright, since reaching that state means something we

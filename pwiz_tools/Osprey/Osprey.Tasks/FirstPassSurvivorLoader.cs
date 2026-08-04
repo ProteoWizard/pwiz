@@ -50,20 +50,6 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class FirstPassSurvivorLoader
     {
-        // Canonical survivor order, matching the legacy post-Percolator-sort +
-        // compaction buffer. Array.Sort is safe with this comparison because the
-        // terminal key ParquetIndex is unique per reloaded stub, so it never ties.
-        private static readonly Comparison<FdrEntry> s_survivorOrder = (a, b) =>
-        {
-            int c = a.EntryId.CompareTo(b.EntryId);
-            if (c != 0) return c;
-            c = a.Charge.CompareTo(b.Charge);
-            if (c != 0) return c;
-            c = a.ScanNumber.CompareTo(b.ScanNumber);
-            if (c != 0) return c;
-            return a.ParquetIndex.CompareTo(b.ParquetIndex);
-        };
-
         private readonly IReadOnlyDictionary<string, string> _perFileParquetPaths;
         private readonly OspreyConfig _config;
         private readonly HashSet<uint> _firstPassBaseIds;
@@ -130,7 +116,7 @@ namespace pwiz.Osprey.Tasks
 
             stubs.RemoveAll(e => !_firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
             stubs.TrimExcess();
-            stubs.Sort(s_survivorOrder); // Array.Sort OK: terminal key ParquetIndex is unique per reloaded stub, so the comparator never ties.
+            stubs.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per reloaded stub, so the comparison never ties
             return stubs;
         }
     }
