@@ -23,12 +23,14 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -52,6 +54,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             TestMenuItems();
+            TestDefaultExportFileName();
             TestFileDialogFilters();
             TestLayoutRoundTrip();
             TestUnrecognizedWindowSkipped();
@@ -107,6 +110,79 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
+        /// The name the Save dialog offers for a saved document must be its layout file, and
+        /// no more. A file dialog understands only the last extension of a name, so a filter
+        /// of "*.sky.view" does not recognize that "Doc.sky.view" already ends in the
+        /// extension and appends it a second time, offering "Doc.sky.view.sky.view".
+        /// </summary>
+        private void TestDefaultExportFileName()
+        {
+            var docPath = TestContext.GetTestResultsPath("DefaultName.sky");
+            RunUI(() => SkylineWindow.SaveDocument(docPath));
+
+            string defaultName = null;
+            RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
+            {
+                defaultName = ReadFileNameBox(dlg);
+                dlg.DismissWithCancelButton();
+            });
+            AssertEx.AreEqual(Path.GetFileName(SkylineWindow.GetViewFile(docPath)), defaultName);
+        }
+
+        /// <summary>
+        /// Saves the current layout through the real File > Export > Window Layout dialog.
+        /// </summary>
+        private static void ExportLayoutThroughDialog(string viewPath)
+        {
+            // Leave nothing for the dialog to prompt about overwriting on a repeat run
+            FileEx.SafeDelete(viewPath, true);
+            RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
+            {
+                dlg.EnterPath(viewPath);
+                dlg.DismissWithAcceptButton();
+            });
+            AssertEx.FileExists(viewPath);
+        }
+
+        /// <summary>
+        /// Loads a layout through the real File > Import > Window Layout dialog. The import
+        /// reports the windows it could not restore, so the caller says whether to expect
+        /// that message and what it must name.
+        /// </summary>
+        private static void ImportLayoutThroughDialog(string viewPath, string expectedProblemWindow = null)
+        {
+            if (expectedProblemWindow == null)
+            {
+                RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowImportLayoutDlg, dlg =>
+                {
+                    dlg.EnterPath(viewPath);
+                    dlg.Accept();
+                });
+                return;
+            }
+
+            // The warning is raised by ShowImportLayoutDlg itself, after the file dialog has
+            // closed but before the call returns, so it holds the UI thread. It has to be
+            // dismissed from the test thread, which is what RunLongNativeDlg runs on.
+            RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowImportLayoutDlg, dlg =>
+            {
+                dlg.EnterPath(viewPath);
+                dlg.DismissWithAcceptButton();
+                var messageDlg = WaitForOpenForm<MessageDlg>();
+                AssertLayoutProblemMessage(messageDlg, viewPath, expectedProblemWindow);
+                OkDialog(messageDlg, messageDlg.OkDialog);
+            });
+        }
+
+        private static string ReadFileNameBox(NativeFileDialog dlg)
+        {
+            var fileNameBox = dlg.EnumerateChildren().OfType<NativeTextBox>()
+                .FirstOrDefault(box => Equals(box.Label, NativeFileDialog.FILE_NAME_FIELD));
+            Assert.IsNotNull(fileNameBox);
+            return fileNameBox.GetValueNow() as string;
+        }
+
+        /// <summary>
         /// Exports a layout, takes the layout apart, and verifies that importing puts the
         /// windows back where they were.
         /// </summary>
@@ -115,8 +191,7 @@ namespace pwiz.SkylineTestFunctional
             var viewPath = TestContext.GetTestResultsPath("RoundTrip.sky.view");
 
             ArrangeTestLayout();
-            RunUI(() => SkylineWindow.ExportLayout(viewPath));
-            AssertEx.FileExists(viewPath);
+            ExportLayoutThroughDialog(viewPath);
 
             // Take the layout apart, so that a successful import cannot be a no-op
             RunUI(() =>
@@ -127,7 +202,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => FindOpenForm<DocumentGridForm>() == null &&
                                      FindOpenForm<ImmediateWindow>() == null);
 
-            RunUI(() => SkylineWindow.ImportLayout(viewPath));
+            ImportLayoutThroughDialog(viewPath);
             WaitForGraphs();
             AssertDockState<DocumentGridForm>(DockState.DockRight);
             AssertDockState<ImmediateWindow>(DockState.DockBottom);
@@ -143,7 +218,7 @@ namespace pwiz.SkylineTestFunctional
             var editedViewPath = TestContext.GetTestResultsPath("UnrecognizedEdited.sky.view");
 
             ArrangeTestLayout();
-            RunUI(() => SkylineWindow.ExportLayout(viewPath));
+            ExportLayoutThroughDialog(viewPath);
 
             // Rename the Immediate Window to something this Skyline knows nothing about
             var layoutXml = File.ReadAllText(viewPath);
@@ -151,9 +226,7 @@ namespace pwiz.SkylineTestFunctional
             File.WriteAllText(editedViewPath,
                 layoutXml.Replace(typeof(ImmediateWindow).ToString(), @"pwiz.Skyline.Controls.NoSuchWindow"));
 
-            var messageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.ImportLayout(editedViewPath));
-            AssertLayoutProblemMessage(messageDlg, editedViewPath, @"pwiz.Skyline.Controls.NoSuchWindow");
-            OkDialog(messageDlg, messageDlg.OkDialog);
+            ImportLayoutThroughDialog(editedViewPath, @"pwiz.Skyline.Controls.NoSuchWindow");
             WaitForGraphs();
             // The unknown window is skipped, but the rest of the layout is restored
             Assert.IsNull(FindOpenForm<ImmediateWindow>());
@@ -169,13 +242,11 @@ namespace pwiz.SkylineTestFunctional
             var viewPath = TestContext.GetTestResultsPath("ListWindow.sky.view");
 
             AddListWithWindow();
-            RunUI(() => SkylineWindow.ExportLayout(viewPath));
+            ExportLayoutThroughDialog(viewPath);
 
             // Start a document which does not have the list, and import the layout anyway
             RunUI(() => SkylineWindow.NewDocument(true));
-            var messageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.ImportLayout(viewPath));
-            AssertLayoutProblemMessage(messageDlg, viewPath, LIST_NAME);
-            OkDialog(messageDlg, messageDlg.OkDialog);
+            ImportLayoutThroughDialog(viewPath, LIST_NAME);
             WaitForGraphs();
             Assert.IsNull(FindOpenForm<ListGridForm>());
         }
@@ -211,9 +282,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(FindOpenForm<ListGridForm>());
 
             // Importing the very same file does complain
-            var messageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.ImportLayout(docViewPath));
-            AssertLayoutProblemMessage(messageDlg, docViewPath, LIST_NAME);
-            OkDialog(messageDlg, messageDlg.OkDialog);
+            ImportLayoutThroughDialog(docViewPath, LIST_NAME);
 
             // A window Skyline does not recognize is severe enough to report on open too
             File.WriteAllText(docViewPath, File.ReadAllText(docViewPath)
