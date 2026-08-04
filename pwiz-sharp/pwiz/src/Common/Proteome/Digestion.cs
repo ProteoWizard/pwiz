@@ -138,7 +138,7 @@ public sealed class Digestion
         _sequence = polypeptide.Sequence;
         _config = config ?? new DigestionConfig();
         _cleavageAgent = cleavageAgent;
-        (_sites, _siteSet) = ComputeSites(_sequence, cleavageAgentRegexes, cleavageAgent);
+        (_sites, _siteSet) = ComputeSites(_sequence, cleavageAgentRegexes, cleavageAgent, _config);
     }
 
     /// <summary>Enumerates every peptide produced by the digestion that satisfies the
@@ -324,7 +324,7 @@ public sealed class Digestion
     // ----- site detection -----
 
     private static (List<int> sites, HashSet<int> set) ComputeSites(string sequence,
-        IEnumerable<string> regexes, CVID cleavageAgent)
+        IEnumerable<string> regexes, CVID cleavageAgent, DigestionConfig config)
     {
         var sites = new List<int>();
         var siteSet = new HashSet<int>();
@@ -364,6 +364,20 @@ public sealed class Digestion
         int cterm = sequence.Length - 1;
         if (siteSet.Add(cterm)) sites.Add(cterm);
         sites.Sort();
+
+        // Clipping the initiator methionine means offset 0 becomes a real cleavage site, not
+        // merely a discount on the missed-cleavage count: peptides starting at offset 1 have a
+        // specific N-terminus, and "M" itself is a fully-specific product. cpp inserts the site
+        // (Digestion.cpp:440-442) and *also* applies the missed-cleavage decrement below; both
+        // are needed. Omitting this made semi-specific digests drop clipped-Met peptides
+        // entirely and under-count missed cleavages across the N-terminal window.
+        if (sites.Count > 2 && sites[1] != 0 && config.ClipNTerminalMethionine
+            && sequence.Length > 0 && sequence[0] == 'M')
+        {
+            sites.Insert(1, 0);
+            siteSet.Add(0);
+        }
+
         return (sites, siteSet);
     }
 

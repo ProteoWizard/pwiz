@@ -158,18 +158,24 @@ public class ProteomeTests
         var digestion = new Digestion(poly, CVID.MS_Trypsin,
             new DigestionConfig { MinimumLength = 1, MaximumLength = 50, MaximumMissedCleavages = 0 });
         var peptides = digestion.Enumerate().ToList();
-        // Expected with 0 missed cleavages: cuts after K at index 2, K at index 4, R at index 5,
-        // and after K at index 10. RP at index 7-8 is NOT a cut (the (?!P) suppresses it).
-        // The polypeptide starts with M, so the clip-N-terminal-Met rule allows MAKMK
-        // (which raw-counts as 1 missed cleavage) to be emitted at 0 missed cleavages
-        // — biologically reasonable since initiator Met is cleaved post-translationally.
+        // Cuts after K at index 2, K at index 4, R at index 5, and K at index 10. RP at index
+        // 7-8 is NOT a cut (the (?!P) suppresses it). The polypeptide starts with M, so
+        // clip-N-terminal-Met adds offset 0 as a real cleavage site - which is what makes "M"
+        // and "AK" fully-specific products, and makes MAKMK span one missed cleavage (sites 0
+        // and 2) so it is excluded at MaximumMissedCleavages = 0.
+        // Verified against cpp: Digestion(MAKMKRGHRPKGG, MS_Trypsin, Config(0, 1, 50)).
         CollectionAssert.AreEqual(
-            new[] { "MAK", "MAKMK", "MK", "R", "GHRPK", "GG" },
+            new[] { "M", "MAK", "AK", "MK", "R", "GHRPK", "GG" },
             peptides.Select(p => p.Sequence).ToArray(),
             "trypsin fully-specific 0-missed-cleavage peptides (clip-N-term-Met active)");
+        foreach (var p in peptides)
+        {
+            Assert.AreEqual(0, p.MissedCleavages, $"{p.Sequence}: missed cleavages");
+            Assert.AreEqual(2, p.SpecificTermini, $"{p.Sequence}: specific termini");
+        }
 
         // Offset / specificity metadata on the GHRPK peptide.
-        var ghrpk = peptides[4];
+        var ghrpk = peptides[5];
         Assert.AreEqual(6, ghrpk.Offset);
         Assert.AreEqual(0, ghrpk.MissedCleavages);
         Assert.IsTrue(ghrpk.NTerminusIsSpecific);
@@ -203,6 +209,208 @@ public class ProteomeTests
             Assert.IsTrue(p.Sequence.Length is >= 3 and <= 4, $"length-violating peptide '{p.Sequence}'");
         Assert.IsTrue(peptides.Count > 0, "some peptides should survive the length filter");
     }
+
+    /// <summary>
+    /// Semi- and non-specific digestion, ported from cpp's <c>testBSADigestion</c>
+    /// (DigestionTest.cpp:481) and the three scenario functions it drives. Until this test
+    /// existed, nothing in pwiz-sharp or the Skyline tree ever built a <see cref="Digestion"/>
+    /// with anything but <see cref="Specificity.FullySpecific"/>, so the entire
+    /// semi/non-specific enumeration path had never run.
+    ///
+    /// Each scenario runs over both cpp forms - the predefined cleavage agent and the
+    /// equivalent hand-written regex - because they take different paths to the same site set.
+    /// </summary>
+    [TestMethod]
+    public void Digestion_SemiAndNonSpecific_BSA()
+    {
+        var bsa = new Peptide(BSA);
+
+        // cpp Config(maximumMissedCleavages, minimumLength, maximumLength, minimumSpecificity).
+        var semi = new DigestionConfig
+        {
+            MaximumMissedCleavages = 1, MinimumLength = 5, MaximumLength = 20,
+            MinimumSpecificity = Specificity.SemiSpecific,
+        };
+        var nonSpecific = semi with { MinimumSpecificity = Specificity.NonSpecific };
+
+        AssertSemitrypticBsa(new Digestion(bsa, CVID.MS_Trypsin_P, semi).Enumerate().ToList());
+        AssertSemitrypticBsa(new Digestion(bsa, "(?<=[KR])", semi).Enumerate().ToList());
+
+        AssertNontrypticBsa(new Digestion(bsa, CVID.MS_Trypsin_P, nonSpecific).Enumerate().ToList());
+        AssertNontrypticBsa(new Digestion(bsa, "(?<=[KR])", nonSpecific).Enumerate().ToList());
+
+        // N-terminal methionine clipping, expressed as an extra cut site after a leading M.
+        // Regex-only in cpp: no predefined agent encodes it.
+        AssertSemitrypticMethionineClippingBsa(
+            new Digestion(bsa, "(?<=^M)|(?<=[KR])", semi).Enumerate().ToList());
+        AssertSemitrypticMethionineClippingBsa(
+            new Digestion(bsa, "(?<=(^M)|([KR]))", semi).Enumerate().ToList());
+    }
+
+    /// <summary>Port of cpp <c>testSemitrypticBSA</c> (DigestionTest.cpp:200).</summary>
+    private static void AssertSemitrypticBsa(List<DigestedPeptide> peptides)
+    {
+        Assert.IsTrue(peptides.Count > 3, "semi-specific digest produced too few peptides");
+
+        // Enumeration order at the N terminus.
+        Assert.AreEqual("MKWVT", peptides[0].Sequence);
+        Assert.AreEqual("MKWVTF", peptides[1].Sequence);
+        Assert.AreEqual("MKWVTFI", peptides[2].Sequence);
+
+        // Enumeration order at the C terminus (cpp indexes these off rbegin()).
+        AssertFromEnd(peptides, 0, "QTALA");
+        AssertFromEnd(peptides, 1, "TQTALA");
+        AssertFromEnd(peptides, 2, "STQTALA");
+        AssertFromEnd(peptides, 5, "LVVSTQTALA");
+        AssertFromEnd(peptides, 6, "LVVSTQTAL");
+        AssertFromEnd(peptides, 10, "LVVST");
+
+        AssertMetadata(peptides[0], offset: 0, missedCleavages: 1, nSpecific: true, cSpecific: false);
+
+        AssertMetadata(Find(peptides, "MKWVTFISLLLLFSSAYSR"), offset: 0, missedCleavages: 1, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "KWVTFISLLLLFSSAYSR"), offset: 1, missedCleavages: 1, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "WVTFISLLLLFSSAYSR"), offset: 2, missedCleavages: 0, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "WVTFISLLLLFSSAYSRG"), offset: 2, missedCleavages: 1, nSpecific: true, cSpecific: false);
+
+        AssertAbsent(peptides, "KWVTFISLLLLFSSAYSRG");  // 2 missed cleavages
+        AssertAbsent(peptides, "VTFISLLLLFSSAYSRG");     // non-tryptic
+
+        // Specificity boundary: tryptic and semi-tryptic in, non-tryptic out.
+        AssertPresent(peptides, "WVTFISLLLLFSSAYSR");    // tryptic
+        AssertPresent(peptides, "VTFISLLLLFSSAYSR");     // semi-tryptic
+        AssertAbsent(peptides, "VTFISLLLLFSSAYS");       // non-tryptic
+
+        // Same boundary at the C terminus.
+        AssertPresent(peptides, "FAVEGPKLVVSTQTALA");    // semi-tryptic
+        AssertAbsent(peptides, "FAVEGPKLVVSTQTAL");      // non-tryptic
+    }
+
+    /// <summary>Port of cpp <c>testNontrypticBSA</c> (DigestionTest.cpp:290).</summary>
+    private static void AssertNontrypticBsa(List<DigestedPeptide> peptides)
+    {
+        Assert.IsTrue(peptides.Count > 3, "non-specific digest produced too few peptides");
+
+        Assert.AreEqual("MKWVT", peptides[0].Sequence);
+        Assert.AreEqual("MKWVTF", peptides[1].Sequence);
+        Assert.AreEqual("MKWVTFI", peptides[2].Sequence);
+
+        AssertMetadata(peptides[0], offset: 0, missedCleavages: 1, nSpecific: true, cSpecific: false);
+
+        AssertMetadata(Find(peptides, "MKWVTFISLLLLFSSAYSR"), offset: 0, missedCleavages: 1, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "KWVTFISLLLLFSSAYSR"), offset: 1, missedCleavages: 1, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "WVTFISLLLLFSSAYSR"), offset: 2, missedCleavages: 0, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "WVTFISLLLLFSSAYSRG"), offset: 2, missedCleavages: 1, nSpecific: true, cSpecific: false);
+        // The one the semi-specific digest rejects: neither terminus at a cut site.
+        AssertMetadata(Find(peptides, "VTFISLLLLFSSAYSRG"), offset: 3, missedCleavages: 1, nSpecific: false, cSpecific: false);
+
+        AssertAbsent(peptides, "KWVTFISLLLLFSSAYSRG");   // 2 missed cleavages
+
+        // All three specificities are admitted here.
+        AssertPresent(peptides, "WVTFISLLLLFSSAYSR");    // tryptic
+        AssertPresent(peptides, "VTFISLLLLFSSAYSR");     // semi-tryptic
+        AssertPresent(peptides, "VTFISLLLLFSSAYS");      // non-tryptic
+
+        AssertPresent(peptides, "FAVEGPKLVVSTQTALA");    // semi-tryptic
+        AssertPresent(peptides, "FAVEGPKLVVSTQTAL");     // non-tryptic
+        Assert.AreEqual("QTALA", peptides[^1].Sequence, "last peptide enumerated");
+
+        // Maximum missed cleavages still applies.
+        AssertPresent(peptides, "KWVTFISLLLLFSSAYSR");
+        AssertAbsent(peptides, "KWVTFISLLLLFSSAYSRG");
+
+        // Length bounds still apply.
+        AssertAbsent(peptides, "LR");                    // below MinimumLength
+        AssertAbsent(peptides, "QRLR");                  // below MinimumLength
+        AssertPresent(peptides, "VLASSAR");
+        AssertAbsent(peptides, "EYEATLEECCAKDDPHACYSTVFDK"); // above MaximumLength
+    }
+
+    /// <summary>Port of cpp <c>testSemitrypticMethionineClippingBSA</c>
+    /// (DigestionTest.cpp:390).</summary>
+    private static void AssertSemitrypticMethionineClippingBsa(List<DigestedPeptide> peptides)
+    {
+        Assert.IsTrue(peptides.Count > 3, "methionine-clipping digest produced too few peptides");
+
+        // Even with the extra cut after the leading M, MKWVT still spans one missed cleavage.
+        Assert.AreEqual("MKWVT", peptides[0].Sequence);
+        Assert.AreEqual("MKWVTF", peptides[1].Sequence);
+        Assert.AreEqual("MKWVTFI", peptides[2].Sequence);
+
+        AssertFromEnd(peptides, 0, "QTALA");
+        AssertFromEnd(peptides, 1, "TQTALA");
+        AssertFromEnd(peptides, 2, "STQTALA");
+        AssertFromEnd(peptides, 5, "LVVSTQTALA");
+        AssertFromEnd(peptides, 6, "LVVSTQTAL");
+        AssertFromEnd(peptides, 10, "LVVST");
+
+        AssertMetadata(peptides[0], offset: 0, missedCleavages: 1, nSpecific: true, cSpecific: false);
+
+        // Clipped-methionine peptides: the N terminus is specific because of the ^M cut site.
+        var clippedSemi = Find(peptides, "KWVTFISLLLLFSSAYS");
+        AssertMetadata(clippedSemi, offset: 1, missedCleavages: 1, nSpecific: true, cSpecific: false);
+
+        AssertMetadata(Find(peptides, "KWVTFISLLLLFSSAYSR"), offset: 1, missedCleavages: 1, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "WVTFISLLLLFSSAYSR"), offset: 2, missedCleavages: 0, nSpecific: true, cSpecific: true);
+        AssertMetadata(Find(peptides, "WVTFISLLLLFSSAYSRG"), offset: 2, missedCleavages: 1, nSpecific: true, cSpecific: false);
+
+        AssertAbsent(peptides, "KWVTFISLLLLFSSAYSRG");   // 2 missed cleavages
+        AssertAbsent(peptides, "VTFISLLLLFSSAYSRG");     // non-tryptic
+
+        AssertPresent(peptides, "WVTFISLLLLFSSAYSR");    // tryptic
+        AssertPresent(peptides, "KWVTFISLLLLFSSAYSR");   // semi-tryptic
+        AssertPresent(peptides, "KWVTFISLLLLFSSAYS");    // clipped methionine + semi-specific
+        AssertAbsent(peptides, "VTFISLLLLFSSAYS");       // non-specific
+
+        AssertPresent(peptides, "FAVEGPKLVVSTQTALA");    // semi-tryptic
+        AssertAbsent(peptides, "FAVEGPKLVVSTQTAL");      // non-tryptic
+    }
+
+    // cpp looks peptides up in a std::set ordered by sequence, which keeps the first of any
+    // duplicates - so "first in enumeration order" is the matching C# semantic.
+    private static DigestedPeptide Find(List<DigestedPeptide> peptides, string sequence)
+    {
+        var hit = peptides.FirstOrDefault(p => p.Sequence == sequence);
+        Assert.IsNotNull(hit, $"expected peptide '{sequence}' was not produced");
+        return hit;
+    }
+
+    private static void AssertPresent(List<DigestedPeptide> peptides, string sequence) =>
+        Assert.IsTrue(peptides.Any(p => p.Sequence == sequence),
+            $"expected peptide '{sequence}' was not produced");
+
+    private static void AssertAbsent(List<DigestedPeptide> peptides, string sequence) =>
+        Assert.IsFalse(peptides.Any(p => p.Sequence == sequence),
+            $"peptide '{sequence}' should have been filtered out");
+
+    private static void AssertFromEnd(List<DigestedPeptide> peptides, int fromEnd, string expected) =>
+        Assert.AreEqual(expected, peptides[peptides.Count - 1 - fromEnd].Sequence,
+            $"peptide {fromEnd} back from the end");
+
+    private static void AssertMetadata(DigestedPeptide peptide, int offset, int missedCleavages,
+        bool nSpecific, bool cSpecific)
+    {
+        Assert.AreEqual(offset, peptide.Offset, $"{peptide.Sequence}: offset");
+        Assert.AreEqual(missedCleavages, peptide.MissedCleavages, $"{peptide.Sequence}: missed cleavages");
+        Assert.AreEqual(nSpecific, peptide.NTerminusIsSpecific, $"{peptide.Sequence}: N-terminus specificity");
+        Assert.AreEqual(cSpecific, peptide.CTerminusIsSpecific, $"{peptide.Sequence}: C-terminus specificity");
+        Assert.AreEqual((nSpecific ? 1 : 0) + (cSpecific ? 1 : 0), peptide.SpecificTermini,
+            $"{peptide.Sequence}: specific termini");
+    }
+
+    // >P02769|ALBU_BOVIN Serum albumin - Bos taurus (Bovine). Verbatim from
+    // cpp DigestionTest.cpp:486.
+    private const string BSA =
+        "MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPF" +
+        "DEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEP" +
+        "ERNECFLSHKDDSPDLPKLKPDPNTLCDEFKADEKKFWGKYLYEIARRHPYFYAPELLYY" +
+        "ANKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVA" +
+        "RLSQKFPKAEFVEVTKLVTDLTKVHKECCHGDLLECADDRADLAKYICDNQDTISSKLKE" +
+        "CCDKPLLEKSHCIAEVEKDAIPENLPPLTADFAEDKDVCKNYQEAKDAFLGSFLYEYSRR" +
+        "HPEYAVSVLLRLAKEYEATLEECCAKDDPHACYSTVFDKLKHLVDEPQNLIKQNCDQFEK" +
+        "LGEYGFQNALIVRYTRKVPQVSTPTLVEVSRSLGKVGTRCCTKPESERMPCTEDYLSLIL" +
+        "NRLCVLHEKTPVSEKVTKCCTESLVNRRPCFSALTPDETYVPKAFDEKLFTFHADICTLP" +
+        "DTEKQIKKQTALVELLKHKPKATEEQLKTVMENFVAFVDKCCAADDKEACFAVEGPKLVV" +
+        "STQTALA";
 
     [TestMethod]
     public void Digestion_CleavageAgent_NameAndRegexLookup()
