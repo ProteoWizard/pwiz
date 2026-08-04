@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -906,6 +907,72 @@ namespace pwiz.SkylineTestData
 
             string reportLines = File.ReadAllText(outPath);
             AssertEx.NoDiff(reportLines, programmaticReport);
+        }
+
+        /// <summary>
+        /// The parquet exporter is the only report exporter that evaluates row values on more
+        /// than one thread (ParquetReportExporter.PopulateChunk uses ParallelEx.For), and the
+        /// databinding layer it calls into is not thread safe. The export then spins forever
+        /// with every core busy. It reproduced on roughly one run in six, so repeat the export
+        /// enough times that a miss is unlikely.
+        ///
+        /// This runs SkylineCmd.exe rather than exporting in process on purpose. The failure
+        /// is a spin, not a deadlock, so an in-process export that hangs leaves threads burning
+        /// every core for the rest of the test run. In a separate process it can be killed.
+        /// </summary>
+        [TestMethod]
+        public void ConsoleParquetReportExportTest()
+        {
+            TestFilesZipPaths = new[] { @"https://skyline.ms/tutorials/LiveReports.zip" };
+            TestFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[0]);
+            string docPath = TestFilesDir.GetTestPath(@"Rat_plasma.sky");
+            AssertEx.IsTrue(File.Exists(docPath), string.Format(@"Missing test document {0}", docPath));
+
+            string reportName = Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results;
+
+            for (int i = 0; i < PARQUET_EXPORT_REPEAT; i++)
+            {
+                ExportParquetReport(docPath, reportName, i);
+            }
+        }
+
+        private const int PARQUET_EXPORT_REPEAT = 20;
+        // A successful export of this document takes under 2 seconds, so this only fires on a hang
+        private const int PARQUET_EXPORT_TIMEOUT_MS = 60 * 1000;
+
+        private void ExportParquetReport(string docPath, string reportName, int iteration)
+        {
+            string outPath = TestFilesDir.GetTestPath(string.Format(@"Rat_plasma_{0}.parquet", iteration));
+            string skylineCmdPath = Path.Combine(
+                Path.GetDirectoryName(GetType().Assembly.Location) ?? string.Empty, @"SkylineCmd.exe");
+            AssertEx.IsTrue(File.Exists(skylineCmdPath), string.Format(@"Missing {0}", skylineCmdPath));
+
+            var startInfo = new ProcessStartInfo(skylineCmdPath)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                Arguments = string.Join(@" ",
+                    (@"--in=" + docPath).Quote(),
+                    (@"--report-name=" + reportName).Quote(),
+                    (@"--report-file=" + outPath).Quote(),
+                    @"--report-format=" + ReportFormat.parquet)
+            };
+
+            var process = Process.Start(startInfo);
+            Assert.IsNotNull(process);
+            if (!process.WaitForExit(PARQUET_EXPORT_TIMEOUT_MS))
+            {
+                process.Kill();
+                AssertEx.Fail(
+                    @"Export of the {0} report to parquet did not finish within {1} seconds on iteration {2} of {3}. See ParquetReportExporter.PopulateChunk.",
+                    reportName, PARQUET_EXPORT_TIMEOUT_MS / 1000, iteration + 1, PARQUET_EXPORT_REPEAT);
+            }
+
+            string output = process.StandardOutput.ReadToEnd();
+            AssertEx.AreEqual(0, process.ExitCode, output);
+            AssertEx.IsTrue(File.Exists(outPath), output);
+            FileEx.SafeDelete(outPath);
         }
 
         [TestMethod]
