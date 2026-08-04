@@ -321,7 +321,11 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
             selectedIon.CVParams.Add(new CVParam(
                 DefaultOverride ? CVID.MS_charge_state : CVID.MS_possible_charge_state,
                 assignedCharge));
-            selectedIon.Set(CVID.MS_selected_ion_m_z, assignedMz, CVID.MS_m_z);
+            // No units argument, matching cpp's `set(MS_selected_ion_m_z, assignedMZ)`
+            // (SpectrumList_ChargeFromIsotope.cpp:484). Set() overwrites units as well as value,
+            // so this clears the MS_m_z unit that SelectedIon(double) put there — cpp emits the
+            // refined m/z with no unitAccession, and msconvert output has to match.
+            selectedIon.Set(CVID.MS_selected_ion_m_z, assignedMz);
         }
         else if (_defaultChargeMin > 0)
         {
