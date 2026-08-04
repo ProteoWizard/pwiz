@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -111,6 +112,16 @@ namespace pwiz.Osprey.Tasks
         // the list reference falls through unchanged from
         // PerFileScoringTask.
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
+
+        // The gap-fill rows each streamed file's rescore appended, kept so the rebuild can
+        // put back exactly what the rescore produced. They are NOT recoverable from the
+        // reconciled parquet: the fresh buffer holds one row per (file, EntryId), so a
+        // gap-fill row is indistinguishable there from the survivor row for the same
+        // precursor. Cheap to keep - 390 rows across the 3-file Stellar set, and O(gap-fill
+        // targets) rather than O(survivors), which is the term this whole change is
+        // shedding. Written from the parallel per-file loop, so it must be concurrent.
+        private readonly ConcurrentDictionary<string, List<FdrEntry>> _streamedGapFill =
+            new ConcurrentDictionary<string, List<FdrEntry>>();
 
         public override string Name => @"PerFileRescoring";
 
@@ -334,6 +345,7 @@ namespace pwiz.Osprey.Tasks
                 // survives it.
                 ResetRescoredTargets(_perFileEntries, ctx);
                 OverlayReconciledIntoAllFiles(_perFileEntries, ctx, canonicalize: false);
+                AppendStreamedGapFill();
             }
 
             // Cross-impl bisection seam: dump per-precursor state
@@ -697,8 +709,18 @@ namespace pwiz.Osprey.Tasks
             }
             finally
             {
-                // Drop this file's entries before the next one loads its own. The rebuild
-                // after the loop reads them back from the reconciled parquet.
+                // Keep the gap-fill rows the rescore appended (ParquetIndex == uint.MaxValue
+                // is the marker it stamps on them) before dropping the rest. Everything else
+                // is rebuilt from the parquet after the loop; these are not.
+                var appended = new List<FdrEntry>();
+                foreach (var e in file.Value)
+                {
+                    if (e.ParquetIndex == uint.MaxValue)
+                        appended.Add(e);
+                }
+                _streamedGapFill[file.Key] = appended;
+
+                // Drop this file's entries before the next one loads its own.
                 file.Value.Clear();
                 file.Value.TrimExcess();
             }
@@ -1401,13 +1423,13 @@ namespace pwiz.Osprey.Tasks
         /// <param name="fileEntries">One file's entry list, updated in place.</param>
         /// <param name="reconciledPath">That file's <c>.scores-reconciled.parquet</c>.</param>
         /// <param name="gapFillForFile">The file's gap-fill targets, or null when it had none.</param>
-        /// <param name="appendedTailStart">Row index in the reconciled parquet at which the
-        /// appended gap-fill tail begins (the original parquet's row count), or -1 to fall
-        /// back to appending by ascending TargetEntryId. See the append block for why the
-        /// tail order is the faithful one.</param>
+        /// <param name="reproducingFreshRescore">TRUE on the streamed rebuild, which reconstructs
+        /// the buffer a cold rescore left: carry the rescored ScanNumber, and append no gap-fill
+        /// (the caller replays the captured rows). FALSE on resume, which keeps the established
+        /// behaviour.</param>
         private void OverlayReconciledIntoBuffer(List<FdrEntry> fileEntries,
             string reconciledPath, IReadOnlyList<GapFillTarget> gapFillForFile,
-            int appendedTailStart = -1)
+            bool reproducingFreshRescore = false)
         {
             List<FdrEntry> loaded;
             try
@@ -1452,7 +1474,7 @@ namespace pwiz.Osprey.Tasks
                 existingIds.Add(entry.EntryId);
                 if (!byId.TryGetValue(entry.EntryId, out FdrEntry r))
                     continue;
-                if (appendedTailStart >= 0)
+                if (reproducingFreshRescore)
                 {
                     // Reproducing a fresh rescore: a MOVED peak's ScanNumber changes, because
                     // the rescore replaces the buffer entry with the newly scored one. The
@@ -1483,49 +1505,49 @@ namespace pwiz.Osprey.Tasks
             // is not already in the buffer; append in ascending TargetEntryId order
             // for determinism. Targets whose reconciled row is missing (no peak)
             // are skipped -- a fresh run would not have appended a stub either.
-            if (gapFillForFile != null && gapFillForFile.Count > 0)
+            if (reproducingFreshRescore)
             {
-                if (appendedTailStart >= 0)
+                // The caller re-appends the ACTUAL gap-fill rows the rescore produced (see
+                // _streamedGapFill). They cannot be rebuilt from the reconciled parquet by
+                // identity: the fresh buffer holds exactly one row per (file, EntryId), so a
+                // gap-fill row is indistinguishable there from the survivor row for the same
+                // precursor.
+            }
+            else if (gapFillForFile != null && gapFillForFile.Count > 0)
+            {
+                var gapFillIds = new SortedSet<uint>();
+                foreach (var t in gapFillForFile)
+                    gapFillIds.Add(t.TargetEntryId);
+                foreach (var gid in gapFillIds)
                 {
-                    // Reproduce the order a FRESH rescore appends in. It runs two gap-fill
-                    // passes (CWT-hit, then forced integration) and appends each pass's
-                    // results as the scorer returns them, which is neither TargetEntryId
-                    // order nor the two passes interleaved. That exact order is preserved
-                    // on disk - the reconciled parquet writes the appended rows as a tail
-                    // after the original rows - so replay the tail in row order rather
-                    // than re-deriving an order the fresh path never had. Order matters
-                    // because the 2nd-pass sidecar is written in buffer order and the
-                    // experiment-wide competition it feeds is order-sensitive.
-                    for (int row = appendedTailStart; row < loaded.Count; row++)
-                    {
-                        var g = loaded[row];
-                        if (!existingIds.Add(g.EntryId))
-                            continue;
-                        g.ParquetIndex = uint.MaxValue;
-                        fileEntries.Add(g);
-                    }
-                }
-                else
-                {
-                    var gapFillIds = new SortedSet<uint>();
-                    foreach (var t in gapFillForFile)
-                        gapFillIds.Add(t.TargetEntryId);
-                    foreach (var gid in gapFillIds)
-                    {
-                        if (existingIds.Contains(gid))
-                            continue;
-                        if (!byId.TryGetValue(gid, out FdrEntry g))
-                            continue;
-                        g.ParquetIndex = uint.MaxValue;
-                        fileEntries.Add(g);
-                        existingIds.Add(gid);
-                    }
+                    if (existingIds.Contains(gid))
+                        continue;
+                    if (!byId.TryGetValue(gid, out FdrEntry g))
+                        continue;
+                    g.ParquetIndex = uint.MaxValue;
+                    fileEntries.Add(g);
+                    existingIds.Add(gid);
                 }
             }
 
             // The canonical (EntryId, Charge, ScanNumber, ParquetIndex) re-sort is
             // applied by the CALLER via SortFileEntriesCanonical -- it runs for every
             // file in the resume path, not only files with a reconciled parquet.
+        }
+
+        /// <summary>
+        /// Put each streamed file's captured gap-fill rows back at the END of its list,
+        /// which is where the rescore appended them and where Stage 7 expects them.
+        /// </summary>
+        private void AppendStreamedGapFill()
+        {
+            if (_perFileEntries == null)
+                return;
+            foreach (var kv in _perFileEntries)
+            {
+                if (_streamedGapFill.TryGetValue(kv.Key, out var appended))
+                    kv.Value.AddRange(appended);
+            }
         }
 
         /// <summary>
@@ -1672,10 +1694,8 @@ namespace pwiz.Osprey.Tasks
                             gapFillForFile = gfList;
                         // Replay the appended gap-fill tail in row order when reproducing a
                         // fresh rescore; the original parquet's row count is where it starts.
-                        int tailStart = -1;
-                        if (!canonicalize)
-                            tailStart = checked((int)ParquetScoreCache.ProbeCwtRowMetadata(scoresPath).RowCount);
-                        OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile, tailStart);
+                        OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile,
+                            reproducingFreshRescore: !canonicalize);
                     }
                 }
                 // Canonical sort for EVERY file (incl. no-work files) so the WARM
