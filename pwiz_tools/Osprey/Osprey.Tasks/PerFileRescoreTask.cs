@@ -327,7 +327,13 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!MaterializeAllSurvivors(survivorLoader, ctx))
                     return false;
-                OverlayReconciledIntoAllFiles(_perFileEntries, ctx);
+                // BEFORE the overlay, which appends gap-fill rows and re-sorts: the
+                // planner's indices address the survivor list as loaded, and the sort
+                // moves the appended rows into EntryId order, shifting every position
+                // after them. The overlay preserves Score / q-values, so the reset
+                // survives it.
+                ResetRescoredTargets(_perFileEntries, ctx);
+                OverlayReconciledIntoAllFiles(_perFileEntries, ctx, canonicalize: false);
             }
 
             // Cross-impl bisection seam: dump per-precursor state
@@ -683,7 +689,6 @@ namespace pwiz.Osprey.Tasks
                 // silently contributing nothing to the totals.
                 throw new InvalidDataException(error);
             }
-            ctx.LogInfo(string.Format(@"[4526-DBG] refill {0}: {1} entries", file.Key, stubs.Count));
             file.Value.Clear();
             file.Value.AddRange(stubs);
             try
@@ -1514,9 +1519,68 @@ namespace pwiz.Osprey.Tasks
                     return false;
                 }
                 kv.Value.AddRange(stubs);
-                ctx.LogInfo(string.Format(@"[4526-DBG] rebuild {0}: {1} entries", kv.Key, stubs.Count));
             }
             return true;
+        }
+
+        /// <summary>
+        /// Reapply the score / q-value reset that <see cref="OverlayRescoredEntries"/>
+        /// performs on every rescore target, which the rebuild-from-disk cannot recover.
+        ///
+        /// <para>A fresh rescore sets each target's Score to 0 and all q-values and Pep to
+        /// 1.0, because the 2nd pass is what assigns their real values. That reset lives
+        /// ONLY in memory: <c>ReconciledParquetWriter</c> persists boundaries, area and
+        /// features, not scores, and <see cref="OverlayReconciledIntoBuffer"/> documents
+        /// that it deliberately preserves each row's 1st-pass Score / q-values. So a
+        /// buffer rebuilt from the reconciled parquet carries 1st-pass q-values where a
+        /// fresh run carries 1.0.</para>
+        ///
+        /// <para>That used to be invisible, because the retired pass-2 Percolator recomputed
+        /// q for every entry. Under the frozen-model modes that replaced it (#4528,
+        /// protein-compact now the default) an OFF-stratum survivor KEEPS its 1st-pass q,
+        /// so the difference reaches the report: without this reset the Stellar straight-
+        /// through run reported 31,583 precursors against the golden 29,364.</para>
+        ///
+        /// <para>The target set is rebuilt from the same bounded planner byproducts
+        /// <see cref="TryAssembleRescoreTargets"/> reads, and the rebuilt list is in the
+        /// same canonical order the planner indexed, so the positional indices select the
+        /// same entries they did during the rescore.</para>
+        /// </summary>
+        private static void ResetRescoredTargets(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, PipelineContext ctx)
+        {
+            var consensus = ctx.Get<PerFileConsensusTargets>().Value;
+            var reconTargets = GroupReconciliationActionsByFile(
+                ctx.Get<ReconciliationActions>().Value, out _);
+            foreach (var kv in perFileEntries)
+            {
+                var indices = new HashSet<int>();
+                if (consensus != null && consensus.TryGetValue(kv.Key, out var consensusTargets))
+                {
+                    foreach (var t in consensusTargets)
+                        indices.Add(t.Index);
+                }
+                if (reconTargets.TryGetValue(kv.Key, out var recon))
+                {
+                    foreach (var t in recon)
+                        indices.Add(t.Index);
+                }
+                var entries = kv.Value;
+                foreach (int idx in indices)
+                {
+                    if (idx < 0 || idx >= entries.Count)
+                        continue;
+                    var e = entries[idx];
+                    e.Score = 0.0;
+                    e.RunPrecursorQvalue = 1.0;
+                    e.RunPeptideQvalue = 1.0;
+                    e.RunProteinQvalue = 1.0;
+                    e.ExperimentPrecursorQvalue = 1.0;
+                    e.ExperimentPeptideQvalue = 1.0;
+                    e.ExperimentProteinQvalue = 1.0;
+                    e.Pep = 1.0;
+                }
+            }
         }
 
         /// <summary>
@@ -1533,8 +1597,19 @@ namespace pwiz.Osprey.Tasks
         /// the end (issue #4526). Sharing the body is what makes the streamed buffer
         /// identical to the resumed one, which mode 2 of regression.ps1 already gates.</para>
         /// </summary>
+        /// <param name="perFileEntries">The shared per-file buffer to bring to its
+        /// post-rescore state, updated in place.</param>
+        /// <param name="ctx">Pipeline context, for the planner byproducts and parquet paths.</param>
+        /// <param name="canonicalize">Re-sort each file by the canonical
+        /// (EntryId, Charge, ScanNumber, ParquetIndex) key. TRUE on resume, where the
+        /// buffer has to be brought to the order a cold run ends in. FALSE on the streamed
+        /// rebuild, which is REPRODUCING a cold run: a cold rescore appends gap-fill at the
+        /// END of the list and never re-sorts, so sorting here would move those rows into
+        /// EntryId order and change the buffer order Stage 7 writes its 2nd-pass sidecars
+        /// in - which changes the protein-compact competition and the reported set.</param>
         private void OverlayReconciledIntoAllFiles(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, PipelineContext ctx)
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, PipelineContext ctx,
+            bool canonicalize = true)
         {
             var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
             var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
@@ -1558,7 +1633,8 @@ namespace pwiz.Osprey.Tasks
                 // Canonical sort for EVERY file (incl. no-work files) so the WARM
                 // buffer order matches the order COLD establishes in
                 // RunPercolatorFdr, independent of whether the file was rescored.
-                SortFileEntriesCanonical(kv.Value);
+                if (canonicalize)
+                    SortFileEntriesCanonical(kv.Value);
                 // Same release the rescore path does once a file's reconciled parquet is
                 // on disk: the overlay above re-fattened this file's entries straight
                 // from that parquet, and holding those arrays for every file is the

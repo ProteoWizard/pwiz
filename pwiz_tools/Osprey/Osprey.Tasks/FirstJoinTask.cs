@@ -488,7 +488,6 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var kvp in perFileEntries)
                 {
-                    ctx.LogInfo(string.Format(@"[4526-DBG] release {0}: {1} entries", kvp.Key, kvp.Value.Count));
                     kvp.Value.Clear();
                     kvp.Value.TrimExcess();
                 }
