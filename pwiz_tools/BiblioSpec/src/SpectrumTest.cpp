@@ -21,7 +21,6 @@
 //
 
 #include "Spectrum.h"
-#include "MzOrderVerdict.h"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
@@ -136,44 +135,6 @@ void testEmptyAndSinglePeak()
     unit_assert_equal(123.4, single.getRawPeaks()[0].mz, 1e-9);
 }
 
-// Checking every spectrum of every file to catch the rare writer that does not sort is a cost the
-// whole world pays for the few, so PwizReader settles the question from the first few spectra and
-// then stops looking. What that costs is the ability to notice a file that changes its mind
-// partway through, which is why the two verdicts here are deliberately not symmetric.
-void testMzOrderVerdict()
-{
-    // Nothing seen yet, so every spectrum is worth examining
-    MzOrderVerdict fresh;
-    unit_assert(fresh.needsSpectrum());
-
-    // A short spectrum in m/z order settles nothing: three peaks ascend by chance, and an early
-    // scan can precede the sample. This is exactly what a first-spectrum-only probe gets wrong.
-    MzOrderVerdict shortOrdered;
-    shortOrdered.record(true, 3);
-    unit_assert(shortOrdered.needsSpectrum());
-    // ... and the writer it was hiding is still caught by the spectrum that follows
-    shortOrdered.record(false, 600);
-    unit_assert(shortOrdered.needsSpectrum());
-
-    // Enough peaks in order to mean it, so the file is trusted and the checking stops
-    MzOrderVerdict trusted;
-    trusted.record(true, 11);
-    unit_assert(!trusted.needsSpectrum());
-
-    // One spectrum out of order condemns the file however few peaks it holds, and no later
-    // spectrum can talk the verdict back round - every spectrum keeps being sorted
-    MzOrderVerdict condemned;
-    condemned.record(false, 2);
-    unit_assert(condemned.needsSpectrum());
-    condemned.record(true, 5000);
-    unit_assert(condemned.needsSpectrum());
-
-    // A new file gets its own verdict
-    condemned.reset();
-    condemned.record(true, 5000);
-    unit_assert(!condemned.needsSpectrum());
-}
-
 } // namespace
 
 int main(int argc, char* argv[])
@@ -186,7 +147,6 @@ int main(int argc, char* argv[])
         testSortedPeaksAreUntouched();
         testDuplicateMzValues();
         testEmptyAndSinglePeak();
-        testMzOrderVerdict();
     }
     catch (exception& e)
     {

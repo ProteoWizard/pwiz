@@ -31,7 +31,6 @@
 #include "BlibUtils.h"
 #include "SpecFileReader.h"
 #include "Spectrum.h"
-#include "MzOrderVerdict.h"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include <memory>
@@ -117,9 +116,6 @@ class PwizReader : public BiblioSpec::SpecFileReader {
     vector< pair<int,double> > indexMzPairs_; // scan/pre-mz pairs, may besorted byeither
     BiblioSpec::SPEC_ID_TYPE idType_;
     BiblioSpec::V_LEVEL idNotFoundWarnLevel_;
-    // Whether the open file's writer presents peaks in ascending m/z order, settled from the first
-    // few spectra rather than re-asked for every spectrum - see ensureMzAscending below.
-    BiblioSpec::MzOrderVerdict mzOrderVerdict_;
 
 
     /**
@@ -156,7 +152,7 @@ class PwizReader : public BiblioSpec::SpecFileReader {
      */
     // Ascending m/z is nowhere required of a writer but is assumed everywhere downstream; both
     // transfer paths below share the SpectrumInfo, so it is corrected there.
-    void ensureMzAscending(SpectrumInfo& specInfo);
+    static void ensureMzAscending(SpectrumInfo& specInfo);
 
     void transferSpec(BiblioSpec::SpecData& returnData,
                       unique_ptr<SpectrumInfo>& specInfo);

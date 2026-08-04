@@ -96,7 +96,6 @@ namespace pwiz.ProteowizardWrapper
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
         private readonly LockMassParameters _lockmassParameters; // For Waters lockmass correction
         private int? _lockmassFunction;  // For Waters lockmass correction
-        private readonly MzOrderVerdict _mzOrderVerdict = new MzOrderVerdict(); // Does this file's writer present peaks in m/z order?
 
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
@@ -1415,8 +1414,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                     msDataSpectrum.SetArrays(ToArray(spectrum.getMZArray()),
                         ToArray(spectrum.getIntensityArray()),
-                        GetIonMobilityArray(spectrum),
-                        mzOrderVerdict: _mzOrderVerdict); // In very rare cases an m/z sort may be needed
+                        GetIonMobilityArray(spectrum));
 
                     if (msDataSpectrum.IonMobilities != null)
                     {
@@ -2421,56 +2419,6 @@ namespace pwiz.ProteowizardWrapper
         public string DissociationMethod { get; set; }
     }
 
-    /// <summary>
-    /// Remembers whether one file's writer presents peaks in ascending m/z order, so that the
-    /// question is settled from a handful of spectra rather than re-asked for every spectrum in
-    /// the file. Reading the answer off the very first spectrum would be wrong: early scans can
-    /// precede the sample and carry almost no peaks, and a spectrum with two of them ascends half
-    /// the time by chance.
-    /// The two verdicts are not symmetric. One spectrum out of order proves the writer does not
-    /// sort, however few peaks it holds, and every spectrum from then on is sorted. Peaks found in
-    /// order prove nothing on their own, so that verdict is only accepted from a spectrum with
-    /// enough peaks to mean it, and until such a spectrum arrives the checking continues.
-    /// </summary>
-    public sealed class MzOrderVerdict
-    {
-        /// <summary>
-        /// A spectrum needs more peaks than this before finding it in m/z order is taken as
-        /// evidence about the writer rather than as coincidence.
-        /// </summary>
-        private const int TOO_FEW_PEAKS_TO_MEAN_ANYTHING = 10;
-
-        private bool _settled;
-        private bool _writerSortsByMz;
-
-        /// <summary>
-        /// True while spectra still have to be examined - either because the file has not yet
-        /// shown enough to settle the question, or because it settled it the wrong way and every
-        /// spectrum now needs sorting.
-        /// </summary>
-        public bool NeedsSpectrum
-        {
-            get { return !_settled || !_writerSortsByMz; }
-        }
-
-        /// <summary>
-        /// Take one spectrum's evidence into account.
-        /// </summary>
-        public void Record(bool wasInOrder, int peakCount)
-        {
-            if (_settled)
-                return; // A settled verdict does not change - one bad spectrum condemns the file.
-            if (!wasInOrder)
-            {
-                _settled = true;
-            }
-            else if (peakCount > TOO_FEW_PEAKS_TO_MEAN_ANYTHING)
-            {
-                _settled = _writerSortsByMz = true;
-            }
-        }
-    }
-
     public sealed class MsDataSpectrum
     {
         public MsDataSpectrum()
@@ -2485,8 +2433,7 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public void SetArrays(double[] mzs, double[] intensities, double[] ionMobilities = null,
-            double[] scanningQuadMzLows = null, double[] scanningQuadMzHighs = null,
-            MzOrderVerdict mzOrderVerdict = null)
+            double[] scanningQuadMzLows = null, double[] scanningQuadMzHighs = null)
         {
             Mzs = mzs;
             Intensities = intensities;
@@ -2500,7 +2447,7 @@ namespace pwiz.ProteowizardWrapper
             // wrong - a worse failure than the unsorted input it exists to correct.
             if (IonMobilities == null)
             {
-                EnsureMzAscending(mzOrderVerdict);
+                EnsureMzAscending();
             }
         }
 
@@ -2511,18 +2458,14 @@ namespace pwiz.ProteowizardWrapper
         /// nowhere useful and the chromatogram comes out empty with no error at all. Writers that
         /// present some other order do exist - one shipped peaks in ascending intensity - so the
         /// order is checked rather than trusted.
-        /// Pass the reading file's <see cref="MzOrderVerdict"/> to have the question settled from
-        /// the first few spectra instead of re-asked for every spectrum in the file. Without one
-        /// every spectrum is checked, which is what a spectrum built outside a file read wants.
+        /// The check is a single pass and costs nothing next to decoding the arrays; the sort only
+        /// runs for a writer that did not present m/z order.
         /// </summary>
-        private void EnsureMzAscending(MzOrderVerdict mzOrderVerdict)
+        private void EnsureMzAscending()
         {
             if (Mzs == null || Intensities == null || Intensities.Length != Mzs.Length)
                 return;
-            if (mzOrderVerdict != null && !mzOrderVerdict.NeedsSpectrum)
-                return;
-            var wasInOrder = ParallelDoubleSort.Sort(Mzs, Intensities);
-            mzOrderVerdict?.Record(wasInOrder, Mzs.Length);
+            ParallelDoubleSort.Sort(Mzs, Intensities);
         }
 
         public void SetEmptyArrays()
