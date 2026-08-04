@@ -65,15 +65,20 @@ if ERRORLEVEL 1 (
     echo ##teamcity[message text='Ensure-InnoSetup.ps1 failed; installer build and Installer.Tests will be skipped' status='WARNING']
 )
 
-REM # Clean before build: TC agents expect a fresh slate every run so stale
-REM # bin/obj from a prior commit can't influence the current build. clean.bat
-REM # wipes everything build.bat produces (bin, obj, TestResults, installer
-REM # outputs, examples build trees) but keeps the slow-to-refetch caches
-REM # (.NET runtime download, extracted vendor SDK DLLs). Caches are content-
-REM # addressed by SHA-256 / git history so they can't drift commit-to-commit
-REM # — keeping them across builds saves ~60s of re-download / re-extract
-REM # without any freshness risk. Pass --all to clean.bat if you ever need
-REM # a paranoia-level reset.
+REM # Clean before build: the agent checkout is persistent (TC cleans only
+REM # NON_IGNORED_ONLY, so gitignored bin/obj survive between builds), and this
+REM # is what makes every CI build a from-scratch compile rather than an
+REM # incremental one. clean.bat wipes everything build.bat produces (bin, obj,
+REM # TestResults, installer outputs, cmake build trees) but keeps the two
+REM # caches (.NET runtime download, extracted vendor SDK DLLs).
+REM #
+REM # Not --all, deliberately. Both caches are content-addressed (vendor
+REM # archives by SHA-256 via the pins table, the runtime by a fixed versioned
+REM # URL), so neither can drift commit-to-commit. Measured, --all would add
+REM # ~2s for the vendor re-extract plus a ~56 MB runtime re-download from
+REM # aka.ms — putting an external endpoint on the critical path of every
+REM # build for no freshness gain. Use --all on a nightly if a periodic
+REM # paranoia reset is wanted.
 echo ##teamcity[progressMessage 'pwiz-sharp clean.bat']
 call "%SCRIPT_DIR%\clean.bat"
 set EXIT=%ERRORLEVEL%
