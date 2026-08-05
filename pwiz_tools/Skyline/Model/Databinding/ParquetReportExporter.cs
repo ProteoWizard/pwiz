@@ -39,12 +39,6 @@ namespace pwiz.Skyline.Model.Databinding
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
-            // Parquet.Net 4.x uses an async-only API; the no-async/await rule
-            // means we synchronously bridge each Task. GetAwaiter().GetResult()
-            // rethrows the original exception instead of wrapping it in an
-            // AggregateException. Waiting like this would deadlock if Parquet.Net
-            // resumed on the caller's SynchronizationContext, but it does not, and
-            // TestParquetExportIgnoresSynchronizationContext fails if that changes.
             using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
             writer.CompressionMethod = CompressionMethod.Zstd;
             using var writeWorker = new QueueWorker<DataColumn[]>(

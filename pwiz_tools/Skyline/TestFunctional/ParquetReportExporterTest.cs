@@ -77,12 +77,15 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// ParquetReportExporter waits on an async-only API from the thread it is called on,
-        /// which deadlocks if the continuation is posted back to that thread while it is
-        /// blocked. That does not happen because Parquet.Net does not resume on the caller's
-        /// SynchronizationContext, so the exporter does nothing to defend against it. This is
-        /// what makes that assumption safe to rely on: it installs a context and fails if the
-        /// export ever posts to it, which is the signal to stop relying on it.
+        /// ParquetReportExporter.Export waits on Parquet.Net's async-only API with
+        /// GetAwaiter().GetResult(), on the thread it was called on. That deadlocks if the
+        /// continuation is posted back to that thread, which is blocked waiting for it.
+        /// Parquet.Net does not resume on the caller's SynchronizationContext, so the exporter
+        /// does nothing to prevent this, and this test is what makes that safe to depend on:
+        /// it installs a context and fails if the export ever posts a continuation to it.
+        ///
+        /// The context runs those continuations rather than dropping them, so a regression
+        /// fails here instead of hanging the test run.
         /// </summary>
         [TestMethod]
         public void TestParquetExportIgnoresSynchronizationContext()
