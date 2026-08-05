@@ -490,44 +490,53 @@ namespace pwiz.SkylineTestUtil
             Assert.AreNotEqual(-1, index, string.Format("Replicate {0} not found among -> {1} <-", replicateName,
                 TextUtil.LineSeparate(document.Settings.MeasuredResults.Chromatograms.Select(c => c.Name))));
             int peptidesActual = 0;
+            int transitionsActual = 0;
+            int transitionsHeavyActual = 0;
+            int tranGroupsActual = 0;
+            int tranGroupsHeavyActual = 0;
 
-            // The peak count ratio comes from the precursors' columnar results now, and one
-            // molecule has one of them per replicate rather than one per file.
+            // The chrom infos are not stored any more, so they are rebuilt from the .skyd. That is
+            // what keeps the counts these are asserted against: MoleculeResults gives one per file
+            // and per optimization step, the same as the doc nodes used to hold, while the columnar
+            // results keep only step zero and would count an optimized peak once instead of once
+            // per step.
             bool integrateAll = document.Settings.TransitionSettings.Integration.IsIntegrateAll;
             foreach (var nodePep in document.Molecules)
             {
                 if (nodePep.GetPeakCountRatio(index, integrateAll) >= 0.5)
                     peptidesActual++;
-            }
-            int transitionsActual = 0;
-            int transitionsHeavyActual = 0;
-            int tranGroupsActual = 0;
-            int tranGroupsHeavyActual = 0;
-            // The peak count ratio comes from the transitions' columnar results now, one for the
-            // replicate rather than one per peak in it.
-            foreach (var nodeGroup in document.MoleculeTransitionGroups)
-            {
-                {
-                    if ((nodeGroup.GetPeakCountRatio(index, integrateAll) ?? 0) < 0.5)
-                        continue;
 
-                    if (nodeGroup.TransitionGroup.LabelType.IsLight)
-                        tranGroupsActual++;
-                    else
-                        tranGroupsHeavyActual++;
-                }
-                foreach (var nodeTran in nodeGroup.Children.Cast<TransitionDocNode>().Where(
-                            nodeTran => (nodeTran.Results != null && !nodeTran.Results[index].IsEmpty)))
+                // One read for the whole molecule, which is what makes asking about every
+                // precursor and transition of it affordable.
+                var moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
-                    foreach (var chromInfo in nodeTran.Results[index])
+                    bool isLight = nodeGroup.TransitionGroup.LabelType.IsLight;
+                    foreach (var chromInfo in moleculeResults.GetTransitionGroupChromInfos(
+                                 nodeGroup.TransitionGroup, index))
                     {
-                        if (!chromInfo.IsGoodPeak(document.Settings.TransitionSettings.Integration.IsIntegrateAll))
+                        if (chromInfo.PeakCountRatio < 0.5)
                             continue;
 
-                        if (nodeGroup.TransitionGroup.LabelType.IsLight)
-                            transitionsActual++;
+                        if (isLight)
+                            tranGroupsActual++;
                         else
-                            transitionsHeavyActual++;
+                            tranGroupsHeavyActual++;
+                    }
+
+                    foreach (var nodeTran in nodeGroup.Transitions)
+                    {
+                        foreach (var chromInfo in moleculeResults.GetTransitionChromInfos(
+                                     nodeGroup.TransitionGroup, nodeTran.Transition, index))
+                        {
+                            if (!chromInfo.IsGoodPeak(integrateAll))
+                                continue;
+
+                            if (isLight)
+                                transitionsActual++;
+                            else
+                                transitionsHeavyActual++;
+                        }
                     }
                 }
             }

@@ -71,12 +71,22 @@ namespace pwiz.SkylineTestData.Results
             var measuredResults = new MeasuredResults(new[] { chromSet });
             docContainer.ChangeMeasuredResults(measuredResults, 1, 1*optSteps, 3*optSteps);
 
-            // Check expected optimization data.
-            foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
+            // Check expected optimization data. Rebuilt from the .skyd, since a transition does
+            // not keep its chrom infos any more and only the .skyd has the optimization steps.
+            var document = docContainer.Document;
+            foreach (var nodePep in document.Molecules)
             {
-                Assert.IsTrue(nodeTran.HasResults, "No results for transition Mz: {0}", nodeTran.Mz);
-                Assert.IsNotNull(nodeTran.Results[0]);
-                Assert.AreEqual(optSteps, nodeTran.Results[0].Count);
+                var moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                foreach (var nodeGroup in nodePep.TransitionGroups)
+                {
+                    foreach (var nodeTran in nodeGroup.Transitions)
+                    {
+                        var chromInfos = moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup,
+                            nodeTran.Transition, 0);
+                        Assert.AreEqual(optSteps, chromInfos.Count,
+                            "Wrong number of optimization steps for transition Mz: {0}", nodeTran.Mz);
+                    }
+                }
             }
         }
     }

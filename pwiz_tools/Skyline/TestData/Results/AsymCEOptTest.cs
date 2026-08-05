@@ -69,23 +69,31 @@ namespace pwiz.SkylineTestData.Results
 
             // Check expected optimization data with missing values for steps below 10 volts CE
             int expectedMissingSteps = optSteps - optSteps1;
-            foreach (var nodeGroup in docContainer.Document.MoleculeTransitionGroups)
+            var document = docContainer.Document;
+            foreach (var nodePep in document.Molecules)
             {
-                foreach (var nodeTran in nodeGroup.Transitions)
+                // Rebuilt from the .skyd, since a transition does not keep its chrom infos any
+                // more and only the .skyd has the optimization steps.
+                var moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
-                    Assert.IsTrue(nodeTran.HasResults, "No results for transition Mz: {0}", nodeTran.Mz);
-                    Assert.IsNotNull(nodeTran.Results[0]);
-                    Assert.AreEqual(optSteps, nodeTran.Results[0].Count);
-                    for (int i = 0; i < optSteps; i++)
+                    foreach (var nodeTran in nodeGroup.Transitions)
                     {
-                        if (i < expectedMissingSteps)
-                            Assert.IsTrue(nodeTran.Results[0][i].IsEmpty);
-                        else
-                            Assert.IsFalse(nodeTran.Results[0][i].IsEmpty);
+                        var chromInfos = moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup,
+                            nodeTran.Transition, 0);
+                        Assert.AreEqual(optSteps, chromInfos.Count,
+                            "Wrong number of optimization steps for transition Mz: {0}", nodeTran.Mz);
+                        for (int i = 0; i < optSteps; i++)
+                        {
+                            if (i < expectedMissingSteps)
+                                Assert.IsTrue(chromInfos[i].IsEmpty);
+                            else
+                                Assert.IsFalse(chromInfos[i].IsEmpty);
+                        }
                     }
-                }
 
-                expectedMissingSteps = optSteps - optSteps2;
+                    expectedMissingSteps = optSteps - optSteps2;
+                }
             }
         }
     }
