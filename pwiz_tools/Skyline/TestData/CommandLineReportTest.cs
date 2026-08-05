@@ -18,11 +18,14 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
@@ -96,11 +99,36 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(!expectInvariant, columnNames.Contains(localizedName), message);
         }
 
+        /// <summary>
+        /// ParquetReader has only an async API, and the no-async/await rule means bridging it
+        /// synchronously. Doing that on the calling thread deadlocks whenever the read really
+        /// suspends and the thread has a SynchronizationContext, because the continuation is
+        /// posted back to the thread that is already blocked. TestRunner's thread has one once
+        /// a functional test has run, and CI is where a read is slow enough to suspend, so this
+        /// reads on a thread of its own, which has no context. ParquetReportExporter relies on
+        /// the same property, which is why it says it is only safe off the UI thread.
+        /// </summary>
         private static IList<string> GetParquetColumnNames(string path)
         {
-            using var stream = File.OpenRead(path);
-            using var reader = ParquetReader.CreateAsync(stream).ConfigureAwait(false).GetAwaiter().GetResult();
-            return reader.Schema.GetDataFields().Select(dataField => dataField.Name).ToList();
+            IList<string> columnNames = null;
+            ExceptionDispatchInfo exception = null;
+            var readThread = CommonActionUtil.RunAsync(() =>
+            {
+                try
+                {
+                    using var stream = File.OpenRead(path);
+                    using var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                    columnNames = reader.Schema.GetDataFields().Select(dataField => dataField.Name).ToList();
+                }
+                catch (Exception e)
+                {
+                    exception = ExceptionDispatchInfo.Capture(e);
+                }
+            }, @"Parquet Reader");
+
+            readThread.Join();
+            exception?.Throw();
+            return columnNames;
         }
     }
 }
