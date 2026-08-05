@@ -28,32 +28,12 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace pwiz.Skyline.Model.Databinding
 {
     public class ParquetReportExporter : IReportExporter
     {
         public void Export(Stream stream, RowItemEnumerator rowItemEnumerator)
-        {
-            // Detach from any SynchronizationContext the caller happens to have installed.
-            // Everything below waits on an async-only API from this thread, and a continuation
-            // posted back to a thread that is blocked waiting for it deadlocks. Callers are not
-            // supposed to have a context, but nothing enforces that, so do not rely on it.
-            // TestParquetExportIgnoresSynchronizationContext covers this.
-            var saveContext = SynchronizationContext.Current;
-            SynchronizationContext.SetSynchronizationContext(null);
-            try
-            {
-                ExportToStream(stream, rowItemEnumerator);
-            }
-            finally
-            {
-                SynchronizationContext.SetSynchronizationContext(saveContext);
-            }
-        }
-
-        private void ExportToStream(Stream stream, RowItemEnumerator rowItemEnumerator)
         {
             // Build columns and schema from item properties
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
@@ -62,7 +42,9 @@ namespace pwiz.Skyline.Model.Databinding
             // Parquet.Net 4.x uses an async-only API; the no-async/await rule
             // means we synchronously bridge each Task. GetAwaiter().GetResult()
             // rethrows the original exception instead of wrapping it in an
-            // AggregateException.
+            // AggregateException. Waiting like this would deadlock if Parquet.Net
+            // resumed on the caller's SynchronizationContext, but it does not, and
+            // TestParquetExportIgnoresSynchronizationContext fails if that changes.
             using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
             writer.CompressionMethod = CompressionMethod.Zstd;
             using var writeWorker = new QueueWorker<DataColumn[]>(

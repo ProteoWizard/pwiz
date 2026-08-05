@@ -77,10 +77,12 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// ParquetReportExporter bridges an async-only API synchronously, which is only safe
-        /// while nothing has installed a SynchronizationContext on the calling thread: a
-        /// continuation posted back to a thread that is blocked waiting for it deadlocks.
-        /// Nothing enforces that, so this installs one and fails if the exporter posts to it.
+        /// ParquetReportExporter waits on an async-only API from the thread it is called on,
+        /// which deadlocks if the continuation is posted back to that thread while it is
+        /// blocked. That does not happen because Parquet.Net does not resume on the caller's
+        /// SynchronizationContext, so the exporter does nothing to defend against it. This is
+        /// what makes that assumption safe to rely on: it installs a context and fails if the
+        /// export ever posts to it, which is the signal to stop relying on it.
         /// </summary>
         [TestMethod]
         public void TestParquetExportIgnoresSynchronizationContext()
