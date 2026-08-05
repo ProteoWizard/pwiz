@@ -212,11 +212,13 @@ namespace pwiz.Osprey.Test
             // second one would make a single decision need two environment variables.
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(false, false, null));
 
-            // SEVERAL paths may be named at once. A run can legitimately trip more than one,
-            // and a single-value variable made that run impossible: regression.ps1 mode 2 needs
-            // mdiag-full-resume while the arm under test needs compacted-entries-buffer, so the
-            // A/B that proves this very change bounded aborted on its own guard. Both guards
-            // read the list, and every admitted path is still named individually.
+            // SEVERAL paths may be named at once. A run can legitimately trip more than one -
+            // an HPC merge measured with the Stage 6 resident handoff forced, say - and a
+            // single-value variable made such a run impossible to perform at all: naming one
+            // path meant the other aborted on its own guard. Both guards read the list, and
+            // every admitted path is still named individually, which is the property that
+            // matters. (The motivating case when this landed was regression.ps1 mode 2, whose
+            // mdiag-full-resume opt-in #4505 has since removed entirely.)
             string both = ResidentPaths.HPC_MERGE + "," +
                           ResidentPaths.COMPACTED_ENTRIES_BUFFER;
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, both));
