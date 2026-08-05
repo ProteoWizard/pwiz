@@ -261,6 +261,28 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
+    /// The means to REBUILD any one file's post-compaction survivors from disk,
+    /// published by FirstJoin alongside <see cref="CompactedEntries"/>.
+    ///
+    /// <para>Every artifact the rebuild needs - the original <c>.scores.parquet</c>
+    /// and the finalized <c>.1st-pass.fdr_scores.bin</c> - is on disk by the time
+    /// Stage 5 compacts, so holding the survivors is a choice rather than a
+    /// requirement. It is an expensive one: the all-files survivor buffer is
+    /// 88.9 M entries / 28 GB at 163 files, live for the whole Stage 6 rescore
+    /// (issue #4526). A consumer that works one file at a time takes this instead
+    /// and the buffer never has to exist.</para>
+    ///
+    /// <para><c>Value</c> is null when the run kept the resident buffer (the
+    /// token-gated parity oracle), so a consumer must fall back to
+    /// <see cref="CompactedEntries"/> when it is absent.</para>
+    /// </summary>
+    internal sealed class FirstPassSurvivorSource
+    {
+        public FirstPassSurvivorLoader Value { get; }
+        public FirstPassSurvivorSource(FirstPassSurvivorLoader value) { Value = value; }
+    }
+
+    /// <summary>
     /// The FROZEN 1st-pass Percolator model (fold weights + biases + feature
     /// standardizer, carried on <see cref="PercolatorResults"/>), captured at
     /// first-pass FDR time. Published only under the OSPREY_PASS2_QVALUE=transfer

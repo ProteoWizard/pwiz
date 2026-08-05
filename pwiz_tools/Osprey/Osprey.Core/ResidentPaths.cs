@@ -89,12 +89,31 @@ namespace pwiz.Osprey.Core
         public static readonly string PROJECTION_OFF = @"projection-off";
 
         /// <summary>
+        /// <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c>: the operator forced the resident
+        /// POST-compaction handoff, where the all-files survivor buffer built by Stage 5 stays
+        /// live across the whole Stage 6 rescore - 88.9 M entries / 28 GB at 163 files, held
+        /// for 5.5 hours, growing super-linearly in file count because the passing base_id set
+        /// grows too (issue #4526). Like <see cref="PROJECTION_OFF"/> this is the A/B
+        /// byte-identity oracle for the streamed default, and it is named for the same reason.
+        ///
+        /// <para>This entry ADDS to the list, which the class remarks say must only shrink.
+        /// The justification is that it names a path which was previously unnamed rather than
+        /// re-admitting one that had been fixed: the older guard's invariant stops at the
+        /// compaction line - it enforces "no unnamed PRE-compaction pool", and this buffer is
+        /// built after it, so no token could refuse it and none was required. Naming it is the
+        /// ratchet reaching further, not running backwards. It goes when the resident handoff
+        /// itself goes.</para>
+        /// </summary>
+        public static readonly string COMPACTED_ENTRIES_BUFFER = @"compacted-entries-buffer";
+
+        /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
         /// <c>ResidentPoolGuardTest</c> - see the class remarks for why it may only shrink.
         /// </summary>
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
-            HPC_MERGE, FDRBENCH_PASS1, MDIAG_FULL_RESUME, NON_PERCOLATOR_FDR, PROJECTION_OFF
+            HPC_MERGE, FDRBENCH_PASS1, MDIAG_FULL_RESUME, NON_PERCOLATOR_FDR, PROJECTION_OFF,
+            COMPACTED_ENTRIES_BUFFER
         };
     }
 }

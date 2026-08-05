@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace pwiz.Osprey.Core
@@ -172,6 +173,37 @@ namespace pwiz.Osprey.Core
         /// unit tests can A/B both paths.
         /// </summary>
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
+
+        /// <summary>
+        /// Stage 6 rebuilds each file's post-compaction survivors from that file's
+        /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
+        /// them again once its reconciled parquet is on disk - so the all-files survivor
+        /// buffer is not resident across the rescore loop.
+        ///
+        /// DEFAULT ON. That buffer is 88.9 M entries / 28 GB live at 163 files, held for
+        /// the 5.5 hours of Stage 6, and it grows super-linearly in file count because the
+        /// passing base_id set grows too (issue #4526). Set
+        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 to keep the resident buffer as the A/B
+        /// byte-identity oracle, the same role OSPREY_FDR_PROJECTION=0 plays for Stage 5.
+        /// A settable property (not a readonly field) so unit tests can A/B both paths.
+        /// </summary>
+        public static bool Stage6StreamSurvivors { get; set; } =
+            IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
+
+        /// <summary>
+        /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
+        /// so shipping this does not invalidate a single existing output directory; only the
+        /// resident opt-out adds a term.
+        ///
+        /// <para>Without it an in-place A/B of the two arms is not an A/B at all: the second
+        /// run finds the first run's reconciled parquets valid, skips Stage 6 entirely, and
+        /// reports a clean match it never computed. That is the exact failure mode the two arms
+        /// exist to detect, so leaving it out makes the oracle self-confirming.</para>
+        /// </summary>
+        public static string Stage6StreamSurvivorsValidityKeySuffix()
+        {
+            return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
+        }
 
         /// <summary>
         /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
@@ -416,7 +448,7 @@ namespace pwiz.Osprey.Core
             IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
 
         /// <summary>
-        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the ONE known-unfixed resident path this run may
+        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
         /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=mdiag-full-resume</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
         /// that is not on that list, is refused no matter what this is set to.
@@ -430,24 +462,61 @@ namespace pwiz.Osprey.Core
         /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
         /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
         ///
-        /// Read once at process start. Intended for local testing; CI names its token explicitly
+        /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
+        /// legitimately trip more than one at once and a single-value variable made that run
+        /// impossible to perform at all. The A/B that proves the Stage 6 handoff bounded is
+        /// exactly such a run: <c>regression.ps1</c> mode 2 needs
+        /// <see cref="ResidentPaths.MDIAG_FULL_RESUME"/> while the arm under test needs
+        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/>. A LIST keeps the property that
+        /// matters - every admitted path is still named individually, so nothing rides along
+        /// unnamed the way the blanket boolean allowed - while a single value only ever
+        /// prevented honest work.</para>
+        ///
+        /// Read once at process start. Intended for local testing; CI names its tokens explicitly
         /// (regression.ps1 mode 2), so what CI depends on is visible rather than ambient.
         /// </summary>
         public static readonly string AllowUnfixedResident =
             (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
 
         /// <summary>
-        /// True when <see cref="AllowUnfixedResident"/> was set to something that is not a legal
-        /// token, so the guard can say "that value is not a known path" instead of printing the
+        /// True when <see cref="AllowUnfixedResident"/> names anything that is not a legal token,
+        /// so the guard can say "that value is not a known path" instead of printing the
         /// same message it prints when the variable is unset. Without this, a typo
         /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
         /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
         /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
         /// </summary>
         public static readonly bool AllowUnfixedResidentUnrecognized =
-            AllowUnfixedResident.Length > 0 &&
-            !ResidentPaths.KNOWN_UNFIXED.Any(
-                t => string.Equals(t, AllowUnfixedResident, StringComparison.OrdinalIgnoreCase));
+            SplitResidentTokens(AllowUnfixedResident).Any(
+                v => !ResidentPaths.KNOWN_UNFIXED.Any(
+                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase)));
+
+        /// <summary>
+        /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
+        /// <paramref name="token"/>. Case-insensitive, matching how the rest of the CLI parses
+        /// tokens: the guard's message names the exact token to set, so rejecting the operator's
+        /// own value for capitalization would read as the guard ignoring what they just did.
+        /// </summary>
+        public static bool NamesResidentPath(string allowValue, string token)
+        {
+            return SplitResidentTokens(allowValue).Any(
+                v => string.Equals(v, token, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// The individual tokens in an OSPREY_ALLOW_UNFIXED_RESIDENT setting. Comma and semicolon
+        /// both separate, and empty entries are dropped, so a trailing separator is not a typo
+        /// the operator has to hunt for.
+        /// </summary>
+        private static IEnumerable<string> SplitResidentTokens(string allowValue)
+        {
+            if (string.IsNullOrEmpty(allowValue))
+                return Array.Empty<string>();
+            return allowValue
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(v => v.Trim())
+                .Where(v => v.Length > 0);
+        }
 
         /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
         /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default

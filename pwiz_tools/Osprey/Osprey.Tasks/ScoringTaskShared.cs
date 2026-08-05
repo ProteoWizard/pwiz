@@ -215,5 +215,51 @@ namespace pwiz.Osprey.Tasks
                     "outputs are written to the same place).", inputFile, cachePath), indexError);
             return index;
         }
+
+        /// <summary>
+        /// Resolve a path whose stem matches <paramref name="fileName"/>, used
+        /// only as the base for sidecar file naming (the path itself need
+        /// not exist). In normal mode this is the input mzML; in
+        /// --task FirstPassFDR mode where InputFiles is empty we synthesize the
+        /// path from the matching .scores.parquet by replacing the
+        /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
+        /// `synthetic_input_from_parquet` helper.
+        ///
+        /// <para>Lives here rather than on <see cref="FirstJoinTask"/> because
+        /// <see cref="FirstPassSurvivorLoader"/> needs the same resolution to find a
+        /// file's 1st-pass sidecar, and a loader reaching into a task class for it
+        /// would be the wrong direction of dependency.</para>
+        /// </summary>
+        internal static string ResolveSidecarBasePath(
+            string fileName,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            OspreyConfig config)
+        {
+            // Normal mode: prefer the actual input mzML path so sidecars
+            // land next to the source mzML.
+            if (config.InputFiles != null)
+            {
+                foreach (string inputPath in config.InputFiles)
+                {
+                    if (string.Equals(
+                        Path.GetFileNameWithoutExtension(inputPath),
+                        fileName,
+                        StringComparison.Ordinal))
+                    {
+                        return inputPath;
+                    }
+                }
+            }
+            // --task FirstPassFDR fallback: derive a synthetic mzML path from the
+            // matching parquet stem so all the existing sidecar path
+            // helpers keep working without conditional branches.
+            if (perFileParquetPaths != null
+                && perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
+            {
+                string parent = Path.GetDirectoryName(parquetPath) ?? ".";
+                return Path.Combine(parent, fileName + ".mzML");
+            }
+            return null;
+        }
     }
 }

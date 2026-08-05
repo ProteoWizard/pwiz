@@ -1120,12 +1120,29 @@ foreach ($name in $selected) {
         # The former blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 would also have waved through any
         # OTHER resident path this leg happened to take - which is how a transfer regression
         # rode along unnoticed. An unlisted path now fails here even with this set.
-        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = 'mdiag-full-resume'
+        #
+        # ADDS its token to whatever the caller named rather than replacing it, and restores the
+        # original afterwards. Replacing it made the A/B that this gate exists to support
+        # impossible to run: an operator proving the streamed Stage 6 handoff bounded sets
+        # OSPREY_STAGE6_STREAM_SURVIVORS=0 with OSPREY_ALLOW_UNFIXED_RESIDENT=
+        # compacted-entries-buffer, and this line then dropped that token and aborted the leg on
+        # the guard. Appending keeps every admitted path individually named, which is the
+        # property that matters.
+        $priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
+        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = if ([string]::IsNullOrWhiteSpace($priorAllowResident)) {
+            'mdiag-full-resume'
+        } else {
+            "$priorAllowResident,mdiag-full-resume"
+        }
         try {
             $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
                 -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
         } finally {
-            Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
+            if ([string]::IsNullOrWhiteSpace($priorAllowResident)) {
+                Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
+            } else {
+                $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $priorAllowResident
+            }
         }
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
