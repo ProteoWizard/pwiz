@@ -4,6 +4,10 @@ using Pwiz.Data.Common.Diff;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Diff;
+using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.Processing;
+using Pwiz.Data.MsData.Samples;
+using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Spectra;
 
 namespace Pwiz.Data.MsData.Tests;
@@ -44,6 +48,24 @@ public class MSDataDiffDetectionTests
         ("spectrum count", m => ((SpectrumListSimple)m.Run.SpectrumList!).Spectra.RemoveAt(1)),
         ("run id", m => m.Run.Id = "different-run"),
         ("file description", m => m.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum)),
+        // cpp testSpectrum: index, defaultArrayLength, sourceFile and dataProcessing are all
+        // fields of the spectrum it expects to see reported.
+        ("spectrum index", m => Spec(m).Index = 4),
+        ("defaultArrayLength", m => Spec(m).DefaultArrayLength = 22),
+        ("spectrum source file", m => Spec(m).SourceFile = new SourceFile("sf", "test.raw", "file:///test.raw")),
+        ("spectrum data processing", m => Spec(m).DataProcessing = new DataProcessing("msdata 2")),
+        ("product isolation window", m =>
+        {
+            var product = new Product();
+            product.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, 420.0, CVID.MS_m_z);
+            Spec(m).Products.Add(product);
+        }),
+        ("binary data array count", m => Spec(m).BinaryDataArrays.RemoveAt(1)),
+        // cpp testFileDescription / testSample / testSoftware, at the document level.
+        ("contact", m => m.FileDescription.Contacts[0].Set(CVID.MS_contact_name, "Isabelle Lynn")),
+        ("source file location", m => m.FileDescription.SourceFiles[0].Location = "location2"),
+        ("sample", m => m.Samples[0].Set(CVID.MS_peak_intensity, 1.0)),
+        ("software version", m => m.Software[0].Version = "4.21"),
     };
 
     [TestMethod]
@@ -93,12 +115,80 @@ public class MSDataDiffDetectionTests
             "2e-4 relative difference is outside a 1e-4 relative precision");
     }
 
+    /// <summary>
+    /// The other half of cpp's DiffTest, and the half a detection-only test cannot see: the cases
+    /// where the diff must stay quiet. A comparison that called everything different would satisfy
+    /// every assertion above and still be useless.
+    /// </summary>
+    [TestMethod]
+    public void Diff_StaysQuietWhereCppDoes()
+    {
+        // cpp testSpectrum / testChromatogram: at precision 1e-6, a 1e-12 perturbation is noise.
+        var a = Build();
+        var b = Build();
+        Spec(a).GetMZArray()!.Data[0] = 420;
+        Spec(b).GetMZArray()!.Data[0] = 420 + 1e-12;
+        Assert.AreEqual(string.Empty, MSDataDiff.Describe(a, b, new DiffConfig { Precision = 1e-6 }),
+            "a 1e-12 difference is inside a 1e-6 precision");
+
+        Spec(b).GetMZArray()!.Data[0] += 1e-3;
+        Assert.AreNotEqual(string.Empty, MSDataDiff.Describe(a, b, new DiffConfig { Precision = 1e-6 }),
+            "a 1e-3 difference is not");
+
+        // cpp testFileDescription: the same two contacts in the other order are the same contacts.
+        var orderedA = Build();
+        var orderedB = Build();
+        AddContact(orderedA, "Darren");
+        AddContact(orderedA, "Laura Jane");
+        AddContact(orderedB, "Laura Jane");
+        AddContact(orderedB, "Darren");
+        Assert.AreEqual(string.Empty, MSDataDiff.Describe(orderedA, orderedB),
+            "contacts compare as a set, not a sequence");
+
+        // cpp's testScanList swaps two scans and expects no diff, so cpp compares scans as a set
+        // too. The port compares them position by position and reports the swap. That is the safe
+        // direction for an oracle - it can raise a difference that does not matter, but it cannot
+        // hide one that does - so the divergence is pinned here rather than papered over. Note
+        // cpp's fixture reaches its conclusion partly by accident: it populates a1 twice and
+        // leaves a2 empty, so the swap it checks is between a populated scan and an empty one.
+        var scansA = Build();
+        var scansB = Build();
+        AddScan(Spec(scansA), "booger", 4.20);
+        AddScan(Spec(scansA), "goober", 6.66);
+        AddScan(Spec(scansB), "goober", 6.66);
+        AddScan(Spec(scansB), "booger", 4.20);
+        Assert.AreNotEqual(string.Empty, MSDataDiff.Describe(scansA, scansB),
+            "the port compares scans positionally where cpp compares them as a set");
+    }
+
+    private static void AddContact(MSData msd, string name)
+    {
+        var contact = new Contact();
+        contact.Set(CVID.MS_contact_name, name);
+        msd.FileDescription.Contacts.Add(contact);
+    }
+
+    private static void AddScan(Spectrum s, string filterString, double startTimeMinutes)
+    {
+        var scan = new Scan();
+        scan.Set(CVID.MS_filter_string, filterString);
+        scan.Set(CVID.MS_scan_start_time, startTimeMinutes, CVID.UO_minute);
+        s.ScanList.Scans.Add(scan);
+    }
+
     private static Spectrum Spec(MSData msd) => ((SpectrumListSimple)msd.Run.SpectrumList!).Spectra[0];
 
     private static MSData Build()
     {
         var msd = new MSData { Id = "diff-test" };
         msd.Run.Id = "run1";
+
+        var contact = new Contact();
+        contact.Set(CVID.MS_contact_name, "Emma Lee");
+        msd.FileDescription.Contacts.Add(contact);
+        msd.FileDescription.SourceFiles.Add(new SourceFile("id1", "name1", "location1"));
+        msd.Samples.Add(new Sample("id1", "name1"));
+        msd.Software.Add(new Software("msdata", new CVParam(CVID.MS_ionization_type), "4.20"));
 
         var list = new SpectrumListSimple();
         for (int i = 0; i < 2; i++)

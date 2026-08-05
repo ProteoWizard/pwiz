@@ -6,6 +6,7 @@ using System.Globalization;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
+using Pwiz.Data.MsData.Samples;
 using Pwiz.Data.MsData.Sources;
 using AgDeviceType = Agilent.MassSpectrometry.DataAnalysis.DeviceType;
 using AgIonization = Agilent.MassSpectrometry.DataAnalysis.IonizationMode;
@@ -90,6 +91,17 @@ public sealed class Reader_Agilent : IReader
         string dirName = Path.GetFileName(dotDPath.TrimEnd('/', '\\'));
         result.Id = Path.GetFileNameWithoutExtension(dirName);
         result.Run.Id = result.Id;
+
+        // sampleList: cpp Reader_Agilent.cpp:90-95 emits one Sample named after the acquisition's
+        // "Sample Name" field when the .d carries one, with the name as both the id and an
+        // MS_sample_name param.
+        string sampleName = raw.GetSampleInfoValue("Sample Name");
+        if (!string.IsNullOrEmpty(sampleName))
+        {
+            var sample = new Sample(sampleName);
+            sample.Set(CVID.MS_sample_name, sampleName);
+            result.Samples.Add(sample);
+        }
 
         // fileDescription/fileContent: per-spectrum-type CV terms based on actual scan content,
         // plus a representation tag (centroid / profile / mixed) from the storage mode, plus

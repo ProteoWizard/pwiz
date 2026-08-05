@@ -4,6 +4,7 @@ using Pwiz.Data.Common.Diff;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
+using Pwiz.Data.MsData.Samples;
 using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Spectra;
 using DiffImpl = Pwiz.Data.Common.Diff.Diff;
@@ -152,6 +153,7 @@ public static class MSDataDiff
                     "dataProcessingList/dataProcessing");
             DiffListById(a.InstrumentConfigurations, b.InstrumentConfigurations, ic => ic.Id,
                 DiffInstrumentConfiguration, ctx, "instrumentConfigurationList/instrumentConfiguration");
+            DiffListById(a.Samples, b.Samples, s => s.Id, DiffSample, ctx, "sampleList/sample");
         }
 
         DiffRun(a.Run, b.Run, ctx);
@@ -164,6 +166,50 @@ public static class MSDataDiff
         using var _ = ctx.Push("fileDescription");
         DiffParamContainer(a.FileContent, b.FileContent, ctx, "fileContent");
         DiffListById(a.SourceFiles, b.SourceFiles, s => s.Id, DiffSourceFile, ctx, "sourceFileList/sourceFile");
+        DiffContacts(a.Contacts, b.Contacts, ctx);
+    }
+
+    /// <summary>
+    /// Contacts carry no id, so they are matched by content rather than by position - cpp compares
+    /// them as a set, and two files listing the same people in a different order describe the same
+    /// thing. Previously they were not compared at all.
+    /// </summary>
+    private static void DiffContacts(List<Contact> a, List<Contact> b, Context ctx)
+    {
+        using var _ = ctx.Push("contact");
+        if (a.Count != b.Count)
+        {
+            ctx.Report($"count: {a.Count} vs {b.Count}");
+            return;
+        }
+
+        var unmatched = new List<Contact>(b);
+        foreach (var contact in a)
+        {
+            int match = unmatched.FindIndex(candidate => ParamSignature(candidate) == ParamSignature(contact));
+            if (match < 0)
+                ctx.Report($"a-only: {ParamSignature(contact)}");
+            else
+                unmatched.RemoveAt(match);
+        }
+        foreach (var leftover in unmatched)
+            ctx.Report($"b-only: {ParamSignature(leftover)}");
+    }
+
+    private static string ParamSignature(ParamContainer container)
+    {
+        var parts = container.CVParams.Select(p => $"{p.Cvid}={p.Value}({p.Units})")
+            .Concat(container.UserParams.Select(p => $"{p.Name}={p.Value}"))
+            .ToList();
+        parts.Sort(StringComparer.Ordinal);
+        return string.Join(",", parts);
+    }
+
+    /// <summary>Sample id, name and params. Samples were counted by DiffListById but never read.</summary>
+    private static void DiffSample(Sample a, Sample b, Context ctx)
+    {
+        DiffStrings(a.Name, b.Name, ctx, "name");
+        DiffParamContainer(a, b, ctx);
     }
 
     private static void DiffSourceFile(SourceFile a, SourceFile b, Context ctx)
@@ -313,6 +359,13 @@ public static class MSDataDiff
         }
         if (a.DefaultArrayLength != b.DefaultArrayLength)
             ctx.Report($"defaultArrayLength: {a.DefaultArrayLength} vs {b.DefaultArrayLength}");
+        // The two references a spectrum can carry. Neither was compared, so a spectrum could
+        // claim a different source file or a different processing history and still match.
+        DiffStrings(a.SourceFile?.Id ?? string.Empty, b.SourceFile?.Id ?? string.Empty,
+            ctx, "sourceFileRef");
+        if (!ctx.Config.IgnoreDataProcessing)
+            DiffStrings(a.DataProcessing?.Id ?? string.Empty, b.DataProcessing?.Id ?? string.Empty,
+                ctx, "dataProcessingRef");
         DiffParamContainer(a.Params, b.Params, ctx);
         DiffScanList(a.ScanList, b.ScanList, ctx);
         DiffListByIndex(a.Precursors, b.Precursors, DiffPrecursor, ctx, "precursor");

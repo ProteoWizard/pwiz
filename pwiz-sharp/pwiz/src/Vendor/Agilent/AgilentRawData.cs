@@ -202,6 +202,45 @@ public sealed class AgilentRawData : IDisposable
         }
     }
 
+    private Dictionary<string, string>? _sampleInfoCache;
+
+    /// <summary>
+    /// Name/value pairs from <c>AcqData/sample_info.xml</c>, as cpp's <c>XmlMetadataParser</c>
+    /// reads them - the SDK does not expose this metadata. Repeated names get a numeric suffix so
+    /// no entry is lost, matching cpp's uniquifying rule.
+    /// </summary>
+    private Dictionary<string, string> SampleInfo
+    {
+        get
+        {
+            if (_sampleInfoCache is not null) return _sampleInfoCache;
+            _sampleInfoCache = new Dictionary<string, string>(StringComparer.Ordinal);
+            try
+            {
+                var sampleInfoPath = System.IO.Path.Combine(Path, "AcqData", "sample_info.xml");
+                if (!File.Exists(sampleInfoPath)) return _sampleInfoCache;
+                var doc = System.Xml.Linq.XDocument.Load(sampleInfoPath);
+                foreach (var field in doc.Descendants("Field"))
+                {
+                    string name = ((string?)field.Element("Name") ?? string.Empty).Trim();
+                    if (name.Length == 0) continue;
+                    string value = ((string?)field.Element("Value") ?? string.Empty).Trim();
+
+                    string uniqueName = name;
+                    for (int suffix = 2; _sampleInfoCache.ContainsKey(uniqueName); suffix++)
+                        uniqueName = $"{name}_{suffix}";
+                    _sampleInfoCache[uniqueName] = value;
+                }
+            }
+            catch { /* best-effort, as with Devices.xml */ }
+            return _sampleInfoCache;
+        }
+    }
+
+    /// <summary>Looks up one sample-info field. cpp <c>MassHunterData::getSampleInfoValue</c>.</summary>
+    public string GetSampleInfoValue(string key, string defaultValue = "") =>
+        SampleInfo.TryGetValue(key, out var value) ? value : defaultValue;
+
     /// <summary>Per-device serial number lookup (cpp <c>MassHunterData::getDeviceSerialNumber</c>).
     /// Returns empty when the SDK doesn't report one.</summary>
     public string GetDeviceSerialNumber(DeviceType deviceType)
