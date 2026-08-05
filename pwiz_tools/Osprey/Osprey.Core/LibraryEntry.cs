@@ -43,26 +43,10 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public const uint DECOY_ID_BIT = 0x80000000u;
 
-        /// <summary>
-        /// The shared value <see cref="Fragments"/> is set to when its spectra have been
-        /// released (issue #4532) - the counterpart of the <c>Array.Empty</c> the constructor
-        /// assigns, for entries whose fragments were dropped rather than never present.
-        /// One instance for the whole process, so releasing costs nothing per entry.
-        ///
-        /// <para>It THROWS on every access, and that is the point. Both obvious sentinels are
-        /// silent: every scorer guards with
-        /// <c>if (entry.Fragments == null || entry.Fragments.Count == 0)</c>, so a null and an
-        /// empty list are equally absorbed as "this entry has no spectrum" - and an entry whose
-        /// spectra were released, but which something still wanted, would score a degenerate
-        /// zero instead of failing. Fragments are released only where nothing is believed to
-        /// read them; this makes a wrong belief loud rather than quiet, by turning that same
-        /// guard expression into a tripwire (the null test short-circuits false, then
-        /// <c>Count</c> throws).</para>
-        ///
-        /// <para>Test membership with <c>ReferenceEquals(entry.Fragments,
-        /// LibraryEntry.RELEASED)</c> - reading <c>Count</c> to detect it would throw.</para>
-        /// </summary>
-        public static readonly IReadOnlyList<LibraryFragment> RELEASED = new ReleasedFragmentList();
+        /// <summary>Backing value for <see cref="ReleaseSpectrum"/>; see there for why it
+        /// throws rather than being empty. Private - no caller needs to know it exists.</summary>
+        private static readonly IReadOnlyList<LibraryFragment> RELEASED_SPECTRUM =
+            new ReleasedFragmentList();
 
         public uint Id { get; set; }
         public string Sequence { get; set; }
@@ -140,10 +124,33 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Backing type of <see cref="RELEASED"/>: a zero-state list that throws on every
+        /// Drop this entry's spectrum, freeing the fragment array, and report whether it was
+        /// still held (so a caller can count releases, and a second call is a no-op).
+        /// Identity - sequence, protein ids, m/z, RT - is untouched: protein parsimony walks
+        /// the whole library after the spectra are gone and reads exactly those fields.
+        ///
+        /// <para>The released state THROWS on any access to <see cref="Fragments"/>, which is
+        /// the point of releasing through a method rather than assigning null or an empty
+        /// list. Every scorer guards with
+        /// <c>if (entry.Fragments == null || entry.Fragments.Count == 0)</c>, so both of those
+        /// are silently absorbed as "this entry has no spectrum" - an entry released in error
+        /// would score a degenerate zero instead of failing. Spectra are released only where
+        /// nothing is believed to read them; this makes a wrong belief loud, by turning that
+        /// same guard expression into a tripwire.</para>
+        /// </summary>
+        public bool ReleaseSpectrum()
+        {
+            if (ReferenceEquals(Fragments, RELEASED_SPECTRUM))
+                return false;
+            Fragments = RELEASED_SPECTRUM;
+            return true;
+        }
+
+        /// <summary>
+        /// Backing type of <see cref="RELEASED_SPECTRUM"/>: a zero-state list that throws on every
         /// access. Private and instantiated exactly once - callers only ever see the singleton
-        /// through <see cref="RELEASED"/>, so there is no way to create a second one or to
-        /// mistake it for an ordinary empty list.
+        /// through <see cref="ReleaseSpectrum"/>, so there is no way to create a second one or
+        /// to mistake it for an ordinary empty list.
         /// </summary>
         private sealed class ReleasedFragmentList : IReadOnlyList<LibraryFragment>
         {

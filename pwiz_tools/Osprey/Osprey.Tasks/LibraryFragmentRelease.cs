@@ -69,9 +69,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Point <see cref="LibraryEntry.Fragments"/> at <see cref="LibraryEntry.RELEASED"/> on
-        /// every entry whose base_id is outside <paramref name="retainedBaseIds"/>, freeing the
-        /// backing array, and return how many were released. Identity fields
+        /// Call <see cref="LibraryEntry.ReleaseSpectrum"/> on every entry whose base_id is
+        /// outside <paramref name="retainedBaseIds"/> and return how many were released.
+        /// Identity fields
         /// are untouched on ALL entries, because protein parsimony and the protein-compact
         /// stratum walk the whole library after this point and read them.
         /// </summary>
@@ -84,16 +84,10 @@ namespace pwiz.Osprey.Tasks
             int released = 0;
             foreach (var e in fullLibrary)
             {
-                // ReferenceEquals, not .Count: the sentinel THROWS on Count, so an
-                // already-released entry has to be recognized by identity. That also makes the
-                // pass idempotent without ever touching a released entry's contents.
-                if (ReferenceEquals(e.Fragments, LibraryEntry.RELEASED) ||
-                    retainedBaseIds.Contains(e.Id & ScoringTaskShared.BASE_ID_MASK))
-                {
+                if (retainedBaseIds.Contains(e.Id & ScoringTaskShared.BASE_ID_MASK))
                     continue;
-                }
-                e.Fragments = LibraryEntry.RELEASED;
-                released++;
+                if (e.ReleaseSpectrum())
+                    released++;
             }
             return released;
         }
