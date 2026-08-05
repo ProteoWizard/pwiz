@@ -1075,6 +1075,59 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Issue #4493: a diagnostic-only (<c>*Only</c>) dump aborts the run, and the abort
+        /// sentinel <see cref="PercolatorTrainer"/> returns carries NO trained model -
+        /// FoldWeights, FoldBiases and Standardizer are all null. The frozen-model capture
+        /// hook must therefore NOT be handed that object, or a later 2nd-pass step re-scores
+        /// against nulls believing it holds a trained 1st-pass model.
+        ///
+        /// <para>The ordering used to be conventional rather than enforced: this overload
+        /// invoked <c>captureModel</c> BEFORE testing <c>DiagnosticAbort</c>, while the
+        /// streaming sibling in the same file tested it first, so the two disagreed. No
+        /// abort-path test existed, which is why nothing caught it.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestDiagnosticAbortDoesNotCaptureUntrainedModel()
+        {
+            const int nFeat = 3;
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", false),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
+            var config = new OspreyConfig();
+            var fdrStubs = BuildMultiObservationEquivFixture(nFeat, out var features);
+
+            // StandardizerOnly is the earliest abort: it fires before any fold is trained,
+            // so the sentinel is maximally empty and the assertion is unambiguous.
+            var diagnostics = new PercolatorDiagnosticsConfig
+            {
+                DumpStandardizer = true,
+                StandardizerOnly = true
+            };
+
+            PercolatorResults captured = null;
+            bool aborted;
+            try
+            {
+                aborted = PercolatorEngine.RunPercolatorFdr(
+                    fdrStubs, config, featureInfos, s => { }, out _, diagnostics, "First-pass",
+                    f => features[f], r => captured = r);
+            }
+            finally
+            {
+                // The dump writes a fixed relative path; do not leave it in the test cwd.
+                if (File.Exists(@"cs_stage5_standardizer.tsv"))
+                    File.Delete(@"cs_stage5_standardizer.tsv");
+            }
+
+            Assert.IsTrue(aborted, "a *Only diagnostic dump must stop the run");
+            Assert.IsNull(captured,
+                "captureModel must not be handed the abort sentinel - it carries no trained model");
+        }
+
+        /// <summary>
         /// Issue #4355 step (b) increment iii (the transient-SVM-stack collapse, gate
         /// 1): the projection-native STREAMING score+compete path
         /// (<see cref="PercolatorEngine.RunStreamingIntoProjection"/>) must

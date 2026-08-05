@@ -132,18 +132,25 @@ namespace pwiz.Osprey.FDR
             // is a pure hand-off, no behavior change on any production path.
             contributions = results.FeatureContributions;
 
+            // A diagnostic-only (*Only) dump fired inside the engine; it left the
+            // run as a pure no-op and signalled here. Stop without scoring the
+            // stubs and let the Tasks-layer caller perform the process exit.
+            //
+            // CHECKED BEFORE captureModel, not after. On an abort DispatchSvm returns
+            // `new PercolatorResults { DiagnosticAbort = true }` with FoldWeights,
+            // FoldBiases and Standardizer all NULL - nothing was trained. Handing that
+            // to the frozen-model hook passes an untrained model off as a trained one,
+            // and the 2nd pass would then re-score against nulls. The sibling path in
+            // this same file (RunStreamingFirstPass) already orders it this way.
+            if (results.DiagnosticAbort)
+                return true;
+
             // Frozen-model capture hook (OSPREY_PASS2_QVALUE=transfer): the caller
             // can grab the trained model (FoldWeights / FoldBiases / Standardizer)
             // here so a later 2nd-pass step re-scores reconciled features with this
             // FROZEN 1st-pass model instead of retraining. No-op (null) on every
             // default percolator run, so scoring stays byte-identical.
             captureModel?.Invoke(results);
-
-            // A diagnostic-only (*Only) dump fired inside the engine; it left the
-            // run as a pure no-op and signalled here. Stop without scoring the
-            // stubs and let the Tasks-layer caller perform the process exit.
-            if (results.DiagnosticAbort)
-                return true;
 
             // Zip the SVM results back onto the FdrEntry stubs by position
             // (replaces the former psm_id-keyed resultMap re-join).
