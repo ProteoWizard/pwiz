@@ -102,11 +102,11 @@ public class IdentDataIoTest
 
     // -- base / leaf types --
 
-    private static IdentData BuildIdentifiable() =>
+    internal static IdentData BuildIdentifiable() =>
         // Identifiable / Name on the root MzIdentML element itself.
         new() { Id = "id", Name = "name" };
 
-    private static IdentData BuildIdentifiableParamContainer()
+    internal static IdentData BuildIdentifiableParamContainer()
     {
         // IPC carries Id+Name+ParamContainer. Use an AnalysisSoftware as the carrier.
         var ident = new IdentData();
@@ -117,14 +117,14 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildCv()
+    internal static IdentData BuildCv()
     {
         var ident = new IdentData();
         ident.Cvs.Add(new CV { Id = "PSI-MS", FullName = "PSI-MS", Uri = "http://psidev.info/...", Version = "4.0" });
         return ident;
     }
 
-    private static IdentData BuildBibliographicReference()
+    internal static IdentData BuildBibliographicReference()
     {
         var ident = new IdentData();
         ident.BibliographicReferences.Add(new BibliographicReference
@@ -136,7 +136,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildPerson()
+    internal static IdentData BuildPerson()
     {
         var ident = new IdentData();
         var p = new Person { Id = "p1", LastName = "Smith", FirstName = "Jane", MidInitials = "Q." };
@@ -150,7 +150,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildOrganization()
+    internal static IdentData BuildOrganization()
     {
         var ident = new IdentData();
         var parent = new Organization { Id = "org-parent", Name = "Parent" };
@@ -161,7 +161,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildContactRole()
+    internal static IdentData BuildContactRole()
     {
         var ident = new IdentData();
         var contact = new Person { Id = "contact1", LastName = "Smith" };
@@ -176,7 +176,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildProvider()
+    internal static IdentData BuildProvider()
     {
         var ident = new IdentData();
         var contact = new Person { Id = "p2", LastName = "Jones" };
@@ -193,7 +193,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSample()
+    internal static IdentData BuildSample()
     {
         var ident = new IdentData();
         var contact = new Person { Id = "c1", LastName = "Smith" };
@@ -212,7 +212,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildAnalysisSoftware()
+    internal static IdentData BuildAnalysisSoftware()
     {
         var ident = new IdentData();
         var contact = new Person { Id = "asc1", LastName = "Smith" };
@@ -232,7 +232,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildAnalysisSampleCollection()
+    internal static IdentData BuildAnalysisSampleCollection()
     {
         var ident = new IdentData();
         ident.AnalysisSampleCollection.Samples.Add(new Sample { Id = "S_a", Name = "Sample A" });
@@ -240,7 +240,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildDbSequence()
+    internal static IdentData BuildDbSequence()
     {
         var ident = new IdentData();
         var sd = new SearchDatabase { Id = "db1", Location = "/tmp/db.fasta" };
@@ -255,7 +255,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildModification()
+    internal static IdentData BuildModification()
     {
         var ident = new IdentData();
         var pep = new Peptide { Id = "pep1", PeptideSequence = "PEPTIDER" };
@@ -271,7 +271,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSubstitutionModification()
+    internal static IdentData BuildSubstitutionModification()
     {
         var ident = new IdentData();
         var pep = new Peptide { Id = "pep2", PeptideSequence = "PEPTIDER" };
@@ -284,7 +284,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildPeptide()
+    internal static IdentData BuildPeptide()
     {
         var ident = new IdentData();
         var pep = new Peptide { Id = "pepF", Name = "named", PeptideSequence = "PEPTIDER" };
@@ -293,7 +293,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSequenceCollection()
+    internal static IdentData BuildSequenceCollection()
     {
         var ident = new IdentData();
         ident.SequenceCollection.DBSequences.Add(new DBSequence { Id = "dbs", Accession = "P1" });
@@ -307,7 +307,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSpectrumIdentification()
+    internal static IdentData BuildSpectrumIdentification()
     {
         var ident = BuildSpectrumIdentificationProtocol();
         // Hook up an SpectrumIdentification entry referring to the protocol + a fake list.
@@ -333,7 +333,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildProteinDetection()
+    internal static IdentData BuildProteinDetection()
     {
         var ident = new IdentData();
         var sw = new AnalysisSoftware { Id = "SW_PD" };
@@ -353,9 +353,9 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildAnalysisCollection() => BuildSpectrumIdentification();
+    internal static IdentData BuildAnalysisCollection() => BuildSpectrumIdentification();
 
-    private static IdentData BuildSearchModification()
+    internal static IdentData BuildSearchModification()
     {
         var ident = BuildSpectrumIdentificationProtocol();
         var sip = ident.AnalysisProtocolCollection.SpectrumIdentificationProtocol[0];
@@ -368,7 +368,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildEnzyme()
+    internal static IdentData BuildEnzyme()
     {
         var ident = BuildSpectrumIdentificationProtocol();
         var sip = ident.AnalysisProtocolCollection.SpectrumIdentificationProtocol[0];
@@ -386,7 +386,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildEnzymes()
+    internal static IdentData BuildEnzymes()
     {
         var ident = BuildEnzyme();
         var sip = ident.AnalysisProtocolCollection.SpectrumIdentificationProtocol[0];
@@ -394,10 +394,10 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildResidue() => BuildMassTable(); // covered together
-    private static IdentData BuildAmbiguousResidue() => BuildMassTable();
+    internal static IdentData BuildResidue() => BuildMassTable(); // covered together
+    internal static IdentData BuildAmbiguousResidue() => BuildMassTable();
 
-    private static IdentData BuildMassTable()
+    internal static IdentData BuildMassTable()
     {
         var ident = BuildSpectrumIdentificationProtocol();
         var sip = ident.AnalysisProtocolCollection.SpectrumIdentificationProtocol[0];
@@ -412,7 +412,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildFilter()
+    internal static IdentData BuildFilter()
     {
         var ident = BuildSpectrumIdentificationProtocol();
         var sip = ident.AnalysisProtocolCollection.SpectrumIdentificationProtocol[0];
@@ -423,7 +423,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSpectrumIdentificationProtocol()
+    internal static IdentData BuildSpectrumIdentificationProtocol()
     {
         var ident = new IdentData();
         var sw = new AnalysisSoftware { Id = "AS_proto", Name = "Engine", Version = "1.0" };
@@ -443,7 +443,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildProteinDetectionProtocol()
+    internal static IdentData BuildProteinDetectionProtocol()
     {
         var ident = new IdentData();
         var sw = new AnalysisSoftware { Id = "AS_pdp" };
@@ -458,9 +458,9 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildAnalysisProtocolCollection() => BuildSpectrumIdentificationProtocol();
+    internal static IdentData BuildAnalysisProtocolCollection() => BuildSpectrumIdentificationProtocol();
 
-    private static IdentData BuildSpectraData()
+    internal static IdentData BuildSpectraData()
     {
         var ident = new IdentData();
         ident.DataCollection.Inputs.SpectraData.Add(new SpectraData
@@ -472,7 +472,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSearchDatabase()
+    internal static IdentData BuildSearchDatabase()
     {
         var ident = new IdentData();
         var db = new SearchDatabase
@@ -486,7 +486,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSourceFile()
+    internal static IdentData BuildSourceFile()
     {
         var ident = new IdentData();
         ident.DataCollection.Inputs.SourceFile.Add(new SourceFile
@@ -497,9 +497,9 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildInputs() => BuildSpectraData();
+    internal static IdentData BuildInputs() => BuildSpectraData();
 
-    private static IdentData BuildMeasure()
+    internal static IdentData BuildMeasure()
     {
         var ident = new IdentData();
         var sil = new SpectrumIdentificationList { Id = "SIL_M" };
@@ -510,8 +510,8 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildFragmentArray() => BuildIonType(); // covered together
-    private static IdentData BuildIonType()
+    internal static IdentData BuildFragmentArray() => BuildIonType(); // covered together
+    internal static IdentData BuildIonType()
     {
         var ident = new IdentData();
         var sil = new SpectrumIdentificationList { Id = "SIL_I" };
@@ -543,9 +543,9 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildPeptideEvidence() => BuildSequenceCollection();
+    internal static IdentData BuildPeptideEvidence() => BuildSequenceCollection();
 
-    private static IdentData BuildSpectrumIdentificationItem()
+    internal static IdentData BuildSpectrumIdentificationItem()
     {
         var ident = BuildSequenceCollection();
         var pep = ident.SequenceCollection.Peptides[0];
@@ -565,7 +565,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildSpectrumIdentificationResult()
+    internal static IdentData BuildSpectrumIdentificationResult()
     {
         var ident = BuildSpectrumIdentificationItem();
         var sd = new SpectraData { Id = "SD_R", Location = "/tmp/run.mzML" };
@@ -576,7 +576,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildProteinDetectionHypothesis()
+    internal static IdentData BuildProteinDetectionHypothesis()
     {
         var ident = BuildSequenceCollection();
         var dbs = ident.SequenceCollection.DBSequences[0];
@@ -594,15 +594,15 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildProteinAmbiguityGroup() => BuildProteinDetectionHypothesis();
+    internal static IdentData BuildProteinAmbiguityGroup() => BuildProteinDetectionHypothesis();
 
-    private static IdentData BuildSpectrumIdentificationList() => BuildSpectrumIdentificationResult();
+    internal static IdentData BuildSpectrumIdentificationList() => BuildSpectrumIdentificationResult();
 
-    private static IdentData BuildProteinDetectionList() => BuildProteinDetectionHypothesis();
+    internal static IdentData BuildProteinDetectionList() => BuildProteinDetectionHypothesis();
 
-    private static IdentData BuildAnalysisData() => BuildSpectrumIdentificationResult();
+    internal static IdentData BuildAnalysisData() => BuildSpectrumIdentificationResult();
 
-    private static IdentData BuildDataCollection()
+    internal static IdentData BuildDataCollection()
     {
         var ident = BuildSpectrumIdentificationResult();
         var sf = new SourceFile
@@ -614,7 +614,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildBibliographicReferenceList()
+    internal static IdentData BuildBibliographicReferenceList()
     {
         var ident = BuildBibliographicReference();
         ident.BibliographicReferences.Add(new BibliographicReference
@@ -624,7 +624,7 @@ public class IdentDataIoTest
         return ident;
     }
 
-    private static IdentData BuildFullIdentData()
+    internal static IdentData BuildFullIdentData()
     {
         // Combine several pieces into one tree to exercise the root.
         var ident = BuildSpectrumIdentificationResult();
