@@ -41,9 +41,17 @@ public sealed class SpectrumListMzShift : SpectrumListWrapper
         // Shift the spectrum's own m/z metadata when this spectrum's level is in scope.
         if (MsLevels.Contains(msLevel))
         {
-            ShiftCvParam(spec.Params, CVID.MS_base_peak_m_z);
+            // cpp does not name the params it shifts - it rewrites every CV param whose units are
+            // m/z (MzShiftFilter.cpp:51). Naming them individually silently dropped
+            // lowest/highest observed m/z, which left the spectrum declaring an m/z range its own
+            // shifted array contradicted.
+            ShiftAllMzParams(spec.Params);
             foreach (var scan in spec.ScanList.Scans)
             {
+                ShiftAllMzParams(scan);
+                // cpp stops at the scan itself and never descends into its windows. Shifting them
+                // keeps the window consistent with the data it describes, so the port does it
+                // deliberately; it is the one place here that emits different m/z than cpp would.
                 foreach (var window in scan.ScanWindows)
                 {
                     ShiftCvParam(window, CVID.MS_scan_window_lower_limit);
@@ -69,14 +77,30 @@ public sealed class SpectrumListMzShift : SpectrumListWrapper
         {
             foreach (var precursor in spec.Precursors)
             {
+                ShiftAllMzParams(precursor);
+                ShiftAllMzParams(precursor.Activation);
                 ShiftCvParam(precursor.IsolationWindow, CVID.MS_isolation_window_target_m_z);
-                // lower/upper offsets are widths, not absolute m/z, so they don't shift.
+                // cpp shifts the whole isolation window generically, which moves the lower/upper
+                // OFFSETS too - they carry m/z units but are widths, so a shift corrupts the
+                // window width rather than relocating it. Only the target moves here. This is the
+                // second and last place the port deliberately emits different m/z than cpp.
                 foreach (var si in precursor.SelectedIons)
-                    ShiftCvParam(si, CVID.MS_selected_ion_m_z);
+                    ShiftAllMzParams(si);
             }
         }
 
         return spec;
+    }
+
+    /// <summary>Shifts every CV param in the container carrying m/z units, as cpp's
+    /// <c>doMzShift</c> does, so a param nobody thought to name still moves with the data.</summary>
+    private void ShiftAllMzParams(ParamContainer container)
+    {
+        foreach (var p in container.CVParams)
+        {
+            if (p.Units != CVID.MS_m_z) continue;
+            p.Value = (p.ValueAs<double>() + Shift).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
     }
 
     private void ShiftCvParam(ParamContainer container, CVID cvid)
