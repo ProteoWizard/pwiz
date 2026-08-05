@@ -34,4 +34,22 @@
     <Compile Remove="MascotShimSmokeTests.cs" />
   </ItemGroup>
 
+  <!-- The golden-file tests read fixtures from pwiz_tools/BiblioSpec/tests/inputs/, which is
+       gitignored and populated from inputs.tar.bz2 beside it. Without this the archive is never
+       unpacked and 69 of the 142 tests fail on missing inputs - which is exactly the state this
+       suite was in, unnoticed, because it was also absent from build.bat's test list.
+
+       Reuses the vendor-fixture target purely for its extraction semantics; the archive is not
+       vendor data. Those semantics matter here: it extracts with bsdtar -xkf (the skip-old-files
+       flag off-Windows), i.e. it never overwrites a file that already exists. ~100 files in that
+       directory are force-added to git despite the ignore rule and are the authoritative,
+       newer copies; the archive is the older cpp-era set and carries stale versions of three of
+       them. Overwriting would silently regress the data (verified: forcing the archive's
+       waters-mobility.final_fragment.csv over the tracked one turns Mse_Mobility red). -->
+  <PropertyGroup>
+    <VendorTestArchive>$(PwizCppToolsRoot)\BiblioSpec\tests\inputs.tar.bz2</VendorTestArchive>
+    <VendorTestDataParent>$(PwizCppToolsRoot)\BiblioSpec\tests</VendorTestDataParent>
+  </PropertyGroup>
+  <Import Project="..\..\..\..\build\ExtractTestData.targets" />
+
 </Project>

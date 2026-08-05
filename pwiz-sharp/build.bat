@@ -146,18 +146,36 @@ if %IAGREE%==1 (
     )
 )
 
-REM # Test discovery: with vendor support, every test csproj under test\.
-REM # Without vendor support, only the projects that don't pull vendor refs
-REM # (Bruker.Tests / Thermo.Tests / Waters.Tests / Agilent.Tests /
-REM # Sciex.Tests / Shimadzu.Tests / UNIFI.Tests / UIMF.Tests / Mobilion.Tests
-REM # all reference vendor projects).
+REM # Test discovery: every *.Tests.csproj found under pwiz\test\ and Tools\, taken
+REM # from disk rather than from a list here.
 REM #
-REM # Installer.Tests is vendor-only because its smoke test runs the installed
-REM # msconvert-sharp against a Thermo .raw to exercise VendorSdkLoader +
-REM # Reader_Thermo end-to-end. With no vendor support the conversion would
-REM # fail (and the installer itself wouldn't have vendor-enabled binaries).
-set TEST_TARGET=pwiz\test\Util.Tests\Util.Tests.csproj pwiz\test\Common.Tests\Common.Tests.csproj pwiz\test\MsData.Tests\MsData.Tests.csproj pwiz\test\MsData.NativeAot.Tests\MsData.NativeAot.Tests.csproj pwiz\test\IdentData.Tests\IdentData.Tests.csproj pwiz\test\Analysis.Tests\Analysis.Tests.csproj Tools\Commandline\MsConvert\test\MsConvert.Tests.csproj
-if %IAGREE%==1 set TEST_TARGET=%TEST_TARGET% pwiz\test\Agilent.Tests\Agilent.Tests.csproj pwiz\test\Bruker.Tests\Bruker.Tests.csproj pwiz\test\Mobilion.Tests\Mobilion.Tests.csproj pwiz\test\Sciex.Tests\Sciex.Tests.csproj pwiz\test\Shimadzu.Tests\Shimadzu.Tests.csproj pwiz\test\Thermo.Tests\Thermo.Tests.csproj pwiz\test\UIMF.Tests\UIMF.Tests.csproj pwiz\test\UNIFI.Tests\UNIFI.Tests.csproj pwiz\test\Waters.Tests\Waters.Tests.csproj pwiz\test\Installer.Tests\Installer.Tests.csproj
+REM # This used to be a hand-maintained list, and it had silently drifted: TraData.Tests,
+REM # Bruker.PrmScheduling.Tests, BiblioSpec.Tests and MsConvertGUI.Tests were all built by
+REM # the solution but named nowhere, so neither CI nor the coverage run had ever executed
+REM # them. A missing entry produced no error and no output - just absence - which is the
+REM # worst failure mode a test runner can have. Globbing means a new suite runs the day it
+REM # is added.
+REM #
+REM # VENDOR_GATED lists the suites that need --i-agree-to-the-vendor-licenses. It cannot be
+REM # derived from the csproj: Analysis.Tests references a vendor project but gates that
+REM # reference internally and runs fine without licences, while Installer.Tests references
+REM # none yet needs them, because its smoke test runs the installed msconvert-sharp against
+REM # a Thermo .raw to exercise VendorSdkLoader + Reader_Thermo end-to-end. Note the gate is
+REM # an *exclusion*: anything not named here runs unconditionally, so a new vendor suite
+REM # that forgets to register produces a loud vendor-support error rather than silence.
+set VENDOR_GATED=Agilent.Tests Bruker.Tests Bruker.PrmScheduling.Tests Mobilion.Tests Sciex.Tests Shimadzu.Tests Thermo.Tests UIMF.Tests UNIFI.Tests Waters.Tests Installer.Tests
+
+set TEST_TARGET=
+for %%r in ("%SCRIPT_DIR%\pwiz\test" "%SCRIPT_DIR%\Tools") do (
+    for /f "delims=" %%p in ('dir /b /s "%%~r\*.Tests.csproj" 2^>nul ^| findstr /v /i "\\obj\\ \\bin\\"') do (
+        set "SKIP_PROJ="
+        if %IAGREE%==0 (
+            echo %VENDOR_GATED% | findstr /i /c:"%%~np" >nul && set "SKIP_PROJ=1"
+        )
+        if not defined SKIP_PROJ set "TEST_TARGET=!TEST_TARGET! %%p"
+    )
+)
+if not defined TEST_TARGET (set "ERROR_TEXT=test discovery found no *.Tests.csproj under pwiz\test or Tools" & set EXIT=1 & goto error)
 
 REM # Test step: scripts\Run-Tests-Parallel.ps1 spawns one parallel
 REM # `dotnet test <project>` job per csproj, each redirected to its own log
