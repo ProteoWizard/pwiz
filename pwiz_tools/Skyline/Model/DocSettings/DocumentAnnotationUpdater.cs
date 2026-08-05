@@ -303,22 +303,22 @@ namespace pwiz.Skyline.Model.DocSettings
             for (int iTran = 0; iTran < precursorDocNode.Children.Count; iTran++)
             {
                 var groupResults = precursorDocNode.AbbreviatedResults;
-                if (groupResults?.HasTransitionResults(iTran) != true)
+                var nodeTran = (TransitionDocNode) precursorDocNode.Children[iTran];
+                if (groupResults?.HasTransitionResults(nodeTran.Transition) != true)
                 {
                     continue;
                 }
 
                 CheckCancelled();
-                var nodeTran = (TransitionDocNode) precursorDocNode.Children[iTran];
                 var transition = new Databinding.Entities.Transition(SkylineDataSchema,
                     new IdentityPath(parent, nodeTran.Transition));
-                int transitionIndex = iTran;
+                var tranId = nodeTran.Transition;
                 var newResults = groupResults;
-                _transitionResultUpdater.Update(groupResults.GetTransitionChromFileIds(iTran), transition.Results,
+                _transitionResultUpdater.Update(groupResults.GetTransitionChromFileIds(tranId), transition.Results,
                     (replicateIndex, fileId) =>
-                        newResults.FindTransitionAnnotations(transitionIndex, replicateIndex, fileId),
+                        newResults.FindTransitionAnnotations(tranId, replicateIndex, fileId),
                     (replicateIndex, fileId, annotations) => newResults =
-                        newResults.ChangeTransitionAnnotations(transitionIndex, replicateIndex, fileId, annotations));
+                        newResults.ChangeTransitionAnnotations(tranId, replicateIndex, fileId, annotations));
                 precursorDocNode = precursorDocNode.ChangeAbbreviatedResults(newResults);
             }
 

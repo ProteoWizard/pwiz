@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private static QuantifiablePeak GetTransitionPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode transitionDocNode, int replicateIndex)
         {
             return nodeGroup.AbbreviatedResults
-                ?.GetQuantifiablePeaks(nodeGroup.IndexOfTransition(transitionDocNode), replicateIndex)
+                ?.GetQuantifiablePeaks(transitionDocNode.Transition, replicateIndex)
                 .FirstOrDefault();
         }
 

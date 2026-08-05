@@ -313,8 +313,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             // The columnar results, which hold optimization step zero only, so there is no step to
             // skip past and no chromatogram to read.
-            int iTran = transitionGroup.IndexOfTransition(transition);
-            var chromFileIds = transitionGroup.AbbreviatedResults?.GetTransitionChromFileIds(iTran);
+            var chromFileIds = transitionGroup.AbbreviatedResults?.GetTransitionChromFileIds(transition.Transition);
             if (chromFileIds == null)
             {
                 yield break;
@@ -322,7 +321,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             for (int iResult = 0; iResult < chromFileIds.ReplicatePositions.ReplicateCount; iResult++)
             {
-                foreach (var chromInfo in transitionGroup.AbbreviatedResults.GetQuantifiablePeaks(iTran, iResult))
+                foreach (var chromInfo in transitionGroup.AbbreviatedResults.GetQuantifiablePeaks(transition.Transition, iResult))
                 {
                     double? area = GetTransitionArea(parameters, transitionGroup, transition, iResult, chromInfo);
                     if (area.HasValue)

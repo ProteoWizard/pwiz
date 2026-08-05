@@ -632,9 +632,9 @@ namespace pwiz.Skyline.Model
                     for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
                     {
                         var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
-                        if (!nodeGroup.HasTransitionResults(iTran))
+                        if (!nodeGroup.HasTransitionResults(nodeTran.Transition))
                             continue;
-                        var peaks = nodeGroup.AbbreviatedResults.GetTransitionPeaks(iTran, i).ToArray();
+                        var peaks = nodeGroup.AbbreviatedResults.GetTransitionPeaks(nodeTran.Transition, i).ToArray();
                         int resultCount = peaks.Length;
                         if (resultCount == 0)
                             continue;

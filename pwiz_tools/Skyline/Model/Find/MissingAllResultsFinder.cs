@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Find
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             var chromFileIds = nodeGroup?.AbbreviatedResults?
-                .GetTransitionChromFileIds(nodeGroup.IndexOfTransition(nodeTran));
+                .GetTransitionChromFileIds(nodeTran.Transition);
             return chromFileIds != null && chromFileIds.ReplicatePositions.TotalCount == 0;
         }
     }

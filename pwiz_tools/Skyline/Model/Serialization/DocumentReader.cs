@@ -1317,9 +1317,13 @@ namespace pwiz.Skyline.Model.Serialization
                     nodeGroup = nodeGroup.ChangeAbbreviatedResults(columnarResults);
                 if (transitionResults.Any(results => results != null))
                 {
-                    var groupResults = nodeGroup.AbbreviatedResults ?? TransitionGroupResults.Empty;
+                    // Taken from the precursor rather than made here, because giving results the
+                    // transitions they belong to is the precursor's job and nothing else's.
+                    if (!nodeGroup.HasAbbreviatedResults)
+                        nodeGroup = nodeGroup.ChangeAbbreviatedResults(TransitionGroupResults.Empty);
+                    var groupResults = nodeGroup.AbbreviatedResults;
                     for (int iTran = 0; iTran < transitionResults.Length; iTran++)
-                        groupResults = transitionResults[iTran]?.AddTo(groupResults, iTran) ?? groupResults;
+                        groupResults = transitionResults[iTran]?.AddTo(groupResults, ((TransitionDocNode) children[iTran]).Transition) ?? groupResults;
                     nodeGroup = nodeGroup.ChangeAbbreviatedResults(groupResults);
                 }
             }
@@ -1526,14 +1530,14 @@ namespace pwiz.Skyline.Model.Serialization
             /// The precursor's results with this transition's added at
             /// <paramref name="transitionIndex"/>.
             /// </summary>
-            public TransitionGroupResults AddTo(TransitionGroupResults groupResults, int transitionIndex)
+            public TransitionGroupResults AddTo(TransitionGroupResults groupResults, Transition transition)
             {
                 return ChromInfos != null
                     // The chrom infos are not kept: everything a peak would lose with them goes on
                     // the transition's results instead, until the .skyd says which candidate peak
                     // it is and gives the rest back.
-                    ? groupResults.ChangeTransitionFromChromInfos(transitionIndex, ChromInfos)
-                    : groupResults.ChangeTransitionResults(transitionIndex, ChromFileIds, Peaks, Annotations,
+                    ? groupResults.ChangeTransitionFromChromInfos(transition, ChromInfos)
+                    : groupResults.ChangeTransitionResults(transition, ChromFileIds, Peaks, Annotations,
                         PeakBounds, PeakMetrics);
             }
         }

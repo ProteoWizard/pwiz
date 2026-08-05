@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
                     var peak = results.GetPeak(file.Key, file.Value);
                     // The boundaries a transition kept for itself, which is nothing when its peak
                     // was integrated between the same two times as the rest of the precursor's.
-                    var peakBounds = results.Results.FindTransitionCustomPeakBounds(results.TransitionIndex,
+                    var peakBounds = results.Results.FindTransitionCustomPeakBounds(results.Transition,
                                          file.Key, file.Value) ??
                                      results.Results.FindPrecursorPeakBounds(file.Key, file.Value);
                     peaks.Add(string.Format(@"{0} {1} {2} {3}", peak.Area, peak.UserSet,

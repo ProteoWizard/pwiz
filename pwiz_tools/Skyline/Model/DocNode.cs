@@ -400,6 +400,17 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Where each child's <see cref="Identity"/> sits, which anything holding values in the
+        /// same order as these children can hold onto to address them by identity instead of by
+        /// position. The very same instance the children hold, so a node which replaces a child in
+        /// place goes on sharing it.
+        /// </summary>
+        public IdentityIndex ChildrenIndex
+        {
+            get { return _children.IdentityIndex; }
+        }
+
+        /// <summary>
         /// This breaks immutability, but it is necessary in order to free child memory
         /// during command-line processing to achieve maximum scale
         /// </summary>

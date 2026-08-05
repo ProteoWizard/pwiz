@@ -37,29 +37,29 @@ using System.Xml.Serialization;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// One transition's results: the precursor which holds them and the index which addresses
-    /// them. Everything about them is asked of <see cref="TransitionGroupResults"/> with the
-    /// index, since the results object itself is the precursor's own business.
+    /// One transition's results: the precursor which holds them and the <see cref="Transition"/>
+    /// which addresses them. Everything about them is asked of <see cref="TransitionGroupResults"/>
+    /// with that transition, since the results object itself is the precursor's own business.
     /// </summary>
     public struct TransitionResultsRef
     {
-        public TransitionResultsRef(TransitionGroupResults results, int transitionIndex)
+        public TransitionResultsRef(TransitionGroupResults results, Transition transition)
         {
             Results = results;
-            TransitionIndex = transitionIndex;
+            Transition = transition;
         }
 
         public TransitionGroupResults Results { get; }
-        public int TransitionIndex { get; }
+        public Transition Transition { get; }
 
         public bool HasResults
         {
-            get { return Results?.HasTransitionResults(TransitionIndex) ?? false; }
+            get { return Results?.HasTransitionResults(Transition) ?? false; }
         }
 
         public ChromFileIds ChromFileIds
         {
-            get { return Results?.GetTransitionChromFileIds(TransitionIndex); }
+            get { return Results?.GetTransitionChromFileIds(Transition); }
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestUtil
 
         public TransitionPeak GetPeak(int replicateIndex, ChromFileInfoId fileId)
         {
-            Assert.IsTrue(Results.TryGetTransitionPeak(TransitionIndex, replicateIndex, fileId, out var peak));
+            Assert.IsTrue(Results.TryGetTransitionPeak(Transition, replicateIndex, fileId, out var peak));
             return peak;
         }
 
@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var self = this;
                 return Files.Select(file =>
-                    self.Results.FindTransitionAnnotations(self.TransitionIndex, file.Key, file.Value));
+                    self.Results.FindTransitionAnnotations(self.Transition, file.Key, file.Value));
             }
         }
 
@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var self = this;
                 return Files.Select(file =>
-                    self.Results.FindTransitionCustomPeakBounds(self.TransitionIndex, file.Key, file.Value));
+                    self.Results.FindTransitionCustomPeakBounds(self.Transition, file.Key, file.Value));
             }
         }
 
@@ -155,7 +155,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var self = this;
                 return Files.Select(file =>
-                    self.Results.FindTransitionCustomPeakMetrics(self.TransitionIndex, file.Key, file.Value));
+                    self.Results.FindTransitionCustomPeakMetrics(self.Transition, file.Key, file.Value));
             }
         }
     }
@@ -164,17 +164,17 @@ namespace pwiz.SkylineTestUtil
     {
         /// <summary>
         /// Every transition's results, in document order, each as the precursor which owns them
-        /// and the index which addresses them. A transition's results belong to its precursor now,
-        /// and nothing hands the results object itself out, so this is what a test which used to
-        /// walk MoleculeTransitions and ask each node for them does instead.
+        /// and the transition which addresses them. A transition's results belong to its precursor
+        /// now, and nothing hands the results object itself out, so this is what a test which used
+        /// to walk MoleculeTransitions and ask each node for them does instead.
         /// </summary>
         public static IEnumerable<TransitionResultsRef> EnumerateTransitionResults(SrmDocument document)
         {
             foreach (var nodeGroup in document.MoleculeTransitionGroups)
             {
-                for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
+                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    yield return new TransitionResultsRef(nodeGroup.AbbreviatedResults, iTran);
+                    yield return new TransitionResultsRef(nodeGroup.AbbreviatedResults, nodeTran.Transition);
                 }
             }
         }

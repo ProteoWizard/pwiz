@@ -520,9 +520,9 @@ namespace pwiz.Skyline.Model.Results
         private static int FindChosenPeakIndex(TransitionGroupResults groupResults,
             ChromatogramGroupInfo chromGroupInfo, int replicateIndex, ChromFileInfoId fileId)
         {
-            for (int iTran = 0; iTran < groupResults.TransitionCount; iTran++)
+            foreach (var transition in groupResults.GetTransitions())
             {
-                if (groupResults.FindTransitionCustomPeakBounds(iTran, replicateIndex, fileId).HasValue)
+                if (groupResults.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId).HasValue)
                 {
                     return -1;
                 }
@@ -878,16 +878,20 @@ namespace pwiz.Skyline.Model.Results
             var nodeGroupNew = nodeGroup.ChangeResults(new Results<TransitionGroupChromInfo>(
                 ReplaceReplicate(GetTransitionGroupChromInfos(transitionGroup), replicateIndex, groupChromInfos)));
 
-            var groupResults = nodeGroupNew.AbbreviatedResults ?? TransitionGroupResults.Empty;
+            // The complete set worked out first, so that the results are handed every transition's
+            // peaks at once rather than being named for the transitions and then filled in.
+            var chromInfosByTransition = new List<Results<TransitionChromInfo>>();
             for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
             {
                 var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
                 var transitionChromInfos = GetTransitionChromInfos(transitionGroup, nodeTran.Transition);
-                groupResults = groupResults.UpdateTransitionFromChromInfos(iTran,
-                    new Results<TransitionChromInfo>(ReplaceReplicate(transitionChromInfos, replicateIndex,
+                chromInfosByTransition.Add(new Results<TransitionChromInfo>(
+                    ReplaceReplicate(transitionChromInfos, replicateIndex,
                         new ChromInfoList<TransitionChromInfo>(chromInfoLists[iTran]))));
             }
 
+            var groupResults = (nodeGroupNew.AbbreviatedResults ?? TransitionGroupResults.Empty)
+                .UpdateTransitionsFromChromInfos(nodeGroupNew.ChildrenIndex, chromInfosByTransition);
             nodeGroupNew = ConvertResults(nodeGroupNew.ChangeAbbreviatedResults(groupResults));
             return ReferenceEquals(nodeGroup, nodeGroupNew)
                 ? PeptideDocNode
@@ -1033,13 +1037,14 @@ namespace pwiz.Skyline.Model.Results
             var transitionPeaks = new TransitionPeak?[transitionCount];
             for (int iTran = 0; iTran < transitionCount; iTran++)
             {
+                var nodeTranRead = (TransitionDocNode) nodeGroup.Children[iTran];
                 optStepChromatograms[iTran] = chromGroupInfo.GetAllTransitionInfo(
                     (TransitionDocNode) nodeGroup.Children[iTran], MzMatchTolerance,
                     chromatograms.OptimizationFunction, TransformChrom.interpolated);
 
                 // The entry holding the values of optimization step zero, found by file.
                 if (groupResults != null &&
-                    groupResults.TryGetTransitionPeak(iTran, replicateIndex, fileId, out var transitionPeak))
+                    groupResults.TryGetTransitionPeak(nodeTranRead.Transition, replicateIndex, fileId, out var transitionPeak))
                 {
                     transitionPeaks[iTran] = transitionPeak;
                 }
@@ -1060,12 +1065,12 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
-                var annotations = groupResults?.FindTransitionAnnotations(iTran, replicateIndex, fileId) ??
+                var annotations = groupResults?.FindTransitionAnnotations(nodeTran.Transition, replicateIndex, fileId) ??
                                   Annotations.EMPTY;
                 var userSet = transitionPeaks[iTran]?.UserSet ?? UserSet.FALSE;
-                var peakBounds = groupResults?.FindTransitionCustomPeakBounds(iTran, replicateIndex, fileId) ??
+                var peakBounds = groupResults?.FindTransitionCustomPeakBounds(nodeTran.Transition, replicateIndex, fileId) ??
                                  precursorBounds;
-                var peakMetrics = groupResults?.FindTransitionCustomPeakMetrics(iTran, replicateIndex, fileId);
+                var peakMetrics = groupResults?.FindTransitionCustomPeakMetrics(nodeTran.Transition, replicateIndex, fileId);
 
                 // The peak being changed is put here rather than after the fact, so that the ranks
                 // and the dot products which come from all of the transitions together are worked

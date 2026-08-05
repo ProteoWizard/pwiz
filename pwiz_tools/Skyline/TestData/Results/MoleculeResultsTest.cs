@@ -118,10 +118,10 @@ namespace pwiz.SkylineTestData.Results
                         }
 
                         var fileId = chromFileIds.FileIds[position].Value;
-                        for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
+                        foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                         {
-                            if (results.FindTransitionCustomPeakMetrics(iTran, replicateIndex, fileId) != null ||
-                                results.FindTransitionCustomPeakBounds(iTran, replicateIndex, fileId).HasValue)
+                            if (results.FindTransitionCustomPeakMetrics(nodeTran.Transition, replicateIndex, fileId) != null ||
+                                results.FindTransitionCustomPeakBounds(nodeTran.Transition, replicateIndex, fileId).HasValue)
                             {
                                 kept++;
                             }
@@ -299,9 +299,8 @@ namespace pwiz.SkylineTestData.Results
         private static int CheckTransition(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
             TransitionDocNode nodeTran, ref int reintegrated)
         {
-            int iTran = nodeGroup.IndexOfTransition(nodeTran);
             var abbreviated = nodeGroup.AbbreviatedResults;
-            if (abbreviated?.HasTransitionResults(iTran) != true)
+            if (abbreviated?.HasTransitionResults(nodeTran.Transition) != true)
             {
                 return 0;
             }
@@ -336,7 +335,7 @@ namespace pwiz.SkylineTestData.Results
                         continue;
                     }
 
-                    Assert.IsTrue(abbreviated.TryGetTransitionPeak(iTran, replicateIndex,
+                    Assert.IsTrue(abbreviated.TryGetTransitionPeak(nodeTran.Transition, replicateIndex,
                         chromInfo.FileId, out var peak));
                     Assert.AreEqual(peak.Area, chromInfo.Area);
                     Assert.AreEqual(peak.UserSet, chromInfo.UserSet);
@@ -345,7 +344,7 @@ namespace pwiz.SkylineTestData.Results
                     // the boundaries the results kept: the transition's own when it has any, and
                     // otherwise the precursor's, which is what the whole peak group shares.
                     var peakBounds =
-                        abbreviated.FindTransitionCustomPeakBounds(iTran, replicateIndex, chromInfo.FileId) ??
+                        abbreviated.FindTransitionCustomPeakBounds(nodeTran.Transition, replicateIndex, chromInfo.FileId) ??
                         (abbreviated.FindChosenPeakIndex(replicateIndex, chromInfo.FileId).HasValue
                             ? null
                             : abbreviated.FindPrecursorPeakBounds(replicateIndex, chromInfo.FileId));
@@ -500,24 +499,25 @@ namespace pwiz.SkylineTestData.Results
         {
             // Index zero of a precursor of its own, since what is being checked is the conversion
             // rather than where the transition sits.
-            var unconverted = TransitionGroupResults.Empty.ChangeTransitionFromChromInfos(0, rebuilt);
+            var unconverted = TransitionGroupResults.Empty.ChangeTransitionsFromChromInfos(
+                new IdentityIndex(new[] { nodeTran.Transition }), new[] { rebuilt });
             Assert.IsTrue(unconverted.NeedsPeakIndexes);
             // Optimization step zero only, which is all that is kept: the rest are read back from
             // the .skyd along with it.
             Assert.AreEqual(
                 rebuilt.Sum(chromInfoList => chromInfoList.Count(chromInfo => chromInfo.OptimizationStep == 0)),
-                unconverted.GetTransitionChromFileIds(0).FileIds.Count);
+                unconverted.GetTransitionChromFileIds(nodeTran.Transition).FileIds.Count);
 
             // No chrom info is kept anywhere. What survives instead is the handful of values a peak
             // cannot get back by being integrated between its boundaries again.
             foreach (var chromInfo in rebuilt[0].Where(chromInfo =>
                          chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty))
             {
-                var peakBounds = unconverted.FindTransitionCustomPeakBounds(0, 0, chromInfo.FileId);
+                var peakBounds = unconverted.FindTransitionCustomPeakBounds(nodeTran.Transition, 0, chromInfo.FileId);
                 Assert.IsTrue(peakBounds.HasValue, @"no boundaries kept");
                 Assert.AreEqual(chromInfo.StartRetentionTime, peakBounds.Value.StartTime);
                 Assert.AreEqual(chromInfo.EndRetentionTime, peakBounds.Value.EndTime);
-                var peakMetrics = unconverted.FindTransitionCustomPeakMetrics(0, 0, chromInfo.FileId);
+                var peakMetrics = unconverted.FindTransitionCustomPeakMetrics(nodeTran.Transition, 0, chromInfo.FileId);
                 Assert.AreEqual(chromInfo.MassError, peakMetrics?.MassError);
                 Assert.AreEqual(chromInfo.Identified, peakMetrics?.Identified ?? PeakIdentification.FALSE);
             }

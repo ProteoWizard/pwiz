@@ -417,6 +417,11 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public TransitionGroupDocNode ChangeAbbreviatedResults(TransitionGroupResults prop)
         {
+            // Given the transitions they belong to here, in the one place results arrive, so that
+            // nothing can hand a precursor results which cannot say which transition is which. Any
+            // results built for some other set of transitions lose them here rather than having
+            // these transitions' names put on them.
+            prop = prop?.ReorderTransitions(ChildrenIndex);
             if (Equals(AbbreviatedResults, prop))
                 return this;
             return ChangeProp(ImClone(this), im => im.AbbreviatedResults = prop);
@@ -434,12 +439,12 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public bool HasTransitionResults(TransitionDocNode nodeTran)
         {
-            return HasTransitionResults(IndexOfTransition(nodeTran));
+            return HasTransitionResults(nodeTran.Transition);
         }
 
-        public bool HasTransitionResults(int transitionIndex)
+        public bool HasTransitionResults(Transition transition)
         {
-            return AbbreviatedResults?.HasTransitionResults(transitionIndex) ?? false;
+            return AbbreviatedResults?.HasTransitionResults(transition) ?? false;
         }
 
         /// <summary>
@@ -493,17 +498,11 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            var indexByTransition = new Dictionary<int, int>();
-            for (int i = 0; i < Children.Count; i++)
-            {
-                indexByTransition[Children[i].Id.GlobalIndex] = i;
-            }
-
-            var oldIndexes = childrenNew
-                .Select(child => indexByTransition.TryGetValue(child.Id.GlobalIndex, out int index) ? index : -1)
-                .ToArray();
+            // Matched by identity rather than by working out where each one used to be: the results
+            // know that themselves, since they hold the same IdentityIndex these children do.
             var nodeGroupClone = (TransitionGroupDocNode) clone;
-            nodeGroupClone.AbbreviatedResults = AbbreviatedResults.ReorderTransitions(oldIndexes);
+            nodeGroupClone.AbbreviatedResults =
+                AbbreviatedResults.ReorderTransitions(childrenNew.Select(child => (Transition) child.Id));
             return childrenNew;
         }
 
@@ -561,9 +560,10 @@ namespace pwiz.Skyline.Model
             {
                 if (transitions != null && !transitions((TransitionDocNode) Children[iTran]))
                     continue;
-                if (!HasTransitionResults(iTran))
+                if (!HasTransitionResults(((TransitionDocNode) Children[iTran]).Transition))
                     continue;
-                foreach (var entry in AbbreviatedResults.GetTransitionPeaks(iTran, replicateIndex))
+                foreach (var entry in AbbreviatedResults.GetTransitionPeaks(
+                             ((TransitionDocNode) Children[iTran]).Transition, replicateIndex))
                 {
                     area += entry.Value.Area;
                     anyPeak = true;
@@ -584,10 +584,11 @@ namespace pwiz.Skyline.Model
             int transitionCount = 0;
             for (int iTran = 0; iTran < Children.Count; iTran++)
             {
-                if (!HasTransitionResults(iTran))
+                if (!HasTransitionResults(((TransitionDocNode) Children[iTran]).Transition))
                     continue;
                 transitionCount++;
-                foreach (var entry in AbbreviatedResults.GetTransitionPeaks(iTran, replicateIndex))
+                foreach (var entry in AbbreviatedResults.GetTransitionPeaks(
+                             ((TransitionDocNode) Children[iTran]).Transition, replicateIndex))
                 {
                     if (entry.Value.IsGoodPeak(integrateAll))
                     {
@@ -2479,12 +2480,12 @@ namespace pwiz.Skyline.Model
 
                 nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
 
-                // After the children, because the two have to agree on which transition each index
-                // stands for, and the children are what says so.
+                // After the children, because the two have to agree on which transition each entry
+                // stands for, and the children are what says so. Every transition's at once, since
+                // transitionChromInfos has been the complete set since the loop above filled it.
                 var groupResults = nodeGroupNew.AbbreviatedResults ?? TransitionGroupResults.Empty;
-                var groupResultsNew = groupResults;
-                for (int iTran = 0; iTran < transitionChromInfos.Length; iTran++)
-                    groupResultsNew = groupResultsNew.UpdateTransitionFromChromInfos(iTran, transitionChromInfos[iTran]);
+                var groupResultsNew = groupResults.UpdateTransitionsFromChromInfos(
+                    nodeGroupNew.ChildrenIndex, transitionChromInfos);
                 // Reference equal when every transition already said the same, which is also how a
                 // precursor with no results at all avoids being given an empty set of them.
                 if (!ReferenceEquals(groupResultsNew, groupResults))
@@ -3296,7 +3297,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
         {
-            var abbreviatedResults = TransitionGroupResults.FromChromInfos(prop);
+            var abbreviatedResults = TransitionGroupResults.FromChromInfos(prop)?.ReorderTransitions(ChildrenIndex);
             if (Equals(AbbreviatedResults, abbreviatedResults))
                 return this;
             return ChangeProp(ImClone(this), im =>

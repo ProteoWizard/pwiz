@@ -853,12 +853,11 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 // Left out when the precursor already carries these areas and there is nothing
                 // else here to say.
-                int iTran = nodeGroup.IndexOfTransition(nodeTransition);
                 var groupResults = nodeGroup.AbbreviatedResults;
-                if (groupResults != null && groupResults.HasTransitionResults(iTran) &&
-                    !groupResults.IsTransitionCoveredBySharedAreas(iTran, _sharedTransitionAreaFiles))
+                if (groupResults != null && groupResults.HasTransitionResults(nodeTransition.Transition) &&
+                    !groupResults.IsTransitionCoveredBySharedAreas(nodeTransition.Transition, _sharedTransitionAreaFiles))
                 {
-                    WriteTransitionResults(writer, groupResults, iTran);
+                    WriteTransitionResults(writer, groupResults, nodeTransition.Transition);
                 }
             }
             else
@@ -1082,25 +1081,25 @@ namespace pwiz.Skyline.Model.Serialization
         /// are held only where there is one, and none of them has an entry wherever another does.
         /// </para>
         /// </summary>
-        private void WriteTransitionResults(XmlWriter writer, TransitionGroupResults results, int transitionIndex)
+        private void WriteTransitionResults(XmlWriter writer, TransitionGroupResults results, Transition transition)
         {
-            var chromFileIds = results.GetTransitionChromFileIds(transitionIndex);
+            var chromFileIds = results.GetTransitionChromFileIds(transition);
             WriteColumnarResults(writer, chromFileIds, EL.transition_results, EL.transition_peak,
                 (w, replicateIndex, position) =>
                 {
                     var fileId = chromFileIds.FileIds[position].Value;
-                    results.TryGetTransitionPeak(transitionIndex, replicateIndex, fileId, out var peak);
+                    results.TryGetTransitionPeak(transition, replicateIndex, fileId, out var peak);
                     w.WriteAttribute(ATTR.area, peak.Area);
                     w.WriteAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
 
-                    var peakBounds = results.FindTransitionCustomPeakBounds(transitionIndex, replicateIndex, fileId);
+                    var peakBounds = results.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId);
                     if (peakBounds.HasValue)
                     {
                         w.WriteAttribute(ATTR.start_time, peakBounds.Value.StartTime);
                         w.WriteAttribute(ATTR.end_time, peakBounds.Value.EndTime);
                     }
 
-                    var peakMetrics = results.FindTransitionCustomPeakMetrics(transitionIndex, replicateIndex, fileId);
+                    var peakMetrics = results.FindTransitionCustomPeakMetrics(transition, replicateIndex, fileId);
                     if (peakMetrics != null)
                     {
                         w.WriteAttributeNullable(ATTR.mass_error_ppm, peakMetrics.MassError);
@@ -1110,7 +1109,7 @@ namespace pwiz.Skyline.Model.Serialization
 
                     // Last, because these are child elements and an XmlWriter takes no more
                     // attributes once an element has content.
-                    WriteAnnotations(w, results.FindTransitionAnnotations(transitionIndex, replicateIndex, fileId));
+                    WriteAnnotations(w, results.FindTransitionAnnotations(transition, replicateIndex, fileId));
                 });
         }
 

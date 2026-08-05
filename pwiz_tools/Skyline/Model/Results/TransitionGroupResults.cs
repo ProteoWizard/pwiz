@@ -201,8 +201,9 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Builds the columnar form from the chrom infos a document already holds. This is
         /// how both forms can be carried at once while the readers are converted one at a
-        /// time. The peak index lists stay null, because which candidate peak was chosen is
-        /// only knowable by reading the .skyd.
+        /// time. Which candidate peak in the .skyd each peak is stays unknown, because only a
+        /// caller which has read the chromatograms can say, and this one has only the chrom
+        /// infos: see <see cref="MoleculeResults.ConvertResults"/>, which works them out.
         /// <para>
         /// Only optimization step zero is stored. Nothing here can differ between the steps of
         /// one file: the user cannot set peak boundaries or annotations for one step on its own,
@@ -210,18 +211,6 @@ namespace pwiz.Skyline.Model.Results
         /// </para>
         /// </summary>
         public static TransitionGroupResults FromChromInfos(Results<TransitionGroupChromInfo> results)
-        {
-            return FromChromInfos(results, null);
-        }
-
-        /// <summary>
-        /// <paramref name="getChosenPeakIndex"/> says which of the candidate peaks in the .skyd the
-        /// peak of one replicate and file is. Only a caller which has the chromatograms can know
-        /// that, so it is null when the columnar form is being derived from a document which
-        /// already holds its chrom infos.
-        /// </summary>
-        public static TransitionGroupResults FromChromInfos(Results<TransitionGroupChromInfo> results,
-            Func<int, ChromFileInfoId, int> getChosenPeakIndex)
         {
             if (results == null)
             {
@@ -249,7 +238,6 @@ namespace pwiz.Skyline.Model.Results
                     fileIds.Add(chromInfo.FileId);
                     peaks.Add(new PrecursorPeak(chromInfo.RetentionTime ?? 0,
                         chromInfo.StartRetentionTime ?? 0, chromInfo.EndRetentionTime ?? 0,
-                        getChosenPeakIndex?.Invoke(replicateIndex, chromInfo.FileId) ??
                         PrecursorPeak.NO_PEAK_INDEX));
                     userSets.Add(chromInfo.UserSet);
                     qValues.Add(chromInfo.QValue ?? float.NaN);
@@ -266,9 +254,9 @@ namespace pwiz.Skyline.Model.Results
                     .ChangeQValues(qValues)
                     .ChangeZScores(zScores)
                     .ChangeAnnotations(annotations)
-                    // Without a caller which read the chromatograms there is no way to know which
-                    // candidate peak any of these is, so that is still to be worked out.
-                    .ChangeNeedsPeakIndexes(getChosenPeakIndex == null);
+                    // Nothing here read the chromatograms, so which candidate peak any of these is
+                    // is still to be worked out.
+                    .ChangeNeedsPeakIndexes(true);
 
             // Kept whatever the caller knows, because the precursor level still holds values which
             // have no home in the columnar form yet - PeakCountRatio, the ion mobility info, the dot
@@ -326,22 +314,63 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private ImmutableList<TransitionResults> Transitions { get; set; }
 
-        private TransitionGroupResults ChangeTransitions(IEnumerable<TransitionResults> value)
+        /// <summary>
+        /// Which position each of the precursor's transitions sits at, which is what turns the
+        /// <see cref="Transition"/> a caller has into an index into <see cref="Transitions"/>.
+        /// <para>
+        /// The very same instance the precursor's <see cref="DocNodeChildren"/> holds, so this is
+        /// a reference rather than a copy, and the two cannot drift: replacing a child in place
+        /// leaves the order alone and both go on sharing it.
+        /// </para>
+        /// </summary>
+        public IdentityIndex TransitionIndexes { get; private set; } = IdentityIndex.EMPTY;
+
+        /// <summary>
+        /// The precursor's transitions, in the order these results hold them. How a caller which
+        /// has the results but not the precursor walks them.
+        /// </summary>
+        public IEnumerable<Transition> GetTransitions()
         {
+            return TransitionIndexes.Identities.Cast<Transition>();
+        }
+
+        /// <summary>
+        /// These results with a new set of transition results and the <see cref="IdentityIndex"/>
+        /// which says which transition each one belongs to. The two always change together, so that
+        /// these results are never holding results they cannot name.
+        /// </summary>
+        private TransitionGroupResults ChangeTransitions(IdentityIndex indexes,
+            IEnumerable<TransitionResults> value)
+        {
+            indexes = indexes ?? IdentityIndex.EMPTY;
             var transitions = ImmutableList.ValueOf(value);
             if (transitions != null && transitions.All(results => results == null))
             {
                 transitions = null;
             }
 
-            return ChangeProp(ImClone(this), im => im.Transitions = transitions);
+            if (transitions != null && transitions.Count > indexes.Count)
+            {
+                throw new ArgumentException(
+                    string.Format(@"Results for {0} transitions cannot be held by a precursor with {1}.",
+                        transitions.Count, indexes.Count));
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Transitions = transitions;
+                im.TransitionIndexes = indexes;
+            });
         }
 
         /// <summary>
-        /// The results of one transition, or null when it has none. Takes the index of the
-        /// transition among the precursor's children, which is the only thing these are in the
-        /// order of.
+        /// The results of one transition, or null when it has none.
         /// </summary>
+        private TransitionResults GetTransitionResults(Transition transition)
+        {
+            return GetTransitionResults(TransitionIndexes.IndexOf(transition));
+        }
+
         private TransitionResults GetTransitionResults(int transitionIndex)
         {
             if (Transitions == null || transitionIndex < 0 || transitionIndex >= Transitions.Count)
@@ -356,6 +385,12 @@ namespace pwiz.Skyline.Model.Results
         /// These results with one transition's replaced. Returns this when it is already the same,
         /// so that a document which does not change stays reference equal.
         /// </summary>
+        private TransitionGroupResults ChangeTransitionResults(Transition transition, TransitionResults value)
+        {
+            int transitionIndex = TransitionIndexes.IndexOf(transition);
+            return transitionIndex < 0 ? this : ChangeTransitionResults(transitionIndex, value);
+        }
+
         private TransitionGroupResults ChangeTransitionResults(int transitionIndex, TransitionResults value)
         {
             if (Equals(GetTransitionResults(transitionIndex), value))
@@ -364,7 +399,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             int count = Math.Max(Transitions?.Count ?? 0, transitionIndex + 1);
-            return ChangeTransitions(Enumerable.Range(0, count)
+            return ChangeTransitions(TransitionIndexes, Enumerable.Range(0, count)
                 .Select(i => i == transitionIndex ? value : GetTransitionResults(i)));
         }
 
@@ -387,28 +422,41 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// These results with their transitions put in a new order, where
-        /// <paramref name="oldIndexes"/> gives the index each transition used to be at, or -1 for
-        /// one which was not there before. See
-        /// <see cref="TransitionGroupDocNode.OnChangingChildren"/>, which is the only thing that
-        /// knows how a precursor's transitions moved.
+        /// These results with their transitions put in the order <paramref name="transitions"/>
+        /// gives, which is the precursor's children after a change. Each one keeps whatever results
+        /// it already had, matched by identity, and one which was not there before starts with
+        /// none. See <see cref="TransitionGroupDocNode.OnChangingChildren"/>.
         /// </summary>
-        public TransitionGroupResults ReorderTransitions(IList<int> oldIndexes)
+        public TransitionGroupResults ReorderTransitions(IEnumerable<Transition> transitions)
         {
-            if (Transitions == null)
+            return ReorderTransitions(new IdentityIndex(transitions));
+        }
+
+        /// <summary>
+        /// These results with their transitions put in the order <paramref name="transitionIndexes"/>
+        /// gives. The only way the index changes, and it never changes on its own: every transition's
+        /// results move with it, matched by identity, so a transition which is not in the new index
+        /// loses its results rather than having another transition's handed to it.
+        /// </summary>
+        public TransitionGroupResults ReorderTransitions(IdentityIndex transitionIndexes)
+        {
+            transitionIndexes = transitionIndexes ?? IdentityIndex.EMPTY;
+            if (ReferenceEquals(TransitionIndexes, transitionIndexes))
             {
                 return this;
             }
 
-            return ChangeTransitions(oldIndexes.Select(GetTransitionResults));
+            return ChangeTransitions(transitionIndexes, Transitions == null
+                ? null
+                : transitionIndexes.Identities.Select(identity => GetTransitionResults((Transition) identity)));
         }
 
         /// <summary>
         /// Whether one of the precursor's transitions has any results.
         /// </summary>
-        public bool HasTransitionResults(int transitionIndex)
+        public bool HasTransitionResults(Transition transition)
         {
-            return GetTransitionResults(transitionIndex) != null;
+            return GetTransitionResults(transition) != null;
         }
 
         /// <summary>
@@ -418,9 +466,9 @@ namespace pwiz.Skyline.Model.Results
         /// missing from a file the precursor was found in.
         /// </para>
         /// </summary>
-        public ChromFileIds GetTransitionChromFileIds(int transitionIndex)
+        public ChromFileIds GetTransitionChromFileIds(Transition transition)
         {
-            return GetTransitionResults(transitionIndex)?.ChromFileIds;
+            return GetTransitionResults(transition)?.ChromFileIds;
         }
 
         /// <summary>
@@ -429,10 +477,10 @@ namespace pwiz.Skyline.Model.Results
         /// found by, and a position of these results means nothing anywhere else. Empty when the
         /// transition has no results at all.
         /// </summary>
-        public IEnumerable<KeyValuePair<ChromFileInfoId, TransitionPeak>> GetTransitionPeaks(int transitionIndex,
+        public IEnumerable<KeyValuePair<ChromFileInfoId, TransitionPeak>> GetTransitionPeaks(Transition transition,
             int replicateIndex)
         {
-            var results = GetTransitionResults(transitionIndex);
+            var results = GetTransitionResults(transition);
             return results == null
                 ? Array.Empty<KeyValuePair<ChromFileInfoId, TransitionPeak>>()
                 : results.Peaks[replicateIndex];
@@ -443,9 +491,9 @@ namespace pwiz.Skyline.Model.Results
         /// when the transition has no results. See
         /// <see cref="TransitionResults.GetQuantifiablePeaks"/>.
         /// </summary>
-        public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(int transitionIndex, int replicateIndex)
+        public IEnumerable<QuantifiablePeak> GetQuantifiablePeaks(Transition transition, int replicateIndex)
         {
-            var results = GetTransitionResults(transitionIndex);
+            var results = GetTransitionResults(transition);
             return results == null
                 ? Array.Empty<QuantifiablePeak>()
                 : results.GetQuantifiablePeaks(replicateIndex);
@@ -456,10 +504,10 @@ namespace pwiz.Skyline.Model.Results
         /// position, which is how a caller which has neither the transition's positions nor a
         /// reason to learn them asks.
         /// </summary>
-        public bool TryGetTransitionPeak(int transitionIndex, int replicateIndex, ChromFileInfoId fileId,
+        public bool TryGetTransitionPeak(Transition transition, int replicateIndex, ChromFileInfoId fileId,
             out TransitionPeak peak)
         {
-            var results = GetTransitionResults(transitionIndex);
+            var results = GetTransitionResults(transition);
             if (results == null)
             {
                 peak = default;
@@ -473,9 +521,9 @@ namespace pwiz.Skyline.Model.Results
         /// The annotations of one transition's peak in one file of one replicate, which are empty
         /// for nearly every peak. See <see cref="TryGetTransitionPeak"/>.
         /// </summary>
-        public Annotations FindTransitionAnnotations(int transitionIndex, int replicateIndex, ChromFileInfoId fileId)
+        public Annotations FindTransitionAnnotations(Transition transition, int replicateIndex, ChromFileInfoId fileId)
         {
-            return GetTransitionResults(transitionIndex)?.FindAnnotations(replicateIndex, fileId) ??
+            return GetTransitionResults(transition)?.FindAnnotations(replicateIndex, fileId) ??
                    Model.Annotations.EMPTY;
         }
 
@@ -484,20 +532,20 @@ namespace pwiz.Skyline.Model.Results
         /// the rest of the precursor's transitions used, and otherwise null - which is nearly every
         /// peak. See <see cref="FindPrecursorPeakBounds"/> for the boundaries they share.
         /// </summary>
-        public CustomPeakBounds? FindTransitionCustomPeakBounds(int transitionIndex, int replicateIndex,
+        public CustomPeakBounds? FindTransitionCustomPeakBounds(Transition transition, int replicateIndex,
             ChromFileInfoId fileId)
         {
-            return GetTransitionResults(transitionIndex)?.FindCustomPeakBounds(replicateIndex, fileId);
+            return GetTransitionResults(transition)?.FindCustomPeakBounds(replicateIndex, fileId);
         }
 
         /// <summary>
         /// What one transition's peak keeps because integrating between its boundaries again cannot
         /// find it, or null when it is one of the candidate peaks and the .skyd has it all.
         /// </summary>
-        public CustomPeakMetrics FindTransitionCustomPeakMetrics(int transitionIndex, int replicateIndex,
+        public CustomPeakMetrics FindTransitionCustomPeakMetrics(Transition transition, int replicateIndex,
             ChromFileInfoId fileId)
         {
-            return GetTransitionResults(transitionIndex)?.FindCustomPeakMetrics(replicateIndex, fileId);
+            return GetTransitionResults(transition)?.FindCustomPeakMetrics(replicateIndex, fileId);
         }
 
         /// <summary>
@@ -530,16 +578,16 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// These results with the annotations of one transition's peak in one file replaced.
         /// </summary>
-        public TransitionGroupResults ChangeTransitionAnnotations(int transitionIndex, int replicateIndex,
+        public TransitionGroupResults ChangeTransitionAnnotations(Transition transition, int replicateIndex,
             ChromFileInfoId fileId, Annotations annotations)
         {
-            var results = GetTransitionResults(transitionIndex);
+            var results = GetTransitionResults(transition);
             if (results == null)
             {
                 return this;
             }
 
-            return ChangeTransitionResults(transitionIndex,
+            return ChangeTransitionResults(transition,
                 results.ChangeAnnotations(replicateIndex, fileId, annotations));
         }
 
@@ -589,10 +637,10 @@ namespace pwiz.Skyline.Model.Results
         /// Whether every area one transition has is already in the precursor's shared transition
         /// areas, so that the transition can be left out of the file altogether.
         /// </summary>
-        public bool IsTransitionCoveredBySharedAreas(int transitionIndex,
+        public bool IsTransitionCoveredBySharedAreas(Transition transition,
             ICollection<ReferenceValue<ChromFileInfoId>> sharedAreaFiles)
         {
-            var results = GetTransitionResults(transitionIndex);
+            var results = GetTransitionResults(transition);
             if (sharedAreaFiles == null || results == null)
             {
                 return false;
@@ -607,14 +655,35 @@ namespace pwiz.Skyline.Model.Results
         /// peak needs until the .skyd says which candidate peak it is goes onto the columnar
         /// results instead. This is what reading the compact encoding does.
         /// </summary>
-        public TransitionGroupResults ChangeTransitionFromChromInfos(int transitionIndex,
+        public TransitionGroupResults ChangeTransitionFromChromInfos(Transition transition,
             Results<TransitionChromInfo> chromInfos)
         {
-            return ChangeTransitionResults(transitionIndex,
+            return ChangeTransitionResults(transition,
                     DropSharedPeakBounds(TransitionResults.FromChromInfos(chromInfos)))
                 // A chrom info says where its peak is and nothing about which candidate peak in the
                 // .skyd that makes it, so that is still to be worked out.
                 .ChangeNeedsPeakIndexes(true);
+        }
+
+        /// <summary>
+        /// These results with every one of the precursor's transitions built from chrom infos, one
+        /// entry per transition of <paramref name="transitionIndexes"/> and in that order.
+        /// <para>
+        /// The whole set at once, rather than a transition at a time, because the index and the
+        /// results it names have to arrive together: naming the transitions first and then filling
+        /// them in leaves these results, in between, saying they hold something they do not.
+        /// </para>
+        /// </summary>
+        public TransitionGroupResults ChangeTransitionsFromChromInfos(IdentityIndex transitionIndexes,
+            IEnumerable<Results<TransitionChromInfo>> chromInfos)
+        {
+            var results = ReorderTransitions(transitionIndexes);
+            foreach (var entry in transitionIndexes.Identities.Zip(chromInfos, Tuple.Create))
+            {
+                results = results.ChangeTransitionFromChromInfos((Transition) entry.Item1, entry.Item2);
+            }
+
+            return results;
         }
 
         /// <summary>
@@ -655,11 +724,11 @@ namespace pwiz.Skyline.Model.Results
         /// written with. Each of the sparse lists has one entry per position, or is null when the
         /// transition had no element of its own - which is what nearly every transition has.
         /// </summary>
-        public TransitionGroupResults ChangeTransitionResults(int transitionIndex, ChromFileIds chromFileIds,
+        public TransitionGroupResults ChangeTransitionResults(Transition transition, ChromFileIds chromFileIds,
             IEnumerable<TransitionPeak> peaks, IEnumerable<Annotations> annotations,
             IEnumerable<CustomPeakBounds> peakBounds, IEnumerable<CustomPeakMetrics> peakMetrics)
         {
-            return ChangeTransitionResults(transitionIndex,
+            return ChangeTransitionResults(transition,
                 DropSharedPeakBounds(new TransitionResults(chromFileIds, peaks, annotations, peakBounds,
                     peakMetrics)));
         }
@@ -678,7 +747,30 @@ namespace pwiz.Skyline.Model.Results
         /// hang.
         /// </para>
         /// </summary>
-        public TransitionGroupResults UpdateTransitionFromChromInfos(int transitionIndex,
+        /// <summary>
+        /// These results with every one of the precursor's transitions worked out again, one entry
+        /// per transition of <paramref name="transitionIndexes"/> and in that order. Returns this
+        /// when no transition had anything new to say, which is also how a precursor with no results
+        /// at all avoids being given an empty set of them.
+        /// <para>
+        /// The whole set at once, for the reason
+        /// <see cref="ChangeTransitionsFromChromInfos"/> gives.
+        /// </para>
+        /// </summary>
+        public TransitionGroupResults UpdateTransitionsFromChromInfos(IdentityIndex transitionIndexes,
+            IEnumerable<Results<TransitionChromInfo>> chromInfos)
+        {
+            var reordered = ReorderTransitions(transitionIndexes);
+            var results = reordered;
+            foreach (var entry in transitionIndexes.Identities.Zip(chromInfos, Tuple.Create))
+            {
+                results = results.UpdateTransitionFromChromInfos((Transition) entry.Item1, entry.Item2);
+            }
+
+            return ReferenceEquals(results, reordered) ? this : results;
+        }
+
+        private TransitionGroupResults UpdateTransitionFromChromInfos(Transition transition,
             Results<TransitionChromInfo> chromInfos)
         {
             var calculated = DropSharedPeakBounds(TransitionResults.FromChromInfos(chromInfos));
@@ -691,14 +783,14 @@ namespace pwiz.Skyline.Model.Results
                 return this;
             }
 
-            var existing = GetTransitionResults(transitionIndex);
+            var existing = GetTransitionResults(transition);
             if (existing != null && !NeedsPeakIndexes && Equals(existing, DropChosenPeakCustomPeaks(calculated)))
             {
                 return this;
             }
 
             // The peaks are new, so which candidate peak each of them is has to be worked out again.
-            return ChangeTransitionResults(transitionIndex, calculated).ChangeNeedsPeakIndexes(true);
+            return ChangeTransitionResults(transition, calculated).ChangeNeedsPeakIndexes(true);
         }
 
         /// <summary>
@@ -1003,7 +1095,7 @@ namespace pwiz.Skyline.Model.Results
                 var newTransitions = Transitions
                     .Select(transition => transition?.StripAnnotationValues(annotationNamesToKeep)).ToArray();
                 if (!ArrayUtil.ReferencesEqual(newTransitions, Transitions))
-                    results = results.ChangeTransitions(newTransitions);
+                    results = results.ChangeTransitions(TransitionIndexes, newTransitions);
             }
 
             return results;

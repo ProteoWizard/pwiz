@@ -341,7 +341,7 @@ namespace pwiz.Skyline.Model.Results
 
             int transitionIndex = nodeGroup.FindNodeIndex(nodeTran.Transition);
             if (transitionIndex < 0 ||
-                !groupResults.TryGetTransitionPeak(transitionIndex, fileInfo.ResultsIndex, fileId, out var peak))
+                !groupResults.TryGetTransitionPeak(nodeTran.Transition, fileInfo.ResultsIndex, fileId, out var peak))
             {
                 return null;
             }

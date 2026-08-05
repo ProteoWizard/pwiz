@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model
@@ -9,7 +10,7 @@ namespace pwiz.Skyline.Model
     {
         private readonly int _itemCount;    // Necessary for knowing the count after items have been freed
         private ImmutableList<DocNode> _items;
-        private Dictionary<ReferenceValue<Identity>, int> _indexes;
+        private IdentityIndex _indexes;
 
         public DocNodeChildren(IEnumerable<DocNode> items, IList<DocNode> previous)
         {
@@ -19,20 +20,24 @@ namespace pwiz.Skyline.Model
             if (previousChildren != null && previousChildren._items != null && IsOrderSame(previousChildren))
                 _indexes = previousChildren._indexes;
             else
-            {
-                _indexes = new Dictionary<ReferenceValue<Identity>, int>(_itemCount);
-                for (int i = 0; i < _itemCount; i++)
-                {
-                    _indexes.Add(_items[i].Id, i);
-                }
-            }
+                _indexes = new IdentityIndex(_items.Select(item => item.Id));
         }
 
-        private DocNodeChildren(Dictionary<ReferenceValue<Identity>, int> indexes, ImmutableList<DocNode> items)
+        private DocNodeChildren(IdentityIndex indexes, ImmutableList<DocNode> items)
         {
             _itemCount = items.Count;
             _items = items;
             _indexes = indexes;
+        }
+
+        /// <summary>
+        /// Where each child's <see cref="Identity"/> sits, which anything holding values in the
+        /// same order as these children can hold onto to address them by identity instead of by
+        /// position. Null once <see cref="ReleaseChildren"/> has let the children go.
+        /// </summary>
+        public IdentityIndex IdentityIndex
+        {
+            get { return _indexes; }
         }
 
         private bool IsOrderSame(DocNodeChildren previousChildren)
@@ -145,12 +150,7 @@ namespace pwiz.Skyline.Model
 
         public int IndexOf(Identity id)
         {
-            int index;
-            if (_indexes == null || !_indexes.TryGetValue(id, out index))
-            {
-                return -1;
-            }
-            return index;
+            return _indexes?.IndexOf(id) ?? -1;
         }
 
         void IList<DocNode>.Insert(int index, DocNode item)

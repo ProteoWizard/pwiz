@@ -2017,6 +2017,7 @@
     <Compile Include="Controls\Databinding\SampleTypeDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\StandardTypeDataGridViewColumn.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
+    <Compile Include="Model\IdentityIndex.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurve.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurveFitter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurveOptions.cs" />
