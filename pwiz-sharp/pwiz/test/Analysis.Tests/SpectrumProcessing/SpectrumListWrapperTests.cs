@@ -198,7 +198,7 @@ public class SpectrumListWrapperTests
                 $"defaultArrayLength not ascending at {i}");
     }
 
-    private static int MsLevelOf(ISpectrumList list, int index) =>
+    private static int MsLevelOf(SpectrumListSorter list, int index) =>
         list.GetSpectrum(index, getBinaryData: false).Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
 
     [TestMethod]
