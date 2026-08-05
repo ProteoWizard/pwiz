@@ -130,13 +130,14 @@ namespace pwiz.Skyline.Model.Results
                     return null;
                 }
 
-                var otherChrominfo = FindMatchingTransitionChromInfo(transitionChromInfo, otherTransition);
-                if (otherChrominfo == null || otherChrominfo.IsEmpty)
+                var otherPeak = FindMatchingTransitionPeak(transitionChromInfo.FileId, otherTransitionGroup,
+                    otherTransition);
+                if (!otherPeak.HasValue || otherPeak.Value.IsEmpty)
                 {
                     return null;
                 }
 
-                return transitionChromInfo.Area / otherChrominfo.Area;
+                return transitionChromInfo.Area / otherPeak.Value.Area;
             }
 
             return null;
@@ -179,7 +180,8 @@ namespace pwiz.Skyline.Model.Results
 
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
-                return GetTransitionGroupRatioValue(ratioToLabel, peptideDocNode, transitionGroupDocNode, transitionGroupChromInfo)?.Ratio;
+                var ratioValue = GetTransitionGroupRatioValue(ratioToLabel, peptideDocNode, transitionGroupDocNode, transitionGroupChromInfo);
+                return ratioValue?.Ratio;
             }
 
             return null;
@@ -211,21 +213,20 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var tran in transitionGroupDocNode.Transitions.Where(tran =>
                     tran.IsQuantitative(Document.Settings)))
                 {
-                    var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                        transitionGroupChromInfo.OptimizationStep, tran);
-                    if (chromInfo != null)
+                    var peak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, transitionGroupDocNode,
+                        tran);
+                    if (peak.HasValue)
                     {
-                        numerators.Add(chromInfo.Area);
+                        numerators.Add(peak.Value.Area);
                     }
                 }
                 foreach (var tran in otherTransitionGroup.Transitions.Where(tran =>
                     tran.IsQuantitative(Document.Settings)))
                 {
-                    var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                        transitionGroupChromInfo.OptimizationStep, tran);
-                    if (chromInfo != null)
+                    var peak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, otherTransitionGroup, tran);
+                    if (peak.HasValue)
                     {
-                        denominators.Add(chromInfo.Area);
+                        denominators.Add(peak.Value.Area);
                     }
                 }
 
@@ -257,16 +258,16 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var transitionChromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                    transitionGroupChromInfo.OptimizationStep, transition);
-                var otherTransitionChromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                    transitionGroupChromInfo.OptimizationStep, otherTransition);
-                if (transitionChromInfo == null || transitionChromInfo.IsEmpty || otherTransitionChromInfo == null || otherTransitionChromInfo.IsEmpty)
+                var peak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, transitionGroupDocNode,
+                    transition);
+                var otherPeak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, otherTransitionGroup,
+                    otherTransition);
+                if (!peak.HasValue || peak.Value.IsEmpty || !otherPeak.HasValue || otherPeak.Value.IsEmpty)
                 {
                     continue;
                 }
-                numerators.Add(transitionChromInfo.Area);
-                denominators.Add(otherTransitionChromInfo.Area);
+                numerators.Add(peak.Value.Area);
+                denominators.Add(otherPeak.Value.Area);
             }
 
             return RatioValue.Calculate(numerators, denominators);
@@ -320,51 +321,32 @@ namespace pwiz.Skyline.Model.Results
         }
 
 
-        public TransitionChromInfo FindMatchingTransitionChromInfo(TransitionChromInfo transitionChromInfo,
-            TransitionDocNode otherTransition)
+        /// <summary>
+        /// One transition's peak in one file, or null when there is no peak there.
+        /// <para>
+        /// From the columnar results, which is where a peak lives now: a
+        /// <see cref="TransitionDocNode"/> reports no chrom infos at all, so the precursor which
+        /// owns the transition has to be named before its peak can be found. Optimization step
+        /// zero, which is all the columnar results keep and all this ever accepted.
+        /// </para>
+        /// </summary>
+        private TransitionPeak? FindMatchingTransitionPeak(ChromFileInfoId fileId,
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
-            return FindMatchingTransitionChromInfo(transitionChromInfo.FileId, transitionChromInfo.OptimizationStep,
-                otherTransition);
-        }
-        public TransitionChromInfo FindMatchingTransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, TransitionDocNode otherTransition) 
-        {
-            if (otherTransition.Results == null)
+            var groupResults = nodeGroup.AbbreviatedResults;
+            if (groupResults == null || !_fileInfos.TryGetValue(fileId, out var fileInfo))
             {
                 return null;
             }
 
-            FileInfo fileInfo;
-            if (!_fileInfos.TryGetValue(fileId, out fileInfo))
+            int transitionIndex = nodeGroup.FindNodeIndex(nodeTran.Transition);
+            if (transitionIndex < 0 ||
+                !groupResults.TryGetTransitionPeak(transitionIndex, fileInfo.ResultsIndex, fileId, out var peak))
             {
                 return null;
             }
 
-            if (otherTransition.Results.Count <= fileInfo.ResultsIndex)
-            {
-                return null;
-            }
-
-            foreach (var otherChromInfo in otherTransition.Results[fileInfo.ResultsIndex])
-            {
-                if (otherChromInfo == null)
-                {
-                    continue;
-                }
-
-                if (!ReferenceEquals(otherChromInfo.FileId, fileId))
-                {
-                    continue;
-                }
-
-                if (otherChromInfo.OptimizationStep != 0)
-                {
-                    continue;
-                }
-
-                return otherChromInfo;
-            }
-
-            return null;
+            return peak;
         }
 
         public TransitionGroupDocNode FindMatchingTransitionGroup(NormalizationMethod.RatioToLabel ratioToLabel,

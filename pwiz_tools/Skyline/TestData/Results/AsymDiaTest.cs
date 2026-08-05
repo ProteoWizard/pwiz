@@ -136,10 +136,15 @@ namespace pwiz.SkylineTestData.Results
 
                     SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
                     nodeGroup = docResults.MoleculeTransitionGroups.First();
+                    var nodePep = docResults.Molecules.First();
+                    // Rebuilt from the .skyd: EmptyResults holds nothing, since a precursor does
+                    // not keep its chrom infos any more.
+                    var chromInfo = new MoleculeResults(docResults.Settings, nodePep)
+                        .GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, 0).First();
                     var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
                     ratio = normalizedValueCalculator.GetTransitionGroupValue(
                         normalizedValueCalculator.GetFirstRatioNormalizationMethod(),
-                        docResults.Molecules.First(), nodeGroup, 0, nodeGroup.EmptyResults[0][0]).Value;
+                        nodePep, nodeGroup, 0, chromInfo).Value;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
                         Assert.AreEqual(fixedRatio, ratio, 0.05);
