@@ -7,17 +7,26 @@ namespace Pwiz.Analysis.PeakFilters;
 /// <summary>How <see cref="ThresholdFilter"/> interprets the threshold value.</summary>
 public enum ThresholdingBy
 {
-    /// <summary>Keep the top/bottom N peaks (N = round(<see cref="ThresholdFilter.Threshold"/>)). Peaks tied at the cutoff are dropped.</summary>
+    /// <summary>Keep the top/bottom N peaks (N = round(<see cref="ThresholdFilter.Threshold"/>)).
+    /// If the cut falls between two peaks of equal intensity, the whole run at that intensity is
+    /// dropped; a run lying wholly inside the kept set is kept.</summary>
     Count,
-    /// <summary>Keep the top/bottom N peaks, preserving ties at the cutoff (may return more than N).</summary>
+    /// <summary>Keep the top/bottom N peaks, extended forward through any run tied at the cutoff
+    /// (so this may return more than N).</summary>
     CountAfterTies,
-    /// <summary>Keep peaks with intensity ≥/≤ <see cref="ThresholdFilter.Threshold"/>.</summary>
+    /// <summary>Keep peaks whose intensity is strictly past <see cref="ThresholdFilter.Threshold"/>
+    /// - above it for <see cref="ThresholdingOrientation.MostIntense"/>, below it for
+    /// <see cref="ThresholdingOrientation.LeastIntense"/>. A peak exactly at the threshold is dropped.</summary>
     AbsoluteIntensity,
-    /// <summary>Keep peaks whose intensity is ≥/≤ <see cref="ThresholdFilter.Threshold"/> × base-peak intensity.</summary>
+    /// <summary>As <see cref="AbsoluteIntensity"/>, against
+    /// <see cref="ThresholdFilter.Threshold"/> times the base-peak intensity.</summary>
     FractionOfBasePeakIntensity,
-    /// <summary>Keep peaks whose intensity is ≥/≤ <see cref="ThresholdFilter.Threshold"/> × total ion current.</summary>
+    /// <summary>As <see cref="AbsoluteIntensity"/>, against
+    /// <see cref="ThresholdFilter.Threshold"/> times the total ion current.</summary>
     FractionOfTotalIntensity,
-    /// <summary>Sort by intensity; keep top peaks until their cumulative intensity ≥ <see cref="ThresholdFilter.Threshold"/> × TIC.</summary>
+    /// <summary>Sort by intensity in the orientation's direction and keep peaks from that end until
+    /// their cumulative intensity reaches <see cref="ThresholdFilter.Threshold"/> times the TIC,
+    /// then extend through any run tied at the cut point.</summary>
     FractionOfTotalIntensityCutoff,
 }
 
@@ -111,12 +120,12 @@ public sealed class ThresholdFilter : ISpectrumDataFilter
 
                 double cutoffIntensity = intArr.Data[ordered[count - 1]];
 
-                // pwiz semantics: a tie exists whenever the cutoff intensity appears more than once
-                // in the full list (ambiguous which tied peak to drop). Checking neighbors on either
-                // side of the count boundary catches both within-top-N ties and spill-over ties.
-                bool hasTieAtCutoff =
-                    intArr.Data[ordered[count]] == cutoffIntensity
-                    || (count >= 2 && intArr.Data[ordered[count - 2]] == cutoffIntensity);
+                // Only a tie ACROSS the cut matters: cpp starts at the first point to erase and
+                // walks backward while consecutive intensities are equal, so a run of equal
+                // intensities that lies wholly inside the kept set is kept. Testing
+                // ordered[count - 2] as well would treat such an inside run as ambiguous and
+                // discard it: intensities 30 20 20 10 10 at count 3 keep all of 30 20 20.
+                bool hasTieAtCutoff = intArr.Data[ordered[count]] == cutoffIntensity;
 
                 if (hasTieAtCutoff)
                 {
@@ -161,20 +170,35 @@ public sealed class ThresholdFilter : ISpectrumDataFilter
 
             case ThresholdingBy.FractionOfTotalIntensityCutoff:
             {
-                double target = Threshold * sum;
+                // cpp sorts in the orientation's direction and accumulates from that end, so
+                // LeastIntense keeps the least-intense prefix - NOT the complement of the
+                // most-intense one. The two differ: at threshold 1.0 the prefix is everything,
+                // where the complement is nothing.
                 var ordered = new int[n];
                 for (int i = 0; i < n; i++) ordered[i] = i;
-                Array.Sort(ordered, (a, b) => intArr.Data[b].CompareTo(intArr.Data[a])); // always descending
-                double cumulative = 0;
-                foreach (var idx in ordered)
+                Array.Sort(ordered, (a, b) =>
                 {
-                    keep[idx] = true;
-                    cumulative += intArr.Data[idx];
-                    if (cumulative >= target) break;
+                    int cmp = intArr.Data[a].CompareTo(intArr.Data[b]);
+                    return Orientation == ThresholdingOrientation.MostIntense ? -cmp : cmp;
+                });
+
+                // Accumulate until the running fraction reaches the threshold. cpp compares
+                // against threshold - 1e-6 so a sum landing exactly on the threshold stops here.
+                int last = 0;
+                double cumulative = intArr.Data[ordered[0]] / sum;
+                while (cumulative < Threshold - 1e-6 && last + 1 < n)
+                {
+                    last++;
+                    cumulative += intArr.Data[ordered[last]] / sum;
                 }
-                // If LeastIntense, invert the result (keep the complement).
-                if (Orientation == ThresholdingOrientation.LeastIntense)
-                    for (int i = 0; i < n; i++) keep[i] = !keep[i];
+
+                // Ties at the cut point are included, so the kept set never splits equal
+                // intensities: intensities 12 2 2 1 1 1 1 0 0 at threshold .90 cut after the
+                // fifth point, but keep seven, because points 5-7 are all intensity 1.
+                while (last + 1 < n && intArr.Data[ordered[last + 1]] == intArr.Data[ordered[last]])
+                    last++;
+
+                for (int i = 0; i <= last; i++) keep[ordered[i]] = true;
                 break;
             }
         }
@@ -182,8 +206,11 @@ public sealed class ThresholdFilter : ISpectrumDataFilter
         EmitFiltered(spectrum, keep);
     }
 
+    // The comparison is strict, as it is in cpp. There, lower_bound over the intensity-sorted
+    // pairs returns the first point to ERASE, so a point exactly at the threshold is dropped:
+    // intensities 10 20 30 20 10 thresholded at 10 keep only 20 30 20, and at 30 keep nothing.
     private bool PassesIntensity(double actual, double threshold) =>
-        Orientation == ThresholdingOrientation.MostIntense ? actual >= threshold : actual <= threshold;
+        Orientation == ThresholdingOrientation.MostIntense ? actual > threshold : actual < threshold;
 
     private static void EmitFiltered(Spectrum spectrum, bool[] keep)
     {

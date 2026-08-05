@@ -1,100 +1,455 @@
 using Pwiz.Analysis.PeakFilters;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
+/// <summary>
+/// Port of cpp's <c>SpectrumList_PeakFilterTest.cpp::testIntensityThresholding()</c>, driving
+/// <see cref="ThresholdFilter"/> through <see cref="SpectrumListPeakFilter"/> over cpp's own
+/// 74-row table. Every expected array below is copied verbatim from that table, so these cases
+/// check the port against cpp rather than against itself.
+/// </summary>
+/// <remarks>
+/// cpp runs the table twice: once with the default m/s levels, where the filter must apply, and
+/// once with the filter restricted to MS2 against an MS1 spectrum, where it must be a no-op.
+/// Both loops are reproduced. Comparisons are exact, as they are in cpp - the filter only selects
+/// peaks, it never recomputes them.
+/// </remarks>
 [TestClass]
 public class ThresholdFilterTests
 {
-    private static Spectrum MakeSpectrum(double[] mz, double[] intensity, int msLevel = 2)
+    private sealed record ThresholdCase(
+        string Label,
+        string InputMz, string InputIntensity,
+        string ExpectedMz, string ExpectedIntensity,
+        ThresholdingBy By, double Threshold, ThresholdingOrientation Orientation);
+
+    private static readonly ThresholdCase[] Cases =
     {
-        var s = new Spectrum { Index = 0, Id = "test", DefaultArrayLength = mz.Length };
-        s.Params.Set(CVID.MS_ms_level, msLevel);
-        s.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
-        return s;
-    }
+        new("test empty spectrum",
+            InputMz: "", InputIntensity: "",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test empty spectrum",
+            InputMz: "", InputIntensity: "",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test empty spectrum",
+            InputMz: "", InputIntensity: "",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test empty spectrum",
+            InputMz: "", InputIntensity: "",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.99, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test empty spectrum",
+            InputMz: "", InputIntensity: "",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.Count, Threshold: 5, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test one peak spectrum",
+            InputMz: "1", InputIntensity: "10",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test one peak spectrum",
+            InputMz: "1", InputIntensity: "10",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test one peak spectrum",
+            InputMz: "1", InputIntensity: "10",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test one peak spectrum",
+            InputMz: "1", InputIntensity: "10",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.99, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test one peak spectrum",
+            InputMz: "1", InputIntensity: "10",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.Count, Threshold: 5, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test two peak spectrum with a zero data point",
+            InputMz: "1 2", InputIntensity: "10 0",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test two peak spectrum with a zero data point",
+            InputMz: "1 2", InputIntensity: "10 0",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test two peak spectrum with a zero data point",
+            InputMz: "1 2", InputIntensity: "10 0",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test two peak spectrum with a zero data point",
+            InputMz: "1 2", InputIntensity: "10 0",
+            ExpectedMz: "1", ExpectedIntensity: "10",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.99, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("test two peak spectrum with a zero data point",
+            InputMz: "1 2", InputIntensity: "10 0",
+            ExpectedMz: "1 2", ExpectedIntensity: "10 0",
+            By: ThresholdingBy.Count, Threshold: 5, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("absolute thresholding, keeping the most intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 3 4 5", ExpectedIntensity: "10 20 30 20 10",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 5, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("absolute thresholding, keeping the most intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 10, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("absolute thresholding, keeping the most intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 15, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("absolute thresholding, keeping the most intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 30, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("absolute thresholding, keeping the least intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 5, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("absolute thresholding, keeping the least intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 10, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("absolute thresholding, keeping the least intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 15, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("absolute thresholding, keeping the least intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 4 5", ExpectedIntensity: "10 20 20 10",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 30, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("absolute thresholding, keeping the least intense points",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 3 4 5", ExpectedIntensity: "10 20 30 20 10",
+            By: ThresholdingBy.AbsoluteIntensity, Threshold: 50, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to the base peak, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 3 4 5", ExpectedIntensity: "10 20 30 20 10",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to the base peak, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.34, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to the base peak, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.65, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to the base peak, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "3", ExpectedIntensity: "30",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.67, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to the base peak, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 1.0, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to the base peak, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to the base peak, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.32, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to the base peak, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.34, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to the base peak, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 4 5", ExpectedIntensity: "10 20 20 10",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 0.67, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to the base peak, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 4 5", ExpectedIntensity: "10 20 20 10",
+            By: ThresholdingBy.FractionOfBasePeakIntensity, Threshold: 1.0, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to total intensity, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 3 4 5", ExpectedIntensity: "10 20 30 20 10",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to total intensity, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.12, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to total intensity, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.21, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to total intensity, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "3", ExpectedIntensity: "30",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.23, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to total intensity, keeping the most intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.34, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("relative thresholding to total intensity, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.1, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to total intensity, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.12, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to total intensity, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.21, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to total intensity, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 4 5", ExpectedIntensity: "10 20 20 10",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.23, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("relative thresholding to total intensity, keeping the least intense peaks",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 3 4 5", ExpectedIntensity: "10 20 30 20 10",
+            By: ThresholdingBy.FractionOfTotalIntensity, Threshold: 0.34, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("at threshold .15 ---^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "2 3 4 6 7 8 9", ExpectedIntensity: "1 2 1 1 2 12 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 1.0, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("at threshold .15 ---^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "2 3 4 6 7 8 9", ExpectedIntensity: "1 2 1 1 2 12 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.99, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("at threshold .15 ---^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "2 3 4 6 7 8 9", ExpectedIntensity: "1 2 1 1 2 12 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.90, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("at threshold .15 ---^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "3 7 8", ExpectedIntensity: "2 2 12",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.80, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("at threshold .15 ---^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "3 7 8", ExpectedIntensity: "2 2 12",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.65, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("at threshold .15 ---^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "8", ExpectedIntensity: "12",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.60, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("at threshold .15 ---^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "8", ExpectedIntensity: "12",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.15, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("at threshold .01 -----------------------^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "1 2 3 4 5 6 7 8 9", ExpectedIntensity: "0 1 2 1 0 1 2 12 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 1.0, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("at threshold .01 -----------------------^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "1 2 3 4 5 6 7 8 9", ExpectedIntensity: "0 1 2 1 0 1 2 12 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.45, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("at threshold .01 -----------------------^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "1 2 3 4 5 6 7 9", ExpectedIntensity: "0 1 2 1 0 1 2 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.40, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("at threshold .01 -----------------------^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "1 2 3 4 5 6 7 9", ExpectedIntensity: "0 1 2 1 0 1 2 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.35, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("at threshold .01 -----------------------^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "1 2 3 4 5 6 7 9", ExpectedIntensity: "0 1 2 1 0 1 2 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.25, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("at threshold .01 -----------------------^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "1 2 4 5 6 9", ExpectedIntensity: "0 1 1 0 1 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.20, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("at threshold .01 -----------------------^ cut here",
+            InputMz: "1 2 3 4 5 6 7 8 9", InputIntensity: "0 1 2 1 0 1 2 12 1",
+            ExpectedMz: "1 2 4 5 6 9", ExpectedIntensity: "0 1 1 0 1 1",
+            By: ThresholdingBy.FractionOfTotalIntensityCutoff, Threshold: 0.15, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> most intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "3", ExpectedIntensity: "30",
+            By: ThresholdingBy.Count, Threshold: 1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> most intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "3", ExpectedIntensity: "30",
+            By: ThresholdingBy.Count, Threshold: 2, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> most intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.Count, Threshold: 3, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> most intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.Count, Threshold: 4, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> least intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "", ExpectedIntensity: "",
+            By: ThresholdingBy.Count, Threshold: 1, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> least intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.Count, Threshold: 2, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> least intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.Count, Threshold: 3, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> least intense points, excluding ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 4 5", ExpectedIntensity: "10 20 20 10",
+            By: ThresholdingBy.Count, Threshold: 4, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> most intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "3", ExpectedIntensity: "30",
+            By: ThresholdingBy.CountAfterTies, Threshold: 1, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> most intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.CountAfterTies, Threshold: 2, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> most intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "2 3 4", ExpectedIntensity: "20 30 20",
+            By: ThresholdingBy.CountAfterTies, Threshold: 3, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> most intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 3 4 5", ExpectedIntensity: "10 20 30 20 10",
+            By: ThresholdingBy.CountAfterTies, Threshold: 4, Orientation: ThresholdingOrientation.MostIntense),
+
+        new("keep the <threshold> least intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.CountAfterTies, Threshold: 1, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> least intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 5", ExpectedIntensity: "10 10",
+            By: ThresholdingBy.CountAfterTies, Threshold: 2, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> least intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 4 5", ExpectedIntensity: "10 20 20 10",
+            By: ThresholdingBy.CountAfterTies, Threshold: 3, Orientation: ThresholdingOrientation.LeastIntense),
+
+        new("keep the <threshold> least intense points, including ties",
+            InputMz: "1 2 3 4 5", InputIntensity: "10 20 30 20 10",
+            ExpectedMz: "1 2 4 5", ExpectedIntensity: "10 20 20 10",
+            By: ThresholdingBy.CountAfterTies, Threshold: 4, Orientation: ThresholdingOrientation.LeastIntense),
+
+    };
 
     [TestMethod]
-    public void Count_AndCountAfterTies()
+    public void ThresholdFilter_MatchesCppTable()
     {
-        // Top 3 distinct intensities: drop everything from rank 3 down (ties at the cutoff also dropped).
-        var byCount = MakeSpectrum(new[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, new[] { 100.0, 90, 80, 70, 60 });
-        new ThresholdFilter(ThresholdingBy.Count, 3).Apply(byCount);
-        CollectionAssert.AreEqual(new[] { 1.0, 2.0, 3.0 }, byCount.GetMZArray()!.Data, "Count: top-3 distinct");
-
-        // Ties at the count cutoff drop ALL tied peaks (Count) but are KEPT (CountAfterTies).
-        double[] tieMz = { 1.0, 2.0, 3.0, 4.0 };
-        double[] tieInt = { 100.0, 50, 50, 10 };
-        var withTiesDropped = MakeSpectrum((double[])tieMz.Clone(), (double[])tieInt.Clone());
-        new ThresholdFilter(ThresholdingBy.Count, 3).Apply(withTiesDropped);
-        CollectionAssert.AreEqual(new[] { 1.0 }, withTiesDropped.GetMZArray()!.Data,
-            "Count: cutoff ties dropped");
-
-        var withTiesKept = MakeSpectrum((double[])tieMz.Clone(), (double[])tieInt.Clone());
-        new ThresholdFilter(ThresholdingBy.CountAfterTies, 3).Apply(withTiesKept);
-        CollectionAssert.AreEqual(new[] { 1.0, 2.0, 3.0 }, withTiesKept.GetMZArray()!.Data,
-            "CountAfterTies: cutoff ties kept");
-    }
-
-    [TestMethod]
-    public void AbsoluteIntensity_BothOrientations()
-    {
-        // MostIntense: keep peaks ≥ threshold.
-        var most = MakeSpectrum(new[] { 1.0, 2.0, 3.0, 4.0 }, new[] { 5.0, 50, 500, 5000 });
-        new ThresholdFilter(ThresholdingBy.AbsoluteIntensity, 100).Apply(most);
-        CollectionAssert.AreEqual(new[] { 3.0, 4.0 }, most.GetMZArray()!.Data, "most intense");
-
-        // LeastIntense: keep peaks ≤ threshold.
-        var least = MakeSpectrum(new[] { 1.0, 2.0, 3.0, 4.0 }, new[] { 5.0, 50, 500, 5000 });
-        new ThresholdFilter(ThresholdingBy.AbsoluteIntensity, 100, ThresholdingOrientation.LeastIntense)
-            .Apply(least);
-        CollectionAssert.AreEqual(new[] { 1.0, 2.0 }, least.GetMZArray()!.Data, "least intense");
-    }
-
-    [TestMethod]
-    public void FractionalThresholds_BasePeakAndTotal()
-    {
-        // FractionOfBasePeakIntensity: base = 1000, threshold 0.1 → keep peaks ≥ 100.
-        var ofBase = MakeSpectrum(new[] { 1.0, 2.0, 3.0, 4.0 }, new[] { 50.0, 200, 500, 1000 });
-        new ThresholdFilter(ThresholdingBy.FractionOfBasePeakIntensity, 0.1).Apply(ofBase);
-        CollectionAssert.AreEqual(new[] { 2.0, 3.0, 4.0 }, ofBase.GetMZArray()!.Data);
-
-        // FractionOfTotalIntensity: TIC=100, threshold 0.2 → keep peaks ≥ 20.
-        var ofTotal = MakeSpectrum(new[] { 1.0, 2.0, 3.0, 4.0 }, new[] { 5.0, 20, 30, 45 });
-        new ThresholdFilter(ThresholdingBy.FractionOfTotalIntensity, 0.2).Apply(ofTotal);
-        CollectionAssert.AreEqual(new[] { 2.0, 3.0, 4.0 }, ofTotal.GetMZArray()!.Data);
-
-        // FractionOfTotalIntensityCutoff: keep top peaks until cumulative reaches target.
-        // Sorted desc: 45, 30, 20, 5; target 0.8 × 100 = 80; cumulative reaches 95 at 3rd peak.
-        var cumulative = MakeSpectrum(new[] { 1.0, 2.0, 3.0, 4.0 }, new[] { 5.0, 20, 30, 45 });
-        new ThresholdFilter(ThresholdingBy.FractionOfTotalIntensityCutoff, 0.8).Apply(cumulative);
-        CollectionAssert.AreEqual(new[] { 2.0, 3.0, 4.0 },
-            cumulative.GetMZArray()!.Data.OrderBy(x => x).ToList());
-    }
-
-    [TestMethod]
-    public void MsLevels_RestrictsApplication_AndListWrapperApplies()
-    {
-        // MS1 spectrum + filter restricted to MS level 2 → no-op.
-        var s = MakeSpectrum(new[] { 1.0, 2.0, 3.0 }, new[] { 10.0, 20, 30 }, msLevel: 1);
-        new ThresholdFilter(
-            ThresholdingBy.AbsoluteIntensity, 100,
-            msLevels: new Pwiz.Util.Misc.IntegerSet(2)).Apply(s);
-        CollectionAssert.AreEqual(new[] { 1.0, 2.0, 3.0 }, s.GetMZArray()!.Data);
-
-        // SpectrumListPeakFilter applies the threshold to every spectrum in the list.
-        var inner = new SpectrumListSimple();
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < Cases.Length; i++)
         {
-            var spec = MakeSpectrum(new[] { 1.0, 2.0, 3.0 }, new[] { 10.0, 100, 1000 });
-            spec.Index = i; spec.Id = $"scan={i + 1}";
-            inner.Spectra.Add(spec);
+            var c = Cases[i];
+            var filtered = Filter(c, new ThresholdFilter(c.By, c.Threshold, c.Orientation), msLevel: 2);
+            AssertArrays($"[{i}] {c.Label}", c.ExpectedMz, c.ExpectedIntensity, filtered);
         }
-        var filtered = new SpectrumListPeakFilter(inner,
-            new ThresholdFilter(ThresholdingBy.AbsoluteIntensity, 50));
-        Assert.AreEqual(3, filtered.Count);
-        for (int i = 0; i < 3; i++)
-            Assert.AreEqual(2, filtered.GetSpectrum(i, getBinaryData: true).GetMZArray()!.Data.Count);
     }
+
+    /// <summary>cpp's second loop: restricted to MS2, the filter must leave an MS1 spectrum alone.</summary>
+    [TestMethod]
+    public void ThresholdFilter_RestrictedToMs2_LeavesMs1Untouched()
+    {
+        for (int i = 0; i < Cases.Length; i++)
+        {
+            var c = Cases[i];
+            var filter = new ThresholdFilter(c.By, c.Threshold, c.Orientation, new IntegerSet(2));
+            var unfiltered = Filter(c, filter, msLevel: 1);
+            AssertArrays($"[{i}] {c.Label} (ms1 untouched)", c.InputMz, c.InputIntensity, unfiltered);
+        }
+    }
+
+    private static Spectrum Filter(ThresholdCase c, ThresholdFilter filter, int msLevel)
+    {
+        var inner = new SpectrumListSimple();
+        var s = new Spectrum { Index = 0, Id = "scan=1" };
+        s.Params.Set(CVID.MS_ms_level, msLevel);
+        s.SetMZIntensityArrays(ParseDoubles(c.InputMz), ParseDoubles(c.InputIntensity),
+            CVID.MS_number_of_detector_counts);
+        inner.Spectra.Add(s);
+        return new SpectrumListPeakFilter(inner, filter).GetSpectrum(0, getBinaryData: true);
+    }
+
+    private static void AssertArrays(string label, string expectedMz, string expectedIntensity, Spectrum actual)
+    {
+        var expectedMzArr = ParseDoubles(expectedMz);
+        var expectedIntArr = ParseDoubles(expectedIntensity);
+        var actualMz = actual.GetMZArray()?.Data ?? new List<double>();
+        var actualInt = actual.GetIntensityArray()?.Data ?? new List<double>();
+
+        Assert.AreEqual(expectedMzArr.Length, actual.DefaultArrayLength, $"{label}: defaultArrayLength");
+        CollectionAssert.AreEqual(expectedMzArr, actualMz.ToArray(), $"{label}: m/z array");
+        CollectionAssert.AreEqual(expectedIntArr, actualInt.ToArray(), $"{label}: intensity array");
+    }
+
+    private static double[] ParseDoubles(string s) =>
+        s.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+         .Select(t => double.Parse(t, System.Globalization.NumberStyles.Float,
+             System.Globalization.CultureInfo.InvariantCulture))
+         .ToArray();
 }
