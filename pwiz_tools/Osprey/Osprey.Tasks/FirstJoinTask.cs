@@ -1726,14 +1726,20 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Skipped when <c>_firstPassBaseIds</c> is null - the resident and rehydrate
         /// paths do not surface the surviving set here, and at scale the production route is
-        /// the projection path anyway. Also skipped whenever any diagnostic dump is enabled,
-        /// because the <c>-d</c> dumps read fragments for entries chosen by their own criteria
-        /// rather than by what the pipeline still needs.</para>
+        /// the projection path anyway.</para>
+        ///
+        /// <para>Deliberately NOT gated on diagnostics. The only dump that reads fragments is
+        /// <c>WriteCalXicEntryDumpAndExit</c>, a Stage 3 dump that exits the process where it
+        /// stands, so it cannot observe a Stage 5 -&gt; 6 release. Gating on
+        /// <c>ctx.Diagnostics</c> would instead disable this in exactly the regression run
+        /// that is compared against the committed golden (<c>regression.ps1</c> passes
+        /// <c>-DumpProteinFdr</c> on the straight-through leg), making the byte-identity gate
+        /// vacuous for this feature.</para>
         /// </summary>
         private void ReleaseUnscorableLibraryFragments(List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
             if (!OspreyEnvironment.ReleaseLibraryFragments || _firstPassBaseIds == null ||
-                fullLibrary == null || ctx.Diagnostics != null)
+                fullLibrary == null)
             {
                 return;
             }
