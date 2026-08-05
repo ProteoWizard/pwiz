@@ -138,9 +138,17 @@ namespace pwiz.Osprey.Core
         /// nothing is believed to read them; this makes a wrong belief loud, by turning that
         /// same guard expression into a tripwire.</para>
         /// </summary>
+        /// <summary>
+        /// True once <see cref="ReleaseSpectrum"/> has dropped this entry's spectrum. The only
+        /// safe way to ask: inspecting <see cref="Fragments"/> to find out throws by design, so
+        /// without this the released state would be write-only and callers would be left
+        /// catching an exception to detect it.
+        /// </summary>
+        public bool IsSpectrumReleased => ReferenceEquals(Fragments, RELEASED_SPECTRUM);
+
         public bool ReleaseSpectrum()
         {
-            if (ReferenceEquals(Fragments, RELEASED_SPECTRUM))
+            if (IsSpectrumReleased)
                 return false;
             Fragments = RELEASED_SPECTRUM;
             return true;

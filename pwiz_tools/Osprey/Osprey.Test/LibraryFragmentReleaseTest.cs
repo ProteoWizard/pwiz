@@ -94,9 +94,9 @@ namespace pwiz.Osprey.Test
             int released = LibraryFragmentRelease.ReleaseFragments(library, retained);
 
             Assert.AreEqual(2, released);
-            Assert.IsNotNull(library[0].Fragments, @"survivor keeps its spectra");
-            Assert.IsNotNull(library[1].Fragments, @"paired decoy of a survivor keeps its spectra");
-            Assert.IsNotNull(library[2].Fragments, @"gap-fill candidate keeps its spectra");
+            AssertRetained(library[0], @"survivor");
+            AssertRetained(library[1], @"paired decoy of a survivor");
+            AssertRetained(library[2], @"gap-fill candidate");
             AssertReleased(library[3]);
             AssertReleased(library[4]);
 
@@ -147,6 +147,19 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// A retained entry's spectrum must still be READABLE. Asserting only non-null would
+        /// pass on a released entry too - the released state is deliberately non-null - so the
+        /// assertion has to read through it. That also makes this the released-check in
+        /// reverse: reading a wrongly-released entry throws here rather than passing quietly.
+        /// </summary>
+        private static void AssertRetained(LibraryEntry e, string what)
+        {
+            Assert.IsFalse(e.IsSpectrumReleased, what + @" must not be released");
+            Assert.AreEqual(1, e.Fragments.Count, what + @" must keep a readable spectrum");
+            Assert.AreEqual(300.1, e.Fragments[0].Mz, 1e-12);
+        }
+
+        /// <summary>
         /// A released entry's Fragments must be NON-NULL and must THROW on access. Both halves
         /// matter: every scorer guards with
         /// <c>entry.Fragments == null || entry.Fragments.Count == 0</c>, so a null (or an empty
@@ -155,6 +168,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertReleased(LibraryEntry e)
         {
+            Assert.IsTrue(e.IsSpectrumReleased);
             Assert.IsNotNull(e.Fragments, @"a null would be silently absorbed by every scorer guard");
             Assert.ThrowsException<InvalidOperationException>(() => _ = e.Fragments.Count);
             Assert.ThrowsException<InvalidOperationException>(() => _ = e.Fragments[0]);
