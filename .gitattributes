@@ -5,3 +5,11 @@
 *.mzxml binary
 
 *.sh text eol=lf
+
+# cmd.exe tracks its position in a batch file by byte offset, and that accounting
+# drifts on an LF-only file: after a few `call :label` returns the search starts
+# from the wrong place and fails with "The system cannot find the batch label
+# specified". build.bat lost its entire `call :build_one` loop that way - it
+# staged whatever binaries already existed and reported success. Checkouts with
+# core.autocrlf=true happened to be immune, which is why CI never saw it.
+*.bat text eol=crlf
