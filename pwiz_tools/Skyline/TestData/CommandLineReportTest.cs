@@ -51,8 +51,7 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestParquetReportInvariant()
         {
-            TestFilesZip = @"https://skyline.ms/tutorials/LiveReports.zip";
-            TestFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[0]);
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineReportTest.zip");
             string docPath = TestFilesDir.GetTestPath(@"Rat_plasma.sky");
             AssertEx.FileExists(docPath);
             ExportAndVerifyColumnNames(docPath, @"default", null, true);

@@ -1089,9 +1089,8 @@ namespace pwiz.Skyline
         // Exporting reports does require a document
         public static readonly Argument ARG_REPORT_FILE = new DocArgument(@"report-file", PATH_TO_CSV,
             (c, p) => c.ReportFile = p.ValueFullPath);
-        public static readonly Argument ARG_REPORT_FORMAT = new DocArgument(@"report-format",
-            Helpers.GetEnumValues<ReportFormat>().Select(f => f.ToString()).ToArray(),
-            (c, p) => c.ReportFormat = (ReportFormat) Enum.Parse(typeof(ReportFormat), p.Value, true));
+        public static readonly Argument ARG_REPORT_FORMAT = DocArgument.FromEnumType<ReportFormat>(@"report-format",
+            (c, p) => c.ReportFormat = p);
         public static readonly Argument ARG_REPORT_INVARIANT = new DocArgument(@"report-invariant", BOOL_VALUE,
             (c, p) => c.IsReportInvariant = p.ValueBool) { OptionalValue = true };
 

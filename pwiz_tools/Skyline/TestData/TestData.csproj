@@ -266,6 +266,7 @@
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineRefine.zip" />
     <None Include="CommandLineRefineGroupComparisonTest.zip" />
+    <None Include="CommandLineReportTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
     <None Include="ConsoleAddAnnotationsTest.zip" />
