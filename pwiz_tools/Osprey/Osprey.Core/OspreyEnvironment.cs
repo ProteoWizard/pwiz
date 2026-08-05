@@ -464,10 +464,9 @@ namespace pwiz.Osprey.Core
         ///
         /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
         /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. The A/B that proves the Stage 6 handoff bounded is
-        /// exactly such a run: <c>regression.ps1</c> mode 2 needs
-        /// <see cref="ResidentPaths.MDIAG_FULL_RESUME"/> while the arm under test needs
-        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/>. A LIST keeps the property that
+        /// impossible to perform at all - an A/B whose own arm needs
+        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> could not also name whatever
+        /// path the harness leg it runs under happens to take. A LIST keeps the property that
         /// matters - every admitted path is still named individually, so nothing rides along
         /// unnamed the way the blanket boolean allowed - while a single value only ever
         /// prevented honest work.</para>

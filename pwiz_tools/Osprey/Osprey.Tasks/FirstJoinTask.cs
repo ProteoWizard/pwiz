@@ -570,7 +570,8 @@ namespace pwiz.Osprey.Tasks
             // off the same load for the same reason, and its accumulator is null when the
             // resident twin ran, which leaves the batch report reading perFileEntries.
             LogFirstPassResultsAndDump(perFileEntries, config, ctx, null,
-                bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator);
+                bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator,
+                resumeFromSidecars: true);
             // The accumulator holds the whole run's --model-diagnostics reduction (~1-2 GB
             // at 82 files) and has exactly one reader, the WriteFromAccumulator call the
             // line above just made. It reached here on the published RescoreBundle, whose
@@ -695,7 +696,8 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx,
             FeatureContributions contributions = null,
             IReadOnlyList<PreCompactionTally> preCompactionTallies = null,
-            ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
+            ModelDiagnosticsData.Accumulator mdiagAccumulator = null,
+            bool resumeFromSidecars = false)
         {
             LogFirstPassResults(perFileEntries, config, ctx, preCompactionTallies);
 
@@ -719,11 +721,145 @@ namespace pwiz.Osprey.Tasks
                     ModelDiagnosticsReport.WriteFromAccumulator(
                         mdiagAccumulator, contributions, cal, config, ctx.LogInfo);
                 }
+                else if (resumeFromSidecars)
+                {
+                    // Resume with no accumulator: the upstream hydrate did not stream, so
+                    // perFileEntries is NOT the pre-compaction pool the batch writer needs.
+                    // Rebuild the same reduction by streaming each file's sidecar + parquet
+                    // instead of forcing the O(files) resident pool to exist (issue #4505).
+                    WriteModelDiagnosticsFromSidecars(perFileEntries, cal, config, ctx);
+                }
                 else
                 {
                     var libraryById = ctx.Get<LibraryById>().Value;
                     ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Resume-path <c>--model-diagnostics</c> emission: stream every file's
+        /// <c>.1st-pass.fdr_scores.bin</c> sidecar (SVM score + q-values, in stored row order)
+        /// joined with its parquet scalars (entry_id / charge / is_decoy / modseq, same row
+        /// order) into the reduced <see cref="ModelDiagnosticsData.Accumulator"/>, then render
+        /// via <see cref="ModelDiagnosticsReport.WriteFromAccumulator"/>.
+        ///
+        /// <para>This reproduces the exact rows the resident batch
+        /// <see cref="ModelDiagnosticsReport.Write"/> reads off the fat pool - the sidecar
+        /// carries the SAME per-row score + q the overlay would have assigned each stub - so the
+        /// streamed report is byte-identical to the resident build without ever materializing
+        /// that pool. Contributions are null on a resume (no retrain), matching the resident
+        /// resume path. A failure is logged and swallowed: a diagnostics-only artifact must
+        /// never take down a real run, which is what
+        /// <see cref="ModelDiagnosticsReport.Write"/> and
+        /// <see cref="ModelDiagnosticsReport.WriteFromAccumulator"/> also do.</para>
+        /// </summary>
+        private void WriteModelDiagnosticsFromSidecars(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            ModelDiagnosticsData.CalibrationData cal,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            try
+            {
+                var runNames = perFileEntries.ConvertAll(kv => kv.Key);
+                var libraryById = ctx.Get<LibraryById>().Value;
+                var accumulator = BuildModelDiagnosticsAccumulator(
+                    runNames, libraryById, config, ctx.LogInfo);
+                var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+
+                for (int fileIdx = 0; fileIdx < perFileEntries.Count; fileIdx++)
+                {
+                    string fileName = perFileEntries[fileIdx].Key;
+                    if (perFileParquetPaths == null ||
+                        !perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: no scores parquet path for {0}; skipping its rows.",
+                            fileName));
+                        continue;
+                    }
+                    string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(
+                        fileName, perFileParquetPaths, config);
+                    if (string.IsNullOrEmpty(sidecarBase))
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: no sidecar base path for {0}; skipping its rows.",
+                            fileName));
+                        continue;
+                    }
+                    string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
+
+                    // Row order == parquet row order == the order the score-pass sink wrote
+                    // them, so the two sides zip by row ordinal - the same (scalars indexed by
+                    // row) binding the resident overlay uses. entry_id is carried on both
+                    // sides, so a misalignment fails loud rather than folding wrong rows.
+                    var records = new List<FdrScoreRecord>();
+                    if (!FdrScoresSidecar.ReadRecords(
+                            sidecarPath, FdrScoresSidecar.Pass.FirstPass, records.Add))
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: failed to read {0}; skipping its rows.",
+                            sidecarPath));
+                        continue;
+                    }
+
+                    // Per-file best-effort: an incomplete / mismatched file (sidecar and parquet
+                    // disagree on row count - the realistic "one bad file" case) is skipped with
+                    // a warning BEFORE any of its rows reach the shared accumulator, so one bad
+                    // file corrupts neither the report nor the remaining files. A same-count
+                    // entry_id scramble cannot arise while both sides read the parquet in row
+                    // order, and still trips the defensive throws below. Footer-only read.
+                    long parquetRowCount = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath).RowCount;
+                    if (parquetRowCount != records.Count)
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"[MODEL-DIAGNOSTICS] resume: {0} row-count mismatch (parquet {1} vs sidecar {2}); skipping its rows.",
+                            fileName, parquetRowCount, records.Count));
+                        continue;
+                    }
+
+                    int localFileIdx = fileIdx;
+                    int row = 0;
+                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                        {
+                            if (row >= records.Count)
+                            {
+                                throw new InvalidDataException(string.Format(
+                                    @"model-diagnostics resume: {0} has more parquet rows than {1} has records.",
+                                    parquetPath, sidecarPath));
+                            }
+                            var rec = records[row];
+                            if (rec.EntryId != entryId)
+                            {
+                                throw new InvalidDataException(string.Format(
+                                    @"model-diagnostics resume: row {0} entry_id mismatch (parquet {1} vs sidecar {2}) in {3}.",
+                                    row, entryId, rec.EntryId, fileName));
+                            }
+                            var q = new FdrQValues(
+                                rec.RunPrecursorQvalue, rec.RunPeptideQvalue,
+                                rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue, rec.Pep);
+                            accumulator.Add(localFileIdx, modseq ?? string.Empty, charge, entryId,
+                                isDecoy, rec.Score, in q);
+                            row++;
+                        });
+                    if (row != records.Count)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            @"model-diagnostics resume: {0} has {1} parquet rows but {2} sidecar records.",
+                            fileName, row, records.Count));
+                    }
+                }
+
+                ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null, cal, config, ctx.LogInfo);
+            }
+            catch (Exception ex)
+            {
+                // Log the full exception, not just Message: a sidecar/parquet mismatch is only
+                // diagnosable with the stack.
+                ctx.LogInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] resume report generation failed: {0}", ex));
             }
         }
 

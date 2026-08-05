@@ -58,15 +58,6 @@ namespace pwiz.Osprey.Core
         public static readonly string FDRBENCH_PASS1 = @"fdrbench-pass1";
 
         /// <summary>
-        /// <c>--model-diagnostics</c> on a FULL resume, where the 1st-pass sidecars are already
-        /// on disk so FirstJoin skips its score pass, the streaming accumulator is never fed,
-        /// and the report falls back to the resident batch write. Tracked by issue #4505; the
-        /// scale case was streamed by #4420, and a verified fix for this remainder is parked on
-        /// the closed #4437 branch.
-        /// </summary>
-        public static readonly string MDIAG_FULL_RESUME = @"mdiag-full-resume";
-
-        /// <summary>
         /// A non-Percolator <c>FdrMethod</c> (Simple / Mokapot), which does not use the
         /// projection framework at all. By design rather than unfinished work, but it still
         /// takes the resident path and so must be named to be allowed.
@@ -112,7 +103,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
-            HPC_MERGE, FDRBENCH_PASS1, MDIAG_FULL_RESUME, NON_PERCOLATOR_FDR, PROJECTION_OFF,
+            HPC_MERGE, FDRBENCH_PASS1, NON_PERCOLATOR_FDR, PROJECTION_OFF,
             COMPACTED_ENTRIES_BUFFER
         };
     }

@@ -1100,50 +1100,19 @@ foreach ($name in $selected) {
         $coldBlib = Join-Path $straightDir 'output_cold.blib'
         Copy-Item $straightBlib $coldBlib -Force
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        # Scoped opt-in, and ONLY for this leg. A FULL resume with --model-diagnostics is a
-        # genuinely O(files) path that is not fixed yet: the invalidation leaves every
-        # <stem>.1st-pass.fdr_scores.bin on disk, so FirstJoin skips the first-pass score
-        # pass and emits the report through the batch ModelDiagnosticsReport.Write, which
-        # reads the RESIDENT per-file entries (PerFileScoringTask.cs, needsResidentPool at
-        # the --input-files rehydrate). The guard is therefore RIGHT to throw here, and
-        # suppressing it is the honest thing to do only because these are 3-file datasets.
+        # NO opt-in, on any leg. A full resume with --model-diagnostics used to be a genuinely
+        # O(files) path: the invalidation leaves every <stem>.1st-pass.fdr_scores.bin on disk, so
+        # FirstJoin skipped the first-pass score pass and emitted the report through the batch
+        # ModelDiagnosticsReport.Write, which reads the RESIDENT per-file entries. Issue #4505
+        # streamed that report from the sidecar + parquet instead, so the last leg of this gate
+        # that needed OSPREY_ALLOW_UNFIXED_RESIDENT no longer does - and the standing gate now
+        # runs end to end with no memory hatch set anywhere.
         #
-        # This is NOT the scale case. --model-diagnostics over --input-scores streams the
-        # report off ModelDiagnosticsData.Accumulator one file at a time and needs no opt-in
-        # at any file count. What remains is the full-resume batch report, tracked in #4505;
-        # the fix is to feed the same accumulator during the resume's per-file load and
-        # report from it, and it is already written and verified on the closed #4437 branch.
-        #
-        # mode 3 above deliberately has NO opt-in: its old one wrapped the entire HPC chain
-        # and would mask a guard regression on any --input-scores worker.
-        # Names the ONE path it needs, so what CI depends on is visible rather than ambient.
-        # The former blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 would also have waved through any
-        # OTHER resident path this leg happened to take - which is how a transfer regression
-        # rode along unnoticed. An unlisted path now fails here even with this set.
-        #
-        # ADDS its token to whatever the caller named rather than replacing it, and restores the
-        # original afterwards. Replacing it made the A/B that this gate exists to support
-        # impossible to run: an operator proving the streamed Stage 6 handoff bounded sets
-        # OSPREY_STAGE6_STREAM_SURVIVORS=0 with OSPREY_ALLOW_UNFIXED_RESIDENT=
-        # compacted-entries-buffer, and this line then dropped that token and aborted the leg on
-        # the guard. Appending keeps every admitted path individually named, which is the
-        # property that matters.
-        $priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = if ([string]::IsNullOrWhiteSpace($priorAllowResident)) {
-            'mdiag-full-resume'
-        } else {
-            "$priorAllowResident,mdiag-full-resume"
-        }
-        try {
-            $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-                -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
-        } finally {
-            if ([string]::IsNullOrWhiteSpace($priorAllowResident)) {
-                Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-            } else {
-                $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $priorAllowResident
-            }
-        }
+        # Leaving it unset is the POINT, not an omission: a scoped opt-in here would mask exactly
+        # the regression this leg is best placed to catch, which is how a transfer regression rode
+        # along unnoticed under the former blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1.
+        $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
 

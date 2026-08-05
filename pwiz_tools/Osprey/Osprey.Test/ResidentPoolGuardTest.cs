@@ -91,19 +91,17 @@ namespace pwiz.Osprey.Test
                 allowUnfixedResident: ResidentPaths.HPC_MERGE.ToUpperInvariant(),
                 useFdrProjection: true));
 
-            // Each user-reachable trigger names its own token so the failure is diagnosable:
-            // mdiag arms the pool only in COMBINATION with a full resume, so the caller passes
-            // that conjunction in. Testing config.ModelDiagnostics alone inside the trigger would
-            // make mdiag an unconditional catch-all that absorbed any future arming condition -
-            // and hand it the one token CI already exports (regression.ps1 mode 2).
+            // --model-diagnostics is NO LONGER a trigger (issue #4505): the full-resume report
+            // streams from the 1st-pass sidecar + parquet, so it needs no resident pool and has
+            // no token. mdiag alone was never a trigger either, so the config is refused outright
+            // like any other unnamed path - which is what this asserts, and what stops the
+            // removed trigger from creeping back as an unconditional catch-all.
             var mdiag = new OspreyConfig { ModelDiagnostics = true };
-            StringAssert.Contains(
-                PerFileScoringTask.ResidentPoolGuardError(mdiag, true, null, true,
-                    mdiagFullResume: true),
-                ResidentPaths.MDIAG_FULL_RESUME);
-            // --model-diagnostics WITHOUT the full resume is not a known path: refused outright.
-            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(mdiag, true,
-                ResidentPaths.MDIAG_FULL_RESUME, true, mdiagFullResume: false));
+            foreach (string token in new[] { null, ResidentPaths.HPC_MERGE, "mdiag-full-resume" })
+            {
+                Assert.IsNotNull(
+                    PerFileScoringTask.ResidentPoolGuardError(mdiag, true, token, true), token);
+            }
 
             var fdrbench1 = new OspreyConfig { OutputFdrBench = "bench.tsv", FdrBenchPass = 1 };
             StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, true, null, true),
@@ -134,7 +132,7 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(
                 new[]
                 {
-                    "hpc-merge", "fdrbench-pass1", "mdiag-full-resume", "non-percolator-fdr",
+                    "hpc-merge", "fdrbench-pass1", "non-percolator-fdr",
                     "projection-off", "compacted-entries-buffer"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
@@ -219,19 +217,18 @@ namespace pwiz.Osprey.Test
             // mdiag-full-resume while the arm under test needs compacted-entries-buffer, so the
             // A/B that proves this very change bounded aborted on its own guard. Both guards
             // read the list, and every admitted path is still named individually.
-            string both = ResidentPaths.MDIAG_FULL_RESUME + "," +
+            string both = ResidentPaths.HPC_MERGE + "," +
                           ResidentPaths.COMPACTED_ENTRIES_BUFFER;
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, both));
-            var mdiagCfg = new OspreyConfig { ModelDiagnostics = true };
-            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(mdiagCfg, true, both, true,
-                mdiagFullResume: true));
+            var hpcCfg = new OspreyConfig { ExpectReconciledInput = true };
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(hpcCfg, true, both, true));
             // Separators are interchangeable and surrounding whitespace is tolerated - an
             // operator composing the value in a shell should not have to match a spelling.
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
                 true, false, " projection-off ; compacted-entries-buffer "));
             // A list still admits ONLY what it names: an unnamed path is refused as before.
             Assert.IsNotNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, ResidentPaths.MDIAG_FULL_RESUME + "," + ResidentPaths.HPC_MERGE));
+                true, false, ResidentPaths.PROJECTION_OFF + "," + ResidentPaths.HPC_MERGE));
         }
     }
 }

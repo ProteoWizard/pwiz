@@ -647,9 +647,17 @@ namespace pwiz.Osprey.Tasks
             // so the fat pool is never on the row-count scaling path. The full elimination (stream
             // the batch report from the sidecar+parquet too) is a documented follow-up.
             // See TODO-20260720_osprey_pass2_per_run_qvalue.
-            bool mdiagFullResume = config.ModelDiagnostics && FirstPassSidecarsPresent(config);
-            bool needsResidentPool = NeedsResidentPool(config) || mdiagFullResume;
-            GuardResidentPool(config, needsResidentPool, mdiagFullResume);
+            // --model-diagnostics no longer forces the fat pool (issue #4505). A resume with the
+            // 1st-pass sidecars ABSENT re-runs FirstPassFDR and streams the report off its score
+            // pass, exactly like a compute run. A resume with them PRESENT now emits the report
+            // by streaming each file's sidecar + parquet into the same
+            // ModelDiagnosticsData.Accumulator (FirstJoinTask.WriteModelDiagnosticsFromSidecars)
+            // rather than reading the resident pre-compaction pool. Either way the report is the
+            // same reduction, and the O(files) pool that OOM'd an 82-file mdiag resume is never
+            // materialized - so mdiag now takes the same lean resume path every OTHER resume
+            // already took, rather than being the one exception to it.
+            bool needsResidentPool = NeedsResidentPool(config);
+            GuardResidentPool(config, needsResidentPool);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -1895,31 +1903,7 @@ namespace pwiz.Osprey.Tasks
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
         }
 
-        /// <summary>
-        /// True when every input file already has its <c>.1st-pass.fdr_scores.bin</c> sidecar on
-        /// disk, so FirstJoin will REHYDRATE first-pass FDR (skip its score pass) rather than
-        /// recompute. Under <c>--model-diagnostics</c> that skip routes the report to the batch
-        /// <c>ModelDiagnosticsReport.Write</c>, which reads the RESIDENT per-file entries -- the
-        /// one case a resume still needs the fat pool. A Stage-1-4 (<c>-LinkFrom</c>) resume links
-        /// only the Stage-4 <c>.scores.parquet</c>, so the 1st-pass sidecars are ABSENT, FirstPassFDR
-        /// re-runs, and its score pass streams the report -- no resident pool needed. Absent sidecars
-        /// therefore mean "stay lean" (correct); present sidecars mean "keep fat" (conservative,
-        /// matching the batch-write path). Mirrors <see cref="FdrScoresSidecar.Pass1Path"/> as used by
-        /// <c>FirstJoinTask</c>'s rehydrate-output enumeration.
-        /// </summary>
-        private static bool FirstPassSidecarsPresent(OspreyConfig config)
-        {
-            if (config.InputFiles == null || config.InputFiles.Count == 0)
-                return false;
-            foreach (var inputFile in config.InputFiles)
-            {
-                if (!File.Exists(FdrScoresSidecar.Pass1Path(inputFile)))
-                    return false;
-            }
-            return true;
-        }
-
-        /// <summary>
+                /// <summary>
         /// Fail fast when a run would build the RESIDENT first-pass pool -- an O(files) memory
         /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstJoin.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
@@ -1932,11 +1916,10 @@ namespace pwiz.Osprey.Tasks
         /// outright and so must be named like any other.
         /// </summary>
         private static void GuardResidentPool(
-            OspreyConfig config, bool needsResidentPool, bool mdiagFullResume = false)
+            OspreyConfig config, bool needsResidentPool)
         {
             string error = ResidentPoolGuardError(config, needsResidentPool,
-                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection,
-                mdiagFullResume);
+                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection);
             if (error != null)
                 throw new InvalidOperationException(error);
         }
@@ -1958,11 +1941,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static string ResidentPoolGuardError(
             OspreyConfig config, bool needsResidentPool, string allowUnfixedResident,
-            bool useFdrProjection, bool mdiagFullResume = false)
+            bool useFdrProjection)
         {
             if (!needsResidentPool)
                 return null;
-            string trigger = ResidentPoolTrigger(config, useFdrProjection, mdiagFullResume);
+            string trigger = ResidentPoolTrigger(config, useFdrProjection);
             // Membership in the committed list is what makes it the high-water mark rather than
             // documentation: a token the trigger chain invents but the list does not carry is
             // refused here, so re-admitting a path really does require editing the list (and
@@ -2051,14 +2034,14 @@ namespace pwiz.Osprey.Tasks
         /// config-driven reasons, because it selects the legacy implementation for the WHOLE run
         /// and is therefore the honest description even when another trigger also applies.</para>
         ///
-        /// <para><paramref name="mdiagFullResume"/> is passed in rather than read off
-        /// <paramref name="config"/>: <c>--model-diagnostics</c> forces the pool only in
-        /// combination with a full resume, and testing <c>config.ModelDiagnostics</c> alone here
-        /// would make mdiag an unconditional catch-all that silently absorbed any FUTURE arming
-        /// condition - handing it a token CI already exports.</para>
+        /// <para><c>--model-diagnostics</c> used to appear here as a fifth trigger, armed only in
+        /// combination with a full resume. Issue #4505 removed it: the resume report now streams
+        /// from the 1st-pass sidecar + parquet, so mdiag no longer needs the pool at all and the
+        /// token went with it. That is the ratchet SHRINKING, which is the direction it is
+        /// allowed to move.</para>
         /// </summary>
         private static string ResidentPoolTrigger(
-            OspreyConfig config, bool useFdrProjection, bool mdiagFullResume)
+            OspreyConfig config, bool useFdrProjection)
         {
             if (!useFdrProjection)
                 return ResidentPaths.PROJECTION_OFF;
@@ -2068,8 +2051,6 @@ namespace pwiz.Osprey.Tasks
                 return ResidentPaths.NON_PERCOLATOR_FDR;
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
                 return ResidentPaths.FDRBENCH_PASS1;
-            if (mdiagFullResume)
-                return ResidentPaths.MDIAG_FULL_RESUME;
             return null;
         }
 
