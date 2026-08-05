@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
@@ -260,6 +262,60 @@ namespace pwiz.Osprey.Tasks
                 return Path.Combine(parent, fileName + ".mzML");
             }
             return null;
+        }
+
+        /// <summary>
+        /// Reduce off one file's PRE-compaction stub pool everything a rehydrate used to
+        /// read off the resident all-files pool. Only the run-level FDR passing-target count
+        /// is needed: FirstJoin's Stage 5 result line reports it per file, and the streaming
+        /// hydrate has already dropped the non-survivors by the time that line is written.
+        /// Identical predicate to <c>FirstJoinTask.LogFirstPassResults</c>.
+        ///
+        /// <para>Shared by both callers of
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> -- the
+        /// <c>--task PerFileRescoring</c> worker load in <see cref="PerFileScoringTask"/>
+        /// and the straight-through resume in <see cref="FirstJoinTask"/> - so the two
+        /// cannot drift into reporting per-file counts under different predicates. NOT the
+        /// <c>--task SecondPassFDR</c> merge: that sets <c>ExpectReconciledInput</c>, the
+        /// first branch of <c>PreCompactionPoolReason</c>, so it always takes the resident
+        /// batch twin and is still O(files) (issue #4486).</para>
+        /// </summary>
+        internal static void TallyPreCompaction(
+            OspreyConfig config, List<FdrEntry> stubs, PreCompactionTally tally)
+        {
+            int passing = 0;
+            foreach (var entry in stubs)
+            {
+                if (!entry.IsDecoy && entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                    passing++;
+            }
+            tally.PassingTargets = passing;
+        }
+
+        /// <summary>
+        /// Fold one file's PRE-compaction stubs into the <c>--model-diagnostics</c> report
+        /// accumulator, handing it exactly the scalars the batch
+        /// <c>ModelDiagnosticsData.Build</c> reads off each <see cref="FdrEntry"/> - identity,
+        /// is_decoy, SVM score, and the four first-pass q-values the
+        /// <c>.1st-pass.fdr_scores.bin</c> overlay has just written onto these stubs. Rows
+        /// arrive here in the same nested (file, row) order the batch build walks (input-file
+        /// order, parquet row order within a file), which is what makes the streamed
+        /// reductions reproduce the resident ones element for element.
+        ///
+        /// <para>Shared by the same two hydrate callers as
+        /// <see cref="TallyPreCompaction"/>: the report must be identical whether the
+        /// pre-compaction rows passed through the worker load or a resume's.</para>
+        /// </summary>
+        internal static void FeedModelDiagnostics(
+            ModelDiagnosticsData.Accumulator accumulator, int fileIdx, List<FdrEntry> stubs)
+        {
+            foreach (var entry in stubs)
+            {
+                accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
+                    entry.IsDecoy, entry.Score,
+                    new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
+            }
         }
     }
 }
