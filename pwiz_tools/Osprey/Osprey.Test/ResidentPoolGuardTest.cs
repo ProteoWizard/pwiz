@@ -135,9 +135,15 @@ namespace pwiz.Osprey.Test
                 new[]
                 {
                     "hpc-merge", "fdrbench-pass1", "mdiag-full-resume", "non-percolator-fdr",
-                    "projection-off"
+                    "projection-off", "compacted-entries-buffer"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
+
+            // The POST-compaction handoff guard (issue #4526). The guard above stops at the
+            // compaction line, so the all-files survivor buffer Stage 5 hands to Stage 6 - 28 GB
+            // at 163 files, live for the whole rescore - was never named and no token could
+            // refuse it. Streaming it is the default; the resident opt-out is a named path.
+            AssertStage6HandoffGuard();
 
             // The trigger SET itself, not just the message it produces. Each of these takes the
             // O(files) resident pool and so arms the guard above.
@@ -165,6 +171,67 @@ namespace pwiz.Osprey.Test
         {
             Assert.AreEqual(expected,
                 PerFileScoringTask.NeedsResidentPool(config, useFdrProjection: true));
+        }
+
+        /// <summary>
+        /// The Stage 6 post-compaction handoff guard: streaming (the default) is never guarded,
+        /// the resident opt-out is refused unless it is named, and a run that could not stream
+        /// in the first place is not asked for a second token on top of the one its own
+        /// resident path already requires.
+        /// </summary>
+        private static void AssertStage6HandoffGuard()
+        {
+            // Streaming: no error, whatever the token says.
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                streamingAvailable: true, streamingEnabled: true, allowUnfixedResident: null));
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, true, ResidentPaths.HPC_MERGE));
+
+            // OSPREY_STAGE6_STREAM_SURVIVORS=0 on a run that COULD stream: refused, and the
+            // message names the token to set rather than describing a symptom.
+            string err = PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, null);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err,
+                "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.COMPACTED_ENTRIES_BUFFER);
+
+            // Naming THIS path admits it - that is the A/B byte-identity oracle. Case-
+            // insensitive, matching the pre-compaction guard.
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, false, ResidentPaths.COMPACTED_ENTRIES_BUFFER));
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, false, ResidentPaths.COMPACTED_ENTRIES_BUFFER.ToUpperInvariant()));
+
+            // Naming a DIFFERENT path does not, and the message says which value was supplied
+            // so a stale token does not read like an unset one.
+            string wrongToken = PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, false, ResidentPaths.PROJECTION_OFF);
+            Assert.IsNotNull(wrongToken);
+            StringAssert.Contains(wrongToken, ResidentPaths.PROJECTION_OFF);
+
+            // A run that cannot stream at all (no per-file survivor source: the legacy resident
+            // and rehydrate paths never compute the passing base_id set) is NOT guarded here.
+            // It is already resident for a reason carrying its own token, and demanding a
+            // second one would make a single decision need two environment variables.
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(false, false, null));
+
+            // SEVERAL paths may be named at once. A run can legitimately trip more than one,
+            // and a single-value variable made that run impossible: regression.ps1 mode 2 needs
+            // mdiag-full-resume while the arm under test needs compacted-entries-buffer, so the
+            // A/B that proves this very change bounded aborted on its own guard. Both guards
+            // read the list, and every admitted path is still named individually.
+            string both = ResidentPaths.MDIAG_FULL_RESUME + "," +
+                          ResidentPaths.COMPACTED_ENTRIES_BUFFER;
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, both));
+            var mdiagCfg = new OspreyConfig { ModelDiagnostics = true };
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(mdiagCfg, true, both, true,
+                mdiagFullResume: true));
+            // Separators are interchangeable and surrounding whitespace is tolerated - an
+            // operator composing the value in a shell should not have to match a spelling.
+            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, false, " projection-off ; compacted-entries-buffer "));
+            // A list still admits ONLY what it names: an unnamed path is refused as before.
+            Assert.IsNotNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                true, false, ResidentPaths.MDIAG_FULL_RESUME + "," + ResidentPaths.HPC_MERGE));
         }
     }
 }
