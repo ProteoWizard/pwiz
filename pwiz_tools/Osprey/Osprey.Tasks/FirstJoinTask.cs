@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -125,6 +125,11 @@ namespace pwiz.Osprey.Tasks
         // reconciled + rescored + reported). Null unless OSPREY_PASS2_QVALUE=protein-compact.
         private HashSet<uint> _proteinCompactStratum;
 
+        /// <summary>The post-compaction surviving base_ids, kept from the projection path so the
+        /// Stage 5 -> 6 boundary can release the library fragments nothing can score any more.
+        /// Null on every other path, which simply skips the release.</summary>
+        private HashSet<uint> _firstPassBaseIds;
+
         // Rebuilds any one file's survivors from its .scores.parquet + finalized
         // 1st-pass sidecar, so a per-file consumer never needs the all-files buffer
         // (issue #4526). Set on the projection path, which is the only one that
@@ -213,7 +218,8 @@ namespace pwiz.Osprey.Tasks
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix();
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.ReleaseLibraryFragmentsValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)
@@ -517,6 +523,7 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new ReconciliationActions(_reconciliationActions));
             ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+            ReleaseUnscorableLibraryFragments(fullLibrary, ctx);
             ctx.Publish(new CompactedEntries(perFileEntries));
             // Null off the projection path (legacy resident / rehydrate), where a
             // consumer falls back to the buffer above.
@@ -1706,6 +1713,41 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Stage 5 -> 6 boundary: drop <c>Fragments</c> from every library entry that nothing
+        /// downstream can score or write, keeping the identity fields on all of them. See
+        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and the
+        /// safety argument.
+        ///
+        /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
+        /// already pair-symmetric so a target's decoy rides along) PLUS the gap-fill candidates.
+        /// Gap-fill has to be in it: <c>GapFillTargetIdentifier</c> looks up the MISSING charge
+        /// states of passing peptides through the library, so by construction it reaches
+        /// entries that did NOT survive compaction and still needs their spectra.</para>
+        ///
+        /// <para>Skipped when <c>_firstPassBaseIds</c> is null - the resident and rehydrate
+        /// paths do not surface the surviving set here, and at scale the production route is
+        /// the projection path anyway. Also skipped whenever any diagnostic dump is enabled,
+        /// because the <c>-d</c> dumps read fragments for entries chosen by their own criteria
+        /// rather than by what the pipeline still needs.</para>
+        /// </summary>
+        private void ReleaseUnscorableLibraryFragments(List<LibraryEntry> fullLibrary, PipelineContext ctx)
+        {
+            if (!OspreyEnvironment.ReleaseLibraryFragments || _firstPassBaseIds == null ||
+                fullLibrary == null || ctx.Diagnostics != null)
+            {
+                return;
+            }
+
+            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
+                _firstPassBaseIds, _perFileGapFillForRescore);
+            int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
+            ctx.LogInfo(string.Format(
+                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
+                released, fullLibrary.Count, retained.Count));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after library-fragment release");
+        }
+
+        /// <summary>
         /// Build the protein-compact stratum: the base_ids of every library precursor whose
         /// peptide maps to a protein detected in the 1st pass by &gt;=2 DISTINCT peptides (the
         /// honest multi-hit anchor -- single-hit proteins break the independent-filtering
@@ -1999,6 +2041,7 @@ namespace pwiz.Osprey.Tasks
                 projections, perFileParquetPaths, config, ctx, _proteinCompactStratum);
             if (firstPassBaseIds == null)
                 return null;  // streaming sidecar read fault; ExitCode already set
+            _firstPassBaseIds = firstPassBaseIds;
 
             // Reload full FdrEntry survivors from the ORIGINAL parquet + the
             // just-written 1st-pass sidecar. ParquetIndex therefore comes from

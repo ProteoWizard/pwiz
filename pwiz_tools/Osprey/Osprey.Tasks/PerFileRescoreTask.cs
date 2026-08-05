@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -197,7 +197,8 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
-                + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix();
+                + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
+                + OspreyEnvironment.ReleaseLibraryFragmentsValidityKeySuffix();
         }
 
         public override bool Run(PipelineContext ctx)
