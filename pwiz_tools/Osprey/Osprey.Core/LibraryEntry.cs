@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace pwiz.Osprey.Core
@@ -41,6 +42,27 @@ namespace pwiz.Osprey.Core
         /// Maps to Rust <c>osprey_core::types::DECOY_ID_BIT</c>.
         /// </summary>
         public const uint DECOY_ID_BIT = 0x80000000u;
+
+        /// <summary>
+        /// The shared value <see cref="Fragments"/> is set to when its spectra have been
+        /// released (issue #4532) - the counterpart of the <c>Array.Empty</c> the constructor
+        /// assigns, for entries whose fragments were dropped rather than never present.
+        /// One instance for the whole process, so releasing costs nothing per entry.
+        ///
+        /// <para>It THROWS on every access, and that is the point. Both obvious sentinels are
+        /// silent: every scorer guards with
+        /// <c>if (entry.Fragments == null || entry.Fragments.Count == 0)</c>, so a null and an
+        /// empty list are equally absorbed as "this entry has no spectrum" - and an entry whose
+        /// spectra were released, but which something still wanted, would score a degenerate
+        /// zero instead of failing. Fragments are released only where nothing is believed to
+        /// read them; this makes a wrong belief loud rather than quiet, by turning that same
+        /// guard expression into a tripwire (the null test short-circuits false, then
+        /// <c>Count</c> throws).</para>
+        ///
+        /// <para>Test membership with <c>ReferenceEquals(entry.Fragments,
+        /// LibraryEntry.RELEASED)</c> - reading <c>Count</c> to detect it would throw.</para>
+        /// </summary>
+        public static readonly IReadOnlyList<LibraryFragment> RELEASED = new ReleasedFragmentList();
 
         public uint Id { get; set; }
         public string Sequence { get; set; }
@@ -115,6 +137,38 @@ namespace pwiz.Osprey.Core
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Backing type of <see cref="RELEASED"/>: a zero-state list that throws on every
+        /// access. Private and instantiated exactly once - callers only ever see the singleton
+        /// through <see cref="RELEASED"/>, so there is no way to create a second one or to
+        /// mistake it for an ordinary empty list.
+        /// </summary>
+        private sealed class ReleasedFragmentList : IReadOnlyList<LibraryFragment>
+        {
+            public int Count => throw Released();
+
+            public LibraryFragment this[int index] => throw Released();
+
+            public IEnumerator<LibraryFragment> GetEnumerator()
+            {
+                throw Released();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                throw Released();
+            }
+
+            private static InvalidOperationException Released()
+            {
+                return new InvalidOperationException(
+                    @"These library fragments were released after Stage 5 because the entry is " +
+                    @"neither a compaction survivor nor a gap-fill candidate, so nothing should " +
+                    @"score or write it. Reaching them means the retained set is wrong. Set " +
+                    @"OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to keep the whole library resident.");
+            }
         }
     }
 }

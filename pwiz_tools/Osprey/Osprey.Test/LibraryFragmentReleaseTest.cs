@@ -156,6 +156,7 @@ namespace pwiz.Osprey.Test
         private static void AssertReleased(LibraryEntry e)
         {
             Assert.IsNotNull(e.Fragments, @"a null would be silently absorbed by every scorer guard");
+            Assert.AreSame(LibraryEntry.RELEASED, e.Fragments);
             Assert.ThrowsException<InvalidOperationException>(() => _ = e.Fragments.Count);
             Assert.ThrowsException<InvalidOperationException>(() => _ = e.Fragments[0]);
             Assert.ThrowsException<InvalidOperationException>(() =>
