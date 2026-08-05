@@ -1008,7 +1008,14 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override bool IsRecordMode => false;
-        private bool RedownloadTools => !IsRecordMode && IsPass0;
+
+        /// <summary>
+        /// Whether to throw away the downloaded tools first, so that the download and install path gets
+        /// tested too. Not when running as a parallel test client: the downloaded archives live in a
+        /// cache directory shared by every client, so deleting them pulls the file out from under
+        /// whichever other client happens to be installing from it at the time.
+        /// </summary>
+        private bool RedownloadTools => !IsRecordMode && IsPass0 && !IsParallelClient;
 
         private string GetTestPath(string path)
         {

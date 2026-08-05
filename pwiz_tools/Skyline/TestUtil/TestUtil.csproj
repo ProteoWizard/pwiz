@@ -47,6 +47,7 @@
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
     <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
     <ProjectReference Include="..\Skyline.csproj" />
+    <ProjectReference Include="..\SkylineTool\SkylineTool.csproj" />
     <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj" />
   </ItemGroup>
 

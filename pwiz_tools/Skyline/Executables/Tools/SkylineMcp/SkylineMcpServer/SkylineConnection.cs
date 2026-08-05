@@ -21,10 +21,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using SkylineTool;
 
 namespace SkylineMcpServer;
@@ -82,7 +82,10 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public TutorialListItem[] GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
     public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null) { return CallClient(c => c.GetReportDocTopics(dataSource)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
+    public int ModalNestingCount() { return CallClient(c => c.ModalNestingCount()); }
     public FormInfo[] GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
+    public ControlInfo[] GetControls(string formId) { return CallClient(c => c.GetControls(formId)); }
+    public object PerformAction(UiElementPath path, string action, object value) { return CallClient(c => c.PerformAction(path, action, value)); }
     public string GetUiMode() { return CallClient(c => c.GetUiMode()); }
     public UndoRedoEntry[] GetUndoRedo() { return CallClient(c => c.GetUndoRedo()); }
 
@@ -96,14 +99,19 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void AddReportFromDefinition(ReportDefinition definition) { CallClientVoid(c => c.AddReportFromDefinition(definition)); }
     public void ReorderElements(string[] elementLocators) { CallClientVoid(c => c.ReorderElements(elementLocators)); }
     public void InsertSmallMoleculeTransitionList(string textCsv) { CallClientVoid(c => c.InsertSmallMoleculeTransitionList(textCsv)); }
-    public void ImportProperties(string csvText) { CallClientVoid(c => c.ImportProperties(csvText)); }
+    public ActionResult ImportProperties(string csvText) { return CallClient(c => c.ImportProperties(csvText)); }
     public void SetReplicate(string replicateName) { CallClientVoid(c => c.SetReplicate(replicateName)); }
     public void SetUiMode(string mode) { CallClientVoid(c => c.SetUiMode(mode)); }
     public void SetUndoRedoPosition(int index) { CallClientVoid(c => c.SetUndoRedoPosition(index)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
+    public ActionResult ClickMainMenuItem(string menuPath) { return CallClient(c => c.ClickMainMenuItem(menuPath)); }
+    public ActionResult DismissWithAcceptButton(string formId) { return CallClient(c => c.DismissWithAcceptButton(formId)); }
+    public ActionResult DismissWithCancelButton(string formId) { return CallClient(c => c.DismissWithCancelButton(formId)); }
+    public ActionResult DismissWithButton(string formId, string button) { return CallClient(c => c.DismissWithButton(formId, button)); }
 
     // 2-arg methods
+    public ActionResult ClickControlMenuItem(string formId, string control, string menuPath) { return CallClient(c => c.ClickControlMenuItem(formId, control, menuPath)); }
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
@@ -112,8 +120,10 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
     public ImageBytesMetadata GetFormImageBytes(string formId) { return CallClient(c => c.GetFormImageBytes(formId)); }
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
-    public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
-    public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
+    public ActionResult SelectSettingsListItems(string listType, string[] itemNames) { return CallClient(c => c.SelectSettingsListItems(listType, itemNames)); }
+    public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null) { return CallClient(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
+    public ActionResult ClickFormButton(string formId, string button) { return CallClient(c => c.ClickFormButton(formId, button)); }
+    public string GetGridText(string formId, string gridId) { return CallClient(c => c.GetGridText(formId, gridId)); }
 
     // 3-arg methods
     public ReportMetadata ExportReport(string reportName, string filePath, string culture) { return CallClient(c => c.ExportReport(reportName, filePath, culture)); }
@@ -121,6 +131,11 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorial(name, language, filePath)); }
     public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
     public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en") { return CallClient(c => c.GetTutorialImageBytes(name, imageFilename, language)); }
+    public ActionResult SetFormValue(string formId, string controlId, string value) { return CallClient(c => c.SetFormValue(formId, controlId, value)); }
+    public string GetFormValue(string formId, string controlId) { return CallClient(c => c.GetFormValue(formId, controlId)); }
+    public string[] GetOptions(string formId, string controlId) { return CallClient(c => c.GetOptions(formId, controlId)); }
+    public ActionResult SetGridText(string formId, string controlId, string text) { return CallClient(c => c.SetGridText(formId, controlId, text)); }
+    public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row) { return CallClient(c => c.SetCurrentCellAddress(formId, controlId, column, row)); }
 
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }
@@ -135,6 +150,17 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ReportRowsResult GetReportRows(string reportName, int offset, int count, string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)
     {
         return CallClient(c => c.GetReportRows(reportName, offset, count, columns, filter, includeMaxLength, culture));
+    }
+
+    /// <summary>
+    /// Abandons a call that has waited too long: cancelling the response read releases the pipe handle so that
+    /// disposing this connection really does disconnect, which is what tells Skyline to stop waiting. See
+    /// <see cref="SkylineJsonToolClient.CancellationToken"/>.
+    /// </summary>
+    public CancellationToken CancellationToken
+    {
+        get => _client.CancellationToken;
+        set => _client.CancellationToken = value;
     }
 
     /// <summary>
@@ -259,23 +285,21 @@ public class SkylineConnection : IJsonToolService, IDisposable
 
     private static (SkylineConnection Connection, string Error) TryConnectToInstance(ConnectionInfo info)
     {
-        var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut);
+        // Connect opens the pipe for overlapped I/O, which is what lets a call that has run too long be abandoned:
+        // cancelling the read releases the pipe handle, so disposing the connection actually disconnects it -- and
+        // Skyline, seeing the disconnect, abandons the call. It also disposes the pipe if connecting fails.
         try
         {
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-            var client = new SkylineJsonToolClient(pipe);
+            var client = SkylineJsonToolClient.Connect(info.PipeName);
             return (new SkylineConnection(client) { SkylineVersion = info.SkylineVersion }, null);
         }
         catch (TimeoutException)
         {
-            pipe.Dispose();
             return (null, "Skyline is not responding. " +
                           "It may be busy processing data or showing a dialog. Try again in a moment.");
         }
         catch (IOException)
         {
-            pipe.Dispose();
             return (null, null); // Connection failed silently - try next
         }
     }

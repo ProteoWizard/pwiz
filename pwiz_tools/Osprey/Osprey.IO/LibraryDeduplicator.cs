@@ -47,8 +47,16 @@ namespace pwiz.Osprey.IO
             // Group entries by (modified_sequence, charge)
             var groups = new Dictionary<string, List<LibraryEntry>>();
 
+            // Silent between the parse and "Loaded N library entries" - a full group-by over
+            // every entry (6.3M on the entrapment library). Not `using`d: no re-indent, and no
+            // completed-looking 100% if this throws.
+            var progress = new ProgressReporter(@"Deduplicating library entries", entries.Count,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            long nGrouped = 0;
+
             foreach (var entry in entries)
             {
+                progress.Report(++nGrouped);
                 string key = entry.ModifiedSequence + "\t" + entry.Charge;
                 List<LibraryEntry> group;
                 if (!groups.TryGetValue(key, out group))
@@ -138,6 +146,7 @@ namespace pwiz.Osprey.IO
             for (int i = 0; i < deduped.Count; i++)
                 deduped[i].Id = (uint)i;
 
+            progress.Dispose();
             return deduped;
         }
     }

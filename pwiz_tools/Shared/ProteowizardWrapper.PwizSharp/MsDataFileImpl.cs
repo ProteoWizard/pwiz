@@ -2073,6 +2073,15 @@ namespace pwiz.ProteowizardWrapper
             CVParam param = scans[0].CvParam(CVID.MS_scan_start_time);
             if (param.IsEmpty)
                 return null;
+            // A value already recorded in minutes is returned as recorded.
+            // TimeInSeconds()/60 is NOT an identity in floating point - it
+            // multiplies by 60 and divides again - so it silently perturbs most
+            // retention times by an ULP: 0.5903117 becomes 0.5903116999999999.
+            // Every vendor reader that sets scan start time in UO_minute (Thermo
+            // among them) was affected, which made a direct raw read disagree
+            // with the mzML converted from that same raw file.
+            if (param.Units == CVID.UO_minute)
+                return param.ValueAs<double>();
             return param.TimeInSeconds() / 60;
         }
 

@@ -153,6 +153,13 @@ namespace TestRunnerLib
         public bool IsParallelClient { get; private set; }
         public string ParallelClientId { get; private set; }
 
+        /// <summary>
+        /// TestContext property whose mere presence marks this process as a parallel test client.
+        /// Shared so that the tests reading it cannot drift from the name written here - they silently
+        /// always read false when they do.
+        /// </summary>
+        public const string PARALLEL_TEST_PROPERTY = "ParallelTest";
+
         // dotMemory snapshot configuration - set DotMemoryWarmupRuns > 0 to enable
         // When running under dotMemory profiler, snapshots will be taken:
         //   1. After DotMemoryWarmupRuns iterations (always)
@@ -248,7 +255,7 @@ namespace TestRunnerLib
 
             if (isParallelClient)
             {
-                TestContext.Properties["ParallelTest"] = string.Empty; // Just the presence of the key is the flag
+                TestContext.Properties[PARALLEL_TEST_PROPERTY] = string.Empty; // Just the presence of the key is the flag
             }
 
             // Set Skyline state for unit testing.
@@ -783,6 +790,7 @@ namespace TestRunnerLib
         private List<string> CleanUpTestDir(string tmpTestDir, bool final)
         {
             CleanupMSAmandaTmpFiles();  // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
+            CleanupShellExtensionTmpFiles(tmpTestDir);
             var abandonedFilesList = new List<string>();
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
@@ -799,6 +807,26 @@ namespace TestRunnerLib
             }
 
             return abandonedFilesList;
+        }
+
+        /// <summary>
+        /// The native OpenFileDialog can leave these files in the temp folder. Delete them rather than
+        /// exempt them from the check below, so that a file we cannot delete fails the test saying so.
+        /// </summary>
+        private static void CleanupShellExtensionTmpFiles(string tmpTestDir)
+        {
+            if (string.IsNullOrEmpty(tmpTestDir))
+            {
+                return;
+            }
+            foreach (var fileName in new[] { @"OptaneIconOverlay.ico" })
+            {
+                var filePath = Path.Combine(tmpTestDir, fileName);
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
         }
 
         private void CleanupAbandonedFiles(string dir, bool recreateDirAfterClean, List<string> abandonedFilesList)
@@ -1496,8 +1524,9 @@ namespace TestRunnerLib
 
         public static void KillParallelWorkers(int hostWorkerPid, string workerNames = null)
         {
-            workerNames ??= string.Join(" ", GetDockerWorkerNames());
-
+            // Kill the host worker before asking docker for anything. Listing the containers shells out
+            // to docker, which throws if it is absent or wedged, and that must not be what stops the
+            // host worker from being killed.
             try
             {
                 if (hostWorkerPid > 0)
@@ -1508,8 +1537,11 @@ namespace TestRunnerLib
                 Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
             }
 
-            Console.WriteLine(@"Sending docker kill command to all workers.");
-            Console.WriteLine(@$"docker kill {workerNames}");
+            workerNames ??= string.Join(" ", GetDockerWorkerNames());
+            if (string.IsNullOrEmpty(workerNames))
+                return; // No containers to kill
+
+            Console.WriteLine(@$"Sending docker kill command to: {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;

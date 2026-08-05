@@ -1,0 +1,162 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../../Tutorials/shared/SkylineStyles.css">
+    <script src="../../../Tutorials/shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Spectrum-Centric Analysis of DIA Datasets</h1>
+    <p>
+        In this tutorial you will inspect the results of an untargeted, spectrum-centric analysis of a data independent acquisition (DIA)
+        dataset. The samples come from a study comparing the plasma proteomes of older and younger healthy individuals: pooled plasma from
+        five old and five young participants, digested with the ENRICH-iST kit, and analyzed on an Orbitrap Astral with 2-Da isolation windows
+        over 380 to 980 <i>m/z</i>.
+    </p>
+    <p>
+        The search itself is performed outside Skyline, in FragPipe: MSFragger identifies multiple peptides in each chimeric spectrum,
+        Percolator validates the identifications, and DIA-NN quantifies the peptides. Since version 22.0, FragPipe can write a Skyline document
+        as one of its outputs, and that is where this tutorial picks up. You will:
+    </p>
+    <ul>
+        <li>
+            <b>Open the Skyline document FragPipe produced.</b> It contains every protein and peptide the search identified, together with the
+            chromatograms extracted from the ten runs.
+        </li>
+        <li>
+            <b>Find a peptide and inspect its signal across the samples.</b> You will look at the peak areas of one peptide in all ten
+            replicates and ask where it was identified and where the signal is strong.
+        </li>
+        <li>
+            <b>Look for peptides that behave strangely.</b> Not every peptide looks the same in every sample, and the peak areas are the
+            quickest way to see it.
+        </li>
+    </ul>
+    <p>
+        This tutorial covers only the Skyline portion of Skyline Webinar 26, &ldquo;DIA with FragPipe, DIA-NN and Skyline&rdquo;. The FragPipe
+        and DIA-NN sections of the webinar, which produce the document you open here, are covered in the webinar materials.
+    </p>
+
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file:
+    </p>
+    <p>
+        <a href="https://skyline.ms/webinars/Webinar26_data/Webinar26.zip">https://skyline.ms/webinars/Webinar26_data/Webinar26.zip</a>
+    </p>
+    <p>
+        Note that this file is large (about 4 GB), because it contains the ten Astral DIA runs. Extract the files to a folder on your computer,
+        like:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents
+    </p>
+    <p>
+        This will create a new folder:
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\Webinar26
+    </p>
+    <p>
+        Since this tutorial covers a proteomics topic, ensure that the user interface is set to the &ldquo;Proteomics interface&rdquo;. Click the
+        user interface button in the upper right-hand corner of the Skyline toolbar and select <b>Proteomics interface</b> which looks like this:
+    </p>
+    <p>
+        <img src="../../../Tutorials/shared/en/proteomics-interface.png" />
+    </p>
+    <p>
+        Skyline is operating in proteomics mode, which is displayed by the protein icon in the upper right-hand corner of Skyline.
+    </p>
+
+    <h1>Step 1. Open the Document FragPipe Produced</h1>
+    <p>
+        FragPipe wrote a Skyline document holding everything its spectrum-centric search found, along with the chromatograms it extracted from
+        the raw data. Open it now.
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click <b>Open</b>.</li>
+        <li>Navigate to the <b>skyline_files</b> folder inside the folder you extracted.</li>
+        <li>Select the file <b>fragpipe.sky</b> and click the <b>Open</b> button.</li>
+    </ul>
+    <p>
+        The document is large, so it may take a little while to load. When it is done, the Skyline window should look like this:
+    </p>
+    <p>
+        <img src="s-01.png" />
+    </p>
+    <p>
+        The <b>Targets</b> view on the left lists every protein and peptide the search identified, and the ten chromatogram graphs are the ten
+        runs. You can re-arrange the panels into whatever layout you prefer by dragging them around.
+    </p>
+
+    <h1>Step 2. Inspect a Peptide Across the Samples</h1>
+    <p>
+        Start with the peptide HYEGSTVPEK, from the protein sp|P00738|HPT_HUMAN (haptoglobin). To get to it quickly, use the Find command
+        rather than scrolling the Targets view.
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Find</b>.</li>
+        <li>In the <b>Find what</b> field, type &lsquo;HYEGSTVPEK&rsquo;.</li>
+        <li>Click the <b>Find Next</b> button.</li>
+        <li>Click the <b>Close</b> button.</li>
+    </ul>
+    <p>
+        Skyline selects the peptide in the Targets view. Now look at how much of it was measured in each sample.
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b>.</li>
+    </ul>
+    <p>
+        The peak areas should be the raw, unnormalized values. To be sure:
+    </p>
+    <ul>
+        <li>Right-click the <b>Peak Areas</b> graph, choose <b>Normalized To</b> and click <b>Default (None)</b>.</li>
+    </ul>
+    <p>
+        The graph should now look something like this:
+    </p>
+    <p>
+        <img src="s-02.png" />
+    </p>
+    <p>
+        Each bar is one of the ten samples. Consider what the graph is telling you: in which samples does this peptide have an associated
+        identification? Where are the peak areas highest? Do the samples with the strongest signal agree with the statistical results FragPipe
+        reported?
+    </p>
+
+    <h1>Step 3. Find a Peptide That Behaves Strangely</h1>
+    <p>
+        Not every peptide is as well behaved. Look at the peptide AASGTQNNVLR.
+    </p>
+    <ul>
+        <li>On the <b>Edit</b> menu, click <b>Find</b>.</li>
+        <li>In the <b>Find what</b> field, type &lsquo;AASGTQNNVLR&rsquo;.</li>
+        <li>Click the <b>Find Next</b> button.</li>
+        <li>Click the <b>Close</b> button.</li>
+    </ul>
+    <p>
+        With the Peak Areas graph still showing the Replicate Comparison, you should see something like this:
+    </p>
+    <p>
+        <img src="s-03.png" />
+    </p>
+    <p>
+        Do you see anything strange? Look in particular at the samples 2025NK015_EMBO_001, 003 and 010. What has happened to this peptide there?
+        Click through the individual precursors and look at their chromatograms in each run: how do the peaks look, and how many points are there
+        across each peak?
+    </p>
+    <p>
+        Finally, take your time to browse other proteins and precursors. How are their peaks? Why were they identified?
+    </p>
+
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial you opened a Skyline document produced by a spectrum-centric FragPipe search of a DIA dataset, and used the Targets
+        view, the Find command and the Peak Areas replicate comparison to inspect how individual peptides behaved across ten samples. Being able
+        to see the extracted chromatograms behind an identification &ndash; and to spot the peptides where something has gone wrong &ndash; is
+        what Skyline adds to an otherwise untargeted workflow.
+    </p>
+</body>
+
+</html>

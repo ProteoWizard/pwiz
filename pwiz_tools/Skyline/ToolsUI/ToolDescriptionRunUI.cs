@@ -82,6 +82,8 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (toolDesc.Arguments.Contains(@"$(SkylineConnection)"))
                 {
+                    // An external tool connects over the LEGACY ToolService. A tool is run from the main window,
+                    // so the window is there and StartToolService starts that service along with the JSON one.
                     Program.StartToolService();
                 }
 

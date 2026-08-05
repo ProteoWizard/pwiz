@@ -65,8 +65,8 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             // Owned by the designer container so it is disposed with the control (avoids a native leak)
             _cellEditToolTip = new ToolTip(components);
-            _boundDataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView, bindingListSource);
-            DataGridViewPasteHandler.Attach(ReplicatePivotDataGridView, bindingListSource);
+            _boundDataGridViewPasteHandler = BoundDataGridViewPasteHandler.Attach(DataGridView, bindingListSource);
+            BoundDataGridViewPasteHandler.Attach(ReplicatePivotDataGridView, bindingListSource);
             replicatePivotDataGridView.CellValueChanged += replicatePivotDataGridView_CellValueChanged;
             NavBar.ClusterSplitButton.Visible = true;
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
@@ -287,6 +287,26 @@ namespace pwiz.Skyline.Controls.Databinding
         #region Methods exposed for testing
         public BoundDataGridViewEx DataGridView { get { return boundDataGridView; } }
         public NavBar NavBar { get { return navBar; } }
+
+        /// <summary>
+        /// Pastes tab-delimited <paramref name="text"/> into the grid starting at the current cell,
+        /// exactly as a Ctrl-V of that text would, but without using the system clipboard. Returns
+        /// true if the document changed.
+        /// </summary>
+        public bool PasteText(string text)
+        {
+            return _boundDataGridViewPasteHandler.PasteText(text);
+        }
+
+        /// <summary>
+        /// Returns all the grid's data (column headers followed by every row) as a tab-separated
+        /// string, the same content as Copy All, showing a progress dialog if it takes a while.
+        /// Returns null if cancelled -- by the user (the progress dialog's Cancel button) or by
+        /// </summary>
+        public string GetCopyAllText()
+        {
+            return BindingListSource.ViewContext.GetCopyAllText(this, BindingListSource);
+        }
 
         public DataGridViewColumn FindColumn(PropertyPath propertyPath)
         {

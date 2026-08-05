@@ -30,6 +30,24 @@ namespace pwiz.Common.SystemUtil
     public static class PathEx
     {
         /// <summary>
+        /// Name a per-test working directory, short enough that it does not push command lines run
+        /// against it over the length limit: long test names become their capitals and digits plus the
+        /// original length, e.g. "Foo7WithBar" to "F7WB11".
+        /// <para>
+        /// Shared so that anything needing to name or reason about one of these directories agrees on
+        /// the name. In particular the parallel test runner locks them, and a lock keyed any differently
+        /// would let two tests that shorten to the same thing into the same directory at once.
+        /// </para>
+        /// </summary>
+        public static string GetTestDirectoryName(string testName, string cultureName)
+        {
+            var shortened = testName.Length > 10 // Arbitrary cutoff, but too little is likely to lead to ambiguous names
+                ? string.Concat(testName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + testName.Length
+                : testName;
+            return $@"{shortened}_{cultureName}";
+        }
+
+        /// <summary>
         /// Determines whether the file name in the given path has a
         /// specific extension.  Because this is Windows, the comparison
         /// is case insensitive.  Note that ToLowerInvariant() is used to make

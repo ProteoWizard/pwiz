@@ -18,11 +18,29 @@ not the drill-down.
 | `../tctest.bat` | scheduled TeamCity entry point (`regression.ps1 -TeamCity -Dataset All`) |
 | `RegressionData.ps1` | download + unzip + skip-if-present (TestPerf-style) |
 | `BlibGolden.ps1` | blib projection schema + golden capture/compare + full blib-vs-blib |
+| `DiagnosticsGolden.ps1` | model-diagnostics metric projection + golden compare + fixed FDR sanity bounds |
+
+## Datasets
+
+| Dataset | Decoys | Entrapment | Resolution | Role |
+|---|---|---|---|---|
+| `Stellar` | generated (reverse) | no | unit | fast local pre-commit gate |
+| `StellarLibDecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the recommended path; the only one that can measure true FDP |
+| `Astral` | generated (reverse) | no | hram | larger, HRAM, MS1 features live |
+
+`StellarLibDecoy` reuses the **same** Stellar mzML (via the spec's `LibraryFolder`),
+so the published zip carries one copy of the raw data. Its 2.4 GB library ships as a
+**nested zip** (`stellar-libdecoy/libdecoy-entrapment.zip`) that is extracted only when
+that dataset is selected — so `-Dataset Stellar` never pays for it.
+
+The data zip is **`osprey-testfiles-mzML-v2.zip`**. Acquisition is skip-if-present on
+the extracted root, so adding files under the old name would never reach a machine that
+already had the tree; the v1 zip and URL stay live for older branches.
 
 ## What it asserts
 
-For each dataset (Stellar = unit, Astral = hram), with **zero input copies**
-(inputs referenced read-only from `<Downloads>\Perftests\osprey-testfiles-mzML`,
+For each dataset, with **zero input copies**
+(inputs referenced read-only from `<Downloads>\Perftests\osprey-testfiles-mzML-v2`,
 all output + caches under a per-run timestamped `TestResults/regression-<stamp>`
 via `--work-dir` — gitignored scratch, **nothing is published as a TeamCity
 artifact**, so the multi-GB spectra caches there are harmless):
@@ -31,10 +49,23 @@ artifact**, so the multi-GB spectra caches there are harmless):
    correctness gate). Compares the Stage 7 protein-FDR dump + a deterministic
    ~500-precursor subset + a full-set summary against `osprey-regression.data/`
    at 1e-9.
-2. **mode 2 — resume vs straight-through self-consistency**. Re-runs the build
+2. **mode 1b — FDR-calibration spot checks** (datasets with `ModelDiagnostics`).
+   Two independent tiers over the `--model-diagnostics` report: the metric
+   projection vs `diagnostics.tsv` at 1e-9, **plus fixed sanity bounds that
+   `-CreateGolden` does not regenerate**. The blib golden proves the search did
+   not change; it cannot prove the calibration is still *correct*, because a
+   change can leave the ranking intact and only wreck the reported q-values —
+   which is exactly what the b↔y decoy swap did at ~12x the claimed error rate.
+   The bounds are the only thing that fails when a bad change is blessed into a
+   regenerated baseline, so they must not be derived from the run.
+3. **mode 2 — resume vs straight-through self-consistency**. Re-runs the build
    in resume mode (invalidate the Stage 5 join + blib, re-run the same command
    so the rehydrate paths fire) and asserts the resume blib equals the
    straight-through blib at 1e-9. The build is its own oracle — no baseline.
+
+Every leg of a dataset — straight-through, resume, and each HPC phase — is given
+the **same** dataset CLI flags (`Get-DatasetCliArgs`). A self-consistency oracle
+only means anything if both sides ran the same search.
 
 Any mismatch emits a TeamCity `buildProblem` and a non-zero exit.
 
