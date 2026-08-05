@@ -39,7 +39,10 @@ namespace pwiz.Skyline.Model.Databinding
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
-            using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
+            // SynchronousStream keeps Parquet.Net's writes on the thread that made them,
+            // instead of resuming on a thread pool thread after each row group.
+            using var writer = ParquetWriter.CreateAsync(schema, new SynchronousStream(stream))
+                .GetAwaiter().GetResult();
             writer.CompressionMethod = CompressionMethod.Zstd;
             using var writeWorker = new QueueWorker<DataColumn[]>(
                 consume: (dataColumns, threadIndex) =>

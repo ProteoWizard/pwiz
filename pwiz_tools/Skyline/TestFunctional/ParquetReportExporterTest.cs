@@ -78,14 +78,16 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// ParquetReportExporter.Export waits on Parquet.Net's async-only API with
-        /// GetAwaiter().GetResult(), on the thread it was called on. That deadlocks if the
+        /// GetAwaiter().GetResult(), on the thread it was called on. That deadlocks if a
         /// continuation is posted back to that thread, which is blocked waiting for it.
-        /// Parquet.Net does not resume on the caller's SynchronizationContext, so the exporter
-        /// does nothing to prevent this, and this test is what makes that safe to depend on:
-        /// it installs a context and fails if the export ever posts a continuation to it.
+        /// Two separate things keep that from happening: the export hands Parquet.Net a
+        /// SynchronousStream, whose asynchronous methods finish their work before they
+        /// return, and Parquet.Net does not resume on the caller's SynchronizationContext.
+        /// This test installs a context, and a stream whose asynchronous methods would
+        /// suspend, and fails if either of those stops being true.
         ///
-        /// The context runs those continuations rather than dropping them, so a regression
-        /// fails here instead of hanging the test run.
+        /// The context runs the continuations it is given rather than dropping them, so a
+        /// regression fails here instead of hanging the test run.
         /// </summary>
         [TestMethod]
         public void TestParquetExportIgnoresSynchronizationContext()
@@ -127,8 +129,8 @@ namespace pwiz.SkylineTestFunctional
                 SynchronizationContext.SetSynchronizationContext(saveContext);
             }
 
-            Assert.AreNotEqual(0, stream.AsyncOperationCount,
-                "The export never performed an asynchronous stream operation, so it had nothing to suspend on.");
+            Assert.AreEqual(0, stream.AsyncOperationCount,
+                "The export called an asynchronous method on the stream it was given, so it is no longer wrapping it in a SynchronousStream and can suspend on stream I/O.");
             Assert.AreEqual(0, context.PostCount,
                 "ParquetReportExporter posted {0} continuation(s) to the SynchronizationContext of the thread it was called on. This test lets them run, but a caller that is blocked waiting for the export would never run them, and the export would hang.",
                 context.PostCount);
@@ -163,9 +165,10 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// A stream whose asynchronous operations always finish on another thread. A
-        /// MemoryStream completes them inline, which means the awaits never suspend and no
-        /// continuation is ever posted, so the test would pass without proving anything.
+        /// A stream whose asynchronous operations always finish on another thread, so that
+        /// an export which stopped wrapping it in a SynchronousStream would start suspending
+        /// on stream I/O. A MemoryStream would complete them inline and there would be
+        /// nothing to notice.
         /// </summary>
         private class AsyncSuspendingStream : Stream
         {

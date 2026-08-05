@@ -23,6 +23,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -611,6 +613,52 @@ namespace pwiz.SkylineTest
             ips.TryMatch(@"C:\Data\µ-Experiment\µ-Sample.mzML", false);
             Assert.IsTrue(ips.SpectrumSourceFiles[@"µ-sample.mzML"].HasExactMatch,
                 "TryMatch should find case-insensitive match for Unicode filename");
+        }
+
+        [TestMethod]
+        public void TestSynchronousStream()
+        {
+            var bytes = new byte[] { 1, 2, 3 };
+            var buffer = new byte[bytes.Length];
+            var stream = new SynchronousStream(new SynchronousOnlyStream());
+
+            var writeTask = stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
+            Assert.IsTrue(writeTask.IsCompleted, "WriteAsync returned a task which had not finished");
+            var flushTask = stream.FlushAsync(CancellationToken.None);
+            Assert.IsTrue(flushTask.IsCompleted, "FlushAsync returned a task which had not finished");
+
+            stream.Position = 0;
+            var readTask = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken.None);
+            Assert.IsTrue(readTask.IsCompleted, "ReadAsync returned a task which had not finished");
+            Assert.AreEqual(bytes.Length, readTask.Result);
+            CollectionAssert.AreEqual(bytes, buffer);
+        }
+
+        /// <summary>
+        /// Throws from every asynchronous method, so that a <see cref="SynchronousStream"/>
+        /// which delegated to one of them instead of doing the work itself would be noticed.
+        /// </summary>
+        private class SynchronousOnlyStream : MemoryStream
+        {
+            public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                throw new InvalidOperationException();
+            }
+
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                throw new InvalidOperationException();
+            }
+
+            public override Task FlushAsync(CancellationToken cancellationToken)
+            {
+                throw new InvalidOperationException();
+            }
+
+            public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+            {
+                throw new InvalidOperationException();
+            }
         }
     }
 }
