@@ -84,9 +84,14 @@ namespace pwiz.SkylineTestData.Results
                     var docResults =
                         docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 3, 3);
                     var nodeGroup = docResults.MoleculeTransitionGroups.First();
+                    var nodePep = docResults.Molecules.First();
+                    // Rebuilt from the .skyd: EmptyResults holds nothing, since a precursor does
+                    // not keep its chrom infos any more.
+                    var chromInfo = new MoleculeResults(docResults.Settings, nodePep)
+                        .GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, 0).First();
                     var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
-                    double ratio = normalizedValueCalculator.GetTransitionGroupValue(normalizedValueCalculator.GetFirstRatioNormalizationMethod(), 
-                        docResults.Molecules.First(), nodeGroup, 0, nodeGroup.EmptyResults[0][0]).GetValueOrDefault();
+                    double ratio = normalizedValueCalculator.GetTransitionGroupValue(normalizedValueCalculator.GetFirstRatioNormalizationMethod(),
+                        nodePep, nodeGroup, 0, chromInfo).GetValueOrDefault();
                     // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) // Can't use labels without a formula
                         Assert.AreEqual(0.008, ratio, 0.001);

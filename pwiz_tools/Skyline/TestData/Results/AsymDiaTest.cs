@@ -227,8 +227,12 @@ namespace pwiz.SkylineTestData.Results
             Assert.IsInstanceOfType(normalizationMethod, typeof(NormalizationMethod.RatioToLabel));
             var peptideDocNode = document.Molecules.First();
             var transitionGroupDocNode = peptideDocNode.TransitionGroups.First();
+            // Rebuilt from the .skyd: EmptyResults holds nothing, since a precursor does not keep
+            // its chrom infos any more.
+            var chromInfo = new MoleculeResults(document.Settings, peptideDocNode)
+                .GetTransitionGroupChromInfos(transitionGroupDocNode.TransitionGroup, 0).First();
             return normalizedValueCalculator.GetTransitionGroupValue(normalizationMethod, peptideDocNode,
-                transitionGroupDocNode, 0, transitionGroupDocNode.EmptyResults[0][0]);
+                transitionGroupDocNode, 0, chromInfo);
         }
     }
 }
