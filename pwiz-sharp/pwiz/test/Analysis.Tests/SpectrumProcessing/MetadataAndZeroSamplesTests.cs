@@ -68,14 +68,37 @@ public class MetadataAndZeroSamplesTests
     [TestMethod]
     public void ZeroSamplesFilter_BehaviorVariants()
     {
-        // --- removeExtra: drops zero-intensity peaks ---
-        var inner = new SpectrumListSimple();
-        inner.Spectra.Add(MakeSpectrum(
+        // --- removeExtra on a PROFILE spectrum keeps one zero flanking each non-zero run ---
+        // Every zero here neighbours a peak, so none of them is "extra" and the filter is a no-op.
+        var allFlanking = new SpectrumListSimple();
+        allFlanking.Spectra.Add(MakeSpectrum(
             new[] { 50.0, 100.0, 150.0, 200.0, 250.0 },
             new[] { 0.0, 50.0, 0.0, 200.0, 0.0 }));
-        var filtered = new SpectrumListZeroSamplesFilter(inner).GetSpectrum(0, getBinaryData: true);
-        CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, filtered.GetMZArray()!.Data, "removeExtra m/z");
-        CollectionAssert.AreEqual(new[] { 50.0, 200.0 }, filtered.GetIntensityArray()!.Data, "removeExtra intensity");
+        var untouched = new SpectrumListZeroSamplesFilter(allFlanking).GetSpectrum(0, getBinaryData: true);
+        CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0, 250.0 },
+            untouched.GetMZArray()!.Data, "profile: every zero flanks a peak, so nothing is dropped");
+
+        // Only zeros with a zero on both sides are extra. Here indices 0 and 8 are.
+        var withRuns = new SpectrumListSimple();
+        withRuns.Spectra.Add(MakeSpectrum(
+            new[] { 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0 },
+            new[] { 0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 200.0, 0.0, 0.0 }));
+        var trimmed = new SpectrumListZeroSamplesFilter(withRuns).GetSpectrum(0, getBinaryData: true);
+        // 10 and 90 have a zero on both sides; so does 50, sitting mid-gap between the two peaks.
+        // 40 and 60 survive as the flanks of the peaks at 30 and 70.
+        CollectionAssert.AreEqual(new[] { 20.0, 30.0, 40.0, 60.0, 70.0, 80.0 },
+            trimmed.GetMZArray()!.Data, "profile: one flanking zero kept per run, the rest dropped");
+
+        // --- removeExtra on a CENTROID spectrum drops every zero: there is no flank to preserve ---
+        var centroided = new SpectrumListSimple();
+        var centroidSpec = MakeSpectrum(
+            new[] { 50.0, 100.0, 150.0, 200.0, 250.0 },
+            new[] { 0.0, 50.0, 0.0, 200.0, 0.0 });
+        centroidSpec.Params.Set(CVID.MS_centroid_spectrum);
+        centroided.Spectra.Add(centroidSpec);
+        var filtered = new SpectrumListZeroSamplesFilter(centroided).GetSpectrum(0, getBinaryData: true);
+        CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, filtered.GetMZArray()!.Data, "centroid m/z");
+        CollectionAssert.AreEqual(new[] { 50.0, 200.0 }, filtered.GetIntensityArray()!.Data, "centroid intensity");
 
         // --- MS-level gate: limited to MS2 leaves the MS1 spectrum untouched ---
         var msLevelGated = new SpectrumListSimple();

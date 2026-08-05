@@ -79,22 +79,52 @@ public sealed class SpectrumListZeroSamplesFilter : SpectrumListWrapper
             return s;
         }
 
-        // RemoveExtra: drop all zero-intensity samples.
-        // TODO: cpp's removeExtra preserves one flanking zero per run for profile-mode spectra
-        // (ExtraZeroSamplesFilter.cpp:46 — preserveFlankingZeros=true when not centroided).
-        // This implementation drops all zeros unconditionally; that's a minor parity gap but
-        // tracked separately from the addMissing port.
+        // RemoveExtra drops the zeros that carry no information, but on a PROFILE spectrum it
+        // keeps one zero on each side of every non-zero run: peak picking needs that flank to
+        // see where the peak returns to baseline. cpp decides by the centroid param
+        // (SpectrumList_ZeroSamplesFilter.cpp:17, preserveFlankingZeros = !centroided).
+        bool preserveFlankingZeros = !s.Params.HasCVParam(CVID.MS_centroid_spectrum);
         int n = System.Math.Min(mzArr.Data.Count, intArr.Data.Count);
         var newMz = new List<double>(n);
         var newInt = new List<double>(n);
-        for (int i = 0; i < n; i++)
+
+        if (!preserveFlankingZeros)
         {
-            if (intArr.Data[i] != 0)
+            for (int i = 0; i < n; i++)
             {
-                newMz.Add(mzArr.Data[i]);
-                newInt.Add(intArr.Data[i]);
+                if (intArr.Data[i] != 0)
+                {
+                    newMz.Add(mzArr.Data[i]);
+                    newInt.Add(intArr.Data[i]);
+                }
             }
         }
+        else if (n <= 3)
+        {
+            // cpp passes short arrays through untouched rather than reason about their flanks.
+            newMz.AddRange(mzArr.Data.Take(n));
+            newInt.AddRange(intArr.Data.Take(n));
+        }
+        else
+        {
+            // Keep a sample when it, or either neighbour, is non-zero. The first sample has no
+            // predecessor to consult, which is why cpp guards that term with `i &&`.
+            int last = n - 1;
+            for (int i = 0; i < last; i++)
+            {
+                if (intArr.Data[i] != 0 || intArr.Data[i + 1] != 0 || (i > 0 && intArr.Data[i - 1] != 0))
+                {
+                    newMz.Add(mzArr.Data[i]);
+                    newInt.Add(intArr.Data[i]);
+                }
+            }
+            if (intArr.Data[last] != 0 || intArr.Data[last - 1] != 0)
+            {
+                newMz.Add(mzArr.Data[last]);
+                newInt.Add(intArr.Data[last]);
+            }
+        }
+
         s.SetMZIntensityArrays(newMz, newInt, intensityUnits);
         return s;
     }
