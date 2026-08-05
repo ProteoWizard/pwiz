@@ -511,37 +511,85 @@ namespace pwiz.Osprey.FDR
 
                 case SharedPeptideMode.Razor:
                 {
+                    // Iterative greedy set cover, mirroring Rust
+                    // osprey-fdr/src/protein.rs. Each round selects the GROUP with the
+                    // most unique peptides that still owns at least one unassigned shared
+                    // peptide, claims ALL of that group's remaining shared peptides (in
+                    // sorted order), repoints them to the winner, and repeats until no
+                    // shared peptides remain. The winner is chosen GLOBALLY each round --
+                    // not by iterating the shared peptides in dictionary order -- so the
+                    // result is deterministic and path-independent. The former per-peptide
+                    // greedy assigned each shared peptide independently in Dictionary
+                    // (hash) order, which both diverged from Rust on cascading topologies
+                    // and was not stable across processes under .NET randomized string
+                    // hashing. Tiebreak on equal unique counts is the lowest group ID.
                     var sharedPeptides = new List<string>();
                     foreach (var kvp in peptideToGroups)
                     {
                         if (kvp.Value.Count > 1)
                             sharedPeptides.Add(kvp.Key);
                     }
+                    // Sort ordinally so the round-by-round processing order matches Rust's
+                    // byte-wise String sort and is independent of dictionary iteration.
+                    sharedPeptides.Sort(StringComparer.Ordinal); // Array.Sort OK: distinct peptide-map keys (no ties), so ordinal order is total and equals Rust's stable String sort
+                    var unassigned = new HashSet<string>(sharedPeptides, StringComparer.Ordinal);
 
-                    foreach (string peptide in sharedPeptides)
+                    while (unassigned.Count > 0)
                     {
-                        var groupIds = peptideToGroups[peptide];
-                        // Find group with most unique peptides (tiebreak: lowest group ID)
-                        uint bestGid = groupIds[0];
-                        int bestCount = resultGroups[(int)bestGid].UniquePeptides.Count;
-                        for (int i = 1; i < groupIds.Count; i++)
+                        // Pick the group with the most unique peptides that still owns an
+                        // unassigned shared peptide; ties on unique count resolve to the
+                        // lowest group ID via the explicit `group.Id < bestGroup.Id` test,
+                        // mirroring Rust's max_by_key((unique_len, Reverse(id))). The tiebreak
+                        // is explicit (not a side effect of resultGroups iteration order) so it
+                        // stays correct if that order ever changes. The unique count is read
+                        // live, so peptides claimed in earlier rounds raise a group's count for
+                        // later rounds (the greedy cascade).
+                        ProteinGroup bestGroup = null;
+                        foreach (var group in resultGroups)
                         {
-                            int count = resultGroups[(int)groupIds[i]].UniquePeptides.Count;
-                            if (count > bestCount ||
-                                (count == bestCount && groupIds[i] < bestGid))
+                            bool ownsUnassigned = false;
+                            foreach (string p in group.SharedPeptides)
                             {
-                                bestCount = count;
-                                bestGid = groupIds[i];
+                                if (unassigned.Contains(p))
+                                {
+                                    ownsUnassigned = true;
+                                    break;
+                                }
+                            }
+                            if (!ownsUnassigned)
+                                continue;
+                            if (bestGroup == null ||
+                                group.UniquePeptides.Count > bestGroup.UniquePeptides.Count ||
+                                (group.UniquePeptides.Count == bestGroup.UniquePeptides.Count &&
+                                 group.Id < bestGroup.Id))
+                            {
+                                bestGroup = group;
                             }
                         }
 
-                        // Remove from all groups' shared sets, add to best group's unique set
-                        foreach (uint gid in groupIds)
-                            resultGroups[(int)gid].SharedPeptides.Remove(peptide);
-                        resultGroups[(int)bestGid].UniquePeptides.Add(peptide);
+                        if (bestGroup == null)
+                            break; // no group owns any unassigned shared peptide
 
-                        // Update peptide_to_groups to point only to the best group
-                        peptideToGroups[peptide] = new List<uint> { bestGid };
+                        // Claim all of the winner's still-unassigned shared peptides, in
+                        // sorted order for deterministic processing.
+                        var claimed = new List<string>();
+                        foreach (string p in bestGroup.SharedPeptides)
+                        {
+                            if (unassigned.Contains(p))
+                                claimed.Add(p);
+                        }
+                        claimed.Sort(StringComparer.Ordinal); // Array.Sort OK: distinct shared-peptide strings from a HashSet (no ties); matches Rust claimed.sort()
+
+                        foreach (string peptide in claimed)
+                        {
+                            // Remove from every group's shared set, add to the winner's
+                            // unique set, and repoint the map to the winner alone.
+                            foreach (uint gid in peptideToGroups[peptide])
+                                resultGroups[(int)gid].SharedPeptides.Remove(peptide);
+                            bestGroup.UniquePeptides.Add(peptide);
+                            peptideToGroups[peptide] = new List<uint> { bestGroup.Id };
+                            unassigned.Remove(peptide);
+                        }
                     }
                     break;
                 }

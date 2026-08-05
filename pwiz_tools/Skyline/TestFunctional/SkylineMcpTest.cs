@@ -316,12 +316,14 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 new JObject { ["fastaPath"] = fastaPath });
 
             // Verify from inside Skyline that the import worked
-            var doc = SkylineWindow.Document;
+            var doc = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var protein = doc.PeptideGroups.First();
 
             RunUI(() =>
             {
-                AssertEx.IsDocumentState(doc, 1, 1, 1, 1, 1);   // Strange but correct
+                // Expected transition count is 1 because one peptide clears the 8-25 length filter,
+                // and one transition is between "m/z > precursor" and instrument MaxMz.
+                AssertEx.IsDocumentState(doc, 2, 1, 1, 1, 1);
                 AssertEx.Contains(protein.Name, "INS_HUMAN");
             });
 
