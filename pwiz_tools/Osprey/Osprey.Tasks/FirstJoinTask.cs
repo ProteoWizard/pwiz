@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -600,6 +600,15 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new ReconciliationActions(bundle.ReconciliationActions));
             ctx.Publish(new RefinedCalibrations(bundle.RefinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
+            // Release here too, not just on Run. This path is a RESUME - which is exactly what
+            // an operator does after the OOM this release exists to prevent - so skipping it
+            // would leave the whole library resident in the one run that most needs it lean.
+            // The bundle carries both halves of the retained set: GlobalFirstPassBaseIds is a
+            // required field of the v3 reconciliation envelope, and PerFileGapFill was just
+            // published above.
+            _firstPassBaseIds = bundle.GlobalFirstPassBaseIds;
+            _perFileGapFillForRescore = bundle.PerFileGapFill;
+            ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
             ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
             ctx.Publish(new CompactedEntries(perFileEntries));
             // Null off the projection path (legacy resident / rehydrate), where a
@@ -1724,9 +1733,11 @@ namespace pwiz.Osprey.Tasks
         /// states of passing peptides through the library, so by construction it reaches
         /// entries that did NOT survive compaction and still needs their spectra.</para>
         ///
-        /// <para>Skipped when <c>_firstPassBaseIds</c> is null - the resident and rehydrate
-        /// paths do not surface the surviving set here, and at scale the production route is
-        /// the projection path anyway.</para>
+        /// <para>Called from BOTH <see cref="Run"/> (projection path) and
+        /// <see cref="Rehydrate"/> (resume / bundle-adopt), which set
+        /// <c>_firstPassBaseIds</c> from the compaction result and the reconciliation bundle
+        /// respectively. Skipped when it is null, which now means only the legacy RESIDENT
+        /// first-pass path.</para>
         ///
         /// <para>Deliberately NOT gated on diagnostics. The only dump that reads fragments is
         /// <c>WriteCalXicEntryDumpAndExit</c>, a Stage 3 dump that exits the process where it
@@ -1738,8 +1749,25 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private void ReleaseUnscorableLibraryFragments(List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
+            // StopAfterStage5 (--task FirstPassFDR) is excluded for TWO independent reasons, and
+            // either alone is disqualifying:
+            //
+            // 1. The gap-fill plan is NOT populated there. PlanStage6 returns early before
+            //    assigning _perFileGapFillForRescore, so the field is still its empty default -
+            //    while _firstPassBaseIds IS set. The retained set would be survivors ONLY, and
+            //    the release would strip exactly the gap-fill candidates this method exists to
+            //    protect. Harmless today only because nothing downstream runs in that process.
+            // 2. There is nothing to free. That path already loaded the library with
+            //    OmitFragments (PerFileScoringTask: omitFragments = config.StopAfterStage5), so
+            //    every entry holds the shared Array.Empty. ReleaseSpectrum recognizes an
+            //    already-released entry by reference identity, not by "has a spectrum", so it
+            //    would swap one shared singleton for another and report millions released
+            //    having freed zero bytes - a fabricated saving printed straight above a [MEM]
+            //    probe, which an HPC sizing A/B would read as measured.
+            //
+            // The worker also exits after Stage 5, so there is no Stage 6/7 to save memory for.
             if (!OspreyEnvironment.ReleaseLibraryFragments || _firstPassBaseIds == null ||
-                fullLibrary == null)
+                fullLibrary == null || ctx.Config.StopAfterStage5)
             {
                 return;
             }
