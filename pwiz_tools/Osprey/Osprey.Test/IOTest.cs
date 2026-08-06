@@ -4013,10 +4013,45 @@ namespace pwiz.Osprey.Test
                     typeof(ReconcileAction.ForcedIntegration));
                 Assert.IsInstanceOfType(streamed.ReconciliationActions[("s2", 1)],
                     typeof(ReconcileAction.UseCwtPeak));
+
+                AssertBatchOverlayRejectsLeanStubs(parquetPaths, stems);
             }
             finally
             {
                 try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The batch <see cref="RescoreHydration.HydrateReconciliationOverlay"/> must REFUSE
+        /// the per-file lists a LEAN Stage 5 load publishes - one keyed entry per scored file,
+        /// every list EMPTY - rather than quietly hydrate a bundle with no entries in it.
+        ///
+        /// This is not a hypothetical: it is the shape <c>FirstJoin.Rehydrate</c> is handed on
+        /// every resume that did not need the resident pool, and the reason that path has to
+        /// take <see cref="RescoreHydration.HydrateCompactedStreaming"/> (which loads each
+        /// file's stubs itself) instead. The refusal comes from the sidecar reader's superset
+        /// contract - <c>FdrScoresSidecar.TryRead</c> cannot bind a record to a list of zero
+        /// entries - so it is the CALLER's job to pick the hydrate that matches what upstream
+        /// loaded. Pinned here because the failure is a mid-pipeline
+        /// <see cref="InvalidDataException"/> that reads like sidecar corruption rather than
+        /// like the wrong hydrate being called.
+        /// </summary>
+        private static void AssertBatchOverlayRejectsLeanStubs(
+            List<string> parquetPaths, string[] stems)
+        {
+            var leanEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+            foreach (string stem in stems)
+                leanEntries.Add(new KeyValuePair<string, List<FdrEntry>>(stem, new List<FdrEntry>()));
+            try
+            {
+                RescoreHydration.HydrateReconciliationOverlay(leanEntries, parquetPaths);
+                Assert.Fail("expected InvalidDataException overlaying a sidecar onto empty stubs");
+            }
+            catch (InvalidDataException ex)
+            {
+                StringAssert.Contains(ex.Message, "1st-pass.fdr_scores.bin");
+                StringAssert.Contains(ex.Message, stems[0]);
             }
         }
 
