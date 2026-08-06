@@ -124,6 +124,14 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// True once <see cref="ReleaseSpectrum"/> has dropped this entry's spectrum. The only
+        /// safe way to ask: inspecting <see cref="Fragments"/> to find out throws by design, so
+        /// without this the released state would be write-only and callers would be left
+        /// catching an exception to detect it.
+        /// </summary>
+        public bool IsSpectrumReleased => ReferenceEquals(Fragments, RELEASED_SPECTRUM);
+
+        /// <summary>
         /// Drop this entry's spectrum, freeing the fragment array, and report whether it was
         /// still held (so a caller can count releases, and a second call is a no-op).
         /// Identity - sequence, protein ids, m/z, RT - is untouched: protein parsimony walks
@@ -138,14 +146,6 @@ namespace pwiz.Osprey.Core
         /// nothing is believed to read them; this makes a wrong belief loud, by turning that
         /// same guard expression into a tripwire.</para>
         /// </summary>
-        /// <summary>
-        /// True once <see cref="ReleaseSpectrum"/> has dropped this entry's spectrum. The only
-        /// safe way to ask: inspecting <see cref="Fragments"/> to find out throws by design, so
-        /// without this the released state would be write-only and callers would be left
-        /// catching an exception to detect it.
-        /// </summary>
-        public bool IsSpectrumReleased => ReferenceEquals(Fragments, RELEASED_SPECTRUM);
-
         public bool ReleaseSpectrum()
         {
             if (IsSpectrumReleased)
