@@ -162,8 +162,11 @@ namespace pwiz.Osprey.Tasks
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
-        // ValidityKey is the default (search + library hashes) -- those
-        // are the only parameters that affect per-file scoring output.
+        // ValidityKey is the default: the search and library hashes, plus
+        // the peak-pick arm the base key carries. The pick belongs to THIS
+        // stage - it chooses which candidate peak each precursor's row
+        // describes - so a re-run under a different pick model must not
+        // adopt these parquets.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
@@ -375,8 +378,9 @@ namespace pwiz.Osprey.Tasks
             // projection. It must mirror that task's dispatch exactly (FirstJoinTask.cs:
             // UseFdrProjection && Percolator && !needsResidentFirstPassPool): any other
             // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
-            // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
-            // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
+            // resident-pool consumer FDRBench pass 1, which walks the full pre-compaction
+            // FdrEntry pool -- still needs the fat stubs here. --model-diagnostics is NOT
+            // one of them any more (#4505): it streams its report on every path.
             bool needsResidentPool = NeedsResidentPool(ctx.Config);
             GuardResidentPool(ctx.Config, needsResidentPool);
 
@@ -632,21 +636,15 @@ namespace pwiz.Osprey.Tasks
             // needs the resident pool. FirstJoin consumes the projection set identically
             // whether Run or this path produced it.
             //
-            // --model-diagnostics forces the fat pool ONLY for a FULL resume, where FirstJoin
-            // ALSO skips the first-pass score pass (every 1st-pass sidecar already on disk) and
-            // emits the report via the batch ModelDiagnosticsReport.Write, which reads the
-            // RESIDENT per-file entries. On a Stage-1-4 (-LinkFrom) resume the 1st-pass sidecars
-            // are absent, so FirstPassFDR RE-RUNS and streams the report off its score pass
-            // (ModelDiagnosticsData.Accumulator) exactly like a compute run -- no resident pool
-            // needed. Probing the sidecars keeps the lean counts-only path for the common
-            // -LinkFrom A/B resume (whose forced fat pool OOM'd an 82-file mdiag run) while
-            // preserving the batch-write path's resident entries for the full-resume re-report,
-            // so the fat pool is never on the row-count scaling path. The full elimination (stream
-            // the batch report from the sidecar+parquet too) is a documented follow-up.
-            // See TODO-20260720_osprey_pass2_per_run_qvalue.
-            bool mdiagFullResume = config.ModelDiagnostics && FirstPassSidecarsPresent(config);
-            bool needsResidentPool = NeedsResidentPool(config) || mdiagFullResume;
-            GuardResidentPool(config, needsResidentPool, mdiagFullResume);
+            // --model-diagnostics is NOT a trigger, on a full resume or any other (#4505).
+            // It used to be: with every 1st-pass sidecar already on disk FirstJoin skips its
+            // score pass, so the streaming accumulator was never fed and the report fell back
+            // to the batch ModelDiagnosticsReport.Write over the RESIDENT entries. FirstJoin's
+            // rehydrate now feeds that accumulator from the per-file load it already performs
+            // (FirstJoinTask.StreamOwnReconciliationBundle), off the same PRE-compaction rows,
+            // so the report emits from this lean load at any file count.
+            bool needsResidentPool = NeedsResidentPool(config);
+            GuardResidentPool(config, needsResidentPool);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -801,10 +799,11 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the rehydrate/merge paths (including
-            // a --model-diagnostics resume, which needs resident entries for the batch report)
-            // and on FDRBench pass 1 / OSPREY_PASS2_QVALUE=transfer, which publish fat stubs
-            // above; FirstJoinTask falls back to ScoredEntries whenever this is null.
+            // Lean first-pass rows (issue #4397). Null on the merge paths and on FDRBench
+            // pass 1, which publish fat stubs above; FirstJoinTask falls back to ScoredEntries
+            // whenever this is null. A --model-diagnostics resume publishes a NON-null
+            // projection since #4505 - it no longer needs resident entries, because
+            // FirstJoin's rehydrate streams the report off its own per-file load.
             ctx.Publish(new FdrProjections(projections));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
 
@@ -1282,9 +1281,9 @@ namespace pwiz.Osprey.Tasks
                             perFileCalibrations, perFileIsolationMz, ctx),
                         (fileIdx, fileName, stubs, tally) =>
                         {
-                            TallyPreCompaction(config, stubs, tally);
+                            ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
                             if (mdiagAccumulator != null)
-                                FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
+                                ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
                         }), ctx);
                 if (_rescoreInputs == null)
                 {
@@ -1424,7 +1423,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// --model-diagnostics needs no exclusion at all any more. It needs the same
         /// pre-compaction rows, but it consumes them one at a time:
-        /// <see cref="FeedModelDiagnostics"/> folds every row into a
+        /// <see cref="ScoringTaskShared.FeedModelDiagnostics"/> folds every row into a
         /// ModelDiagnosticsData.Accumulator during this load, after the 1st-pass sidecar
         /// overlay and before compaction drops the non-survivors, and FirstJoin reports from
         /// that reduction instead of from the pool. Same rows in, same report out, bounded
@@ -1535,47 +1534,6 @@ namespace pwiz.Osprey.Tasks
             LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
                 perFileIsolationMz, ctx);
             return stubs;
-        }
-
-        /// <summary>
-        /// Reduce off one file's PRE-compaction stub pool everything the rehydrate used to
-        /// read off the resident all-files pool. Only the run-level FDR passing-target count
-        /// is needed: FirstJoin's Stage 5 result line reports it per file, and the streaming
-        /// hydrate has already dropped the non-survivors by the time that line is written.
-        /// Identical predicate to <c>FirstJoinTask.LogFirstPassResults</c>.
-        /// </summary>
-        private static void TallyPreCompaction(
-            OspreyConfig config, List<FdrEntry> stubs, PreCompactionTally tally)
-        {
-            int passing = 0;
-            foreach (var entry in stubs)
-            {
-                if (!entry.IsDecoy && entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
-                    passing++;
-            }
-            tally.PassingTargets = passing;
-        }
-
-        /// <summary>
-        /// Fold one file's PRE-compaction stubs into the <c>--model-diagnostics</c> report
-        /// accumulator, handing it exactly the scalars the batch
-        /// <c>ModelDiagnosticsData.Build</c> reads off each <see cref="FdrEntry"/> - identity,
-        /// is_decoy, SVM score, and the four first-pass q-values the
-        /// <c>.1st-pass.fdr_scores.bin</c> overlay has just written onto these stubs. Rows
-        /// arrive here in the same nested (file, row) order the batch build walks
-        /// (<c>--input-scores</c> order, parquet row order within a file), which is what makes
-        /// the streamed reductions reproduce the resident ones element for element.
-        /// </summary>
-        private static void FeedModelDiagnostics(
-            ModelDiagnosticsData.Accumulator accumulator, int fileIdx, List<FdrEntry> stubs)
-        {
-            foreach (var entry in stubs)
-            {
-                accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
-                    entry.IsDecoy, entry.Score,
-                    new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
-                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
-            }
         }
 
         /// <summary>
@@ -1871,6 +1829,17 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// <see cref="NeedsResidentPool(OspreyConfig)"/> for callers outside this class:
+        /// "this run already requires a resident-pool token of its own". Only
+        /// <see cref="ResumeResidentHandoffGuardError"/>'s caller needs it, to avoid charging
+        /// a second token for one decision.
+        /// </summary>
+        internal static bool NeedsResidentPoolForRun(OspreyConfig config)
+        {
+            return NeedsResidentPool(config);
+        }
+
+        /// <summary>
         /// Pure core of <see cref="NeedsResidentPool(OspreyConfig)"/> (the env static is passed
         /// in so it is unit testable), and the single definition of the trigger set.
         /// <c>OSPREY_PASS2_QVALUE=transfer</c> is NOT a trigger and must not become one again:
@@ -1893,47 +1862,19 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// True when every input file already has its <c>.1st-pass.fdr_scores.bin</c> sidecar on
-        /// disk, so FirstJoin will REHYDRATE first-pass FDR (skip its score pass) rather than
-        /// recompute. Under <c>--model-diagnostics</c> that skip routes the report to the batch
-        /// <c>ModelDiagnosticsReport.Write</c>, which reads the RESIDENT per-file entries -- the
-        /// one case a resume still needs the fat pool. A Stage-1-4 (<c>-LinkFrom</c>) resume links
-        /// only the Stage-4 <c>.scores.parquet</c>, so the 1st-pass sidecars are ABSENT, FirstPassFDR
-        /// re-runs, and its score pass streams the report -- no resident pool needed. Absent sidecars
-        /// therefore mean "stay lean" (correct); present sidecars mean "keep fat" (conservative,
-        /// matching the batch-write path). Mirrors <see cref="FdrScoresSidecar.Pass1Path"/> as used by
-        /// <c>FirstJoinTask</c>'s rehydrate-output enumeration.
-        /// </summary>
-        private static bool FirstPassSidecarsPresent(OspreyConfig config)
-        {
-            if (config.InputFiles == null || config.InputFiles.Count == 0)
-                return false;
-            foreach (var inputFile in config.InputFiles)
-            {
-                if (!File.Exists(FdrScoresSidecar.Pass1Path(inputFile)))
-                    return false;
-            }
-            return true;
-        }
-
-        /// <summary>
         /// Fail fast when a run would build the RESIDENT first-pass pool -- an O(files) memory
         /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstJoin.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
         /// operator named THIS path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c>, throw with the token
         /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: the
         /// HPC reconciled-input merge (#4486), <c>--fdrbench-pass 1</c> (#4507), a non-Percolator
-        /// FdrMethod, <c>--model-diagnostics</c> on a full resume (#4505 - the scale case was
-        /// streamed by #4420; only the full-resume batch report remains), and
-        /// <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident implementation
-        /// outright and so must be named like any other.
+        /// FdrMethod, and <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident
+        /// implementation outright and so must be named like any other.
         /// </summary>
-        private static void GuardResidentPool(
-            OspreyConfig config, bool needsResidentPool, bool mdiagFullResume = false)
+        private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
         {
             string error = ResidentPoolGuardError(config, needsResidentPool,
-                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection,
-                mdiagFullResume);
+                OspreyEnvironment.AllowUnfixedResident, OspreyEnvironment.UseFdrProjection);
             if (error != null)
                 throw new InvalidOperationException(error);
         }
@@ -1955,11 +1896,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static string ResidentPoolGuardError(
             OspreyConfig config, bool needsResidentPool, string allowUnfixedResident,
-            bool useFdrProjection, bool mdiagFullResume = false)
+            bool useFdrProjection)
         {
             if (!needsResidentPool)
                 return null;
-            string trigger = ResidentPoolTrigger(config, useFdrProjection, mdiagFullResume);
+            string trigger = ResidentPoolTrigger(config, useFdrProjection);
             // Membership in the committed list is what makes it the high-water mark rather than
             // documentation: a token the trigger chain invents but the list does not carry is
             // refused here, so re-admitting a path really does require editing the list (and
@@ -1974,10 +1915,12 @@ namespace pwiz.Osprey.Tasks
                     @"be unfixed. Something that was streamed is resident again - fix that rather " +
                     @"than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this path.";
             }
-            // Case-insensitive to match how the rest of the CLI parses tokens (ParseFdrBenchPass):
-            // the error names the exact token to set, so rejecting it for capitalization would
-            // read as the guard ignoring what the operator just did.
-            if (string.Equals(trigger, allowUnfixedResident, StringComparison.OrdinalIgnoreCase))
+            // Membership, not equality: the setting may name SEVERAL paths, because a run can
+            // legitimately trip more than one at once. Case-insensitive, matching how the rest of
+            // the CLI parses tokens (ParseFdrBenchPass): the error names the exact token to set,
+            // so rejecting it for capitalization would read as the guard ignoring what the
+            // operator just did.
+            if (OspreyEnvironment.NamesResidentPath(allowUnfixedResident, trigger))
                 return null;
             // Name the offending value when one was supplied, so a typo or a shell-quoted token
             // does not produce the identical message the unset case produces.
@@ -1994,6 +1937,110 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The RESUME counterpart of <see cref="Stage6ResidentHandoffGuardError"/>, and the
+        /// reason that one cannot serve here: it exempts runs that cannot stream, on the
+        /// grounds that they are resident under a token of their own. A straight-through
+        /// resume rebuilding its bundle from its own sidecars has NO such token - since #4505
+        /// it needs none at all - yet it still hands Stage 6 the all-files survivor buffer,
+        /// because only a computed Stage 5 produces the per-file loader. Left unguarded that
+        /// is an O(files) path on a DEFAULT user path with nothing asked for and nothing said,
+        /// which is the one shape the ratchet exists to forbid.
+        ///
+        /// <para>So it is refused unless named, exactly like every other resident path: omit
+        /// the token and the run fails loudly with an actionable message; name it and the run
+        /// proceeds with a warning saying what was granted. A warning ALONE would be the
+        /// insufficient case - on a default path there is no request to explain.</para>
+        ///
+        /// <para>Silent for a single-file join, where "all files" is one file and there is no
+        /// O(files) growth to refuse, and silent when <paramref name="alreadyResidentByToken"/>
+        /// says this run is resident under a token it already had to name. Tracked by issue
+        /// #4536: when the rehydrate gets its own survivor loader this guard goes away with
+        /// the buffer.</para>
+        /// </summary>
+        internal static string ResumeResidentHandoffGuardError(
+            int joinedFileCount, string allowUnfixedResident, bool alreadyResidentByToken)
+        {
+            if (joinedFileCount <= 1)
+                return null;
+            // Already resident for a reason that carries its OWN token (projection-off,
+            // fdrbench-pass1, non-percolator-fdr, hpc-merge): demanding a second one would
+            // tell the operator to set two variables for one decision, and neither message
+            // mentions the other, so the natural fix - set the token it names - fails again
+            // naming a different token. Same exemption Stage6ResidentHandoffGuardError makes,
+            // for the same reason. The rule this guard enforces is about the UNTOKENED
+            // default path; a run that already asked for residency has asked.
+            if (alreadyResidentByToken)
+                return null;
+            if (OspreyEnvironment.NamesResidentPath(
+                    allowUnfixedResident, ResidentPaths.RESUME_SURVIVOR_HANDOFF))
+            {
+                return null;
+            }
+            string suppliedOnResume = string.IsNullOrEmpty(allowUnfixedResident)
+                ? string.Empty
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}', which does " +
+                                @"not name this path.", allowUnfixedResident);
+            return string.Format(
+                @"This resume rebuilds its first-pass state from its own sidecars, which leaves " +
+                @"Stage 6 on the '{0}' RESIDENT path: the survivor buffer for all {1} files " +
+                @"stays in memory for the whole rescore and grows O(files) - 28 GB at 163 " +
+                @"files when last measured. Only a computed Stage 5 produces the per-file " +
+                @"survivor loader, so a resume cannot stream it (issue #4536). Set " +
+                @"OSPREY_ALLOW_UNFIXED_RESIDENT={0} to accept that and proceed, or re-run " +
+                @"without resuming so Stage 5 is computed; otherwise this path is " +
+                @"unavailable.{2}",
+                ResidentPaths.RESUME_SURVIVOR_HANDOFF, joinedFileCount, suppliedOnResume);
+        }
+
+        /// <summary>
+        /// The same refusal, one stage later: the guard above stops at the compaction line, and
+        /// the POST-compaction survivor handoff is O(files) too - 88.9 M entries / 28 GB at 163
+        /// files, live for the whole Stage 6 rescore (issue #4526). Stage 6 streams that buffer
+        /// by default; <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> restores the resident handoff as
+        /// the A/B byte-identity oracle, and like every other resident path it has to be NAMED
+        /// to be available. Returns the actionable error, or <c>null</c> when the run streams.
+        ///
+        /// <para><paramref name="streamingAvailable"/> is false when this run could not stream
+        /// whatever the flag says - the resident and rehydrate paths never compute the passing
+        /// base_id set the per-file loader needs. Those runs are exempt HERE because they are
+        /// already resident for a reason with its own token
+        /// (<see cref="ResidentPaths.PROJECTION_OFF"/> above all), so demanding a second token
+        /// would mean two variables for one decision, and would fire on the plain
+        /// <c>--task SecondPassFDR</c> merge that <see cref="ResidentPaths.HPC_MERGE"/> already
+        /// covers.</para>
+        ///
+        /// <para>That reasoning covers every caller of THIS guard, and deliberately leaves one
+        /// gap it cannot see: a lean straight-through resume needs no first-pass token at all
+        /// since #4505, so "already resident under another token" is false for it. That case
+        /// is refused by <see cref="ResumeResidentHandoffGuardError"/> instead, at the point
+        /// where the rehydrate decides to rebuild its own bundle. Both guards disappear when
+        /// #4536 gives the rehydrate a survivor loader.</para>
+        /// </summary>
+        internal static string Stage6ResidentHandoffGuardError(
+            bool streamingAvailable, bool streamingEnabled, string allowUnfixedResident)
+        {
+            if (!streamingAvailable || streamingEnabled)
+                return null;
+            if (OspreyEnvironment.NamesResidentPath(
+                    allowUnfixedResident, ResidentPaths.COMPACTED_ENTRIES_BUFFER))
+            {
+                return null;
+            }
+            string supplied = string.IsNullOrEmpty(allowUnfixedResident)
+                ? string.Empty
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}', which does " +
+                                @"not name this path.", allowUnfixedResident);
+            return string.Format(
+                @"OSPREY_STAGE6_STREAM_SURVIVORS=0 takes the '{0}' RESIDENT path, which holds " +
+                @"every file's post-compaction survivors in memory across the whole Stage 6 " +
+                @"rescore and grows O(files) - 28 GB at 163 files. Set " +
+                @"OSPREY_ALLOW_UNFIXED_RESIDENT={0} to accept it and proceed (it is the A/B " +
+                @"byte-identity oracle for the streamed default); otherwise this path is " +
+                @"unavailable.{1}",
+                ResidentPaths.COMPACTED_ENTRIES_BUFFER, supplied);
+        }
+
+        /// <summary>
         /// The <see cref="ResidentPaths"/> token for the known-unfixed resident path this config
         /// takes, or <c>null</c> when it needs the resident pool for a reason NOT on that list -
         /// which the caller refuses outright, since reaching that state means something we
@@ -2006,14 +2053,14 @@ namespace pwiz.Osprey.Tasks
         /// config-driven reasons, because it selects the legacy implementation for the WHOLE run
         /// and is therefore the honest description even when another trigger also applies.</para>
         ///
-        /// <para><paramref name="mdiagFullResume"/> is passed in rather than read off
-        /// <paramref name="config"/>: <c>--model-diagnostics</c> forces the pool only in
-        /// combination with a full resume, and testing <c>config.ModelDiagnostics</c> alone here
-        /// would make mdiag an unconditional catch-all that silently absorbed any FUTURE arming
-        /// condition - handing it a token CI already exports.</para>
+        /// <para><c>--model-diagnostics</c> is deliberately NOT a branch here, and must not
+        /// become one again. It was, for the full-resume case only (#4505), and the arming
+        /// condition had to be passed in rather than read off <paramref name="config"/> so that
+        /// testing <c>config.ModelDiagnostics</c> alone could not make mdiag an unconditional
+        /// catch-all absorbing any FUTURE arming condition - handing it a token CI exports.
+        /// FirstJoin's rehydrate now streams that report, so the flag arms nothing.</para>
         /// </summary>
-        private static string ResidentPoolTrigger(
-            OspreyConfig config, bool useFdrProjection, bool mdiagFullResume)
+        private static string ResidentPoolTrigger(OspreyConfig config, bool useFdrProjection)
         {
             if (!useFdrProjection)
                 return ResidentPaths.PROJECTION_OFF;
@@ -2023,8 +2070,6 @@ namespace pwiz.Osprey.Tasks
                 return ResidentPaths.NON_PERCOLATOR_FDR;
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
                 return ResidentPaths.FDRBENCH_PASS1;
-            if (mdiagFullResume)
-                return ResidentPaths.MDIAG_FULL_RESUME;
             return null;
         }
 

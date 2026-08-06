@@ -266,12 +266,10 @@ namespace pwiz.SkylineTestConnected
             {
                 SelectNode(remoteDlg, TEST_FOLDER);
                 SelectNode(remoteDlg, PANORAMA_DELETED_FILE_FOLDER);
-                ClickFile(remoteDlg, DELETED_FILE);
             });
-            var errorDlg = ShowDialog<MessageDlg>(remoteDlg.ClickOpen);
+            TestMessageDlgShown(() => ClickFile(remoteDlg, DELETED_FILE),
+                Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_);
             Assert.IsFalse(File.Exists(path));
-            Assert.AreEqual(Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
         }
 
         //Test downloading a file that has been renamed on Panorama

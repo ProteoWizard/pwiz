@@ -57,14 +57,13 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string FDRBENCH_PASS1 = @"fdrbench-pass1";
 
-        /// <summary>
-        /// <c>--model-diagnostics</c> on a FULL resume, where the 1st-pass sidecars are already
-        /// on disk so FirstJoin skips its score pass, the streaming accumulator is never fed,
-        /// and the report falls back to the resident batch write. Tracked by issue #4505; the
-        /// scale case was streamed by #4420, and a verified fix for this remainder is parked on
-        /// the closed #4437 branch.
-        /// </summary>
-        public static readonly string MDIAG_FULL_RESUME = @"mdiag-full-resume";
+        // mdiag-full-resume is GONE (#4505), and this note is the record of the ratchet
+        // shrinking rather than a gap. --model-diagnostics on a full resume took the resident
+        // pool because FirstJoin skipped its score pass (every 1st-pass sidecar already on
+        // disk), so the streaming accumulator was never fed and the report fell back to the
+        // batch write over the resident entries. FirstJoin's rehydrate now feeds that
+        // accumulator from the per-file load it already performs, off the same PRE-compaction
+        // rows, so the flag arms no resident path at any file count and no token can name one.
 
         /// <summary>
         /// A non-Percolator <c>FdrMethod</c> (Simple / Mokapot), which does not use the
@@ -83,10 +82,50 @@ namespace pwiz.Osprey.Core
         /// <para>It still has to be named. The previous blanket bypass let this switch silently
         /// exempt every OTHER resident trigger too, which is the same masking property that hid
         /// the transfer regression. This entry leaves the list last: it can only go when the
-        /// legacy path itself does, which needs #4507 (FDRBench pass 1) and #4505 (mdiag full
-        /// resume) first.</para>
+        /// legacy path itself does, which needs #4507 (FDRBench pass 1) first.</para>
         /// </summary>
         public static readonly string PROJECTION_OFF = @"projection-off";
+
+        /// <summary>
+        /// <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c>: the operator forced the resident
+        /// POST-compaction handoff, where the all-files survivor buffer built by Stage 5 stays
+        /// live across the whole Stage 6 rescore - 88.9 M entries / 28 GB at 163 files, held
+        /// for 5.5 hours, growing super-linearly in file count because the passing base_id set
+        /// grows too (issue #4526). Like <see cref="PROJECTION_OFF"/> this is the A/B
+        /// byte-identity oracle for the streamed default, and it is named for the same reason.
+        ///
+        /// <para>This entry ADDS to the list, which the class remarks say must only shrink.
+        /// The justification is that it names a path which was previously unnamed rather than
+        /// re-admitting one that had been fixed: the older guard's invariant stops at the
+        /// compaction line - it enforces "no unnamed PRE-compaction pool", and this buffer is
+        /// built after it, so no token could refuse it and none was required. Naming it is the
+        /// ratchet reaching further, not running backwards. It goes when the resident handoff
+        /// itself goes.</para>
+        /// </summary>
+        public static readonly string COMPACTED_ENTRIES_BUFFER = @"compacted-entries-buffer";
+
+        /// <summary>
+        /// A straight-through RESUME that rebuilds its first-pass state from its own sidecars:
+        /// only a computed Stage 5 produces the per-file survivor loader, so the rehydrate arm
+        /// hands Stage 6 the all-files post-compaction buffer instead. Tracked by issue #4536.
+        ///
+        /// <para>Deliberately its OWN token rather than reusing
+        /// <see cref="COMPACTED_ENTRIES_BUFFER"/>, which would have been the convenient choice
+        /// - both name the same buffer. Sharing would have let one unfixed path hold the door
+        /// open for a DIFFERENT one that is already fixed: any leg naming the shared token to
+        /// admit this resume would simultaneously admit an
+        /// <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> regression on the computed path that #4530
+        /// closed. A token has to admit exactly one path or the high-water mark leaks, which
+        /// is the entire reason the boolean was replaced by names.</para>
+        ///
+        /// <para>This ADDS to the list, which the class remarks say must only shrink. Same
+        /// justification as <see cref="COMPACTED_ENTRIES_BUFFER"/>: it names a path that was
+        /// previously unnamed and UNGUARDED - it ran on any multi-file resume with nothing
+        /// required and nothing reported - rather than re-admitting one that had been fixed.
+        /// Naming it is the ratchet reaching further, not running backwards. It goes when
+        /// #4536 gives the rehydrate its own survivor loader.</para>
+        /// </summary>
+        public static readonly string RESUME_SURVIVOR_HANDOFF = @"resume-survivor-handoff";
 
         /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
@@ -94,7 +133,8 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
-            HPC_MERGE, FDRBENCH_PASS1, MDIAG_FULL_RESUME, NON_PERCOLATOR_FDR, PROJECTION_OFF
+            HPC_MERGE, FDRBENCH_PASS1, NON_PERCOLATOR_FDR, PROJECTION_OFF,
+            COMPACTED_ENTRIES_BUFFER, RESUME_SURVIVOR_HANDOFF
         };
     }
 }

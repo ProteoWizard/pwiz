@@ -283,9 +283,9 @@ differs. Selection precedence, resolved once at process start
 (`Osprey.Core/OspreyEnvironment.cs`; `PeakDataExtractor.cs:231-239`):
 
 1. `OSPREY_PICK_LDA_MODEL` set to an existing JSON file → that model (test / retrain override);
-2. else `OSPREY_PICK_LDA` set and not `0` → the hardcoded resolution-keyed model
+2. else `OSPREY_PICK_LDA` is not `0` (**default**) → the hardcoded resolution-keyed model
    (`PickLdaModel.ForResolution` — Stellar weights for unit resolution, Astral for HRAM);
-3. else (**default**) → the legacy product pick.
+3. else (`OSPREY_PICK_LDA=0`) → the legacy product pick.
 
 A model JSON must list `features` as `[coelution, ln_intensity, rt_penalty,
 median_polish]` in that exact order (positional weights; `LoadFromEnv` throws a
@@ -394,7 +394,7 @@ unit-resolution runs no MS1 data is produced and both features evaluate to 0.0
 | `FallbackRtTolerance` (`RTCalibrationConfig`) | used when no RT calibration | Sets both `rtTolerance` and `rtSigma` when calibration is absent (`ScoringPipeline.cs:185-186`). |
 | `ReconciliationConfig.TopNPeaks` | `5` | Number of CWT candidates captured per entry for reconciliation (`CoelutionScorer.cs:328`). `0` captures none. |
 | `--task PerFileRescoring` (Stage 6) | off | Activates the boundary-override path: detection skipped, bounds taken from the supplied triple (`see 11-boundary-overrides.md`). |
-| `OSPREY_PICK_LDA` | unset (product pick) | Replaces the default product-form pick with the hardcoded resolution-keyed learned linear model (`PickLdaModel.ForResolution`). Off by default. |
+| `OSPREY_PICK_LDA` | **on** (learned pick) | The hardcoded resolution-keyed learned linear model (`PickLdaModel.ForResolution`) is the default pick. Set `OSPREY_PICK_LDA=0` for the legacy product form, which is how the A/B stays available. |
 | `OSPREY_PICK_LDA_MODEL` | unset | Path to a frozen JSON pick model that overrides the built-in model; its `features` order is validated on load. See [peak-model-training.md](peak-model-training.md). |
 | `OSPREY_PICK_DUMP_CANDIDATES` | unset | Dumps one row per CWT candidate (the raw pick terms) to `<stem>.pick_candidates.tsv` for offline pick-model training. Byte-identical / zero cost when unset. |
 | `OSPREY_DIAG_XIC_ENTRY_ID` / `OSPREY_DIAG_XIC_PASS` | unset | Dumps the per-entry search XIC and CWT peak list (`PeakDataExtractor.cs:154-160`, `312-347`). |
@@ -430,15 +430,16 @@ the reference datasets.
 
 ## Divergences from the Rust documentation
 
-- **[INTENTIONAL — opt-in, off by default] Learned linear pick model** - Beyond
-  the product-form pick the Rust algorithm doc describes, both implementations
-  now carry an opt-in frozen linear pick model (`OSPREY_PICK_LDA` /
+- **[INTENTIONAL — now the default in both implementations] Learned linear pick
+  model** - Beyond the product-form pick the Rust algorithm doc describes, both
+  implementations carry a frozen linear pick model (`OSPREY_PICK_LDA` /
   `OSPREY_PICK_LDA_MODEL`; `Osprey.Scoring/PickLdaModel.cs`, Rust
-  `crates/osprey/src/pick_lda.rs`, kept in lock-step). It is **off by default**,
-  so the reference-dataset parity path (the product pick) is unchanged; when
-  enabled it substitutes only the ranking scalar (argmax + `TotalOrder` tie-break
-  unchanged). The Rust `docs/05-peak-detection.md` predates this feature. Trained
-  offline — see [peak-model-training.md](peak-model-training.md). Evidence:
+  `crates/osprey/src/pick_lda.rs`, kept in lock-step). It shipped opt-in and is
+  now **on by default in both**, so the product pick is reached only via
+  `OSPREY_PICK_LDA=0`, which is how the A/B stays available. It substitutes only
+  the ranking scalar (argmax + `TotalOrder` tie-break unchanged). The Rust
+  `docs/05-peak-detection.md` predates this feature. Trained offline — see
+  [peak-model-training.md](peak-model-training.md). Evidence:
   `Osprey.Scoring/PeakDataExtractor.cs:231-239,330`. Severity: info.
 
 - **[STALE-RUST-DOC] Peak selection uses an RT-penalized rank score, not pure
