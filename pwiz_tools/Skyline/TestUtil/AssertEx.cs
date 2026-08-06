@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
@@ -1467,7 +1468,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void DocsEqual(SrmDocument expected, SrmDocument actual)
+        public static void DocsEqual(SrmDocument expected, SrmDocument actual, string message = null)
         {
             if (!Equals(expected, actual))
             {
@@ -1477,8 +1478,95 @@ namespace pwiz.SkylineTestUtil
                 string actualXML = null;
                 RoundTrip(actual, ref actualXML); // Just for the XML output
                 NoDiff(expectedXML, actualXML, "AssertEx.DocsEqual failed.  Expressing as XML to aid in debugging:");  // This should throw
-                AreEqual(expected, actual);  // In case NoDiff doesn't throw (as when problem is actually in XML read or write)
+                // The XML agrees, so the difference is in something the document holds but does
+                // not write. Saying which is the only way to see it: the documents print the same.
+                AreEqual(expected, actual,
+                    TextUtil.SpaceSeparate(message ?? string.Empty, DescribeModelDifference(expected, actual)));
             }
+        }
+
+        /// <summary>
+        /// Where two documents which serialize to the same XML differ, which is all that is left
+        /// once <see cref="NoDiff"/> has nothing to say. The precursor's results are where this
+        /// lives: they carry more than the document writes - which candidate peak each peak is, and
+        /// the chrom infos a document read before its .skyd still holds.
+        /// </summary>
+        private static string DescribeModelDifference(SrmDocument expected, SrmDocument actual)
+        {
+            var expectedGroups = expected.MoleculeTransitionGroups.ToArray();
+            var actualGroups = actual.MoleculeTransitionGroups.ToArray();
+            if (expectedGroups.Length != actualGroups.Length)
+                return string.Format("{0} precursors expected, {1} found", expectedGroups.Length, actualGroups.Length);
+
+            for (int i = 0; i < expectedGroups.Length; i++)
+            {
+                if (Equals(expectedGroups[i], actualGroups[i]))
+                    continue;
+
+                var expectedResults = expectedGroups[i].AbbreviatedResults;
+                var actualResults = actualGroups[i].AbbreviatedResults;
+                if (expectedResults == null || actualResults == null)
+                    return string.Format("precursor {0} of {1} has results {2}", i + 1, expectedGroups.Length,
+                        expectedResults == null
+                            ? (actualResults == null ? "on neither side, so it differs in something else" : "only where it was not expected to")
+                            : "where it was expected to and nowhere else");
+
+                var differences = new List<string>();
+                if (!expectedGroups[i].Children.SequenceEqual(actualGroups[i].Children))
+                    differences.Add("transitions");
+                foreach (var property in new[]
+                         {
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("peaks", r => r.Peaks),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("user sets", r => r.UserSets),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("q values", r => r.QValues),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("z scores", r => r.ZScores),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("annotations", r => r.Annotations),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("original peak indexes", r => r.OriginalPeakIndexes),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("reintegrated peak indexes", r => r.ReintegratedPeakIndexes),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("needs peak indexes", r => r.NeedsPeakIndexes),
+                             new KeyValuePair<string, Func<TransitionGroupResults, object>>("legacy chrom infos", r => r.LegacyChromInfos),
+                         })
+                {
+                    if (!Equals(property.Value(expectedResults), property.Value(actualResults)))
+                        differences.Add(property.Key);
+                }
+
+                // Each document is asked with its own transitions. The results find a transition by
+                // identity, and two documents read separately hold different identity objects, so
+                // asking one for the other's transition finds nothing at all.
+                var expectedTransitions = expectedGroups[i].Transitions.ToArray();
+                var actualTransitions = actualGroups[i].Transitions.ToArray();
+                for (int t = 0; t < Math.Min(expectedTransitions.Length, actualTransitions.Length); t++)
+                {
+                    var expectedTransition = expectedTransitions[t].Transition;
+                    var actualTransition = actualTransitions[t].Transition;
+                    var expectedPeaks = expectedResults.GetAllTransitionPeaks(expectedTransition).ToArray();
+                    var actualPeaks = actualResults.GetAllTransitionPeaks(actualTransition).ToArray();
+                    if (!expectedPeaks.SequenceEqual(actualPeaks))
+                        differences.Add(string.Format("{0} peaks ({1} expected, {2} found)", expectedTransition,
+                            expectedPeaks.Length, actualPeaks.Length));
+                    for (int replicateIndex = 0; replicateIndex < expectedResults.ChromFileIds.ReplicatePositions.ReplicateCount; replicateIndex++)
+                    {
+                        var expectedFiles = expectedResults.ChromFileIds.GetFileIds(replicateIndex).ToArray();
+                        var actualFiles = actualResults.ChromFileIds.GetFileIds(replicateIndex).ToArray();
+                        for (int f = 0; f < Math.Min(expectedFiles.Length, actualFiles.Length); f++)
+                        {
+                            if (!Equals(expectedResults.FindTransitionCustomPeakBounds(expectedTransition, replicateIndex, expectedFiles[f]),
+                                    actualResults.FindTransitionCustomPeakBounds(actualTransition, replicateIndex, actualFiles[f])))
+                                differences.Add(string.Format("{0} custom peak bounds", expectedTransition));
+                            if (!Equals(expectedResults.FindTransitionAnnotations(expectedTransition, replicateIndex, expectedFiles[f]),
+                                    actualResults.FindTransitionAnnotations(actualTransition, replicateIndex, actualFiles[f])))
+                                differences.Add(string.Format("{0} annotations", expectedTransition));
+                        }
+                    }
+                }
+                if (differences.Count == 0)
+                    differences.Add("something other than the values named here");
+                return string.Format("precursor {0} of {1} differs in {2}", i + 1, expectedGroups.Length,
+                    string.Join(", ", differences.Distinct()));
+            }
+
+            return "no precursor differs";
         }
 
         public static void Cloned(SrmDocument expected, SrmDocument actual)

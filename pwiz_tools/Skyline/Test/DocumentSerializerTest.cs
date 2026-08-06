@@ -170,7 +170,7 @@ namespace pwiz.SkylineTest
                     var document2 = (SrmDocument)xmlSerializer.Deserialize(new StringReader(stringWriter.ToString()));
                     // DocsEqual rather than AreEqual, so that a round trip which loses something
                     // says which element it was rather than printing two identical doc summaries.
-                    AssertEx.DocsEqual(document, document2);
+                    AssertEx.DocsEqual(document, document2, compactFormatOption.Name);
                 }
             }
             finally
