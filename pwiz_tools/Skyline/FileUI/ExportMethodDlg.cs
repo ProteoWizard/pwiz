@@ -2463,7 +2463,8 @@ namespace pwiz.Skyline.FileUI
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
                 Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))
             {
-                using (var chooseDirDialog = new FolderBrowserDialog())
+                // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+                using (var chooseDirDialog = FormUtil.CreateFolderBrowserDialog())
                 {
                     chooseDirDialog.Description = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template;
                     if (!string.IsNullOrEmpty(templateName))

@@ -204,5 +204,26 @@ namespace pwiz.Common.SystemUtil
                 from Control childControl in control.Controls
                 select GetFocus(childControl)).FirstOrDefault(focus => focus != null);
         }
+
+        /// <summary>
+        /// Creates a folder browser showing the classic "Browse For Folder" tree on every framework we build for.
+        /// .NET Framework only ever shows that dialog, while .NET 8 defaults AutoUpgradeEnabled to true and shows
+        /// the newer IFileDialog folder picker instead - so without this the same build would present a different
+        /// dialog depending on which runtime it ran under. The newer picker also ignores BFFM_SETSELECTION, which
+        /// is how the classic tree is driven, so it silently returns the folder it opened on rather than the one
+        /// it was asked for (see NativeFolderBrowserDialog).
+        ///
+        /// TODO: revisit. The newer picker is the better dialog - an address bar, a path you can paste into, the
+        /// places bar - and adopting it is a deliberate UI change plus a rewrite of the folder-browser automation,
+        /// not something to inherit silently from a framework upgrade.
+        /// </summary>
+        public static FolderBrowserDialog CreateFolderBrowserDialog()
+        {
+            var dlg = new FolderBrowserDialog();
+#if !NET472
+            dlg.AutoUpgradeEnabled = false;
+#endif
+            return dlg;
+        }
     }
 }

@@ -30,6 +30,7 @@ using System.ServiceModel;
 #endif
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
+using pwiz.Common.SystemUtil;
 using ZedGraph;
 using Timer = System.Windows.Forms.Timer;
 
@@ -689,7 +690,8 @@ namespace SkylineTester
 
         public void BrowseBuild()
         {
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = "Select or create a root folder for build source files.";
                 dlg.ShowNewFolderButton = true;

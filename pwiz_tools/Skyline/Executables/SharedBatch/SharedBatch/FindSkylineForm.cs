@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.GUI;
 using SharedBatch.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace SharedBatch
 {
@@ -22,7 +23,8 @@ namespace SharedBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var folderBrowserDlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var folderBrowserDlg = FormUtil.CreateFolderBrowserDialog())
             {
                 folderBrowserDlg.ShowNewFolderButton = false;
                 folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
