@@ -37,7 +37,7 @@ using pwiz.Osprey.Tasks.ModelDiagnostics;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// First-join phase of the Osprey pipeline (Stage 5 in the
+    /// FirstPassFDR phase of the Osprey pipeline (Stage 5 in the
     /// HPC-boundary view from <c>Osprey-workflow.html</c>): runs the
     /// first-pass Percolator SVM + protein FDR over the joined per-file
     /// scores, persists the per-file 1st-pass FDR sidecar, compacts
@@ -67,12 +67,12 @@ namespace pwiz.Osprey.Tasks
     /// <c>PlanningPerformed</c> byproduct is the gate for that next task —
     /// it is <c>true</c> only when the Stage 6 planning block actually ran.
     /// </summary>
-    internal sealed class FirstJoinTask : OspreyTask
+    internal sealed class FirstPassFdrTask : OspreyTask
     {
         public override string Name => @"FirstPassFDR";
 
         /// <summary>
-        /// Computes the Stage 5 first-join (Percolator first-pass FDR + Stage 6
+        /// Computes Stage 5 (Percolator first-pass FDR + Stage 6
         /// planning) in straight-through, --task FirstPassFDR (StopAfterStage5), and
         /// the --input-scores full-pipeline. Excluded in --task PerFileScoring
         /// (stops at Stage 1-4), --task PerFileRescoring, and the --task SecondPassFDR
@@ -87,7 +87,7 @@ namespace pwiz.Osprey.Tasks
             // requires --input-scores, so StopAfterStage5 implies inputs at
             // parse time -- a --task FirstPassFDR run can never reach here without
             // InputScores.
-            // ProgramTests.TestValidateFirstJoinRequiresInputScores pins that
+            // ProgramTests.TestValidateFirstPassFdrRequiresInputScores pins that
             // rejection, since the membership truth table (PipelineMembershipTest)
             // does not encode the cross-flag dependency on its own.
             return (!inputs && !c.NoJoin)
@@ -233,7 +233,7 @@ namespace pwiz.Osprey.Tasks
         {
             // Compute path (Stage 5 first-pass FDR + Stage 6 planning): the
             // upstream PerFileScoring task did NOT hydrate a rescore bundle, so
-            // this run owns the full first-join work. The bundle-present
+            // this run owns the full FirstPassFDR work. The bundle-present
             // disk-load counterpart lives in Rehydrate. The driver reaches this
             // task here only in the bundle-absent modes (straight-through,
             // --task FirstPassFDR); a worker-mode consumer materializes it via
@@ -248,7 +248,7 @@ namespace pwiz.Osprey.Tasks
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
-            // OSPREY_EXPERIMENT_AGG family, re-checked at the CONSUMING site against the join's
+            // OSPREY_EXPERIMENT_AGG family, re-checked at the CONSUMING site against FirstPassFDR's
             // real file count. Program.ValidateArgs runs the same helper at startup from the
             // command line, which is where an operator wants the message.
             //
@@ -346,7 +346,7 @@ namespace pwiz.Osprey.Tasks
             // projection path via a ModelDiagnosticsData.Accumulator fed by the score-pass sink
             // (RunFirstPassProjection below), folding each pre-compaction row into the reduced
             // report structures rather than holding the whole-run FdrEntry pool resident -- which
-            // OOM'd an 82-file run at the join. The reductions are order-independent, so the
+            // OOM'd an 82-file run at FirstPassFDR. The reductions are order-independent, so the
             // streamed report is byte-identical to the resident build, and it stays off the
             // default output path.
             bool needsResidentFirstPassPool =
@@ -435,7 +435,7 @@ namespace pwiz.Osprey.Tasks
                 // first-pass run + experiment q-values and raw SVM discriminant -- BEFORE
                 // compaction drops the non-surviving entries. Mirrors Rust
                 // pipeline.rs write_fdrbench_peptide_input (#4377). Pass 2 (the
-                // post-compaction reported set) is emitted from MergeNodeTask; the two
+                // post-compaction reported set) is emitted from SecondPassFdrTask; the two
                 // are mutually exclusive per run (--fdrbench-pass). Reached only on the
                 // resident (legacy) first-pass path -- --fdrbench pass 1 routes here via
                 // the projection gate above.
@@ -458,7 +458,7 @@ namespace pwiz.Osprey.Tasks
                 // "Features != null means this entry was rescored" sentinel that
                 // ReconciledParquetWriter.BuildOverlay relies on valid going into
                 // Stage 6 (mirrors the resume-rehydrate re-null and
-                // PerFileScoringTask.HydrateRescoreBundleIfPresent). MergeNode reloads
+                // PerFileScoringTask.HydrateRescoreBundleIfPresent). SecondPassFDR reloads
                 // features from the reconciled parquet.
                 foreach (var kvp in perFileEntries)
                     foreach (var entry in kvp.Value)
@@ -468,13 +468,13 @@ namespace pwiz.Osprey.Tasks
             }
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
-            // (MergeNodeTask) owns its own 2nd-pass rehydrate -- it reloads (or
+            // (SecondPassFdrTask) owns its own 2nd-pass rehydrate -- it reloads (or
             // recomputes) the 2nd-pass scores onto the shared entry buffer
             // before protein FDR and the blib write. A former overlay at this
-            // point was redundant (its result was overwritten by MergeNode's,
+            // point was redundant (its result was overwritten by SecondPassFDR's,
             // and nothing between here and Stage 7 consumes it -- Stage 6 is a
             // no-op once a 2nd-pass sidecar exists) and forced Stage 5 to reach
-            // forward into MergeNodeTask for its validity key. Removed so Stage 5
+            // forward into SecondPassFdrTask for its validity key. Removed so Stage 5
             // holds no knowledge of what runs after it.
 
             // Stage 6: planning checkpoint -- multi-charge consensus +
@@ -616,7 +616,7 @@ namespace pwiz.Osprey.Tasks
             // at 82 files) and has exactly one reader, the WriteFromAccumulator call the
             // line above just made. It reached here on the published RescoreBundle, whose
             // byproduct slot lives for the process, so leaving the property set would pin
-            // that memory through Stage 6 and the merge for nothing.
+            // that memory through Stage 6 and SecondPassFDR for nothing.
             bundle.ModelDiagnosticsAccumulator = null;
 
             // Compaction delegates to RescoreCompaction.Apply on the bundle
@@ -651,7 +651,7 @@ namespace pwiz.Osprey.Tasks
             // ... and a null loader is exactly what leaves Stage 6 on the RESIDENT
             // post-compaction handoff: PerFileRescore's streamed branches are all gated on
             // this slot, so with nothing to stream from, the all-files survivor buffer
-            // published above stays live across the whole rescore and into the merge. Run
+            // published above stays live across the whole rescore and into SecondPassFDR. Run
             // guards that with Stage6ResidentHandoffGuardError; the guard cannot fire here,
             // because it deliberately no-ops when streaming is unavailable on the grounds
             // that such runs are "already resident for a reason with its own token" - which
@@ -684,7 +684,7 @@ namespace pwiz.Osprey.Tasks
             }
             // The bundle-adopt / resume path never plans, so the rescore gate is
             // false (PerFileRescore falls back to the no-op unless a worker
-            // RescoreBundle is present). Mirrors the old "FirstJoin rehydrates ->
+            // RescoreBundle is present). Mirrors the old "FirstPassFDR rehydrates ->
             // DidPlan is false" semantics, now as a published slot.
             ctx.Publish(new PlanningPerformed(false));
             return true;
@@ -704,7 +704,7 @@ namespace pwiz.Osprey.Tasks
         /// CanRehydrate gated the sidecars as valid, that is a genuine fault, not
         /// a "recompute instead" case. Clears PIN features on the overlaid stubs,
         /// exactly as the worker hydration does, so PerFileRescore's "Features !=
-        /// null means rescored" parquet criterion and MergeNode's feature reload
+        /// null means rescored" parquet criterion and SecondPassFDR's feature reload
         /// stay correct.
         ///
         /// <para>Which hydrate runs is decided by what upstream actually loaded,
@@ -764,7 +764,7 @@ namespace pwiz.Osprey.Tasks
             // here because it stops at PerFileScoring's "no scored entries" boundary. That is
             // NOT true on the lazy-Demand path, which swallows the stop when ExitCode == 0.
             // The conclusion survives for a different reason: such a run writes no 1st-pass
-            // sidecar, so FirstJoin Runs rather than Rehydrates and never reaches this line.)
+            // sidecar, so FirstPassFDR Runs rather than Rehydrates and never reaches this line.)
             bool leanStubs = residentStubs == 0;
 
             RescoreInputs bundle;
@@ -785,7 +785,7 @@ namespace pwiz.Osprey.Tasks
 
             // Clear PIN features on the overlaid stubs so PerFileRescore's
             // "Features != null means this entry was rescored" parquet criterion
-            // stays correct and MergeNode reloads features from the reconciled
+            // stays correct and SecondPassFDR reloads features from the reconciled
             // parquet -- mirrors PerFileScoringTask.HydrateRescoreBundleIfPresent.
             //
             // Skipped on the streaming arm, where it is provably a no-op: those stubs come
@@ -1225,7 +1225,7 @@ namespace pwiz.Osprey.Tasks
         /// target (regardless of q-value) with its first-pass run + experiment
         /// q-values and raw SVM discriminant -- the assumption the second-pass
         /// reported set rests on. No-op for the default pass-2 (emitted
-        /// post-compaction by <see cref="MergeNodeTask"/>) and when no FDRBench
+        /// post-compaction by <see cref="SecondPassFdrTask"/>) and when no FDRBench
         /// output was requested. Called on the straight-through Run path only: the
         /// pre-compaction pool exists solely here, mirroring Rust osprey, which
         /// emits at the same point in its single pipeline.
@@ -1413,17 +1413,17 @@ namespace pwiz.Osprey.Tasks
                 ctx);
 
             // Persist the trained 1st-pass model beside each file's reconciled sidecars so a
-            // distributed --task SecondPassFDR merge node -- or any resume that skips 1st-pass
+            // distributed --task SecondPassFDR node -- or any resume that skips 1st-pass
             // training -- can run the frozen 2nd-pass modes without re-training. Written
-            // per-file (identical copies) so the merge node finds it by the same input-file
+            // per-file (identical copies) so SecondPassFDR finds it by the same input-file
             // stem it uses for every other reconciled sidecar. Best-effort: a write failure
-            // must not fail the run (the merge node keeps its existing fail-fast when the
+            // must not fail the run (SecondPassFDR keeps its existing fail-fast when the
             // sidecar is absent). Save() is a no-op for the GBDT / degenerate model.
             if (ctx.TryGet<FirstPassPercolatorModel>(out var firstPassModel) && firstPassModel.Results != null)
             {
-                // protein-compact needs the stratum as well as the model, and the merge node
+                // protein-compact needs the stratum as well as the model, and SecondPassFDR
                 // cannot rebuild it (that takes the full library plus the 1st-pass detected
-                // peptides). It rides in the same sidecar, so it reaches the merge node by the
+                // peptides). It rides in the same sidecar, so it reaches SecondPassFDR by the
                 // relay that already carries the model. Null under every other mode.
                 HashSet<uint> stratumBaseIds = null;
                 if (ctx.TryGet<ProteinCompactStratum>(out var stratum))
@@ -1464,7 +1464,7 @@ namespace pwiz.Osprey.Tasks
                     @"sidecar pair(s). Exiting before Stage 6 rescore.",
                     perFileEntries.Count));
                 // Success: return true (not false). The stop after Stage 5 is now
-                // a membership fact -- PerFileRescore and MergeNode are excluded
+                // a membership fact -- PerFileRescore and SecondPassFDR are excluded
                 // by IsIncluded under --task FirstPassFDR, so the driver loop iterates no
                 // further. The failure path above keeps ExitCode=1; return false.
                 ctx.ExitCode = 0;
@@ -1602,7 +1602,7 @@ namespace pwiz.Osprey.Tasks
 
             // Compute per-file gap-fill targets. Per-file isolation-window m/z
             // intervals (from each file's extracted windows straight through, or
-            // rehydrated from calibration.json on an HPC merge node) constrain
+            // rehydrated from calibration.json on an HPC SecondPassFDR node) constrain
             // gap-fill candidates to the m/z ranges each file actually isolated --
             // essential for GPF datasets with disjoint windows. Inert for a single
             // sDIA window covering the whole range (every precursor is in-range).
@@ -1871,7 +1871,7 @@ namespace pwiz.Osprey.Tasks
         /// Run Percolator-based FDR control (Stage 5). Thin facade over
         /// <c>PercolatorEngine.RunPercolatorFdr</c>: supplies the PIN
         /// feature names and routes logging through <c>ctx.LogInfo</c>. Static +
-        /// internal so <see cref="MergeNodeTask"/> can call it for the 2nd-pass
+        /// internal so <see cref="SecondPassFdrTask"/> can call it for the 2nd-pass
         /// run after Stage 6 reconciliation (the HPC distribution case where
         /// workers wrote reconciled .scores.parquet but no
         /// .2nd-pass.fdr_scores.bin sidecars; mirrors Rust pipeline.rs:4394-4468).
@@ -1884,14 +1884,14 @@ namespace pwiz.Osprey.Tasks
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
             PercolatorResults frozenModel = null)
         {
-            // loadFileFeatures is supplied by the first-pass caller (FirstJoinTask.Run)
+            // loadFileFeatures is supplied by the first-pass caller (FirstPassFdrTask.Run)
             // so the engine streams PIN features per file from parquet (issue #4355
             // Phase 4). The 2nd-pass caller (Pass2FdrSidecar) leaves it null and
             // pre-reloads features onto the stubs, so the engine reads them resident.
 
             // OSPREY_PASS2_QVALUE=transfer: on the FIRST-pass run only, publish the trained
             // model (FoldWeights / FoldBiases / Standardizer) as a byproduct so the
-            // merge-node 2nd-pass step can re-score reconciled features with this FROZEN
+            // SecondPassFDR 2nd-pass step can re-score reconciled features with this FROZEN
             // model instead of retraining. Null (a pure no-op in the engine) on the default
             // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
             Action<PercolatorResults> captureModel = null;
@@ -2237,7 +2237,7 @@ namespace pwiz.Osprey.Tasks
                 captureContributions = c => mdiagContributions = c;
 
             // OSPREY_PASS2_QVALUE=transfer / transfer-compete / protein-compact: publish the
-            // trained (frozen) 1st-pass model so the merge-node 2nd pass can re-score the
+            // trained (frozen) 1st-pass model so the SecondPassFDR 2nd pass can re-score the
             // reconciled features with it instead of retraining (transfer-compete / protein-compact
             // then recompute q/PEP by a fresh target-decoy competition). The projection first pass
             // (this method) is the SAME lean path the default percolator mode takes, so the model

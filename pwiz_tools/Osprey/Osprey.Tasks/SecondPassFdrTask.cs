@@ -33,18 +33,18 @@ using pwiz.Osprey.Tasks.ModelDiagnostics;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Final merge-node phase of the Osprey pipeline (Stage 7 in the
+    /// Final SecondPassFDR phase of the Osprey pipeline (Stage 7 in the
     /// HPC-boundary view from <c>Osprey-workflow.html</c>): persists the
     /// per-file 2nd-pass FDR-score sidecars, runs run-wide protein FDR
     /// (parsimony + picked-protein TDC), and writes the BiblioSpecLite
-    /// <c>.blib</c> output. Invoked once per pipeline run on the merge
+    /// <c>.blib</c> output. Invoked once per pipeline run on the SecondPassFDR
     /// node — no per-file fan-out beyond the sidecar write loop.
     ///
     /// All three substeps (the 2nd-pass FDR sidecar block, RunProteinFdr,
     /// and WriteBlibOutput) live in this file; nothing on AnalysisPipeline
-    /// is needed for the merge-node phase.
+    /// is needed for the SecondPassFDR phase.
     /// </summary>
-    internal sealed class MergeNodeTask : OspreyTask
+    internal sealed class SecondPassFdrTask : OspreyTask
     {
         public override string Name => @"SecondPassFDR";
 
@@ -52,7 +52,7 @@ namespace pwiz.Osprey.Tasks
         /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
         /// straight-through, the --task SecondPassFDR stage, and the --input-scores
         /// full-pipeline. Excluded in --task PerFileScoring, --task FirstPassFDR,
-        /// and --task PerFileRescoring (all of which stop before the merge node).
+        /// and --task PerFileRescoring (all of which stop before SecondPassFDR).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
         {
@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Tasks
         {
             // The experiment-wide aggregation reaches this task's outputs (the .blib and the
             // 2nd-pass FDR sidecars) through the experiment q it changes upstream, so it has to
-            // invalidate them too. Without it, flipping the arm re-ran Stage 5 - FirstJoinTask
+            // invalidate them too. Without it, flipping the arm re-ran Stage 5 - FirstPassFdrTask
             // did carry the suffix - while THIS task's .blib and sidecars were reused from the
             // other arm, leaving one output directory holding two arms' results.
             // The 2nd-pass mode decides the q this task writes into the .blib and the 2nd-pass
@@ -112,7 +112,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// No-op disk-load: MergeNode is the terminal aggregator. Its output
+        /// No-op disk-load: SecondPassFDR is the terminal aggregator. Its output
         /// (the .blib + 2nd-pass FDR sidecars) is an external artifact that no
         /// other task consumes in-memory, so there is no cross-task state to
         /// rehydrate and nothing ever <see cref="PipelineContext.Demand{T}"/>s
@@ -125,7 +125,7 @@ namespace pwiz.Osprey.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
-            // Mid-Run crash safety: see FirstJoinTask.Run for rationale.
+            // Mid-Run crash safety: see FirstPassFdrTask.Run for rationale.
             foreach (var output in Outputs(ctx))
                 TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
@@ -202,7 +202,7 @@ namespace pwiz.Osprey.Tasks
             // discriminant, so FDRBench can evaluate the FDR/FDP of what Osprey actually outputs.
             // (The blib writer only persists a 0.0 placeholder discriminant, so this is the only
             // path to a usable FDRBench score.) Pass 1 (the full pre-compaction first-pass pool)
-            // is emitted earlier, in FirstJoinTask before compaction; --fdrbench-pass selects one
+            // is emitted earlier, in FirstPassFdrTask before compaction; --fdrbench-pass selects one
             // or both (both writes .pass1/.pass2-suffixed files).
             var benchPath = FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_2);
             if (benchPath != null)
@@ -236,7 +236,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             // --model-diagnostics: append the pass-2 (final reported pool) FDR
-            // calibration views to the page FirstJoinTask wrote for pass 1, from
+            // calibration views to the page FirstPassFdrTask wrote for pass 1, from
             // this post-compaction, second-pass-q-valued pool -- the same
             // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
             // off the default output path; a failure is logged and swallowed.
@@ -253,15 +253,15 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and
         /// <see cref="LibraryFragmentRelease"/> for the set arithmetic.
         ///
-        /// <para>This is the merge node's own release, and on the HPC chain it is the ONLY one.
-        /// <c>FirstJoinTask</c> - where the Stage 5 -&gt; 6 release lives - is excluded from a
+        /// <para>This is SecondPassFDR's own release, and on the HPC chain it is the ONLY one.
+        /// <c>FirstPassFdrTask</c> - where the Stage 5 -&gt; 6 release lives - is excluded from a
         /// <c>--task SecondPassFDR</c> pipeline altogether, and that leg loads the library
         /// fragment-laden (<c>OmitFragments</c> is gated on <c>StopAfterStage5</c>, false here),
         /// so without this the one process that holds the whole 6.3 M-entry fragment set through
         /// second-pass Percolator, protein FDR AND the blib write realized no saving at all -
         /// the distributed path being exactly where memory hurts most.</para>
         ///
-        /// <para>Harmless and near-free on the straight-through pipeline, where FirstJoin
+        /// <para>Harmless and near-free on the straight-through pipeline, where FirstPassFDR
         /// already released in this same process: <see cref="LibraryEntry.ReleaseSpectrum"/> is
         /// idempotent, so the count reported here is only what Stage 6 dropped afterwards (a
         /// gap-fill candidate that did not survive rescoring).</para>
@@ -334,7 +334,7 @@ namespace pwiz.Osprey.Tasks
         /// Stage 6 rescored at least one file (multi-charge consensus, inter-replicate
         /// reconciliation, or gap-fill). Disk-based so it reads identically in the
         /// in-process pipeline (Stage 6 just wrote them) and the --task SecondPassFDR
-        /// merge node (the Stage 6 worker wrote them). The C# analog of Rust's
+        /// node (the Stage 6 worker wrote them). The C# analog of Rust's
         /// <c>total_rescored &gt; 0</c> gate (pipeline.rs:5209) for the second
         /// Percolator pass.
         /// </summary>

@@ -82,12 +82,12 @@ render it without cloning, use a proxy such as
   STAGE 2  mzML processing                       per file
   STAGE 3  Calibration (recalibration)           per file
   STAGE 4  Main first-pass search (21 features)  per file
-       --------------------------------------------------- first join
+       --------------------------------------------------- FirstPassFDR
   STAGE 5  First-pass FDR + reconciliation plan  join (all files)
        --------------------------------------------------- fan back out
   STAGE 6  Per-file rescore + gap-fill           per file
-       --------------------------------------------------- second join
-  STAGE 7  2nd-pass FDR + protein FDR + .blib     merge node
+       --------------------------------------------------- SecondPassFDR
+  STAGE 7  2nd-pass FDR + protein FDR + .blib     join (all files)
 ```
 
 ## HPC distribution: the four `--task` workers
@@ -102,7 +102,7 @@ fan-out boundaries into four single-task workers — one node = one
 | `PerFileScoring`   | split 1 — per file | mzML (`-i`) + library (`-l`) | `<stem>.scores.parquet`, `<stem>.calibration.json` |
 | `FirstPassFDR`     | join 1 — all files | every `<stem>.scores.parquet` (`--input-scores`) | `<stem>.1st-pass.fdr_scores.bin`, `<stem>.reconciliation.json` |
 | `PerFileRescoring` | split 2 — per file | `<stem>.scores.parquet` + co-located `.1st-pass.fdr_scores.bin`, `.reconciliation.json` | `<stem>.scores-reconciled.parquet` |
-| `SecondPassFDR`    | join 2 — merge node | every `<stem>.scores-reconciled.parquet` (`--input-scores`) | `<output>.blib` (+ `<stem>.2nd-pass.fdr_scores.bin` when protein FDR is on) |
+| `SecondPassFDR`    | join 2 — all files | every `<stem>.scores-reconciled.parquet` (`--input-scores`) | `<output>.blib` (+ `<stem>.2nd-pass.fdr_scores.bin` when protein FDR is on) |
 
 The driver also writes a `<output>.<TaskName>.osprey.task` validity
 sidecar next to each output; re-running a task whose outputs already exist
@@ -141,8 +141,8 @@ Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.b
   not match the current invocation.
 - **`--input-scores` ordering is significant.** A *directory* argument is
   globbed and sorted internally (deterministic). An explicit *file list*
-  is consumed in the order given. First-join reconciliation is
-  order-sensitive, so for the join tasks pass a directory or a
+  is consumed in the order given. FirstPassFDR reconciliation is
+  order-sensitive, so for `FirstPassFDR` and `SecondPassFDR` pass a directory or a
   deterministically sorted list — a workflow engine's channel order is
   otherwise nondeterministic and would cause run-to-run drift.
 - **Outputs land next to inputs; sidecars travel with the parquet.** Each

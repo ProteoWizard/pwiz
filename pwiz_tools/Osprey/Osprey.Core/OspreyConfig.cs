@@ -75,7 +75,7 @@ namespace pwiz.Osprey.Core
         /// <c>3</c> (both) emits both in one run; because a single <see cref="OutputFdrBench"/>
         /// path is given, each pass is written with a <c>.pass1</c> / <c>.pass2</c> stem suffix so
         /// they do not overwrite each other (see <c>FdrBenchInputWriter.PathForPass</c>). Pass 1
-        /// is emitted from the first-join stage before compaction; pass 2 from the merge node
+        /// is emitted from the FirstPassFDR stage before compaction; pass 2 from SecondPassFDR
         /// after rescoring.
         /// </summary>
         public int FdrBenchPass { get; set; } = FDRBENCH_PASS_2;
@@ -326,7 +326,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
-        /// include only the per-file fan-out, not the join. Set by both
+        /// include only the per-file fan-out, not the joining tasks. Set by both
         /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
         /// concrete behavior depends on the input type. With <c>-i</c> mzML it
         /// is the Stage 1-4 worker — each input produces a
@@ -406,15 +406,19 @@ namespace pwiz.Osprey.Core
 
     /// <summary>
     /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
-    /// (one HPC node = one task). The names are the stable CLI contract and
-    /// match each task's <c>OspreyTask.Name</c>.
+    /// (one HPC node = one task). Each member is its task's
+    /// <c>OspreyTask.Name</c> in PascalCase -- the same string the task stamps
+    /// into its <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c>
+    /// -- so the member, the class, and the CLI selector are one token.
+    /// <see cref="PerFileRescore"/> is the one member that still reads
+    /// differently from its Name (<c>PerFileRescoring</c>).
     /// </summary>
     public enum HpcTask
     {
         PerFileScoring,
-        FirstJoin,
+        FirstPassFdr,
         PerFileRescore,
-        MergeNode,
+        SecondPassFdr,
         // Stage 1 alone: build each input's .spectra.bin cache and stop. Not an
         // HPC fan-out node like the four above but the data-staging step ahead of
         // them, which is why it needs no library and publishes no byproducts.
@@ -472,7 +476,7 @@ namespace pwiz.Osprey.Core
         ///
         /// Use this ANYWHERE the question is "is this the Percolator pipeline?" rather
         /// than a raw <c>== FdrMethod.Percolator</c>. Those gates are scattered across the
-        /// Tasks layer -- the join's projection gate, the 2nd-pass projection gate,
+        /// Tasks layer -- FirstPassFDR's projection gate, the 2nd-pass projection gate,
         /// <c>NeedsResidentPool</c>, the Stage 5 log header -- and each one that compares
         /// against Percolator alone silently routes Gbdt down the resident
         /// <c>FdrEntry</c> path instead of the streaming projection. That fails quietly:

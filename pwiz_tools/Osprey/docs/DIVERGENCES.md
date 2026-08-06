@@ -224,7 +224,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | Planner passing-precursor precondition undocumented | "For each scored entry" no per-entry gate | Also requires `(base_id,charge)` in `passingBaseIds`; ties to Rust `reconciliation.rs:560-576` | `ReconciliationPlanner.cs:131-144,209` | minor |
 | STALE | Ceiling is sigma-clipped MAD, not plain | "calibration-MAD-based ceiling" | Sigma-clipped median of refined residuals, capped by first-pass MAD; ties to Rust docstring | `ReconciliationPlanner.cs:166-183,299-322` | minor |
 | INTENT | Decoy pairing by base_id, not prefix | Matched by DECOY_ prefix | Pairs by `EntryId & 0x7FFFFFFF`; recognizes prefix-less lib decoys | `ConsensusRts.cs:93-118`; `ReconciliationPlanner.cs:120-144` | info |
-| INTENT | Second-pass FDR is native Percolator only | "Percolator/Mokapot/Simple applies" | No Python Mokapot; native managed Percolator (or simple) | `MergeNodeTask.cs`; see 08 | info |
+| INTENT | Second-pass FDR is native Percolator only | "Percolator/Mokapot/Simple applies" | No Python Mokapot; native managed Percolator (or simple) | `SecondPassFdrTask.cs`; see 08 | info |
 
 ### [11-boundary-overrides.md](11-boundary-overrides.md) — matches-with-notes
 

@@ -67,7 +67,7 @@ artifact**, so the multi-GB spectra caches there are harmless):
    `FirstPassFDR` stamp and every 1st-pass sidecar valid, so the re-run rebuilds
    its post-Stage-5 bundle from those **own** sidecars
    (`LoadOwnReconciliationBundle`). (Task **names** throughout - the classes
-   behind them are `FirstJoinTask` and `MergeNodeTask`, and only the names appear
+   behind them are `FirstPassFdrTask` and `SecondPassFdrTask`, and only the names appear
    in the `[TASK]` log lines and `.osprey.task` stamps.) **No other leg reaches
    that loader**: mode 2 deletes the `FirstPassFDR` stamp, so that task *runs*;
    mode 4 invalidates nothing, so nothing demands its state; and mode 3's
