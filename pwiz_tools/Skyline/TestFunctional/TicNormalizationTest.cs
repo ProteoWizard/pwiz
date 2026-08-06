@@ -184,7 +184,8 @@ namespace pwiz.SkylineTestFunctional
                         var chromFileInfo = chromatogramSet.MSDataFileInfos[0];
                         Assert.IsTrue(replicateIndex >= 0);
                         var actualValue = curve.Points[i].Y;
-                        var rawArea = transition.Results[replicateIndex].FirstOrDefault()?.Area;
+                        // The area is the precursor's columnar results now
+                        var rawArea = transitionGroup.GetTransitionArea(transition.Transition, replicateIndex);
                         var expectedValue = rawArea * medianTicArea / chromFileInfo.TicArea;
                         if (!expectedValue.HasValue)
                         {

@@ -141,20 +141,25 @@ namespace pwiz.SkylineTest
                 var handlerAllNull = new MProphetResultsHandler(docOriginal, peakScoringModel) { QValueCutoff = -0.001 };
                 handlerAllNull.ScoreFeatures();
                 var docNull = handlerAllNull.ChangePeaks();
-                foreach (var transitionNode in docNull.PeptideTransitions)
-                    foreach (var chromInfo in transitionNode.ChromInfos)
-                        Assert.IsTrue(chromInfo.IsEmpty || transitionNode.IsDecoy);
+                // The peaks are the precursors' columnar results now
+                foreach (var nodeGroup in docNull.PeptideTransitionGroups)
+                    foreach (var nodeTran in nodeGroup.Transitions)
+                        foreach (var peak in new TransitionResultsRef(nodeGroup.AbbreviatedResults,
+                                     nodeTran.Transition).Peaks)
+                            Assert.IsTrue(peak.IsEmpty || nodeTran.IsDecoy);
 
                 // 6. Reintegration adjusts example peak to null at q=0.005 cutoff, but adjusts it to a non-null peak at q=0.20
                 const int groupNum = 11;
                 var midQNode = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
-                foreach (var chromInfo in midQNode.Transitions.SelectMany(transition => transition.ChromInfos))
-                    Assert.IsTrue(chromInfo.IsEmpty);
+                foreach (var peak in midQNode.Transitions.SelectMany(transition =>
+                             new TransitionResultsRef(midQNode.AbbreviatedResults, transition.Transition).Peaks))
+                    Assert.IsTrue(peak.IsEmpty);
                 resultsHandler.QValueCutoff = Q_CUTOFF_HIGH;
                 resultsHandler.ChangePeaks();
                 var midQNodeNew = resultsHandler.Document.PeptideTransitionGroups.ToList()[groupNum];
-                foreach (var chromInfo in midQNodeNew.Transitions.SelectMany(transition => transition.ChromInfos))
-                    Assert.IsFalse(chromInfo.IsEmpty);
+                foreach (var peak in midQNodeNew.Transitions.SelectMany(transition =>
+                             new TransitionResultsRef(midQNodeNew.AbbreviatedResults, transition.Transition).Peaks))
+                    Assert.IsFalse(peak.IsEmpty);
 
                 // 7. Labeled peptide pairs still have matching peaks
                 foreach (var peptideNode in resultsHandler.Document.Peptides)

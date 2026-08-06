@@ -487,6 +487,17 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// Every one of a transition's peaks, in no order a caller can rely on. This is what an
+        /// average over all of them needs, which is the one question that does not care which
+        /// replicate or file each peak came from. Empty when the transition has no results.
+        /// </summary>
+        public IEnumerable<TransitionPeak> GetAllTransitionPeaks(Transition transition)
+        {
+            return (IEnumerable<TransitionPeak>) GetTransitionResults(transition)?.Peaks.FlatValues ??
+                   Array.Empty<TransitionPeak>();
+        }
+
+        /// <summary>
         /// What quantification needs to know about one transition's peaks in one replicate. Empty
         /// when the transition has no results. See
         /// <see cref="TransitionResults.GetQuantifiablePeaks"/>.
@@ -546,6 +557,18 @@ namespace pwiz.Skyline.Model.Results
             ChromFileInfoId fileId)
         {
             return GetTransitionResults(transition)?.FindCustomPeakMetrics(replicateIndex, fileId);
+        }
+
+        /// <summary>
+        /// The boundaries one transition's peak was integrated between in one file: its own when
+        /// its peak was moved on its own, and otherwise the precursor's, which is what nearly
+        /// every peak used. Null when there is no peak there.
+        /// </summary>
+        public CustomPeakBounds? FindTransitionPeakBounds(Transition transition, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            return FindTransitionCustomPeakBounds(transition, replicateIndex, fileId) ??
+                   FindPrecursorPeakBounds(replicateIndex, fileId);
         }
 
         /// <summary>

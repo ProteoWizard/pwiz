@@ -129,16 +129,20 @@ namespace pwiz.SkylineTestData
 
             foreach (var nodePep in document.Molecules)
             {
+                // The chrom infos, with an entry per optimization step, are rebuilt from the .skyd:
+                // a transition does not keep them, and the columnar results hold step zero only.
+                var moleculeResults = new MoleculeResults(document.Settings, nodePep);
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
-                        var message = string.Format("Peptide: {0} Precursor: {1} Transition: {2}", 
+                        var message = string.Format("Peptide: {0} Precursor: {1} Transition: {2}",
                             nodePep, nodeGroup, nodeTran.Transition);
-                        Assert.IsNotNull(nodeTran.Results, message);
-                        Assert.AreEqual(replicateCount, nodeTran.Results.Count, message);
-                        var chromInfoList = nodeTran.Results[replicateCount - 1];
-                        Assert.IsNotNull(chromInfoList);
+                        var results = moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup,
+                            nodeTran.Transition);
+                        Assert.IsNotNull(results, message);
+                        Assert.AreEqual(replicateCount, results.Count, message);
+                        var chromInfoList = results[replicateCount - 1];
 
                         int expectedStepCount = GetExpectedOptStepCount(document, nodePep, nodeGroup, nodeTran);
                         int actualStepCount = chromInfoList.AsEnumerable().Count(chromInfo=>!chromInfo.IsEmpty);

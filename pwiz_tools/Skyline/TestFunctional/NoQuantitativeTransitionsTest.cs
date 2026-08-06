@@ -65,8 +65,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure that the TransitionGroupChromInfo's have their values set based on the quantitative peaks, unless there
             // are no quantitative peaks
-            foreach (var transitionGroupDocNode in document.MoleculeTransitionGroups)
+            foreach (var peptideDocNode in document.Molecules)
+            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
             {
+                // Rebuilt from the .skyd, since a transition keeps no chrom infos
+                var moleculeResults = new MoleculeResults(document.Settings, peptideDocNode);
                 for (int iReplicate = 0; iReplicate < transitionGroupDocNode.EmptyResults.Count; iReplicate++)
                 {
                     var transitionGroupChromInfo = transitionGroupDocNode.EmptyResults[iReplicate][0];
@@ -74,7 +77,8 @@ namespace pwiz.SkylineTestFunctional
                     var nonQuanChromInfos = new List<TransitionChromInfo>();
                     foreach (var t in transitionGroupDocNode.Transitions)
                     {
-                        var chromInfo = t.Results[iReplicate][0];
+                        var chromInfo = moleculeResults.GetTransitionChromInfos(
+                            transitionGroupDocNode.TransitionGroup, t.Transition, iReplicate)[0];
                         if (chromInfo.IsEmpty)
                         {
                             continue;
@@ -125,8 +129,13 @@ namespace pwiz.SkylineTestFunctional
                     {
                         foreach (var peptide in protein.Molecules)
                         {
+                            // Rebuilt from the .skyd, since a transition keeps no chrom infos
+                            var moleculeResults = new MoleculeResults(document.Settings, peptide);
                             foreach (var precursor in peptide.TransitionGroups)
                             {
+                                TransitionChromInfo GetChromInfo(TransitionDocNode t) =>
+                                    moleculeResults.GetTransitionChromInfos(precursor.TransitionGroup,
+                                        t.Transition, iReplicate)[0];
                                 foreach (var transition in precursor.Transitions)
                                 {
                                     RunUI(() =>
@@ -139,7 +148,7 @@ namespace pwiz.SkylineTestFunctional
                                     var transitionChromInfos = new List<TransitionChromInfo>();
                                     if (displayTypeChrom == DisplayTypeChrom.single)
                                     {
-                                        var transitionChromInfo = transition.Results[iReplicate][0];
+                                        var transitionChromInfo = GetChromInfo(transition);
                                         if (!transitionChromInfo.IsEmpty)
                                         {
                                             transitionChromInfos.Add(transitionChromInfo);
@@ -148,14 +157,14 @@ namespace pwiz.SkylineTestFunctional
                                     else
                                     {
                                         transitionChromInfos.AddRange(precursor.Transitions.Where(t => t.ExplicitQuantitative)
-                                            .Select(t => t.Results[iReplicate][0]).Where(t=>!t.IsEmpty));
+                                            .Select(GetChromInfo).Where(t=>!t.IsEmpty));
                                         if (!transitionChromInfos.Any())
                                         {
                                             if (displayTypeChrom != DisplayTypeChrom.total ||
                                                 precursor.Transitions.All(t => !t.ExplicitQuantitative))
                                             {
                                                 transitionChromInfos.AddRange(precursor.Transitions
-                                                    .Select(t => t.Results[iReplicate][0]).Where(t => !t.IsEmpty));
+                                                    .Select(GetChromInfo).Where(t => !t.IsEmpty));
                                             }
                                         }
                                     }

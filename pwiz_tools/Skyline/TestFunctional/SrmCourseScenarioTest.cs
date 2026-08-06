@@ -203,11 +203,16 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(userSetGroups[i].Count, counts[i]);
             }
             counts = new int[userSetTrans.Length];
-            foreach (var chromInfo in document.PeptideTransitions
-                .Where(nodeTran => !ignoreDecoys || !nodeTran.IsDecoy)
-                .SelectMany(nodeTran => nodeTran.ChromInfos))
+            // The user sets are the precursors' columnar results now
+            foreach (var userSet in document.PeptideTransitionGroups
+                         .SelectMany(nodeGroup => nodeGroup.Transitions
+                             .Where(nodeTran => !ignoreDecoys || !nodeTran.IsDecoy)
+                             .SelectMany(nodeTran => Enumerable
+                                 .Range(0, nodeGroup.ResultsReplicateCount)
+                                 .SelectMany(replicateIndex => nodeGroup.AbbreviatedResults
+                                     .GetTransitionPeaks(nodeTran.Transition, replicateIndex))))
+                         .Select(entry => entry.Value.UserSet))
             {
-                var userSet = chromInfo.UserSet;
                 int userSetIndex = userSetTrans.IndexOf(us => Equals(us.UserSet, userSet));
                 Assert.AreNotEqual(-1, userSetIndex, string.Format("Unexpected User Set value {0}", userSet));
                 counts[userSetIndex]++;

@@ -173,15 +173,17 @@ namespace pwiz.SkylineTestData.Results
                 measuredResults = new MeasuredResults(listResults.ToArray());
 
                 docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, expectedPepCount, expectedTransGroupCount, expectedTransCount - 6));
-                // The mzML was filtered for the m/z range 410 to 910.
-                foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
+                // The mzML was filtered for the m/z range 410 to 910. The chrom infos come from the
+                // .skyd, since a transition no longer keeps them.
+                foreach (var tranResults in ResultsUtil.EnumerateTransitionChromInfos(docContainer.Document))
                 {
+                    var nodeTran = tranResults.NodeTran;
                     Assume.IsTrue(nodeTran.HasResults);
-                    Assume.IsNotNull(nodeTran.Results[0]);
+                    Assume.IsNotNull(tranResults.ChromInfos);
                     if (410 > nodeTran.Mz || nodeTran.Mz > 910)
-                        Assume.IsTrue(nodeTran.Results[0][0].IsForcedIntegration);
+                        Assume.IsTrue(tranResults[0][0].IsForcedIntegration);
                     else
-                        Assume.IsFalse(nodeTran.Results[0][0].IsForcedIntegration);
+                        Assume.IsFalse(tranResults[0][0].IsForcedIntegration);
                 }
 
                 // Import LTQ data with MS1 and MS/MS using multiple files for a single replicate
@@ -203,10 +205,11 @@ namespace pwiz.SkylineTestData.Results
                     matchIdentifierDRV = RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + matchIdentifierDRV;
                 }
                 int index = 0;
-                foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
+                foreach (var tranResults in ResultsUtil.EnumerateTransitionChromInfos(docContainer.Document))
                 {
+                    var nodeTran = tranResults.NodeTran;
                     Assume.IsTrue(nodeTran.HasResults);
-                    Assume.AreEqual(listResults.Count, nodeTran.Results.Count);
+                    Assume.AreEqual(listResults.Count, tranResults.ChromInfos.Count);
                     var peptide = nodeTran.Transition.Group.Peptide;
 
                     if (peptide.IsCustomMolecule && index == 24)
@@ -220,18 +223,16 @@ namespace pwiz.SkylineTestData.Results
                     if (!peptide.TextId.StartsWith(matchIdentifierDRV) || 
                         (!peptide.IsCustomMolecule && !peptide.Begin.HasValue))
                     {
-                        Assume.IsNotNull(nodeTran.Results[indexResults]);
-                        Assume.IsFalse(nodeTran.Results[indexResults][0].IsEmpty);
+                        Assume.IsFalse(tranResults[indexResults][0].IsEmpty);
                     }
                     else if (nodeTran.Transition.IonType != IonType.precursor)
-                        Assert.IsTrue(nodeTran.Results[indexResults].IsEmpty);
+                        Assert.IsTrue(tranResults[indexResults].IsEmpty);
                     else
                     {
                         // Random, bogus peaks chosen in both files
-                        Assume.IsNotNull(nodeTran.Results[indexResults]);
-                        Assume.AreEqual(2, nodeTran.Results[indexResults].Count);
-                        Assume.IsFalse(nodeTran.Results[indexResults][0].IsEmpty);
-                        Assume.IsFalse(nodeTran.Results[indexResults][1].IsEmpty);
+                        Assume.AreEqual(2, tranResults[indexResults].Count);
+                        Assume.IsFalse(tranResults[indexResults][0].IsEmpty);
+                        Assume.IsFalse(tranResults[indexResults][1].IsEmpty);
                     }
                     index++;
                 }
@@ -318,18 +319,15 @@ namespace pwiz.SkylineTestData.Results
                 {
                     matchIdentifierLVN = RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + matchIdentifierLVN;
                 }
-                foreach (var nodeTranGroup in docContainer.Document.MoleculeTransitionGroups)
+                foreach (var tranResults in ResultsUtil.EnumerateTransitionChromInfos(docContainer.Document))
                 {
-                    foreach (var docNode in nodeTranGroup.Children)
-                    {
-                        var nodeTran = (TransitionDocNode)docNode;
-                        Assume.IsTrue(nodeTran.HasResults);
-                        Assume.AreEqual(1, nodeTran.Results.Count);
-                        if (nodeTran.Transition.Group.Peptide.Target.ToString().StartsWith(matchIdentifierLVN))
-                            Assume.IsFalse(nodeTran.Results[0][0].IsEmpty);
-                        else
-                            Assume.IsTrue(nodeTran.Results[0][0].IsEmpty);
-                    }
+                    var nodeTran = tranResults.NodeTran;
+                    Assume.IsTrue(nodeTran.HasResults);
+                    Assume.AreEqual(1, tranResults.ChromInfos.Count);
+                    if (nodeTran.Transition.Group.Peptide.Target.ToString().StartsWith(matchIdentifierLVN))
+                        Assume.IsFalse(tranResults[0][0].IsEmpty);
+                    else
+                        Assume.IsTrue(tranResults[0][0].IsEmpty);
                 }
                 const string rep2 = "rep2";
                 listResults.Add(new ChromatogramSet(rep2, new[] { TestFilesDir.GetTestPath("S_2_NVN.mzML") }));
@@ -337,18 +335,15 @@ namespace pwiz.SkylineTestData.Results
                 docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1));
                 // Because of the way the mzML files were filtered, all of the LVN peaks should be present
                 // in the first replicate, and all of the NVN peaks should be present in the other.
-                foreach (var nodeTranGroup in docContainer.Document.MoleculeTransitionGroups)
+                foreach (var tranResults in ResultsUtil.EnumerateTransitionChromInfos(docContainer.Document))
                 {
-                    foreach (var docNode in nodeTranGroup.Children)
-                    {
-                        var nodeTran = (TransitionDocNode)docNode;
-                        Assume.IsTrue(nodeTran.HasResults);
-                        Assume.AreEqual(2, nodeTran.Results.Count);
-                        if (nodeTran.Transition.Group.Peptide.Target.ToString().StartsWith(matchIdentifierLVN))
-                            Assume.IsTrue(nodeTran.Results[1][0].IsEmpty);
-                        else
-                            Assume.IsFalse(nodeTran.Results[1][0].IsEmpty);
-                    }
+                    var nodeTran = tranResults.NodeTran;
+                    Assume.IsTrue(nodeTran.HasResults);
+                    Assume.AreEqual(2, tranResults.ChromInfos.Count);
+                    if (nodeTran.Transition.Group.Peptide.Target.ToString().StartsWith(matchIdentifierLVN))
+                        Assume.IsTrue(tranResults[1][0].IsEmpty);
+                    else
+                        Assume.IsFalse(tranResults[1][0].IsEmpty);
                 }
 
                 // Chromatograms should be present in the cache for a number of isotopes.
@@ -376,15 +371,15 @@ namespace pwiz.SkylineTestData.Results
                 AssertEx.IsDocumentState(docMs1All, null, 2, 2, 10);
                 AssertResult.IsDocumentResultsState(docMs1All, rep1, 1, 1, 0, 4, 0);
                 AssertResult.IsDocumentResultsState(docMs1All, rep2, 1, 1, 0, 4, 0);
-                var ms1AllTranstions = docMs1All.MoleculeTransitions.ToArray();
+                var ms1AllTranstions = ResultsUtil.EnumerateTransitionChromInfos(docMs1All).ToArray();
                 var tranM1 = ms1AllTranstions[0];
-                Assert.AreEqual(-1, tranM1.Transition.MassIndex);
-                Assert.IsTrue(!tranM1.Results[0].IsEmpty && !tranM1.Results[1].IsEmpty);
-                Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsForcedIntegration);
+                Assert.AreEqual(-1, tranM1.NodeTran.Transition.MassIndex);
+                Assert.IsTrue(!tranM1[0].IsEmpty && !tranM1[1].IsEmpty);
+                Assert.IsTrue(tranM1[0][0].IsEmpty && tranM1[1][0].IsForcedIntegration);
                 tranM1 = ms1AllTranstions[5];
-                Assert.AreEqual(-1, tranM1.Transition.MassIndex);
-                Assert.IsTrue(!tranM1.Results[0].IsEmpty && !tranM1.Results[1].IsEmpty);
-                Assert.IsTrue(tranM1.Results[0][0].IsForcedIntegration && tranM1.Results[1][0].IsEmpty);                
+                Assert.AreEqual(-1, tranM1.NodeTran.Transition.MassIndex);
+                Assert.IsTrue(!tranM1[0].IsEmpty && !tranM1[1].IsEmpty);
+                Assert.IsTrue(tranM1[0][0].IsForcedIntegration && tranM1[1][0].IsEmpty);
             }
         }
 
@@ -670,33 +665,42 @@ namespace pwiz.SkylineTestData.Results
                     var transDocB = docBTransitions.FirstOrDefault(b =>
                         a.Transition.IsPrecursor() == b.Transition.IsPrecursor() &&
                         Math.Abs(a.Mz - b.Mz) <= 1.0E-5 &&
-                        ((a.Results == null)
-                            ? (b.Results == null)
-                            : (a.Results.Count == b.Results.Count)));
+                        ((a.EmptyResults == null)
+                            ? (b.EmptyResults == null)
+                            : (a.EmptyResults.Count == b.EmptyResults.Count)));
                     Assert.IsNotNull(transDocB, "failed to find matching transition");
                     Assert.IsFalse(docBTransitionsMatched.Contains(transDocB), "transition matched twice");
                     docBTransitionsMatched.Add(transDocB);
-                    for (int i = 0; i < (transDocA.HasResults ? transDocA.Results.Count : 0); i++)
+                    // The peaks are the precursors' columnar results now, one per file, so they are
+                    // compared by the file each belongs to rather than by position.
+                    var dictA = ToDict(docA, transGroupDocA, transDocA);
+                    var dictB = ToDict(docB, transGroupDocB, transDocB);
+                    Assert.AreEqual(dictA.Count, dictB.Count);
+                    foreach (var peakAPair in dictA)
                     {
-                        var dictA = ToDict(docA, transDocA.Results[i]);
-                        var dictB = ToDict(docB, transDocB.Results[i]);
-
-                        Assert.AreEqual(dictA.Count, dictB.Count);
-                        foreach (var chromInfoAPair in dictA)
-                        {
-                            TransitionChromInfo chromInfoB;
-                            Assert.IsTrue(dictB.TryGetValue(chromInfoAPair.Key, out chromInfoB));
-                            Assert.AreEqual(chromInfoAPair.Value, chromInfoB);
-                        }
+                        Assert.IsTrue(dictB.TryGetValue(peakAPair.Key, out var peakB));
+                        Assert.AreEqual(peakAPair.Value, peakB);
                     }
                 }
             }
         }
 
-        private IDictionary<MsDataFileUri, TransitionChromInfo> ToDict(SrmDocument doc, ChromInfoList<TransitionChromInfo> chromInfoList)
+        private IDictionary<MsDataFileUri, TransitionPeak> ToDict(SrmDocument doc,
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
-            return chromInfoList.ToDictionary(c =>
-                doc.MeasuredResults.MSDataFileInfos.First(fi => ReferenceEquals(fi.FileId, c.FileId)).FilePath);
+            var dict = new Dictionary<MsDataFileUri, TransitionPeak>();
+            var results = nodeGroup.AbbreviatedResults;
+            if (results == null)
+                return dict;
+            for (int i = 0; i < results.ChromFileIds.ReplicatePositions.ReplicateCount; i++)
+            {
+                foreach (var entry in results.GetTransitionPeaks(nodeTran.Transition, i))
+                {
+                    dict.Add(doc.MeasuredResults.MSDataFileInfos
+                        .First(fi => ReferenceEquals(fi.FileId, entry.Key)).FilePath, entry.Value);
+                }
+            }
+            return dict;
         }
     }
 }

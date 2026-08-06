@@ -921,7 +921,10 @@ namespace pwiz.SkylineTestTutorial
                 var nodePep = SkylineWindow.DocumentUI.Peptides.ElementAt(pepIndex);
                 var nodeGroup = nodePep.TransitionGroups.First();
                 var transition = nodeGroup.Transitions.ElementAt(transIndex);
-                result = transition.ChromInfos.ToArray()[chromIndex];
+                // Rebuilt from the .skyd, since a transition keeps no chrom infos
+                result = new MoleculeResults(SkylineWindow.DocumentUI.Settings, nodePep)
+                    .GetTransitionChromInfos(nodeGroup.TransitionGroup, transition.Transition)
+                    .SelectMany(chromInfoList => chromInfoList).ToArray()[chromIndex];
             });
             return result;
         }

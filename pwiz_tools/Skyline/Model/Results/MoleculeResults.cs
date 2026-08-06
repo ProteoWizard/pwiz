@@ -91,8 +91,8 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// The complete transition level results, rebuilt from the chromatogram cache. This is what
-        /// a caller uses instead of <see cref="TransitionDocNode.Results"/>, which always reports
-        /// empty now.
+        /// a caller uses instead of the chrom infos a transition used to hold - see
+        /// <see cref="TransitionDocNode.EmptyResults"/>, which is all that is left of them.
         /// <para>
         /// Named for what it returns rather than "results", which at every level here now means the
         /// columnar form: <see cref="TransitionResults"/> is a class of its own, and a

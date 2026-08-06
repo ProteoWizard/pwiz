@@ -758,7 +758,7 @@ namespace pwiz.Skyline.Model
             var listTrans = new List<TransitionDocNode>();
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                double? peakFoundRatio = nodeTran.GetPeakCountRatio(bestResultIndex, integrateAll);
+                double? peakFoundRatio = nodeGroup.GetTransitionPeakCountRatio(nodeTran.Transition, bestResultIndex, integrateAll);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)
@@ -792,7 +792,7 @@ namespace pwiz.Skyline.Model
                 for (int i = 0; i < countTrans; i++)
                 {
                     var nodeTran = (TransitionDocNode) nodeGroupRefined.Children[i];
-                    var sortInfo = new AreaSortInfo(nodeTran.GetPeakArea(bestResultIndex) ?? 0,
+                    var sortInfo = new AreaSortInfo(nodeGroupRefined.GetTransitionArea(nodeTran.Transition, bestResultIndex) ?? 0,
                                                     nodeTran.Transition.Ordinal,
                                                     nodeTran.Mz > nodeGroup.PrecursorMz,
                                                     i);
@@ -1178,8 +1178,8 @@ namespace pwiz.Skyline.Model
                                 var newTransition = new Transition(newTransitionGroup, ionType,
                                     null, transition.Transition.MassIndex, transitionAdduct, null, transitionCustomMolecule);
                                 var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations.Merge(note),
-                                    null, mass, transition.QuantInfo.ChangeLibInfo(transitionLibInfo), ExplicitTransitionValues.EMPTY, 
-                                    transition.Results);
+                                    null, mass, transition.QuantInfo.ChangeLibInfo(transitionLibInfo), ExplicitTransitionValues.EMPTY,
+                                    transition.EmptyResults);
                                 var mzShift = transition.Transition.IonType == IonType.precursor ?
                                     mzShiftPrecursor :
                                     mzShiftFragment;

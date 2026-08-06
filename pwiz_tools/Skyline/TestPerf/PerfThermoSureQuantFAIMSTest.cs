@@ -73,7 +73,8 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // Now import chromatograms, check that FAIMS filtering is working
             // Second transition will include points from wrong CV if we aren't treating MS2 CV data properly
             ImportResultsFile(GetTestPath(TestFilesPersistent[0]));
-            var results = SkylineWindow.Document.MoleculeTransitions.ToArray()[1].Results;
+            // The chrom infos come from the .skyd, since a transition no longer keeps them
+            var results = ResultsUtil.EnumerateTransitionChromInfos(SkylineWindow.Document).ToArray()[1].ChromInfos;
             var transitionChromInfo = results[0].AsList()[0];
             var doc = SkylineWindow.Document;
             var chromatogramSet = doc.Settings.MeasuredResults.Chromatograms.First();

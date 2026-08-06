@@ -119,7 +119,8 @@ namespace pwiz.Skyline.Model.Find
                  replicateIndex < (Document.Settings.MeasuredResults?.Chromatograms.Count ?? 0);
                  replicateIndex++)
             {
-                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, replicateIndex))
+                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, current.IdentityPath,
+                             replicateIndex))
                 {
                     if (currentResultPosition == null)
                     {
@@ -182,7 +183,8 @@ namespace pwiz.Skyline.Model.Find
             bool onResult = currentFileIdOptStep != null;
             for (int resultsIndex = ResultsIndex; resultsIndex >= 0; resultsIndex--)
             {
-                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, resultsIndex).Reverse())
+                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, current.IdentityPath,
+                             resultsIndex).Reverse())
                 {
                     var resultPosition = chromInfoPosition.ResultPosition;
                     if (currentFileIdOptStep == null)
@@ -242,7 +244,7 @@ namespace pwiz.Skyline.Model.Find
         {
             for (int replicateIndex = GetReplicateCount(node, identityPath) - 1; replicateIndex >= 0; replicateIndex--)
             {
-                var chromInfoPosition = GetChromInfoPositions(node, replicateIndex).LastOrDefault();
+                var chromInfoPosition = GetChromInfoPositions(node, identityPath, replicateIndex).LastOrDefault();
                 if (chromInfoPosition.ResultPosition != null)
                 {
                     var resultPosition = chromInfoPosition.ResultPosition;
@@ -269,9 +271,14 @@ namespace pwiz.Skyline.Model.Find
             {
                 if (node is TransitionDocNode transitionDocNode)
                 {
-                    currentChromInfo = transitionDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
-                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
-                        chromInfo.OptimizationStep == bookmark.OptStep);
+                    // Rebuilt from the chromatograms, since a transition keeps no chrom infos, and
+                    // what the finders look at - whether a peak was truncated, or integrated at
+                    // all - is not in the columnar results.
+                    currentChromInfo = GetTransitionChromInfos(bookmark.IdentityPath, transitionDocNode,
+                            bookmark.ReplicateIndex.Value)
+                        .FirstOrDefault(chromInfo =>
+                            ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
+                            chromInfo.OptimizationStep == bookmark.OptStep);
                 }
                 else if (node is TransitionGroupDocNode transitionGroupDocNode)
                 {
@@ -455,7 +462,8 @@ namespace pwiz.Skyline.Model.Find
             }
         }
 
-        private IEnumerable<ChromInfoPosition> GetChromInfoPositions(DocNode docNode, int replicateIndex)
+        private IEnumerable<ChromInfoPosition> GetChromInfoPositions(DocNode docNode, IdentityPath identityPath,
+            int replicateIndex)
         {
             var measuredResults = Document.Settings.MeasuredResults;
             if (measuredResults == null || replicateIndex < 0 || replicateIndex >= measuredResults.Chromatograms.Count)
@@ -466,7 +474,8 @@ namespace pwiz.Skyline.Model.Find
             var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
             if (docNode is TransitionDocNode transitionDocNode)
             {
-                return MakeChromInfoPositions(transitionDocNode.GetSafeChromInfo(replicateIndex),
+                return MakeChromInfoPositions(
+                    GetTransitionChromInfos(identityPath, transitionDocNode, replicateIndex),
                     chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
             }
 
@@ -486,6 +495,48 @@ namespace pwiz.Skyline.Model.Find
 
             return Array.Empty<ChromInfoPosition>();
         }
+
+        /// <summary>
+        /// One transition's chrom infos in one replicate, rebuilt from the chromatograms because a
+        /// transition no longer keeps them. Empty when the path does not name one.
+        /// </summary>
+        private ChromInfoList<TransitionChromInfo> GetTransitionChromInfos(IdentityPath identityPath,
+            TransitionDocNode nodeTran, int replicateIndex)
+        {
+            return GetMoleculeResults(identityPath)
+                       ?.GetTransitionChromInfos(nodeTran.Transition.Group, nodeTran.Transition, replicateIndex) ??
+                   default;
+        }
+
+        /// <summary>
+        /// The peaks of the molecule the walk is on, which is where a transition's chrom infos come
+        /// from now. Only the current molecule's are kept: the walk goes in document order, so each
+        /// is read once and let go when the walk moves past it.
+        /// </summary>
+        private MoleculeResults GetMoleculeResults(IdentityPath identityPath)
+        {
+            if (identityPath == null || identityPath.Length < 2)
+            {
+                return null;
+            }
+
+            var nodePep = Document.FindNode(identityPath.GetPathTo(1)) as PeptideDocNode;
+            if (nodePep == null)
+            {
+                return null;
+            }
+
+            if (!ReferenceEquals(nodePep, _moleculeResultsNode))
+            {
+                _moleculeResultsNode = nodePep;
+                _moleculeResults = new MoleculeResults(Document.Settings, nodePep);
+            }
+
+            return _moleculeResults;
+        }
+
+        private PeptideDocNode _moleculeResultsNode;
+        private MoleculeResults _moleculeResults;
 
         /// <summary>
         /// Stand-in chrom infos for a molecule, whose real ones are no longer stored. Find uses

@@ -162,19 +162,22 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(28, docRefineMaxPeaks.PeptideTransitionCount);
             // Make sure the remaining peaks really started as the right rank,
             // and did not change.
-            var dictIdTran = new Dictionary<int, TransitionDocNode>();
-            foreach (var nodeTran in document.PeptideTransitions)
-                dictIdTran.Add(nodeTran.Id.GlobalIndex, nodeTran);
+            // The ranks come from the precursor, which is what holds the areas they are the order of
+            var dictIdRank = new Dictionary<int, int?>();
+            foreach (var nodeGroup in document.PeptideTransitionGroups)
+            {
+                foreach (var nodeTran in nodeGroup.Transitions)
+                    dictIdRank.Add(nodeTran.Id.GlobalIndex, nodeGroup.GetTransitionRank(nodeTran.Transition, 0, false));
+            }
             foreach (var nodeGroup in docRefineMaxPeaks.PeptideTransitionGroups)
             {
                 Assert.AreEqual(refineSettings.MaxPeakRank, nodeGroup.TransitionCount);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    int rank = nodeTran.Results[0][0].Rank;
+                    int? rank = nodeGroup.GetTransitionRank(nodeTran.Transition, 0, false);
                     Assert.IsTrue(rank <= refineSettings.MaxPeakRank);
 
-                    var nodeTranOld = dictIdTran[nodeTran.Id.GlobalIndex];
-                    Assert.AreEqual(nodeTranOld.Results[0][0].Rank, nodeTran.Results[0][0].Rank);
+                    Assert.AreEqual(dictIdRank[nodeTran.Id.GlobalIndex], rank);
                 }
             }
 

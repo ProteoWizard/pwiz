@@ -168,10 +168,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 return null;
             }
 
-            protected override PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY, int? resultIndex)
+            protected override PointPair CreatePointPair(int iGroup, MoleculeResults moleculeResults,
+                TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY,
+                int? resultIndex)
             {
                 if (RTValue != RTPeptideValue.All)
-                    return base.CreatePointPair(iGroup, nodeTran, ref maxY, ref minY, resultIndex);
+                    return base.CreatePointPair(iGroup, moleculeResults, nodeGroup, nodeTran, ref maxY, ref minY, resultIndex);
 
                 if (!nodeTran.HasResults)
                     return RTPointPairMissing(iGroup);
@@ -180,7 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listStarts = new List<double>();
                 var listEnds = new List<double>();
                 var listFwhms = new List<double>();
-                foreach (var chromInfo in nodeTran.GetChromInfos(resultIndex))
+                foreach (var chromInfo in GetTransitionChromInfos(moleculeResults, nodeGroup, nodeTran, resultIndex))
                 {
                     if (chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty)
                     {

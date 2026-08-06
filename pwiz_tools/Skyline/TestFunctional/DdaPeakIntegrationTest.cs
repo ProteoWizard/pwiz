@@ -76,7 +76,10 @@ namespace pwiz.SkylineTestFunctional
                         var chromatogramGroupInfo = chromatogramGroupInfos[0];
                         foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
                         {
-                            var transitionChromInfos = transitionDocNode.GetSafeChromInfo(iReplicate);
+                            // Rebuilt from the .skyd, since a transition keeps no chrom infos
+                            var transitionChromInfos = new MoleculeResults(document.Settings, peptideDocNode)
+                                .GetTransitionChromInfos(transitionGroupDocNode.TransitionGroup,
+                                    transitionDocNode.Transition, iReplicate);
                             Assert.AreEqual(1, transitionChromInfos.Count);
                             var transitionChromInfo = transitionChromInfos[0];
                             AssertEx.IsLessThanOrEqual(transitionChromInfo.StartRetentionTime, transitionChromInfo.RetentionTime);

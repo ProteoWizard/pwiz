@@ -64,13 +64,15 @@ namespace pwiz.SkylineTestFunctional
 
             // If data has not been properly understood as GC EI all-ions, some peaks won't be found
             var nPeaksFound = 0;
-            foreach (var tg in SkylineWindow.Document.MoleculeTransitions)
+            // The points across a peak are not one of the values the columnar results keep, so the
+            // chrom infos are rebuilt from the .skyd.
+            foreach (var tg in ResultsUtil.EnumerateTransitionChromInfos(SkylineWindow.Document))
             {
-                foreach (var r in tg.Results)
+                foreach (var r in tg.ChromInfos)
                 {
                     foreach (var peak in r)
                     {
-                        if (peak.Area > 0) 
+                        if (peak.Area > 0)
                         {
                             nPeaksFound++;
                             AssertEx.IsTrue((peak.PointsAcrossPeak ?? 0) > 20);

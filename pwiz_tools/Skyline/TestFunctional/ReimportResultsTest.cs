@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.single);
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 0);
                 peak1 = ChangePeakBounds(graphChromatogram, .185, .3);
-                transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.First().Results[0].First();
+                transitionChromInfo = GetTransitionChromInfo(0);
                 Assert.AreEqual(peak1.Item1, transitionChromInfo.StartRetentionTime, deltaRetentionTime);
                 Assert.AreEqual(peak1.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
                 Assert.AreEqual(expectedArea1, transitionChromInfo.Area, 10);
@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectedPath =
                     SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 1);
                 peak2 = ChangePeakBounds(graphChromatogram, .095, .155);
-                transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.Skip(1).First().Results[0].First();
+                transitionChromInfo = GetTransitionChromInfo(1);
                 Assert.AreEqual(peak2.Item1, transitionChromInfo.StartRetentionTime, deltaRetentionTime);
                 Assert.AreEqual(peak2.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
                 Assert.AreEqual(expectedArea2, transitionChromInfo.Area, 10);
@@ -107,13 +107,13 @@ namespace pwiz.SkylineTestFunctional
             AssertTimesInOrder(reimportStartTime.Value, reimportedTime.Value, reimportEndTime);
 
             // Make sure that the reimported results reflect the correct peak area
-            transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.First().Results[0].First();
+            transitionChromInfo = GetTransitionChromInfo(0);
             Assert.AreEqual(peak1.Item1, transitionChromInfo.StartRetentionTime, deltaRetentionTime);
             Assert.AreEqual(peak1.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
             const double expectedReimportedArea2 = 4987;
             const double expectedReimportedBackground2 = 10154;
 
-            transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.Skip(1).First().Results[0].First();
+            transitionChromInfo = GetTransitionChromInfo(1);
             Assert.AreEqual(peak2.Item1, transitionChromInfo.StartRetentionTime, deltaRetentionTime);
             Assert.AreEqual(peak2.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
             Assert.AreEqual(expectedReimportedArea2, transitionChromInfo.Area, 10);
@@ -143,14 +143,29 @@ namespace pwiz.SkylineTestFunctional
             AssertTimesInOrder(rescoreStartTime.Value, rescoredTime.Value, rescoreEndTime);
 
             // Make sure that the rescored peak areas are correct
-            transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.First().Results[0].First();
+            transitionChromInfo = GetTransitionChromInfo(0);
             Assert.AreEqual(peak1.Item1, transitionChromInfo.StartRetentionTime, deltaRetentionTime);
             Assert.AreEqual(peak1.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
-            transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.Skip(1).First().Results[0].First();
+            transitionChromInfo = GetTransitionChromInfo(1);
             Assert.AreEqual(peak2.Item1, transitionChromInfo.StartRetentionTime, deltaRetentionTime);
             Assert.AreEqual(peak2.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
             Assert.AreEqual(expectedReimportedArea2 + expectedReimportedBackground2, transitionChromInfo.Area, 50);
             Assert.AreEqual(0, transitionChromInfo.BackgroundArea);
+        }
+
+        /// <summary>
+        /// The first chrom info of one of the document's transitions in the first replicate,
+        /// rebuilt from the .skyd: a transition keeps none, and the peak shape values and the
+        /// background area are not in the columnar results.
+        /// </summary>
+        private static TransitionChromInfo GetTransitionChromInfo(int transitionIndex)
+        {
+            var document = SkylineWindow.Document;
+            var nodePep = document.Molecules.First();
+            var nodeGroup = nodePep.TransitionGroups.First();
+            var nodeTran = document.MoleculeTransitions.Skip(transitionIndex).First();
+            return new MoleculeResults(document.Settings, nodePep)
+                .GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition, 0).First();
         }
 
         private static Tuple<double, double> ChangePeakBounds(GraphChromatogram graphChromatogram, double startTime, double endTime)

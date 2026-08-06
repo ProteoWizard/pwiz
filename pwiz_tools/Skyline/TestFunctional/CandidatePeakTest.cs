@@ -235,8 +235,11 @@ namespace pwiz.SkylineTestFunctional
                         }
                         else
                         {
-                            totalArea += transitionGroup.Transitions.SelectMany(t => t.GetSafeChromInfo(replicateIndex))
-                                .Sum(chromInfo => chromInfo.Area);
+                            // The areas are the precursor's columnar results now
+                            totalArea += transitionGroup.Transitions
+                                .SelectMany(t => transitionGroup.AbbreviatedResults
+                                    .GetTransitionPeaks(t.Transition, replicateIndex))
+                                .Sum(entry => entry.Value.Area);
                         }
                     }
                     var expectedIntensityScore = Math.Max(0, Math.Log10(totalArea));

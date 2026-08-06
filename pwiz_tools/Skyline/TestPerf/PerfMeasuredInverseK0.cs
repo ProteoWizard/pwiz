@@ -83,7 +83,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SkylineWindow.LoadFile(testPath);
             });
             document = WaitForDocumentLoaded(240000);
-            var transitions = document.MoleculeTransitions.ToArray();
+            // The areas are the precursors' columnar results now
+            var transitions = ResultsUtil.EnumerateTransitionResults(document).ToArray();
 
             // Verify ability to extract ion mobility peaks from raw data
             var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
@@ -122,23 +123,23 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             });
 
             document = WaitForDocumentChangeLoaded(docChangedDriftTimePredictor);
-            var transitionsNew = document.MoleculeTransitions.ToArray();
+            var transitionsNew = ResultsUtil.EnumerateTransitionResults(document).ToArray();
             var nChanges = 0;
             var nNonEmpty = 0;
             for (var i = 0; i < transitions.Length; i++)
             {
-                Assert.AreEqual(transitions[i].Mz, transitionsNew[i].Mz);
-                if (transitions[i].AveragePeakArea.HasValue)
+                Assert.AreSame(transitions[i].Transition, transitionsNew[i].Transition);
+                if (transitions[i].AverageArea.HasValue)
                 {
                     nNonEmpty++;
-                    if (transitions[i].AveragePeakArea != transitionsNew[i].AveragePeakArea) // Using filter should alter peak area
+                    if (transitions[i].AverageArea != transitionsNew[i].AverageArea) // Using filter should alter peak area
                     {
                         nChanges++;
                     }
                 }
                 else
                 {
-                    Assert.AreEqual(transitions[i].AveragePeakArea, transitionsNew[i].AveragePeakArea);
+                    Assert.AreEqual(transitions[i].AverageArea, transitionsNew[i].AverageArea);
                 }
             }
             Assert.IsTrue(nChanges >= nNonEmpty*.9); // We expect nearly all peaks to change in area with IMS filter in use
@@ -155,19 +156,21 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 Assert.AreEqual(2, nodeGroup.EmptyResults.Count);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    Assume.AreEqual(2, nodeTran.Results.Count);
-                    if (nodeTran.Results[0].Any() || nodeTran.Results[1].Any())
+                    // The areas are the precursor's columnar results now
+                    Assume.AreEqual(2, nodeTran.ResultsReplicateCount);
+                    var area0 = nodeGroup.GetTransitionArea(nodeTran.Transition, 0);
+                    var area1 = nodeGroup.GetTransitionArea(nodeTran.Transition, 1);
+                    if (area0.HasValue || area1.HasValue)
                         trials++;
-                    if (Equals(nodeTran.Results[0], nodeTran.Results[1]))
+                    if (!area0.HasValue || !area1.HasValue)
                         continue;
-                    if (nodeTran.Results[0].First().Area != nodeTran.Results[1].First().Area)
+                    if (area0.Value != area1.Value)
                     {
                         diffs++;
-                        var diff = 100 *
-                            Math.Abs(nodeTran.Results[0].First().Area - nodeTran.Results[1].First().Area) /
-                            Math.Min(nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area);
+                        var diff = 100 * Math.Abs(area0.Value - area1.Value) /
+                                   Math.Min(area0.Value, area1.Value);
                         sb.AppendLine(string.Format("{0}% difference {3} vs {4}(mz5) in precursor {1} transition {2}",
-                            diff, nodeGroup, nodeTran.Transition, nodeTran.Results[0].First().Area, nodeTran.Results[1].First().Area));
+                            diff, nodeGroup, nodeTran.Transition, area0.Value, area1.Value));
                     }
                     else
                     {

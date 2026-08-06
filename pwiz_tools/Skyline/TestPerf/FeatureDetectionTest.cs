@@ -443,8 +443,10 @@ namespace TestPerf
             AssertEx.AreEqual(expectedFeaturesTransitions, actualFeaturesTransitions);
 
             // Verify use of library RT in chromatogram extraction
-            var tg = doc.MoleculeTransitions.First(t => t.Transition.Group.IsCustomIon);
-            var r = tg.Results.First().First();
+            // The chrom infos come from the .skyd, since a transition no longer keeps them
+            var tg = ResultsUtil.EnumerateTransitionChromInfos(doc)
+                .First(t => t.NodeTran.Transition.Group.IsCustomIon);
+            var r = tg.ChromInfos.First().First();
             var expectedRT = 19.76576;
             var expectedStartRT = 19.43576;
             var expectedEndRT = 19.99676;

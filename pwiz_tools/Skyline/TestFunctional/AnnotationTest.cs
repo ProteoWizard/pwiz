@@ -277,9 +277,13 @@ namespace pwiz.SkylineTestFunctional
                 // Check all nodes have received the correct values.
                 foreach (TransitionTreeNode nodeTree in SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes)
                 {
-                    foreach (TransitionChromInfo info in ((TransitionDocNode)nodeTree.Model).Results[0])
+                    // The annotations of a transition's peaks are the precursor's columnar results
+                    var transition = ((TransitionDocNode) nodeTree.Model).Transition;
+                    var groupResults = nodeTree.TransitionGroupNode.AbbreviatedResults;
+                    foreach (var entry in groupResults.GetTransitionPeaks(transition, 0))
                     {
-                        Assert.AreEqual("Test2", info.Annotations.Note);
+                        Assert.AreEqual("Test2",
+                            groupResults.FindTransitionAnnotations(transition, 0, entry.Key).Note);
                     }
                 }
                 // Test multiselect node without results - annotation columns should no longer be visible.

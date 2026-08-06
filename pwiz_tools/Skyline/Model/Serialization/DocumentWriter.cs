@@ -109,9 +109,15 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeIfString(ATTR.websearch_status, proteinMetadata.WebSearchInfo.ToString());
         }
 
+        /// <summary>
+        /// Whether the transitions are written as protocol buffers. Never when only the columnar
+        /// results are being written: the compact format is an encoding of the chrom infos, and
+        /// there is nothing of it which says the areas a transition keeps now. See
+        /// <see cref="WriteChromInfos"/>.
+        /// </summary>
         private bool UseCompactFormat()
         {
-            return DocumentFormat.CompareTo(DocumentFormat.BINARY_RESULTS) >= 0 &&
+            return WriteChromInfos && DocumentFormat.CompareTo(DocumentFormat.BINARY_RESULTS) >= 0 &&
                    CompactFormatOption.UseCompactFormat(Document);
         }
         /// <summary>
@@ -669,7 +675,10 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteStartElement(EL.transition_data);
                 var transitionData = new SkylineDocumentProto.Types.TransitionData();
-                transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings, nodePep, node)));
+                // The peaks come from the chromatograms, since a transition does not keep them.
+                transitionData.Transitions.AddRange(node.Transitions.Select(transition =>
+                    transition.ToTransitionProto(Settings, nodePep, node,
+                        moleculeResults?.GetTransitionChromInfos(group, transition.Transition))));
                 byte[] bytes = transitionData.ToByteArray();
                 writer.WriteBase64(bytes, 0, bytes.Length);
                 writer.WriteEndElement();

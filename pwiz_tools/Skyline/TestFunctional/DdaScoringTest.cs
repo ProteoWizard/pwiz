@@ -226,10 +226,11 @@ namespace pwiz.SkylineTestFunctional
             double totalArea = 0;
             foreach (var transition in transitions)
             {
-                var chromInfo = transition.Results[replicateIndex].FirstOrDefault();
-                if (chromInfo != null && !chromInfo.IsEmpty)
+                // The areas are the precursor's columnar results now
+                if (transitionGroupDocNode.TryGetReplicateTransitionPeak(transition.Transition, replicateIndex,
+                        out _, out var peak) && !peak.IsEmpty)
                 {
-                    totalArea += chromInfo.Area;
+                    totalArea += peak.Area;
                 }
             }
 

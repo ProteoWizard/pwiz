@@ -57,9 +57,11 @@ namespace pwiz.SkylineTestFunctional
             var docPosPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, noPolarityPath, -1, true);  // All neg doc, all pos data
             var docNegPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, allNegativePath, 1, true);  // All pos doc, all neg data
 
-            var transProperPolarity = docProperPolarity.MoleculeTransitions.ToArray();
-            var transNoPolarity = docPosPolarity.MoleculeTransitions.ToArray();
-            var transNegPolarity = docNegPolarity.MoleculeTransitions.ToArray();
+            // The peak count ratios come from the precursors, which is what holds a transition's
+            // peaks now, so each transition is walked with the precursor which owns it.
+            var transProperPolarity = ResultsUtil.EnumerateTransitionResults(docProperPolarity).ToArray();
+            var transNoPolarity = ResultsUtil.EnumerateTransitionResults(docPosPolarity).ToArray();
+            var transNegPolarity = ResultsUtil.EnumerateTransitionResults(docNegPolarity).ToArray();
             Assert.AreEqual(transProperPolarity.Length, transNoPolarity.Length);
             Assert.AreEqual(transNegPolarity.Length, transNoPolarity.Length);
             var countPeaksProperPolarity = 0;
@@ -73,16 +75,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var trans in nodeGroup.Transitions)
                 {
-                    if ((transProperPolarity[i].GetPeakCountRatio(0, integrateAll) ?? 0) >= 1)
+                    if (transProperPolarity[i].HasGoodPeak(0, integrateAll))
                     {
                         countPeaksProperPolarity++;
                         properList.Add(string.Format("{0} {1}", nodeGroup, trans.Transition));
                     }
-                    if ((transNoPolarity[i].GetPeakCountRatio(0, integrateAll) ?? 0) >= 1)
+                    if (transNoPolarity[i].HasGoodPeak(0, integrateAll))
                     {
                         countPeaksPosPolarity++;
                     }
-                    if ((transNegPolarity[i].GetPeakCountRatio(0, integrateAll) ?? 0) >= 1)
+                    if (transNegPolarity[i].HasGoodPeak(0, integrateAll))
                     {
                         countPeaksNegPolarity++;
                     }

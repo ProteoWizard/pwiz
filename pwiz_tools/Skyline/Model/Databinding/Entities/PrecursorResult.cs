@@ -547,6 +547,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             double truncatedArea = 0;
             var srmSettings = DataSchema.Document.Settings;
             var resultFile = GetResultFile();
+            // Whether a peak was truncated and how big it is are both in the precursor's columnar
+            // results, so this reads no chromatogram.
+            var groupResults = Precursor.DocNode.AbbreviatedResults;
+            if (groupResults == null)
+            {
+                return null;
+            }
+
             foreach (var transition in Precursor.DocNode.Transitions)
             {
                 if (!transition.IsQuantitative(srmSettings))
@@ -554,24 +562,23 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     continue;
                 }
 
-                foreach (var transitionChromInfo in transition.GetSafeChromInfo(
+                foreach (var peak in groupResults.GetQuantifiablePeaks(transition.Transition,
                              resultFile.Replicate.ReplicateIndex))
                 {
-                    if (transitionChromInfo.OptimizationStep != resultFile.OptimizationStep ||
-                        !ReferenceEquals(transitionChromInfo.FileId, resultFile.ChromFileInfoId))
+                    if (!ReferenceEquals(peak.FileId, resultFile.ChromFileInfoId))
                     {
                         continue;
                     }
 
-                    if (!transitionChromInfo.IsTruncated.HasValue || transitionChromInfo.Area <= 0)
+                    if (!peak.IsTruncated.HasValue || peak.Area <= 0)
                     {
                         continue;
                     }
 
-                    totalArea += transitionChromInfo.Area;
-                    if (transitionChromInfo.IsTruncated.Value)
+                    totalArea += peak.Area;
+                    if (peak.IsTruncated.Value)
                     {
-                        truncatedArea += transitionChromInfo.Area;
+                        truncatedArea += peak.Area;
                     }
                 }
             }

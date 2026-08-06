@@ -63,9 +63,9 @@ namespace pwiz.SkylineTestFunctional
             var doc = WaitForDocumentLoaded();
 
             // If data has not been properly understood as Constant Neutral Loss scans, expected number of peaks will not be found
-            var nPeaksFound = (from tg in SkylineWindow.Document.MoleculeTransitions 
-                from r in tg.Results 
-                from peak in r select peak).Count(peak => peak.Area > 0);
+            // The areas are the precursors' columnar results now
+            var nPeaksFound = ResultsUtil.EnumerateTransitionResults(SkylineWindow.Document)
+                .SelectMany(tg => tg.Peaks).Count(peak => peak.Area > 0);
             AssertEx.AreEqual(provokeFailure ? 0 : 1, nPeaksFound);
             LoadNewDocument(true);
         }

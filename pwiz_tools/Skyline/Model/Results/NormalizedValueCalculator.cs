@@ -93,9 +93,22 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            if (TryGetDenominator(normalizationMethod, replicateIndex, transitionChromInfo.FileId, out double? denominator))
+            return GetTransitionAreaValue(normalizationMethod, peptideDocNode, transitionGroupDocNode,
+                transitionDocNode, replicateIndex, transitionChromInfo.FileId, transitionChromInfo.Area);
+        }
+
+        /// <summary>
+        /// The same value from the area and the file alone, which is all of a peak this needs and
+        /// all of it the columnar results hold. This is how a caller which has no reason to read a
+        /// chromatogram - the targets tree, which asks for every node it paints - gets one.
+        /// </summary>
+        public double? GetTransitionAreaValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupDocNode, TransitionDocNode transitionDocNode, int replicateIndex,
+            ChromFileInfoId fileId, float area)
+        {
+            if (TryGetDenominator(normalizationMethod, replicateIndex, fileId, out double? denominator))
             {
-                return transitionChromInfo.Area / denominator;
+                return area / denominator;
             }
 
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
@@ -130,14 +143,13 @@ namespace pwiz.Skyline.Model.Results
                     return null;
                 }
 
-                var otherPeak = FindMatchingTransitionPeak(transitionChromInfo.FileId, otherTransitionGroup,
-                    otherTransition);
+                var otherPeak = FindMatchingTransitionPeak(fileId, otherTransitionGroup, otherTransition);
                 if (!otherPeak.HasValue || otherPeak.Value.IsEmpty)
                 {
                     return null;
                 }
 
-                return transitionChromInfo.Area / otherPeak.Value.Area;
+                return area / otherPeak.Value.Area;
             }
 
             return null;

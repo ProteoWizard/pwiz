@@ -25,6 +25,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
@@ -78,12 +79,12 @@ namespace pwiz.SkylineTestFunctional
                 var tranId = nodeTran.Id;
                 RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(pathToGroup, tranId));
                 WaitForGraphs();
-                VerifyRawTimesCount("Unrefined", nodeTran, showing);
-                VerifyRawTimesCount("1", nodeTran, showing);
-                VerifyRawTimesCount("2", nodeTran, showing);
-                VerifyRawTimesCount("3", nodeTran, showing);
-                VerifyRawTimesCount("4", nodeTran, showing);
-                VerifyRawTimesCount("5", nodeTran, showing);
+                VerifyRawTimesCount("Unrefined", nodeGroup, nodeTran, showing);
+                VerifyRawTimesCount("1", nodeGroup, nodeTran, showing);
+                VerifyRawTimesCount("2", nodeGroup, nodeTran, showing);
+                VerifyRawTimesCount("3", nodeGroup, nodeTran, showing);
+                VerifyRawTimesCount("4", nodeGroup, nodeTran, showing);
+                VerifyRawTimesCount("5", nodeGroup, nodeTran, showing);
             }
 
             // Now verify that the RT display digits control works properly
@@ -102,15 +103,23 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private void VerifyRawTimesCount(string chromName, TransitionDocNode transition, bool showing)
+        private void VerifyRawTimesCount(string chromName, TransitionGroupDocNode nodeGroup,
+            TransitionDocNode transition, bool showing)
         {
             int resultIndex;
             Assert.IsTrue(SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(chromName, out _, out resultIndex));
 
+            // The points across a peak are not in the columnar results, so the chrom infos are
+            // rebuilt from the .skyd.
+            var nodePep = (PeptideDocNode) SkylineWindow.Document.Molecules.First(pep =>
+                pep.TransitionGroups.Any(g => ReferenceEquals(g.Id, nodeGroup.Id)));
+            var chromInfos = new MoleculeResults(SkylineWindow.Document.Settings, nodePep)
+                .GetTransitionChromInfos(nodeGroup.TransitionGroup, transition.Transition, resultIndex);
+
             RunUI(() =>
             {
                 int count = GetRawTimeCount(chromName);
-                foreach (var tranChromInfo in transition.Results[resultIndex])
+                foreach (var tranChromInfo in chromInfos)
                 {
                     int pointsCount = showing 
                         ? tranChromInfo.PointsAcrossPeak ?? 0

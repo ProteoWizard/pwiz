@@ -148,10 +148,13 @@ namespace pwiz.SkylineTestFunctional
         {
             var numerator = new List<double>();
             var denominator = new List<double>();
-            foreach (var transition in peptide.Precursors.SelectMany(precursor=>precursor.Transitions))
+            foreach (var precursor in peptide.Precursors)
+            foreach (var transition in precursor.Transitions)
             {
-                var transitionDocNode = transition.DocNode;
-                var chromInfo = transitionDocNode.Results[replicate.ReplicateIndex].FirstOrDefault();
+                // The area and whether the peak was truncated are the precursor's columnar results
+                var groupResults = precursor.DocNode.AbbreviatedResults;
+                var chromInfo = groupResults?.GetQuantifiablePeaks(transition.DocNode.Transition,
+                    replicate.ReplicateIndex).FirstOrDefault();
                 if (chromInfo == null || chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
                 {
                     continue;

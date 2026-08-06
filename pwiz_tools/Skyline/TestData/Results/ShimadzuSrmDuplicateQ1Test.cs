@@ -175,7 +175,9 @@ namespace pwiz.SkylineTestData.Results
                     foreach (var entry in sharedQ3.Value)
                     {
                         var nodeTran = entry.Value;
-                        if (!nodeTran.HasResults || nodeTran.Results.Count == 0 || nodeTran.Results[0].IsEmpty)
+                        // The peaks are the precursor's columnar results now
+                        if (!nodeTran.HasResults ||
+                            !entry.Key.NodeGroup.TryGetReplicateTransitionPeak(nodeTran.Transition, 0, out _, out _))
                         {
                             failures.Add(string.Format(
                                 "Q1 {0} Q3 {1} ({2}): shared transition has no chromatogram after import",
@@ -252,9 +254,10 @@ namespace pwiz.SkylineTestData.Results
         {
             var sharedQ1 = new SignedMz(331.226771);
 
-            bool TranHasData(TransitionDocNode t) =>
-                t.HasResults && t.Results.Count > 0 && !t.Results[0].IsEmpty;
-            bool GroupHasData(TransitionGroupDocNode g) => g.Transitions.Any(TranHasData);
+            // A transition's peaks are the precursor's columnar results now
+            bool TranHasData(TransitionGroupDocNode g, TransitionDocNode t) =>
+                t.HasResults && g.TryGetReplicateTransitionPeak(t.Transition, 0, out _, out _);
+            bool GroupHasData(TransitionGroupDocNode g) => g.Transitions.Any(t => TranHasData(g, t));
 
             void AssertPhantom(string name, bool expectData)
             {
@@ -286,9 +289,8 @@ namespace pwiz.SkylineTestData.Results
             // Use the document's own product-match tolerance, the same one PeptideFinder applies.
             double mzMatchTol = importedDoc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var sharedQ3 = new SignedMz(81.05);
-            bool q3Measured = realPairs
-                .SelectMany(p => p.NodeGroup.Transitions)
-                .Any(t => Math.Abs(t.Mz - sharedQ3) <= mzMatchTol && TranHasData(t));
+            bool q3Measured = realPairs.Any(p => p.NodeGroup.Transitions
+                .Any(t => Math.Abs(t.Mz - sharedQ3) <= mzMatchTol && TranHasData(p.NodeGroup, t)));
             Assert.IsTrue(q3Measured,
                 "Test setup: expected the shared 81.05 product channel to be measured in this file");
 

@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var nodeTran in nodeTranGroup.Transitions)
                 {
-                    var rank = nodeTran.GetRank(null, false);
+                    var rank = nodeTran.GetRank(nodeTranGroup, null, false);
                     if (rank != null)
                     {
                         Dictionary<double, int> tranGroupRanks;
@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 foreach (var nodeTran in nodeTranGroup.Transitions.Where(nodeTran => nodeTran.HasLibInfo && tranGroupRanks.ContainsKey(nodeTran.Mz)))
                 {
-                    var rank = nodeTran.GetRank(null, false);
+                    var rank = nodeTran.GetRank(nodeTranGroup, null, false);
                     Assert.IsTrue(rank == null || rank <= 2);
                     Assert.AreEqual(tranGroupRanks[nodeTran.Mz], rank);
                 }

@@ -56,16 +56,17 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(transitionGroup);
 
             Assert.IsFalse(Settings.Default.ShowQuantitativeOnly);
-            VerifyPeakAreas(transitionGroup.Transitions.ToList(), areaReplicateGraphPane.CurveList);
+            VerifyPeakAreas(transitionGroup, transitionGroup.Transitions.ToList(), areaReplicateGraphPane.CurveList);
 
             RunUI(()=>SkylineWindow.ShowOnlyQuantitative(true));
             WaitForGraphs();
-            VerifyPeakAreas(
+            VerifyPeakAreas(transitionGroup,
                 transitionGroup.Transitions.Where(t => t.IsQuantitative(SkylineWindow.Document.Settings)).ToList(),
                 areaReplicateGraphPane.CurveList);
         }
 
-        private void VerifyPeakAreas(IList<TransitionDocNode> transitions, CurveList curveList)
+        private void VerifyPeakAreas(TransitionGroupDocNode transitionGroup, IList<TransitionDocNode> transitions,
+            CurveList curveList)
         {
             Assert.AreEqual(transitions.Count, curveList.Count);
             foreach (var transition in transitions)
@@ -73,8 +74,9 @@ namespace pwiz.SkylineTestFunctional
                 var matchingCurve = curveList.FirstOrDefault(curve =>
                     ReferenceEquals(transition.Id, ((IdentityPath) curve.Tag).Child));
                 Assert.IsNotNull(matchingCurve);
-                var transitionChromInfo = transition.Results[0][0];
-                Assert.AreEqual(transitionChromInfo.Area, matchingCurve.Points[0].Y);
+                // The area is the precursor's columnar results now
+                Assert.AreEqual(transitionGroup.GetTransitionArea(transition.Transition, 0),
+                    matchingCurve.Points[0].Y);
             }
         }
     }

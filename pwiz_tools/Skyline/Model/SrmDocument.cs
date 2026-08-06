@@ -2355,7 +2355,9 @@ namespace pwiz.Skyline.Model
                     ValidateChromInfo(Settings, nodeGroup.AbbreviatedResults?.LegacyChromInfos);
                     foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
                     {
-                        ValidateChromInfo(Settings, nodeTran.Results);
+                        // Only the shape: a transition keeps no peaks, and the empty list it does
+                        // keep is still one entry per replicate of the document.
+                        ValidateChromInfo(Settings, nodeTran.EmptyResults);
                     }
                 }
             }

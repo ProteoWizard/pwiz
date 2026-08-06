@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestFunctional
                 var globalStandardArea = CalculateGlobalStandardArea(document, chromFileInfoId);
                 foreach (var peptide in document.Molecules)
                 {
-                    VerifyTotalAreas(peptide, chromFileInfoId);
+                    VerifyTotalAreas(document, peptide, chromFileInfoId);
                     var peptideChromInfo = FindChromInfo(
                         new MoleculeResults(document.Settings, peptide).GetPeptideChromInfos(), chromFileInfoId);
                     if (peptideChromInfo == null)
@@ -376,7 +376,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     continue;
                 }
-                VerifyTotalAreas(peptide, chromFileInfoId);
+                VerifyTotalAreas(document, peptide, chromFileInfoId);
                 foreach (var transitionGroup in peptide.TransitionGroups)
                 {
                     var transitionGroupChromInfo = FindChromInfo(transitionGroup.EmptyResults, chromFileInfoId);
@@ -447,22 +447,30 @@ namespace pwiz.SkylineTestFunctional
         /// Verifies that the total area on the TransitionGroupChromInfo is equal to the sum of the
         /// areas on the TransitionChromInfo.
         /// </summary>
-        public static void VerifyTotalAreas(PeptideDocNode peptideDocNode, ChromFileInfoId chromFileInfoId)
+        public static void VerifyTotalAreas(SrmDocument document, PeptideDocNode peptideDocNode,
+            ChromFileInfoId chromFileInfoId)
         {
+            // Both levels are rebuilt from the .skyd now rather than held on the nodes. The
+            // background area is not one of the values the columnar results keep, so the transition
+            // level comes from here too rather than from the areas the precursor holds.
+            var moleculeResults = new MoleculeResults(document.Settings, peptideDocNode);
             foreach (var transitionGroup in peptideDocNode.TransitionGroups)
             {
                 var precursorTotalArea = 0.0;
                 var precursorTotalBackground = 0.0;
                 foreach (var transition in transitionGroup.Transitions)
                 {
-                    var transitionChromInfo = FindChromInfo(transition.Results, chromFileInfoId);
+                    var transitionChromInfo = FindChromInfo(
+                        moleculeResults.GetTransitionChromInfos(transitionGroup.TransitionGroup, transition.Transition),
+                        chromFileInfoId);
                     if (transitionChromInfo != null)
                     {
                         precursorTotalArea += transitionChromInfo.Area;
                         precursorTotalBackground += transitionChromInfo.BackgroundArea;
                     }
                 }
-                var precursorChromInfo = FindChromInfo(transitionGroup.EmptyResults, chromFileInfoId);
+                var precursorChromInfo = FindChromInfo(
+                    moleculeResults.GetTransitionGroupChromInfos(transitionGroup.TransitionGroup), chromFileInfoId);
                 AssertValuesEqual(precursorTotalArea, precursorChromInfo?.Area??0);
                 AssertValuesEqual(precursorTotalBackground, precursorChromInfo?.BackgroundArea??0);
             }

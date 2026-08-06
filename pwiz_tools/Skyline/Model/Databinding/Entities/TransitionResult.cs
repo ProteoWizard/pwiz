@@ -42,9 +42,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Browsable(false)]
         public TransitionChromInfo ChromInfo { get { return _cachedValues.GetValue(this); } }
 
-        public void ChangeChromInfo(EditDescription editDescription, Func<TransitionChromInfo, TransitionChromInfo> newChromInfo)
+        /// <summary>
+        /// Only the annotations of a peak can be edited from here, and they live on the precursor's
+        /// columnar results rather than on a chrom info, so this goes straight there and reads no
+        /// chromatogram.
+        /// </summary>
+        public void ChangeAnnotations(EditDescription editDescription, Func<Annotations, Annotations> newAnnotations)
         {
-            Transition.ChangeDocNode(editDescription, docNode=>docNode.ChangeResults(GetResultFile().ChangeChromInfo(docNode.Results, newChromInfo)));
+            var resultFile = GetResultFile();
+            var fileId = resultFile.ChromFileInfoId;
+            int replicateIndex = resultFile.Replicate.ReplicateIndex;
+            var transition = Transition.DocNode.Transition;
+            Transition.Precursor.ChangeDocNode(editDescription,
+                docNode => docNode.ChangeTransitionAnnotations(transition, replicateIndex, fileId,
+                    newAnnotations(docNode.GetTransitionAnnotations(transition, replicateIndex, fileId))));
         }
         [HideWhen(AncestorOfType = typeof(Transition))]
         public Transition Transition { get { return (Transition)SkylineDocNode; } }
@@ -144,8 +155,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return ChromInfo.Annotations.Note; }
             set
             {
-                ChangeChromInfo(EditColumnDescription(nameof(Note), value),
-                    chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
+                ChangeAnnotations(EditColumnDescription(nameof(Note), value),
+                    annotations => annotations.ChangeNote(value));
             }
         }
 
@@ -167,8 +178,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 
-                chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
+            ChangeAnnotations(EditDescription.SetAnnotation(annotationDef, value),
+                annotations => annotations.ChangeAnnotation(annotationDef, value));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)
@@ -246,7 +257,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
             float tolerance = (float)SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var transitionChromInfo = GetResultFile().FindChromInfo(Transition.DocNode.Results);
+            var transitionChromInfo = ChromInfo;
             if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
             {
                 return null;
@@ -280,7 +291,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override TransitionChromInfo CalculateValue(TransitionResult owner)
             {
-                return owner.GetResultFile().FindChromInfo(owner.Transition.DocNode.Results);
+                // Through the molecule's MoleculeResults, the one the report rows share.
+                return owner.GetResultFile().FindChromInfo(owner.Transition.Precursor.Peptide.GetMoleculeResults()
+                    .GetTransitionChromInfos(owner.Transition.Precursor.DocNode.TransitionGroup,
+                        owner.Transition.DocNode.Transition));
             }
 
             protected override Chromatogram CalculateValue1(TransitionResult owner)

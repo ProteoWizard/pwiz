@@ -305,10 +305,13 @@ namespace pwiz.SkylineTestTutorial
         {
             Assert.AreEqual(ionName, transitionTreeNode.DocNode.FragmentIonName);
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
-            var ratioActual = normalizedValueCalculator.GetTransitionValue(
+            // The area is the precursor's columnar results now
+            var nodeGroup = transitionTreeNode.TransitionGroupNode;
+            Assert.IsTrue(nodeGroup.TryGetReplicateTransitionPeak(transitionTreeNode.DocNode.Transition, 0,
+                out var fileId, out var peak));
+            var ratioActual = normalizedValueCalculator.GetTransitionAreaValue(
                 normalizedValueCalculator.GetFirstRatioNormalizationMethod(), transitionTreeNode.PepNode,
-                transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
-                0, transitionTreeNode.DocNode.Results[0][0]);
+                nodeGroup, transitionTreeNode.DocNode, 0, fileId, peak.Area);
 
             if (ratioExpected.HasValue)
                 Assert.AreEqual(ratioExpected.Value, ratioActual.Value, 0.005);

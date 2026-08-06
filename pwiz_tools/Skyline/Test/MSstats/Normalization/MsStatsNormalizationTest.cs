@@ -78,7 +78,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             } 
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetNoNormalization_dataProcessedData.csv")));
             VerifyAbundances(testDocument, asSmallMolecules, expected,
-                transitionChromInfo =>
+                (transitionFileId, transitionChromInfo) =>
                 {
                     if (transitionChromInfo.IsEmpty || transitionChromInfo.IsTruncated.GetValueOrDefault())
                     {
@@ -158,7 +158,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             }
               
             double medianMedian = new Statistics(mediansByReplicateFileIndex.Values).Median();
-            VerifyAbundances(testDocument, asSmallMolecules, expected, transitionChromInfo =>
+            VerifyAbundances(testDocument, asSmallMolecules, expected, (transitionFileId, transitionChromInfo) =>
             {
                 if (transitionChromInfo.IsEmpty || transitionChromInfo.IsTruncated.GetValueOrDefault())
                 {
@@ -172,7 +172,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                 else
                 {
                     double abundance = Math.Log(transitionChromInfo.Area, 2.0);
-                    abundance -= mediansByReplicateFileIndex[transitionChromInfo.FileIndex];
+                    abundance -= mediansByReplicateFileIndex[transitionFileId.GlobalIndex];
                     abundance += medianMedian;
                     return abundance;
                 }
@@ -211,7 +211,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             VerifyFoldChanges(testDocument, groupComparisonDef, expectedResults);
         }
 
-        private void VerifyAbundances(SrmDocument testDocument, bool asSmallMolecules, Dictionary<DataProcessedRowKey, double?> expected, Func<TransitionChromInfo, double?> calcAbundance)
+        private void VerifyAbundances(SrmDocument testDocument, bool asSmallMolecules, Dictionary<DataProcessedRowKey, double?> expected, Func<ChromFileInfoId, TransitionPeak, double?> calcAbundance)
         {
             var chromatograms = testDocument.Settings.MeasuredResults.Chromatograms;
             foreach (var protein in testDocument.MoleculeGroups)
@@ -240,8 +240,10 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                                 : transitionCharge;
                             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
                             {
-                                var transitionChromInfo = transition.Results[iReplicate].First();
-                                double? abundance = calcAbundance(transitionChromInfo);
+                                // The areas are the precursor's columnar results now
+                                var transitionPeak = precursor.AbbreviatedResults
+                                    .GetTransitionPeaks(transition.Transition, iReplicate).First();
+                                double? abundance = calcAbundance(transitionPeak.Key, transitionPeak.Value);
                                 var expectedAbundance = expected[new DataProcessedRowKey()
                                 {
                                     Protein = protein.Name,

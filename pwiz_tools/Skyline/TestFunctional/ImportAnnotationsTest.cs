@@ -120,19 +120,30 @@ namespace pwiz.SkylineTestFunctional
                                 transition = (TransitionDocNode)transition.ChangeAnnotations(
                                     AddAnnotations(transition.Annotations,
                                         AnnotationDef.AnnotationTarget.transition));
-                                if (transition.Results != null)
+                                // The annotations of a transition's peaks are the precursor's
+                                // columnar results, so they are added there rather than to a chrom
+                                // info the transition no longer keeps.
+                                var groupResults = precursor.AbbreviatedResults;
+                                if (groupResults != null)
                                 {
-                                    var results = transition.Results.ToArray();
-                                    for (int replicateIndex = 0; replicateIndex < results.Length; replicateIndex++)
+                                    for (int replicateIndex = 0;
+                                         replicateIndex < groupResults.ChromFileIds.ReplicatePositions.ReplicateCount;
+                                         replicateIndex++)
                                     {
-                                        _elementCount+=results[replicateIndex].Count;
-                                        results[replicateIndex] = new ChromInfoList<TransitionChromInfo>(
-                                            results[replicateIndex]
-                                                .Select(chromInfo => chromInfo.ChangeAnnotations(AddAnnotations(
-                                                    chromInfo.Annotations,
-                                                    AnnotationDef.AnnotationTarget.transition_result))));
+                                        foreach (var entry in groupResults.GetTransitionPeaks(transition.Transition,
+                                                     replicateIndex))
+                                        {
+                                            _elementCount++;
+                                            groupResults = groupResults.ChangeTransitionAnnotations(
+                                                transition.Transition, replicateIndex, entry.Key,
+                                                AddAnnotations(
+                                                    groupResults.FindTransitionAnnotations(transition.Transition,
+                                                        replicateIndex, entry.Key),
+                                                    AnnotationDef.AnnotationTarget.transition_result));
+                                        }
                                     }
-                                    transition = transition.ChangeResults(new Results<TransitionChromInfo>(results));
+
+                                    precursor = precursor.ChangeAbbreviatedResults(groupResults);
                                 }
                                 transitions[iTransition] = transition;
                             }

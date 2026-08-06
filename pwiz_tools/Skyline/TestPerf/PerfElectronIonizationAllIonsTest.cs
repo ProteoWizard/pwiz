@@ -72,8 +72,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             ImportResults(TestFilesDir.GetTestPath("GC_00343_500ng_62std2nd.raw"));
             // If data has not been properly understood as high energy all-ions (despite being MS1), some peaks won't be found
-            foreach (var peak in from tg in SkylineWindow.Document.MoleculeTransitions
-                from r in tg.Results
+            // The chrom infos come from the .skyd, since a transition no longer keeps them
+            foreach (var peak in from tg in ResultsUtil.EnumerateTransitionChromInfos(SkylineWindow.Document)
+                from r in tg.ChromInfos
                 from p in r
                 select p)
             {

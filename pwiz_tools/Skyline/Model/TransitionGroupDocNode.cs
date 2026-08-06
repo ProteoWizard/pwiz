@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model
                     moleculeMass = nodeTran.GetMoleculeMass(molecule);
                 }
                 var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
-                    moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.Results);
+                    moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.EmptyResults);
                 children.Add(nodeTranNew);
             }
             return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, null,
@@ -602,6 +602,219 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// The file whose peaks a question about one replicate is answered from, which is the
+        /// precursor's first there. Nearly every replicate has exactly one; a multi injection
+        /// replicate has several, and this picks the same one the chrom infos used to be walked in
+        /// the order of. Null when the precursor has no peak in that replicate.
+        /// </summary>
+        private ChromFileInfoId FindFirstFileId(int replicateIndex)
+        {
+            var results = AbbreviatedResults;
+            if (results == null || replicateIndex < 0 || replicateIndex >= ResultsReplicateCount)
+                return null;
+            foreach (int position in results.GetPositions(replicateIndex))
+                return results.ChromFileIds.FileIds[position].Value;
+            return null;
+        }
+
+        /// <summary>
+        /// One transition's peak area in one replicate, from the columnar results, so this reads no
+        /// chromatogram. Null when it has no peak there. -1 asks for the mean over every replicate,
+        /// which is what the chrom info accessors this replaced took it to mean.
+        /// </summary>
+        public float? GetTransitionArea(Transition transition, int replicateIndex)
+        {
+            if (replicateIndex == -1)
+                return GetTransitionAverageArea(transition);
+            return FindTransitionPeak(transition, replicateIndex, out var peak) ? peak.Area : (float?) null;
+        }
+
+        /// <summary>
+        /// One transition's mean peak area over every peak it has anywhere, which is what a caller
+        /// with no replicate in mind - an exporter ordering transitions, say - asks. Null when it
+        /// has no peaks at all.
+        /// </summary>
+        public float? GetTransitionAverageArea(Transition transition)
+        {
+            double total = 0;
+            int count = 0;
+            foreach (var peak in AbbreviatedResults?.GetAllTransitionPeaks(transition) ??
+                     Array.Empty<TransitionPeak>())
+            {
+                total += peak.Area;
+                count++;
+            }
+
+            return count == 0 ? (float?) null : (float) (total / count);
+        }
+
+        /// <summary>
+        /// Whether one transition has a good peak in one replicate, as the one and zero a peak
+        /// count ratio is averaged from. Null when it has no peak there. -1 asks for the mean over
+        /// every replicate.
+        /// </summary>
+        public float? GetTransitionPeakCountRatio(Transition transition, int replicateIndex, bool integrateAll)
+        {
+            if (replicateIndex == -1)
+                return GetTransitionAveragePeakCountRatio(transition, integrateAll);
+            return FindTransitionPeak(transition, replicateIndex, out var peak)
+                ? (peak.IsGoodPeak(integrateAll) ? 1f : 0f)
+                : (float?) null;
+        }
+
+        /// <summary>
+        /// What fraction of one transition's peaks are good, over every peak it has anywhere. Null
+        /// when it has no peaks at all.
+        /// </summary>
+        public float? GetTransitionAveragePeakCountRatio(Transition transition, bool integrateAll)
+        {
+            int goodPeaks = 0, count = 0;
+            foreach (var peak in AbbreviatedResults?.GetAllTransitionPeaks(transition) ??
+                     Array.Empty<TransitionPeak>())
+            {
+                if (peak.IsGoodPeak(integrateAll))
+                    goodPeaks++;
+                count++;
+            }
+
+            return count == 0 ? (float?) null : (float) goodPeaks / count;
+        }
+
+        /// <summary>
+        /// Whether the user moved or removed any of one transition's peaks, which the columnar
+        /// results say without reading anything.
+        /// </summary>
+        public bool IsTransitionUserModified(Transition transition)
+        {
+            return AbbreviatedResults?.GetAllTransitionPeaks(transition)
+                .Any(peak => peak.UserSet != UserSet.FALSE) ?? false;
+        }
+
+        /// <summary>
+        /// Where one of this precursor's transitions ranks by the area of its peak in one
+        /// replicate, and null when it has no peak there or the peak has no area, which is what an
+        /// unranked peak looks like.
+        /// <para>
+        /// Worked out here rather than stored, because a rank is nothing but the order of the
+        /// areas: this ranks exactly as the pass which puts the ranks on the chrom infos does - see
+        /// <see cref="MoleculeResults"/> - and so needs only what the columnar results already hold
+        /// and reads no chromatogram.
+        /// </para>
+        /// </summary>
+        /// <param name="byLevel">The rank among the transitions measured the same way rather than
+        /// among all of them, which is what a caller showing MS1 and MS2 apart wants.</param>
+        public int? GetTransitionRank(Transition transition, int replicateIndex, bool byLevel)
+        {
+            var results = AbbreviatedResults;
+            var fileId = FindFirstFileId(replicateIndex);
+            if (results == null || fileId == null)
+                return null;
+
+            // Everything ranked together, because a rank is a place among all of the precursor's
+            // transitions. A transition which takes no part in scoring sorts below an absent peak,
+            // which is what the negative area stands for.
+            var ranked = new List<RankedArea>(Children.Count);
+            foreach (TransitionDocNode nodeTran in Children)
+            {
+                bool hasPeak = results.TryGetTransitionPeak(nodeTran.Transition, replicateIndex, fileId, out var peak);
+                ranked.Add(new RankedArea(nodeTran, hasPeak ? peak.Area : (float?) null));
+            }
+
+            ranked.Sort((first, second) => Comparer<float>.Default.Compare(second.RankArea, first.RankArea));
+            int rankMs = 0, rankMsMs = 0;
+            for (int iRank = 0; iRank < ranked.Count; iRank++)
+            {
+                var rankedArea = ranked[iRank];
+                if (!rankedArea.Area.HasValue)
+                    continue;
+                if (rankedArea.Area.Value <= 0)
+                {
+                    // A peak with no area is left unranked, the same as the peak which is not there
+                    // at all, so it must not take a place at its level either.
+                    if (ReferenceEquals(rankedArea.NodeTran.Transition, transition))
+                        return null;
+                    continue;
+                }
+
+                int rankByLevel = rankedArea.NodeTran.IsMs1 ? ++rankMs : ++rankMsMs;
+                if (ReferenceEquals(rankedArea.NodeTran.Transition, transition))
+                    return byLevel ? rankByLevel : iRank + 1;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// One transition and the area its peak has in the file being ranked, which is the only
+        /// thing the order depends on.
+        /// </summary>
+        private readonly struct RankedArea
+        {
+            public RankedArea(TransitionDocNode nodeTran, float? area)
+            {
+                NodeTran = nodeTran;
+                Area = area;
+            }
+
+            public TransitionDocNode NodeTran { get; }
+            public float? Area { get; }
+
+            /// <summary>
+            /// What the sort compares: below every real area for a transition which takes no part
+            /// in scoring, and zero where there is no peak, which is how the results pass orders
+            /// them.
+            /// </summary>
+            public float RankArea
+            {
+                get { return NodeTran.ParticipatesInScoring ? Area ?? 0 : -1.0f; }
+            }
+        }
+
+        /// <summary>
+        /// One transition's peak in one replicate, with the file it belongs to, which is what
+        /// everything else about that peak is found by. False when it has no peak there. See
+        /// <see cref="FindFirstFileId"/> for which file a replicate's questions are answered from.
+        /// </summary>
+        public bool TryGetReplicateTransitionPeak(Transition transition, int replicateIndex,
+            out ChromFileInfoId fileId, out TransitionPeak peak)
+        {
+            fileId = FindFirstFileId(replicateIndex);
+            if (fileId == null)
+            {
+                peak = default;
+                return false;
+            }
+
+            return AbbreviatedResults.TryGetTransitionPeak(transition, replicateIndex, fileId, out peak);
+        }
+
+        private bool FindTransitionPeak(Transition transition, int replicateIndex, out TransitionPeak peak)
+        {
+            return TryGetReplicateTransitionPeak(transition, replicateIndex, out _, out peak);
+        }
+
+        /// <summary>
+        /// The annotations of one transition's peak are in the columnar results, so setting them
+        /// rewrites that map rather than a chrom info, and reads nothing. The precursor's own are
+        /// <see cref="ChangePrecursorAnnotations"/>.
+        /// </summary>
+        public TransitionGroupDocNode ChangeTransitionAnnotations(Transition transition, int replicateIndex,
+            ChromFileInfoId fileId, Annotations annotations)
+        {
+            var results = AbbreviatedResults;
+            if (results == null)
+                return this;
+            return ChangeAbbreviatedResults(
+                results.ChangeTransitionAnnotations(transition, replicateIndex, fileId, annotations));
+        }
+
+        public Annotations GetTransitionAnnotations(Transition transition, int replicateIndex, ChromFileInfoId fileId)
+        {
+            return AbbreviatedResults?.FindTransitionAnnotations(transition, replicateIndex, fileId) ??
+                   Annotations.EMPTY;
+        }
+
+        /// <summary>
         /// The chrom infos the columnar results are still carrying, which is what a precursor has
         /// before its .skyd has been read. Empty once they have been given up: a caller which needs
         /// them after that asks a <see cref="MoleculeResults"/>, which rebuilds them.
@@ -675,12 +888,12 @@ namespace pwiz.Skyline.Model
         public int? GetRank(TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran, int? replicateIndex)
         {
             if (nodeGroupPrimary == null || ReferenceEquals(this, nodeGroupPrimary))
-                return nodeTran.GetRank(replicateIndex, HasResultRanks);
+                return nodeTran.GetRank(this, replicateIndex, HasResultRanks);
 
             var nodeTranEquivalent = nodeGroupPrimary.FindEquivalentTransition(nodeTran);
             if (nodeTranEquivalent == null)
                 return null;
-            return nodeTranEquivalent.GetRank(replicateIndex, nodeGroupPrimary.HasResultRanks);
+            return nodeTranEquivalent.GetRank(nodeGroupPrimary, replicateIndex, nodeGroupPrimary.HasResultRanks);
         }
 
         public bool HasLibRanks
@@ -697,7 +910,8 @@ namespace pwiz.Skyline.Model
         {
             if (!replicateIndex.HasValue)
                 return HasResultRanks;
-            return Transitions.Any(nodeTran => nodeTran.GetPeakRank(replicateIndex.Value).HasValue);
+            return Transitions.Any(nodeTran =>
+                GetTransitionRank(nodeTran.Transition, replicateIndex.Value, false).HasValue);
         }
 
         public float? GetPeakCountRatio(int i)
@@ -1085,7 +1299,10 @@ namespace pwiz.Skyline.Model
                     (results.UserSets?.FlatValues.Any(userSet => userSet != UserSet.FALSE) == true ||
                      results.Annotations?.FlatValues.Any(a => !a.IsEmpty) == true))
                     return true;
-                return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
+                // A transition says so the same way, in the same columnar results, plus whatever
+                // is annotated on the node itself.
+                return Children.Cast<TransitionDocNode>().Contains(nodeTran =>
+                    !nodeTran.Annotations.IsEmpty || IsTransitionUserModified(nodeTran.Transition));
             }
         }
 
@@ -1308,7 +1525,7 @@ namespace pwiz.Skyline.Model
                                 .UseValuesFrom(nodeTranResult.QuantInfo);
                             if (!ReferenceEquals(quantInfo.LibInfo, nodeTranResult.LibInfo))
                                 dotProductChange = true;
-                            var results = nodeTranResult.Results;
+                            var results = nodeTranResult.EmptyResults;
                             if (mods != null && mods.HasCrosslinks)
                             {
                                 crosslinkBuilder ??= new CrosslinkBuilder(settingsNew, TransitionGroup.Peptide, mods,
@@ -1404,7 +1621,7 @@ namespace pwiz.Skyline.Model
                             losses = losses.ChangeMassType(massType);
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var explicitValues = nodeTransition.ExplicitValues;
-                        var results = nodeTransition.Results;           // Results changes happen later
+                        var results = nodeTransition.EmptyResults;      // Results changes happen later
                         // Discard isotope transitions which are no longer valid
                         if (!TransitionDocNode.IsValidIsotopeTransition(tran, isotopeDist))
                             continue;
@@ -1660,12 +1877,15 @@ namespace pwiz.Skyline.Model
                 }
             }
 
+            // There used to be a check here for whether the existing information could be reused
+            // without looking at the ChromatogramInfo. What it reused was the chrom infos the
+            // transitions held, and they hold none, so it could no longer be satisfied. The
+            // columnar results are not a substitute: a pass which produces nothing for a replicate
+            // replaces that replicate's peaks with nothing rather than leaving them alone - see
+            // TransitionGroupResults.UpdateTransitionsFromChromInfos - so skipping the work would
+            // lose the peaks it was meant to keep. Only a replicate whose .skyd could not be read
+            // takes that path now.
             bool canUseOldResults = false;
-            // Check whether we can reuse the existing information without having to look at the ChromatogramInfo
-            if (iResultOld != -1 && resultsHandler == null)
-            {
-                canUseOldResults = CanUseOldResults(settingsNew, diff, nodePrevious, chromIndex, iResultOld);
-            }
 
             float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
             if (!canUseOldResults)
@@ -1725,7 +1945,7 @@ namespace pwiz.Skyline.Model
 
             // Check for any user set transitions in the previous node that
             // should be used to set peak boundaries on any new nodes.
-            Dictionary<int, TransitionChromInfo> dictUserSetInfoBest = null;
+            Dictionary<int, PreviousPeak> dictUserSetInfoBest = null;
             bool mismatchedEmptyReintegrated = false;
             if (keepUserSet && iResultOld != -1)
             {
@@ -1802,10 +2022,6 @@ namespace pwiz.Skyline.Model
             for (int iTran = 0; iTran < Children.Count; iTran++)
             {
                 var nodeTran = (TransitionDocNode)Children[iTran];
-                // Use existing information, if it is still equivalent to the
-                // chosen peak.
-                var results = nodeTran.HasResults && iResultOld != -1 ?
-                    nodeTran.Results[iResultOld] : default(ChromInfoList<TransitionChromInfo>);
 
                 // Singleton chrom infos are most common. So avoid creating a list every time
                 TransitionChromInfo firstChromInfo = null;
@@ -1831,6 +2047,14 @@ namespace pwiz.Skyline.Model
                         transitionGroupChromInfoOld = FindGroupChromInfo(GetSafeChromInfo(iResultOld), fileId, 0);
                     }
 
+                    // What this transition's peak in this file was before, which is in the columnar
+                    // results: a transition keeps no chrom infos to look at. One entry per file
+                    // rather than per optimization step, so every step of a file is judged by the
+                    // peak of step zero, which is the one the document records.
+                    var previousPeak = iResultOld < 0
+                        ? PreviousPeak.NONE
+                        : PreviousPeak.Find(AbbreviatedResults, nodeTran.Transition, iResultOld, fileId);
+
                     // Always add the right number of steps to the list, no matter
                     // how many entries were returned.
                     for (int step = -numSteps; step <= numSteps; step++)
@@ -1838,45 +2062,44 @@ namespace pwiz.Skyline.Model
                         ChromatogramInfo info = listChromInfo.GetChromatogramForStep(step);
                         // Check for existing info that was set by the user.
                         UserSet userSet = UserSet.FALSE;
-                        var chromInfo = FindChromInfo(results, fileId, step);
                         bool notUserSet;
                         if (resultsHandler == null && transitionGroupChromInfoOld?.ReintegratedPeak == null)
                         {
                             // If we don't have a model then we shouldn't change peaks that are "REINTEGRATED".
-                            notUserSet = chromInfo == null || chromInfo.UserSet == UserSet.FALSE;
+                            notUserSet = previousPeak.UserSet == UserSet.FALSE;
                         }
                         else
                         {
-                            notUserSet = chromInfo == null || chromInfo.UserSet == UserSet.FALSE ||
-                                         chromInfo.UserSet == UserSet.REINTEGRATED;
+                            notUserSet = previousPeak.UserSet == UserSet.FALSE ||
+                                         previousPeak.UserSet == UserSet.REINTEGRATED;
                         }
+
+                        ChromPeak peak = ChromPeak.EMPTY;
+                        IonMobilityFilter ionMobility = IonMobilityFilter.EMPTY;
                         if (!keepUserSet || notUserSet || mismatchedEmptyReintegrated || chromatogramDataChanged)
                         {
-                            ChromPeak peak = ChromPeak.EMPTY;
-                            IonMobilityFilter ionMobility = IonMobilityFilter.EMPTY;
                             if (info != null)
                             {
                                 TransitionGroupChromInfo chromGroupInfoMatch;
                                 if (dictUserSetInfoBest != null)
                                 {
-                                    TransitionChromInfo chromInfoBest;
+                                    PreviousPeak peakBest;
                                     if (mismatchedEmptyReintegrated)
                                     {
                                         // If we are reintegrating, then copy the peak boundaries of the best peak
-                                        dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex,
-                                            out chromInfoBest);
+                                        dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex, out peakBest);
                                     }
                                     else
                                     {
                                         // Otherwise, use the same peak boundaries
-                                        chromInfoBest = chromInfo;
+                                        peakBest = previousPeak;
                                     }
 
-                                    if (chromInfoBest != null)
+                                    if (peakBest.PeakBounds.HasValue)
                                     {
                                         peak = transitionGroupIntegrator.CalcPeak(nodeTran.Transition, step,
-                                            chromInfoBest.StartRetentionTime, chromInfoBest.EndRetentionTime, 0);
-                                        userSet = chromInfoBest.UserSet;
+                                            peakBest.PeakBounds.Value.StartTime, peakBest.PeakBounds.Value.EndTime, 0);
+                                        userSet = peakBest.UserSet;
                                     }
                                 }
                                 else if (resultsHandler != null)
@@ -1901,15 +2124,20 @@ namespace pwiz.Skyline.Model
                                 }
                                 ionMobility = info.GetIonMobilityFilter();
                             }
-
-                            // Avoid creating new info objects that represent the same data
-                            // in use before.
-                            if (chromInfo == null || !chromInfo.Equivalent(fileId, step, peak, ionMobility) || chromInfo.UserSet != userSet)
-                            {
-                                int ratioCount = settingsNew.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
-                                chromInfo = CreateTransitionChromInfo(chromInfo, fileId, step, peak, ionMobility, ratioCount, userSet);
-                            }
                         }
+                        else if (info != null && previousPeak.PeakBounds.HasValue)
+                        {
+                            // The peak the user set is kept, which now means integrating between
+                            // the boundaries it was set to again: there is no stored chrom info to
+                            // carry forward, and those boundaries are what reproduces it.
+                            peak = transitionGroupIntegrator.CalcPeak(nodeTran.Transition, step,
+                                previousPeak.PeakBounds.Value.StartTime, previousPeak.PeakBounds.Value.EndTime, 0);
+                            userSet = previousPeak.UserSet;
+                            ionMobility = info.GetIonMobilityFilter();
+                        }
+
+                        var chromInfo = new TransitionChromInfo(fileId, step, peak, ionMobility,
+                            previousPeak.Annotations, userSet);
 
                         if (firstChromInfo == null)
                             firstChromInfo = chromInfo;
@@ -2033,71 +2261,6 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
-        /// <summary>
-        /// Returns true if the area values in the TransitionChromInfo's can be trusted so that the data from the .skyd does not need to be examined.
-        /// </summary>
-        private bool CanUseOldResults(SrmSettings settingsNew, SrmSettingsDiff diff, TransitionGroupDocNode nodePrevious, int chromIndex, int iResultOld)
-        {
-            if (MustReadAllChromatograms(settingsNew, diff))
-            {
-                return false;
-            }
-            var measuredResults = settingsNew.MeasuredResults;
-            var chromatograms = settingsNew.MeasuredResults.Chromatograms[chromIndex];
-            var settingsOld = diff.SettingsOld;
-            if (!chromatograms.IsLoadedAndAvailable(measuredResults))
-            {
-                return true;
-            }
-            if (settingsOld == null)
-            {
-                return false;
-            }
-            if (settingsNew.TransitionSettings.Instrument.MzMatchTolerance != settingsOld.TransitionSettings.Instrument.MzMatchTolerance)
-            {
-                return false;
-            }
-
-            if (!Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation))
-            {
-                return false;
-            }
-
-            if (settingsNew.PeptideSettings.Imputation.HasImputation)
-            {
-                if (!Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
-                {
-                    return false;
-                }
-            }
-            if (measuredResults.HasNewChromatogramData(chromIndex))
-            {
-                return false;
-            }
-            if (!ReferenceEquals(chromatograms, settingsOld.MeasuredResults?.Chromatograms[iResultOld]))
-            {
-                return false;
-            }
-            if (!Equals(this, nodePrevious))
-            {
-                return false;
-            }
-
-            foreach (var transition in Transitions)
-            {
-                if (transition.Results == null || iResultOld >= transition.Results.Count)
-                {
-                    return false;
-                }
-
-                if (transition.Results[iResultOld].IsEmpty)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         private TransitionGroupDocNode UpdateResultsToEmpty(MeasuredResults measuredResults)
         {
             // If the results are already empty at this level, then no need to change anything
@@ -2156,13 +2319,51 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
-        private static TransitionChromInfo CreateTransitionChromInfo(TransitionChromInfo chromInfo, ChromFileInfoId fileId,
-                                              int step, ChromPeak peak, IonMobilityFilter ionMobility, int ratioCount, UserSet userSet)
+        /// <summary>
+        /// What a transition's peak leaves behind for the next results pass once the chrom infos
+        /// are gone: how it was set, the boundaries it was integrated between and the annotations
+        /// put on it. That is everything the pass asks of the peak which was there before, and
+        /// everything the columnar results hold about one.
+        /// </summary>
+        private readonly struct PreviousPeak
         {
-            // Use the old ratio for now, and it will be corrected by the peptide,
-            // if it is incorrect.
-            Annotations annotations = chromInfo != null ? chromInfo.Annotations : Annotations.EMPTY;
-            return new TransitionChromInfo(fileId, step, peak, ionMobility, annotations, userSet);
+            public static readonly PreviousPeak NONE = default;
+
+            private PreviousPeak(UserSet userSet, CustomPeakBounds? peakBounds, Annotations annotations, float area)
+            {
+                UserSet = userSet;
+                PeakBounds = peakBounds;
+                _annotations = annotations;
+                Area = area;
+            }
+
+            private readonly Annotations _annotations;
+
+            public UserSet UserSet { get; }
+            public CustomPeakBounds? PeakBounds { get; }
+            public float Area { get; }
+
+            /// <summary>
+            /// Never null, so that a peak which was not there hands the same thing forward as one
+            /// with nothing written on it.
+            /// </summary>
+            public Annotations Annotations
+            {
+                get { return _annotations ?? Annotations.EMPTY; }
+            }
+
+            public static PreviousPeak Find(TransitionGroupResults results, Transition transition, int replicateIndex,
+                ChromFileInfoId fileId)
+            {
+                if (results == null || !results.TryGetTransitionPeak(transition, replicateIndex, fileId, out var peak))
+                {
+                    return NONE;
+                }
+
+                return new PreviousPeak(peak.UserSet,
+                    results.FindTransitionPeakBounds(transition, replicateIndex, fileId),
+                    results.FindTransitionAnnotations(transition, replicateIndex, fileId), peak.Area);
+            }
         }
 
         /// <summary>
@@ -2170,20 +2371,15 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private bool IsMismatchedEmptyReintegrated(int indexResult)
         {
+            var results = AbbreviatedResults;
+            if (results == null)
+                return false;
+
             foreach (TransitionDocNode nodeTran in Children)
             {
-                if (!nodeTran.HasResults)
-                    continue;
-
-                var chromInfoList = nodeTran.Results[indexResult];
-                if (chromInfoList.IsEmpty)
-                    continue;
-
-                foreach (var chromInfo in chromInfoList)
+                foreach (var entry in results.GetTransitionPeaks(nodeTran.Transition, indexResult))
                 {
-                    if (chromInfo == null || chromInfo.UserSet != UserSet.REINTEGRATED || chromInfo.OptimizationStep != 0)
-                        continue;
-                    if (chromInfo.IsEmpty)
+                    if (entry.Value.UserSet == UserSet.REINTEGRATED && entry.Value.IsEmpty)
                         return true;
                 }
             }
@@ -2191,38 +2387,33 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Find the <see cref="TransitionChromInfo"/> set by the user with the largest
-        /// peak area for each file represented in a specific result set.
+        /// The peak set by the user with the largest area for each file of one replicate, which is
+        /// the one whose boundaries the other transitions are given. From the columnar results, so
+        /// this reads no chromatogram.
         /// </summary>
-        private Dictionary<int, TransitionChromInfo> FindBestUserSetInfo(int indexResult)
+        private Dictionary<int, PreviousPeak> FindBestUserSetInfo(int indexResult)
         {
-            Dictionary<int, TransitionChromInfo> dictInfo = null;
+            var results = AbbreviatedResults;
+            if (results == null)
+                return null;
 
+            Dictionary<int, PreviousPeak> dictInfo = null;
             foreach (TransitionDocNode nodeTran in Children)
             {
-                if (!nodeTran.HasResults)
-                    continue;
-
-                var chromInfoList = nodeTran.Results[indexResult];
-                if (chromInfoList.IsEmpty)
-                    continue;
-
-                foreach (var chromInfo in chromInfoList)
+                foreach (var entry in results.GetTransitionPeaks(nodeTran.Transition, indexResult))
                 {
-                    if (chromInfo == null || chromInfo.UserSet == UserSet.FALSE || chromInfo.OptimizationStep != 0)
+                    if (entry.Value.UserSet == UserSet.FALSE)
                         continue;
 
-                    if (dictInfo == null)
-                        dictInfo = new Dictionary<int, TransitionChromInfo>();
-
-                    TransitionChromInfo chromInfoBest;
-                    if (dictInfo.TryGetValue(chromInfo.FileIndex, out chromInfoBest))
+                    dictInfo ??= new Dictionary<int, PreviousPeak>();
+                    if (dictInfo.TryGetValue(entry.Key.GlobalIndex, out var peakBest) &&
+                        peakBest.Area >= entry.Value.Area)
                     {
-                        if (chromInfoBest.Area >= chromInfo.Area)
-                            continue;
-                        dictInfo.Remove(chromInfoBest.FileIndex);
+                        continue;
                     }
-                    dictInfo.Add(chromInfo.FileIndex, chromInfo);
+
+                    dictInfo[entry.Key.GlobalIndex] =
+                        PreviousPeak.Find(results, nodeTran.Transition, indexResult, entry.Key);
                 }
             }
 
@@ -2244,24 +2435,14 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        private static TransitionChromInfo FindChromInfo(IList<TransitionChromInfo> results,
-                                                         ChromFileInfoId fileId, int step)
-        {
-            if (results != null)
-            {
-                for (int i = 0; i < results.Count; i++)
-                {
-                    var chromInfo = results[i];
-                    if (ReferenceEquals(fileId, chromInfo.FileId) && step == chromInfo.OptimizationStep)
-                        return chromInfo;
-                }
-            }
-            return null;
-        }
-
-        private bool ChangedResults(DocNodeParent nodeGroup)
+        private bool ChangedResults(TransitionGroupDocNode nodeGroup)
         {
             if (nodeGroup.Children.Count != Children.Count)
+                return true;
+
+            // The transitions' results are the precursor's now, so one comparison covers all of
+            // them, the same way the molecule level asks about its precursors.
+            if (!ReferenceEquals(AbbreviatedResults, nodeGroup.AbbreviatedResults))
                 return true;
 
             int iChild = 0;
@@ -2271,10 +2452,6 @@ namespace pwiz.Skyline.Model
                 // at all.
                 var nodeTran2 = (TransitionDocNode) nodeGroup.Children[iChild];
                 if (!ReferenceEquals(nodeTran.Id, nodeTran2.Id))
-                    return true;
-
-                // or if the results for any transition have changed
-                if (!ReferenceEquals(nodeTran.Results, nodeTran2.Results))
                     return true;
 
                 iChild++;
@@ -2518,7 +2695,7 @@ namespace pwiz.Skyline.Model
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
                 chromInfosNew = Results<TransitionChromInfo>.Merge(null, chromInfoSet.ChromInfoLists);
                 var emptyResults = Settings.MeasuredResults.EmptyTransitionResults;
-                if (!Results<TransitionChromInfo>.EqualsDeep(emptyResults, nodeTran.Results))
+                if (!Results<TransitionChromInfo>.EqualsDeep(emptyResults, nodeTran.EmptyResults))
                     nodeTran = nodeTran.ChangeResults(emptyResults);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);

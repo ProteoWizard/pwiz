@@ -23,6 +23,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -45,11 +46,14 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var nodePep in nodePepGroup.Molecules)
                 {
+                    // One per molecule, since the apex height and the ion mobility of a peak are
+                    // read back from the chromatograms rather than kept by the transition.
+                    var moleculeResults = new MoleculeResults(Document.Settings, nodePep);
                     foreach (var nodeTranGroup in nodePep.TransitionGroups)
                     {
                         for (var i = 0; i < Document.Settings.MeasuredResults.Chromatograms.Count; i++)
                         {
-                            ProcessTransitionGroup(spectra, nodePepGroup, nodePep, nodeTranGroup, i);
+                            ProcessTransitionGroup(spectra, nodePepGroup, nodePep, nodeTranGroup, moleculeResults, i);
                         }
                     }
                 }
@@ -77,7 +81,8 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         private void ProcessTransitionGroup(IDictionary<LibKey, SpectrumMzInfo> spectra,
-            PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int replicateIndex)
+            PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup,
+            MoleculeResults moleculeResults, int replicateIndex)
         {
             LibKey key;
             if (nodePep.IsProteomic)
@@ -107,7 +112,8 @@ namespace pwiz.Skyline.Model.Lib
             double? mobilityMs1 = null; // Track MS1 ion mobility in order to derive high energy ion mobility offset value
             foreach (var nodeTran in nodeTranGroup.Transitions)
             {
-                var chromInfos = nodeTran.GetSafeChromInfo(replicateIndex);
+                var chromInfos = moleculeResults.GetTransitionChromInfos(nodeTranGroup.TransitionGroup,
+                    nodeTran.Transition, replicateIndex);
                 if (chromInfos.IsEmpty)
                     continue;
                 var chromInfo = chromInfos.First(info => info.OptimizationStep == 0);

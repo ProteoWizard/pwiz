@@ -331,7 +331,9 @@ namespace pwiz.SkylineTestTutorial
                                 (PeptideDocNode) nodePep.Model,
                                 SkylineWindow.SequenceTree));
                         var resultsIndex = SkylineWindow.SequenceTree.GetDisplayResultsIndex(nodePep);
-                        var rank = nodeTranDoc.GetPeakRank(resultsIndex);
+                        // The rank comes from the precursor, which holds the areas it is the order of
+                        var rank = nodeTran.TransitionGroupNode.GetTransitionRank(
+                            nodeTranDoc.Transition, resultsIndex, false);
                         if (rank == null || rank > 3)
                             SkylineWindow.SequenceTree.SelectedNode = nodeTran;
                         SkylineWindow.SequenceTree.KeysOverride = Keys.Control;

@@ -230,11 +230,12 @@ namespace pwiz.SkylineTestFunctional
             var importDoc = SkylineWindow.Document;
             var transitionCount = importDoc.MoleculeTransitionCount;
             var tranWithResults = importDoc.MoleculeTransitions.Count(tran => tran.HasResults);
-            var tranWithPeaks = importDoc.MoleculeTransitions.Count(tran => 
+            // The peaks are the precursors' columnar results now
+            var tranWithPeaks = ResultsUtil.EnumerateTransitionResults(importDoc).Count(tran =>
             {
                 for (int i = 0; i < 4; i ++)
                 {
-                    if (tran.GetPeakCountRatio(i, importDoc.Settings.TransitionSettings.Integration.IsIntegrateAll) > 0)
+                    if (tran.HasGoodPeak(i, importDoc.Settings.TransitionSettings.Integration.IsIntegrateAll))
                         return true;
                 }
                 return false;

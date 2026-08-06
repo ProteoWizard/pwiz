@@ -95,7 +95,11 @@ namespace pwiz.Skyline.Model
                 if (chromInfoCached == null)
                     continue;
 
-                var tranChromInfo = nodeTran.Results[resultsIndex].First(r => r.FileIndex == tranGroupChromInfo.FileIndex);
+                // The area and the boundaries of this transition's peak, from the columnar results
+                // rather than a chrom info the transition no longer keeps.
+                if (!abbreviatedResults.TryGetTransitionPeak(nodeTran.Transition, resultsIndex,
+                        tranGroupChromInfo.FileId, out var tranPeak))
+                    continue;
 
                 float area;
                 if (peakIndex != -1)
@@ -104,16 +108,18 @@ namespace pwiz.Skyline.Model
                     var cachedPeak = chromInfoCached.GetPeak(peakIndex);
                     area = cachedPeak.Area;
 
-                    if (cachedPeak.RetentionTime.Equals(tranGroupChromInfo.RetentionTime.Value))
+                    var peakBounds = abbreviatedResults.FindTransitionPeakBounds(nodeTran.Transition, resultsIndex,
+                        tranGroupChromInfo.FileId);
+                    if (peakBounds.HasValue && cachedPeak.RetentionTime.Equals(tranGroupChromInfo.RetentionTime.Value))
                     {
                         var range = cachedPeak.EndTime - cachedPeak.StartTime;
-                        referenceMatchDataList[peakIndex].ShiftLeft = (tranChromInfo.StartRetentionTime - cachedPeak.StartTime)/range;
-                        referenceMatchDataList[peakIndex].ShiftRight = (tranChromInfo.EndRetentionTime - cachedPeak.EndTime)/range;
+                        referenceMatchDataList[peakIndex].ShiftLeft = (peakBounds.Value.StartTime - cachedPeak.StartTime)/range;
+                        referenceMatchDataList[peakIndex].ShiftRight = (peakBounds.Value.EndTime - cachedPeak.EndTime)/range;
                     }
                 }
                 else
                 {
-                    area = tranChromInfo.Area;
+                    area = tranPeak.Area;
                 }
                 abundances.Add(nodeTran, area);
             }

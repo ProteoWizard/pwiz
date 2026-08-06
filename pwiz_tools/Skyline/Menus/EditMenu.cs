@@ -1079,23 +1079,25 @@ namespace pwiz.Skyline.Menus
         private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, ChromFileInfoId chromFileInfoId, IdentityPath groupPath,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, bool syncRecurse = true)
         {
-            ChromInfo chromInfo;
+            ChromFileInfoId fileId;
             Transition transition;
 
             if (nodeTran == null)
             {
-                chromInfo = nodeGroup.GetChromInfo(resultsIndex, chromFileInfoId);
+                fileId = nodeGroup.GetChromInfo(resultsIndex, chromFileInfoId)?.FileId;
                 transition = null;
             }
             else
             {
-                chromInfo = nodeTran.GetChromInfo(resultsIndex, chromFileInfoId);
+                // The precursor's columnar results say whether the transition has a peak in that
+                // file, which is all this needed the chrom info for.
                 transition = nodeTran.Transition;
+                fileId = FindTransitionPeakFileId(nodeGroup, transition, resultsIndex, chromFileInfoId);
             }
-            if (chromInfo == null)
+            if (fileId == null)
                 return document;
 
-            string name = SkylineWindow.GetGraphChromStrings(resultsIndex, chromInfo.FileId, out var filePath);
+            string name = SkylineWindow.GetGraphChromStrings(resultsIndex, fileId, out var filePath);
             document = name == null
                 ? document
                 : document.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false);
@@ -1108,7 +1110,7 @@ namespace pwiz.Skyline.Menus
                     var chromSet = document.MeasuredResults.Chromatograms[i];
                     if (syncTargets.Contains(chromSet))
                     {
-                        foreach (var info in chromSet.MSDataFileInfos.Where(info => !(resultsIndex == i && Equals(chromInfo.FileId, info.FileId))))
+                        foreach (var info in chromSet.MSDataFileInfos.Where(info => !(resultsIndex == i && Equals(fileId, info.FileId))))
                             document = RemovePeakInternal(document, i, info.FileId, groupPath, nodeGroup, nodeTran, false);
                     }
                 }
@@ -1137,7 +1139,8 @@ namespace pwiz.Skyline.Menus
             var node = selectedTreeNode as TransitionTreeNode;
             if (node != null && GraphChromatogram.IsSingleTransitionDisplay)
             {
-                if (HasPeak(SelectedResultsIndex, chromFileInfoId, node.DocNode))
+                if (node.TransitionGroupNode != null &&
+                    HasPeak(SelectedResultsIndex, chromFileInfoId, node.TransitionGroupNode, node.DocNode))
                 {
                     if (removePeakItems != null)
                         removePeakItems.Add(new ToolStripMenuItem());
@@ -1180,16 +1183,43 @@ namespace pwiz.Skyline.Menus
         {
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                if (HasPeak(iResult, chromFileInfoId, nodeTran))
+                if (HasPeak(iResult, chromFileInfoId, nodeGroup, nodeTran))
                     return true;
             }
             return false;
         }
 
-        private static bool HasPeak(int iResults, ChromFileInfoId chromFileInfoId, TransitionDocNode nodeTran)
+        /// <summary>
+        /// Whether a transition has a peak in one file, which the precursor's columnar results say
+        /// without reading a chromatogram.
+        /// </summary>
+        private static bool HasPeak(int iResults, ChromFileInfoId chromFileInfoId, TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTran)
         {
-            var chromInfo = nodeTran.GetChromInfo(iResults, chromFileInfoId);
-            return (chromInfo != null && !chromInfo.IsEmpty);
+            return FindTransitionPeakFileId(nodeGroup, nodeTran.Transition, iResults, chromFileInfoId) != null;
+        }
+
+        /// <summary>
+        /// The file a transition's peak in one replicate belongs to, or null when it has none
+        /// there. A null <paramref name="chromFileInfoId"/> takes the first file with a peak, which
+        /// is what a caller with no file in mind means.
+        /// </summary>
+        private static ChromFileInfoId FindTransitionPeakFileId(TransitionGroupDocNode nodeGroup,
+            Transition transition, int replicateIndex, ChromFileInfoId chromFileInfoId)
+        {
+            var groupResults = nodeGroup.AbbreviatedResults;
+            if (groupResults == null)
+                return null;
+
+            foreach (var entry in groupResults.GetTransitionPeaks(transition, replicateIndex))
+            {
+                if (chromFileInfoId != null && !ReferenceEquals(chromFileInfoId, entry.Key))
+                    continue;
+                if (!entry.Value.IsEmpty)
+                    return entry.Key;
+            }
+
+            return null;
         }
 
         private void synchronizedIntegrationToolStripMenuItem_Click(object sender, EventArgs e)

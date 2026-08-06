@@ -720,7 +720,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 var transitionChromInfoDatas = TransitionChromInfoData.GetTransitionChromInfoDatas(
-                    _document.Settings.MeasuredResults, peptideDocNode, nodeGroup, nodeTran);
+                    _document.Settings, peptideDocNode, nodeGroup, nodeTran);
 
                 return MakePointPairLists(displayType, transitionChromInfoDatas, IsMissingValue, CreatePointPair);
             }

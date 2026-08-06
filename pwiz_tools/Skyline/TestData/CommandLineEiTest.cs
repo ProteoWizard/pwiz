@@ -69,7 +69,9 @@ namespace pwiz.SkylineTestData
                 "--out=" + eiLoadedDocPath);
             doc = ResultsUtil.DeserializeDocument(eiLoadedDocPath);
             Assert.AreEqual(16, doc.MoleculeTransitions.Count());
-            Assert.AreEqual(14, doc.MoleculeTransitions.Count(t => t.Results[0][0].Area > 0));
+            // The areas are the precursor's columnar results now
+            Assert.AreEqual(14, doc.MoleculeTransitionGroups.Sum(g =>
+                g.Transitions.Count(t => g.GetTransitionArea(t.Transition, 0) > 0)));
             AssertEx.Serializable(doc); // Verifies consistency with current Skyline schema
         }
 

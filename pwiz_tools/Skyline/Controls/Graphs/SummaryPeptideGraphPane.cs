@@ -341,6 +341,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 // Calculate lists and values
                 PeptideDocNode nodePepCurrent = null;
+                // The transition level peaks, which a transition no longer keeps. One per molecule,
+                // made as the walk reaches it and dropped when it moves on, so a document's worth
+                // of them is never held at once.
+                MoleculeResults moleculeResults = null;
                 int chargeCount = 0;
                 var chargeCurrent = Adduct.EMPTY;
                 foreach (var dataPoint in listPoints)
@@ -350,6 +354,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!ReferenceEquals(nodePep, nodePepCurrent))
                     {
                         nodePepCurrent = nodePep;
+                        moleculeResults = document.Settings.HasResults
+                            ? new MoleculeResults(document.Settings, nodePep)
+                            : null;
 
                         chargeCount = GetChargeCount(nodePep);
                         chargeCurrent = Adduct.EMPTY;
@@ -422,7 +429,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var pointPairList = pointPairLists[i];
                                 pointPairList.Add(i >= nodeTrans.Length
                                                       ? CreatePointPairMissing(iGroup)
-                                                      : CreatePointPair(iGroup, nodeTrans[i], ref groupMaxY,
+                                                      : CreatePointPair(iGroup, moleculeResults, nodeGroup,
+                                                                        nodeTrans[i], ref groupMaxY,
                                                                         ref groupMinY,
                                                                         resultIndex));
                             }
@@ -553,19 +561,41 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected abstract double? GetValue(TransitionGroupChromInfo chromInfo);
 
-            protected virtual PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY, int? resultIndex)
+            protected virtual PointPair CreatePointPair(int iGroup, MoleculeResults moleculeResults,
+                TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY,
+                int? resultIndex)
             {
                 if (!nodeTran.HasResults)
                     return PointPairMissing(iGroup);
 
                 var listValues = new List<double>();
-                foreach (var chromInfo in nodeTran.GetChromInfos(resultIndex))
+                foreach (var chromInfo in GetTransitionChromInfos(moleculeResults, nodeGroup, nodeTran, resultIndex))
                 {
                     if (chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty)
                         listValues.Add(GetValue(chromInfo));
                 }
 
                 return CreatePointPair(iGroup, listValues, ref maxY, ref minY);
+            }
+
+            /// <summary>
+            /// One transition's chrom infos, rebuilt from the chromatograms since a transition no
+            /// longer keeps them: one replicate's, or every replicate's when
+            /// <paramref name="resultIndex"/> is null.
+            /// </summary>
+            protected static IEnumerable<TransitionChromInfo> GetTransitionChromInfos(
+                MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
+                int? resultIndex)
+            {
+                var results = moleculeResults?.GetTransitionChromInfos(nodeGroup.TransitionGroup,
+                    nodeTran.Transition);
+                if (results == null)
+                    return Array.Empty<TransitionChromInfo>();
+                if (!resultIndex.HasValue)
+                    return results.SelectMany(chromInfoList => chromInfoList);
+                return resultIndex.Value >= 0 && resultIndex.Value < results.Count
+                    ? (IEnumerable<TransitionChromInfo>) results[resultIndex.Value]
+                    : Array.Empty<TransitionChromInfo>();
             }
 
             protected abstract double GetValue(TransitionChromInfo info);

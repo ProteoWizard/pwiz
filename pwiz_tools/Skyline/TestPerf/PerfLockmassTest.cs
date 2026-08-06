@@ -169,10 +169,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         }
 
+        /// <summary>
+        /// Every transition peak of the document, rebuilt from the .skyd since a transition keeps
+        /// no chrom infos.
+        /// </summary>
         private static List<TransitionChromInfo> Peaks(SrmDocument doc)
         {
-            return (from tg in doc.MoleculeTransitions
-                       from r in tg.Results
+            return (from tg in ResultsUtil.EnumerateTransitionChromInfos(doc)
+                       from r in tg.ChromInfos
                        from p in r
                        select p).ToList();
         }

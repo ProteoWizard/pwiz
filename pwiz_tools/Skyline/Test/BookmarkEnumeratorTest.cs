@@ -189,11 +189,16 @@ namespace pwiz.SkylineTest
                         Increment(elementCounts, typeof(TransitionGroupChromInfo), transitionGroup.EmptyResults.Sum(result=>result.Count));
                     }
 
+                    // A transition's peaks are the precursor's columnar results, one per file it
+                    // was found in.
                     foreach (var transition in transitionGroup.Transitions)
                     {
-                        if (transition.HasResults)
+                        if (transition.HasResults && transitionGroup.AbbreviatedResults != null)
                         {
-                            Increment(elementCounts, typeof(TransitionChromInfo), transition.Results.Sum(result=>result.Count));
+                            Increment(elementCounts, typeof(TransitionChromInfo), Enumerable
+                                .Range(0, transitionGroup.ResultsReplicateCount)
+                                .Sum(replicateIndex => transitionGroup.AbbreviatedResults
+                                    .GetTransitionPeaks(transition.Transition, replicateIndex).Count()));
                         }
                     }
                 }

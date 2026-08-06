@@ -573,7 +573,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static bool IsOptimization(TransitionGroupDocNode nodeTranGroup)
         {
-            if (nodeTranGroup.Transitions.Any(nodeTran => nodeTran.IsMs1 && nodeTran.ChromInfos.Any()))
+            if (nodeTranGroup.Transitions.Any(nodeTran =>
+                    nodeTran.IsMs1 && nodeTranGroup.HasTransitionResults(nodeTran.Transition)))
                 return false;
 
             var steps = nodeTranGroup.ChromInfos.Select(info => info.OptimizationStep).OrderBy(step => step).ToArray();

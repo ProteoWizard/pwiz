@@ -64,11 +64,12 @@ namespace pwiz.SkylineTestFunctional
             TransitionGroupTreeNode lightTreeNode =
                 (TransitionGroupTreeNode) peptideTreeNode.Nodes[0];
             TransitionGroupTreeNode heavyTreeNode = (TransitionGroupTreeNode) peptideTreeNode.Nodes[1];
-            var lightTransitionAreas =
-                lightTreeNode.DocNode.Transitions.Select(tran => tran.Results[0][0].Area).ToList();
+            // The areas are the precursors' columnar results now
+            var lightTransitionAreas = lightTreeNode.DocNode.Transitions
+                .Select(tran => lightTreeNode.DocNode.GetTransitionArea(tran.Transition, 0).Value).ToList();
             Assert.AreEqual(4, lightTransitionAreas.Count);
-            var heavyTransitionAreas =
-                heavyTreeNode.DocNode.Transitions.Select(tran => tran.Results[0][0].Area).ToList();
+            var heavyTransitionAreas = heavyTreeNode.DocNode.Transitions
+                .Select(tran => heavyTreeNode.DocNode.GetTransitionArea(tran.Transition, 0).Value).ToList();
             Assert.AreEqual(2, heavyTransitionAreas.Count);
             // Verify that only the first two transition areas in both precursors contribute to the displayed ratio
             var expectedRatio = lightTransitionAreas.Take(2).Sum() / heavyTransitionAreas.Sum();

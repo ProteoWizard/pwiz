@@ -197,8 +197,10 @@ namespace pwiz.Skyline.Model.Results
             IList<ChromatogramGroupInfo> chromatogramGroupInfos, IList<FeatureScores> peakGroupFeatureValues)
         {
             var chromatogramInfos = new List<ChromatogramInfo>();
-            
-            var transitionChromInfos = new List<TransitionChromInfo>();
+
+            // The boundaries of each transition's peak, which is all that deciding whether a
+            // candidate peak is the chosen one needs, and null where there is no peak.
+            var transitionPeakBounds = new List<PeakBounds>();
             for (int iTransitionGroup = 0; iTransitionGroup < transitionGroups.Count; iTransitionGroup++)
             {
                 var transitionGroupDocNode = transitionGroups[iTransitionGroup];
@@ -212,45 +214,46 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     chromatogramInfos.Add(chromatogramInfo);
-                    transitionChromInfos.Add(FindTransitionChromInfo(transition));
+                    transitionPeakBounds.Add(GetTransitionPeakBounds(transitionGroupDocNode.TransitionGroup,
+                        transition.Transition));
                 }
             }
 
             var peakGroupDatas = new List<CandidatePeakGroupData>();
             for (int peakIndex = 0; peakIndex < peakGroupFeatureValues.Count; peakIndex++)
             {
-                peakGroupDatas.Add(MakeCandidatePeakGroupData(peakIndex, chromatogramInfos, transitionChromInfos, peakGroupFeatureValues[peakIndex]));
+                peakGroupDatas.Add(MakeCandidatePeakGroupData(peakIndex, chromatogramInfos, transitionPeakBounds, peakGroupFeatureValues[peakIndex]));
             }
 
             return peakGroupDatas;
         }
 
         private CandidatePeakGroupData MakeCandidatePeakGroupData(int peakIndex,
-            IList<ChromatogramInfo> chromatogramInfos, IList<TransitionChromInfo> transitionChromInfos,
+            IList<ChromatogramInfo> chromatogramInfos, IList<PeakBounds> transitionPeakBounds,
             FeatureScores featureScores)
         {
-            Assume.AreEqual(chromatogramInfos.Count, transitionChromInfos.Count);
+            Assume.AreEqual(chromatogramInfos.Count, transitionPeakBounds.Count);
             bool isChosen = true;
             double minStartTime = double.MaxValue;
             double maxEndTime = double.MinValue;
             double apexTime = double.MinValue;
             double? apexHeight = null;
-            for (int iTransition = 0; iTransition < transitionChromInfos.Count; iTransition++)
+            for (int iTransition = 0; iTransition < transitionPeakBounds.Count; iTransition++)
             {
-                var transitionChromInfo = transitionChromInfos[iTransition];
+                var peakBounds = transitionPeakBounds[iTransition];
                 var chromatogramInfo = chromatogramInfos[iTransition];
                 var chromPeak = chromatogramInfo.GetPeak(peakIndex);
                 if (chromPeak.IsEmpty)
                 {
-                    if (transitionChromInfo != null && !transitionChromInfo.IsEmpty)
+                    if (peakBounds != null)
                     {
                         isChosen = false;
                     }
                 }
                 else
                 {
-                    if (transitionChromInfo == null || transitionChromInfo.IsEmpty || transitionChromInfo.StartRetentionTime != chromPeak.StartTime ||
-                        transitionChromInfo.EndRetentionTime != chromPeak.EndTime)
+                    if (peakBounds == null || peakBounds.StartTime != chromPeak.StartTime ||
+                        peakBounds.EndTime != chromPeak.EndTime)
                     {
                         isChosen = false;
                     }
@@ -313,29 +316,25 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// The boundaries one transition's peak was integrated between, which are in the
+        /// precursor's columnar results, so this reads no chromatogram.
+        /// </summary>
         public virtual PeakBounds GetTransitionPeakBounds(TransitionGroup transitionGroup, Transition transition)
         {
-            var transitionChromInfo = FindTransitionChromInfo((TransitionDocNode) ((TransitionGroupDocNode) PeptideDocNode
-                .FindNode(transitionGroup))?.FindNode(transition));
-            if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
+            var groupResults =
+                ((TransitionGroupDocNode) PeptideDocNode.FindNode(transitionGroup))?.AbbreviatedResults;
+            if (groupResults == null ||
+                !groupResults.TryGetTransitionPeak(transition, ReplicateIndex, ChromFileInfo.FileId, out var peak) ||
+                peak.IsEmpty)
             {
                 return null;
             }
-            return new PeakBounds(transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime);
-        }
 
-        private TransitionChromInfo FindTransitionChromInfo(TransitionDocNode transitionDocNode)
-        {
-            foreach (var transitionChromInfo in transitionDocNode.GetSafeChromInfo(ReplicateIndex))
-            {
-                if (transitionChromInfo.OptimizationStep == 0 &&
-                    ReferenceEquals(transitionChromInfo.FileId, ChromFileInfo.FileId))
-                {
-                    return transitionChromInfo;
-                }
-            }
-
-            return null;
+            var peakBounds = groupResults.FindTransitionPeakBounds(transition, ReplicateIndex, ChromFileInfo.FileId);
+            return peakBounds.HasValue
+                ? new PeakBounds(peakBounds.Value.StartTime, peakBounds.Value.EndTime)
+                : null;
         }
         internal PeptideChromDataSets MakePeptideChromDataSets()
         {

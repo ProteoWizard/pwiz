@@ -89,7 +89,10 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             ImportResultsFile(GetTestPath(TestFilesPersistent[1]));
 
             // First precursor area will be less than 7613528 @ RT47.4 if we aren't treating CV data properly (397369 @ RT47.52 instead)
-            Assume.IsTrue(SkylineWindow.Document.MoleculeTransitions.First().GetPeakArea(-1) >= 7600000);
+            // The mean area is the precursor's columnar results now
+            var nodeGroupFirst = SkylineWindow.Document.MoleculeTransitionGroups.First();
+            Assume.IsTrue(nodeGroupFirst.GetTransitionAverageArea(
+                nodeGroupFirst.Transitions.First().Transition) >= 7600000);
         }
 
         private void TestPopulateDocumentFromLibrary()

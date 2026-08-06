@@ -400,31 +400,28 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that the transition information has been moved around
             // as expected, but nothing newly created
-            using (var enumTranOrig = docOrig.PeptideTransitions.GetEnumerator())
+            // The peaks are the precursors' columnar results now, so what has to have moved rather
+            // than changed is one value per file, compared by value: nothing is shared between two
+            // documents' results for a reference comparison to say anything about.
+            using (var enumTranOrig = ResultsUtil.EnumerateTransitionResults(docOrig).GetEnumerator())
             {
-                foreach (var nodeTran in docNew.PeptideTransitions)
+                foreach (var tranResults in ResultsUtil.EnumerateTransitionResults(docNew))
                 {
                     Assert.IsTrue(enumTranOrig.MoveNext());
 
-                    var nodeTranOrig = enumTranOrig.Current;
-                    Assert.IsNotNull(nodeTranOrig);
-                    Assert.AreNotSame(nodeTran, nodeTranOrig);
-                    Assert.AreSame(nodeTran.Id, nodeTranOrig.Id);
+                    var tranResultsOrig = enumTranOrig.Current;
+                    Assert.AreSame(tranResults.Transition, tranResultsOrig.Transition);
 
                     // Results should have just moved, but otherwise they should be the same
                     for (int i = 0; i < countChrom; i++)
                     {
-                        // For the most part everything should be reference equal with old values
-                        if (!ArrayUtil.ReferencesEqual(nodeTran.Results[i], nodeTranOrig.Results[arrayIndexOld[i]]))
+                        var peaks = tranResults.ChromFileIds?.GetFileIds(i)
+                            .Select(fileId => tranResults.GetPeak(i, fileId)).ToArray();
+                        var peaksOld = tranResultsOrig.ChromFileIds?.GetFileIds(arrayIndexOld[i])
+                            .Select(fileId => tranResultsOrig.GetPeak(arrayIndexOld[i], fileId)).ToArray();
+                        if (!ArrayUtil.EqualsDeep(peaks, peaksOld))
                         {
-                            // But, also allow it to be reference equal with its previous value, as long
-                            // as that value is content equal with the desired value.  Code in TransitionGroupDocNode
-                            // may cause this, because it tries to keep new copies of chromInfo to a minimum.
-                            if (!ArrayUtil.ReferencesEqual(nodeTran.Results[i], nodeTranOrig.Results[i]) ||
-                                !ArrayUtil.EqualsDeep(nodeTran.Results[i], nodeTranOrig.Results[arrayIndexOld[i]]))
-                            {
-                                Assert.Fail("Transition chromatogram information changed.");
-                            }
+                            Assert.Fail("Transition chromatogram information changed.");
                         }
                     }
                 }

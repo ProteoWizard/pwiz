@@ -2538,9 +2538,9 @@ namespace pwiz.Skyline.Model
 
             double maxRtDiff = 0;
             float? averagePeakArea = null;
-            if (nodeTran?.Results != null && predictedRT.HasValue)
+            if (nodeTran != null && nodeTran.HasResults && predictedRT.HasValue)
             {
-                GetValuesFromResults(nodeTran, predictedRT, out averagePeakArea, out maxRtDiff);
+                GetValuesFromResults(nodeTranGroup, nodeTran, predictedRT, out averagePeakArea, out maxRtDiff);
             }
             string averagePeakAreaText = averagePeakArea.HasValue ? averagePeakArea.Value.ToString(CultureInfo) : string.Empty;
 
@@ -2726,35 +2726,42 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,
-                                     out double maxRtDiff)
+        /// <summary>
+        /// The mean area of a transition's peaks and how far the earliest of them starts before the
+        /// predicted retention time, both from the precursor's columnar results, so exporting a
+        /// method reads no chromatogram.
+        /// </summary>
+        private void GetValuesFromResults(TransitionGroupDocNode nodeTranGroup, TransitionDocNode nodeTran,
+                                     double? predictedRT, out float? averagePeakArea, out double maxRtDiff)
         {
             maxRtDiff = 0;
             averagePeakArea = null;
-            if (!predictedRT.HasValue)
+            var groupResults = nodeTranGroup.AbbreviatedResults;
+            if (!predictedRT.HasValue || groupResults == null)
                 return;
 
             float sumPeakArea = 0;
             int resultsUsedCount = 0;
-            for (int resultIdx = 0; resultIdx < nodeTran.Results.Count; resultIdx++)
+            for (int resultIdx = 0; resultIdx < nodeTranGroup.ResultsReplicateCount; resultIdx++)
             {
                 if (SchedulingReplicateIndex.HasValue && SchedulingReplicateIndex != resultIdx)
                     continue;
 
-                var result = nodeTran.Results[resultIdx];
-                if (result.IsEmpty)
-                    continue;
-
-                foreach (TransitionChromInfo chromInfo in result)
+                foreach (var entry in groupResults.GetTransitionPeaks(nodeTran.Transition, resultIdx))
                 {
-                    if (chromInfo.IsEmpty)
+                    if (entry.Value.IsEmpty)
                         continue;
 
-                    double rtDiff = predictedRT.Value - chromInfo.StartRetentionTime;
-                    if (rtDiff > maxRtDiff)
-                        maxRtDiff = rtDiff;
+                    var peakBounds =
+                        groupResults.FindTransitionPeakBounds(nodeTran.Transition, resultIdx, entry.Key);
+                    if (peakBounds.HasValue)
+                    {
+                        double rtDiff = predictedRT.Value - peakBounds.Value.StartTime;
+                        if (rtDiff > maxRtDiff)
+                            maxRtDiff = rtDiff;
+                    }
 
-                    sumPeakArea += chromInfo.Area;
+                    sumPeakArea += entry.Value.Area;
                     resultsUsedCount++;
                 }
             }

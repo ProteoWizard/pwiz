@@ -82,16 +82,19 @@ namespace pwiz.SkylineTestData.Results
             docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 3);
 
             // Check expected Mz range.
-            foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
+            // A transition's peaks are the precursor's columnar results now
+            foreach (var nodeGroup in docContainer.Document.MoleculeTransitionGroups)
             {
-                Assert.IsTrue(nodeTran.HasResults, "No results for transition Mz: {0}", nodeTran.Mz);
-                if (nodeTran.Results[0].IsEmpty)
-                    continue;
-                //Assert.IsNotNull(nodeTran.Results[0], "Null results for transition Mz: {0}", nodeTran.Mz);
-                if (minMz > nodeTran.Mz || nodeTran.Mz > maxMz)
-                    Assert.IsTrue(nodeTran.Results[0][0].IsEmpty, "Non-empty transition Mz: {0}", nodeTran.Mz);
-                else
-                    Assert.IsFalse(nodeTran.Results[0][0].IsEmpty, "Empty transition Mz: {0}", nodeTran.Mz);
+                foreach (var nodeTran in nodeGroup.Transitions)
+                {
+                    Assert.IsTrue(nodeTran.HasResults, "No results for transition Mz: {0}", nodeTran.Mz);
+                    if (!nodeGroup.TryGetReplicateTransitionPeak(nodeTran.Transition, 0, out _, out var peak))
+                        continue;
+                    if (minMz > nodeTran.Mz || nodeTran.Mz > maxMz)
+                        Assert.IsTrue(peak.IsEmpty, "Non-empty transition Mz: {0}", nodeTran.Mz);
+                    else
+                        Assert.IsFalse(peak.IsEmpty, "Empty transition Mz: {0}", nodeTran.Mz);
+                }
             }
         }
     }

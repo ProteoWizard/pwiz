@@ -71,11 +71,16 @@ namespace pwiz.SkylineTestFunctional
                     expectedMinOptStep = -2;
                 }
                 var expectedMaxOptStep = 3;
+                // The optimization steps are not in the columnar results, so the chrom infos are
+                // rebuilt from the .skyd.
+                var moleculeResults = new MoleculeResults(SkylineWindow.Document.Settings, peptideDocNode);
                 foreach (var precursor in peptideDocNode.TransitionGroups)
                 {
                     foreach (var transition in precursor.Transitions)
                     {
-                        var nonEmptyResults = transition.Results[0].Where(chromInfo => !chromInfo.IsEmpty).ToList();
+                        var nonEmptyResults = moleculeResults
+                            .GetTransitionChromInfos(precursor.TransitionGroup, transition.Transition, 0)
+                            .Where(chromInfo => !chromInfo.IsEmpty).ToList();
                         var minOptStep = nonEmptyResults
                             .Min(transitionChromInfo => transitionChromInfo.OptimizationStep);
                         var maxOptStep = nonEmptyResults

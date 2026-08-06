@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model
             MzMassType = mass.MassType;
             IsotopeDistInfo = transitionQuantInfo.IsotopeDistInfo;
             LibInfo = transitionQuantInfo.LibInfo;
-            Results = results;
+            _emptyResults = EmptyLike(results);
             ExplicitQuantitative = transitionQuantInfo.Quantititative;
             ExplicitValues = explicitTransitionValues ?? ExplicitTransitionValues.EMPTY;
 
@@ -297,157 +297,68 @@ namespace pwiz.Skyline.Model
 
         public bool HasLibInfo { get { return LibInfo != null; } }
 
-        public IEnumerable<TransitionChromInfo> ChromInfos
+        /// <summary>
+        /// An empty entry for each replicate the transition has results in, which is all a
+        /// transition holds now. Its peaks are the columnar results of the precursor which owns it
+        /// - see <see cref="TransitionGroupResults"/> - and the chrom infos they were read as are
+        /// rebuilt from the .skyd by a <see cref="MoleculeResults"/>.
+        /// <para>
+        /// What this still says is whether the node was made from chrom infos at all, which is what
+        /// <see cref="HasResults"/> answers.
+        /// </para>
+        /// </summary>
+        private Results<TransitionChromInfo> _emptyResults;
+
+        /// <summary>
+        /// See <see cref="_emptyResults"/>. Named for what it holds - nothing - because reading
+        /// peaks out of it is the mistake this replaced a property called Results to stop.
+        /// </summary>
+        public Results<TransitionChromInfo> EmptyResults { get { return _emptyResults; } }
+
+        /// <summary>
+        /// An empty entry for each replicate of <paramref name="results"/>, which is all that a
+        /// transition ever reports now.
+        /// </summary>
+        private static Results<TransitionChromInfo> EmptyLike(Results<TransitionChromInfo> results)
         {
-            get
-            {
-                if (HasResults)
-                {
-                    foreach (var result in Results)
-                    {
-                        if (result.IsEmpty)
-                            continue;
-                        foreach (var chromInfo in result)
-                            yield return chromInfo;
-                    }
-                }
-            }
+            return results == null
+                ? null
+                : new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[results.Count]);
         }
 
-        public Results<TransitionChromInfo> Results { get; private set; }
-
+        /// <summary>
+        /// The mean of the ranks this transition's peaks have, which does not vary by replicate and
+        /// so is one of the few result values a transition still keeps.
+        /// </summary>
         public int? ResultsRank { get; private set; }
 
-        public bool HasResults { get { return Results != null; } }
+        public bool HasResults { get { return _emptyResults != null; } }
 
-        public IEnumerable<TransitionChromInfo> GetChromInfos(int? i)
+        /// <summary>
+        /// How many replicates the results cover, which is what Results.Count used to answer, and
+        /// zero for a transition with no results at all.
+        /// </summary>
+        public int ResultsReplicateCount
         {
-            if (!i.HasValue)
-                return ChromInfos;
-            var chromInfos = GetSafeChromInfo(i.Value);
-            if (!chromInfos.IsEmpty)
-                return chromInfos;
-            return new TransitionChromInfo[0];
+            get { return _emptyResults?.Count ?? 0; }
         }
 
-        public ChromInfoList<TransitionChromInfo> GetSafeChromInfo(int i)
-        {
-            return HasResults && Results.Count > i ? Results[i] : default(ChromInfoList<TransitionChromInfo>);
-        }
-
-        public TransitionChromInfo GetChromInfoEntry(int i)
-        {
-            var result = GetSafeChromInfo(i);
-            // CONSIDER: Also specify the file index and/or optimization step?
-            if (!result.IsEmpty)
-            {
-                foreach (var chromInfo in result)
-                {
-                    if (chromInfo != null && chromInfo.OptimizationStep == 0)
-                        return chromInfo;
-                }
-            }
-            return null;
-        }
-
-        public TransitionChromInfo GetChromInfo(int resultsIndex, ChromFileInfoId chromFileInfoId)
-        {
-            return GetSafeChromInfo(resultsIndex).FirstOrDefault(chromInfo =>
-                chromFileInfoId == null || ReferenceEquals(chromFileInfoId, chromInfo.FileId));
-        }
-
-        public float? GetPeakCountRatio(int i, bool integrateAll)
-        {
-            if (i == -1)
-                return GetAveragePeakCountRatio(integrateAll);
-
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-                return null;
-            return GetPeakCountRatio(chromInfo, integrateAll);
-        }
-
-        public float? GetAveragePeakCountRatio(bool integrateAll)
-        {
-            return GetAverageResultValue(chromInfo =>
-                chromInfo.OptimizationStep != 0 ?
-                    (float?)null : GetPeakCountRatio(chromInfo, integrateAll));
-        }
-
-        private static float GetPeakCountRatio(TransitionChromInfo chromInfo, bool integrateAll)
-        {
-            return chromInfo.IsGoodPeak(integrateAll) ? 1 : 0;
-        }
-
-        public float? GetPeakArea(int i)
-        {
-            if (i == -1)
-                return AveragePeakArea;
-
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-                return null;
-            return chromInfo.Area;
-        }
-
-        public float? AveragePeakArea
-        {
-            get
-            {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
-                                                              ? (float?) null
-                                                              : chromInfo.Area);
-            }
-        }
-
-        public bool IsUserModified
-        {
-            get
-            {
-                if (!Annotations.IsEmpty)
-                    return true;
-                return HasResults && Results.SelectMany(l => l)
-                                         .Contains(chromInfo => chromInfo.IsUserModified);
-            }
-        }
-
-        public int? GetPeakRank(int i)
-        {
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo != null && chromInfo.Rank > 0)
-                return chromInfo.Rank;
-            return null;
-        }
-
-        public int? GetPeakRankByLevel(int i)
-        {
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo != null && chromInfo.Rank > 0)
-                return chromInfo.RankByLevel;
-            return null;
-        }
-
-        public int? GetRank(int? i, bool useResults)
+        /// <summary>
+        /// The rank of this transition, either among the library's or among the measured peaks.
+        /// The latter comes from the precursor, which is what holds the areas a rank is the order
+        /// of - see <see cref="TransitionGroupDocNode.GetTransitionRank"/>.
+        /// </summary>
+        public int? GetRank(TransitionGroupDocNode nodeGroup, int? i, bool useResults)
         {
             if (useResults && HasResults)
             {
                 if (i.HasValue)
-                    return GetPeakRank(i.Value);
-                else
-                    return ResultsRank;
+                    return nodeGroup?.GetTransitionRank(Transition, i.Value, false);
+                return ResultsRank;
             }
-            else if (!useResults && HasLibInfo && LibInfo.Rank > 0)
+            if (!useResults && HasLibInfo && LibInfo.Rank > 0)
                 return LibInfo.Rank;
             return null;
-        }
-
-        private float? GetAverageResultValue(Func<TransitionChromInfo, float?> getVal)
-        {
-            return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
         /// <summary>
@@ -491,12 +402,19 @@ namespace pwiz.Skyline.Model
         public override string GetDisplayText(DisplaySettings settings)
         {
             // Mirror legacy UI semantics without depending on Controls.SeqNode
-            return GetLabel(this, GetResultsText(settings, this));
+            return GetLabel(this, GetResultsText(settings, FindNodeGroup(settings, this), this));
         }
 
-        private static string GetResultsText(DisplaySettings displaySettings, TransitionDocNode nodeTran)
+        /// <summary>
+        /// The rank and the ratio the targets tree shows beside a transition. Both come from the
+        /// precursor's columnar results, so painting the tree reads no chromatogram, which is what
+        /// asking a <see cref="MoleculeResults"/> for every node would have meant.
+        /// </summary>
+        public static string GetResultsText(DisplaySettings displaySettings, TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTran)
         {
-            int? rank = nodeTran.GetPeakRankByLevel(displaySettings.ResultsIndex);
+            int resultsIndex = displaySettings.ResultsIndex;
+            int? rank = nodeGroup?.GetTransitionRank(nodeTran.Transition, resultsIndex, true);
             string label = string.Empty;
             if (rank.HasValue && rank > 0)
             {
@@ -506,17 +424,28 @@ namespace pwiz.Skyline.Model
             }
 
             float? ratio = null;
-            if (!Equals(displaySettings.NormalizationMethod, NormalizationMethod.NONE))
+            if (nodeGroup != null && !Equals(displaySettings.NormalizationMethod, NormalizationMethod.NONE) &&
+                nodeGroup.TryGetReplicateTransitionPeak(nodeTran.Transition, resultsIndex, out var fileId,
+                    out var peak) && !peak.IsEmpty)
             {
-                ratio = (float?)displaySettings.NormalizedValueCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
-                    displaySettings.NodePep, nodeTran,
-                    displaySettings.ResultsIndex,
-                    nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
+                ratio = (float?) displaySettings.NormalizedValueCalculator.GetTransitionAreaValue(
+                    displaySettings.NormalizationMethod, displaySettings.NodePep, nodeGroup, nodeTran, resultsIndex,
+                    fileId, peak.Area);
             }
             if (!ratio.HasValue)
                 return label;
 
             return string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, label, MathEx.RoundAboveZero(ratio.Value, 2, 4));
+        }
+
+        /// <summary>
+        /// The precursor which owns a transition, which is where its results are now. Null when the
+        /// molecule being displayed does not hold it.
+        /// </summary>
+        private static TransitionGroupDocNode FindNodeGroup(DisplaySettings displaySettings,
+            TransitionDocNode nodeTran)
+        {
+            return (TransitionGroupDocNode) displaySettings.NodePep?.FindNode(nodeTran.Transition.Group);
         }
 
         public string PrimaryCustomIonEquivalenceKey
@@ -545,7 +474,14 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public SkylineDocumentProto.Types.Transition ToTransitionProto(SrmSettings settings, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        /// <summary>
+        /// <paramref name="chromInfos"/> is what this transition's peaks are written from, since a
+        /// transition no longer keeps them: the caller rebuilds them through a
+        /// <see cref="MoleculeResults"/> once for the whole molecule. Null writes no peaks, which
+        /// is what a document with no results does.
+        /// </summary>
+        public SkylineDocumentProto.Types.Transition ToTransitionProto(SrmSettings settings, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, Results<TransitionChromInfo> chromInfos)
         {
             var transitionProto = new SkylineDocumentProto.Types.Transition
             {
@@ -616,10 +552,10 @@ namespace pwiz.Skyline.Model
                     Rank = LibInfo.Rank
                 };
             }
-            if (Results != null)
+            if (chromInfos != null)
             {
                 transitionProto.Results = new SkylineDocumentProto.Types.TransitionResults();
-                transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(Results, settings.MeasuredResults));
+                transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(chromInfos, settings.MeasuredResults));
             }
 
             if (!Equals(ExplicitValues, ExplicitTransitionValues.EMPTY))
@@ -975,9 +911,13 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.LibInfo = prop);
         }
 
+        /// <summary>
+        /// The peaks are not kept - see <see cref="_emptyResults"/> - so all this takes from
+        /// <paramref name="prop"/> is how many replicates it covers.
+        /// </summary>
         public TransitionDocNode ChangeResults(Results<TransitionChromInfo> prop)
         {
-            return ChangeProp(ImClone(this), im => im.Results = prop);
+            return ChangeProp(ImClone(this), im => im._emptyResults = EmptyLike(prop));
         }
 
         public TransitionDocNode ChangeResultsRank(int? prop)
@@ -1010,7 +950,7 @@ namespace pwiz.Skyline.Model
             var equal =  base.Equals(obj) && obj.Mz == Mz &&
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
-                   Equals(obj.Results, Results) &&
+                   Equals(obj._emptyResults, _emptyResults) &&
                    Equals(obj.ExplicitQuantitative, ExplicitQuantitative);
             return equal;  // For debugging convenience
         }
@@ -1030,7 +970,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ Mz.GetHashCode();
                 result = (result*397) ^ (IsotopeDistInfo != null ? IsotopeDistInfo.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
-                result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
+                result = (result*397) ^ (_emptyResults != null ? _emptyResults.GetHashCode() : 0);
                 result = (result*397) ^ ExplicitQuantitative.GetHashCode();
                 return result;
             }

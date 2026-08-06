@@ -53,9 +53,8 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the initial chosen peak boundary is at originalPeakTime
             var transitionDocNode = SkylineWindow.Document.FindNode(transitionIdPath) as TransitionDocNode;
             Assert.IsNotNull(transitionDocNode);
-            Assert.IsNotNull(transitionDocNode.Results);
-            Assert.AreEqual(1, transitionDocNode.Results.Count);
-            var transitionChromInfo = transitionDocNode.Results[0].First();
+            Assert.AreEqual(1, transitionDocNode.ResultsReplicateCount);
+            var transitionChromInfo = GetTransitionChromInfo(transitionIdPath).First();
             Assert.AreEqual(originalPeakTime, transitionChromInfo.RetentionTime, .1);
             Assert.AreEqual(UserSet.FALSE, transitionChromInfo.UserSet);
 
@@ -77,8 +76,8 @@ namespace pwiz.SkylineTestFunctional
             });
             transitionDocNode = SkylineWindow.Document.FindNode(transitionIdPath) as TransitionDocNode;
             Assert.IsNotNull(transitionDocNode);
-            Assert.AreEqual(1, transitionDocNode.Results.Count);
-            transitionChromInfo = transitionDocNode.Results[0].First();
+            Assert.AreEqual(1, transitionDocNode.ResultsReplicateCount);
+            transitionChromInfo = GetTransitionChromInfo(transitionIdPath).First();
             Assert.AreEqual(newPeakTime, transitionChromInfo.RetentionTime, .1);
             Assert.AreEqual(UserSet.TRUE, transitionChromInfo.UserSet);
             
@@ -94,8 +93,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             transitionDocNode = SkylineWindow.Document.FindNode(transitionIdPath) as TransitionDocNode;
             Assert.IsNotNull(transitionDocNode);
-            Assert.AreEqual(1, transitionDocNode.Results.Count);
-            transitionChromInfo = transitionDocNode.Results[0].First();
+            Assert.AreEqual(1, transitionDocNode.ResultsReplicateCount);
+            transitionChromInfo = GetTransitionChromInfo(transitionIdPath).First();
             Assert.AreEqual(newPeakTime, transitionChromInfo.RetentionTime, .1);
             Assert.AreEqual(UserSet.TRUE, transitionChromInfo.UserSet);
 
@@ -114,11 +113,25 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the chosen peak has gone back to originalPeakTime
             transitionDocNode = SkylineWindow.Document.FindNode(transitionIdPath) as TransitionDocNode;
             Assert.IsNotNull(transitionDocNode);
-            Assert.IsNotNull(transitionDocNode.Results);
-            Assert.AreEqual(1, transitionDocNode.Results.Count);
-            transitionChromInfo = transitionDocNode.Results[0].First();
+            Assert.AreEqual(1, transitionDocNode.ResultsReplicateCount);
+            transitionChromInfo = GetTransitionChromInfo(transitionIdPath).First();
             Assert.AreEqual(originalPeakTime, transitionChromInfo.RetentionTime, .1);
             Assert.AreEqual(UserSet.FALSE, transitionChromInfo.UserSet);
+        }
+
+        /// <summary>
+        /// One transition's chrom infos in the first replicate, rebuilt from the .skyd: a
+        /// transition keeps none, and the retention time of its peak is not one of the values the
+        /// columnar results hold.
+        /// </summary>
+        private ChromInfoList<TransitionChromInfo> GetTransitionChromInfo(IdentityPath transitionIdPath)
+        {
+            var document = SkylineWindow.Document;
+            var nodePep = (PeptideDocNode) document.FindNode(transitionIdPath.GetPathTo(1));
+            var nodeGroup = (TransitionGroupDocNode) document.FindNode(transitionIdPath.Parent);
+            var nodeTran = (TransitionDocNode) document.FindNode(transitionIdPath);
+            return new MoleculeResults(document.Settings, nodePep)
+                .GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition, 0);
         }
     }
 }

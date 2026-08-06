@@ -751,7 +751,7 @@ namespace pwiz.Skyline.Model.Irt
                 // This assumes that they start out comparable and that removing the MS1
                 // transitions may leave them with nothing to compare by.
                 nodeGroup = nodePep.TransitionGroups.OrderByDescending(g =>
-                    g.Transitions.Sum(t => t.GetPeakArea(-1))).First();
+                    g.Transitions.Sum(t => g.GetTransitionAverageArea(t.Transition))).First();
             }
 
             if (nodeGroup == null)

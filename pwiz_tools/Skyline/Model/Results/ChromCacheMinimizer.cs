@@ -182,28 +182,40 @@ namespace pwiz.Skyline.Model.Results
             {
                 var chromatogram = chromatograms[i];
                 var matchingTransitions = new List<TransitionDocNode>();
-                foreach (var transitionDocNode in transitionGroups.SelectMany(tg => tg.Transitions))
+                foreach (var transitionGroup in transitionGroups)
                 {
-                    if (0!=chromatogram.ProductMz.CompareTolerant(transitionDocNode.Mz, _tolerance))
+                    // The peak boundaries are in the precursor's columnar results, so working out
+                    // what to keep reads no chromatogram of its own.
+                    var groupResults = transitionGroup.AbbreviatedResults;
+                    foreach (var transitionDocNode in transitionGroup.Transitions)
                     {
-                        continue;
-                    }
-                    matchingTransitions.Add(transitionDocNode);
-                    foreach (var fileIndex in fileIndexes)
-                    {
-                        var chromatogramSet = transitionDocNode.Results[fileIndex];
-                        if (chromatogramSet.IsEmpty)
+                        if (0 != chromatogram.ProductMz.CompareTolerant(transitionDocNode.Mz, _tolerance))
                         {
                             continue;
                         }
-                        foreach (var transitionChromInfo in chromatogramSet)
+                        matchingTransitions.Add(transitionDocNode);
+                        if (groupResults == null)
                         {
-                            if (transitionChromInfo.IsEmpty)
+                            continue;
+                        }
+                        foreach (var fileIndex in fileIndexes)
+                        {
+                            foreach (var entry in groupResults.GetTransitionPeaks(transitionDocNode.Transition,
+                                         fileIndex))
                             {
-                                continue;
+                                if (entry.Value.IsEmpty)
+                                {
+                                    continue;
+                                }
+                                var peakBounds = groupResults.FindTransitionPeakBounds(transitionDocNode.Transition,
+                                    fileIndex, entry.Key);
+                                if (!peakBounds.HasValue)
+                                {
+                                    continue;
+                                }
+                                minRetentionTime = Math.Min(minRetentionTime, peakBounds.Value.StartTime);
+                                maxRetentionTime = Math.Max(maxRetentionTime, peakBounds.Value.EndTime);
                             }
-                            minRetentionTime = Math.Min(minRetentionTime, transitionChromInfo.StartRetentionTime);
-                            maxRetentionTime = Math.Max(maxRetentionTime, transitionChromInfo.EndRetentionTime);
                         }
                     }
                 }

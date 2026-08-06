@@ -100,11 +100,13 @@ namespace pwiz.SkylineTestFunctional
         private string NodeTextRatioToGlobalStandards(TransitionTreeNode transitionTreeNode)
         {
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.DocumentUI);
-            var ratioToGlobalStandards = normalizedValueCalculator.GetTransitionValue(
+            // The area is the precursor's columnar results now
+            var nodeGroup = transitionTreeNode.TransitionGroupNode;
+            Assert.IsTrue(nodeGroup.TryGetReplicateTransitionPeak(transitionTreeNode.DocNode.Transition, 0,
+                out var fileId, out var peak));
+            var ratioToGlobalStandards = normalizedValueCalculator.GetTransitionAreaValue(
                 NormalizationMethod.GLOBAL_STANDARDS, transitionTreeNode.PepNode,
-                transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
-                0,
-                transitionTreeNode.DocNode.GetSafeChromInfo(0).FirstOrDefault());
+                nodeGroup, transitionTreeNode.DocNode, 0, fileId, peak.Area);
             Assert.IsNotNull(ratioToGlobalStandards);
             string resultsText = string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, 
                 GetRankText(transitionTreeNode), MathEx.RoundAboveZero((float) ratioToGlobalStandards.Value, 2, 4));
@@ -113,7 +115,9 @@ namespace pwiz.SkylineTestFunctional
 
         private string GetRankText(TransitionTreeNode transitionTreeNode)
         {
-            int? rank = transitionTreeNode.DocNode.GetPeakRankByLevel(0);
+            // The rank comes from the precursor, which holds the areas it is the order of
+            int? rank = transitionTreeNode.TransitionGroupNode
+                .GetTransitionRank(transitionTreeNode.DocNode.Transition, 0, true);
             if (!rank.HasValue)
             {
                 return string.Empty;

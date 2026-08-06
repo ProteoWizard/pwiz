@@ -116,6 +116,40 @@ namespace pwiz.SkylineTestUtil
             get { return Peaks.Select(peak => peak.Area); }
         }
 
+        /// <summary>
+        /// The mean area of every peak the transition has, or null when it has none. What
+        /// TransitionDocNode.AveragePeakArea used to answer.
+        /// </summary>
+        public float? AverageArea
+        {
+            get
+            {
+                var areas = Areas.ToArray();
+                return areas.Length == 0 ? (float?) null : areas.Average();
+            }
+        }
+
+        /// <summary>
+        /// Whether the transition's peak in one replicate is a good one, which is what a peak count
+        /// ratio of 1 used to say about a single transition. The first file of the replicate, which
+        /// is the one the chrom info accessors this replaced answered about.
+        /// </summary>
+        public bool HasGoodPeak(int replicateIndex, bool integrateAll)
+        {
+            var chromFileIds = ChromFileIds;
+            if (chromFileIds == null)
+            {
+                return false;
+            }
+
+            foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
+            {
+                return GetPeak(replicateIndex, fileId).IsGoodPeak(integrateAll);
+            }
+
+            return false;
+        }
+
         public IEnumerable<UserSet> UserSets
         {
             get { return Peaks.Select(peak => peak.UserSet); }
@@ -160,6 +194,38 @@ namespace pwiz.SkylineTestUtil
         }
     }
 
+    /// <summary>
+    /// One transition, the precursor and molecule it belongs to, and its chrom infos as
+    /// <see cref="MoleculeResults"/> rebuilt them. See
+    /// <see cref="ResultsUtil.EnumerateTransitionChromInfos"/>.
+    /// </summary>
+    public struct TransitionChromInfosRef
+    {
+        public TransitionChromInfosRef(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTran, Results<TransitionChromInfo> chromInfos)
+        {
+            NodePep = nodePep;
+            NodeGroup = nodeGroup;
+            NodeTran = nodeTran;
+            ChromInfos = chromInfos;
+        }
+
+        public PeptideDocNode NodePep { get; }
+        public TransitionGroupDocNode NodeGroup { get; }
+        public TransitionDocNode NodeTran { get; }
+
+        /// <summary>
+        /// Null when the transition has no results at all, the same as the property a transition
+        /// used to hold.
+        /// </summary>
+        public Results<TransitionChromInfo> ChromInfos { get; }
+
+        public ChromInfoList<TransitionChromInfo> this[int replicateIndex]
+        {
+            get { return ChromInfos[replicateIndex]; }
+        }
+    }
+
     public static class ResultsUtil
     {
         /// <summary>
@@ -175,6 +241,32 @@ namespace pwiz.SkylineTestUtil
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
                     yield return new TransitionResultsRef(nodeGroup.AbbreviatedResults, nodeTran.Transition);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Every transition of a document with its chrom infos rebuilt from the .skyd, in document
+        /// order. This is what a test which used to walk MoleculeTransitions and index each node's
+        /// Results does instead, when it needs values the columnar results do not keep - the ranks,
+        /// the optimization steps, whether a peak was forced.
+        /// <para>
+        /// One <see cref="MoleculeResults"/> per molecule, so a molecule's chromatograms are read
+        /// once however many transitions it has, and only one molecule's peaks are held at a time.
+        /// </para>
+        /// </summary>
+        public static IEnumerable<TransitionChromInfosRef> EnumerateTransitionChromInfos(SrmDocument document)
+        {
+            foreach (var nodePep in document.Molecules)
+            {
+                var moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                foreach (var nodeGroup in nodePep.TransitionGroups)
+                {
+                    foreach (var nodeTran in nodeGroup.Transitions)
+                    {
+                        yield return new TransitionChromInfosRef(nodePep, nodeGroup, nodeTran,
+                            moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition));
+                    }
                 }
             }
         }
@@ -331,19 +423,29 @@ namespace pwiz.SkylineTestUtil
                         }
                     }
 
-                    foreach (var nodeTran in
-                        nodeGroup.Children.Cast<TransitionDocNode>().Where(nodeTran => nodeTran.HasResults))
+                    // A transition's peaks are the precursor's columnar results too, one per file
+                    // it was found in.
+                    if (groupResults == null)
+                        continue;
+
+                    foreach (var nodeTran in nodeGroup.Children.Cast<TransitionDocNode>())
                     {
-                        foreach (var chromInfo in nodeTran.Results.Where(result => !result.IsEmpty)
-                            .SelectMany(info => info))
+                        for (int replicateIndex = 0;
+                             replicateIndex < groupResults.ChromFileIds.ReplicatePositions.ReplicateCount;
+                             replicateIndex++)
                         {
-                            TransitionResults++;
-                            if (chromInfo.Annotations.Note != null)
-                                NoteCount++;
-                            if (chromInfo.Annotations.ListAnnotations().Length > 0)
-                                AnnotationCount++;
-                            if (chromInfo.IsUserSetManual)
-                                UserSetCount++;
+                            foreach (var entry in groupResults.GetTransitionPeaks(nodeTran.Transition, replicateIndex))
+                            {
+                                TransitionResults++;
+                                var annotations = groupResults.FindTransitionAnnotations(nodeTran.Transition,
+                                    replicateIndex, entry.Key);
+                                if (annotations.Note != null)
+                                    NoteCount++;
+                                if (annotations.ListAnnotations().Length > 0)
+                                    AnnotationCount++;
+                                if (entry.Value.UserSet == UserSet.TRUE)
+                                    UserSetCount++;
+                            }
                         }
                     }
                 }

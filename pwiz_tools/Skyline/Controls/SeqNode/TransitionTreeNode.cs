@@ -114,7 +114,12 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             int index = sequenceTree.GetDisplayResultsIndex(nodePep);
 
-            float? ratio = (nodeTran.HasResults ? nodeTran.GetPeakCountRatio(index, settings.TransitionSettings.Integration.IsIntegrateAll) : null);
+            // Through the precursor, which is what holds a transition's peaks now.
+            var nodeGroup = FindNodeGroup(nodePep, nodeTran);
+            float? ratio = nodeTran.HasResults && nodeGroup != null
+                ? nodeGroup.GetTransitionPeakCountRatio(nodeTran.Transition, index,
+                    settings.TransitionSettings.Integration.IsIntegrateAll)
+                : null;
             if (ratio == null)
                 return (int)SequenceTree.StateImageId.peak_blank;
             if (ratio == 0)
@@ -132,27 +137,17 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private static string GetResultsText(DisplaySettings displaySettings, TransitionDocNode nodeTran)
         {
-            int? rank = nodeTran.GetPeakRankByLevel(displaySettings.ResultsIndex);
-            string label = string.Empty;
-            if (rank.HasValue && rank > 0)
-            {
-                // Mark MS1 transition ranks with "i" for isotope
-                string rankText = (nodeTran.IsMs1 ? @"i " : string.Empty) + rank;
-                label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
-            }
+            return TransitionDocNode.GetResultsText(displaySettings,
+                FindNodeGroup(displaySettings.NodePep, nodeTran), nodeTran);
+        }
 
-            float? ratio = null;
-            if (!Equals(displaySettings.NormalizationMethod, NormalizationMethod.NONE))
-            {
-                ratio = (float?)displaySettings.NormalizedValueCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
-                    displaySettings.NodePep, nodeTran,
-                    displaySettings.ResultsIndex,
-                    nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
-            }
-            if (!ratio.HasValue)
-                return label;
-
-            return string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, label, MathEx.RoundAboveZero(ratio.Value, 2, 4));
+        /// <summary>
+        /// The precursor which owns a transition, which is where its peaks are now. Null when the
+        /// molecule being displayed does not hold it.
+        /// </summary>
+        private static TransitionGroupDocNode FindNodeGroup(PeptideDocNode nodePep, TransitionDocNode nodeTran)
+        {
+            return (TransitionGroupDocNode) nodePep?.FindNode(nodeTran.Transition.Group);
         }
 
         /// <summary>

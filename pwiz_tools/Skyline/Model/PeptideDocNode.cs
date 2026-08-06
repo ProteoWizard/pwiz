@@ -1538,10 +1538,11 @@ namespace pwiz.Skyline.Model
                     }
                     for (int i = 0; i < countResults; i++)
                     {
-                        var calc = _listResultCalcs[i];
-                        calc.AddChromInfoList(nodeGroup);
-                        foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
-                            calc.AddChromInfoList(nodeGroup, nodeTran);
+                        // Only the precursor level. All this pass still does with what it gathers is
+                        // decide which peaks to mark MATCHED, which is a precursor level question:
+                        // the molecule level values it used to work out are aggregated on demand by
+                        // a MoleculeResults now.
+                        _listResultCalcs[i].AddChromInfoList(nodeGroup);
                     }
                 }
             }
@@ -1566,23 +1567,10 @@ namespace pwiz.Skyline.Model
                     if (!ReferenceEquals(resultsGroup, nodeGroup.EmptyResults))
                         nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
 
-                    var listTransNew = new List<DocNode>();
-                    foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                    {
-                        // Update transition ratios
-                        var nodeTranConvert = nodeTran;
-                        // GetSafeChromInfo rather than indexing Results, which a document read from
-                        // a file has none of: it keeps only the columnar results until they are
-                        // converted. The group above already reads it this way.
-                        var listTranInfoList = _listResultCalcs.ConvertAll(calc =>
-                            calc.UpdateTransitionUserSetMatched(nodeTranConvert.GetSafeChromInfo(calc.ResultsIndex),
-                                isMatching));
-                        var resultsTran = Results<TransitionChromInfo>.Merge(nodeTran.Results, listTranInfoList);
-                        listTransNew.Add(ReferenceEquals(resultsTran, nodeTran.Results)
-                                             ? nodeTran
-                                             : nodeTran.ChangeResults(resultsTran));
-                    }
-                    listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
+                    // Only the precursor, because marking a peak MATCHED is a change to a chrom
+                    // info, and a transition has none to change: its peaks are the precursor's
+                    // columnar results, which this pass does not touch.
+                    listGroupsNew.Add(nodeGroupNew);
                 }
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);
             }
@@ -1721,11 +1709,6 @@ namespace pwiz.Skyline.Model
                 return false;
             }
 
-            public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
-            {
-                AddChromInfoList(nodeGroup, nodeTran, nodeTran.GetSafeChromInfo(ResultsIndex));
-            }
-
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran,
                 IList<TransitionChromInfo> listInfo)
             {
@@ -1764,38 +1747,6 @@ namespace pwiz.Skyline.Model
                     .OrderBy(c => c.FileOrder)
                     .Select(c => c.CalcChromInfo(transitionGroupCount))
                     .ToArray();
-            }
-
-            public IList<TransitionChromInfo> UpdateTransitionUserSetMatched(IList<TransitionChromInfo> listInfo, bool isMatching)
-            {
-                if (CalculatorFirst == null || listInfo == null)
-                    return null;
-
-                int countInfo = listInfo.Count;
-                // Delay allocation in the hope that nothing has changed for faster loading
-                TransitionChromInfo[] listInfoNew = null;
-                for (int iInfo = 0; iInfo < countInfo; iInfo++)
-                {
-                    var info = listInfo[iInfo];
-
-                    PeptideChromInfoCalculator calc;
-                    if (TryGetCalculator(info.FileIndex, out calc))
-                    {
-                        if (isMatching && calc.IsSetMatching && !info.IsUserSetMatched)
-                            info = info.ChangeUserSet(UserSet.MATCHED);
-                        if (!ReferenceEquals(info, listInfo[iInfo]) && listInfoNew == null)
-                        {
-                            listInfoNew = listInfo.ToArray();
-                        }
-                    }
-
-                    if (listInfoNew != null)
-                        listInfoNew[iInfo] = info;
-                }
-
-                if (listInfoNew == null)
-                    return listInfo;
-                return listInfoNew;
             }
 
             public IList<TransitionGroupChromInfo> UpdateTransitionGroupUserSetMatched(IList<TransitionGroupChromInfo> listInfo, bool isMatching)

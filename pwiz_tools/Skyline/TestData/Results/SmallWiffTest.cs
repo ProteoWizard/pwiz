@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestData.Results
                 foreach (var nodeTran in docResults.PeptideTransitions)
                 {
                     Assert.IsTrue(nodeTran.HasResults);
-                    Assert.AreEqual(2, nodeTran.Results.Count);
+                    Assert.AreEqual(2, nodeTran.ResultsReplicateCount);
                 }
 
                 // Remove the last chromatogram

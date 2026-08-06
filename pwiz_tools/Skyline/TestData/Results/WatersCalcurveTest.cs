@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -118,12 +119,17 @@ namespace pwiz.SkylineTestData.Results
                     var docResults = doc.ChangeMeasuredResults(doc.Settings.MeasuredResults != null
                         ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
                         : new MeasuredResults(listChromatograms));
-                    // Adding unloaded results should add a new null result.
-                    foreach (var nodeTran in docResults.PeptideTransitions)
+                    // Adding unloaded results should add a new null result. The peaks are the
+                    // precursor's columnar results now, so a replicate with none has no entry.
+                    foreach (var nodeGroup in docResults.PeptideTransitionGroups)
                     {
-                        Assert.IsTrue(nodeTran.HasResults);
-                        Assert.AreEqual(listChromatograms.Count, nodeTran.Results.Count);
-                        Assert.IsTrue(nodeTran.Results[len - 1].IsEmpty);
+                        foreach (var nodeTran in nodeGroup.Transitions)
+                        {
+                            Assert.IsTrue(nodeTran.HasResults);
+                            Assert.AreEqual(listChromatograms.Count, nodeTran.ResultsReplicateCount);
+                            Assert.IsFalse(
+                                nodeGroup.TryGetReplicateTransitionPeak(nodeTran.Transition, len - 1, out _, out _));
+                        }
                     }
 
                     Assert.IsTrue(docContainer.SetDocument(docResults, doc, true),
@@ -133,30 +139,34 @@ namespace pwiz.SkylineTestData.Results
 
                     Assert.IsTrue(docResults.Settings.MeasuredResults.IsLoaded);
 
-                    var transOld = doc.PeptideTransitions.ToArray();
-                    var transNew = docResults.PeptideTransitions.ToArray();
+                    // The peaks are the precursors' columnar results now, one per file
+                    var transOld = ResultsUtil.EnumerateTransitionResults(doc).ToArray();
+                    var transNew = ResultsUtil.EnumerateTransitionResults(docResults).ToArray();
                     Assert.AreEqual(transOld.Length, transNew.Length);
                     int countPeaks = 0;
                     for (int i = 0; i < transNew.Length; i++)
                     {
                         // Make sure new peak was added to each transition
-                        var nodeTranNew = transNew[i];
-                        Assert.IsTrue(nodeTranNew.HasResults);
-                        Assert.AreEqual(len, nodeTranNew.Results.Count);
-                        var chromInfo = nodeTranNew.Results[len - 1][0];
-                        Assert.IsNotNull(chromInfo);
+                        var resultsNew = transNew[i];
+                        Assert.IsTrue(resultsNew.HasResults);
+                        var peaksAdded = ReplicatePeaks(resultsNew, len - 1);
+                        Assert.AreNotEqual(0, peaksAdded.Length);
+                        var peak = peaksAdded[0];
 
-                        if (!chromInfo.IsEmpty)
+                        if (!peak.IsEmpty)
                             countPeaks++;
 
                         // Make sure previously loaded peaks did not change
                         for (int j = 0; j < len - 1; j++)
                         {
-                            var chromInfoPrevious = transOld[i].Results[j][0];
-                            Assert.AreSame(chromInfoPrevious, nodeTranNew.Results[j][0]);
-                            if ((chromInfo.IsEmpty && !chromInfoPrevious.IsEmpty) ||
-                                    (!chromInfo.IsEmpty && chromInfoPrevious.Area >= chromInfo.Area))
-                                outOfOrder++;
+                            var peaksPrevious = ReplicatePeaks(transOld[i], j);
+                            CollectionAssert.AreEqual(peaksPrevious, ReplicatePeaks(resultsNew, j));
+                            foreach (var peakPrevious in peaksPrevious)
+                            {
+                                if ((peak.IsEmpty && !peakPrevious.IsEmpty) ||
+                                        (!peak.IsEmpty && peakPrevious.Area >= peak.Area))
+                                    outOfOrder++;
+                            }
                         }
                     }
                     // Allow 2 missed peaks
@@ -242,13 +252,17 @@ namespace pwiz.SkylineTestData.Results
                                 TransitionDocNode nodeTran1 = (TransitionDocNode)nodeGroup1.Children[l];
                                 TransitionDocNode nodeTran2 = (TransitionDocNode)nodeGroup2.Children[l];
                                 Assert.AreNotSame(nodeTran1, nodeTran2);
-                                Assert.AreEqual(nodeTran1.Results.Count, nodeTran2.Results.Count);
-                                for (int m = 0; m < nodeTran1.Results.Count; m++)
+                                Assert.AreEqual(nodeTran1.ResultsReplicateCount, nodeTran2.ResultsReplicateCount);
+                                // The peaks are the precursors' columnar results now
+                                for (int m = 0; m < nodeTran1.ResultsReplicateCount; m++)
                                 {
-                                    if (!nodeTran1.Results[m].IsEmpty && !nodeTran2.Results[m].IsEmpty)
-                                        Assert.AreEqual(nodeTran1.Results[m][0].IsEmpty, nodeTran2.Results[m][0].IsEmpty);
-                                    else
-                                        Assert.AreEqual(nodeTran1.Results[m], nodeTran2.Results[m]); // both null
+                                    bool hasPeak1 = nodeGroup1.TryGetReplicateTransitionPeak(nodeTran1.Transition, m,
+                                        out _, out var peak1);
+                                    bool hasPeak2 = nodeGroup2.TryGetReplicateTransitionPeak(nodeTran2.Transition, m,
+                                        out _, out var peak2);
+                                    Assert.AreEqual(hasPeak1, hasPeak2);
+                                    if (hasPeak1)
+                                        Assert.AreEqual(peak1.IsEmpty, peak2.IsEmpty);
                                 }
                             }
                         }
@@ -294,6 +308,20 @@ namespace pwiz.SkylineTestData.Results
                 // Cache files should be closed now, and delete successfully.
                 FileEx.SafeDelete(cachePath);
             }
+        }
+
+        /// <summary>
+        /// One transition's peaks in one replicate, in position order, which is what the chrom
+        /// infos of that replicate used to be. The files are the transition's own: two documents
+        /// share no positions, so each is asked for its own.
+        /// </summary>
+        private static TransitionPeak[] ReplicatePeaks(TransitionResultsRef results, int replicateIndex)
+        {
+            var chromFileIds = results.ChromFileIds;
+            if (chromFileIds == null)
+                return Array.Empty<TransitionPeak>();
+            return chromFileIds.GetFileIds(replicateIndex)
+                .Select(fileId => results.GetPeak(replicateIndex, fileId)).ToArray();
         }
 
         [TestMethod]

@@ -171,22 +171,30 @@ namespace pwiz.SkylineTestFunctional
                                      transitionGroupTreeNode.Nodes.OfType<TransitionTreeNode>())
                             {
                                 transitionCount++;
-                                var transitionChromInfo = transitionTreeNode.DocNode
-                                    .GetChromInfo(SkylineWindow.SelectedResultsIndex, null);
+                                // The area is the precursor's columnar results now
+                                bool hasPeak = transitionGroupTreeNode.DocNode.TryGetReplicateTransitionPeak(
+                                    transitionTreeNode.DocNode.Transition, SkylineWindow.SelectedResultsIndex,
+                                    out var transitionFileId, out var transitionPeak);
                                 double? expectedRatioValue = null;
                                 if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod))
                                 {
-                                    expectedRatioValue =
-                                        normalizedValueCalculator.GetTransitionValue(
-                                            NormalizationMethod.GLOBAL_STANDARDS, peptideTreeNode.DocNode, transitionTreeNode.DocNode,
-                                            SkylineWindow.SelectedResultsIndex, transitionChromInfo);
+                                    expectedRatioValue = !hasPeak || transitionPeak.IsEmpty
+                                        ? null
+                                        : normalizedValueCalculator.GetTransitionAreaValue(
+                                            NormalizationMethod.GLOBAL_STANDARDS, peptideTreeNode.DocNode,
+                                            transitionGroupTreeNode.DocNode, transitionTreeNode.DocNode,
+                                            SkylineWindow.SelectedResultsIndex, transitionFileId, transitionPeak.Area);
                                 }
                                 else if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                                 {
                                     if (!Equals(ratioToLabel.IsotopeLabelTypeName, transitionGroup.LabelType.Name))
                                     {
-                                        expectedRatioValue = normalizedValueCalculator.GetTransitionValue(ratioToLabel,
-                                            peptideTreeNode.DocNode, transitionTreeNode.DocNode, SkylineWindow.SelectedResultsIndex, transitionChromInfo);
+                                        expectedRatioValue = !hasPeak || transitionPeak.IsEmpty
+                                            ? null
+                                            : normalizedValueCalculator.GetTransitionAreaValue(ratioToLabel,
+                                                peptideTreeNode.DocNode, transitionGroupTreeNode.DocNode,
+                                                transitionTreeNode.DocNode, SkylineWindow.SelectedResultsIndex,
+                                                transitionFileId, transitionPeak.Area);
                                     }
                                 }
 

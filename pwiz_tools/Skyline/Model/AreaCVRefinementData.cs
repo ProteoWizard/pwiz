@@ -146,24 +146,26 @@ namespace pwiz.Skyline.Model
                                     if (!groupChromInfo.Area.HasValue)
                                         continue;
                                     var index = replicateIndex;
+                                    // The areas and the ranks come from the precursor's columnar
+                                    // results, so this reads no chromatogram.
                                     sumArea = transitionGroupDocNode.Transitions.Where(t =>
                                     {
                                         if (ms1 != t.IsMs1 || !t.ExplicitQuantitative)
                                             return false;
 
-                                        var chromInfo = t.GetSafeChromInfo(index)
-                                            .FirstOrDefault(c => c.OptimizationStep == 0);
-                                        if (chromInfo == null)
+                                        if (!transitionGroupDocNode.GetTransitionArea(t.Transition, index).HasValue)
                                             return false;
-                                        if (_settings.Transitions == AreaCVTransitions.best)
-                                            return chromInfo.RankByLevel == 1;
                                         if (_settings.Transitions == AreaCVTransitions.all)
                                             return true;
 
-                                        return chromInfo.RankByLevel <= _settings.CountTransitions;
-                                        // ReSharper disable once PossibleNullReferenceException
-                                    }).Sum(t => (double) t.GetSafeChromInfo(index)
-                                        .FirstOrDefault(c => c.OptimizationStep == 0).Area);
+                                        int? rankByLevel =
+                                            transitionGroupDocNode.GetTransitionRank(t.Transition, index, true);
+                                        if (_settings.Transitions == AreaCVTransitions.best)
+                                            return rankByLevel == 1;
+
+                                        return rankByLevel <= _settings.CountTransitions;
+                                    }).Sum(t => (double) transitionGroupDocNode
+                                        .GetTransitionArea(t.Transition, index).GetValueOrDefault());
 
                                     normalizedArea = sumArea;
                                     if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
@@ -257,7 +259,7 @@ namespace pwiz.Skyline.Model
                         setRemove.Add(nodeGroup.Id.GlobalIndex);
                     foreach (var trans in nodeGroup.Transitions)
                     {
-                        if (trans.AveragePeakArea == null)
+                        if (nodeGroup.GetTransitionAverageArea(trans.Transition) == null)
                             setRemove.Add(trans.Id.GlobalIndex);
                     }
                 }

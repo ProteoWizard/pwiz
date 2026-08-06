@@ -281,7 +281,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var nodeTran in SkylineWindow.Document.MoleculeTransitions)
             {
                 Assert.IsTrue(nodeTran.HasResults);
-                Assert.AreEqual(2, nodeTran.Results.Count);
+                Assert.AreEqual(2, nodeTran.ResultsReplicateCount);
             }
 
             // Set up display while loading
@@ -332,13 +332,16 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
 
             // Make sure imported data is of the expected shape.
-            foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
+            // One entry per optimization step, which is not something the columnar results keep, so
+            // the chrom infos are rebuilt from the .skyd.
+            foreach (var tranResults in ResultsUtil.EnumerateTransitionChromInfos(SkylineWindow.Document))
             {
-                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                var nodeGroup = tranResults.NodeGroup;
+                var nodeTran = tranResults.NodeTran;
                 {
                     Assert.IsTrue(nodeTran.HasResults);
-                    Assert.AreEqual(2, nodeTran.Results.Count);
-                    foreach (var chromInfoList in nodeTran.Results)
+                    Assert.AreEqual(2, tranResults.ChromInfos.Count);
+                    foreach (var chromInfoList in tranResults.ChromInfos)
                     {
                         if (nodeGroup.TransitionGroup.LabelType.IsLight)
                         {

@@ -144,8 +144,8 @@ namespace pwiz.SkylineTestData.Results
                 // A transition keeps only its columnar results either way.
                 foreach (var nodeTran in docRoundTrip.MoleculeTransitions)
                 {
-                    Assert.IsTrue(nodeTran.Results == null ||
-                                  nodeTran.Results.All(chromInfoList => chromInfoList.IsEmpty));
+                    Assert.IsTrue(nodeTran.EmptyResults == null ||
+                                  nodeTran.EmptyResults.All(chromInfoList => chromInfoList.IsEmpty));
                 }
 
                 // Sharing writes them, which is what the Panorama website reads. A transition does

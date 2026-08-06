@@ -301,8 +301,13 @@ namespace pwiz.Skyline.Menus
                     menu.DropDownItems.Insert(0, item);
                 }
 
-                var chromInfo = nodeTran.GetChromInfo(SequenceTree.ResultsIndex, GetSelectedChromFileId());
-                if (chromInfo != null && !chromInfo.IsEmpty)
+                // Whether there is a peak to remove, which the precursor's columnar results answer
+                // without reading a chromatogram.
+                var groupResults = nodeGroup.AbbreviatedResults;
+                bool hasPeak = groupResults != null &&
+                               groupResults.TryGetTransitionPeak(nodeTran.Transition, SequenceTree.ResultsIndex,
+                                   GetSelectedChromFileId(), out var peak) && !peak.IsEmpty;
+                if (hasPeak)
                 {
                     var handler = new RemovePeakHandler(SkylineWindow, pathGroup, nodeGroup, nodeTran);
                     var item = new ToolStripMenuItem(ChromGraphItem.GetTitle(nodeTran), null, handler.menuItem_Click);

@@ -1888,9 +1888,11 @@ namespace pwiz.SkylineTestUtil
                     if (Math.Abs(transition.Mz - convertedTransition.Mz) > SequenceMassCalc.MassTolerance)
                         AreEqual(transition.Mz, convertedTransition.Mz, "mz mismatch transition as small molecule");
                     AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
-                    if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.formulas && 
-                        !Equals(transition.Results, convertedTransition.Results))
-                        AreEqual(transition.Results, convertedTransition.Results, "results mismatch transition as small molecule");
+                    // Only the shape, which is all a transition keeps: its peaks are the columnar
+                    // results of the precursor, compared by the caller of this.
+                    if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.formulas &&
+                        !Equals(transition.EmptyResults, convertedTransition.EmptyResults))
+                        AreEqual(transition.EmptyResults, convertedTransition.EmptyResults, "results mismatch transition as small molecule");
                 }
                 IsFalse(convertedTransitionIterator.MoveNext());
             }
