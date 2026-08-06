@@ -220,11 +220,13 @@ public sealed class AgilentRawData : IDisposable
                 var sampleInfoPath = System.IO.Path.Combine(Path, "AcqData", "sample_info.xml");
                 if (!File.Exists(sampleInfoPath)) return _sampleInfoCache;
                 var doc = System.Xml.Linq.XDocument.Load(sampleInfoPath);
-                foreach (var field in doc.Descendants("Field"))
+                // Not named `field`: inside a property accessor that is a contextual keyword from
+                // C# 14 on, binding to the synthesized backing field rather than the loop variable.
+                foreach (var element in doc.Descendants("Field"))
                 {
-                    string name = ((string?)field.Element("Name") ?? string.Empty).Trim();
+                    string name = ((string?)element.Element("Name") ?? string.Empty).Trim();
                     if (name.Length == 0) continue;
-                    string value = ((string?)field.Element("Value") ?? string.Empty).Trim();
+                    string value = ((string?)element.Element("Value") ?? string.Empty).Trim();
 
                     string uniqueName = name;
                     for (int suffix = 2; _sampleInfoCache.ContainsKey(uniqueName); suffix++)
