@@ -375,6 +375,14 @@ namespace TestRunnerLib
             {
                 exception = e;
             }
+
+            // Done here rather than inside RunTestInstance so that the context is put back
+            // even when the test threw, since otherwise a failing test would go on to break
+            // every test after it.
+            var contextViolation = ResetSynchronizationContext(test);
+            if (exception == null && contextViolation != null)
+                exception = new InvalidOperationException(contextViolation);
+
             stopwatch.Stop();
             LastTestDuration = (int) stopwatch.ElapsedMilliseconds;
 
@@ -618,6 +626,68 @@ namespace TestRunnerLib
             }
 
             return tmpTestDir;
+        }
+
+        /// <summary>
+        /// Puts the plain <see cref="SynchronizationContext"/> back on the test thread if the
+        /// test which just ran left a different one installed, and returns a message saying
+        /// what it left, or null if the thread was clean.
+        ///
+        /// Constructing any WindowsForms control installs a
+        /// WindowsFormsSynchronizationContext on the current thread. It takes no handle, no
+        /// message loop and no Application.Run, disposing the control does not undo it, and
+        /// the only thing which puts the plain context back is a functional test, whose
+        /// Application.Run ends by calling WindowsFormsSynchronizationContext.Uninstall.
+        ///
+        /// That makes it a hazard for other tests rather than for the test which does it.
+        /// Every test which runs afterwards in the same process inherits a context whose Post
+        /// goes to a message queue that nothing is pumping, so any of them which blocks
+        /// waiting on an async API from the test thread deadlocks instead of finishing. A
+        /// parquet read is one of those, which is how a report test hung on TeamCity while
+        /// passing every time it was run on its own.
+        ///
+        /// The context is reset and not merely reported so that the first offender does not
+        /// implicate every test which happens to follow it.
+        /// </summary>
+        private string ResetSynchronizationContext(TestInfo test)
+        {
+            var context = SynchronizationContext.Current;
+            // The plain base class is what a thread which has never touched WindowsForms has,
+            // and its Post goes to the thread pool, where it cannot deadlock anything.
+            if (context == null || context.GetType() == typeof(SynchronizationContext))
+                return null;
+
+            RestorePlainSynchronizationContext();
+            return string.Format(
+                "The test {0} left a {1} installed on the test thread. Constructing a WindowsForms control installs one and nothing removes it, so every test which ran after this one in the same process would inherit it, and any of those which blocks on an async API from the test thread would deadlock rather than fail. Save SynchronizationContext.Current before creating the control and restore it when done.",
+                test.TestMethod.Name, context.GetType().FullName);
+        }
+
+        /// <summary>
+        /// Puts the plain <see cref="SynchronizationContext"/> back, the way Application.Run
+        /// does when its message loop ends.
+        ///
+        /// This goes through WindowsForms rather than just calling SetSynchronizationContext
+        /// because WindowsForms remembers the context it replaced and will not install a
+        /// second time while that record is set. Replacing the context without clearing the
+        /// record leaves WindowsForms believing it is still installed, so every test after
+        /// the first offender creates its controls without installing anything, and this
+        /// check reports exactly one test however many are at fault. That is worth a
+        /// non-public method: with it, both halves of CreateTextSequencesTest are reported,
+        /// and without it only whichever one runs first.
+        /// </summary>
+        private static void RestorePlainSynchronizationContext()
+        {
+            var uninstall = typeof(System.Windows.Forms.WindowsFormsSynchronizationContext)
+                .GetMethod(@"Uninstall", BindingFlags.NonPublic | BindingFlags.Static, null,
+                    new[] { typeof(bool) }, null);
+            uninstall?.Invoke(null, new object[] { false });
+
+            // Uninstall does nothing unless a WindowsForms context is current, and puts back
+            // whatever was there before, which may be null or may be nothing at all.
+            var context = SynchronizationContext.Current;
+            if (context == null || context.GetType() != typeof(SynchronizationContext))
+                SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
         }
 
         /// <summary>
