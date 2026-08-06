@@ -211,3 +211,58 @@ function Invoke-ResumeInvalidation {
     }
     $targets | Remove-Item -Force
 }
+
+<#
+.SYNOPSIS
+    Invalidate ONLY the SecondPassFDR task, leaving FirstPassFDR valid, so a
+    re-run enters FirstPassFDR's rehydrate arm.
+
+.DESCRIPTION
+    Named for the task NAMES the driver stamps and logs -- FirstPassFDR and
+    SecondPassFDR -- not for the C# class names (FirstJoinTask, MergeNodeTask) and
+    not for "the join" / "the merge node", which are the same metaphor applied to
+    two tasks that both join and so distinguish nothing. The stamp filenames below
+    carry the Name, so the Name is what this reads.
+
+    The narrower sibling of Invoke-ResumeInvalidation, and the only invalidation
+    that reaches FirstPassFDR's REHYDRATE arm. Invoke-ResumeInvalidation deletes
+    '*.FirstPassFDR.osprey.task' -- that task's validity stamp -- so FirstPassFDR
+    RUNS and recomputes from the entries it is handed. Rehydrate is entered on the
+    opposite state: FirstPassFDR's own outputs are still valid on disk, so the
+    driver skips its Run, and a downstream task is the first to touch its state
+    (FirstJoinTask.LoadOwnReconciliationBundle then rebuilds the post-Stage-5
+    bundle from the .1st-pass.fdr_scores.bin + .reconciliation.json sidecars).
+
+    Deleting the blib plus its SecondPassFDR stamp is exactly that state: every
+    per-file parquet, every 1st-pass sidecar, and the FirstPassFDR stamp survive,
+    so PerFileScoring / FirstPassFDR / PerFileRescoring must all report cache hits
+    while SecondPassFDR recomputes and demands FirstJoin's state on the way.
+
+    Deleting nothing is a hard failure, for Invoke-ResumeInvalidation's reason: a
+    silently no-op invalidation yields a green leg that only compared a run
+    against itself.
+
+.PARAMETER WorkDir
+    The straight-through run directory to invalidate in place.
+#>
+function Invoke-SecondPassOnlyInvalidation {
+    param([Parameter(Mandatory=$true)][string]$WorkDir)
+
+    $targets = @(Get-ChildItem -Path $WorkDir -File | Where-Object {
+        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
+    })
+    # BOTH are required, so check the count rather than truthiness. Realistic drift
+    # renames ONE of the two, and a single match is a truthy scalar that sails past a
+    # `-not $targets` test: deleting only the stamp leaves the blib un-invalidated (the
+    # leg then compares a stale blib to itself), and deleting only the blib leaves the
+    # merge cached (it never re-runs). Both surface downstream as a whole-run ABORTED
+    # from regression.ps1's outer catch, skipping every remaining dataset, instead of
+    # the named mode 5 failure the assertions here were written to produce.
+    if ($targets.Count -lt 2) {
+        throw (("Invoke-SecondPassOnlyInvalidation matched {1} of the 2 required files in '{0}'. " +
+                "The rehydrate leg would not have re-run the merge. Expected 'output.blib' + " +
+                "'output.blib.SecondPassFDR.osprey.task' (MergeNodeTask.Name); check that " +
+                "Name value has not changed.") -f $WorkDir, $targets.Count)
+    }
+    $targets | Remove-Item -Force
+}
