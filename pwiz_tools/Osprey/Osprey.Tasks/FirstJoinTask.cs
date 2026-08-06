@@ -125,9 +125,16 @@ namespace pwiz.Osprey.Tasks
         // reconciled + rescored + reported). Null unless OSPREY_PASS2_QVALUE=protein-compact.
         private HashSet<uint> _proteinCompactStratum;
 
-        /// <summary>The post-compaction surviving base_ids, kept from the projection path so the
-        /// Stage 5 -> 6 boundary can release the library fragments nothing can score any more.
-        /// Null on every other path, which simply skips the release.</summary>
+        /// <summary>The post-compaction surviving base_ids, so the Stage 5 -&gt; 6 boundary can
+        /// release the library fragments nothing can score any more. Null on the legacy resident
+        /// path, which simply skips the release.
+        ///
+        /// <para>This is the same set <see cref="_survivorLoader"/> holds privately, and it is a
+        /// separate field on purpose rather than by oversight: the loader is built only on the
+        /// projection path, while <see cref="Rehydrate"/> - the resume, and the one run that most
+        /// needs a lean library - has no loader and takes the set off the reconciliation bundle
+        /// instead. One field that both paths can fill beats an accessor that is null on
+        /// half of them.</para></summary>
         private HashSet<uint> _firstPassBaseIds;
 
         // Rebuilds any one file's survivors from its .scores.parquet + finalized
@@ -219,7 +226,7 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
-                + OspreyEnvironment.ReleaseLibraryFragmentsValidityKeySuffix();
+                + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
         public override bool Run(PipelineContext ctx)
@@ -1736,41 +1743,28 @@ namespace pwiz.Osprey.Tasks
         /// <para>Called from BOTH <see cref="Run"/> (projection path) and
         /// <see cref="Rehydrate"/> (resume / bundle-adopt), which set
         /// <c>_firstPassBaseIds</c> from the compaction result and the reconciliation bundle
-        /// respectively. Skipped when it is null, which now means only the legacy RESIDENT
-        /// first-pass path.</para>
+        /// respectively. <see cref="LibraryFragmentRelease.RunsOnThisLeg"/> decides whether this
+        /// leg releases at all, and is the same predicate the validity-key suffix reads, so the
+        /// key can never claim an arm the code did not run.</para>
         ///
         /// <para>Deliberately NOT gated on diagnostics. The only dump that reads fragments is
         /// <c>WriteCalXicEntryDumpAndExit</c>, a Stage 3 dump that exits the process where it
         /// stands, so it cannot observe a Stage 5 -&gt; 6 release. Gating on
         /// <c>ctx.Diagnostics</c> would instead disable this in exactly the regression run
-        /// that is compared against the committed golden (<c>regression.ps1</c> passes
-        /// <c>-DumpProteinFdr</c> on the straight-through leg), making the byte-identity gate
-        /// vacuous for this feature.</para>
+        /// that is compared against the committed golden - <c>regression.ps1 -DumpProteinFdr</c>
+        /// sets OSPREY_DUMP_STAGE7_PROTEIN_FDR, and any variable in the forced-dump bundle makes
+        /// <c>ctx.Diagnostics</c> non-null - making the byte-identity gate vacuous for this
+        /// feature.</para>
         /// </summary>
         private void ReleaseUnscorableLibraryFragments(List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
-            // StopAfterStage5 (--task FirstPassFDR) is excluded for TWO independent reasons, and
-            // either alone is disqualifying:
-            //
-            // 1. The gap-fill plan is NOT populated there. PlanStage6 returns early before
-            //    assigning _perFileGapFillForRescore, so the field is still its empty default -
-            //    while _firstPassBaseIds IS set. The retained set would be survivors ONLY, and
-            //    the release would strip exactly the gap-fill candidates this method exists to
-            //    protect. Harmless today only because nothing downstream runs in that process.
-            // 2. There is nothing to free. That path already loaded the library with
-            //    OmitFragments (PerFileScoringTask: omitFragments = config.StopAfterStage5), so
-            //    every entry holds the shared Array.Empty. ReleaseSpectrum recognizes an
-            //    already-released entry by reference identity, not by "has a spectrum", so it
-            //    would swap one shared singleton for another and report millions released
-            //    having freed zero bytes - a fabricated saving printed straight above a [MEM]
-            //    probe, which an HPC sizing A/B would read as measured.
-            //
-            // The worker also exits after Stage 5, so there is no Stage 6/7 to save memory for.
-            if (!OspreyEnvironment.ReleaseLibraryFragments || _firstPassBaseIds == null ||
-                fullLibrary == null || ctx.Config.StopAfterStage5)
-            {
+            // _firstPassBaseIds is the one meaningful null here: it separates the paths that
+            // computed a surviving set (projection Run, bundle-adopt Rehydrate) from the legacy
+            // resident path that did not. fullLibrary is not checked - it is a published
+            // byproduct every other reader dereferences unguarded, so a null is a wiring fault
+            // and should say so.
+            if (!LibraryFragmentRelease.RunsOnThisLeg(ctx) || _firstPassBaseIds == null)
                 return;
-            }
 
             var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
                 _firstPassBaseIds, _perFileGapFillForRescore);

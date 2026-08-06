@@ -124,10 +124,18 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// True once <see cref="ReleaseSpectrum"/> has dropped this entry's spectrum. The only
-        /// safe way to ask: inspecting <see cref="Fragments"/> to find out throws by design, so
-        /// without this the released state would be write-only and callers would be left
-        /// catching an exception to detect it.
+        /// True once <see cref="ReleaseSpectrum"/> has dropped this entry's spectrum, and only
+        /// then. It exists because inspecting <see cref="Fragments"/> to find out throws by
+        /// design, which would otherwise leave the released state write-only - detectable only
+        /// by catching an exception.
+        ///
+        /// <para>This answers "was the spectrum RELEASED", NOT "does this entry have a
+        /// spectrum". An entry can legitimately hold no fragments and report false here: the
+        /// constructor default and the <c>OmitFragments</c> load arm both leave
+        /// <c>Array.Empty</c>, which is a readable empty spectrum rather than a released one.
+        /// Asking the has-a-spectrum question is what the ordinary
+        /// <c>Fragments == null || Fragments.Count == 0</c> guard is for - and on a released
+        /// entry that guard throws, which is the point.</para>
         /// </summary>
         public bool IsSpectrumReleased => ReferenceEquals(Fragments, RELEASED_SPECTRUM);
 
@@ -176,6 +184,11 @@ namespace pwiz.Osprey.Core
                 throw Released();
             }
 
+            // The message cannot name WHICH entry was wrongly released, because one shared
+            // singleton stands in for every released spectrum - deliberately, since a
+            // per-entry sentinel would reintroduce the per-entry allocation the release
+            // exists to remove. The stack trace names the READER, which is the half that
+            // matters: rerun with OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to get the entry.
             private static InvalidOperationException Released()
             {
                 return new InvalidOperationException(

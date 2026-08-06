@@ -196,11 +196,18 @@ namespace pwiz.Osprey.Core
         /// compaction survivors and the gap-fill candidates. The identity fields
         /// (<c>ModifiedSequence</c> / <c>ProteinIds</c> / m/z / RT) are KEPT on every entry.
         ///
-        /// DEFAULT ON. The library is ~7.1 GB of a 20.1 GB Stage 6 floor at 82 SEA-AD files,
-        /// held to the end of Stage 7 in order to write 37,078 spectra out of 6,275,151
-        /// entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to keep the whole library
-        /// resident as the A/B byte-identity oracle, the same role
+        /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
+        /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
+        /// keep the whole library resident as the A/B byte-identity oracle, the same role
         /// OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff.
+        ///
+        /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
+        /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
+        /// entries. Few files is the MAXIMUM-saving case rather than a scaled-down one - the
+        /// library is fixed while the retained set grows with file count - so expect a smaller
+        /// (still large) saving at 82. Only the FRAGMENTS are freed, never a whole entry, and
+        /// the in-repo figure for the fragment share alone is ~3.2 GB at SEA-AD scale; do not
+        /// read a saving here as recovering the library's total footprint.</para>
         ///
         /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
         /// and <c>FirstJoinTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
@@ -211,24 +218,19 @@ namespace pwiz.Osprey.Core
         /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
         /// blib-written is a SUBSET of what is retained here.</para>
         ///
+        /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> deletes its own
+        /// validity sidecars. The suffix is still required - the release is a Run-only side
+        /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
+        /// and report a memory profile it never computed - but the escape hatch is not cheap.
+        /// The suffix itself lives with the release
+        /// (<c>LibraryFragmentRelease.ValidityKeySuffix</c>), keyed on whether the release
+        /// actually RAN rather than on this flag alone.</para>
+        ///
         /// <para>A settable property (not a readonly field) so unit tests can A/B both arms.</para>
         /// </summary>
         public static bool ReleaseLibraryFragments { get; set; } =
             IsNotZero(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS");
-
-        /// <summary>
-        /// Cache-validity suffix for the library-fragment release arm. EMPTY on the default,
-        /// so shipping this invalidates no existing output directory; only the resident opt-out
-        /// adds a term. It participates at all for the reason
-        /// <see cref="Stage6StreamSurvivorsValidityKeySuffix"/> does: the two arms are supposed
-        /// to write byte-identical outputs, and an in-place A/B that adopted the first arm's
-        /// reconciled parquets would skip Stage 6 entirely and report that identity - and the
-        /// memory saving - without ever computing either.
-        /// </summary>
-        public static string ReleaseLibraryFragmentsValidityKeySuffix()
-        {
-            return ReleaseLibraryFragments ? string.Empty : @";libfrag=0";
-        }
 
         /// <summary>
         /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
