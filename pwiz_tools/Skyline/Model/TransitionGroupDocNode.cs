@@ -2161,6 +2161,14 @@ namespace pwiz.Skyline.Model
                             userSet = previousPeak.UserSet;
                             ionMobility = info.GetIonMobilityFilter();
                         }
+                        else if (previousPeak.IsEmpty)
+                        {
+                            // A peak the user emptied has no boundaries to integrate between again,
+                            // so there is nothing to work out here - but it is still the user's, and
+                            // saying otherwise is how the next pass over the results picks a peak the
+                            // user deliberately threw away.
+                            userSet = previousPeak.UserSet;
+                        }
 
                         var chromInfo = new TransitionChromInfo(fileId, step, peak, ionMobility,
                             previousPeak.Annotations, userSet);
@@ -2355,9 +2363,11 @@ namespace pwiz.Skyline.Model
         {
             public static readonly PreviousPeak NONE = default;
 
-            private PreviousPeak(UserSet userSet, CustomPeakBounds? peakBounds, Annotations annotations, float area)
+            private PreviousPeak(UserSet userSet, CustomPeakBounds? peakBounds, Annotations annotations, float area,
+                bool isEmpty)
             {
                 UserSet = userSet;
+                IsEmpty = isEmpty;
                 PeakBounds = peakBounds;
                 _annotations = annotations;
                 Area = area;
@@ -2368,6 +2378,13 @@ namespace pwiz.Skyline.Model
             public UserSet UserSet { get; }
             public CustomPeakBounds? PeakBounds { get; }
             public float Area { get; }
+
+            /// <summary>
+            /// Whether the peak was no peak at all, which is what a peak the user threw away is.
+            /// There is nothing to integrate between for one of these, so a pass which keeps it has
+            /// only <see cref="UserSet"/> to keep.
+            /// </summary>
+            public bool IsEmpty { get; }
 
             /// <summary>
             /// Never null, so that a peak which was not there hands the same thing forward as one
@@ -2388,7 +2405,8 @@ namespace pwiz.Skyline.Model
 
                 return new PreviousPeak(peak.UserSet,
                     results.FindTransitionPeakBounds(transition, replicateIndex, fileId),
-                    results.FindTransitionAnnotations(transition, replicateIndex, fileId), peak.Area);
+                    results.FindTransitionAnnotations(transition, replicateIndex, fileId), peak.Area,
+                    peak.IsEmpty);
             }
         }
 

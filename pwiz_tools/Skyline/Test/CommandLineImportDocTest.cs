@@ -196,10 +196,12 @@ namespace pwiz.SkylineTest
                             (int)(state.TransitionGroupResults * fOld + stateAdded.TransitionGroupResults * fAdded));
             Assert.AreEqual(stateAdd.TransitionResults,
                             (int)(state.TransitionResults * fOld + stateAdded.TransitionResults * fAdded));
+            // One peak per replicate for every precursor, which the columnar results say: the
+            // precursor keeps no chrom infos to count.
             foreach (var nodeGroup in docAdd.PeptideTransitionGroups)
             {
                 for (int i = 0; i < 5; i++)
-                    Assert.AreEqual(1, nodeGroup.EmptyResults[i].Count);
+                    Assert.AreEqual(1, nodeGroup.AbbreviatedResults.GetPositions(i).Count());
             }
 
             // Cache should now contain results for both documents
