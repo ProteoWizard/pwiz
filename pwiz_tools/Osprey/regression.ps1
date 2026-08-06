@@ -792,7 +792,13 @@ function Test-LibraryFragmentRelease {
         return @{ Pass = $false; Issues = $issues }
     }
     $logName = Split-Path -Leaf $LogPath
-    $facts = Get-ReleaseLogFacts -LogPath $LogPath
+    # @() is REQUIRED, not defensive habit. A function returning a List<T> UNROLLS it
+    # into the pipeline, so this arrives as $null for an empty result and -- the case
+    # that bites -- as a BARE HASHTABLE for a single result, whose .Count is its KEY
+    # count (3) and whose [0] is $null. A one-line log is exactly what the ExpectNone
+    # leg looks like when it fires, so without this the fabricated-saving failure
+    # message renders its counts blank precisely when someone needs to read them.
+    $facts = @(Get-ReleaseLogFacts -LogPath $LogPath)
 
     if ($ExpectNone) {
         if ($facts.Count -gt 0) {
