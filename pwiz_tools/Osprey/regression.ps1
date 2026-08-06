@@ -46,6 +46,17 @@
               Stage 5 first, so it never exercises the all-cached case; it now
               carries the same skip assertion for the tasks its invalidation leaves
               valid. See Test-TaskCacheHits for the driver log lines both key on.
+      mode 5  library-fragment release engagement (issue #4532) - asserts, from the
+              legs' own logs, that the release RAN on every leg that holds the
+              library (straight-through, resume, --task PerFileRescoring, and the
+              merge node) and did NOT run on --task FirstPassFDR, which loads with
+              OmitFragments and can therefore only fabricate a saving. The release
+              is OUTPUT-NEUTRAL by design, which is its safety argument and also
+              why modes 1-4 pass identically whether it ran or was deleted
+              outright: they can catch an OVER-release (the tripwire throws) but
+              are structurally blind to it silently not happening. Every defect
+              found reviewing #4534 was in that blind spot. Asserts presence and
+              non-zero counts, never exact counts. See Test-LibraryFragmentRelease.
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -605,6 +616,15 @@ $taskRunMarker  = ':starting'
 $coldScoreMarker   = 'Scoring file '
 $coldRescoreMarker = 'Re-scoring file '
 
+# The library-fragment release (issue #4532). Two scopes, distinguished by the
+# tail of the line: FirstJoinTask retains "for rescore + gap-fill", MergeNodeTask
+# retains "for the reported pool". Captured rather than merely matched, because
+# the count is the whole point -- see Test-LibraryFragmentRelease.
+$releaseLinePattern =
+    'Released library fragments for (\d+) of (\d+) entries \((\d+) base_ids retained for ([^)]+)\)'
+$releaseScopeRescore  = 'rescore + gap-fill'
+$releaseScopeReported = 'the reported pool'
+
 function Get-TaskCacheMap {
     <#
     Classify every canonical task in one run log as 'skipped' (cache hit), 'ran'
@@ -702,6 +722,115 @@ function Test-TaskCacheHits {
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
 
+function Get-ReleaseLogFacts {
+    <#
+    Parse every library-fragment release line out of one leg's log. Returns an
+    array of { Released; Entries; Retained; Scope } in log order, empty when the
+    leg logged none.
+    #>
+    param([Parameter(Mandatory = $true)][string]$LogPath)
+    $facts = [System.Collections.Generic.List[hashtable]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) { return $facts }
+    foreach ($line in (Get-Content -LiteralPath $LogPath)) {
+        if ($line -match $releaseLinePattern) {
+            $facts.Add(@{
+                Released = [int]$Matches[1]
+                Entries  = [int]$Matches[2]
+                Retained = [int]$Matches[3]
+                Scope    = $Matches[4]
+            })
+        }
+    }
+    return $facts
+}
+
+function Test-LibraryFragmentRelease {
+    <#
+    Assert that the library-fragment release (#4532) actually RAN on the legs that
+    must release, and did NOT run on the leg that must not.
+
+    This is the one leg-level assertion the blib comparators structurally cannot
+    make. The release is OUTPUT-NEUTRAL by design -- that is its safety argument --
+    so mode 1 proves it is HARMLESS, never that it HAPPENED. Deleting the
+    production call site leaves every other mode green. Split the failure modes:
+
+      * releases TOO MUCH -> the released-spectrum tripwire throws when Stage 6 or
+        the blib reads a released entry, and the leg dies. Already covered.
+      * does NOT run      -> output byte-identical, saving silently gone.
+      * runs but frees 0  -> output identical, log claims a saving it never made.
+
+    Every defect /code-review found on #4534 was in the last two columns: the
+    Rehydrate path never released, --task FirstPassFDR printed millions released
+    having freed ZERO bytes directly above a [MEM] probe, and the merge node
+    realized nothing at all. None was an over-release. This closes that column.
+
+    -ExpectScopes names the release scopes the log must contain. -RequireFreed
+    names the subset that must additionally have freed a non-zero count; it is a
+    separate list because the merge node legitimately reports 0 on a
+    straight-through run, where FirstJoin already released in the same process and
+    ReleaseSpectrum is idempotent -- requiring non-zero there would fail every
+    in-process run, while requiring it on the HPC merge node is exactly the
+    assertion that would have caught the zero-saving defect. -ExpectNone asserts
+    the log contains no release line at all, which pins --task FirstPassFDR: it
+    loads with OmitFragments, so a release there can only ever be the fabricated
+    kind.
+
+    Asserts PRESENCE and non-zero, never exact counts -- those move with any
+    scoring change, and a gate that cries wolf stops being read.
+
+    Returns the { Pass; Issues } shape every other comparator returns.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$LogPath,
+        [string[]]$ExpectScopes = @(),
+        [string[]]$RequireFreed = @(),
+        [switch]$ExpectNone
+    )
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) {
+        $issues.Add("release assertion: run log not found: $LogPath")
+        return @{ Pass = $false; Issues = $issues }
+    }
+    $logName = Split-Path -Leaf $LogPath
+    $facts = Get-ReleaseLogFacts -LogPath $LogPath
+
+    if ($ExpectNone) {
+        if ($facts.Count -gt 0) {
+            $issues.Add((("{0}: {1} release line(s), expected NONE - this leg loads the " +
+                "library with OmitFragments, so every entry already holds the shared " +
+                "Array.Empty and a release here frees nothing while reporting that it did; " +
+                "first: released {2} of {3}") -f
+                $logName, $facts.Count, $facts[0].Released, $facts[0].Entries))
+        }
+        return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+    }
+
+    foreach ($scope in $ExpectScopes) {
+        $matching = @($facts | Where-Object { $_.Scope -eq $scope })
+        if ($matching.Count -eq 0) {
+            $issues.Add((("{0}: no release line for scope '{1}' - either the release no " +
+                "longer runs on this leg (the saving is gone and nothing else can see it), " +
+                "or the C# log wording drifted from this assertion and it is reading " +
+                "nothing. Scopes present: {2}") -f
+                $logName, $scope,
+                $(if ($facts.Count) { ($facts.Scope | Sort-Object -Unique) -join ', ' } else { '(none)' })))
+            continue
+        }
+        if ($RequireFreed -notcontains $scope) { continue }
+        if ($matching[0].Released -le 0) {
+            $issues.Add((("{0}: release line for scope '{1}' freed 0 of {2} entries - the " +
+                "call site ran but released nothing, which is the fabricated-saving shape") -f
+                $logName, $scope, $matching[0].Entries))
+        }
+        if ($matching[0].Retained -le 0) {
+            $issues.Add((("{0}: release line for scope '{1}' retained 0 base_ids - the " +
+                "retained set is empty, so the next reader of any spectrum will trip the " +
+                "released tripwire") -f $logName, $scope))
+        }
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+}
+
 # --- mode 3: HPC 4-task worker chain ------------------------------------------
 # Low-level runner for a single --task phase: CWD = its own scratch dir so the
 # task's CWD-relative outputs (parquets, sidecars, blib) land there, mirroring a
@@ -753,6 +882,14 @@ function Invoke-HpcChain {
     $mzmlByStem = @{}
     foreach ($m in $Mzmls) { $mzmlByStem[[IO.Path]::GetFileNameWithoutExtension($m)] = $m }
 
+    # Phase logs are copied here as each phase finishes, because the phase DIRS are
+    # freed mid-chain to bound peak disk (phases 1, 2 and every phase-3 worker go
+    # before the merge node even starts). A leg-level assertion therefore cannot read
+    # them where they were written -- mode 5 found exactly that, seeing only phase 4.
+    # A few KB of text survives; the multi-GB inputs still do not.
+    $chainLogDir = Join-Path $ChainRoot 'logs'
+    New-Item -ItemType Directory -Path $chainLogDir -Force | Out-Null
+
     # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
     # <stem>.calibration.json per file.
     $ph1 = Join-Path $ChainRoot 'phase1_scoring'
@@ -766,6 +903,7 @@ function Invoke-HpcChain {
     $a1 += $extraArgs
     $a1 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
+    Copy-Item (Join-Path $ph1 'phase1.log') (Join-Path $chainLogDir 'phase1.log') -Force
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
     # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
@@ -792,6 +930,7 @@ function Invoke-HpcChain {
     $a2 += $extraArgs
     $a2 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
+    Copy-Item (Join-Path $ph2 'phase2.log') (Join-Path $chainLogDir 'phase2.log') -Force
 
     # Phase 3: per-file rescore workers (Stage 6), one independent worker per
     # file. Stage 6 STREAMS its MS2 from the .spectra.bin cache phase 1 wrote (there is
@@ -825,6 +964,7 @@ function Invoke-HpcChain {
         $a3 += $extraArgs
         $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
+        Copy-Item (Join-Path $ph3 'phase3.log') (Join-Path $chainLogDir "phase3_$s.log") -Force
         # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
         # consumes only those plus the calibration / reconciliation / 1st-pass
         # sidecars copied above -- never this worker's spectra cache, input
@@ -879,6 +1019,7 @@ function Invoke-HpcChain {
     $a4 += $extraArgs
     $a4 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
+    Copy-Item (Join-Path $ph4 'phase4.log') (Join-Path $chainLogDir 'phase4.log') -Force
 
     return (Join-Path $ph4 'output.blib')
 }
@@ -1181,6 +1322,89 @@ foreach ($name in $selected) {
             $m2.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode2 (resume==straight): FAIL ($($m2.Issues.Count) issues)")
         }
+    }
+
+    # ---- mode 5: the library-fragment release engaged on every leg that holds the library ----
+    # Runs LAST because it reads the logs of all the legs above -- straight-through,
+    # resume, and every phase of the HPC chain -- and they have to have been written.
+    #
+    # This is the assertion the blib comparators cannot make. The release is
+    # output-neutral by design, so modes 1-4 pass identically whether it ran or was
+    # deleted outright; #4534's review found three separate wirings where it silently
+    # did not run, every one caught by a human reading these same logs by hand.
+    #
+    # The per-leg expectations are calibrated against an observed run, NOT derived from
+    # reading the C# -- deriving them is how the original defects got in. Two surprises
+    # from that observation are encoded here: --task PerFileRescoring DOES release
+    # (FirstJoinTask.Rehydrate is reached through a lazy Demand even though IsIncluded
+    # excludes it from that leg), and the warm re-run legitimately logs nothing at all
+    # because a fully cached run does no work -- asserting a release there would be a
+    # false red on every run.
+    $releaseChecks = [System.Collections.Generic.List[hashtable]]::new()
+    $releaseChecks.Add(@{
+        Label = 'straight-through'; Log = (Join-Path $straightDir 'straight.log')
+        Scopes = @($releaseScopeRescore, $releaseScopeReported)
+        Freed  = @($releaseScopeRescore)
+    })
+    if (-not $SkipResume) {
+        # The RESUME path, and the reason this leg is not optional: FirstJoinTask.Rehydrate
+        # shipped in #4534 never releasing at all. That is the run an operator reaches for
+        # AFTER the OOM this feature exists to prevent, so it is the worst possible leg to
+        # lose the saving on, and nothing but this line can see it.
+        $releaseChecks.Add(@{
+            Label = 'resume'; Log = (Join-Path $straightDir 'resume.log')
+            Scopes = @($releaseScopeRescore, $releaseScopeReported)
+            Freed  = @($releaseScopeRescore)
+        })
+    }
+    if (-not $SkipHpcChain) {
+        # Read the PRESERVED copies under chain\logs, not the phase dirs: phases 1, 2
+        # and every phase-3 worker are freed mid-chain to bound peak disk, so by the
+        # time this runs only phase 4's dir still exists.
+        $releaseLogDir = Join-Path $runRoot "$name\chain\logs"
+        $releaseChecks.Add(@{
+            Label = 'HPC --task FirstPassFDR'
+            Log = (Join-Path $releaseLogDir 'phase2.log'); None = $true
+        })
+        foreach ($mzml in $inputs.Mzmls) {
+            $stem = [IO.Path]::GetFileNameWithoutExtension($mzml)
+            $releaseChecks.Add(@{
+                Label = "HPC --task PerFileRescoring ($stem)"
+                Log = (Join-Path $releaseLogDir "phase3_$stem.log")
+                Scopes = @($releaseScopeRescore); Freed = @($releaseScopeRescore)
+            })
+        }
+        # The merge node is the whole point of requiring a non-zero count anywhere: it is
+        # the process that holds the fragment set through pass-2 Percolator, protein FDR
+        # AND the blib write, and it realized ZERO saving until #4534 gave it its own
+        # release. On the HPC chain it is the only release there is.
+        $releaseChecks.Add(@{
+            Label = 'HPC merge node'
+            Log = (Join-Path $releaseLogDir 'phase4.log')
+            Scopes = @($releaseScopeReported); Freed = @($releaseScopeReported)
+        })
+    }
+
+    Write-Progress-Tc "${name}: library-fragment release engagement (mode 5)"
+    $m5Issues = [System.Collections.Generic.List[string]]::new()
+    foreach ($check in $releaseChecks) {
+        $r = if ($check.None) {
+            Test-LibraryFragmentRelease -LogPath $check.Log -ExpectNone
+        } else {
+            Test-LibraryFragmentRelease -LogPath $check.Log `
+                -ExpectScopes $check.Scopes -RequireFreed $check.Freed
+        }
+        if (-not $r.Pass) {
+            $r.Issues | ForEach-Object { $m5Issues.Add("$($check.Label): $_") }
+        }
+    }
+    if ($m5Issues.Count -eq 0) {
+        $summaryLines.Add("$name mode5 (library-fragment release engaged): PASS")
+    } else {
+        $overallFail = $true
+        Write-Problem-Tc "$name mode5 (library-fragment release engaged): FAIL - $($m5Issues.Count) issue(s)"
+        $m5Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+        $summaryLines.Add("$name mode5 (library-fragment release engaged): FAIL ($($m5Issues.Count) issues)")
     }
 
     # All legs for this dataset are done -- free its scratch now so peak disk stays
