@@ -2679,7 +2679,12 @@ namespace pwiz.Skyline.Model
                         .ConvertResults(nodeGroupNew);
                 }
 
-                return nodeGroupNew;
+                // Compared by value, because a precursor whose results have been converted has no
+                // chrom infos left for the pass to find equal, so it rebuilds them every time and
+                // arrives here with a new object holding the same peaks. Without this a pass which
+                // changed nothing - scoring the same peaks with the same model again - would give
+                // back a document which differs from the one it was handed in nothing but identity.
+                return Equals(nodeGroup, nodeGroupNew) ? nodeGroup : nodeGroupNew;
             }
 
             /// <summary>

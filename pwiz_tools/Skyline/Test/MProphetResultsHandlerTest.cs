@@ -96,7 +96,8 @@ namespace pwiz.SkylineTest
                 var resultsHandlerRepeat = new MProphetResultsHandler(docNew, peakScoringModel) { QValueCutoff = Q_CUTOFF };
                 resultsHandlerRepeat.ScoreFeatures();
                 var docRepeat = resultsHandlerRepeat.ChangePeaks();
-                Assert.AreSame(docRepeat, docNew);
+                Assert.AreSame(docRepeat, docNew,
+                    Equals(docRepeat, docNew) ? "equal but not same" : "not even equal");
                 Assert.AreNotSame(docOriginal, docNew);
 
                 // 3. Export mProphet results gives expected file
