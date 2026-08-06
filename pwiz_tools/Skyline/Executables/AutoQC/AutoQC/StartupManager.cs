@@ -153,16 +153,11 @@ namespace AutoQC
 
         private static ShortCutInfo GetShortcut()
         {
-            var exeLocation = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
-            if (exeLocation.StartsWith(@"file:"))
-            {
-                exeLocation = exeLocation.Substring(5);
-            }
-            while (exeLocation.StartsWith(@"/"))
-            {
-                exeLocation = exeLocation.Substring(1);
-            }
-           
+            // Location, not CodeBase: CodeBase is obsolete on .NET 8, and it returns a file:// URL that
+            // the hand-rolled trimming below never percent-decoded - an install under "C:\Program Files"
+            // came back as "C:/Program%20Files". Location is the path already.
+            var exeLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
             var exeDirInfo = Directory.GetParent(exeLocation);
             if (exeDirInfo == null)
             {

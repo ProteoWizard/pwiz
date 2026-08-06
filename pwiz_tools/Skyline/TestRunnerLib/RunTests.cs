@@ -292,7 +292,12 @@ namespace TestRunnerLib
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
             else if (IsParallelClient && resultsDir.Contains("TestResults_"))
                 ParallelClientId = resultsDir.Split('_').Last();
+            // Seed both keys. The deprecated TestDir property and TestRunDirectory read different
+            // entries, so moving callers onto the latter needs it present: under VSTest the adapter
+            // fills these in, but under TestRunner we are the adapter, and the property MSTest is
+            // steering everyone toward would otherwise come back null.
             testContext.Properties["TestDir"] = resultsDir;
+            testContext.Properties["TestRunDirectory"] = resultsDir;
             if (Directory.Exists(resultsDir))
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
             if (Directory.Exists(resultsDir))
@@ -367,7 +372,7 @@ namespace TestRunnerLib
             var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
 
             if (string.IsNullOrEmpty(dmpDir))
-                dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
+                dmpDir = Path.Combine(TestContext.TestRunDirectory, test.TestMethod.Name, "Minidumps");
 
             var preDumpPath = WritePreMiniDumpIfRequested(test, pass, testNumber, dmpDir);
 
@@ -795,7 +800,7 @@ namespace TestRunnerLib
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
             {
-                CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
+                CleanupAbandonedFiles(TestContext.TestRunDirectory, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
 

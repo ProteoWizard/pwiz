@@ -358,7 +358,7 @@ namespace pwiz.Skyline
                                                  activationArgs.ActivationData != null &&
                                                  activationArgs.ActivationData.Length != 0;
 #else
-                    object activationArgs = null;
+                    // ClickOnce activation data does not exist on .NET 8; see the ClickOnce replacement TODO.
                     bool activationDataPresent = false;
 #endif
                     // Activation data and --opendoc always go straight to MainWindow.

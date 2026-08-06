@@ -429,7 +429,9 @@ namespace TestRunner
                 else if (commandLineArgs.HasArg("listonly"))
                 {
                     foreach(var test in testList)
-                        Console.WriteLine("{0}\t{1}", Path.GetFileName(test.TestClassType.Assembly.CodeBase), test.TestMethod.Name);
+                        // Location, not the obsolete CodeBase: both name the same DLL here, and only the
+                        // file name is printed.
+                        Console.WriteLine("{0}\t{1}", Path.GetFileName(test.TestClassType.Assembly.Location), test.TestMethod.Name);
                     return 0;
                 }
                 else

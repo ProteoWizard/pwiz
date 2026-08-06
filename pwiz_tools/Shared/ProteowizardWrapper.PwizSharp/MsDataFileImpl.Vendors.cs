@@ -15,7 +15,12 @@ namespace pwiz.ProteowizardWrapper
 {
     internal static class VendorReaderRegistration
     {
+        // CA2255 warns off module initializers in libraries because callers cannot control when they
+        // run. That is exactly the property being relied on here: registration has to happen before
+        // MsDataFileImpl's static ReaderList snapshot, and no caller-invoked hook runs early enough.
+#pragma warning disable CA2255
         [System.Runtime.CompilerServices.ModuleInitializer]
+#pragma warning restore CA2255
         internal static void RegisterVendorReaders()
         {
             var extra = ReaderList.AdditionalReaders;

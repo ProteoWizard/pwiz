@@ -2860,7 +2860,9 @@ namespace pwiz.Skyline
 
             private readonly SkylineWindow _parent;
             public string Title { get { return _tool.Title; } }
-            public string Command { get { return _tool.Command; } }
+            // Not "Command": .NET 8's ToolStripItem has a Command property of its own (an ICommand to bind
+            // to), and a tool's command line is a different thing entirely.
+            public string ToolCommand { get { return _tool.Command; } }
 
             private void HandleClick(object sender, EventArgs e)
             {

@@ -830,7 +830,7 @@ namespace pwiz.SkylineTestFunctional
             const string MSFRAGGER_PRESET_NAME = "Imported MSFragger";
 
             // Create a temp Comet .params file
-            var cometParamsPath = Path.Combine(TestContext.TestDir, "test_comet.params");
+            var cometParamsPath = Path.Combine(TestContext.TestRunDirectory, "test_comet.params");
             File.WriteAllText(cometParamsPath, string.Join("\r\n",
                 @"peptide_mass_tolerance = 20.0",
                 @"peptide_mass_units = 2",
@@ -851,7 +851,7 @@ namespace pwiz.SkylineTestFunctional
                 @"1.  Trypsin                1      KR          P"));
 
             // Create a temp MSFragger .params file
-            var msFraggerParamsPath = Path.Combine(TestContext.TestDir, "test_fragger.params");
+            var msFraggerParamsPath = Path.Combine(TestContext.TestRunDirectory, "test_fragger.params");
             File.WriteAllText(msFraggerParamsPath, string.Join("\r\n",
                 @"precursor_true_tolerance = 20",
                 @"precursor_true_units = 1",
@@ -936,7 +936,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestEditListImportShare()
         {
-            var sharePath = Path.Combine(TestContext.TestDir, "shared_presets.skysp");
+            var sharePath = Path.Combine(TestContext.TestRunDirectory, "shared_presets.skysp");
 
             // Open Edit List dialog from the preset combo's "Edit list..." option
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
