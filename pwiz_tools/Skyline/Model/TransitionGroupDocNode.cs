@@ -2586,7 +2586,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings, _nodePep,
-                    iResult, transitionCount, listChromInfo, _nodeGroup.AbbreviatedResults, iResultOldSet));
+                    iResult, transitionCount, listChromInfo, _nodeGroup.AbbreviatedResults));
             }
 
             public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
@@ -3016,20 +3016,13 @@ namespace pwiz.Skyline.Model
             /// not work out - its annotations and its scores - come from once the chrom infos
             /// <paramref name="listChromInfo"/> held have been given up. Without it a rebuilt peak
             /// would come back with the note and the q value stripped off it.
-            /// <para>
-            /// <paramref name="groupResultsReplicateIndex"/> is the replicate those results hold it
-            /// under, which is not <paramref name="resultsIndex"/> when the replicates have been
-            /// reordered: the results being read are the ones the precursor came in with, and this
-            /// pass is filling in the new order. -1 when there are none to read.
-            /// </para>
             /// </summary>
             public TransitionGroupChromInfoListCalculator(SrmSettings settings,
                                                           PeptideDocNode nodePep,
                                                           int resultsIndex,
                                                           int transitionCount,
                                                           ChromInfoList<TransitionGroupChromInfo> listChromInfo,
-                                                          TransitionGroupResults groupResults = null,
-                                                          int groupResultsReplicateIndex = -1)
+                                                          TransitionGroupResults groupResults = null)
             {
                 Settings = settings;
                 ResultsIndex = resultsIndex;
@@ -3038,13 +3031,11 @@ namespace pwiz.Skyline.Model
 
                 _listChromInfo = listChromInfo;
                 _groupResults = groupResults;
-                _groupResultsReplicateIndex = groupResultsReplicateIndex;
 
                 Calculators = new List<TransitionGroupChromInfoCalculator>();
             }
 
             private readonly TransitionGroupResults _groupResults;
-            private readonly int _groupResultsReplicateIndex;
 
             private SrmSettings Settings { get; set; }
             private int ResultsIndex { get; set; }
@@ -3112,7 +3103,7 @@ namespace pwiz.Skyline.Model
                         // the columnar results hold - the other steps of a file have never had
                         // annotations or scores of their own.
                         if (chromInfoGroup == null && step == 0)
-                            calc.CarryColumnarValues(_groupResults, _groupResultsReplicateIndex, fileId);
+                            calc.CarryColumnarValues(_groupResults, fileId);
                         if (ReintegrateResults != null)
                         {
                             var reintegratedPeak = GetReintegratePeak(fileId, step);
@@ -3245,11 +3236,17 @@ namespace pwiz.Skyline.Model
             /// These are values a peak keeps rather than values worked out from a chromatogram, so
             /// a pass which has no chrom info to carry them forward from takes them from where the
             /// document records them instead of dropping them.
+            /// <para>
+            /// Found by file rather than by replicate and file, because the results being read are
+            /// not always in the replicate order this pass is filling in: they are in the old order
+            /// when the replicates have been reordered, and in the merged order when two documents
+            /// have just been merged. A file belongs to one replicate, so the file alone says which
+            /// entry is meant either way.
+            /// </para>
             /// </summary>
-            public void CarryColumnarValues(TransitionGroupResults groupResults, int replicateIndex,
-                ChromFileInfoId fileId)
+            public void CarryColumnarValues(TransitionGroupResults groupResults, ChromFileInfoId fileId)
             {
-                int position = groupResults?.ChromFileIds.IndexOfFile(replicateIndex, fileId) ?? -1;
+                int position = IndexOfFile(groupResults, fileId);
                 if (position < 0)
                 {
                     return;
@@ -3258,6 +3255,21 @@ namespace pwiz.Skyline.Model
                 Annotations = groupResults.GetAnnotations(position);
                 QValue = groupResults.GetQValue(position);
                 ZScore = groupResults.GetZScore(position);
+            }
+
+            private static int IndexOfFile(TransitionGroupResults groupResults, ChromFileInfoId fileId)
+            {
+                var fileIds = groupResults?.ChromFileIds.FileIds;
+                for (int position = 0; position < (fileIds?.Count ?? 0); position++)
+                {
+                    // ReSharper disable once PossibleNullReferenceException
+                    if (ReferenceEquals(fileIds[position].Value, fileId))
+                    {
+                        return position;
+                    }
+                }
+
+                return -1;
             }
 
             private ExplicitPeakBounds ExplicitPeakBounds { get; set; }

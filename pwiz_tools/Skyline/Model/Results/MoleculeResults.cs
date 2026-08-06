@@ -1278,7 +1278,7 @@ namespace pwiz.Skyline.Model.Results
                 : default;
             var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
                 PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos,
-                nodeGroup.AbbreviatedResults, replicateIndex);
+                nodeGroup.AbbreviatedResults);
             for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
             {
                 listCalculator.AddChromInfoList((TransitionDocNode) nodeGroup.Children[iTran], chromInfoLists[iTran]);
