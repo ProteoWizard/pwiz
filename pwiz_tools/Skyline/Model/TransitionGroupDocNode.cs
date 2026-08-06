@@ -2576,17 +2576,17 @@ namespace pwiz.Skyline.Model
                 int iResult = _listResultCalcs.Count;
                 // The chrom infos the columnar results are still carrying, which is what a document
                 // whose .skyd has not been read yet has. Null once they have been converted.
+                int iResultOldSet = GetOldPosition(iResult);
                 var chromInfos = _nodeGroup.AbbreviatedResults?.LegacyChromInfos;
                 if (chromInfos != null)
                 {
-                    int iResultOld = GetOldPosition(iResult);
-                    if (iResultOld != -1 && iResultOld < chromInfos.Count)
+                    if (iResultOldSet != -1 && iResultOldSet < chromInfos.Count)
                     {
-                        listChromInfo = chromInfos[iResultOld];
+                        listChromInfo = chromInfos[iResultOldSet];
                     }
                 }
                 _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings, _nodePep,
-                    iResult, transitionCount, listChromInfo));
+                    iResult, transitionCount, listChromInfo, _nodeGroup.AbbreviatedResults, iResultOldSet));
             }
 
             public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
@@ -2998,11 +2998,25 @@ namespace pwiz.Skyline.Model
             private readonly PeptideDocNode _nodePep;
             private readonly ChromInfoList<TransitionGroupChromInfo> _listChromInfo;
 
+            /// <summary>
+            /// <paramref name="groupResults"/> is where the values a peak keeps but this pass does
+            /// not work out - its annotations and its scores - come from once the chrom infos
+            /// <paramref name="listChromInfo"/> held have been given up. Without it a rebuilt peak
+            /// would come back with the note and the q value stripped off it.
+            /// <para>
+            /// <paramref name="groupResultsReplicateIndex"/> is the replicate those results hold it
+            /// under, which is not <paramref name="resultsIndex"/> when the replicates have been
+            /// reordered: the results being read are the ones the precursor came in with, and this
+            /// pass is filling in the new order. -1 when there are none to read.
+            /// </para>
+            /// </summary>
             public TransitionGroupChromInfoListCalculator(SrmSettings settings,
                                                           PeptideDocNode nodePep,
                                                           int resultsIndex,
                                                           int transitionCount,
-                                                          ChromInfoList<TransitionGroupChromInfo> listChromInfo)
+                                                          ChromInfoList<TransitionGroupChromInfo> listChromInfo,
+                                                          TransitionGroupResults groupResults = null,
+                                                          int groupResultsReplicateIndex = -1)
             {
                 Settings = settings;
                 ResultsIndex = resultsIndex;
@@ -3010,9 +3024,14 @@ namespace pwiz.Skyline.Model
                 _nodePep = nodePep;
 
                 _listChromInfo = listChromInfo;
+                _groupResults = groupResults;
+                _groupResultsReplicateIndex = groupResultsReplicateIndex;
 
                 Calculators = new List<TransitionGroupChromInfoCalculator>();
             }
+
+            private readonly TransitionGroupResults _groupResults;
+            private readonly int _groupResultsReplicateIndex;
 
             private SrmSettings Settings { get; set; }
             private int ResultsIndex { get; set; }
@@ -3075,6 +3094,12 @@ namespace pwiz.Skyline.Model
                                                                           TransitionCount,
                                                                           chromInfoGroup,
                                                                           explicitPeakBounds);
+                        // What the peak keeps but this pass does not work out, when there is no
+                        // chrom info left to carry it forward from. Step zero only, which is all
+                        // the columnar results hold - the other steps of a file have never had
+                        // annotations or scores of their own.
+                        if (chromInfoGroup == null && step == 0)
+                            calc.CarryColumnarValues(_groupResults, _groupResultsReplicateIndex, fileId);
                         if (ReintegrateResults != null)
                         {
                             var reintegratedPeak = GetReintegratePeak(fileId, step);
@@ -3200,6 +3225,26 @@ namespace pwiz.Skyline.Model
                     IonMobilityInfo = TransitionGroupIonMobilityInfo.EMPTY; 
                 }
                 ExplicitPeakBounds = explicitPeakBounds;
+            }
+
+            /// <summary>
+            /// The annotations and the scores of the peak being rebuilt, from the columnar results.
+            /// These are values a peak keeps rather than values worked out from a chromatogram, so
+            /// a pass which has no chrom info to carry them forward from takes them from where the
+            /// document records them instead of dropping them.
+            /// </summary>
+            public void CarryColumnarValues(TransitionGroupResults groupResults, int replicateIndex,
+                ChromFileInfoId fileId)
+            {
+                int position = groupResults?.ChromFileIds.IndexOfFile(replicateIndex, fileId) ?? -1;
+                if (position < 0)
+                {
+                    return;
+                }
+
+                Annotations = groupResults.GetAnnotations(position);
+                QValue = groupResults.GetQValue(position);
+                ZScore = groupResults.GetZScore(position);
             }
 
             private ExplicitPeakBounds ExplicitPeakBounds { get; set; }

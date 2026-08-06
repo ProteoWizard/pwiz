@@ -177,7 +177,8 @@ namespace pwiz.SkylineTest
                 // Test that importing same file twice leads to no change to document the second time
                 var docNew = ImportFileToDoc(docResults, ref peakBoundaryFileTsv);
                 var docNewSame = ImportFileToDoc(docNew, ref peakBoundaryFileTsv);
-                Assert.AreSame(docNew, docNewSame);
+                Assert.AreSame(docNew, docNewSame,
+                    Equals(docNew, docNewSame) ? "equal but not same" : "not even equal");
                 Assert.AreNotSame(docNew, docResults);
 
                 // Test that exporting peak boundaries and then importing them leads to no change
@@ -633,17 +634,33 @@ namespace pwiz.SkylineTest
                 ++i;
             }
             int j = 0;
-            foreach (TransitionGroupDocNode groupNode in docNew.MoleculeTransitionGroups)
+            foreach (var peptideNode in docNew.Molecules)
+            foreach (var groupNode in peptideNode.TransitionGroups)
             {
-                var groupChromInfo = groupNode.ChromInfos.ToList()[fileId];
+                // The precursor's chrom infos are rebuilt from the .skyd, since neither it nor its
+                // transitions keep them. What is asserted below - the peak boundaries, the total
+                // area, whether the peak contains an identification - is what they hold.
+                var groupChromInfos = new MoleculeResults(docNew.Settings, peptideNode)
+                    .GetTransitionGroupChromInfos(groupNode.TransitionGroup);
+                var groupChromInfo = groupChromInfos.SelectMany(chromInfoList => chromInfoList).ToList()[fileId];
                 // Make sure charge on each transition group is correct
                 AssertEx.AreEqual(groupNode.TransitionGroup.PrecursorAdduct.AdductCharge, chargeList[j]);
                 // Make sure imported retention time boundaries, including nulls, are correct
-                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE));
-                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE));
+                var columnarBounds = groupNode.AbbreviatedResults?.FindPrecursorPeakBounds(0,
+                    groupChromInfo.FileId);
+                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE),
+                    string.Format("Start time {0} expected {1} for {2} ({3}); columnar {4}-{5} chosen {6}",
+                        groupChromInfo.StartRetentionTime, minTime[j], groupNode.TransitionGroup.Peptide, j,
+                        columnarBounds?.StartTime, columnarBounds?.EndTime,
+                        groupNode.AbbreviatedResults?.FindChosenPeakIndex(0, groupChromInfo.FileId)));
+                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE),
+                    string.Format("End time {0} expected {1} for {2} ({3})", groupChromInfo.EndRetentionTime,
+                        maxTime[j], groupNode.TransitionGroup.Peptide, j));
                 // Check that peak areas are updated correctly
                 double peakArea = peakAreas[j] ?? 0;
-                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE*peakArea));
+                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE*peakArea),
+                    string.Format("Area {0} expected {1} for {2} ({3})", groupChromInfo.Area, peakAreas[j],
+                        groupNode.TransitionGroup.Peptide, j));
                 // Check that identified values are preserved/updated appropriately
                 AssertEx.IsTrue(groupChromInfo.Identified == identified[j],
                     string.Format("No identification match for {0}  ({1})", groupNode.TransitionGroup.Peptide, j));

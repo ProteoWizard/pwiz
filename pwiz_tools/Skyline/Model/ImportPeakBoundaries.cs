@@ -594,8 +594,14 @@ namespace pwiz.Skyline.Model
                         }
 
                         // Loop over the files in this groupNode to find the correct sample
-                        // Change peak boundaries for the transition group
-                        if (!groupNode.ChromInfos.Any(info => ReferenceEquals(info.FileId, fileId)))
+                        // Change peak boundaries for the transition group.
+                        // Whether the precursor has a peak in this file is in the columnar results,
+                        // which is where a precursor keeps that now: asking its chrom infos meant
+                        // asking a list which is empty once they have been given up, so every
+                        // boundary in the file was skipped and the import did nothing.
+                        var groupResultsFound = groupNode.AbbreviatedResults;
+                        if (groupResultsFound == null ||
+                            groupResultsFound.ChromFileIds.IndexOfFile(replicateIndex, fileId) < 0)
                         {
                             continue;
                         }

@@ -893,7 +893,12 @@ namespace pwiz.Skyline.Model.Results
             var groupResults = (nodeGroupNew.AbbreviatedResults ?? TransitionGroupResults.Empty)
                 .UpdateTransitionsFromChromInfos(nodeGroupNew.ChildrenIndex, chromInfosByTransition);
             nodeGroupNew = ConvertResults(nodeGroupNew.ChangeAbbreviatedResults(groupResults));
-            return ReferenceEquals(nodeGroup, nodeGroupNew)
+            // Compared by value, because this rebuilds the precursor's results whatever the change
+            // turns out to be: setting a peak to the boundaries it already has arrives here with a
+            // new object holding the same peaks. A caller which then replaces the child would hand
+            // back a document which differs from the one it was given in nothing but identity -
+            // which is what importing the same peak boundaries twice does.
+            return Equals(nodeGroup, nodeGroupNew)
                 ? PeptideDocNode
                 : (PeptideDocNode) PeptideDocNode.ReplaceChild(nodeGroupNew);
         }
@@ -1251,7 +1256,8 @@ namespace pwiz.Skyline.Model.Results
                 ? chromInfos[replicateIndex]
                 : default;
             var listCalculator = new TransitionGroupDocNode.TransitionGroupChromInfoListCalculator(Settings,
-                PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos);
+                PeptideDocNode, replicateIndex, nodeGroup.TransitionCount, previousChromInfos,
+                nodeGroup.AbbreviatedResults, replicateIndex);
             for (int iTran = 0; iTran < nodeGroup.Children.Count; iTran++)
             {
                 listCalculator.AddChromInfoList((TransitionDocNode) nodeGroup.Children[iTran], chromInfoLists[iTran]);
