@@ -2587,7 +2587,17 @@ namespace pwiz.Skyline.Model
                 }
                 _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(Settings, _nodePep,
                     iResult, transitionCount, listChromInfo, _nodeGroup.AbbreviatedResults));
+
+                // Whether this replicate's chromatograms were there to be read. A replicate which
+                // could not be read says nothing about the peaks - see UpdateTransitionGroupNode -
+                // while one which was read and matched nothing says the precursor has none.
+                var measuredResults = Settings.MeasuredResults;
+                _allReplicatesRead = _allReplicatesRead &&
+                                     iResult < measuredResults.Chromatograms.Count &&
+                                     measuredResults.Chromatograms[iResult].IsLoadedAndAvailable(measuredResults);
             }
+
+            private bool _allReplicatesRead = true;
 
             public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
             {
@@ -2643,16 +2653,28 @@ namespace pwiz.Skyline.Model
                 var chromInfosOld = nodeGroup.AbbreviatedResults?.LegacyChromInfos;
                 var results = Results<TransitionGroupChromInfo>.Merge(chromInfosOld, listChromInfoLists);
 
-                // A pass which worked nothing out has nothing to say about the peaks, and must not
-                // replace what the document was read with - the same care
-                // TransitionGroupResults.UpdateTransitionFromChromInfos takes at the transition
-                // level. Replacing the chrom infos is what discards the columnar results derived
-                // from them, so without this a settings change made while the .skyd was not loaded
-                // would empty every precursor of the document.
-                bool anythingWorkedOut = listChromInfoLists.Any(chromInfoList => chromInfoList != null);
+                // A pass which worked nothing out because it had nothing to read has nothing to say
+                // about the peaks, and must not replace what the document was read with - the same
+                // care TransitionGroupResults.UpdateTransitionFromChromInfos takes at the
+                // transition level. Replacing the chrom infos is what discards the columnar results
+                // derived from them, so without this a settings change made while the .skyd was not
+                // loaded would empty every precursor of the document.
+                //
+                // A pass which read every replicate and still found nothing is a different thing:
+                // it has looked, and the precursor has no peak, so its results go.
+                bool nothingToRead = !_allReplicatesRead &&
+                                     !listChromInfoLists.Any(chromInfoList => chromInfoList != null);
+
+                // Results covering a different set of replicates than the document has cannot be
+                // kept whatever the pass found, because everything downstream indexes the two
+                // against each other.
+                bool sameReplicates =
+                    (nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0) ==
+                    Settings.MeasuredResults.Chromatograms.Count;
 
                 var nodeGroupNew = nodeGroup;
-                if (anythingWorkedOut && !Results<TransitionGroupChromInfo>.EqualsDeep(results, chromInfosOld))
+                if ((!nothingToRead || !sameReplicates) &&
+                    !Results<TransitionGroupChromInfo>.EqualsDeep(results, chromInfosOld))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
                 // Filled in rather than replaced. Replacing the chrom infos above is what discards
