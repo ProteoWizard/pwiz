@@ -13,3 +13,8 @@
 # staged whatever binaries already existed and reported success. Checkouts with
 # core.autocrlf=true happened to be immune, which is why CI never saw it.
 *.bat text eol=crlf
+
+# Fixtures copied verbatim out of the cpp tests are reference data, not source: the whole point
+# is that they are the same bytes pwiz C++ parses, so line endings must survive a checkout
+# unchanged on every platform.
+pwiz-sharp/pwiz/test/**/TestData/** -text
