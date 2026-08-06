@@ -96,23 +96,27 @@ namespace pwiz.Osprey.Test
             // full resume, where FirstJoin skipped its score pass and reported off the resident
             // entries, and FirstJoin's rehydrate now streams that report instead.
             //
-            // Pinned on the MESSAGE, not just on non-null. Asserting "some error" across a
-            // list of tokens looks thorough and proves nothing here: mdiag has no trigger at
-            // all, so ResidentPoolTrigger returns null and ResidentPoolGuardError returns the
-            // generic "not one of the paths known to be unfixed" refusal BEFORE it ever
-            // consults the token. Every token therefore yields the identical string, and the
-            // loop would stay green with ModelDiagnostics = false.
+            // Pinned on what the message MEANS, not on its prose. Two things have to hold,
+            // and neither is "some error came back": mdiag has no trigger at all, so
+            // ResidentPoolTrigger returns null and the refusal is the generic one issued
+            // BEFORE any token is consulted - a bare non-null assertion would stay green even
+            // with ModelDiagnostics = false.
             //
-            // The claim worth pinning is that mdiag reaches the resident pool by NO named
-            // route, and the generic refusal IS that claim: it is the branch taken when the
-            // trigger chain produced no token to offer. If someone re-arms mdiag onto an
-            // already-legal token, this message changes to the one naming that token and the
-            // assertion fails.
+            // 1. The refusal NAMES NO TOKEN. That is exactly "no named route admits mdiag":
+            //    the tokened refusal always carries OSPREY_ALLOW_UNFIXED_RESIDENT=<token>, so
+            //    if someone re-arms mdiag onto an already-legal token the message gains that
+            //    token and this fails. Asserting the absence of every legal token says it
+            //    without pinning a sentence, which would break on any rewording.
+            // 2. The disposition does not CHANGE under any token, which the absence check
+            //    alone does not cover.
             var mdiag = new OspreyConfig { ModelDiagnostics = true };
             string mdiagErr = PerFileScoringTask.ResidentPoolGuardError(mdiag, true, null, true);
-            StringAssert.Contains(mdiagErr, "not one of the paths known to be unfixed");
+            StringAssert.Contains(mdiagErr, "OSPREY_ALLOW_UNFIXED_RESIDENT");
             foreach (string token in ResidentPaths.KNOWN_UNFIXED)
             {
+                Assert.IsFalse(mdiagErr.Contains(token),
+                    string.Format("--model-diagnostics refusal names token '{0}', so that " +
+                                  "token now admits it", token));
                 Assert.AreEqual(mdiagErr,
                     PerFileScoringTask.ResidentPoolGuardError(mdiag, true, token, true),
                     string.Format("--model-diagnostics changed disposition under token '{0}'", token));
