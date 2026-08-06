@@ -168,12 +168,15 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(2, peptideNode.TransitionGroupCount);
                     var groupList = peptideNode.TransitionGroups.ToList();
                     var lightGroup = groupList[0];
-                    var heavyGroup = groupList[0];
-                    var lightChromInfo = lightGroup.ChromInfos.ToList()[0];
-                    var heavyChromInfo = heavyGroup.ChromInfos.ToList()[0];
-                    Assert.AreEqual(lightChromInfo.StartRetentionTime, heavyChromInfo.StartRetentionTime);
-                    Assert.AreEqual(lightChromInfo.EndRetentionTime, heavyChromInfo.EndRetentionTime);
-                    Assert.AreEqual(lightChromInfo.RetentionTime, heavyChromInfo.RetentionTime);
+                    var heavyGroup = groupList[1];
+                    // The peaks are the precursor's columnar results, which hold no chrom infos
+                    var lightPeak = lightGroup.AbbreviatedResults.Peaks.FlatValues[0];
+                    var heavyPeak = heavyGroup.AbbreviatedResults.Peaks.FlatValues[0];
+                    // The boundaries are what the two label types share. The apex is not: each one
+                    // has its own within those boundaries. This used to compare the light precursor
+                    // with itself, which is why it could ask about the apex as well.
+                    Assert.AreEqual(lightPeak.StartTime, heavyPeak.StartTime);
+                    Assert.AreEqual(lightPeak.EndTime, heavyPeak.EndTime);
                 }
 
                 // 8. Verify that chosen peaks and q values are the same as those in mProphet paper: 

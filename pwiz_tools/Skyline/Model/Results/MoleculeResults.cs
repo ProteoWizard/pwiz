@@ -1105,7 +1105,30 @@ namespace pwiz.Skyline.Model.Results
                                   !(peakChange.PreserveMissingPeaks && transitionPeaks[iTran]?.IsEmpty != false);
                 if (isChanging)
                 {
-                    userSet = peakChange.UserSet;
+                    // A change which asks for the peak the transition already has is not a change:
+                    // the peak stays as it was, and so does its user set, so that importing
+                    // boundaries and reintegrating do not reset each other when the boundaries are
+                    // no different. This is the rule TransitionDocNode.ChangePeak applied while a
+                    // transition still kept a chrom info to compare against. Reintegrating the same
+                    // boundaries again is not free of consequence without it: the peak comes back
+                    // from integrating the chromatogram rather than from the candidate peak the
+                    // .skyd holds, and the two agree to a tolerance rather than exactly.
+                    var chromatogramStepZero = optStepChromatograms[iTran].GetChromatogramForStep(0);
+                    var peakUnchanged = new TransitionChromInfo(fileId, 0,
+                        GetChromPeak(nodeGroup, nodeTran, replicateIndex, fileId, 0, chromatogramStepZero,
+                            chosenPeakIndex, peakBounds, peakMetrics),
+                        IonMobilityFilter.EMPTY, annotations, userSet);
+                    if (userSet.IsOverride(peakChange.UserSet) ||
+                        !peakUnchanged.EquivalentTolerant(fileId, 0,
+                            peakChange.GetChromPeak(this, nodeGroup, nodeTran, replicateIndex, fileId, 0,
+                                chromatogramStepZero)))
+                    {
+                        userSet = peakChange.UserSet;
+                    }
+                    else
+                    {
+                        isChanging = false;
+                    }
                 }
 
                 int stepCount = optStepChromatograms[iTran].StepCount;
