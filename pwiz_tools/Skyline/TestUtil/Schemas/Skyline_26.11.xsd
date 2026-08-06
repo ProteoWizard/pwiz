@@ -1900,10 +1900,12 @@
   <xs:complexType name="peptide_result_type">
     <xs:complexContent>
       <xs:extension base="measured_result_type">
-        <xs:attribute name="peak_count_ratio" type="xs:double" use="required">
+        <xs:attribute name="peak_count_ratio" type="xs:double" use="optional">
           <xs:annotation>
             <xs:documentation>
               Average peak count ratio (proportion of transition peaks) of all the precursors of a peptide in a single sample file.
+              Optional: a document which records its peaks as areas and retention times rather than as
+              complete chrom infos leaves this out, because it is worked out from the transitions.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -1957,9 +1959,18 @@
         <xs:attribute name="zscore" type="xs:float"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
         <xs:attribute name="original_score" type="xs:float"/>
+        <!-- Which of the candidate peaks in the .skyd this peak is, or -1 when it is none of
+             them. Its presence is what says the document knows, so it is always written. -->
+        <xs:attribute name="chosen_peak_index" type="xs:integer" use="optional"/>
+        <!-- The areas of the precursor's transitions, in the order of its children, written here
+             rather than on each transition when that is all a transition has to say. -->
+        <xs:attribute name="transition_areas" type="float_list" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:simpleType name="float_list">
+    <xs:list itemType="xs:float"/>
+  </xs:simpleType>
   <xs:complexType name="transition_peak_type">
     <xs:complexContent>
       <xs:extension base="measured_result_type">
