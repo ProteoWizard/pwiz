@@ -318,6 +318,22 @@
     </Content>
   </ItemGroup>
 
+  <!-- MS Amanda's bundled percolator.exe imports vcruntime140_1.dll, which its own zip does not
+       ship (it carries vcruntime140.dll, msvcp140.dll, concrt140.dll, vcomp140.dll and xerces).
+       On a machine with the VC++ 2015-2022 x64 redistributable installed the loader finds it in
+       System32; on a freshly provisioned CI agent it does not, percolator fails to start, and MS
+       Amanda writes an mzIdentML with no q-values at all - which only surfaces two steps later as
+       BlibBuild's "unsupported score type". Ship the DLL so MSAmandaSearchWrapper can stage it
+       next to percolator.exe after the tool is unzipped. Same app-local pattern the Agilent
+       reader uses for the VC120 runtime (see Agilent.csproj). -->
+  <ItemGroup>
+    <Content Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcruntime140_1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>vcruntime140_1.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
   <!-- SkylineProcessRunner (tiny console helper Skyline shells out to, often elevated, to run a
        command via cmd.exe and stream output back over a named pipe - used by the R/Python/tool
        installers). Skyline resolves SkylineProcessRunner.exe from its own assembly directory

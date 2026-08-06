@@ -197,6 +197,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             _intermediateFiles = new List<string>();
             CurrentFile = 0;
 
+            StagePercolatorRuntime();
+
             try
             {
                 foreach (var rawFileName in SpectrumFileNames)
@@ -278,6 +280,15 @@ namespace pwiz.Skyline.Model.DdaSearch
                             DdaSearchResources.DdaSearch_Search_failed__0,
                             $@"MSAmanda did not produce expected output {outputMzidGz}"));
 
+                    // Percolator is what scores these results (RunPercolator is set in the settings we
+                    // write), and only the PSMs it scored carry a q-value. If none of them do, the search
+                    // produced nothing a library can be built from, and the reason is here rather than in
+                    // the reader that rejects the file later.
+                    if (!HasPercolatorQValues(outputMzidGz))
+                        throw new IOException(string.Format(
+                            DdaSearchResources.MSAmandaSearchWrapper_Run_No_Percolator_q_values,
+                            Path.GetFileName(outputMzidGz), PercolatorDirectory));
+
                     CurrentFile++;
                     _progressStatus = _progressStatus.NextSegment();
                 }
@@ -309,6 +320,71 @@ namespace pwiz.Skyline.Model.DdaSearch
             UpdateProgress(_progressStatus);
 
             return _success;
+        }
+
+        /// <summary>MS Amanda's bundled Percolator, which it runs itself (see BuildSettingsXml).</summary>
+        private static string PercolatorDirectory => Path.Combine(MSAmandaDirectory, @"percolator");
+
+        // percolator.exe imports vcruntime140_1.dll, which MS Amanda's zip does not ship alongside the
+        // rest of the VC runtime it does bundle. Where the VC++ 2015-2022 x64 redistributable is
+        // installed the loader finds it in System32 and nobody notices; where it is not - a freshly
+        // provisioned machine - percolator cannot start, MS Amanda carries on, and the results come out
+        // with no q-values. Microsoft supports app-local deployment of the runtime, so put our copy
+        // beside the exe rather than requiring a machine-wide install.
+        private static readonly string PERCOLATOR_MISSING_DLL = @"vcruntime140_1.dll";
+
+        private void StagePercolatorRuntime()
+        {
+            try
+            {
+                if (!Directory.Exists(PercolatorDirectory))
+                    return; // No percolator to stage for; MS Amanda will report its own problem.
+
+                string destination = Path.Combine(PercolatorDirectory, PERCOLATOR_MISSING_DLL);
+                if (File.Exists(destination))
+                    return;
+
+                string source = Path.Combine(
+                    Path.GetDirectoryName(typeof(MSAmandaSearchWrapper).Assembly.Location) ?? string.Empty,
+                    PERCOLATOR_MISSING_DLL);
+                if (File.Exists(source))
+                    File.Copy(source, destination);
+            }
+            catch (Exception e)
+            {
+                // Staging is best-effort: the machine may already have the redistributable, and if it
+                // does not, the missing q-values are reported after the search with a better message.
+                Messages.WriteAsyncDebugMessage(@"Could not stage {0} for percolator: {1}",
+                    PERCOLATOR_MISSING_DLL, e.Message);
+            }
+        }
+
+        // The q-value accessions BiblioSpec accepts from an mzIdentML: percolator:Q value and the
+        // generic PSM-level q-value. MS Amanda writes one of these only for Percolator-scored PSMs;
+        // everything else carries just Amanda:AmandaScore, which no library build can use.
+        private static readonly string[] QVALUE_ACCESSIONS = { @"MS:1001491", @"MS:1002354" };
+
+        internal static bool HasPercolatorQValues(string mzidGzPath)
+        {
+            using var file = File.OpenRead(mzidGzPath);
+            using var gzip = new GZipStream(file, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzip, Encoding.UTF8);
+
+            // Read in chunks rather than lines: an mzIdentML is not guaranteed to be pretty-printed,
+            // and one long line would otherwise be buffered whole. Carry the tail between reads so an
+            // accession split across a boundary is still found.
+            int carryLength = QVALUE_ACCESSIONS.Max(a => a.Length);
+            var buffer = new char[64 * 1024];
+            var carry = string.Empty;
+            int read;
+            while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                var text = carry + new string(buffer, 0, read);
+                if (QVALUE_ACCESSIONS.Any(a => text.IndexOf(a, StringComparison.Ordinal) >= 0))
+                    return true;
+                carry = text.Length > carryLength ? text.Substring(text.Length - carryLength) : text;
+            }
+            return false;
         }
 
         // Captures the opening <spectrum ...> tag's id attribute as three groups:

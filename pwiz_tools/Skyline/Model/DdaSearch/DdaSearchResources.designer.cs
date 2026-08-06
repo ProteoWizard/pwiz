@@ -358,6 +358,15 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS Amanda produced no Percolator q-values in {0}, so no library can be built from this search. Percolator may have failed to start: check that it can run from {1}..
+        /// </summary>
+        public static string MSAmandaSearchWrapper_Run_No_Percolator_q_values {
+            get {
+                return ResourceManager.GetString("MSAmandaSearchWrapper_Run_No_Percolator_q_values", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Converting file &quot;{0}&quot; to {1}.
         /// </summary>
         public static string MsconvertDdaConverter_Run_Converting_file___0___to__1_ {
