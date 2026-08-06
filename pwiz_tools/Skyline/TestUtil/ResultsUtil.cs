@@ -417,7 +417,10 @@ namespace pwiz.SkylineTestUtil
                         {
                             var annotations = groupResults.GetAnnotations(position);
                             if (annotations.Note != null)
+                            {
                                 NoteCount++;
+                                PrecursorNoteCount++;
+                            }
                             if (annotations.ListAnnotations().Length > 0)
                                 AnnotationCount++;
                         }
@@ -440,7 +443,10 @@ namespace pwiz.SkylineTestUtil
                                 var annotations = groupResults.FindTransitionAnnotations(nodeTran.Transition,
                                     replicateIndex, entry.Key);
                                 if (annotations.Note != null)
+                                {
                                     NoteCount++;
+                                    TransitionNoteCount++;
+                                }
                                 if (annotations.ListAnnotations().Length > 0)
                                     AnnotationCount++;
                                 if (entry.Value.UserSet == UserSet.TRUE)
@@ -473,6 +479,13 @@ namespace pwiz.SkylineTestUtil
         public int TransitionResults { get; private set; }
         public int UserSetCount { get; private set; }
         public int NoteCount { get; private set; }
+
+        /// <summary>
+        /// The <see cref="NoteCount"/> split by the level the note is on, so that a document
+        /// which has lost notes says which kind it lost.
+        /// </summary>
+        public int PrecursorNoteCount { get; private set; }
+        public int TransitionNoteCount { get; private set; }
         public int AnnotationCount { get; private set; }
     }
 

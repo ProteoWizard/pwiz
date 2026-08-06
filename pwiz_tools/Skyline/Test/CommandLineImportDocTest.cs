@@ -178,7 +178,11 @@ namespace pwiz.SkylineTest
             var stateAdded = new DocResultsState(docAdded);
             var state = new DocResultsState(doc);
             Assert.IsTrue(stateAdd.HasResults && stateAdded.HasResults);
-            Assert.AreEqual(stateAdd.NoteCount, state.NoteCount + stateAdded.NoteCount);
+            Assert.AreEqual(stateAdd.NoteCount, state.NoteCount + stateAdded.NoteCount,
+                @"merged precursor/transition notes {0}/{1}, from {2}/{3} and {4}/{5}",
+                stateAdd.PrecursorNoteCount, stateAdd.TransitionNoteCount,
+                state.PrecursorNoteCount, state.TransitionNoteCount,
+                stateAdded.PrecursorNoteCount, stateAdded.TransitionNoteCount);
             Assert.AreEqual(stateAdd.AnnotationCount, state.AnnotationCount + stateAdded.AnnotationCount);
             Assert.AreEqual(stateAdd.UserSetCount, state.UserSetCount + stateAdded.UserSetCount);
             // Because the data in the two documents actually cover the same results,

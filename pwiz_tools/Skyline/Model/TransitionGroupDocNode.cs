@@ -412,6 +412,32 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// This precursor with the peaks of the replicates a pass could not read taken from
+        /// <paramref name="oldResults"/>. Entry i of <paramref name="oldReplicateIndexes"/> is the
+        /// replicate of <paramref name="oldResults"/> which holds this precursor's replicate i, or
+        /// -1 for one the pass read and worked out for itself. See
+        /// <see cref="TransitionGroupResults.KeepReplicates"/> for what it is for.
+        /// </summary>
+        public TransitionGroupDocNode KeepReplicates(TransitionGroupResults oldResults,
+            IList<int> oldReplicateIndexes)
+        {
+            var results = AbbreviatedResults ?? TransitionGroupResults.Empty;
+            var resultsNew = results.KeepReplicates(oldResults, oldReplicateIndexes).ReorderTransitions(ChildrenIndex);
+            if (Equals(AbbreviatedResults, resultsNew) && ResultsReplicateCount == oldReplicateIndexes.Count)
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.AbbreviatedResults = resultsNew;
+                im._emptyResults =
+                    new Results<TransitionGroupChromInfo>(
+                        new ChromInfoList<TransitionGroupChromInfo>[oldReplicateIndexes.Count]);
+            });
+        }
+
+        /// <summary>
         /// Returns this node when the results are the ones it already has, because a document which
         /// has not changed has to stay reference equal.
         /// </summary>
@@ -2592,12 +2618,18 @@ namespace pwiz.Skyline.Model
                 // could not be read says nothing about the peaks - see UpdateTransitionGroupNode -
                 // while one which was read and matched nothing says the precursor has none.
                 var measuredResults = Settings.MeasuredResults;
-                _allReplicatesRead = _allReplicatesRead &&
-                                     iResult < measuredResults.Chromatograms.Count &&
+                bool replicateRead = iResult < measuredResults.Chromatograms.Count &&
                                      measuredResults.Chromatograms[iResult].IsLoadedAndAvailable(measuredResults);
+                _oldReplicateIndexes.Add(replicateRead ? -1 : iResultOldSet);
             }
 
-            private bool _allReplicatesRead = true;
+            /// <summary>
+            /// Which replicate of the results the precursor came in with holds each replicate the
+            /// new settings have, or -1 for one this pass read and so worked out for itself. What
+            /// <see cref="TransitionGroupResults.KeepReplicates"/> needs to keep, and move, the
+            /// peaks of a replicate whose chromatograms could not be read.
+            /// </summary>
+            private readonly List<int> _oldReplicateIndexes = new List<int>();
 
             public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
             {
@@ -2653,28 +2685,8 @@ namespace pwiz.Skyline.Model
                 var chromInfosOld = nodeGroup.AbbreviatedResults?.LegacyChromInfos;
                 var results = Results<TransitionGroupChromInfo>.Merge(chromInfosOld, listChromInfoLists);
 
-                // A pass which worked nothing out because it had nothing to read has nothing to say
-                // about the peaks, and must not replace what the document was read with - the same
-                // care TransitionGroupResults.UpdateTransitionFromChromInfos takes at the
-                // transition level. Replacing the chrom infos is what discards the columnar results
-                // derived from them, so without this a settings change made while the .skyd was not
-                // loaded would empty every precursor of the document.
-                //
-                // A pass which read every replicate and still found nothing is a different thing:
-                // it has looked, and the precursor has no peak, so its results go.
-                bool nothingToRead = !_allReplicatesRead &&
-                                     !listChromInfoLists.Any(chromInfoList => chromInfoList != null);
-
-                // Results covering a different set of replicates than the document has cannot be
-                // kept whatever the pass found, because everything downstream indexes the two
-                // against each other.
-                bool sameReplicates =
-                    (nodeGroup.AbbreviatedResults?.ChromFileIds.ReplicatePositions.ReplicateCount ?? 0) ==
-                    Settings.MeasuredResults.Chromatograms.Count;
-
                 var nodeGroupNew = nodeGroup;
-                if ((!nothingToRead || !sameReplicates) &&
-                    !Results<TransitionGroupChromInfo>.EqualsDeep(results, chromInfosOld))
+                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, chromInfosOld))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
                 // Filled in rather than replaced. Replacing the chrom infos above is what discards
@@ -2697,6 +2709,15 @@ namespace pwiz.Skyline.Model
                 // precursor with no results at all avoids being given an empty set of them.
                 if (!ReferenceEquals(groupResultsNew, groupResults))
                     nodeGroupNew = nodeGroupNew.ChangeAbbreviatedResults(groupResultsNew);
+
+                // A replicate whose chromatograms could not be read has had nothing worked out for
+                // it above, and what this pass has not worked out it must not throw away: the peaks
+                // the precursor came in with stand, moved to wherever the new settings hold that
+                // replicate. Without this, a settings change made while the .skyd was not loaded
+                // would empty every precursor of the document, and importing one document into
+                // another - where the imported document's .skyd has not been read yet - would drop
+                // every peak the imported document brought with it.
+                nodeGroupNew = nodeGroupNew.KeepReplicates(nodeGroup.AbbreviatedResults, _oldReplicateIndexes);
 
                 // The chrom infos the columnar results are still holding on to can only be got rid
                 // of by looking at the candidate peaks in the .skyd, which is what MoleculeResults

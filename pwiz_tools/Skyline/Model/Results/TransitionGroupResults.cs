@@ -473,6 +473,154 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// Where one position of a combined set of results comes from: a replicate the pass could
+        /// read, or one it could not and so keeps what the precursor already had.
+        /// </summary>
+        private readonly struct PositionSource
+        {
+            public PositionSource(bool fromOld, int replicateIndex, int position)
+            {
+                FromOld = fromOld;
+                ReplicateIndex = replicateIndex;
+                Position = position;
+            }
+
+            public bool FromOld { get; }
+
+            /// <summary>
+            /// The replicate this came from, in the results it came from. What the maps which are
+            /// not laid out by the same positions as the peaks have to be looked up by - see
+            /// <see cref="TransitionResults.Annotations"/>.
+            /// </summary>
+            public int ReplicateIndex { get; }
+            public int Position { get; }
+        }
+
+        /// <summary>
+        /// These results with the replicates a pass could not read taken from
+        /// <paramref name="oldResults"/> instead. Entry i of <paramref name="oldReplicateIndexes"/>
+        /// is the replicate of <paramref name="oldResults"/> which holds new replicate i's peaks,
+        /// or -1 for a replicate the pass read and so worked out for itself.
+        /// <para>
+        /// A pass which cannot read a replicate's chromatograms has nothing to say about its peaks,
+        /// and the peaks the precursor already had stand. They have to be moved as well as kept,
+        /// because the replicate they belong to need not be at the same index: importing one
+        /// document into another appends the imported document's replicates, so the peaks the
+        /// imported precursors bring with them belong to the appended ones. Without this, importing
+        /// a document into another drops every peak the imported document brought.
+        /// </para>
+        /// <para>
+        /// No peak changes here. A peak belongs to a file, and moving the file from one document to
+        /// another does not remeasure it.
+        /// </para>
+        /// </summary>
+        public TransitionGroupResults KeepReplicates(TransitionGroupResults oldResults,
+            IList<int> oldReplicateIndexes)
+        {
+            if (oldResults == null || !oldReplicateIndexes.Any(index => index >= 0))
+            {
+                return this;
+            }
+
+            var sources = CombinePositions(ChromFileIds.ReplicatePositions,
+                oldResults.ChromFileIds.ReplicatePositions, oldReplicateIndexes, out var counts);
+            var chromFileIds = new ChromFileIds(ReplicatePositions.FromCounts(counts),
+                sources.Select(source => (source.FromOld ? oldResults : this).ChromFileIds
+                    .FileIds[source.Position].Value));
+            var results = new TransitionGroupResults(chromFileIds,
+                    CombineValues(Peaks, oldResults.Peaks, sources, default(PrecursorPeak)))
+                .ChangeUserSets(CombineValues(UserSets, oldResults.UserSets, sources, UserSet.FALSE))
+                .ChangeQValues(CombineValues(QValues, oldResults.QValues, sources, float.NaN))
+                .ChangeZScores(CombineValues(ZScores, oldResults.ZScores, sources, float.NaN))
+                .ChangeAnnotations(CombineValues(Annotations, oldResults.Annotations, sources,
+                    Model.Annotations.EMPTY))
+                .ChangeOriginalPeakIndexes(CombineValues(OriginalPeakIndexes, oldResults.OriginalPeakIndexes,
+                    sources, PrecursorPeak.NO_PEAK_INDEX))
+                .ChangeReintegratedPeakIndexes(CombineValues(ReintegratedPeakIndexes,
+                    oldResults.ReintegratedPeakIndexes, sources, PrecursorPeak.NO_PEAK_INDEX))
+                // The kept peaks are as unconverted as they ever were: nothing read a chromatogram
+                // to work out which candidate peak they are.
+                .ChangeNeedsPeakIndexes(NeedsPeakIndexes || oldResults.NeedsPeakIndexes)
+                .ChangeTransitions(TransitionIndexes, TransitionIndexes.Identities
+                    .Select((identity, index) => CombineTransitionResults(GetTransitionResults(index),
+                        oldResults.GetTransitionResults((Transition) identity), oldReplicateIndexes)));
+            if (LegacyChromInfos != null || oldResults.LegacyChromInfos != null)
+            {
+                results = results.ChangeLegacyChromInfos(new Results<TransitionGroupChromInfo>(
+                    oldReplicateIndexes.Select((oldReplicateIndex, replicateIndex) => oldReplicateIndex < 0
+                        ? GetLegacyChromInfos(LegacyChromInfos, replicateIndex)
+                        : GetLegacyChromInfos(oldResults.LegacyChromInfos, oldReplicateIndex)).ToArray()));
+            }
+
+            return results;
+        }
+
+        private static ChromInfoList<TransitionGroupChromInfo> GetLegacyChromInfos(
+            Results<TransitionGroupChromInfo> chromInfos, int replicateIndex)
+        {
+            return chromInfos == null || replicateIndex < 0 || replicateIndex >= chromInfos.Count
+                ? default
+                : chromInfos[replicateIndex];
+        }
+
+        private static TransitionResults CombineTransitionResults(TransitionResults newResults,
+            TransitionResults oldResults, IList<int> oldReplicateIndexes)
+        {
+            if (oldResults == null)
+            {
+                return newResults;
+            }
+
+            return (newResults ?? new TransitionResults(ChromFileIds.Empty, new TransitionPeak[0]))
+                .KeepReplicates(oldResults, oldReplicateIndexes);
+        }
+
+        /// <summary>
+        /// Which position of which of the two sets of results holds each position of the combined
+        /// results, and how many of them land in each replicate. A replicate the pass read comes
+        /// from the new results at the same index; one it could not comes from the old results at
+        /// the index <paramref name="oldReplicateIndexes"/> gives.
+        /// </summary>
+        private static IList<PositionSource> CombinePositions(ReplicatePositions newPositions,
+            ReplicatePositions oldPositions, IList<int> oldReplicateIndexes, out IList<int> counts)
+        {
+            var sources = new List<PositionSource>();
+            var countList = new List<int>();
+            for (int replicateIndex = 0; replicateIndex < oldReplicateIndexes.Count; replicateIndex++)
+            {
+                int oldReplicateIndex = oldReplicateIndexes[replicateIndex];
+                bool fromOld = oldReplicateIndex >= 0;
+                var positions = fromOld ? oldPositions : newPositions;
+                int index = fromOld ? oldReplicateIndex : replicateIndex;
+                int count = index >= positions.ReplicateCount ? 0 : positions.GetCount(index);
+                for (int i = 0; i < count; i++)
+                {
+                    sources.Add(new PositionSource(fromOld, index, positions.GetStart(index) + i));
+                }
+
+                countList.Add(count);
+            }
+
+            counts = countList;
+            return sources;
+        }
+
+        private static IEnumerable<TValue> CombineValues<TValue>(ChromFileIdMap<TValue> newMap,
+            ChromFileIdMap<TValue> oldMap, IList<PositionSource> sources, TValue defaultValue)
+        {
+            if (newMap == null && oldMap == null)
+            {
+                return null;
+            }
+
+            return sources.Select(source =>
+            {
+                var map = source.FromOld ? oldMap : newMap;
+                return map == null ? defaultValue : map.FlatValues[source.Position];
+            });
+        }
+
+        /// <summary>
         /// Whether one of the precursor's transitions has any results.
         /// </summary>
         public bool HasTransitionResults(Transition transition)
@@ -1526,6 +1674,49 @@ namespace pwiz.Skyline.Model.Results
             /// </para>
             /// </summary>
             public ChromFileIdMap<CustomPeakMetrics> CustomPeakMetrics { get; private set; }
+
+            /// <summary>
+            /// The transition level counterpart of <see cref="TransitionGroupResults.KeepReplicates"/>,
+            /// combined through their own positions rather than the precursor's, because a
+            /// transition need not have a peak everywhere the precursor does.
+            /// </summary>
+            public TransitionResults KeepReplicates(TransitionResults oldResults,
+                IList<int> oldReplicateIndexes)
+            {
+                var sources = CombinePositions(ChromFileIds.ReplicatePositions,
+                    oldResults.ChromFileIds.ReplicatePositions, oldReplicateIndexes, out var counts);
+                var chromFileIds = new ChromFileIds(ReplicatePositions.FromCounts(counts),
+                    sources.Select(source => GetFileId(source, oldResults)));
+                return new TransitionResults(chromFileIds,
+                    CombineValues(Peaks, oldResults.Peaks, sources, default(TransitionPeak)),
+                    // By replicate and file rather than by position: these three are maps in their
+                    // own right, and a position in one of them means nothing in the peaks.
+                    sources.Select(source => Find(source, Annotations, oldResults.Annotations,
+                        oldResults, Model.Annotations.EMPTY)),
+                    sources.Select(source => Find(source, CustomPeakBounds, oldResults.CustomPeakBounds,
+                        oldResults, default(CustomPeakBounds))),
+                    sources.Select(source => Find(source, CustomPeakMetrics, oldResults.CustomPeakMetrics,
+                        oldResults, (CustomPeakMetrics) null)));
+            }
+
+            private ChromFileInfoId GetFileId(PositionSource source, TransitionResults oldResults)
+            {
+                return (source.FromOld ? oldResults : this).ChromFileIds.FileIds[source.Position].Value;
+            }
+
+            private TValue Find<TValue>(PositionSource source, ChromFileIdMap<TValue> newMap,
+                ChromFileIdMap<TValue> oldMap, TransitionResults oldResults, TValue defaultValue)
+            {
+                var map = source.FromOld ? oldMap : newMap;
+                if (map == null)
+                {
+                    return defaultValue;
+                }
+
+                return map.TryGetValue(source.ReplicateIndex, GetFileId(source, oldResults), out var value)
+                    ? value
+                    : defaultValue;
+            }
 
             /// <summary>
             /// What quantification needs to know about the peaks of one replicate.
