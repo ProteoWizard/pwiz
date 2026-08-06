@@ -1547,32 +1547,23 @@ namespace pwiz.Skyline.Model
                 }
             }
 
+            /// <summary>
+            /// The molecule unchanged. Everything this pass used to work out is gone: the molecule
+            /// level chrom infos are aggregated from the precursors on demand through a
+            /// <see cref="MoleculeResults"/>, and the two values nothing can work out are already
+            /// in <see cref="PeptideResults"/>, which this does not touch.
+            /// <para>
+            /// What is left is marking a peak <see cref="UserSet.MATCHED"/>, and that is a change
+            /// to a chrom info, which neither a precursor nor a transition has any more. It used to
+            /// hand the empty chrom info lists to
+            /// <see cref="TransitionGroupDocNode.ChangeResults"/>, which rebuilds the columnar
+            /// results from what it is given - so a settings change made while the .skyd was not
+            /// loaded emptied every precursor of the document.
+            /// </para>
+            /// </summary>
             public PeptideDocNode UpdateResults(PeptideDocNode nodePeptide)
             {
-                // The molecule level chrom infos are not worked out here any more. Everything they
-                // held is either aggregated from the precursors on demand through a
-                // MoleculeResults, or - for the two values nothing can work out - already in
-                // PeptideResults, which nothing in this pass changes.
-                var listGroupsNew = new List<DocNode>();
-                foreach (TransitionGroupDocNode nodeGroup in nodePeptide.Children)
-                {
-                    // Update transition group ratios
-                    var nodeGroupConvert = nodeGroup;
-                    bool isMatching = nodeGroup.RelativeRT == RelativeRT.Matching;
-                    var listGroupInfoList = _listResultCalcs.ConvertAll(calc =>
-                        calc.UpdateTransitionGroupUserSetMatched(nodeGroupConvert.GetSafeChromInfo(calc.ResultsIndex),
-                            isMatching));
-                    var resultsGroup = Results<TransitionGroupChromInfo>.Merge(nodeGroup.EmptyResults, listGroupInfoList);
-                    var nodeGroupNew = nodeGroup;
-                    if (!ReferenceEquals(resultsGroup, nodeGroup.EmptyResults))
-                        nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
-
-                    // Only the precursor, because marking a peak MATCHED is a change to a chrom
-                    // info, and a transition has none to change: its peaks are the precursor's
-                    // columnar results, which this pass does not touch.
-                    listGroupsNew.Add(nodeGroupNew);
-                }
-                return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);
+                return nodePeptide;
             }
 
             private List<IList<PeptideChromInfo>> CopyChromInfoAttributes(PeptideDocNode peptideDocNode,

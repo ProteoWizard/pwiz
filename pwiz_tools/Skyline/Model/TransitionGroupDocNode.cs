@@ -2643,8 +2643,16 @@ namespace pwiz.Skyline.Model
                 var chromInfosOld = nodeGroup.AbbreviatedResults?.LegacyChromInfos;
                 var results = Results<TransitionGroupChromInfo>.Merge(chromInfosOld, listChromInfoLists);
 
+                // A pass which worked nothing out has nothing to say about the peaks, and must not
+                // replace what the document was read with - the same care
+                // TransitionGroupResults.UpdateTransitionFromChromInfos takes at the transition
+                // level. Replacing the chrom infos is what discards the columnar results derived
+                // from them, so without this a settings change made while the .skyd was not loaded
+                // would empty every precursor of the document.
+                bool anythingWorkedOut = listChromInfoLists.Any(chromInfoList => chromInfoList != null);
+
                 var nodeGroupNew = nodeGroup;
-                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, chromInfosOld))
+                if (anythingWorkedOut && !Results<TransitionGroupChromInfo>.EqualsDeep(results, chromInfosOld))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
                 // Filled in rather than replaced. Replacing the chrom infos above is what discards

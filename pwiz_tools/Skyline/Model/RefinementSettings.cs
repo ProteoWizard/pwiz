@@ -1115,6 +1115,10 @@ namespace pwiz.Skyline.Model
                             var mzShiftFragment = invertCharges ? -2.0 * BioMassCalc.MassElectron : 0; // We will move proton masses to the fragment and use charge-only adducts
                             Assume.IsTrue(Math.Abs(newTransitionGroupDocNode.PrecursorMz.Value + mzShiftPrecursor - transitionGroupDocNode.PrecursorMz.Value) <= 1E-5);
 
+                            // The old transition each new one stands for, in the order the new ones
+                            // become children. The converted transitions are new identities, so this
+                            // is the only thing which can say whose results are whose.
+                            var convertedFrom = new List<Transition>();
                             foreach (var transition in transitionGroupDocNode.Transitions)
                             {
                                 var mass = TypedMass.ZERO_MONO_MASSH;
@@ -1186,6 +1190,22 @@ namespace pwiz.Skyline.Model
                                 Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz + mzShift - transition.Mz.Value) <= .5 * BioMassCalc.MassElectron, String.Format(@"unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz, transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value));
                                 newTransitionGroupDocNode =
                                     (TransitionGroupDocNode)newTransitionGroupDocNode.Add(newTransitionDocNode);
+                                convertedFrom.Add(transition.Transition);
+                            }
+
+                            // The peaks of the precursor and of every transition, which are the
+                            // columnar results and are all a converted document has: the chrom
+                            // infos above are whatever had not been worked out from the .skyd yet,
+                            // and are null once they have been.
+                            var groupResultsOld = transitionGroupDocNode.AbbreviatedResults;
+                            if (groupResultsOld != null)
+                            {
+                                var groupResultsNew = groupResultsOld.MapTransitions(convertedFrom,
+                                    newTransitionGroupDocNode.ChildrenIndex);
+                                if (resultsNew != null)
+                                    groupResultsNew = groupResultsNew.ChangeLegacyChromInfos(resultsNew);
+                                newTransitionGroupDocNode =
+                                    newTransitionGroupDocNode.ChangeAbbreviatedResults(groupResultsNew);
                             }
                             if (newPeptideDocNode != null)
                                 newPeptideDocNode = (PeptideDocNode)newPeptideDocNode.Add(newTransitionGroupDocNode);

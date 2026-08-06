@@ -452,6 +452,27 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// These results with each transition's handed to the transition at the same position in
+        /// <paramref name="transitionIndexes"/>, matched through <paramref name="transitionsInOrder"/>
+        /// rather than by identity.
+        /// <para>
+        /// This is for a copy of a precursor whose transitions are new objects standing for the old
+        /// ones - converting a document to small molecules is the only thing which does that - where
+        /// <see cref="ReorderTransitions(IdentityIndex)"/> would match nothing and drop every
+        /// transition's results. <paramref name="transitionsInOrder"/> is the old transition each
+        /// new one was made from, in the order the new ones are children.
+        /// </para>
+        /// </summary>
+        public TransitionGroupResults MapTransitions(IEnumerable<Transition> transitionsInOrder,
+            IdentityIndex transitionIndexes)
+        {
+            transitionIndexes = transitionIndexes ?? IdentityIndex.EMPTY;
+            var ordered = ReorderTransitions(new IdentityIndex(transitionsInOrder));
+            return ordered.ChangeTransitions(transitionIndexes,
+                Enumerable.Range(0, transitionIndexes.Count).Select(ordered.GetTransitionResults));
+        }
+
+        /// <summary>
         /// Whether one of the precursor's transitions has any results.
         /// </summary>
         public bool HasTransitionResults(Transition transition)

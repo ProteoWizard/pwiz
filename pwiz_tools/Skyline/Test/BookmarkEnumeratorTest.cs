@@ -156,7 +156,16 @@ namespace pwiz.SkylineTest
                 actualElementCounts.TryGetValue(expectedKvp.Key, out int actualCount);
                 Assert.AreEqual(expectedKvp.Value, actualCount, "Mismatch on type: {0}", expectedKvp.Key);
             }
-            Assert.AreEqual(expectedElementCounts.Count, actualElementCounts.Count);
+
+            // Every type the walk produced has to be one the document accounts for. Compared this
+            // way rather than by counting the keys, because a type the document has none of need
+            // not appear among the bookmarks at all: the loop above has already checked that a
+            // type it does have some of was enumerated the right number of times.
+            foreach (var actualKvp in actualElementCounts)
+            {
+                Assert.IsTrue(expectedElementCounts.ContainsKey(actualKvp.Key),
+                    "Unexpected element type: {0}", actualKvp.Key);
+            }
         }
 
         private static void Increment<TKey>(Dictionary<TKey, int> dictionary, TKey key, int difference)

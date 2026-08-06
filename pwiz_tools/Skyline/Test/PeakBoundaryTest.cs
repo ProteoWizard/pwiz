@@ -652,7 +652,10 @@ namespace pwiz.SkylineTest
                     string.Format("Start time {0} expected {1} for {2} ({3}); columnar {4}-{5} chosen {6}",
                         groupChromInfo.StartRetentionTime, minTime[j], groupNode.TransitionGroup.Peptide, j,
                         columnarBounds?.StartTime, columnarBounds?.EndTime,
-                        groupNode.AbbreviatedResults?.FindChosenPeakIndex(0, groupChromInfo.FileId)));
+                        groupNode.AbbreviatedResults == null
+                            ? "no columnar results"
+                            : groupNode.AbbreviatedResults.ChromFileIds.FileIds.Count + " files, " +
+                              groupNode.AbbreviatedResults.Peaks.FlatValues.Count + " peaks"));
                 AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE),
                     string.Format("End time {0} expected {1} for {2} ({3})", groupChromInfo.EndRetentionTime,
                         maxTime[j], groupNode.TransitionGroup.Peptide, j));
