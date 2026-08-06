@@ -504,9 +504,16 @@ public sealed class SerializerMSn
                 spec.ScanList.Scans.Add(scan);
             }
         }
-        else if (line.Contains("\tEZ\t", StringComparison.Ordinal) || line.StartsWith("I EZ", StringComparison.Ordinal))
+        else if (line.Contains("EZ", StringComparison.Ordinal))
         {
             // I EZ charge mass rt area
+            //
+            // Matching on the bare token, as cpp does, rather than on "\tEZ\t": .ms2 files in the
+            // wild - including cpp's own test fixture - separate these columns with spaces, and
+            // requiring tabs silently dropped the charge and accurate mass, leaving the spectrum
+            // with a guessed possible-charge state and the isolation m/z instead. The token check
+            // below still has to find EZ followed by two parseable numbers, so this stays narrower
+            // than cpp's substring search.
             var parts = line.Split(WhitespaceSplit, StringSplitOptions.RemoveEmptyEntries);
             // First two tokens are "I" and "EZ"; charge + mass follow.
             int ezIdx = Array.IndexOf(parts, "EZ");
@@ -571,6 +578,19 @@ public sealed class SerializerMSn
         ComputePeakStats(spec, mz, intensity);
     }
 
+    /// <summary>
+    /// Bytes in one binary spectrum header, which is what has to be present before a record can be
+    /// read at all: scan number twice, precursor m/z, retention time; then from v2 the base peak,
+    /// conversion factors, TIC and injection time; then the charge-state count, the EZ-state count
+    /// in v3, and the peak count.
+    /// </summary>
+    private static int SpectrumHeaderBytes(int version) =>
+        2 * SizeInt + SizeDouble + SizeFloat
+        + (version >= 2 ? SizeFloat + 4 * SizeDouble + SizeFloat : 0)
+        + SizeInt
+        + (version == 3 ? SizeInt : 0)
+        + SizeInt;
+
     private void ReadBinary(Stream input, SpectrumListSimple list)
     {
         using var br = new BinaryReader(input, System.Text.Encoding.ASCII, leaveOpen: true);
@@ -596,8 +616,12 @@ public sealed class SerializerMSn
 
     private static bool TryReadBinarySpectrum(BinaryReader br, Spectrum spec, int version, bool ms1, bool compressed)
     {
-        // Detect EOF inside a fragmented header.
-        if (br.BaseStream.Position + 2 * SizeInt > br.BaseStream.Length) return false;
+        // A file cut short mid-record - an interrupted write, or a fixture that simply stops -
+        // ends the list at the last complete spectrum rather than throwing. cpp does the same by
+        // reading the header and testing the stream (`if (!*is_) break;`), which discards the
+        // partial record; checking the size up front expresses it without relying on an exception.
+        if (br.BaseStream.Position + SpectrumHeaderBytes(version) > br.BaseStream.Length)
+            return false;
 
         int scanNum = br.ReadInt32();
         br.ReadInt32(); // duplicated scan number
