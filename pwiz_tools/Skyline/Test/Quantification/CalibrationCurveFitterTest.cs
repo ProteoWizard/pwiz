@@ -91,7 +91,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = lightPrecursor.EmptyResults[iReplicate].First().Area.Value;
+                var expectedY = GetPrecursorArea(srmDocument, lightPrecursor, iReplicate);
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = GetLabelRatio(srmDocument, peptide, iReplicate);
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
@@ -178,7 +178,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = GetLabelRatio(srmDocument, peptide, iReplicate);
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, .01, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
@@ -218,7 +218,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = lightPrecursor.EmptyResults[iReplicate].First().Area.Value;
+                var expectedY = GetPrecursorArea(srmDocument, lightPrecursor, iReplicate);
                 double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, .01, msg);
@@ -264,7 +264,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = GetLabelRatio(srmDocument, peptide, iReplicate);
                 double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, epsilon, msg);
@@ -310,7 +310,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = GetLabelRatio(srmDocument, peptide, iReplicate);
                 double? actualY = curveFitter.GetYValue(iReplicate).Value;
                 Assert.IsNotNull(actualY);
                 Assert.AreEqual(expectedY, actualY.Value, epsilon, msg);
@@ -418,7 +418,7 @@ namespace pwiz.SkylineTest.Quantification
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 string msg = string.Format("Replicate {0}", iReplicate);
-                var expectedY = new MoleculeResults(srmDocument.Settings, peptide).GetPeptideChromInfos()[iReplicate].First().LabelRatios.First().Ratio.Ratio;
+                var expectedY = GetLabelRatio(srmDocument, peptide, iReplicate);
                 Assert.AreEqual(expectedY, curveFitter.GetYValue(iReplicate).Value, epsilon, msg);
                 var calibrationCurve = curveFitter.GetCalibrationCurve();
                 var metrics = curveFitter.GetCalibrationCurveMetrics();
@@ -471,6 +471,37 @@ namespace pwiz.SkylineTest.Quantification
                 srmDocument.Settings.ChangePeptideSettings(
                     srmDocument.Settings.PeptideSettings.ChangeAbsoluteQuantification(
                         quantificationSettings)));
+        }
+
+        /// <summary>
+        /// The total area of a molecule's quantitative transitions in one replicate, which is what
+        /// the precursor's chrom info used to report as its Area. Summed from the areas the
+        /// precursor's columnar results hold, because the chrom infos are rebuilt from the .skyd
+        /// and this document is deserialized from a resource with no .skyd to read.
+        /// </summary>
+        private static double GetPrecursorArea(SrmDocument document, TransitionGroupDocNode nodeGroup,
+            int replicateIndex)
+        {
+            var area = nodeGroup.GetArea(replicateIndex, nodeTran => nodeTran.IsQuantitative(document.Settings));
+            Assert.IsNotNull(area, string.Format("No area for {0} in replicate {1}", nodeGroup, replicateIndex));
+            return area.Value;
+        }
+
+        /// <summary>
+        /// The light to heavy peak area ratio of a molecule in one replicate, which is what its
+        /// <see cref="PeptideChromInfo.LabelRatios"/> used to report. A ratio of matched
+        /// transitions is the sum of the numerators over the sum of the denominators - see
+        /// <see cref="RatioValue.Calculate"/> - so the columnar areas give it without reading a
+        /// chromatogram.
+        /// </summary>
+        private static double GetLabelRatio(SrmDocument document, PeptideDocNode peptide, int replicateIndex)
+        {
+            var light = peptide.TransitionGroups.First(tg =>
+                IsotopeLabelType.light.Equals(tg.TransitionGroup.LabelType));
+            var heavy = peptide.TransitionGroups.First(tg =>
+                IsotopeLabelType.heavy.Equals(tg.TransitionGroup.LabelType));
+            return GetPrecursorArea(document, light, replicateIndex) /
+                   GetPrecursorArea(document, heavy, replicateIndex);
         }
 
         private SrmDocument LoadTestDocument()
