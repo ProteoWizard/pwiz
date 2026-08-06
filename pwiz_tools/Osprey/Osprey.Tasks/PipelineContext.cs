@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Tasks
         /// records byproduct types read via <see cref="TryGet{TInfo}"/>;
         /// <see cref="_milestoneByBuffer"/> records, per backing-list reference,
         /// the milestone type last published over it. Keying on the list reference
-        /// (not a static type order) makes the guard path-independent: the SecondPassFDR
+        /// (not a static type order) makes the guard path-independent: the reconciled-input
         /// path publishes RescoredEntries directly over the ScoredEntries buffer,
         /// skipping CompactedEntries.
         /// </summary>

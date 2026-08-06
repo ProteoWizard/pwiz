@@ -185,8 +185,8 @@ function Get-RegressionData {
     harness so there is ONE definition of what "resume" invalidates. The
     patterns key off the task Name values the C# tasks stamp into their
     validity sidecars: FirstPassFdrTask.Name is "FirstPassFDR" and
-    SecondPassFdrTask.Name is "SecondPassFDR" -- the same words as the class
-    names, differing only in the FDR casing PascalCase requires of a type.
+    SecondPassFdrTask.Name is "SecondPassFDR" - the same words as the class
+    names, differing only in the Fdr/FDR casing used for type names.
     They did NOT always agree: the classes were FirstJoinTask and MergeNodeTask
     until issue #4535, and a private copy of this function that used those class
     names matched zero files and silently produced a run that never resumed.
@@ -256,7 +256,7 @@ function Invoke-SecondPassOnlyInvalidation {
     # renames ONE of the two, and a single match is a truthy scalar that sails past a
     # `-not $targets` test: deleting only the stamp leaves the blib un-invalidated (the
     # leg then compares a stale blib to itself), and deleting only the blib leaves the
-    # merge cached (it never re-runs). Both surface downstream as a whole-run ABORTED
+    # SecondPassFDR leg cached (it never re-runs). Both surface downstream as a whole-run ABORTED
     # from regression.ps1's outer catch, skipping every remaining dataset, instead of
     # the named mode 5 failure the assertions here were written to produce.
     if ($targets.Count -lt 2) {

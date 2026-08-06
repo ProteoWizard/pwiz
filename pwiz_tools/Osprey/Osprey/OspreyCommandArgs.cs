@@ -759,7 +759,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p><code>--input-scores</code> takes a directory (globbed and sorted internally) " +
                 @"or an explicit file list (used in the order given). FirstPassFDR reconciliation is " +
-                @"order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a sorted " +
+                @"order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted " +
                 @"list. The rehydration sidecars must travel with their parquet into each worker's " +
                 @"working directory. Let the scheduler do the fan-out (one file per split process) rather " +
                 @"than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>");

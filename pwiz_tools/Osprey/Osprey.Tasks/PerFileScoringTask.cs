@@ -233,7 +233,7 @@ namespace pwiz.Osprey.Tasks
             // unmutated outer config. ProcessFile clones the config per
             // file and mutates FragmentTolerance during MS2 calibration,
             // so reading config.Identity.SearchParameterHash() inside ProcessFile
-            // would produce a hash that the FirstPassFDR-side validator would
+            // would produce a hash that the --input-scores validator would
             // not recognize. Built unconditionally because Stage 6
             // reconciliation needs the per-file .scores.parquet on disk to
             // lazily load CWT candidates -- matches Rust's end-to-end
@@ -799,7 +799,7 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the SecondPassFDR paths and on FDRBench
+            // Lean first-pass rows (issue #4397). Null on the resident paths and on FDRBench
             // pass 1, which publish fat stubs above; FirstPassFdrTask falls back to ScoredEntries
             // whenever this is null. A --model-diagnostics resume publishes a NON-null
             // projection since #4505 - it no longer needs resident entries, because
@@ -1224,10 +1224,10 @@ namespace pwiz.Osprey.Tasks
             // loading every worker's .scores.parquet used to rebuild the full fat
             // FdrEntry stubs + PIN features (~53 GB at 82 files) -- the same Stage-5
             // blowup the resume path had. Stream 32 B FdrProjection rows instead, unless
-            // SecondPassFDR needs the resident pool (an opt-in feature output) or is a
+            // this run needs the resident pool (an opt-in feature output) or is a
             // reconciled 2nd-pass bundle hydration (AllHaveReconSidecars -- FirstPassFDR
             // skips Percolator there and HydrateReconciliationOverlay reads the fat stubs).
-            // Counts-only (issue #4355 struct-shrink S3, Stage B): the SecondPassFDR lean path builds
+            // Counts-only (issue #4355 struct-shrink S3, Stage B): the lean path builds
             // only per-file row counts; the 1st-pass streaming score path re-reads identity +
             // features from parquet, so the resident FdrProjection[] buffer is never allocated.
             bool needsResidentPool = NeedsResidentPool(config);
@@ -1417,7 +1417,7 @@ namespace pwiz.Osprey.Tasks
         /// FdrMethod, and --fdrbench-pass 1. OSPREY_PASS2_QVALUE=transfer is NOT among them:
         /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
         /// own on-disk sidecar. The
-        /// --task SecondPassFDR merge is NOT among them: it sets ExpectReconciledInput, which
+        /// --task SecondPassFDR is NOT among them: it sets ExpectReconciledInput, which
         /// <c>--task</c> selection makes mutually exclusive with <c>NoJoin</c>, so term 2's
         /// NoJoin clause already excludes it.
         ///
@@ -2006,7 +2006,7 @@ namespace pwiz.Osprey.Tasks
         /// already resident for a reason with its own token
         /// (<see cref="ResidentPaths.PROJECTION_OFF"/> above all), so demanding a second token
         /// would mean two variables for one decision, and would fire on the plain
-        /// <c>--task SecondPassFDR</c> merge that <see cref="ResidentPaths.HPC_MERGE"/> already
+        /// <c>--task SecondPassFDR</c> run that <see cref="ResidentPaths.HPC_MERGE"/> already
         /// covers.</para>
         ///
         /// <para>That reasoning covers every caller of THIS guard, and deliberately leaves one

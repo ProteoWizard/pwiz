@@ -131,7 +131,7 @@ namespace pwiz.Osprey.Tasks
             var config = ctx.Config;
             // RescoredEntries is the final milestone of the shared buffer:
             // demanding it materializes PerFileRescore (running its rescore /
-            // merge-mode compaction when the driver skipped it), which is what
+            // reconciled-input compaction when the driver skipped it), which is what
             // produces the post-rescore version this stage reads.
             var perFileEntries = ctx.Get<RescoredEntries>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
@@ -150,7 +150,7 @@ namespace pwiz.Osprey.Tasks
             // protein FDR. A reconciled parquet exists for a file iff that file had
             // rescore work, so "any reconciled parquet on disk" == total_rescored > 0,
             // and the test holds in both the straight-through pipeline (Stage 6 just
-            // wrote them) and the --task SecondPassFDR merge (the Stage 6 worker wrote
+            // wrote them) and the --task SecondPassFDR run (the Stage 6 worker wrote
             // them). Previously this was wrongly nested inside the ProteinFdr.HasValue
             // block, so a run without --protein-fdr wrote the blib from stale
             // first-pass (pre-reconciliation) scores. ComputeAndPersist reloads the

@@ -102,7 +102,7 @@
 
 .PARAMETER SkipRehydrate
     Skip the mode-5 Stage-5 rehydrate leg. The overnight gate leaves it on: it is
-    the only leg that enters FirstPassFdrTask.Rehydrate at all, and it costs one merge
+    the only leg that enters FirstPassFdrTask.Rehydrate at all, and it costs one SecondPassFDR
     re-run. This switch is for fast local iteration, like -SkipHpcChain.
 
 .PARAMETER SkipHpcChain
@@ -810,7 +810,7 @@ function Test-TaskCacheHits {
 # Matched as a substring for the reason Get-TaskCacheMap matches its own: if the C#
 # wording drifts, mode 5 goes red naming the token it could not find rather than
 # passing vacuously.
-$FirstPassFDRRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundle from'
+$firstPassFdrRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundle from'
 
 function Test-LogMarker {
     <#
@@ -912,7 +912,7 @@ function Invoke-HpcChain {
             Remove-Item -Force -ErrorAction SilentlyContinue
     }
 
-    # Phase 2: 1st-join (Stage 5). Consumes the per-file parquets, writes the
+    # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes the
     # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. A
     # 0-byte stub mzML lets the task derive sidecar paths without reading spectra.
     $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
@@ -1157,7 +1157,7 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR merge does
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR leg does
         # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
         # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
         # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
@@ -1301,7 +1301,7 @@ foreach ($name in $selected) {
     # ---- mode 5: Stage-5 rehydrate (FirstPassFDR's rehydrate arm) ----
     # Runs AFTER mode 2, and the order is not arbitrary. Mode 5's SecondPassFDR run
     # rewrites more than output.blib: every <stem>.2nd-pass.fdr_scores.bin, the
-    # model-diagnostics report, and its .data.json are merge outputs too, and
+    # model-diagnostics report, and its .data.json are SecondPassFDR outputs too, and
     # Invoke-ResumeInvalidation deletes none of them. Running mode 5 first therefore
     # left mode 2 resuming on top of mode-5-produced pass-2 state, which feeds
     # PerFileRescore's pass-2 self-gate and SecondPassFDR's 2nd-pass rehydrate - so mode
@@ -1389,7 +1389,7 @@ foreach ($name in $selected) {
         # ... and the FirstPassFDR cache hit above is NOT evidence the rehydrate arm
         # ran: a skipped task whose state nobody demands never enters Rehydrate at
         # all. This marker is the only thing that says it did.
-        $m5marker = Test-LogMarker -LogPath $rRehydrate.Log -Marker $FirstPassFDRRehydrateMarker `
+        $m5marker = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstPassFdrRehydrateMarker `
             -Description 'FirstPassFDR streaming the post-Stage-5 bundle from its own sidecars'
         foreach ($issue in $m5marker.Issues) { $m5cache.Issues.Add($issue) }
         # Repair Pass after mutating Issues. Test-TaskCacheHits computed it at return

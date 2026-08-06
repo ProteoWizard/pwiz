@@ -39,7 +39,7 @@ namespace pwiz.Osprey.Tasks
     /// finalize. Drives the low-level <see cref="BlibWriter"/> (the SQLite layer);
     /// this type owns only the per-spectrum row composition.
     ///
-    /// Extracted verbatim from <c>SecondPassFdrTask.WriteBlibFile</c> as pure code
+    /// Extracted verbatim from <c>SecondPassFdrTask.WriteBlibOutput</c> as pure code
     /// motion so <see cref="Write"/> reads as a sequencer; behavior (and therefore
     /// the blib bytes) is unchanged. Mirrors Rust pipeline.rs:4596-6272.
     /// </summary>

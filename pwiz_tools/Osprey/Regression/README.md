@@ -79,7 +79,7 @@ artifact**, so the multi-GB spectra caches there are harmless):
    `ModelDiagnostics`, the report re-emitted from those sidecars against the same
    golden mode 1b uses.
 
-   Runs **last**, after mode 2: its merge rewrites the 2nd-pass sidecars and the
+   Runs **last**, after mode 2: its SecondPassFDR leg rewrites the 2nd-pass sidecars and the
    diagnostics report as well as the blib, none of which `Invoke-ResumeInvalidation`
    deletes, so running it earlier would leave mode 2 resuming on top of mode-5
    state.

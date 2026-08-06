@@ -2168,7 +2168,7 @@ namespace pwiz.Osprey.Tasks
             // Preferred path (issue #4397): PerFileScoring streamed these rows straight
             // out of the per-file .scores.parquet, so the fat FdrEntry stub buffer was
             // never allocated at all (it cost ~53 GB at 191M rows). Fall back to building
-            // from stubs on the paths that still publish them -- rehydrate/merge, or when
+            // from stubs on the paths that still publish them - rehydrate / reconciled-input, or when
             // a resident pool is required. BuildFromEntries releases each file's stubs
             // incrementally (releaseStubs: true) so the projection never coexists with the
             // full stub buffer. Clearing the hand-off ScoredEntries lists is safe: nothing

@@ -880,15 +880,15 @@ namespace pwiz.Osprey.Tasks
                 reloadProgress.Report(++reloadIdx);
                 if (!perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath))
                 {
-                    // No FirstPassFDR parquet was produced (or mapped) for this
+                    // No scores parquet was produced (or mapped) for this
                     // file. The {0} entries below will go into the second-pass
                     // Percolator with stale / null Features, which silently
                     // regresses 2nd-pass FDR -- log so the operator can detect
-                    // an incomplete FirstPassFDR hand-off.
+                    // an incomplete hand-off.
                     ctx.LogWarning(string.Format(
                         "Second-pass FDR: no parquet path mapped for file '{0}' " +
                         "({1} entries will run with stale/null features). " +
-                        "Check FirstPassFDR output completeness.",
+                        "Check that each file's scores parquet was produced and mapped.",
                         kvp.Key, kvp.Value.Count));
                     continue;
                 }
@@ -923,7 +923,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(string.Format(
                         "Second-pass FDR: file '{0}' reconciled parquet has {1} feature rows " +
                         "but {2} FDR entries reference it; {3} entries will run with " +
-                        "stale/null features. Stub/parquet mismatch -- check FirstPassFDR " +
+                        "stale/null features. Stub/parquet mismatch - check reconciled-parquet " +
                         "output integrity.",
                         kvp.Key, featByIdentity.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
                 }
@@ -1073,7 +1073,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(string.Format(
                         "Second-pass FDR: no parquet path mapped for file '{0}' " +
                         "(entries will run with basic-feature fallback). " +
-                        "Check FirstPassFDR output completeness.", fileName));
+                        "Check that each file's reconciled parquet is present.", fileName));
                     return new Dictionary<(uint, byte, uint), uint>();
                 }
                 try
@@ -1113,7 +1113,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(string.Format(
                         "Second-pass FDR: file '{0}' reconciled parquet is missing {1} of " +
                         "{2} survivor identities; those entries run with basic-feature " +
-                        "fallback. Stub/parquet mismatch -- check FirstPassFDR output integrity.",
+                        "fallback. Stub/parquet mismatch - check reconciled-parquet output integrity.",
                         kvp.Key, total - nMapped, total));
                 }
                 totalMapped += nMapped;

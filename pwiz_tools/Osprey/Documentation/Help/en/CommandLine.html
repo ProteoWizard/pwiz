@@ -103,5 +103,5 @@ Osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o o
 # join 2 - one process over ALL reconciled parquets (writes out.blib)
 Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 </pre>
-<p><code>--input-scores</code> takes a directory (globbed and sorted internally) or an explicit file list (used in the order given). FirstPassFDR reconciliation is order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a sorted list. The rehydration sidecars must travel with their parquet into each worker's working directory. Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
+<p><code>--input-scores</code> takes a directory (globbed and sorted internally) or an explicit file list (used in the order given). FirstPassFDR reconciliation is order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted list. The rehydration sidecars must travel with their parquet into each worker's working directory. Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
 </body></html>

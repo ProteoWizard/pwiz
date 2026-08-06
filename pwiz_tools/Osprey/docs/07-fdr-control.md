@@ -597,7 +597,7 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `OSPREY_MEANBEST2_FLOOR_MEAN` | off (median) | **Experimental.** Missing-run floor = decoy MEAN instead of the default decoy MEDIAN. Read only under `mean-best-<N>`; the `MEANBEST2` name is historical and it applies at every N. |
 | `OSPREY_MEANBEST2_FLOOR_PCT` | unset (median) | **Experimental.** Missing-run floor = this percentile (0-100) of the decoy scores; a low value is a harder reproducibility cut. Refused outside [0, 100], and refused together with `OSPREY_MEANBEST2_FLOOR_MEAN`. |
 | `--model-diagnostics` | off | Also collects per-feature target/decoy histograms + feature-contribution report (`CollectFeatureHistograms`, `PercolatorEngine.cs:310`); forces the resident first-pass pool. Byte-neutral when off. |
-| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. The internal `HpcTask` enum values are the same names in PascalCase — `PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr` (`OspreyConfig.cs:388`). See `15-hpc-scoring-split.md`. |
+| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. The internal `HpcTask` enum values are `PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr` (`OspreyConfig.cs`); note the enum spells `PerFileRescore` where the CLI takes `PerFileRescoring`. See `15-hpc-scoring-split.md`. |
 
 Internal Percolator constants (not CLI-exposed; `PercolatorConfig` ctor
 `PercolatorFdr.cs:115`): `MaxIterations = 10`, `NFolds = 3`, `Seed = 42`,

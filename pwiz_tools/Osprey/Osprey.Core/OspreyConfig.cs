@@ -407,9 +407,9 @@ namespace pwiz.Osprey.Core
     /// <summary>
     /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
     /// (one HPC node = one task). Each member is its task's
-    /// <c>OspreyTask.Name</c> in PascalCase -- the same string the task stamps
+    /// <c>OspreyTask.Name</c> in PascalCase - the same string the task stamps
     /// into its <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c>
-    /// -- so the member, the class, and the CLI selector are one token.
+    /// so the member, the class, and the CLI selector are one token.
     /// <see cref="PerFileRescore"/> is the one member that still reads
     /// differently from its Name (<c>PerFileRescoring</c>).
     /// </summary>

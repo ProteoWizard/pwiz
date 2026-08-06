@@ -274,7 +274,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
 | INTENT | CLI is `--task <Name>`, not `--no-join`/`--join-at-pass`/`--join-only` | Orchestrated by `--join-at-pass` + modifiers | Single `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}`; old flags retired, fail fast | `Program.cs:86-128`; `OspreyCommandArgs.cs:206-207` | major |
-| INTENT | Task names differ from stage they run | Named by pass/join topology | CLI names by FDR pass; enum/classes by join topology | `OspreyConfig.cs:388-394`; `Program.cs:326-335` | info |
+| INTENT | One name per task, describing the FDR pass | Named by pass/join topology | CLI name, enum member and class are one name per task; residual `PerFileRescoring` vs `PerFileRescore` | `OspreyConfig.cs` (`HpcTask`); `Program.cs` (`ResolveTask`) | info |
 | INTENT | Stage 6 separate `.scores-reconciled.parquet` | Rewrites `.scores.parquet` | Separate sibling; `--input-scores` prefers reconciled | `PerFileRescoreTask.cs:163-177,944-954` | minor |
 | INTENT | Membership-predicate + lazy-rehydrate, not stage window | Each mode runs stages X..Y | Fixed 4-task pipeline; `IsIncluded` + typed byproduct registry; pinned by truth table | `AnalysisPipeline.cs:99-148`; `PipelineMembershipTest.cs:55-93` | info |
 | INTENT | No `--parquet-compression`; ZSTD unconditional | `--parquet-compression snappy` for OspreySharp interop | Writes ZSTD; read auto-dispatches; cross-impl ZSTD/Snappy read compat is follow-up | `ParquetScoreCache.cs:270,462` | minor |

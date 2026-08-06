@@ -2,13 +2,13 @@
 
 > Pipeline stage: Cross-cutting (orchestration). C# port of Rust docs/18-hpc-scoring-split.md. Corresponds to Rust osprey `--no-join` / `--join-at-pass` HPC scoring split.
 
-For large experiments (hundreds to thousands of mzML files) the Osprey pipeline can be split into phases that scale very differently. The embarrassingly-parallel per-file phases (Stages 1-4 scoring, Stage 6 rescore) can fan out across N HPC nodes; the single-process join phases (Stage 5 first-pass FDR + reconciliation planning, Stages 7-8 merge) run once on a head node and require all-file evidence.
+For large experiments (hundreds to thousands of mzML files) the Osprey pipeline can be split into phases that scale very differently. The embarrassingly-parallel per-file phases (Stages 1-4 scoring, Stage 6 rescore) can fan out across N HPC nodes; the single-process join phases (Stage 5 first-pass FDR + reconciliation planning, Stages 7-8 second-pass FDR) run once on a head node and require all-file evidence.
 
 The C# port implements this split as **four pipeline tasks** driven by a single `--task <Name>` CLI selector, rather than the Rust doc's `--no-join` / `--join-at-pass` / `--join-only` flag family. Each task is a subclass of `OspreyTask` (`Osprey.Tasks/OspreyTask.cs`), and the orchestration model is a per-task membership predicate walked by a driver loop (`Osprey/AnalysisPipeline.cs:99-112`) rather than a contiguous `[start..stop]` stage window.
 
 ## Task-name mapping (CLI name vs internal enum)
 
-The CLI `--task` spelling and the internal `HpcTask` enum member differ for three of the four tasks. This is the single most important thing to keep straight when reading the code.
+The CLI `--task` spelling, the `HpcTask` enum member, and the task class are now one name per task. The only one that still needs a second look is `PerFileRescoring` (CLI) vs `PerFileRescore` (enum and class); the rest differ at most in the `Fdr`/`FDR` casing.
 
 | Pipeline stage | CLI `--task` name | `HpcTask` enum | `OspreyTask` subclass (`OspreyTask.Name`) |
 |---|---|---|---|
@@ -17,9 +17,9 @@ The CLI `--task` spelling and the internal `HpcTask` enum member differ for thre
 | Stage 6 per-file rescore | `PerFileRescoring` | `HpcTask.PerFileRescore` | `PerFileRescoreTask` (`"PerFileRescoring"`) |
 | Stages 7-8 second-pass FDR | `SecondPassFDR` | `HpcTask.SecondPassFdr` | `SecondPassFdrTask` (`"SecondPassFDR"`) |
 
-- The enum is defined at `Osprey.Core/OspreyConfig.cs:388-394` as `{ PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr }`.
-- The CLI-name ↔ enum mapping is `Program.ResolveTask` (`Osprey/Program.cs:291-317`) and its inverse `Program.TaskCliName` (`Osprey/Program.cs:326-335`).
-- The `OspreyTask.Name` strings (used in `[TASK]` log lines and `.osprey.task` sidecar naming) ARE the CLI spelling, and the class names now match them: `PerFileScoringTask.Name => "PerFileScoring"`, `FirstPassFdrTask.Name => "FirstPassFDR"` (`Osprey.Tasks/FirstPassFdrTask.cs:71`), `PerFileRescoreTask.Name => "PerFileRescoring"` (`Osprey.Tasks/PerFileRescoreTask.cs:114`), `SecondPassFdrTask.Name => "SecondPassFDR"` (`Osprey.Tasks/SecondPassFdrTask.cs:49`). The one name to read carefully is `PerFileRescore`/`PerFileRescoring`; everything else differs only in the `Fdr`/`FDR` casing that C# PascalCase requires of the class and enum.
+- The enum is defined in `Osprey.Core/OspreyConfig.cs` as `{ PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr }`.
+- The CLI-name to enum mapping is `Program.ResolveTask` and its inverse `Program.TaskCliName`, both in `Osprey/Program.cs`.
+- The `OspreyTask.Name` strings (used in `[TASK]` log lines and `.osprey.task` sidecar naming) ARE the CLI spelling, and the class names now match them: `PerFileScoringTask.Name => "PerFileScoring"`, `FirstPassFdrTask.Name => "FirstPassFDR"` (`Osprey.Tasks/FirstPassFdrTask.cs:71`), `PerFileRescoreTask.Name => "PerFileRescoring"` (`Osprey.Tasks/PerFileRescoreTask.cs:114`), `SecondPassFdrTask.Name => "SecondPassFDR"` (`Osprey.Tasks/SecondPassFdrTask.cs:49`). The one name to read carefully is `PerFileRescore`/`PerFileRescoring`; everything else differs only in the `Fdr`/`FDR` casing, which follows this codebase's own type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace.
 
 ## Orchestration model: `--task` + membership predicates
 
@@ -166,7 +166,7 @@ All cache writers write to a local temp file and copy-and-verify to the final de
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | none (full pipeline in one process) | Selects one HPC worker; sets `NoJoin` / `StopAfterStage5` / `ExpectReconciledInput` (`Program.cs:126-128`). Resolved case-insensitively (`ResolveTask`). |
 | `--input-scores <paths\|dir>` | none | One or more `.scores.parquet` files or a single directory (globbed non-recursively, reconciled-wins-per-stem, Ordinal-sorted). Mutually exclusive with `-i/--input`. Consumed by `FirstPassFDR` / `PerFileRescoring` / `SecondPassFDR` and the `--input-scores`-only full run. |
 | `-i/--input <mzML...>` | none | Required by `PerFileScoring` and the default full pipeline; forbidden by `FirstPassFDR` / `PerFileRescoring` / `SecondPassFDR`. |
-| `-l/--library`, `-o/--output` | none | Required by every join/merge task. `--output` is accepted-but-unused by `--task PerFileScoring` (writes per-file parquets, not a blib). |
+| `-l/--library`, `-o/--output` | none | Required by `FirstPassFDR`, `PerFileRescoring`, and `SecondPassFDR`. `--output` is accepted-but-unused by `--task PerFileScoring` (writes per-file parquets, not a blib). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 | Peptide-q gate for Stage 5 compaction (`FirstPassFdrTask.cs:689`). |
 | `--protein-fdr <v>` | 0.01 (machinery always runs) | Protein-rescue gate for compaction (`EffectiveProteinFdr`, `FirstPassFdrTask.cs:693`) and the SecondPassFDR passing-group count. |
 | `Reconciliation.Enabled` (config) | true | Gates Stage 6 planning (`FirstPassFdrTask.cs:387`) and the `--task FirstPassFDR` requirement (`Program.cs:395-398`). |
@@ -181,7 +181,7 @@ All cache writers write to a local temp file and copy-and-verify to the final de
 
 - **[INTENTIONAL-CSHARP-DESIGN] CLI surface is `--task <Name>`, not `--no-join` / `--join-at-pass` / `--join-only`** - Rust doc says the HPC split is orchestrated by `--join-at-pass=<N>` with `--no-join` / `--join-only` modifiers; C# retired those flags and uses a single `--task {PerFileScoring|FirstPassFDR|PerFileRescoring|SecondPassFDR}` selector that derives the `NoJoin` / `StopAfterStage5` / `ExpectReconciledInput` membership flags. The unrecognized Rust flags fail fast. Evidence: `Osprey/Program.cs:86-128`, `Osprey/OspreyCommandArgs.cs:206-207`. Severity: major.
 
-- **[INTENTIONAL-CSHARP-DESIGN] One name per task, describing the FDR pass** - The CLI name, the `HpcTask` member, the task class, the `[TASK]` log token, and the `.osprey.task` stamp are all one string per task, describing the FDR pass rather than the join topology. Two of them used to describe the topology instead (`FirstJoinTask`/`FirstPassFDR` and `MergeNodeTask`/`SecondPassFDR`), which cost a reader a mapping table and once produced a resume leg that keyed off the class names, matched zero sidecars, and passed green having resumed nothing; issue #4535 renamed them. The residual mapping is `PerFileRescoring` ↔ `PerFileRescore` and the `Fdr`/`FDR` casing C# PascalCase requires. Evidence: `Osprey.Core/OspreyConfig.cs:388-394`, `Osprey/Program.cs:326-335`. Severity: info.
+- **[INTENTIONAL-CSHARP-DESIGN] One name per task, describing the FDR pass** - The CLI name, the `HpcTask` member, the task class, the `[TASK]` log token, and the `.osprey.task` stamp are all one string per task, describing the FDR pass rather than the join topology. Two of them used to describe the topology instead (`FirstJoinTask`/`FirstPassFDR` and `MergeNodeTask`/`SecondPassFDR`), which cost a reader a mapping table and once produced a resume leg that keyed off the class names, matched zero sidecars, and passed green having resumed nothing; issue #4535 renamed them. The residual mapping is `PerFileRescoring` vs `PerFileRescore`, plus the `Fdr`/`FDR` casing that follows this codebase's type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace. Folding those two in as well would let `ResolveTask` and `TaskCliName` be deleted outright. Evidence: the `HpcTask` enum in `Osprey.Core/OspreyConfig.cs`, `ResolveTask` / `TaskCliName` in `Osprey/Program.cs`. Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Stage 6 writes a separate `.scores-reconciled.parquet`, not an in-place rewrite** - Rust doc says Stage 6 "rewrites each `<stem>.scores.parquet`" with reconciled scores; C# writes a separate `<stem>.scores-reconciled.parquet` sibling and leaves the Stage 4 parquet intact (crash-safety: a partial Stage 6 crash cannot half-rewrite the Stage 4 output). `--input-scores` directory resolution then prefers the reconciled sibling per stem. Evidence: `Osprey.Tasks/PerFileRescoreTask.cs:163-177,944-954`, `Osprey/Program.cs:459-472`. Severity: minor.
 

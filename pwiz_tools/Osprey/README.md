@@ -107,7 +107,7 @@ fan-out boundaries into four single-task workers — one node = one
 The driver also writes a `<output>.<TaskName>.osprey.task` validity
 sidecar next to each output; re-running a task whose outputs already exist
 with a matching validity key (search-parameter + library hashes, plus the
-reconciliation hash for the rescore/merge tasks) skips the recompute.
+reconciliation hash for `PerFileRescoring` and `SecondPassFDR`) skips the recompute.
 
 ### Worked example (Stellar 3-file: `s1.mzML s2.mzML s3.mzML`, library `hela.tsv`)
 

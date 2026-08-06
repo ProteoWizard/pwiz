@@ -276,7 +276,7 @@ namespace pwiz.Osprey.Tasks
         /// <c>--task PerFileRescoring</c> worker load in <see cref="PerFileScoringTask"/>
         /// and the straight-through resume in <see cref="FirstPassFdrTask"/> - so the two
         /// cannot drift into reporting per-file counts under different predicates. NOT the
-        /// <c>--task SecondPassFDR</c> merge: that sets <c>ExpectReconciledInput</c>, the
+        /// <c>--task SecondPassFDR</c> run: that sets <c>ExpectReconciledInput</c>, the
         /// first branch of <c>PreCompactionPoolReason</c>, so it always takes the resident
         /// batch twin and is still O(files) (issue #4486).</para>
         /// </summary>

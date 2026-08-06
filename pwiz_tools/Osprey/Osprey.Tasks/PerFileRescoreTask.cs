@@ -123,7 +123,7 @@ namespace pwiz.Osprey.Tasks
         /// Computes the Stage 6 rescore in straight-through, the rescore worker
         /// (--task PerFileRescoring), and the --input-scores
         /// full-pipeline. Excluded in --task PerFileScoring, --task FirstPassFDR (stops at Stage 5),
-        /// and the --task SecondPassFDR merge (where it rehydrates rather than
+        /// and the --task SecondPassFDR run (where it rehydrates rather than
         /// re-scoring, SecondPassFDR having no mzMLs).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
@@ -136,10 +136,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         // The final milestone of the shared mutable entry buffer: this task
-        // overlays the Stage 6 rescore (or, in the --task SecondPassFDR merge path,
+        // overlays the Stage 6 rescore (or, in the --task SecondPassFDR reconciled-input path,
         // applies its own compaction) onto the same backing list. SecondPassFDR
         // pulls RescoredEntries, so a cache miss lazily materializes this task --
-        // which is exactly what triggers the rescore/compaction in merge mode
+        // which is exactly what triggers the rescore/compaction in reconciled-input mode
         // where the driver does not run this task.
         public override IEnumerable<Type> Publishes => new[] { typeof(RescoredEntries) };
 
@@ -240,7 +240,7 @@ namespace pwiz.Osprey.Tasks
             // ExpectReconciledInput gate (Phase C: mechanism-driven, not
             // flag-driven) for the worker self-gate cases below;
             // ExpectReconciledInput keeps the hard short-circuit above for
-            // the strict --task SecondPassFDR merge path. Downstream SecondPassFdrTask
+            // the strict --task SecondPassFDR reconciled-input path. Downstream SecondPassFdrTask
             // reads the RescoredEntries milestone of this same backing list.
             // Read the planning gate from the typed byproduct registry rather
             // than reaching for the concrete FirstPassFdrTask. ctx.Get lazily
@@ -415,7 +415,7 @@ namespace pwiz.Osprey.Tasks
             // Reproduce exactly that end state by loading the CompactedEntries
             // milestone (which materializes FirstPassFDR's own pure rehydrate) and
             // publishing it as RescoredEntries -- never calling Run, so Rehydrate
-            // stays pure. The --task SecondPassFDR merge path (ExpectReconciledInput)
+            // stays pure. The --task SecondPassFDR path (ExpectReconciledInput)
             // below is a different rehydrate that must NOT materialize FirstPassFDR.
             if (!ctx.Config.ExpectReconciledInput)
             {
@@ -444,7 +444,7 @@ namespace pwiz.Osprey.Tasks
                 return true;
             }
 
-            // ScoredEntries, NOT CompactedEntries: the SecondPassFDR path must NOT
+            // ScoredEntries, NOT CompactedEntries: the reconciled-input path must NOT
             // materialize FirstPassFDR (that would re-run Stage 5 Percolator on the
             // reconciled parquets); it applies its own compaction below. Reading
             // the pre-compaction milestone keeps the dependency on PerFileScoring
@@ -452,7 +452,7 @@ namespace pwiz.Osprey.Tasks
             _perFileEntries = ctx.Get<ScoredEntries>().Value;
 
             // Publish the RescoredEntries milestone over the shared backing list
-            // (the SecondPassFDR path applies its own compaction below, in place).
+            // (the reconciled-input path applies its own compaction below, in place).
             ctx.Publish(new RescoredEntries(_perFileEntries));
 
             var bundle = ctx.Get<RescoreBundle>().Value;

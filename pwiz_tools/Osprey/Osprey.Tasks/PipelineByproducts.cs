@@ -239,7 +239,7 @@ namespace pwiz.Osprey.Tasks
     /// bypassing the fat <see cref="FdrEntry"/> stub buffer entirely (issue #4397:
     /// rematerializing 191M stubs to convert them into 32 B rows cost ~53 GB).
     /// <c>Value</c> is null when the run needs the resident stub pool instead
-    /// (--model-diagnostics / FDRBench pass 1) or on the rehydrate/merge paths, which
+    /// (--model-diagnostics / FDRBench pass 1) or on the rehydrate / reconciled-input paths, which
     /// still publish fat stubs via <see cref="ScoredEntries"/>.
     /// </summary>
     internal sealed class FdrProjections
