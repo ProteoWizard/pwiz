@@ -191,6 +191,48 @@ namespace pwiz.Osprey.Core
             IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
 
         /// <summary>
+        /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
+        /// entry that can no longer be scored or written - i.e. everything outside the
+        /// compaction survivors and the gap-fill candidates. The identity fields
+        /// (<c>ModifiedSequence</c> / <c>ProteinIds</c> / m/z / RT) are KEPT on every entry.
+        ///
+        /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
+        /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
+        /// keep the whole library resident as the A/B byte-identity oracle, the same role
+        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff.
+        ///
+        /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
+        /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
+        /// entries. Few files is the MAXIMUM-saving case rather than a scaled-down one - the
+        /// library is fixed while the retained set grows with file count - so expect a smaller
+        /// (still large) saving at 82. Only the FRAGMENTS are freed, never a whole entry, and
+        /// the in-repo figure for the fragment share alone is ~3.2 GB at SEA-AD scale; do not
+        /// read a saving here as recovering the library's total footprint.</para>
+        ///
+        /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
+        /// and <c>FirstJoinTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
+        /// after Stage 5, including entries already judged false. They read only the identity
+        /// fields, never the spectra - so dropping entries would silently move protein FDR,
+        /// while dropping fragments cannot. The blib write is safe for a separate reason:
+        /// <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments only for
+        /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
+        /// blib-written is a SUBSET of what is retained here.</para>
+        ///
+        /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> deletes its own
+        /// validity sidecars. The suffix is still required - the release is a Run-only side
+        /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
+        /// and report a memory profile it never computed - but the escape hatch is not cheap.
+        /// The suffix itself lives with the release
+        /// (<c>LibraryFragmentRelease.ValidityKeySuffix</c>), keyed on whether the release
+        /// actually RAN rather than on this flag alone.</para>
+        ///
+        /// <para>A settable property (not a readonly field) so unit tests can A/B both arms.</para>
+        /// </summary>
+        public static bool ReleaseLibraryFragments { get; set; } =
+            IsNotZero(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS");
+
+        /// <summary>
         /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
         /// so shipping this does not invalidate a single existing output directory; only the
         /// resident opt-out adds a term.
@@ -449,7 +491,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=mdiag-full-resume</c>. Legal values are
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=hpc-merge</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
         /// that is not on that list, is refused no matter what this is set to.
         ///
@@ -464,16 +506,20 @@ namespace pwiz.Osprey.Core
         ///
         /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
         /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. The A/B that proves the Stage 6 handoff bounded is
-        /// exactly such a run: <c>regression.ps1</c> mode 2 needs
-        /// <see cref="ResidentPaths.MDIAG_FULL_RESUME"/> while the arm under test needs
-        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/>. A LIST keeps the property that
-        /// matters - every admitted path is still named individually, so nothing rides along
-        /// unnamed the way the blanket boolean allowed - while a single value only ever
-        /// prevented honest work.</para>
+        /// impossible to perform at all. An operator running the Stage 6 handoff A/B on a
+        /// configuration that is already resident for its own reason needs
+        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> alongside that run's own token.
+        /// A LIST keeps the property that matters - every admitted path is still named
+        /// individually, so nothing rides along unnamed the way the blanket boolean allowed -
+        /// while a single value only ever prevented honest work.</para>
         ///
-        /// Read once at process start. Intended for local testing; CI names its tokens explicitly
-        /// (regression.ps1 mode 2), so what CI depends on is visible rather than ambient.
+        /// Read once at process start. Intended for local testing. The standing
+        /// <c>regression.ps1</c> gate names exactly ONE token, on one leg
+        /// (<see cref="ResidentPaths.RESUME_SURVIVOR_HANDOFF"/>, issue #4536); every other leg
+        /// runs with nothing suppressed, and an INHERITED value is cleared at startup unless a
+        /// deliberate A/B switch needs it. A resident path appearing anywhere else fails CI
+        /// rather than riding along on an ambient allowance, and each token the gate does
+        /// require carries an open issue to remove it.
         /// </summary>
         public static readonly string AllowUnfixedResident =
             (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();

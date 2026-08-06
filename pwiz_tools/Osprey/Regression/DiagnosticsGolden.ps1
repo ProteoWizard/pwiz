@@ -192,12 +192,27 @@ function Compare-DiagnosticsGolden {
     Tier 1: compare a fresh report's metrics against the committed golden.
     Numeric metrics at absolute Tolerance; everything else exact. Returns
     Pass + Issues.
+
+    -NoTrainedModel is for a report emitted by a run that ADOPTED first-pass
+    q-values from the .1st-pass.fdr_scores.bin sidecars instead of training
+    Percolator (FirstJoinTask.Rehydrate -- regression.ps1 mode 5). Exactly one
+    metric is model-derived: featureCount comes from the FeatureContributions
+    the trainer produces, and a run that never trained has none to report. The
+    switch does NOT skip that metric -- it PINS it at 0, so the comparison stays
+    total: every metric is still asserted, one of them against the value a
+    modelless run must have rather than against the golden. Skipping instead
+    would leave the report free to lose its feature view on the straight-through
+    path too, unnoticed.
     #>
     param([Parameter(Mandatory = $true)][string]$HtmlPath,
           [Parameter(Mandatory = $true)][string]$GoldenDir,
-          [double]$Tolerance = 1e-9)
+          [double]$Tolerance = 1e-9,
+          [switch]$NoTrainedModel)
 
     $issues = [System.Collections.Generic.List[string]]::new()
+    # The one model-derived metric, named once so the two places below that treat
+    # it specially cannot drift apart.
+    $modelMetric = 'featureCount'
     $goldenPath = Join-Path $GoldenDir 'diagnostics.tsv'
     if (-not (Test-Path $goldenPath)) {
         $issues.Add("diagnostics: missing golden $goldenPath")
@@ -217,6 +232,23 @@ function Compare-DiagnosticsGolden {
     foreach ($name in $goldenOrder) {
         if (-not $fresh.ContainsKey($name)) { $issues.Add("diagnostics: metric missing from run: $name"); continue }
         $g = $golden[$name]; $f = $fresh[$name]
+        if ($NoTrainedModel -and $name -eq $modelMetric) {
+            # Pinned, not skipped. A run that adopted its q-values from the 1st-pass
+            # sidecars trained no model, so it has no feature contributions to report
+            # and this must read 0. Anything else means the report claims a feature
+            # view it cannot have computed, which is the direction that would matter.
+            if ($f -ne '0') {
+                # Double parens: -f binds TIGHTER than the ',' separating method arguments,
+                # so Add(("...") -f $name, $f) parses as a TWO-argument call and the format
+                # operator throws on the missing {1}. Every other Add in this file does the
+                # same. Getting it wrong is invisible until the branch first fires - which
+                # here is the failure path this pin exists to report.
+                $issues.Add((("diagnostics: {0} run='{1}', expected '0' - this run adopted " +
+                    "first-pass q-values from the sidecars and trained no model, so it has " +
+                    "no feature contributions to report") -f $name, $f))
+            }
+            continue
+        }
         $gd = 0.0; $fd = 0.0
         # Invariant, matching how Format-CellValue WROTE these. The current-culture
         # overload reads its own invariant output wrong on a comma-decimal agent, and

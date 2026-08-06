@@ -125,6 +125,18 @@ namespace pwiz.Osprey.Tasks
         // reconciled + rescored + reported). Null unless OSPREY_PASS2_QVALUE=protein-compact.
         private HashSet<uint> _proteinCompactStratum;
 
+        /// <summary>The post-compaction surviving base_ids, so the Stage 5 -&gt; 6 boundary can
+        /// release the library fragments nothing can score any more. Null on the legacy resident
+        /// path, which simply skips the release.
+        ///
+        /// <para>This is the same set <see cref="_survivorLoader"/> holds privately, and it is a
+        /// separate field on purpose rather than by oversight: the loader is built only on the
+        /// projection path, while <see cref="Rehydrate"/> - the resume, and the one run that most
+        /// needs a lean library - has no loader and takes the set off the reconciliation bundle
+        /// instead. One field that both paths can fill beats an accessor that is null on
+        /// half of them.</para></summary>
+        private HashSet<uint> _firstPassBaseIds;
+
         // Rebuilds any one file's survivors from its .scores.parquet + finalized
         // 1st-pass sidecar, so a per-file consumer never needs the all-files buffer
         // (issue #4526). Set on the projection path, which is the only one that
@@ -213,7 +225,8 @@ namespace pwiz.Osprey.Tasks
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix();
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
         public override bool Run(PipelineContext ctx)
@@ -517,6 +530,7 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new ReconciliationActions(_reconciliationActions));
             ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+            ReleaseUnscorableLibraryFragments(fullLibrary, ctx);
             ctx.Publish(new CompactedEntries(perFileEntries));
             // Null off the projection path (legacy resident / rehydrate), where a
             // consumer falls back to the buffer above.
@@ -552,8 +566,33 @@ namespace pwiz.Osprey.Tasks
             // deferring to Run -- so a lazy Demand loads, never computes, and
             // Run stays outer-loop-only.
             var bundle = ctx.Get<RescoreBundle>().Value;
-            if (bundle == null)
+            bool builtOwnBundle = bundle == null;
+            if (builtOwnBundle)
             {
+                // Refuse the O(files) Stage 6 handoff BEFORE the load, not after: this
+                // rebuild reads every sidecar and parquet, so checking afterwards would
+                // spend minutes (hours at scale) only to abort. See
+                // PerFileScoringTask.ResumeResidentHandoffGuardError and issue #4536.
+                //
+                // Restricted to a STRAIGHT-THROUGH resume. A null bundle also occurs in worker
+                // mode when the .reconciliation.json sidecars are simply absent (a --task
+                // PerFileRescoring node pointed at parquets whose FirstPassFDR has not run) -
+                // that is a missing-input fault, and answering it with a memory-token refusal
+                // would name the wrong problem, quote that worker's slice as if it were the
+                // all-files buffer, and offer a remediation ("re-run without resuming") that
+                // means nothing to a --task worker. Those runs fall through to the load, which
+                // reports the envelope that is actually missing.
+                bool straightThroughResume =
+                    config.InputScores == null || config.InputScores.Count == 0;
+                if (straightThroughResume)
+                {
+                    string resumeHandoffError = PerFileScoringTask.ResumeResidentHandoffGuardError(
+                        perFileEntries.Count, OspreyEnvironment.AllowUnfixedResident,
+                        PerFileScoringTask.NeedsResidentPoolForRun(config));
+                    if (resumeHandoffError != null)
+                        throw new InvalidOperationException(resumeHandoffError);
+                }
+
                 bundle = LoadOwnReconciliationBundle(ctx, perFileEntries);
                 if (bundle == null)
                     return false;  // load failure; ExitCode already set
@@ -561,14 +600,16 @@ namespace pwiz.Osprey.Tasks
 
             ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
 
-            // The bundle's PreCompactionTallies are non-null only when the upstream
-            // hydrate streamed (compacting each file as it loaded, so it never held the
-            // all-files pre-compaction pool). The per-file passing-target counts below are
-            // then read from those tallies rather than recomputed off perFileEntries, which
-            // by that point holds only survivors - the same reason the lean projection path
-            // reads them off its score-pass sink. The --model-diagnostics report is streamed
-            // off the same load for the same reason, and its accumulator is null when the
-            // resident twin ran, which leaves the batch report reading perFileEntries.
+            // The bundle's PreCompactionTallies are non-null only when the hydrate that
+            // produced it STREAMED (compacting each file as it loaded, so it never held the
+            // all-files pre-compaction pool) - either the upstream worker-mode load or this
+            // task's own LoadOwnReconciliationBundle on a lean resume. The per-file
+            // passing-target counts below are then read from those tallies rather than
+            // recomputed off perFileEntries, which by that point holds only survivors - the
+            // same reason the lean projection path reads them off its score-pass sink. The
+            // --model-diagnostics report is streamed off the same load for the same reason,
+            // and its accumulator is null only where the RESIDENT twin ran, which is exactly
+            // where perFileEntries still IS the pre-compaction pool the batch report reads.
             LogFirstPassResultsAndDump(perFileEntries, config, ctx, null,
                 bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator);
             // The accumulator holds the whole run's --model-diagnostics reduction (~1-2 GB
@@ -593,11 +634,54 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new ReconciliationActions(bundle.ReconciliationActions));
             ctx.Publish(new RefinedCalibrations(bundle.RefinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
+            // Release here too, not just on Run. This path is a RESUME - which is exactly what
+            // an operator does after the OOM this release exists to prevent - so skipping it
+            // would leave the whole library resident in the one run that most needs it lean.
+            // The bundle carries both halves of the retained set: GlobalFirstPassBaseIds is a
+            // required field of the v3 reconciliation envelope, and PerFileGapFill was just
+            // published above.
+            _firstPassBaseIds = bundle.GlobalFirstPassBaseIds;
+            _perFileGapFillForRescore = bundle.PerFileGapFill;
+            ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
             ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
             ctx.Publish(new CompactedEntries(perFileEntries));
             // Null off the projection path (legacy resident / rehydrate), where a
             // consumer falls back to the buffer above.
             ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
+            // ... and a null loader is exactly what leaves Stage 6 on the RESIDENT
+            // post-compaction handoff: PerFileRescore's streamed branches are all gated on
+            // this slot, so with nothing to stream from, the all-files survivor buffer
+            // published above stays live across the whole rescore and into the merge. Run
+            // guards that with Stage6ResidentHandoffGuardError; the guard cannot fire here,
+            // because it deliberately no-ops when streaming is unavailable on the grounds
+            // that such runs are "already resident for a reason with its own token" - which
+            // was true of every rehydrate that used to reach this point (an mdiag full
+            // resume needed the resident first-pass pool) and is NOT true now that a lean
+            // resume gets here. Warn rather than throw, matching WarnPreCompactionPool: the
+            // mdiag full resume reached Stage 6 this way before #4505 too, so refusing it
+            // would turn a working configuration into a failing one.
+            //
+            // NOT covered by #4526, which is CLOSED: #4530 bounded this handoff by giving
+            // Run a per-file survivor loader, and the rehydrate arm never got one, so the
+            // resident fallback survives here. Tracked by #4536.
+            //
+            // This is the SECOND half of token + warning. Reaching this line means the
+            // operator named resume-survivor-handoff (the guard above refused the run
+            // otherwise), so the warning explains what that token bought rather than
+            // annotating something nobody asked for. A warning WITHOUT the refusal would be
+            // the insufficient case: on a default path there is no request to explain, and
+            // the line reads as normal within a week. Both halves go when #4536 gives the
+            // rehydrate its own survivor loader.
+            if (builtOwnBundle && !config.StopAfterStage5 && perFileEntries.Count > 1)
+            {
+                ctx.LogWarning(string.Format(
+                    @"OSPREY_ALLOW_UNFIXED_RESIDENT={1}: Stage 6 takes the RESIDENT " +
+                    @"post-compaction handoff on this resume. The survivor buffer for all " +
+                    @"{0} files stays in memory for the whole rescore, so memory here grows " +
+                    @"O(files) - 28 GB at 163 files when last measured. Only a computed " +
+                    @"Stage 5 produces the per-file survivor loader (issue #4536).",
+                    perFileEntries.Count, ResidentPaths.RESUME_SURVIVOR_HANDOFF));
+            }
             // The bundle-adopt / resume path never plans, so the rescore gate is
             // false (PerFileRescore falls back to the no-op unless a worker
             // RescoreBundle is present). Mirrors the old "FirstJoin rehydrates ->
@@ -613,7 +697,7 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="Run"/> because those outputs were already valid on disk
         /// (<see cref="PipelineContext.CanRehydrate"/>) and a downstream task is
         /// the first to touch this task's state. Overlays the first-pass q-values
-        /// onto the shared stubs and parses the reconciliation envelopes -- the
+        /// onto the per-file stubs and parses the reconciliation envelopes -- the
         /// same bundle PerFileScoring's worker-mode hydration produces, but owned
         /// here against this task's own outputs. Returns <c>null</c> (with
         /// <see cref="PipelineContext.ExitCode"/> set) on a load failure; because
@@ -622,17 +706,38 @@ namespace pwiz.Osprey.Tasks
         /// exactly as the worker hydration does, so PerFileRescore's "Features !=
         /// null means rescored" parquet criterion and MergeNode's feature reload
         /// stay correct.
+        ///
+        /// <para>Which hydrate runs is decided by what upstream actually loaded,
+        /// not by a flag. Stage 5 takes the LEAN load unless an opt-in output reads
+        /// every entry's resident features (<c>NeedsResidentPool</c>), and the lean
+        /// load publishes one EMPTY stub list per scored file. Those empty lists
+        /// cannot carry the sidecar overlay: <c>FdrScoresSidecar.TryRead</c> binds
+        /// each record to a stub by <c>entry_id</c> and fails the file when one is
+        /// missing, so any sidecar that carries at least one record is refused
+        /// against zero stubs. (A zero-record sidecar would "succeed" vacuously -
+        /// the refusal comes from the records, not from the emptiness.) So the batch
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> is only
+        /// correct when the resident pool is present. The lean case loads each
+        /// file's stubs from its own <c>.scores.parquet</c> through
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> instead, which
+        /// compacts each file before touching the next and so never holds more than
+        /// ONE file's pre-compaction pool (~1.19 GB per file, vs O(files) for the
+        /// batch twin). That is what lets <c>--model-diagnostics</c> report off this
+        /// path without the resident pool (issue #4505): the accumulator is fed from
+        /// the pass that already reads every sidecar, so the report comes off the
+        /// same PRE-compaction rows the batch write would have read.</para>
         /// </summary>
         private RescoreInputs LoadOwnReconciliationBundle(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
         {
-            // Resolve each loaded file's own .scores.parquet path in
-            // perFileEntries order so HydrateReconciliationOverlay's
-            // index-correspondence contract (entries[i] <-> parquetPaths[i])
-            // holds; PerFileScoring published these paths as PerFileParquetPaths.
+            // Resolve each loaded file's own .scores.parquet path in perFileEntries
+            // order so both hydrates' index-correspondence contract (entries[i] <->
+            // parquetPaths[i]) holds; PerFileScoring published these paths as
+            // PerFileParquetPaths.
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var parquetPaths = new List<string>(perFileEntries.Count);
+            long residentStubs = 0;
             foreach (var kvp in perFileEntries)
             {
                 if (!perFileParquetPaths.TryGetValue(kvp.Key, out var path))
@@ -643,12 +748,31 @@ namespace pwiz.Osprey.Tasks
                     return null;
                 }
                 parquetPaths.Add(path);
+                residentStubs += kvp.Value.Count;
             }
+
+            // Zero stubs across every file IS the lean load's signature: it appends a keyed
+            // entry per scored file with an empty list, while every resident arm appends real
+            // ones. Tested on the DATA rather than read off a published flag because it is the
+            // overlay's actual precondition - "are there stubs to overlay onto" - and the
+            // batch hydrate fails on exactly this shape.
+            //
+            // The alternative signal is FdrProjections, non-null exactly on the lean arm.
+            // Equivalent today. If the two ever disagree, that is a bug in Stage 5's own
+            // lean/fat bookkeeping, and this test still picks the hydrate the data can serve.
+            // (An earlier version of this comment claimed an all-zero-row run could not reach
+            // here because it stops at PerFileScoring's "no scored entries" boundary. That is
+            // NOT true on the lazy-Demand path, which swallows the stop when ExitCode == 0.
+            // The conclusion survives for a different reason: such a run writes no 1st-pass
+            // sidecar, so FirstJoin Runs rather than Rehydrates and never reaches this line.)
+            bool leanStubs = residentStubs == 0;
 
             RescoreInputs bundle;
             try
             {
-                bundle = RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths);
+                bundle = leanStubs
+                    ? StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths)
+                    : RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths);
             }
             catch (InvalidDataException ex)
             {
@@ -663,11 +787,168 @@ namespace pwiz.Osprey.Tasks
             // "Features != null means this entry was rescored" parquet criterion
             // stays correct and MergeNode reloads features from the reconciled
             // parquet -- mirrors PerFileScoringTask.HydrateRescoreBundleIfPresent.
-            foreach (var kvp in perFileEntries)
-                foreach (var entry in kvp.Value)
-                    entry.Features = null;
+            //
+            // Skipped on the streaming arm, where it is provably a no-op: those stubs come
+            // from LoadFdrStubsFromParquet, which never assigns Features. Running it anyway
+            // would store null over null across every file's survivors - ~88.9 M reference
+            // writes at 163 files, each tripping the GC write barrier and dirtying the card
+            // table over the whole survivor buffer, immediately before Stage 6 adopts it.
+            if (!leanStubs)
+            {
+                foreach (var kvp in perFileEntries)
+                    foreach (var entry in kvp.Value)
+                        entry.Features = null;
+            }
 
             return bundle;
+        }
+
+        /// <summary>
+        /// The file-count-bounded arm of <see cref="LoadOwnReconciliationBundle"/>: load
+        /// each file's stubs from its own <c>.scores.parquet</c> inside
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>, so one file's
+        /// pre-compaction pool is resident at a time rather than all of them.
+        ///
+        /// <para><paramref name="perFileEntries"/> arrives holding the lean load's empty
+        /// per-file lists and is CLEARED here, because the streaming hydrate appends the
+        /// survivors itself and requires an empty buffer on entry. The list OBJECT is
+        /// kept - it is the published <c>ScoredEntries</c> buffer that
+        /// <see cref="Rehydrate"/> goes on to compact and republish as
+        /// <c>CompactedEntries</c> - so clearing rather than replacing it is what keeps
+        /// those consumers pointed at the same buffer.</para>
+        ///
+        /// <para>The per-file hook is the run's one look at each file's PRE-compaction
+        /// pool, and both reductions taken there are the ones a resident pool used to
+        /// serve afterwards: the run-level passing-target count Stage 5 reports per file,
+        /// and the <c>--model-diagnostics</c> report reduction. The report needs those
+        /// rows specifically - compaction discards ~52x of them, mostly the decoys and
+        /// entrapment its FDP and calibration views are built from - so feeding it here
+        /// is what makes the streamed report identical to the batch one rather than a
+        /// plausible-looking survivors-only page.</para>
+        ///
+        /// <para>COST, stated rather than hidden: this is the SECOND full pass over every
+        /// <c>.scores.parquet</c> on a lean resume. Stage 5 already streamed all five scalar
+        /// columns of every file to build the counts-only projection - whose only consumer
+        /// is <see cref="Run"/>, so on this path its surviving product is a log line and the
+        /// empty-set gate - and this method then re-opens each file for the full stub read.
+        /// The pre-#4505 mdiag full resume read each parquet ONCE, fat. The trade is
+        /// deliberate: one extra sequential scan per file buys an O(files) -> O(1-file)
+        /// pre-compaction pool, which is the whole point at 82 files. Removing the
+        /// redundancy means making the Stage 5 lean load lazy about work only Run consumes,
+        /// which is a separate change.</para>
+        /// </summary>
+        private RescoreInputs StreamOwnReconciliationBundle(
+            PipelineContext ctx,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IList<string> parquetPaths)
+        {
+            var config = ctx.Config;
+            // File names in load order. The accumulator is seeded with them so its per-run
+            // report rows are keyed by the same index the hook reports, and the streaming
+            // hydrate rederives its own names from the parquet stems (checked below).
+            var fileNames = perFileEntries.ConvertAll(kv => kv.Key);
+            // This log line is what regression.ps1 mode 5 asserts on. It has to come from
+            // THIS arm: Rehydrate's own "Bundle hydration" line is emitted before the bundle
+            // source is even known, so a worker-supplied bundle logs it too and it cannot
+            // witness the own-sidecar streaming path.
+            ctx.LogInfo(string.Format(
+                @"Resume rehydrate: streaming the first-pass bundle from {0} file(s) " +
+                @"(one file's pre-compaction pool resident at a time).", fileNames.Count));
+
+            // Diagnostics must never take down a real run - the invariant
+            // ModelDiagnosticsReport states three times and enforces with catch-all guards
+            // around its own builders. This path calls one of those builders directly
+            // (BuildClassificationFromLibrary reads the --decoy-pairing-manifest through a
+            // StreamReader and allocates multi-million-entry dictionaries), and the only
+            // enclosing handler catches InvalidDataException, so an IOException or an OOM
+            // would kill a search for the sake of an opt-in HTML page - where the batch write
+            // it replaces logged and swallowed it. A failure here drops the report, not the
+            // run: the accumulator stays null and LogFirstPassResultsAndDump skips it.
+            ModelDiagnosticsData.Accumulator mdiagAccumulator = null;
+            if (config.ModelDiagnostics)
+            {
+                try
+                {
+                    mdiagAccumulator = BuildModelDiagnosticsAccumulator(
+                        fileNames, ctx.Get<LibraryById>().Value, config, ctx.LogInfo);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        @"--model-diagnostics: could not build the report accumulator on this " +
+                        @"resume, so no report will be written. The search is unaffected. {0}",
+                        ex.Message));
+                }
+            }
+            // Hydrate into a LOCAL buffer, then swap the contents in only on success.
+            // perFileEntries is the PUBLISHED ScoredEntries list, and the streaming hydrate
+            // appends per file, so clearing it up front would leave it holding a partial
+            // survivor set with the original keys gone if any file threw midway. The list
+            // OBJECT still has to be the one that was published (Rehydrate compacts and
+            // republishes it as CompactedEntries), which is why the contents are copied
+            // rather than the reference replaced.
+            var hydrated = new List<KeyValuePair<string, List<FdrEntry>>>(fileNames.Count);
+            var bundle = RescoreHydration.HydrateCompactedStreaming(
+                hydrated, parquetPaths,
+                (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath),
+                (fileIdx, fileName, stubs, tally) =>
+                {
+                    ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
+                    if (mdiagAccumulator != null)
+                        ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
+                });
+
+            // The hydrate re-derived every key from its parquet stem, while the accumulator
+            // above and the published PerFileParquetPaths map are keyed by the ORIGINAL
+            // ScoredEntries stems. They agree today because GetScoresPath appends exactly
+            // ".scores.parquet" and SyntheticInputFromParquet strips it - a round trip, not a
+            // guarantee. Left unchecked, a divergence is SILENT: PerFileRescore looks its
+            // parquet up by the new key, misses, and that file keeps its 1st-pass boundaries
+            // all the way into the blib. Assert the coupling instead of relying on it.
+            for (int i = 0; i < hydrated.Count; i++)
+            {
+                if (!string.Equals(hydrated[i].Key, fileNames[i], StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException(string.Format(
+                        @"Resume rehydrate: file {0} is keyed '{1}' by the loaded scores but " +
+                        @"'{2}' by its parquet stem. The rescore looks parquet paths up by " +
+                        @"the loaded key, so proceeding would silently leave this file " +
+                        @"un-rescored.", i, fileNames[i], hydrated[i].Key));
+                }
+            }
+
+            perFileEntries.Clear();
+            perFileEntries.AddRange(hydrated);
+            bundle.PerFileEntries = perFileEntries;
+            bundle.ModelDiagnosticsAccumulator = mdiagAccumulator;
+            return bundle;
+        }
+
+        /// <summary>
+        /// One file's stub load for <see cref="StreamOwnReconciliationBundle"/>, with any
+        /// parquet fault wrapped as <see cref="InvalidDataException"/>.
+        ///
+        /// <para><see cref="LoadOwnReconciliationBundle"/> catches exactly that type and
+        /// promises an operator-facing "failed to hydrate reconciliation bundle from own
+        /// sidecars" line plus <c>ExitCode = 1</c>. That was free for the batch arm, which
+        /// never opened a parquet; this arm does, so a truncated or locked
+        /// <c>.scores.parquet</c> would otherwise throw <c>IOException</c> straight out of
+        /// <c>Rehydrate</c> with no exit code and none of that text. Mirrors
+        /// <c>RescoreHydration.HydrateForRescore</c> and both upstream resume loaders, which
+        /// all wrap for the same reason.</para>
+        /// </summary>
+        private static List<FdrEntry> LoadResumeStubs(string fileName, string parquetPath)
+        {
+            try
+            {
+                return ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(
+                    @"failed to load scored entries for {0} from {1}: {2}",
+                    fileName, parquetPath, ex.Message), ex);
+            }
         }
 
         /// <summary>
@@ -677,6 +958,12 @@ namespace pwiz.Osprey.Tasks
         /// OSPREY_DUMP_PERCOLATOR; written before compaction drops rows so the
         /// cross-impl diff sees both targets and decoys) and the
         /// OSPREY_PERCOLATOR_ONLY measurement exit.
+        ///
+        /// <paramref name="preCompactionTallies"/> non-null says the hydrate that produced
+        /// <paramref name="perFileEntries"/> compacted each file as it loaded, so this list
+        /// holds SURVIVORS, not the pre-compaction pool. Both consumers below key off that:
+        /// the per-file counts come from the tallies, and the Percolator dump is skipped
+        /// rather than written from rows it would misreport.
         ///
         /// <paramref name="mdiagAccumulator"/> is the streamed
         /// <c>--model-diagnostics</c> reduction the bounded reconciled-bundle rehydrate
@@ -699,10 +986,57 @@ namespace pwiz.Osprey.Tasks
         {
             LogFirstPassResults(perFileEntries, config, ctx, preCompactionTallies);
 
+            bool dumpWritten = false;
             if (ctx.Diagnostics?.DumpPercolator ?? false)
-                ctx.Diagnostics?.WriteStage5PercolatorDump(perFileEntries);
+            {
+                // The dump's whole value is that it is written BEFORE compaction drops rows,
+                // so the cross-impl diff sees decoys as well as targets. A non-null tally list
+                // means the hydrate that produced perFileEntries already compacted each file as
+                // it loaded, so what is left here is the survivors - roughly 1/52 of the rows,
+                // with the decoys gone. Writing that would produce a file that LOOKS like a
+                // Stage 5 dump and silently disagrees with every reference it is diffed
+                // against, which is worse than not writing one. The lean projection path emits
+                // no dump either (LogFirstPassResultsProjection has no dump point at all), so
+                // skipping matches it; the warning is what keeps the operator from reading an
+                // absent file as "the run had nothing to say".
+                if (preCompactionTallies == null)
+                {
+                    ctx.Diagnostics?.WriteStage5PercolatorDump(perFileEntries);
+                    dumpWritten = true;
+                }
+                else
+                {
+                    // Names the exact token, like every ResidentPoolGuardError message: an
+                    // operator told to "set the matching token" without being told which one
+                    // has to go read the source to act on the warning.
+                    ctx.LogWarning(string.Format(
+                        @"OSPREY_DUMP_PERCOLATOR: no Stage 5 dump written. This run hydrated " +
+                        @"its first-pass state through the bounded per-file path, which " +
+                        @"compacts each file as it loads, so the PRE-compaction pool the dump " +
+                        @"reports never exists all at once. Re-run with " +
+                        @"OSPREY_FDR_PROJECTION=0 OSPREY_ALLOW_UNFIXED_RESIDENT={0} for the " +
+                        @"resident dump.", ResidentPaths.PROJECTION_OFF));
+                }
+            }
             if (ctx.Diagnostics?.PercolatorOnly ?? false)
+            {
+                // Master exited here unconditionally, and that stays true for every
+                // combination it could reach - including OSPREY_PERCOLATOR_ONLY without
+                // OSPREY_DUMP_PERCOLATOR, which the two env vars being read independently
+                // makes legal. The one NEW combination is a dump that was asked for and
+                // could not be written: exiting 0 there would hand a bisection harness a
+                // success code with a stale dump or none, so it fails instead of lying.
+                if ((ctx.Diagnostics?.DumpPercolator ?? false) && !dumpWritten)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"OSPREY_DUMP_PERCOLATOR + OSPREY_PERCOLATOR_ONLY: no Stage 5 dump " +
+                        @"could be written on this run (see the warning above), so there is " +
+                        @"nothing to stop after and exiting would report success without the " +
+                        @"file. Re-run with OSPREY_FDR_PROJECTION=0 " +
+                        @"OSPREY_ALLOW_UNFIXED_RESIDENT={0}.", ResidentPaths.PROJECTION_OFF));
+                }
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
+            }
 
             // --model-diagnostics: emit the self-contained interactive HTML
             // report from the just-scored, pre-compaction first-pass entries
@@ -1706,6 +2040,53 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Stage 5 -> 6 boundary: drop <c>Fragments</c> from every library entry that nothing
+        /// downstream can score or write, keeping the identity fields on all of them. See
+        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and the
+        /// safety argument.
+        ///
+        /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
+        /// already pair-symmetric so a target's decoy rides along) PLUS the gap-fill candidates.
+        /// Gap-fill has to be in it: <c>GapFillTargetIdentifier</c> looks up the MISSING charge
+        /// states of passing peptides through the library, so by construction it reaches
+        /// entries that did NOT survive compaction and still needs their spectra.</para>
+        ///
+        /// <para>Called from BOTH <see cref="Run"/> (projection path) and
+        /// <see cref="Rehydrate"/> (resume / bundle-adopt), which set
+        /// <c>_firstPassBaseIds</c> from the compaction result and the reconciliation bundle
+        /// respectively. <see cref="LibraryFragmentRelease.RunsOnThisLeg"/> decides whether this
+        /// leg releases at all, and is the same predicate the validity-key suffix reads, so the
+        /// key can never claim an arm the code did not run.</para>
+        ///
+        /// <para>Deliberately NOT gated on diagnostics. The only dump that reads fragments is
+        /// <c>WriteCalXicEntryDumpAndExit</c>, a Stage 3 dump that exits the process where it
+        /// stands, so it cannot observe a Stage 5 -&gt; 6 release. Gating on
+        /// <c>ctx.Diagnostics</c> would instead disable this in exactly the regression run
+        /// that is compared against the committed golden - <c>regression.ps1 -DumpProteinFdr</c>
+        /// sets OSPREY_DUMP_STAGE7_PROTEIN_FDR, and any variable in the forced-dump bundle makes
+        /// <c>ctx.Diagnostics</c> non-null - making the byte-identity gate vacuous for this
+        /// feature.</para>
+        /// </summary>
+        private void ReleaseUnscorableLibraryFragments(List<LibraryEntry> fullLibrary, PipelineContext ctx)
+        {
+            // _firstPassBaseIds is the one meaningful null here: it separates the paths that
+            // computed a surviving set (projection Run, bundle-adopt Rehydrate) from the legacy
+            // resident path that did not. fullLibrary is not checked - it is a published
+            // byproduct every other reader dereferences unguarded, so a null is a wiring fault
+            // and should say so.
+            if (!LibraryFragmentRelease.RunsOnThisLeg(ctx) || _firstPassBaseIds == null)
+                return;
+
+            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
+                _firstPassBaseIds, _perFileGapFillForRescore);
+            int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
+            ctx.LogInfo(string.Format(
+                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
+                released, fullLibrary.Count, retained.Count));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after library-fragment release");
+        }
+
+        /// <summary>
         /// Build the protein-compact stratum: the base_ids of every library precursor whose
         /// peptide maps to a protein detected in the 1st pass by &gt;=2 DISTINCT peptides (the
         /// honest multi-hit anchor -- single-hit proteins break the independent-filtering
@@ -1999,6 +2380,7 @@ namespace pwiz.Osprey.Tasks
                 projections, perFileParquetPaths, config, ctx, _proteinCompactStratum);
             if (firstPassBaseIds == null)
                 return null;  // streaming sidecar read fault; ExitCode already set
+            _firstPassBaseIds = firstPassBaseIds;
 
             // Reload full FdrEntry survivors from the ORIGINAL parquet + the
             // just-written 1st-pass sidecar. ParquetIndex therefore comes from
