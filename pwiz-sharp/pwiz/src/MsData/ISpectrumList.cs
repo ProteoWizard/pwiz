@@ -1,3 +1,4 @@
+using System.Globalization;
 using Pwiz.Data.MsData.Processing;
 
 namespace Pwiz.Data.MsData.Spectra;
@@ -92,6 +93,43 @@ public abstract class SpectrumListBase : ISpectrumList
         ArgumentNullException.ThrowIfNull(id);
         for (int i = 0; i < Count; i++)
             if (SpectrumIdentity(i).Id == id) return i;
+        return CheckNativeIdFindResult(Count, id);
+    }
+
+    /// <summary>
+    /// cpp's <c>SpectrumListBase::checkNativeIdFindResult</c>: when a lookup misses, a caller
+    /// asking in the other of the two interchangeable id spellings is given the answer it meant.
+    /// A list whose ids are <c>scan=N</c> answers an <c>index=N</c> lookup as <c>scan=N+1</c>, and
+    /// one whose ids are <c>index=N</c> - MGF, which has no scan numbers - answers <c>scan=N</c>
+    /// as <c>index=N-1</c>. Without it, anything holding a scan-based id cannot locate a spectrum
+    /// in an MGF-derived list at all.
+    /// </summary>
+    /// <remarks>
+    /// Recursion terminates: the retried id is in the same spelling as the list's own ids, so a
+    /// second miss matches neither branch and returns <see cref="Count"/>. cpp additionally warns
+    /// once about an id-format mismatch before giving up; the port just reports not-found.
+    /// </remarks>
+    protected int CheckNativeIdFindResult(int result, string id)
+    {
+        if (result < Count || Count == 0) return result;
+        if (id.Length == 0) return Count;
+
+        string firstId = SpectrumIdentity(0).Id;
+        bool triedToFindScanByIndex = firstId.StartsWith("scan=", StringComparison.Ordinal)
+                                      && id.StartsWith("index=", StringComparison.Ordinal);
+        bool triedToFindIndexByScan = firstId.StartsWith("index=", StringComparison.Ordinal)
+                                      && id.StartsWith("scan=", StringComparison.Ordinal);
+
+        if (triedToFindScanByIndex
+            && int.TryParse(Id.Value(id, "index"), NumberStyles.Integer, CultureInfo.InvariantCulture,
+                out int indexValue))
+            return Find("scan=" + (indexValue + 1).ToString(CultureInfo.InvariantCulture));
+
+        if (triedToFindIndexByScan
+            && int.TryParse(Id.Value(id, "scan"), NumberStyles.Integer, CultureInfo.InvariantCulture,
+                out int scanValue))
+            return Find("index=" + (scanValue - 1).ToString(CultureInfo.InvariantCulture));
+
         return Count;
     }
 
