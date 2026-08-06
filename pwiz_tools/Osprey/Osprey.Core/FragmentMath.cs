@@ -48,6 +48,21 @@ namespace pwiz.Osprey.Core
         private static readonly ConcurrentDictionary<uint, double[]> _top6MzCache =
             new ConcurrentDictionary<uint, double[]>();
 
+        /// <summary>
+        /// Drop the memoized top-6 table. Keyed by full entry Id and never evicted, it grows to
+        /// the size of the WHOLE library during Stages 3-4 - library-derived spectral data that
+        /// outlives the spectra themselves, on the order of a gigabyte at SEA-AD scale.
+        ///
+        /// <para>Safe to call at any time: this is a pure memo of
+        /// <see cref="LibraryEntry.Fragments"/>, so an entry that still holds its spectrum
+        /// recomputes the identical value on the next call. Called from the library-fragment
+        /// release, whose retained entries are the only ones that can be asked again.</para>
+        /// </summary>
+        public static void ClearTop6MzCache()
+        {
+            _top6MzCache.Clear();
+        }
+
         private static double[] GetTop6FragmentMzs(LibraryEntry entry)
         {
             return _top6MzCache.GetOrAdd(entry.Id, _ =>

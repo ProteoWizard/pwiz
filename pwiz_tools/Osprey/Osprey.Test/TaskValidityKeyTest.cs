@@ -48,6 +48,7 @@ namespace pwiz.Osprey.Test
             AssertSuffixesAreUnconditional();
             AssertEachArmKeysDifferently();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
+            AssertLibraryFragmentArmIsPinnedToThePipeline();
         }
 
         /// <summary>
@@ -123,6 +124,61 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectPass2, key.Contains(pass2), string.Format(
                     @"{0} must {1} key on the 2nd-pass q-value mode",
                     task.Name, expectPass2 ? @"" : @"NOT "));
+            }
+        }
+
+        /// <summary>
+        /// The library-fragment arm, pinned to the pipeline by the same walk. It is hand-wired
+        /// into three tasks, so without this, dropping any one of those lines stays green.
+        ///
+        /// <para>Asserted against a NON-EMPTY arm on purpose. The default arm emits nothing -
+        /// deliberately, so shipping the feature invalidates no existing output directory - and
+        /// a test written against that arm asserts nothing at all. Flipping the flag off is what
+        /// makes the term observable.</para>
+        ///
+        /// <para>The term must also be DISTINCT from every other arm's, which
+        /// <c>AreNotEqual(string.Empty, ...)</c> alone would not catch: a suffix that collided
+        /// with a token another arm already emits would let two different configurations
+        /// compute the same key, which is the failure the whole file exists to prevent.</para>
+        /// </summary>
+        private static void AssertLibraryFragmentArmIsPinnedToThePipeline()
+        {
+            bool saved = OspreyEnvironment.ReleaseLibraryFragments;
+            try
+            {
+                OspreyEnvironment.ReleaseLibraryFragments = false;
+                var tasks = AnalysisPipeline.CanonicalPipeline();
+                var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+                string libfrag = LibraryFragmentRelease.ValidityKeySuffix(ctx);
+
+                Assert.AreNotEqual(string.Empty, libfrag,
+                    @"the resident opt-out must emit a term, or an in-place A/B adopts the other arm's outputs");
+                foreach (string other in new[]
+                {
+                    OspreyEnvironment.PickValidityKeySuffix(),
+                    OspreyEnvironment.Pass2QValueValidityKeySuffix(),
+                    OspreyEnvironment.ExperimentAggValidityKeySuffix(),
+                    OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
+                })
+                {
+                    Assert.AreNotEqual(libfrag, other,
+                        @"the library-fragment term must not collide with another arm's token");
+                }
+
+                // Per-file scoring is exempt for the reason it is exempt from the 2nd-pass mode:
+                // its parquet is written in Stages 1-4, before any release can happen, and
+                // keying it here would re-run hours of scoring to reproduce a byte-identical file.
+                foreach (var task in tasks)
+                {
+                    bool expectLibfrag = task.Name != @"PerFileScoring";
+                    Assert.AreEqual(expectLibfrag, task.ValidityKey(ctx).Contains(libfrag),
+                        string.Format(@"{0} must {1}key on the library-fragment release arm",
+                            task.Name, expectLibfrag ? string.Empty : @"NOT "));
+                }
+            }
+            finally
+            {
+                OspreyEnvironment.ReleaseLibraryFragments = saved;
             }
         }
     }

@@ -107,7 +107,8 @@ namespace pwiz.Osprey.Tasks
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                + OspreyEnvironment.Pass2QValueValidityKeySuffix();
+                + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
         /// <summary>
@@ -136,6 +137,8 @@ namespace pwiz.Osprey.Tasks
             var fullLibrary = ctx.Get<FullLibrary>().Value;
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+
+            ReleaseUnscorableLibraryFragments(perFileEntries, fullLibrary, ctx);
 
             // The 2nd-pass Percolator model, captured for the model-diagnostics
             // pass-2 model view; null when no reconciliation rescore happened.
@@ -242,6 +245,40 @@ namespace pwiz.Osprey.Tasks
                     perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo);
 
             return true;
+        }
+
+        /// <summary>
+        /// Drop <c>Fragments</c> from every library entry outside the final per-file pool,
+        /// keeping the identity fields on all of them. See
+        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and
+        /// <see cref="LibraryFragmentRelease"/> for the set arithmetic.
+        ///
+        /// <para>This is the merge node's own release, and on the HPC chain it is the ONLY one.
+        /// <c>FirstJoinTask</c> - where the Stage 5 -&gt; 6 release lives - is excluded from a
+        /// <c>--task SecondPassFDR</c> pipeline altogether, and that leg loads the library
+        /// fragment-laden (<c>OmitFragments</c> is gated on <c>StopAfterStage5</c>, false here),
+        /// so without this the one process that holds the whole 6.3 M-entry fragment set through
+        /// second-pass Percolator, protein FDR AND the blib write realized no saving at all -
+        /// the distributed path being exactly where memory hurts most.</para>
+        ///
+        /// <para>Harmless and near-free on the straight-through pipeline, where FirstJoin
+        /// already released in this same process: <see cref="LibraryEntry.ReleaseSpectrum"/> is
+        /// idempotent, so the count reported here is only what Stage 6 dropped afterwards (a
+        /// gap-fill candidate that did not survive rescoring).</para>
+        /// </summary>
+        private void ReleaseUnscorableLibraryFragments(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            List<LibraryEntry> fullLibrary, PipelineContext ctx)
+        {
+            if (!LibraryFragmentRelease.RunsOnThisLeg(ctx))
+                return;
+
+            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(perFileEntries);
+            int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
+            ctx.LogInfo(string.Format(
+                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the reported pool)",
+                released, fullLibrary.Count, retained.Count));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after library-fragment release");
         }
 
         /// <summary>

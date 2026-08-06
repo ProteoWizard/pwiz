@@ -197,7 +197,8 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
-                + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix();
+                + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
+                + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
         public override bool Run(PipelineContext ctx)
