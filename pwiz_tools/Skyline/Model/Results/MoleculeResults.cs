@@ -165,6 +165,27 @@ namespace pwiz.Skyline.Model.Results
             return groupIndex < 0 ? null : _groupResults[groupIndex];
         }
 
+        /// <summary>
+        /// Whether any chromatogram of the molecule could be read, which is what everything here
+        /// rebuilds its answers from. False when the .skyd is not there - moved, deleted, or still
+        /// being built - and then nothing below can say anything about a peak.
+        /// <para>
+        /// A caller which has something else to fall back on asks this first. The document's own
+        /// record of its peaks is its columnar results, which are there either way, so writing a
+        /// document is not allowed to take a silent nothing for an answer - see
+        /// <see cref="Serialization.DocumentWriter"/>.
+        /// </para>
+        /// </summary>
+        public bool HasChromatograms
+        {
+            get
+            {
+                EnsureRead();
+                return _groupResults.Any(groupResults =>
+                    groupResults.ChromatogramGroupInfos.Values.Any(infos => infos.Count > 0));
+            }
+        }
+
         private GroupResults GetGroupResults(TransitionGroup transitionGroup)
         {
             var groupResults = FindGroupResults(transitionGroup);

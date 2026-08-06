@@ -110,14 +110,22 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Whether the transitions are written as protocol buffers. Never when only the columnar
-        /// results are being written: the compact format is an encoding of the chrom infos, and
-        /// there is nothing of it which says the areas a transition keeps now. See
-        /// <see cref="WriteChromInfos"/>.
+        /// Whether the transitions of one molecule are written as protocol buffers. Never when its
+        /// columnar results are what is being written: the compact format is an encoding of the
+        /// chrom infos, and there is nothing of it which says the areas a transition keeps now. A
+        /// null <paramref name="moleculeResults"/> is what says so - see
+        /// <see cref="WriteChromInfos"/> and <see cref="MoleculeResults.HasChromatograms"/>.
         /// </summary>
-        private bool UseCompactFormat()
+        private bool UseCompactFormat(MoleculeResults moleculeResults)
         {
-            return WriteChromInfos && DocumentFormat.CompareTo(DocumentFormat.BINARY_RESULTS) >= 0 &&
+            // A document with no results at all has no columnar results to write either, so the
+            // compact format is still what shrinks a long transition list.
+            if (moleculeResults == null && Settings.MeasuredResults != null)
+            {
+                return false;
+            }
+
+            return DocumentFormat.CompareTo(DocumentFormat.BINARY_RESULTS) >= 0 &&
                    CompactFormatOption.UseCompactFormat(Document);
         }
         /// <summary>
@@ -363,9 +371,20 @@ namespace pwiz.Skyline.Model.Serialization
             // One per molecule, made once and handed down, because making one reads every
             // chromatogram of the molecule. The doc nodes no longer keep their chrom infos, so this
             // is where every attribute of them written below comes from.
+            //
+            // Null when there is no chromatogram to rebuild them from, which drops this molecule
+            // back to writing its columnar results. Those are the document's own record of its
+            // peaks and are there either way, so a document whose .skyd cannot be read - moved,
+            // deleted, or not built yet - is written with the areas and retention times it has
+            // rather than with no results at all.
             var moleculeResults = WriteChromInfos && Settings.MeasuredResults != null
                 ? new MoleculeResults(Settings, node)
                 : null;
+            if (moleculeResults?.HasChromatograms == false)
+            {
+                moleculeResults = null;
+            }
+
             var peptideChromInfos = moleculeResults?.GetPeptideChromInfos();
             if (peptideChromInfos != null)
             {
@@ -657,7 +676,10 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElements(new[] { libInfo }, helpers);
             }
 
-            if (!WriteChromInfos)
+            // The columnar results whenever the chrom infos could not be rebuilt, which is
+            // every molecule when only they are being written and any molecule whose
+            // chromatograms could not be read. See WritePeptideXml.
+            if (moleculeResults == null)
             {
                 WriteTransitionGroupResults(writer, node);
             }
@@ -671,7 +693,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            if (UseCompactFormat())
+            if (UseCompactFormat(moleculeResults))
             {
                 writer.WriteStartElement(EL.transition_data);
                 var transitionData = new SkylineDocumentProto.Types.TransitionData();
@@ -858,7 +880,9 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
             }
 
-            if (!WriteChromInfos)
+            // The columnar results whenever the chrom infos could not be rebuilt. See
+            // WritePeptideXml for when that is.
+            if (moleculeResults == null)
             {
                 // Left out when the precursor already carries these areas and there is nothing
                 // else here to say.
@@ -876,7 +900,7 @@ namespace pwiz.Skyline.Model.Serialization
                     nodeTransition.Transition);
                 if (transitionChromInfos != null)
                 {
-                    if (UseCompactFormat())
+                    if (UseCompactFormat(moleculeResults))
                     {
                         var protoResults = new SkylineDocumentProto.Types.TransitionResults();
                         protoResults.Peaks.AddRange(TransitionDocNode.GetTransitionPeakProtos(transitionChromInfos,
