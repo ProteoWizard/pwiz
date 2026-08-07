@@ -362,13 +362,15 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// The CLI <c>--task</c> name for an <see cref="HpcTask"/> -- the inverse of
-        /// <see cref="ResolveTask"/>, used to echo the selected task in the startup
-        /// settings block. The members now spell their own CLI name, so the only
-        /// differences left are the FDR casing (<c>FirstPassFdr</c>/<c>FirstPassFDR</c>,
-        /// PascalCase vs the acronym the CLI takes) and PerFileRescore/PerFileRescoring.
-        /// Echoing the enum directly would print those spellings rather than what the
-        /// user typed, which is what this maps back.
+        /// The canonical CLI <c>--task</c> token for an <see cref="HpcTask"/> - the
+        /// inverse of <see cref="ResolveTask"/>, used to echo the selected task in the
+        /// startup settings block. Not necessarily the spelling the operator typed:
+        /// <see cref="ResolveTask"/> matches case-insensitively, and only the resolved
+        /// enum value reaches this method, so <c>--task firstpassfdr</c> echoes as
+        /// <c>FirstPassFDR</c>. The members now spell their own CLI token, so the only
+        /// differences left are the FDR casing (<c>FirstPassFdr</c> vs the all-caps
+        /// acronym the CLI takes) and PerFileRescore vs PerFileRescoring - which is why
+        /// <c>task.ToString()</c> is still not a substitute for this switch.
         /// </summary>
         private static string TaskCliName(HpcTask task)
         {

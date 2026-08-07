@@ -407,11 +407,15 @@ namespace pwiz.Osprey.Core
     /// <summary>
     /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
     /// (one HPC node = one task). Each member is its task's
-    /// <c>OspreyTask.Name</c> in PascalCase - the same string the task stamps
-    /// into its <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c>
-    /// so the member, the class, and the CLI selector are one token.
-    /// <see cref="PerFileRescore"/> is the one member that still reads
-    /// differently from its Name (<c>PerFileRescoring</c>).
+    /// <c>OspreyTask.Name</c> in PascalCase, so the member, the class, and the
+    /// CLI selector are one word per task rather than three to map between.
+    /// <para>The stamp is not the member: what a task writes into its
+    /// <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c> is
+    /// <c>OspreyTask.Name</c> verbatim, which keeps the all-caps FDR acronym
+    /// (<see cref="FirstPassFdr"/> stamps <c>FirstPassFDR</c>). Anything matching
+    /// those artifacts must use the Name, never the member or the class name.
+    /// <see cref="PerFileRescore"/> differs by more than casing - its Name is
+    /// <c>PerFileRescoring</c>.</para>
     /// </summary>
     public enum HpcTask
     {
