@@ -312,6 +312,7 @@
     <Compile Include="EncyclopeDiaHelpersTest.cs" />
     <Compile Include="SrmSettingsNewTest.cs" />
     <Compile Include="DllFinderUnitTest.cs" />
+    <Compile Include="SiteDeterminingIonTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
