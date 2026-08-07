@@ -514,12 +514,11 @@ namespace pwiz.Osprey.Core
         /// while a single value only ever prevented honest work.</para>
         ///
         /// Read once at process start. Intended for local testing. The standing
-        /// <c>regression.ps1</c> gate names exactly ONE token, on one leg
-        /// (<see cref="ResidentPaths.RESUME_SURVIVOR_HANDOFF"/>, issue #4536); every other leg
-        /// runs with nothing suppressed, and an INHERITED value is cleared at startup unless a
-        /// deliberate A/B switch needs it. A resident path appearing anywhere else fails CI
-        /// rather than riding along on an ambient allowance, and each token the gate does
-        /// require carries an open issue to remove it.
+        /// <c>regression.ps1</c> gate names NO token on any leg - #4536 removed the last one -
+        /// and an INHERITED value is cleared at startup unless a deliberate A/B switch needs it.
+        /// A resident path appearing anywhere in the gate fails CI rather than riding along on
+        /// an ambient allowance, and any token the gate is ever made to require has to carry an
+        /// open issue to remove it again.
         /// </summary>
         public static readonly string AllowUnfixedResident =
             (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();

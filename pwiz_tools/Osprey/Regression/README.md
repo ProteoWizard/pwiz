@@ -110,11 +110,13 @@ artifact**, so the multi-GB spectra caches there are harmless):
 assertion) are described in `regression.ps1`'s own comment header, alongside why
 comparing output alone cannot detect a cache-invalidation regression.
 
-Exactly **one** leg names a resident-pool token: mode 5 sets
-`OSPREY_ALLOW_UNFIXED_RESIDENT=resume-survivor-handoff`, because a resume cannot stream the
-Stage 6 survivor handoff (issue #4536). Every other leg runs with nothing suppressed, and an
-*inherited* value is cleared at startup unless a deliberate A/B switch needs it. Each
-required token must have an open issue to remove it, and the run summary prints the count.
+**No** leg names a resident-pool token. Mode 5 was the last one that did
+(`OSPREY_ALLOW_UNFIXED_RESIDENT=resume-survivor-handoff`, because a resume could not stream
+the Stage 6 survivor handoff); issue #4536 gave the rehydrate its own per-file survivor
+loader, so that leg streams like the rest and the token is gone. An *inherited* value is
+cleared at startup unless a deliberate A/B switch needs it. Any token this gate is ever made
+to require must have an open issue to remove it, and the run summary prints the count so a
+required token is visible on every green run.
 
 An ambient allowance on a standing gate can only mask the regression the gate exists to
 catch - which is how the former blanket `OSPREY_ALLOW_UNBOUNDED_MEMORY=1` let an

@@ -4226,6 +4226,18 @@ namespace pwiz.Osprey.Test
                 inputs.ReconciliationActions[(fileName, 2)], typeof(ReconcileAction.UseCwtPeak));
             Assert.IsInstanceOfType(
                 inputs.ReconciliationActions[(fileName, 4)], typeof(ReconcileAction.ForcedIntegration));
+
+            // The retained set is handed back on the bundle, because FirstJoin's rehydrate
+            // rebuilds each file's survivors from disk against exactly it - that is what lets a
+            // resume stream the Stage 6 handoff instead of holding every file's survivors for
+            // the whole rescore (issue #4536). It is {1, 2, 3}, NOT the {1} of
+            // GlobalFirstPassBaseIds: a rebuild filtered on the global set alone would drop
+            // base 2, the cross-file-rescued entry this union exists to keep, and that entry
+            // would reach the blib with its stale Stage 4 boundaries. Both sets are asserted
+            // so a future change cannot quietly make one an alias of the other.
+            CollectionAssert.AreEquivalent(
+                new[] { 1u, 2u, 3u }, inputs.RetainedBaseIds.ToArray());
+            CollectionAssert.AreEqual(new[] { 1u }, inputs.GlobalFirstPassBaseIds.ToArray());
         }
 
         /// <summary>
