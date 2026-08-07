@@ -75,8 +75,8 @@ namespace pwiz.Osprey.Test
             {
                 SelectedTask = task,
                 NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                StopAfterStage5 = task == HpcTask.FirstJoin,
-                ExpectReconciledInput = task == HpcTask.MergeNode,
+                StopAfterStage5 = task == HpcTask.FirstPassFdr,
+                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
             };
         }
 
@@ -211,12 +211,12 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "not -i <mzML>");
         }
 
-        // - FirstJoin (--input-scores in, 2+ files, reconciliation on) --
+        // - FirstPassFDR (--input-scores in, 2+ files, reconciliation on) --
 
         [TestMethod]
-        public void TestValidateFirstJoinHappyPath()
+        public void TestValidateFirstPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -224,9 +224,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRequiresInputScores()
+        public void TestValidateFirstPassFdrRequiresInputScores()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
@@ -236,9 +236,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRejectsInputMzml()
+        public void TestValidateFirstPassFdrRejectsInputMzml()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputFiles = new List<string> { "a.mzML" };
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
@@ -250,9 +250,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRequiresLibraryAndOutput()
+        public void TestValidateFirstPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -261,11 +261,11 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRejectsSingleFile()
+        public void TestValidateFirstPassFdrRejectsSingleFile()
         {
-            // FirstJoin writes the Stage 5 -> Stage 6 boundary pair, only
+            // FirstPassFDR writes the Stage 5 -> Stage 6 boundary pair, only
             // meaningful with siblings; a single-file run errors fast.
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "only.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -276,9 +276,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRequiresReconciliationEnabled()
+        public void TestValidateFirstPassFdrRequiresReconciliationEnabled()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -288,12 +288,12 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "Reconciliation.Enabled");
         }
 
-        // - MergeNode (reconciled --input-scores in) --
+        // - SecondPassFDR (reconciled --input-scores in) --
 
         [TestMethod]
-        public void TestValidateMergeNodeHappyPath()
+        public void TestValidateSecondPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -301,12 +301,12 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRequiresInputScores()
+        public void TestValidateSecondPassFdrRequiresInputScores()
         {
             // Uncontested gap from ultrareview: --task SecondPassFDR without
             // --input-scores (even with -i mzML) used to pass validation and
             // silently run the full pipeline. It must now fail fast.
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -317,9 +317,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRequiresInputScoresNoMzml()
+        public void TestValidateSecondPassFdrRequiresInputScoresNoMzml()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
@@ -329,9 +329,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRequiresLibraryAndOutput()
+        public void TestValidateSecondPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -340,9 +340,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRejectsInputMzml()
+        public void TestValidateSecondPassFdrRejectsInputMzml()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputFiles = new List<string> { "a.mzML" };
             config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
@@ -438,10 +438,10 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestResolveTaskFirstJoin()
+        public void TestResolveTaskFirstPassFdr()
         {
             Assert.IsNull(Program.ResolveTask("FirstPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.FirstJoin, task);
+            Assert.AreEqual(HpcTask.FirstPassFdr, task);
         }
 
         [TestMethod]
@@ -452,10 +452,10 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestResolveTaskMergeNode()
+        public void TestResolveTaskSecondPassFdr()
         {
             Assert.IsNull(Program.ResolveTask("SecondPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.MergeNode, task);
+            Assert.AreEqual(HpcTask.SecondPassFdr, task);
         }
 
         [TestMethod]
@@ -489,9 +489,9 @@ namespace pwiz.Osprey.Test
             // tasks' IsIncluded methods read. Mirrors PipelineMembershipTest.
             //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
             //   PerFileScoring   | true   | false           | false
-            //   FirstJoin        | false  | true            | false
+            //   FirstPassFDR        | false  | true            | false
             //   PerFileRescore   | true   | false           | false
-            //   MergeNode        | false  | false           | true
+            //   SecondPassFDR        | false  | false           | true
             //   SpectraCache     | false  | false           | false
             // SpectraCache is all-false because it drives no membership at all:
             // it runs its own one-task pipeline (AnalysisPipeline.SpectraCachePipeline)
@@ -499,9 +499,9 @@ namespace pwiz.Osprey.Test
             var cases = new (HpcTask Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
             {
                 (HpcTask.PerFileScoring, true,  false, false),
-                (HpcTask.FirstJoin,      false, true,  false),
+                (HpcTask.FirstPassFdr,      false, true,  false),
                 (HpcTask.PerFileRescore, true,  false, false),
-                (HpcTask.MergeNode,      false, false, true),
+                (HpcTask.SecondPassFdr,      false, false, true),
                 (HpcTask.SpectraCache,   false, false, false),
             };
             foreach (var c in cases)

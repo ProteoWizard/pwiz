@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace pwiz.Osprey.Core
@@ -157,7 +158,7 @@ namespace pwiz.Osprey.Core
         /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
         /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
         /// resident across first-pass Percolator + protein FDR + the sidecar write
-        /// + compaction. <c>FirstJoinTask</c> materializes the projection from the
+        /// + compaction. <c>FirstPassFdrTask</c> materializes the projection from the
         /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
         /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
         /// the just-written 1st-pass sidecar after compaction.
@@ -172,6 +173,79 @@ namespace pwiz.Osprey.Core
         /// unit tests can A/B both paths.
         /// </summary>
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
+
+        /// <summary>
+        /// Stage 6 rebuilds each file's post-compaction survivors from that file's
+        /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
+        /// them again once its reconciled parquet is on disk - so the all-files survivor
+        /// buffer is not resident across the rescore loop.
+        ///
+        /// DEFAULT ON. That buffer is 88.9 M entries / 28 GB live at 163 files, held for
+        /// the 5.5 hours of Stage 6, and it grows super-linearly in file count because the
+        /// passing base_id set grows too (issue #4526). Set
+        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 to keep the resident buffer as the A/B
+        /// byte-identity oracle, the same role OSPREY_FDR_PROJECTION=0 plays for Stage 5.
+        /// A settable property (not a readonly field) so unit tests can A/B both paths.
+        /// </summary>
+        public static bool Stage6StreamSurvivors { get; set; } =
+            IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
+
+        /// <summary>
+        /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
+        /// entry that can no longer be scored or written - i.e. everything outside the
+        /// compaction survivors and the gap-fill candidates. The identity fields
+        /// (<c>ModifiedSequence</c> / <c>ProteinIds</c> / m/z / RT) are KEPT on every entry.
+        ///
+        /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
+        /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
+        /// keep the whole library resident as the A/B byte-identity oracle, the same role
+        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff.
+        ///
+        /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
+        /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
+        /// entries. Few files is the MAXIMUM-saving case rather than a scaled-down one - the
+        /// library is fixed while the retained set grows with file count - so expect a smaller
+        /// (still large) saving at 82. Only the FRAGMENTS are freed, never a whole entry, and
+        /// the in-repo figure for the fragment share alone is ~3.2 GB at SEA-AD scale; do not
+        /// read a saving here as recovering the library's total footprint.</para>
+        ///
+        /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
+        /// and <c>FirstPassFdrTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
+        /// after Stage 5, including entries already judged false. They read only the identity
+        /// fields, never the spectra - so dropping entries would silently move protein FDR,
+        /// while dropping fragments cannot. The blib write is safe for a separate reason:
+        /// <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments only for
+        /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
+        /// blib-written is a SUBSET of what is retained here.</para>
+        ///
+        /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> deletes its own
+        /// validity sidecars. The suffix is still required - the release is a Run-only side
+        /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
+        /// and report a memory profile it never computed - but the escape hatch is not cheap.
+        /// The suffix itself lives with the release
+        /// (<c>LibraryFragmentRelease.ValidityKeySuffix</c>), keyed on whether the release
+        /// actually RAN rather than on this flag alone.</para>
+        ///
+        /// <para>A settable property (not a readonly field) so unit tests can A/B both arms.</para>
+        /// </summary>
+        public static bool ReleaseLibraryFragments { get; set; } =
+            IsNotZero(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS");
+
+        /// <summary>
+        /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
+        /// so shipping this does not invalidate a single existing output directory; only the
+        /// resident opt-out adds a term.
+        ///
+        /// <para>Without it an in-place A/B of the two arms is not an A/B at all: the second
+        /// run finds the first run's reconciled parquets valid, skips Stage 6 entirely, and
+        /// reports a clean match it never computed. That is the exact failure mode the two arms
+        /// exist to detect, so leaving it out makes the oracle self-confirming.</para>
+        /// </summary>
+        public static string Stage6StreamSurvivorsValidityKeySuffix()
+        {
+            return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
+        }
 
         /// <summary>
         /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
@@ -200,17 +274,25 @@ namespace pwiz.Osprey.Core
         public static readonly string PickLdaModelPath = Environment.GetEnvironmentVariable(@"OSPREY_PICK_LDA_MODEL");
 
         /// <summary>
-        /// OSPREY_PICK_LDA: opt in to the learned resolution-keyed linear peak-pick model
-        /// (Stellar for unit, Astral for HRAM) instead of the default pure product-form pick
-        /// (coelution * rt_penalty * ln_intensity, no median-polish factor). The DEFAULT is the
-        /// legacy product pick -- the standard / Rust-parity pick that matches the committed
-        /// regression golden -- so the model is off unless requested, and flipping the model on
-        /// by default is a coordinated golden re-baseline. Precedence in the picker:
+        /// OSPREY_PICK_LDA: use the learned resolution-keyed linear peak-pick model (Stellar
+        /// for unit, Astral for HRAM). DEFAULT ON; set OSPREY_PICK_LDA=0 for the legacy pure
+        /// product-form pick (coelution * rt_penalty * ln_intensity, no median-polish factor).
+        /// Precedence in the picker:
         ///   1. OSPREY_PICK_LDA_MODEL set -> that model (test override);
-        ///   2. else OSPREY_PICK_LDA set -> the hardcoded resolution-keyed model;
-        ///   3. else (default) -> the legacy product pick. Default OFF.
+        ///   2. else OSPREY_PICK_LDA != 0 (default) -> the hardcoded resolution-keyed model;
+        ///   3. else (OSPREY_PICK_LDA=0) -> the legacy product pick.
+        ///
+        /// The default moved to the learned model with the #4484 golden re-baseline. An
+        /// additive rank over standardized terms is the same direction Skyline's
+        /// LegacyScoringModel took, and it is unlikely that a three-way product of terms whose
+        /// combination in log space was never established is the end state. Measured effect on
+        /// the discovery set is SMALL and its sign is not stable per cohort (seven A/B cells
+        /// spanning -3.5% to +1.8% at matched true FDP), so do NOT expect a sensitivity gain
+        /// from this and do NOT read a single validation run as evidence either way - the pick
+        /// relocates ~44% of contested peaks and moves discoveries by about 1%. The =0 opt-out
+        /// is kept precisely so the two stay comparable.
         /// </summary>
-        public static readonly bool PickLda = IsSetAndNotZero(@"OSPREY_PICK_LDA");
+        public static readonly bool PickLda = IsNotZero(@"OSPREY_PICK_LDA");
 
         /// <summary>
         /// Semi-supervised training iterations for <c>--fdr-method gbdt</c>
@@ -279,11 +361,6 @@ namespace pwiz.Osprey.Core
         /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
         public static readonly int GbtInnerFolds = ParseIntOrNull(@"OSPREY_GBT_INNER_FOLDS") ?? 5;
 
-        /// <summary>The default <see cref="Pass2QValue"/> mode: retrain the 2nd-pass
-        /// Percolator SVM and recompute a target/decoy null on the reconciled + compacted
-        /// reported pool. Current (PR #4395) behavior; preserves Rust parity.</summary>
-        public const string PASS2_QVALUE_PERCOLATOR = @"percolator";
-
         /// <summary>The <see cref="Pass2QValue"/> confidence-transfer mode: do NOT retrain
         /// or re-estimate a null; score each reconciled peak with the frozen 1st-pass model
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
@@ -341,14 +418,12 @@ namespace pwiz.Osprey.Core
         public const int MEAN_BEST_N_MAX = 64;
 
         /// <summary>
-        /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
+        /// OSPREY_PASS2_QVALUE: selects how the SecondPassFDR 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
         /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
         /// only the q-value step changes.
-        ///   <see cref="PASS2_QVALUE_PERCOLATOR"/> (default): retrain Percolator + recompute
-        ///     a target/decoy null on the reconciled + compacted pool. Preserves the
-        ///     always-on Rust 2nd pass. Compaction has already stripped most decoys from
-        ///     that pool, so the null is decoy-depleted and the retrained q anti-conservative.
+        ///   <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> (default): frozen 1st-pass model, with
+        ///     the target-decoy competition constrained to the protein stratum.
         ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
         ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
         ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
@@ -359,22 +434,34 @@ namespace pwiz.Osprey.Core
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
         ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
         ///     <c>ResidentPaths</c>.
-        /// Unset or unrecognized normalizes to the parity-preserving default. Read once at
-        /// process start. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+        /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
+        /// <see cref="Pass2QValueUnrecognized"/>). Read once at process start.
         ///
-        /// LIMITATION (experimental mode): use a FRESH <c>--output-dir</c> per mode. The
-        /// per-file 2nd-pass sidecar (.2nd-pass.fdr_scores.bin) is not tagged with the mode,
-        /// so resuming a run in an output dir written under a different mode would reuse the
-        /// other mode's cached q-values. The Part-B work tags the sidecar validity with the
-        /// mode; until then, do not switch modes within one output dir.
+        /// The former default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and
+        /// recompute a target/decoy null on the reconciled + COMPACTED pool - was REMOVED, not
+        /// merely demoted. Compaction strips most decoys from that pool, so the retrained null
+        /// is thin and the reported q anti-conservative: 1.57% true FDP at a nominal 1% on
+        /// Stellar libdecoy entrapment (vs 0.92% for the 1st-pass q), and ~9% on an 82-file
+        /// SEA-AD set. The linear model trained by the 1st-pass SVM is now the model for pass 2
+        /// in every mode; only the <see cref="Pass2ProteinCompactRetrain"/> diagnostic A/B still
+        /// retrains. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+        ///
+        /// Switching modes within one output directory is now SAFE: the mode participates in
+        /// the resume validity key through <see cref="Pass2QValueValidityKeySuffix()"/>, so a
+        /// re-run under a different mode invalidates the previous mode's outputs instead of
+        /// adopting its cached q-values. That retires the standing "use a FRESH --output-dir
+        /// per mode" limitation, which became far more than an experimental-mode caveat once
+        /// this variable acquired a non-percolator default.
         /// </summary>
         public static readonly string Pass2QValue = NormalizePass2QValue(
             Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
 
-        /// <summary>True when OSPREY_PASS2_QVALUE was set to a value that is neither
-        /// <see cref="PASS2_QVALUE_PERCOLATOR"/> nor <see cref="PASS2_QVALUE_TRANSFER"/> and
-        /// was therefore normalized to the default. The consuming site logs a one-line
-        /// warning so a typo does not silently pick the default.</summary>
+        /// <summary>True when OSPREY_PASS2_QVALUE was set to a value that is not one of the
+        /// recognized modes. Program startup ABORTS on this rather than falling back: silently
+        /// substituting the default would report numbers the caller did not ask for, and the
+        /// removed <c>percolator</c> token in particular is one that existing sweep scripts
+        /// still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
+        /// instead of after Stage 1-5.</summary>
         public static readonly bool Pass2QValueUnrecognized = IsUnrecognizedPass2QValue(
             Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
 
@@ -403,8 +490,8 @@ namespace pwiz.Osprey.Core
             IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
 
         /// <summary>
-        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the ONE known-unfixed resident path this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=mdiag-full-resume</c>. Legal values are
+        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=hpc-merge</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
         /// that is not on that list, is refused no matter what this is set to.
         ///
@@ -417,24 +504,65 @@ namespace pwiz.Osprey.Core
         /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
         /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
         ///
-        /// Read once at process start. Intended for local testing; CI names its token explicitly
-        /// (regression.ps1 mode 2), so what CI depends on is visible rather than ambient.
+        /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
+        /// legitimately trip more than one at once and a single-value variable made that run
+        /// impossible to perform at all. An operator running the Stage 6 handoff A/B on a
+        /// configuration that is already resident for its own reason needs
+        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> alongside that run's own token.
+        /// A LIST keeps the property that matters - every admitted path is still named
+        /// individually, so nothing rides along unnamed the way the blanket boolean allowed -
+        /// while a single value only ever prevented honest work.</para>
+        ///
+        /// Read once at process start. Intended for local testing. The standing
+        /// <c>regression.ps1</c> gate names exactly ONE token, on one leg
+        /// (<see cref="ResidentPaths.RESUME_SURVIVOR_HANDOFF"/>, issue #4536); every other leg
+        /// runs with nothing suppressed, and an INHERITED value is cleared at startup unless a
+        /// deliberate A/B switch needs it. A resident path appearing anywhere else fails CI
+        /// rather than riding along on an ambient allowance, and each token the gate does
+        /// require carries an open issue to remove it.
         /// </summary>
         public static readonly string AllowUnfixedResident =
             (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
 
         /// <summary>
-        /// True when <see cref="AllowUnfixedResident"/> was set to something that is not a legal
-        /// token, so the guard can say "that value is not a known path" instead of printing the
+        /// True when <see cref="AllowUnfixedResident"/> names anything that is not a legal token,
+        /// so the guard can say "that value is not a known path" instead of printing the
         /// same message it prints when the variable is unset. Without this, a typo
         /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
         /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
         /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
         /// </summary>
         public static readonly bool AllowUnfixedResidentUnrecognized =
-            AllowUnfixedResident.Length > 0 &&
-            !ResidentPaths.KNOWN_UNFIXED.Any(
-                t => string.Equals(t, AllowUnfixedResident, StringComparison.OrdinalIgnoreCase));
+            SplitResidentTokens(AllowUnfixedResident).Any(
+                v => !ResidentPaths.KNOWN_UNFIXED.Any(
+                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase)));
+
+        /// <summary>
+        /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
+        /// <paramref name="token"/>. Case-insensitive, matching how the rest of the CLI parses
+        /// tokens: the guard's message names the exact token to set, so rejecting the operator's
+        /// own value for capitalization would read as the guard ignoring what they just did.
+        /// </summary>
+        public static bool NamesResidentPath(string allowValue, string token)
+        {
+            return SplitResidentTokens(allowValue).Any(
+                v => string.Equals(v, token, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// The individual tokens in an OSPREY_ALLOW_UNFIXED_RESIDENT setting. Comma and semicolon
+        /// both separate, and empty entries are dropped, so a trailing separator is not a typo
+        /// the operator has to hunt for.
+        /// </summary>
+        private static IEnumerable<string> SplitResidentTokens(string allowValue)
+        {
+            if (string.IsNullOrEmpty(allowValue))
+                return Array.Empty<string>();
+            return allowValue
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(v => v.Trim())
+                .Where(v => v.Length > 0);
+        }
 
         /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
         /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default
@@ -591,7 +719,7 @@ namespace pwiz.Osprey.Core
         /// the byte-identity gate could not see it, because the gate always uses fresh directories.
         ///
         /// One helper rather than three copies: the suffix must be IDENTICAL across
-        /// <c>FirstJoinTask</c>, <c>PerFileRescoreTask</c> and <c>MergeNodeTask</c>. When only the
+        /// <c>FirstPassFdrTask</c>, <c>PerFileRescoreTask</c> and <c>SecondPassFdrTask</c>. When only the
         /// first had it, a flipped arm re-ran Stage 5 while the downstream reconciled parquets,
         /// 2nd-pass sidecars and .blib were reused from the OTHER arm - a self-inconsistent output
         /// set that no single task's key could have caught.
@@ -607,10 +735,73 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the peak-pick
+        /// model - which is every task from per-file scoring onward, because the pick decides
+        /// WHICH peak each precursor's row describes.
+        ///
+        /// UNCONDITIONAL, unlike <see cref="ExperimentAggValidityKeySuffix"/>, and that
+        /// difference is the point. The aggregation suffix is empty for its default arm because
+        /// that arm's output never changed; this arm's DID. The default moved from the
+        /// product-form pick to the learned model (<see cref="PickLda"/>), so "emits nothing"
+        /// already describes every output directory written before the flip. Emitting nothing
+        /// for the new default too would make a post-flip key EQUAL a pre-flip key, and the
+        /// resume driver would adopt product-form parquets as though the learned model had
+        /// produced them.
+        ///
+        /// The one-time cost is real: every output directory written before this shipped is
+        /// invalidated, so a warm re-run or a <c>-LinkFrom</c> adoption re-runs Stage 1-4. That
+        /// is the correct outcome, not a regression - those artifacts were picked by a
+        /// different model, and reusing them reports one model's peaks under the other's name.
+        ///
+        /// The arm can also be passed explicitly, because the environment is read once into a
+        /// static and cannot be flipped at run time - a test would otherwise be able to assert
+        /// only whichever arm the test process happens to be running under.
+        /// </summary>
+        public static string PickValidityKeySuffix()
+        {
+            return PickValidityKeySuffix(PickLda, PickLdaModelPath);
+        }
+
+        /// <summary>
+        /// <see cref="PickValidityKeySuffix()"/> for an explicitly supplied arm. The model PATH
+        /// participates as well as the on/off flag: <see cref="PickLdaModelPath"/> overrides the
+        /// resolution-keyed default outright, so two runs can differ in nothing else.
+        /// </summary>
+        public static string PickValidityKeySuffix(bool pickLda, string pickModelPath)
+        {
+            return @";pick=" + (pickLda ? @"lda" : @"product")
+                   + @";pickmodel=" + (string.IsNullOrEmpty(pickModelPath) ? @"none" : pickModelPath);
+        }
+
+        /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the 2nd-pass
+        /// q-value mode. UNCONDITIONAL for the same reason as
+        /// <see cref="PickValidityKeySuffix()"/>: the default moved from the removed
+        /// <c>percolator</c> retrain to <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>, so an empty
+        /// suffix would let a run adopt the other mode's cached q-values.
+        ///
+        /// This is the tagging the <see cref="Pass2QValue"/> remarks used to defer, and it
+        /// retires the "use a FRESH --output-dir per mode" limitation they carried.
+        /// </summary>
+        public static string Pass2QValueValidityKeySuffix()
+        {
+            return Pass2QValueValidityKeySuffix(Pass2QValue);
+        }
+
+        /// <summary>
+        /// <see cref="Pass2QValueValidityKeySuffix()"/> for an explicitly supplied mode, in the
+        /// normalized form <see cref="Pass2QValue"/> holds.
+        /// </summary>
+        public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
+        {
+            return @";pass2=" + normalizedPass2QValue;
+        }
+
+        /// <summary>
         /// True when <paramref name="normalizedAgg"/> names a mean(best-N) arm. Takes the arm as
         /// an ARGUMENT rather than reading <see cref="ExperimentAggMeanBest"/> so a consumer can
         /// ask about an arm RECORDED BY ANOTHER PROCESS - a distributed <c>--task SecondPassFDR</c>
-        /// merge node reloads the 1st-pass model from disk and must gate on the arm that trained
+        /// SecondPassFDR node reloads the 1st-pass model from disk and must gate on the arm that trained
         /// it, not on its own environment. Expects the normalized form
         /// (<see cref="ExperimentAgg"/>) as persisted alongside the model.
         /// </summary>
@@ -671,7 +862,7 @@ namespace pwiz.Osprey.Core
         private static string NormalizePass2QValue(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
-                return PASS2_QVALUE_PERCOLATOR;
+                return PASS2_QVALUE_PROTEIN_COMPACT;
             string v = raw.Trim().ToLowerInvariant();
             if (v == PASS2_QVALUE_TRANSFER)
                 return PASS2_QVALUE_TRANSFER;
@@ -679,9 +870,10 @@ namespace pwiz.Osprey.Core
                 return PASS2_QVALUE_TRANSFER_COMPETE;
             if (v == PASS2_QVALUE_PROTEIN_COMPACT)
                 return PASS2_QVALUE_PROTEIN_COMPACT;
-            // Fall back to the parity-preserving default on any unrecognized token; the
-            // consuming site (Pass2FdrSidecar) warns so a typo is visible in the log.
-            return PASS2_QVALUE_PERCOLATOR;
+            // An unrecognized token normalizes to the default only so the other statics are
+            // well-formed; the run does not get here, because Program aborts at startup on
+            // IsUnrecognizedPass2QValue.
+            return PASS2_QVALUE_PROTEIN_COMPACT;
         }
 
         private static bool IsUnrecognizedPass2QValue(string raw)
@@ -689,7 +881,7 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrWhiteSpace(raw))
                 return false;
             string v = raw.Trim().ToLowerInvariant();
-            return v != PASS2_QVALUE_PERCOLATOR && v != PASS2_QVALUE_TRANSFER &&
+            return v != PASS2_QVALUE_TRANSFER &&
                    v != PASS2_QVALUE_TRANSFER_COMPETE && v != PASS2_QVALUE_PROTEIN_COMPACT;
         }
 

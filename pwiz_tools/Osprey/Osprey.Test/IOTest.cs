@@ -4013,10 +4013,45 @@ namespace pwiz.Osprey.Test
                     typeof(ReconcileAction.ForcedIntegration));
                 Assert.IsInstanceOfType(streamed.ReconciliationActions[("s2", 1)],
                     typeof(ReconcileAction.UseCwtPeak));
+
+                AssertBatchOverlayRejectsLeanStubs(parquetPaths, stems);
             }
             finally
             {
                 try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The batch <see cref="RescoreHydration.HydrateReconciliationOverlay"/> must REFUSE
+        /// the per-file lists a LEAN Stage 5 load publishes - one keyed entry per scored file,
+        /// every list EMPTY - rather than quietly hydrate a bundle with no entries in it.
+        ///
+        /// This is not a hypothetical: it is the shape <c>FirstPassFdrTask.Rehydrate</c> is handed on
+        /// every resume that did not need the resident pool, and the reason that path has to
+        /// take <see cref="RescoreHydration.HydrateCompactedStreaming"/> (which loads each
+        /// file's stubs itself) instead. The refusal comes from the sidecar reader's superset
+        /// contract - <c>FdrScoresSidecar.TryRead</c> cannot bind a record to a list of zero
+        /// entries - so it is the CALLER's job to pick the hydrate that matches what upstream
+        /// loaded. Pinned here because the failure is a mid-pipeline
+        /// <see cref="InvalidDataException"/> that reads like sidecar corruption rather than
+        /// like the wrong hydrate being called.
+        /// </summary>
+        private static void AssertBatchOverlayRejectsLeanStubs(
+            List<string> parquetPaths, string[] stems)
+        {
+            var leanEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+            foreach (string stem in stems)
+                leanEntries.Add(new KeyValuePair<string, List<FdrEntry>>(stem, new List<FdrEntry>()));
+            try
+            {
+                RescoreHydration.HydrateReconciliationOverlay(leanEntries, parquetPaths);
+                Assert.Fail("expected InvalidDataException overlaying a sidecar onto empty stubs");
+            }
+            catch (InvalidDataException ex)
+            {
+                StringAssert.Contains(ex.Message, "1st-pass.fdr_scores.bin");
+                StringAssert.Contains(ex.Message, stems[0]);
             }
         }
 
@@ -4157,7 +4192,7 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = actions,
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
-                // FirstJoin's authoritative join-wide set: only base_id 1 passed
+                // FirstPassFDR's authoritative join-wide set: only base_id 1 passed
                 // first-pass FDR. This test deliberately exercises the documented
                 // union semantics: RescoreCompaction retains that set PLUS the
                 // base_ids of reconciliation-action targets (below), pulling in 2
@@ -4219,7 +4254,7 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
-                // FirstJoin built the passing set WITHOUT the protein rescue, so
+                // FirstPassFDR built the passing set WITHOUT the protein rescue, so
                 // entry 2 (failing peptide, passing protein) is not in it.
                 GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
             };
@@ -4268,7 +4303,7 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
-                // FirstJoin excludes decoys when building the set, so a lone decoy's
+                // FirstPassFDR excludes decoys when building the set, so a lone decoy's
                 // base_id is never in it -> empty set here -> decoy dropped.
                 GlobalFirstPassBaseIds = new HashSet<uint>(),
             };

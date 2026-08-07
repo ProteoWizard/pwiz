@@ -142,18 +142,19 @@ The picker resolves the model once, in this order
 
 1. `OSPREY_PICK_LDA_MODEL` set to an existing file → that JSON model (the
    validation override);
-2. else `OSPREY_PICK_LDA` set and not `0` → the hard-coded resolution-keyed
-   model (Stellar for unit, Astral for HRAM);
-3. else (**default**) → the legacy pure product-form pick — the Rust-parity
-   pick that matches the committed regression golden.
+2. else `OSPREY_PICK_LDA` is not `0` (**default**) → the hard-coded
+   resolution-keyed model (Stellar for unit, Astral for HRAM);
+3. else (`OSPREY_PICK_LDA=0`) → the legacy pure product-form pick, kept so the
+   A/B stays available.
 
 ## Caveats
 
-- **Promoting weights does not change production behavior.** The learned model
-  is off by default; only `OSPREY_PICK_LDA` (or the JSON override) turns it on.
-  **Flipping it on by default is a separate, coordinated golden re-baseline** —
-  it moves the pick, so the committed regression golden must be regenerated and
-  cross-impl parity re-confirmed on Stellar + Astral.
+- **Promoting weights DOES change production behavior now.** The learned model
+  became the default on 2026-08-03; `OSPREY_PICK_LDA=0` selects the legacy
+  product pick. This section previously said flipping it on would need "a
+  separate, coordinated golden re-baseline ... and cross-impl parity re-confirmed
+  on Stellar + Astral" - that is exactly how it was done, so a change to the
+  promoted weights now needs the same treatment rather than being a no-op.
 - **The `pick-model-*.json` files are developer-local training artifacts** and
   are not committed; only the numeric literals copied into source live in the
   repo.

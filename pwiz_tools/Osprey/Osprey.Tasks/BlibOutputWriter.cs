@@ -32,14 +32,14 @@ using pwiz.Osprey.IO;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Orchestrates the BiblioSpecLite <c>.blib</c> output emission for the merge
+    /// Orchestrates the BiblioSpecLite <c>.blib</c> output emission for the SecondPassFDR
     /// node (Stage 9): source-file IDs, a parallel zlib pre-compress pass, the
     /// sequential per-best-precursor RefSpectra + modifications + protein +
     /// RetentionTimes + Osprey extension-table emission, then metadata and
     /// finalize. Drives the low-level <see cref="BlibWriter"/> (the SQLite layer);
     /// this type owns only the per-spectrum row composition.
     ///
-    /// Extracted verbatim from <c>MergeNodeTask.WriteBlibFile</c> as pure code
+    /// Extracted verbatim from <c>SecondPassFdrTask.WriteBlibOutput</c> as pure code
     /// motion so <see cref="Write"/> reads as a sequencer; behavior (and therefore
     /// the blib bytes) is unchanged. Mirrors Rust pipeline.rs:4596-6272.
     /// </summary>

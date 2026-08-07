@@ -34,11 +34,11 @@ namespace pwiz.Osprey.Tasks
 {
     /// <summary>
     /// Persists the trained 1st-pass Percolator model to a small join-wide JSON sidecar
-    /// so a distributed <c>--task SecondPassFDR</c> merge node -- or any resume that
+    /// so a distributed <c>--task SecondPassFDR</c> node -- or any resume that
     /// skips 1st-pass training -- can run the frozen 2nd-pass modes
     /// (OSPREY_PASS2_QVALUE=transfer / transfer-compete / protein-compact) without the
-    /// in-process <see cref="FirstPassPercolatorModel"/>. Without this the merge node hits
-    /// the <see cref="Pass2FdrSidecar"/> fail-fast ("a distributed SecondPassFDR merge node
+    /// in-process <see cref="FirstPassPercolatorModel"/>. Without this SecondPassFDR hits
+    /// the <see cref="Pass2FdrSidecar"/> fail-fast ("a distributed SecondPassFDR node
     /// that never trained pass 1").
     ///
     /// Only the slice <see cref="FrozenModelScorer"/> consumes is stored: the feature
@@ -49,15 +49,22 @@ namespace pwiz.Osprey.Tasks
     /// applied to the same per-fold values either way).
     ///
     /// GBDT (<c>--fdr-method gbdt</c>) is NOT persisted here: the tree ensembles carry no
-    /// linear weights, so <see cref="Save"/> declines and a GBDT merge node keeps the prior
+    /// linear weights, so <see cref="Save"/> declines and a GBDT SecondPassFDR node keeps the prior
     /// fail-fast behavior (unchanged) until tree serialization is added.
+    ///
+    /// The <see cref="ProteinCompactStratum"/> base ids ride in this same sidecar rather than
+    /// a second file. protein-compact needs BOTH the frozen model and the stratum, they are
+    /// produced by the same first-pass span, and a SecondPassFDR node that has one without the other
+    /// can do nothing with it - so one artifact, one relay hop in the HPC chain, and one
+    /// reload site. The stratum is absent (null) under every other mode, which is what the
+    /// mode gate below expects.
     /// </summary>
     internal static class FirstPassModelIO
     {
         private const string ModelSuffix = @".1st-pass.model.json";
 
         /// <summary>Serializable slice of <see cref="PercolatorResults"/> the frozen scorer needs,
-        /// plus the pass-1 provenance a merge node cannot otherwise know.</summary>
+        /// plus the pass-1 provenance a SecondPassFDR node cannot otherwise know.</summary>
         private sealed class ModelDto
         {
             public int SchemaVersion { get; set; }
@@ -71,16 +78,37 @@ namespace pwiz.Osprey.Tasks
             /// Deliberately added WITHOUT bumping <see cref="SchemaVersion"/>: it is an optional
             /// additive property, so an older reader ignores it and this reader sees null on an
             /// older file. Bumping the version would instead make every pre-existing sidecar
-            /// unreadable, which on a merge node is the hard fail-fast, not a graceful
+            /// unreadable, which on a SecondPassFDR node is the hard fail-fast, not a graceful
             /// degradation.</summary>
             public string ExperimentAgg { get; set; }
+
+            /// <summary>The <see cref="ProteinCompactStratum"/> base ids, written only under
+            /// OSPREY_PASS2_QVALUE=protein-compact and null under every other mode. Optional and
+            /// additive for the same reason as <see cref="ExperimentAgg"/>, so
+            /// <see cref="SchemaVersion"/> stays at 1 and sidecars written before this field
+            /// still load. Sorted ascending on write: the in-memory source is a
+            /// <see cref="HashSet{T}"/>, whose enumeration order is an implementation detail,
+            /// and an artifact that reorders between runs is neither diffable nor safe to
+            /// compare byte-wise in the regression golden.</summary>
+            public uint[] StratumBaseIds { get; set; }
+        }
+
+        /// <summary>What one persisted sidecar carries. A result type rather than a stack of
+        /// out parameters because the three values are read together and travel together: the
+        /// frozen scorer's model slice, the pass-1 provenance, and the protein-compact
+        /// stratum.</summary>
+        public sealed class Sidecar
+        {
+            public PercolatorResults Model { get; set; }
+            public string ExperimentAgg { get; set; }
+            public HashSet<uint> StratumBaseIds { get; set; }
         }
 
         /// <summary>
         /// Per-file model sidecar path <c>&lt;parquetDir&gt;/&lt;fileStem&gt;.1st-pass.model.json</c>,
         /// sitting beside the file's other Stage-5 sidecars (<c>.calibration.json</c>,
         /// <c>.1st-pass.fdr_scores.bin</c>, <c>.reconciliation.json</c>). Per-file (not
-        /// join-wide) so a distributed <c>--task SecondPassFDR</c> merge node finds it by the
+        /// join-wide) so a distributed <c>--task SecondPassFDR</c> node finds it by the
         /// SAME input-file-stem derivation it uses for every other reconciled sidecar -- the
         /// model is identical across files, so any one copy serves. <paramref name="parquetPath"/>
         /// is the file's score parquet; only its directory is used.
@@ -92,21 +120,19 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Load the model from the first per-file sidecar that exists among
+        /// Load from the first per-file sidecar that exists among
         /// <paramref name="perFileParquetPaths"/> (stem -&gt; score parquet path), or null when
         /// none is present. The copies are identical, so the first hit is authoritative.
         /// </summary>
-        public static PercolatorResults LoadFromAny(
-            IReadOnlyDictionary<string, string> perFileParquetPaths, out string experimentAgg)
+        public static Sidecar LoadFromAny(IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
-            experimentAgg = null;
             if (perFileParquetPaths == null)
                 return null;
             foreach (var kvp in perFileParquetPaths)
             {
-                var model = Load(PathFor(kvp.Value, kvp.Key), out experimentAgg);
-                if (model != null)
-                    return model;
+                var sidecar = Load(PathFor(kvp.Value, kvp.Key));
+                if (sidecar != null)
+                    return sidecar;
             }
             return null;
         }
@@ -115,20 +141,31 @@ namespace pwiz.Osprey.Tasks
         /// Write the frozen-scorer slice of <paramref name="model"/> to <paramref name="path"/>.
         /// Returns false (writing nothing) when the model has no linear weights or standardizer
         /// -- the GBDT path, or an empty/degenerate model -- so the caller does not advertise a
-        /// sidecar the merge node cannot use.
+        /// sidecar SecondPassFDR cannot use.
         /// </summary>
         /// <param name="path">Sidecar path to write.</param>
         /// <param name="model">The trained 1st-pass model.</param>
         /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process,
-        ///   stamped so a merge node reads the pass-1 arm instead of guessing it from its own
+        ///   stamped so a SecondPassFDR node reads the pass-1 arm instead of guessing it from its own
         ///   environment. Comes from the caller (which holds the byproduct) rather than being
         ///   re-read here, so this stays a pure serializer.</param>
-        public static bool Save(string path, PercolatorResults model, string experimentAgg)
+        /// <param name="stratumBaseIds">The protein-compact stratum base ids, or null under any
+        ///   other mode. Sorted here so the artifact is stable across runs.</param>
+        public static bool Save(string path, PercolatorResults model, string experimentAgg,
+            HashSet<uint> stratumBaseIds = null)
         {
             if (model?.Standardizer == null ||
                 model.FoldWeights == null || model.FoldWeights.Count == 0 ||
                 model.FoldBiases == null || model.FoldBiases.Count != model.FoldWeights.Count)
                 return false;
+
+            uint[] sortedBaseIds = null;
+            if (stratumBaseIds != null && stratumBaseIds.Count > 0)
+            {
+                sortedBaseIds = new uint[stratumBaseIds.Count];
+                stratumBaseIds.CopyTo(sortedBaseIds);
+                Array.Sort(sortedBaseIds); // Array.Sort OK: distinct uint keys, so stability cannot change the result
+            }
 
             var dto = new ModelDto
             {
@@ -139,6 +176,7 @@ namespace pwiz.Osprey.Tasks
                 FoldWeights = model.FoldWeights.ToArray(),
                 FoldBiases = model.FoldBiases.ToArray(),
                 ExperimentAgg = experimentAgg,
+                StratumBaseIds = sortedBaseIds,
             };
 
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
@@ -167,20 +205,20 @@ namespace pwiz.Osprey.Tasks
         /// The returned <see cref="PercolatorResults"/> carries only the scorer slice
         /// (standardizer + per-fold weights/biases); <see cref="FrozenModelScorer.TryCreate"/>
         /// needs nothing else.
+        ///
+        /// <see cref="Sidecar.ExperimentAgg"/> is null when the sidecar predates that field, so
+        /// null there means "unknown", never "max" - a caller that gates on the arm must treat it
+        /// as unknown rather than assuming the default. <see cref="Sidecar.StratumBaseIds"/> is
+        /// null under every mode but protein-compact, and likewise on an older sidecar.
         /// </summary>
         /// <param name="path">Sidecar path to read.</param>
-        /// <param name="experimentAgg">Out: the pass-1 OSPREY_EXPERIMENT_AGG arm recorded in the
-        ///   sidecar, or null when the model could not be read OR the sidecar predates the field.
-        ///   Null therefore means "unknown", never "max" - a caller that gates on the arm must
-        ///   treat it as unknown rather than assuming the default.</param>
-        public static PercolatorResults Load(string path, out string experimentAgg)
+        public static Sidecar Load(string path)
         {
-            experimentAgg = null;
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return null;
 
             // A corrupt or truncated sidecar must load as null (the documented "unreadable"
-            // contract) rather than throw and crash the merge node: a bad read/parse and a
+            // contract) rather than throw and crash SecondPassFDR: a bad read/parse and a
             // shape-invariant violation both fall back to the pre-persistence fail-fast.
             try
             {
@@ -195,7 +233,7 @@ namespace pwiz.Osprey.Tasks
 
                 // Each fold's linear weights must be present and match the feature width,
                 // or the frozen scorer would dereference null / index past the end while
-                // scoring on the merge node -- an opaque crash outside this method's
+                // scoring on SecondPassFDR -- an opaque crash outside this method's
                 // documented null-on-unreadable contract.
                 foreach (var foldWeights in dto.FoldWeights)
                 {
@@ -203,12 +241,18 @@ namespace pwiz.Osprey.Tasks
                         return null;
                 }
 
-                experimentAgg = dto.ExperimentAgg;
-                return new PercolatorResults
+                return new Sidecar
                 {
-                    Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
-                    FoldWeights = new List<double[]>(dto.FoldWeights),
-                    FoldBiases = new List<double>(dto.FoldBiases),
+                    Model = new PercolatorResults
+                    {
+                        Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
+                        FoldWeights = new List<double[]>(dto.FoldWeights),
+                        FoldBiases = new List<double>(dto.FoldBiases),
+                    },
+                    ExperimentAgg = dto.ExperimentAgg,
+                    StratumBaseIds = dto.StratumBaseIds == null || dto.StratumBaseIds.Length == 0
+                        ? null
+                        : new HashSet<uint>(dto.StratumBaseIds),
                 };
             }
             catch (Exception)
