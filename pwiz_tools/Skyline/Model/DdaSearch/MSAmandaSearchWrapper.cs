@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     if (!HasPercolatorQValues(outputMzidGz))
                         throw new IOException(string.Format(
                             DdaSearchResources.MSAmandaSearchWrapper_Run_No_Percolator_q_values,
-                            Path.GetFileName(outputMzidGz), PercolatorDirectory));
+                            Path.GetFileName(outputMzidGz), DiagnosePercolator()));
 
                     CurrentFile++;
                     _progressStatus = _progressStatus.NextSegment();
@@ -359,6 +359,59 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
+        /// <summary>
+        /// Asks percolator.exe why it produced nothing, rather than guessing. A Windows loader failure -
+        /// a DLL it imports that is not beside it and not on the machine - exits the process with a status
+        /// like 0xC0000135 and writes nothing at all, which is otherwise indistinguishable from a search
+        /// that simply found no matches. Returns a sentence for the error the user sees.
+        /// </summary>
+        private static string DiagnosePercolator()
+        {
+            string percolatorExe = Path.Combine(PercolatorDirectory, @"percolator.exe");
+            if (!File.Exists(percolatorExe))
+                return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_could_not_run,
+                    percolatorExe, DdaSearchResources.MSAmandaSearchWrapper_Percolator_not_found);
+
+            try
+            {
+                var psi = new ProcessStartInfo(percolatorExe, @"--help")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    WorkingDirectory = PercolatorDirectory
+                };
+                using var process = Process.Start(psi);
+                if (process == null)
+                    return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_could_not_run,
+                        percolatorExe, DdaSearchResources.MSAmandaSearchWrapper_Percolator_not_found);
+
+                process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+                if (!process.WaitForExit(30 * 1000))
+                {
+                    process.Kill();
+                    return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing,
+                        PercolatorDirectory);
+                }
+
+                // A negative exit code here is an NTSTATUS from the loader, not something percolator chose
+                // to return, so report it in the hex form those statuses are documented under.
+                if (process.ExitCode < 0)
+                    return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_could_not_run,
+                        percolatorExe, Invariant($@"0x{process.ExitCode:X8} {error.Trim()}").Trim());
+
+                return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing,
+                    PercolatorDirectory);
+            }
+            catch (Exception e)
+            {
+                return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_could_not_run,
+                    percolatorExe, e.Message);
+            }
+        }
+
         // The q-value accessions BiblioSpec accepts from an mzIdentML: percolator:Q value and the
         // generic PSM-level q-value. MS Amanda writes one of these only for Percolator-scored PSMs;
         // everything else carries just Amanda:AmandaScore, which no library build can use.
@@ -367,7 +420,12 @@ namespace pwiz.Skyline.Model.DdaSearch
         internal static bool HasPercolatorQValues(string mzidGzPath)
         {
             using var file = File.OpenRead(mzidGzPath);
-            using var gzip = new GZipStream(file, CompressionMode.Decompress);
+            return HasPercolatorQValues(file);
+        }
+
+        internal static bool HasPercolatorQValues(Stream mzidGzStream)
+        {
+            using var gzip = new GZipStream(mzidGzStream, CompressionMode.Decompress);
             using var reader = new StreamReader(gzip, Encoding.UTF8);
 
             // Read in chunks rather than lines: an mzIdentML is not guaranteed to be pretty-printed,

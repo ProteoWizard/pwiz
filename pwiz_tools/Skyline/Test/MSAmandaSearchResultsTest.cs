@@ -20,7 +20,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.SkylineTestUtil;
 
@@ -40,46 +39,43 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestPercolatorQValueDetection()
         {
-            // Padding long enough to push the accession in the "straddles a read" case past the
-            // reader's 64K chunk, which is the one way a chunk-at-a-time scan can miss a match.
-            string padding = new string('x', 70 * 1024);
+            const string qValue = @"<cvParam accession=""MS:1001491"" name=""percolator:Q value"" value=""0.001""/>";
 
-            AssertQValuesFound(true, "percolator Q value",
-                @"<cvParam accession=""MS:1001491"" name=""percolator:Q value"" value=""0.001""/>");
+            AssertQValuesFound(true, "percolator Q value", qValue);
             AssertQValuesFound(true, "generic PSM-level q-value",
                 @"<cvParam accession=""MS:1002354"" name=""PSM-level q-value"" value=""0.004""/>");
             AssertQValuesFound(false, "only the raw Amanda score",
                 @"<cvParam accession=""MS:1002319"" name=""Amanda:AmandaScore"" value=""123.4""/>");
             AssertQValuesFound(false, "no scores at all", string.Empty);
             AssertQValuesFound(true, "q-value beyond the first read",
-                padding + @"<cvParam accession=""MS:1001491"" name=""percolator:Q value"" value=""0.001""/>");
-            AssertQValuesFound(true, "q-value straddling a read boundary",
-                new string('y', 64 * 1024 - 5) + @"<cvParam accession=""MS:1001491"" name=""percolator:Q value""/>");
+                new string('x', 70 * 1024) + qValue);
+
+            // The one way a chunk-at-a-time scan misses a match is an accession split across two
+            // reads, so walk the accession through the offsets around the reader's 64K chunk. Sweep
+            // rather than aim: a StreamReader is free to return a short read, so no single padding
+            // length reliably lands the accession on the seam, but a run of them cannot all miss it.
+            for (int offset = -32; offset <= 32; offset++)
+                AssertQValuesFound(true, $"q-value at 64K{offset:+#;-#;+0}",
+                    new string('y', 64 * 1024 + offset) + qValue);
         }
 
-        private void AssertQValuesFound(bool expected, string label, string body)
+        private static void AssertQValuesFound(bool expected, string label, string body)
         {
-            string path = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(),
-                @"MSAmandaSearchResultsTest.mzid.gz");
-            WriteGzippedMzid(path, body);
-            try
-            {
-                Assert.AreEqual(expected, MSAmandaSearchWrapper.HasPercolatorQValues(path), label);
-            }
-            finally
-            {
-                FileEx.SafeDelete(path, true);
-            }
+            using var mzidGz = new MemoryStream(GzipMzid(body));
+            Assert.AreEqual(expected, MSAmandaSearchWrapper.HasPercolatorQValues(mzidGz), label);
         }
 
-        private static void WriteGzippedMzid(string path, string body)
+        private static byte[] GzipMzid(string body)
         {
-            using var file = File.Create(path);
-            using var gzip = new GZipStream(file, CompressionMode.Compress);
-            using var writer = new StreamWriter(gzip, new UTF8Encoding(false));
-            writer.Write(@"<?xml version=""1.0"" encoding=""UTF-8""?><MzIdentML>");
-            writer.Write(body);
-            writer.Write(@"</MzIdentML>");
+            using var buffer = new MemoryStream();
+            using (var gzip = new GZipStream(buffer, CompressionMode.Compress, true))
+            using (var writer = new StreamWriter(gzip, new UTF8Encoding(false)))
+            {
+                writer.Write(@"<?xml version=""1.0"" encoding=""UTF-8""?><MzIdentML>");
+                writer.Write(body);
+                writer.Write(@"</MzIdentML>");
+            }
+            return buffer.ToArray();
         }
     }
 }
