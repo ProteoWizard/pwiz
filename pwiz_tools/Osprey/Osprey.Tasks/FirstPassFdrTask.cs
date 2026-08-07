@@ -685,12 +685,15 @@ namespace pwiz.Osprey.Tasks
         /// leaving them their stale Stage 4 boundaries in the blib - the divergence
         /// <see cref="RescoreCompaction"/>'s union step exists to prevent.</para>
         ///
-        /// <para>Returns true with a NULL loader when the compaction never ran (no files
-        /// joined), which is also the only case where a null loader costs nothing: there is no
-        /// survivor buffer to bound. Returns false (<see cref="PipelineContext.ExitCode"/> set)
-        /// when a joined file has no published parquet path - a genuine fault rather than a
-        /// reason to fall back, since Stage 6 looks that file's inputs up by the same key and
-        /// would otherwise leave it un-rescored.</para>
+        /// <para>Returns true with a NULL loader ONLY for an empty join, which is also the only
+        /// case where a null loader costs nothing: there is no survivor buffer to bound. Any
+        /// other missing precondition returns false with
+        /// <see cref="PipelineContext.ExitCode"/> set, rather than falling back to the resident
+        /// handoff. That asymmetry is the point of the issue this fixes: a silent fallback is
+        /// how an O(files) path reached a default run in the first place, and
+        /// <c>Stage6ResidentHandoffGuardError</c> cannot catch it - it reads a null loader as
+        /// "this run could not stream" and exempts it. So the preconditions are faults here,
+        /// where they can still be reported.</para>
         /// </summary>
         private static bool TryBuildResumeSurvivorLoader(
             PipelineContext ctx,
@@ -700,7 +703,22 @@ namespace pwiz.Osprey.Tasks
         {
             loader = null;
             if (bundle.RetainedBaseIds == null)
-                return true;
+            {
+                // Null means CompactFirstPass skipped RescoreCompaction.Apply, which it does
+                // only for an empty join. Checked rather than assumed: if some later change
+                // gives Apply a second skip, the loader would go null on a populated run and
+                // Stage 6 would silently take the resident buffer again - the exact regression
+                // shape that produced this issue, and one no guard downstream can see.
+                if (perFileEntries.Count == 0)
+                    return true;
+                ctx.LogError(string.Format(
+                    @"Resume rehydrate: the first-pass compaction published no retained base_id " +
+                    @"set for {0} joined file(s), so the Stage 6 survivor handoff cannot be " +
+                    @"streamed. RescoreCompaction.Apply must run whenever any file is joined.",
+                    perFileEntries.Count));
+                ctx.ExitCode = 1;
+                return false;
+            }
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             foreach (var kvp in perFileEntries)
             {
