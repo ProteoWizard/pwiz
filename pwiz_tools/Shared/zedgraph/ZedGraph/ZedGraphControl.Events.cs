@@ -668,6 +668,93 @@ namespace ZedGraph
 			Cursor.Current = Cursors.Default;
 		}
 
+		#region Automated mouse simulation
+
+		// These entry points let a test or automation harness (e.g.
+		// IJsonToolService.ClickGraph) reproduce a user gesture. They call the very
+		// same handlers the operating system invokes for a real mouse message, so
+		// every MouseDownEvent/MouseMoveEvent/MouseUpEvent subscriber AND ZedGraph's
+		// own zoom/pan/edit state machine behave identically to a genuine press,
+		// drag, and release. A stationary click is a down followed by an up with no
+		// intervening move; a drag is a down, one or more moves, then an up.
+
+		/// <summary>
+		/// Simulate a mouse-down at the client point carried by <paramref name="e" />
+		/// exactly as if the operating system had delivered it.
+		/// </summary>
+		public void SimulateMouseDown( MouseEventArgs e )
+		{
+			ZedGraphControl_MouseDown( this, e );
+		}
+
+		/// <summary>
+		/// Simulate a mouse-move to the client point carried by <paramref name="e" />
+		/// exactly as if the operating system had delivered it.
+		/// </summary>
+		public void SimulateMouseMove( MouseEventArgs e )
+		{
+			ZedGraphControl_MouseMove( this, e );
+		}
+
+		/// <summary>
+		/// Simulate a mouse-up at the client point carried by <paramref name="e" />
+		/// exactly as if the operating system had delivered it.
+		/// </summary>
+		public void SimulateMouseUp( MouseEventArgs e )
+		{
+			ZedGraphControl_MouseUp( this, e );
+		}
+
+		/// <summary>
+		/// Simulate the click the operating system raises after a stationary press and
+		/// release at one point (the WinForms MouseClick event). Some graph panes select
+		/// on click rather than on mouse-down, so a faithful stationary click is a
+		/// <see cref="SimulateMouseDown" />, a <see cref="SimulateMouseUp" />, then this.
+		/// A drag raises no click and must omit it.
+		/// </summary>
+		public void SimulateMouseClick( MouseEventArgs e )
+		{
+			OnMouseClick( e );
+		}
+
+		/// <summary>
+		/// Zoom <paramref name="pane" /> so its X and Y axes span exactly the supplied
+		/// scale ranges (each Min must be less than its Max), recording the change on the
+		/// zoom stack so the user can unzoom and raising <see cref="ZoomEvent" />, just as
+		/// the end of an interactive zoom-drag does. Intended for automation harnesses
+		/// (e.g. IJsonToolService.ZoomGraphTo).
+		/// </summary>
+		public void ZoomPaneToScale( GraphPane pane, double xMin, double xMax, double yMin, double yMax )
+		{
+			if ( pane == null )
+				return;
+
+			ZoomState oldState = ZoomStateSave( pane, ZoomState.StateType.Zoom );
+
+			pane.XAxis.Scale.Min = xMin;
+			pane.XAxis.Scale.Max = xMax;
+			pane.XAxis.Scale.MinAuto = false;
+			pane.XAxis.Scale.MaxAuto = false;
+			pane.YAxis.Scale.Min = yMin;
+			pane.YAxis.Scale.Max = yMax;
+			pane.YAxis.Scale.MinAuto = false;
+			pane.YAxis.Scale.MaxAuto = false;
+
+			ApplyToAllPanes( pane );
+
+			using ( Graphics g = this.CreateGraphics() )
+				pane.AxisChange( g );
+
+			ZoomStatePush( pane );
+
+			if ( this.ZoomEvent != null )
+				this.ZoomEvent( this, oldState, new ZoomState( pane, ZoomState.StateType.Zoom ), pane.CenterPoint );
+
+			this.Refresh();
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Make a string label that corresponds to a user scale value.
 		/// </summary>

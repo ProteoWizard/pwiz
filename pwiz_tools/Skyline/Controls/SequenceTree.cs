@@ -1129,15 +1129,21 @@ namespace pwiz.Skyline.Controls
         {
             if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
-                BeginEdit(true);
+                // Start editing on the first character. A second one arriving before the edit box has taken
+                // the keyboard must NOT start another edit: StartLabelEdit builds a new box every time, and
+                // what had been typed so far would go with the old one.
+                if (_editTextBox == null)
+                    BeginEdit(true);
                 string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
                 if (IsKeyLocked(Keys.CapsLock))
                     keyChar = keyChar.ToLower();
-                if (@"+^%~(){}[]".IndexOf(keyChar, StringComparison.Ordinal) >= 0)
-                {
-                    keyChar = @"{" + keyChar + @"}";
-                }
-                SendKeys.Send(keyChar);
+                // Put the character straight into the edit box. It used to be handed to SendKeys.Send, which
+                // posts to whatever window holds the FOCUS -- so a character could land in another application
+                // if focus moved, and characters could arrive out of order, since that post is asynchronous
+                // while the typing that produced it is not. Writing here is synchronous and goes nowhere else;
+                // TextChanged still drives statement completion. (It also retires the escaping of the
+                // characters SendKeys syntax reserves, which only ever existed to satisfy SendKeys.)
+                _editTextBox?.TextBox.AppendText(keyChar);
                 e.Handled = true;
             }
             else

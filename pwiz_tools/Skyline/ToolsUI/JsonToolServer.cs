@@ -1080,19 +1080,61 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(formId).DismissWithCancelButton();
         }
 
-        public string GetGraphData(string graphId, string filePath = null)
+        // The graph verbs all resolve the formId to its form and act on that form's single graph (its
+        // GraphElement), on the form's UI thread. There is no separate graph id -- a graph form is assumed to
+        // have exactly one graph -- so the parameter is the same formId GetOpenForms reports.
+
+        public string GetGraphData(string formId, string filePath = null)
         {
-            return JsonUiService.GetGraphData(graphId, filePath, RequestCancellation);
+            return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetData(filePath));
         }
 
-        public string GetGraphImage(string graphId, string filePath = null)
+        public string GetGraphImage(string formId, string filePath = null)
         {
-            return JsonUiService.GetGraphImage(graphId, filePath);
+            return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetImage(filePath));
         }
 
-        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        public ImageBytesMetadata GetGraphImageBytes(string formId)
         {
-            return JsonUiService.GetGraphImageBytes(graphId);
+            return CallOnForm<StandaloneForm, ImageBytesMetadata>(formId, form => form.FindGraph().GetImageBytes());
+        }
+
+        // The geometry verbs go through the graph's UiActions, so what each one MEANS lives in one place and is
+        // the same reached through a named verb or through perform_action. They resolve the graph with FindGraph
+        // rather than the action machinery's "the form's single element that supports this": a graph on a
+        // background dock tab reports its controls not-visible and so is absent from the control walk, and these
+        // verbs have always worked on a graph whichever tab it is on.
+        public SkylineTool.Rectangle GetGraphZoom(string formId)
+        {
+            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form =>
+                UiActions.GetGraphZoom.CallNow(form.FindGraph()));
+        }
+
+        public SkylineTool.Rectangle ZoomGraphTo(string formId, SkylineTool.Rectangle bounds)
+        {
+            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form =>
+                (SkylineTool.Rectangle) UiActions.ZoomGraphTo.InvokeNow(form.FindGraph(), bounds));
+        }
+
+        public ActionResult ClickGraph(string formId, SkylineTool.Rectangle bounds)
+        {
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+                UiActions.ClickGraph.InvokeNow(form.FindGraph(), bounds));
+        }
+
+        // Both find the control the way set_value does (by the label/type GetControls reports). InvokeNow gates
+        // it -- a missing, blocked or disabled control throws -- before anything is sent, and runs the gesture
+        // on the form's UI thread.
+        public ActionResult SendText(string formId, string controlId, string text)
+        {
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+                UiActions.SendText.InvokeNow(form.FindElement(controlId, UiActions.SendText), text));
+        }
+
+        public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke)
+        {
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+                UiActions.SendKeyStroke.InvokeNow(form.FindElement(controlId, UiActions.SendKeyStroke), keyStroke));
         }
 
         public string GetFormImage(string formId, string filePath = null)
