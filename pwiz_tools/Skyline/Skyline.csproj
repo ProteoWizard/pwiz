@@ -496,6 +496,13 @@
        build)" suffix). Override with -p:SkylineInformationalVersion=... . -->
   <Import Project="SkylineVersion.targets"
           Condition="'$(TargetFramework)' == 'net8.0-windows'" />
+  <!-- ...and don't compile Jam's AssemblyInfo.cs on the net8 pass, or its attributes and the ones
+       stamped below are both present and every build of this project fails with CS0579
+       (duplicate AssemblyVersionAttribute). The file is gitignored, so it exists only where the
+       net472/Jam build has run - which is why this bites a shared CI agent and no clean one. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
   <Target Name="StampNet8InformationalVersion"
           Condition="'$(TargetFramework)' == 'net8.0-windows'"
           DependsOnTargets="ComputeSkylineVersion"
