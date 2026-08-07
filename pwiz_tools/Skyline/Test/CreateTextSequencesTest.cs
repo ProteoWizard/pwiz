@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib;
 
 namespace pwiz.SkylineTest
 {
@@ -44,16 +45,22 @@ namespace pwiz.SkylineTest
             var document =
                 (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(
                     new StringReader(STATIC_AND_HEAVY_MODIFICATIONS_DOCUMENT));
-            var modFontHolder = new ModFontHolder(new Control());
-            var oxidizedPeptide = document.Molecules.First();
-            VerifyTextSequences(PeptideTreeNode.CreateTextSequences(oxidizedPeptide, document.Settings, "MPEPTIDE", null, modFontHolder),
-                Tuple.Create("M", FontStyle.Bold | FontStyle.Underline, Color.Blue),
-                Tuple.Create("PEPTIDE", FontStyle.Bold, Color.Blue)
-            );
+            // Constructing the Control installs a WindowsFormsSynchronizationContext on this
+            // thread which nothing else would remove, and every test which ran afterwards
+            // would inherit it.
+            using (new SynchronizationContextRestorer())
+            {
+                var modFontHolder = new ModFontHolder(new Control());
+                var oxidizedPeptide = document.Molecules.First();
+                VerifyTextSequences(PeptideTreeNode.CreateTextSequences(oxidizedPeptide, document.Settings, "MPEPTIDE", null, modFontHolder),
+                    Tuple.Create("M", FontStyle.Bold | FontStyle.Underline, Color.Blue),
+                    Tuple.Create("PEPTIDE", FontStyle.Bold, Color.Blue)
+                );
 
-            var peptide = document.Molecules.Skip(1).First();
-            VerifyTextSequences(PeptideTreeNode.CreateTextSequences(peptide, document.Settings, "MPEPTIDE", null, modFontHolder),
-                Tuple.Create("MPEPTIDE", FontStyle.Bold, Color.Blue));
+                var peptide = document.Molecules.Skip(1).First();
+                VerifyTextSequences(PeptideTreeNode.CreateTextSequences(peptide, document.Settings, "MPEPTIDE", null, modFontHolder),
+                    Tuple.Create("MPEPTIDE", FontStyle.Bold, Color.Blue));
+            }
         }
 
         /// <summary>
@@ -66,12 +73,15 @@ namespace pwiz.SkylineTest
                 (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(
                     new StringReader(NEUTRAL_LOSS_DOCUMENT));
             var peptideDocNode = document.Molecules.First();
-            var modFontHolder = new ModFontHolder(new Control());
-            var textSequences = PeptideTreeNode.CreateTextSequences(peptideDocNode, document.Settings, "MGFGGTLEIK", null, modFontHolder);
-            VerifyTextSequences(textSequences,
-                Tuple.Create("M", FontStyle.Bold | FontStyle.Underline, Color.Black),
-                Tuple.Create("GFGGTLEIK", FontStyle.Regular, Color.Black)
-            );
+            using (new SynchronizationContextRestorer())
+            {
+                var modFontHolder = new ModFontHolder(new Control());
+                var textSequences = PeptideTreeNode.CreateTextSequences(peptideDocNode, document.Settings, "MGFGGTLEIK", null, modFontHolder);
+                VerifyTextSequences(textSequences,
+                    Tuple.Create("M", FontStyle.Bold | FontStyle.Underline, Color.Black),
+                    Tuple.Create("GFGGTLEIK", FontStyle.Regular, Color.Black)
+                );
+            }
         }
 
         private void VerifyTextSequences(IList<TextSequence> textSequences,

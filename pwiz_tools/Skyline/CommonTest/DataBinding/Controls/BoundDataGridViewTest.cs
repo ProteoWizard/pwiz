@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib;
 
 namespace CommonTest.DataBinding.Controls
 {
@@ -37,6 +38,11 @@ namespace CommonTest.DataBinding.Controls
         [TestMethod]
         public void TestDataBindingSubList()
         {
+            // Constructing the grid installs a WindowsFormsSynchronizationContext on this
+            // thread which nothing else would remove, and every test which ran afterwards
+            // would inherit it. Disposing the grid does not undo it.
+            using (new SynchronizationContextRestorer())
+            {
             var boundDataGridView = new BoundDataGridView
                                         {
                                             BindingContext = new BindingContext(),
@@ -62,6 +68,7 @@ namespace CommonTest.DataBinding.Controls
                 Assert.AreEqual(2, boundDataGridView.Rows.Count);
                 innerList.Add(new LinkValue<Peptide>(new Peptide("TISE"), null));
                 Assert.AreEqual(6, boundDataGridView.Rows.Count);
+            }
             }
         }
     }

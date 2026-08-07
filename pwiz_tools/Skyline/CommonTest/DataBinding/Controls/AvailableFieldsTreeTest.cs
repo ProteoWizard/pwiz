@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib;
 
 namespace CommonTest.DataBinding.Controls
 {
@@ -34,22 +35,28 @@ namespace CommonTest.DataBinding.Controls
         [TestMethod]
         public void TestDataBindingMapAttribute()
         {
-            var tree = new AvailableFieldsTree
+            // Constructing the tree installs a WindowsFormsSynchronizationContext on this
+            // thread which nothing else would remove, and every test which ran afterwards
+            // would inherit it.
+            using (new SynchronizationContextRestorer())
             {
-                RootColumn = ColumnDescriptor.RootColumn(new DataSchema(), typeof (Peptide)),
-                ShowHiddenFields = true
-            };
-            var idAminoAcidMoleculeElement = PropertyPath.Parse("AminoAcidsList!*.Molecule!*.Key");
-            Assert.IsNull(tree.FindTreeNode(idAminoAcidMoleculeElement, false));
-            var aminoAcidMoleculeElementNode = tree.FindTreeNode(idAminoAcidMoleculeElement, true);
-            Assert.AreEqual("Element", aminoAcidMoleculeElementNode.Text);
-            Assert.AreEqual(PropertyPath.Parse("AminoAcidsList!*.Molecule!*"), tree.GetTreeColumn(aminoAcidMoleculeElementNode.Parent).PropertyPath);
-            Assert.AreEqual(PropertyPath.Parse("AminoAcidsList!*.Molecule!*.Value"), tree.GetValueColumn(aminoAcidMoleculeElementNode.Parent).PropertyPath);
-            Assert.AreEqual(PropertyPath.Parse("AminoAcidsList!*"), tree.GetValueColumn(aminoAcidMoleculeElementNode.Parent.Parent).PropertyPath);
-            var aminoAcidDictKeyNode = tree.FindTreeNode(PropertyPath.Parse("AminoAcidsDict!*.Key"), true);
-            var aminoAcidDictCodeNode = tree.FindTreeNode(PropertyPath.Parse("AminoAcidsDict!*.Value.Code"), true);
-            Assert.AreEqual("Code", aminoAcidDictCodeNode.Text);
-            Assert.AreSame(aminoAcidDictKeyNode.Parent, aminoAcidDictCodeNode.Parent);
+                var tree = new AvailableFieldsTree
+                {
+                    RootColumn = ColumnDescriptor.RootColumn(new DataSchema(), typeof (Peptide)),
+                    ShowHiddenFields = true
+                };
+                var idAminoAcidMoleculeElement = PropertyPath.Parse("AminoAcidsList!*.Molecule!*.Key");
+                Assert.IsNull(tree.FindTreeNode(idAminoAcidMoleculeElement, false));
+                var aminoAcidMoleculeElementNode = tree.FindTreeNode(idAminoAcidMoleculeElement, true);
+                Assert.AreEqual("Element", aminoAcidMoleculeElementNode.Text);
+                Assert.AreEqual(PropertyPath.Parse("AminoAcidsList!*.Molecule!*"), tree.GetTreeColumn(aminoAcidMoleculeElementNode.Parent).PropertyPath);
+                Assert.AreEqual(PropertyPath.Parse("AminoAcidsList!*.Molecule!*.Value"), tree.GetValueColumn(aminoAcidMoleculeElementNode.Parent).PropertyPath);
+                Assert.AreEqual(PropertyPath.Parse("AminoAcidsList!*"), tree.GetValueColumn(aminoAcidMoleculeElementNode.Parent.Parent).PropertyPath);
+                var aminoAcidDictKeyNode = tree.FindTreeNode(PropertyPath.Parse("AminoAcidsDict!*.Key"), true);
+                var aminoAcidDictCodeNode = tree.FindTreeNode(PropertyPath.Parse("AminoAcidsDict!*.Value.Code"), true);
+                Assert.AreEqual("Code", aminoAcidDictCodeNode.Text);
+                Assert.AreSame(aminoAcidDictKeyNode.Parent, aminoAcidDictCodeNode.Parent);
+            }
         }
     }
 }

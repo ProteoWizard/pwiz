@@ -652,42 +652,13 @@ namespace TestRunnerLib
         private string ResetSynchronizationContext(TestInfo test)
         {
             var context = SynchronizationContext.Current;
-            // The plain base class is what a thread which has never touched WindowsForms has,
-            // and its Post goes to the thread pool, where it cannot deadlock anything.
-            if (context == null || context.GetType() == typeof(SynchronizationContext))
+            if (!SynchronizationContextRestorer.IsThreadAffine(context))
                 return null;
 
-            RestorePlainSynchronizationContext();
+            SynchronizationContextRestorer.RestorePlain();
             return string.Format(
-                "The test {0} left a {1} installed on the test thread. Constructing a WindowsForms control installs one and nothing removes it, so every test which ran after this one in the same process would inherit it, and any of those which blocks on an async API from the test thread would deadlock rather than fail. Save SynchronizationContext.Current before creating the control and restore it when done.",
-                test.TestMethod.Name, context.GetType().FullName);
-        }
-
-        /// <summary>
-        /// Puts the plain <see cref="SynchronizationContext"/> back, the way Application.Run
-        /// does when its message loop ends.
-        ///
-        /// This goes through WindowsForms rather than just calling SetSynchronizationContext
-        /// because WindowsForms remembers the context it replaced and will not install a
-        /// second time while that record is set. Replacing the context without clearing the
-        /// record leaves WindowsForms believing it is still installed, so every test after
-        /// the first offender creates its controls without installing anything, and this
-        /// check reports exactly one test however many are at fault. That is worth a
-        /// non-public method: with it, both halves of CreateTextSequencesTest are reported,
-        /// and without it only whichever one runs first.
-        /// </summary>
-        private static void RestorePlainSynchronizationContext()
-        {
-            var uninstall = typeof(System.Windows.Forms.WindowsFormsSynchronizationContext)
-                .GetMethod(@"Uninstall", BindingFlags.NonPublic | BindingFlags.Static, null,
-                    new[] { typeof(bool) }, null);
-            uninstall?.Invoke(null, new object[] { false });
-
-            // Uninstall does nothing unless a WindowsForms context is current, and puts back
-            // whatever was there before, which may be null or may be nothing at all.
-            var context = SynchronizationContext.Current;
-            if (context == null || context.GetType() != typeof(SynchronizationContext))
-                SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+                "The test {0} left a {1} installed on the test thread. Constructing a WindowsForms control installs one and nothing removes it, so every test which ran after this one in the same process would inherit it, and any of those which blocks on an async API from the test thread would deadlock rather than fail. Wrap the control in a \"using (new {2}())\".",
+                test.TestMethod.Name, context.GetType().FullName, nameof(SynchronizationContextRestorer));
         }
 
         /// <summary>
