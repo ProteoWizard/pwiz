@@ -18,23 +18,25 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
-using PersistedViews = pwiz.Skyline.Model.PersistedViews;
+using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.SkylineTestData
 {
@@ -44,22 +46,17 @@ namespace pwiz.SkylineTestData
     [TestClass]
     public class CommandLineReportTest : AbstractUnitTestEx
     {
-        private const string REPORT_NAME = "CommandLineReportTest";
-
         /// <summary>
-        /// The exports are done in this culture so that the expected values below are the
-        /// same no matter which language the test run is using. Skyline has no resources
-        /// for French, so the captions and messages stay in English, and the only thing
-        /// that changes is the number formatting, which is what these tests are about.
+        /// The report these tests export is one of the defaults, so that nothing here has to
+        /// define it. It is the one default which has a "Quantification" column, whose value
+        /// has no parquet storage type of its own and is therefore written as text, which is
+        /// the only way the culture a parquet file was exported in can be seen at all.
+        ///
+        /// The tests reset the settings so the defaults are present under the localized names
+        /// <see cref="Resources"/> gives them. They are added the first time
+        /// Settings.Default.PersistedViews is read.
         /// </summary>
-        private static readonly CultureInfo LOCALIZED_CULTURE = CultureInfo.GetCultureInfo("fr-FR");
-
-        // The first row of REPORT_NAME for Rat_plasma.sky.
-        private const string SEQUENCE = "CSLPRPWALTFSYGR";
-        private const string INVARIANT_RETENTION_TIME = "30.817350387573242";
-        private const string LOCALIZED_RETENTION_TIME = "30,82";
-        private const string INVARIANT_QUANTIFICATION = "Normalized Area: 1.3746E+5";
-        private const string LOCALIZED_QUANTIFICATION = "Normalized Area: 1,3746E+5";
+        private static string ReportName => Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results;
 
         /// <summary>
         /// Exports the report to parquet with each form of the "--report-invariant" argument,
@@ -73,24 +70,25 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestParquetReportInvariant()
         {
+            string docPath = GetTestDocumentPath();
+            ExportAndVerifyColumnNames(docPath, @"default", null, true);
+            ExportAndVerifyColumnNames(docPath, @"bare", @"--report-invariant", true);
+            ExportAndVerifyColumnNames(docPath, @"true", @"--report-invariant=true", true);
+            ExportAndVerifyColumnNames(docPath, @"false", @"--report-invariant=false", false);
+        }
+
+        /// <summary>
+        /// Resets the settings so <see cref="ReportName"/> is present, and returns the
+        /// document to export. The export runs in this process, so the settings it reads are
+        /// the ones reset here.
+        /// </summary>
+        private string GetTestDocumentPath()
+        {
+            Settings.Default.Reset();
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineReportTest.zip");
             string docPath = TestFilesDir.GetTestPath(@"Rat_plasma.sky");
             AssertEx.FileExists(docPath);
-            using (new CurrentCultureSetter(LOCALIZED_CULTURE))
-            {
-                AddTestReport();
-                try
-                {
-                    ExportAndVerifyColumnNames(docPath, @"default", null, true);
-                    ExportAndVerifyColumnNames(docPath, @"bare", @"--report-invariant", true);
-                    ExportAndVerifyColumnNames(docPath, @"true", @"--report-invariant=true", true);
-                    ExportAndVerifyColumnNames(docPath, @"false", @"--report-invariant=false", false);
-                }
-                finally
-                {
-                    Settings.Default.PersistedViews.ResetDefaults();
-                }
-            }
+            return docPath;
         }
 
         /// <summary>
@@ -103,63 +101,26 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestTextReportInvariant()
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineReportTest.zip");
-            string docPath = TestFilesDir.GetTestPath(@"Rat_plasma.sky");
-            AssertEx.FileExists(docPath);
-            using (new CurrentCultureSetter(LOCALIZED_CULTURE))
+            string docPath = GetTestDocumentPath();
+            foreach (var reportFormat in new[] { ReportFormat.csv, ReportFormat.tsv })
             {
-                AddTestReport();
-                try
-                {
-                    foreach (var reportFormat in new[] { ReportFormat.csv, ReportFormat.tsv })
-                    {
-                        // A comma cannot separate the columns of a file whose numbers are
-                        // written with a comma, so the localized .csv gets a semicolon.
-                        char invariantSeparator = reportFormat == ReportFormat.csv
-                            ? TextUtil.SEPARATOR_CSV
-                            : TextUtil.SEPARATOR_TSV;
-                        char localizedSeparator = reportFormat == ReportFormat.csv
-                            ? TextUtil.SEPARATOR_CSV_INTL
-                            : TextUtil.SEPARATOR_TSV;
-                        ExportAndVerifyTextValues(docPath, reportFormat, @"default", null,
-                            localizedSeparator, false);
-                        ExportAndVerifyTextValues(docPath, reportFormat, @"bare", @"--report-invariant",
-                            invariantSeparator, true);
-                        ExportAndVerifyTextValues(docPath, reportFormat, @"true", @"--report-invariant=true",
-                            invariantSeparator, true);
-                        ExportAndVerifyTextValues(docPath, reportFormat, @"false", @"--report-invariant=false",
-                            localizedSeparator, false);
-                    }
-                }
-                finally
-                {
-                    Settings.Default.PersistedViews.ResetDefaults();
-                }
+                // A comma cannot separate the columns of a file whose numbers are
+                // written with a comma, so a comma-decimal culture gets a semicolon.
+                char invariantSeparator = reportFormat == ReportFormat.csv
+                    ? TextUtil.SEPARATOR_CSV
+                    : TextUtil.SEPARATOR_TSV;
+                char localizedSeparator = reportFormat == ReportFormat.csv
+                    ? TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture)
+                    : TextUtil.SEPARATOR_TSV;
+                ExportAndVerifyTextValues(docPath, reportFormat, @"default", null,
+                    localizedSeparator, false);
+                ExportAndVerifyTextValues(docPath, reportFormat, @"bare", @"--report-invariant",
+                    invariantSeparator, true);
+                ExportAndVerifyTextValues(docPath, reportFormat, @"true", @"--report-invariant=true",
+                    invariantSeparator, true);
+                ExportAndVerifyTextValues(docPath, reportFormat, @"false", @"--report-invariant=false",
+                    localizedSeparator, false);
             }
-        }
-
-        /// <summary>
-        /// Adds the report that the tests export. It has a column whose value has no storage
-        /// type of its own and is therefore written as text, which is the only way the culture
-        /// the report is being exported in can be seen in a parquet file.
-        /// </summary>
-        private static void AddTestReport()
-        {
-            var resultsPath = PropertyPath.Root.Property(nameof(Peptide.Results));
-            var peptideResultPath = resultsPath.DictionaryValues();
-            var viewSpec = new ViewSpec()
-                .SetName(REPORT_NAME)
-                .SetRowType(typeof(Peptide))
-                .SetSublistId(resultsPath.LookupAllItems())
-                .SetColumns(new[]
-                {
-                    new ColumnSpec(PropertyPath.Root.Property(nameof(Peptide.Sequence))),
-                    new ColumnSpec(peptideResultPath.Property(nameof(PeptideResult.PeptideRetentionTime))),
-                    new ColumnSpec(peptideResultPath.Property(nameof(PeptideResult.Quantification)))
-                });
-            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
-            Settings.Default.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id,
-                viewSpecList.AddOrReplaceViews(new[] { new ViewSpecLayout(viewSpec, ViewLayoutList.EMPTY) }));
         }
 
         private string ExportReport(string docPath, ReportFormat reportFormat, string fileSuffix,
@@ -172,7 +133,7 @@ namespace pwiz.SkylineTestData
             var arguments = new List<string>
             {
                 @"--in=" + docPath,
-                @"--report-name=" + REPORT_NAME,
+                @"--report-name=" + ReportName,
                 @"--report-file=" + outPath,
                 @"--report-format=" + reportFormat
             };
@@ -207,37 +168,82 @@ namespace pwiz.SkylineTestData
             string quantificationColumn = expectInvariant
                 ? nameof(ColumnCaptions.Quantification)
                 : SanitizedCaption(ColumnCaptions.Quantification);
-            Assert.AreEqual(expectInvariant ? INVARIANT_QUANTIFICATION : LOCALIZED_QUANTIFICATION,
+            Assert.AreEqual(ExpectedQuantification(docPath, expectInvariant),
                 GetParquetFirstValue(outPath, quantificationColumn), message);
+        }
+
+        /// <summary>
+        /// What the export should write for the "Quantification" column of the first row,
+        /// taken from the document rather than written down here. The value has no storage
+        /// type of its own, so it is written by calling ToString on it, which formats the
+        /// number with the current culture and looks the "Normalized Area" caption up in the
+        /// current language. The invariant export does both of those under the invariant
+        /// culture, which also falls back to the neutral (English) resources.
+        /// </summary>
+        private string ExpectedQuantification(string docPath, bool expectInvariant)
+        {
+            var quantification = GetFirstPeptideResult(docPath).Quantification;
+            // Without this a row with no quantification would compare an empty expectation
+            // against an empty column and pass without checking any formatting.
+            Assert.IsNotNull(quantification.Value,
+                "The first row has no quantification, so this test has nothing to compare.");
+            return expectInvariant
+                ? LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () => quantification.ToString())
+                : quantification.ToString();
+        }
+
+        /// <summary>
+        /// What the export should write for the "PeptideRetentionTime" column of the first
+        /// row. The invariant export writes the round trip form of the number and the
+        /// localized export writes the display format, so these differ in precision as well
+        /// as in the decimal separator.
+        /// </summary>
+        private string ExpectedRetentionTime(string docPath, bool expectInvariant)
+        {
+            double retentionTime = GetFirstPeptideResult(docPath).PeptideRetentionTime.Value;
+            return expectInvariant
+                ? retentionTime.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture)
+                : retentionTime.ToString(Formats.RETENTION_TIME, CultureInfo.CurrentCulture);
         }
 
         private void ExportAndVerifyTextValues(string docPath, ReportFormat reportFormat, string fileSuffix,
             string invariantArgument, char expectedSeparator, bool expectInvariant)
         {
             string outPath = ExportReport(docPath, reportFormat, fileSuffix, invariantArgument);
-
             var lines = File.ReadAllLines(outPath);
             string message = string.Format(@"First two lines of {0} were:\r\n{1}",
                 Path.GetFileName(outPath), string.Join(@"\r\n", lines.Take(2)));
             var captions = lines[0].Split(expectedSeparator);
             var values = lines[1].Split(expectedSeparator);
-            // A wrong separator leaves the whole line in one field, so this is what says the
-            // file is separated by the character it is supposed to be.
-            Assert.AreEqual(3, captions.Length, message);
-            Assert.AreEqual(3, values.Length, message);
+            Assert.AreEqual(captions.Length, values.Length, message);
 
-            Assert.AreEqual(expectInvariant
-                ? nameof(ColumnCaptions.PeptideRetentionTime)
-                : ColumnCaptions.PeptideRetentionTime, captions[1], message);
-            Assert.AreEqual(expectInvariant
-                ? nameof(ColumnCaptions.Quantification)
-                : ColumnCaptions.Quantification, captions[2], message);
+            // Looking the columns up by caption is also what says the file is separated by the
+            // character it is supposed to be: a wrong separator leaves the whole line in one
+            // field, and then none of these captions is found.
+            Assert.AreEqual(ExpectedRetentionTime(docPath, expectInvariant),
+                values[IndexOfColumn(captions, expectInvariant
+                    ? nameof(ColumnCaptions.PeptideRetentionTime)
+                    : ColumnCaptions.PeptideRetentionTime, message)], message);
+            Assert.AreEqual(ExpectedQuantification(docPath, expectInvariant),
+                values[IndexOfColumn(captions, expectInvariant
+                    ? nameof(ColumnCaptions.Quantification)
+                    : ColumnCaptions.Quantification, message)], message);
+        }
 
-            Assert.AreEqual(SEQUENCE, values[0], message);
-            Assert.AreEqual(expectInvariant ? INVARIANT_RETENTION_TIME : LOCALIZED_RETENTION_TIME,
-                values[1], message);
-            Assert.AreEqual(expectInvariant ? INVARIANT_QUANTIFICATION : LOCALIZED_QUANTIFICATION,
-                values[2], message);
+        private static int IndexOfColumn(IList<string> captions, string caption, string message)
+        {
+            int index = captions.IndexOf(caption);
+            Assert.AreNotEqual(-1, index,
+                "No column captioned {0}. {1}", caption, message);
+            return index;
+        }
+
+        private PeptideResult GetFirstPeptideResult(string docPath)
+        {
+            using var stream = File.OpenRead(docPath);
+            var srmDocument = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(stream);
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(srmDocument, DataSchemaLocalizer.INVARIANT);
+            return new Peptide(dataSchema, srmDocument.GetPathTo((int)SrmDocument.Level.Molecules, 0)).Results.Values.First();
         }
 
         /// <summary>
@@ -271,24 +277,21 @@ namespace pwiz.SkylineTestData
 
         /// <summary>
         /// ParquetReader has no synchronous API, so this waits on the async one, which a test
-        /// can afford to do. What it cannot do is wait while a SynchronizationContext is
-        /// installed, because the continuation gets posted back to this thread while it is
-        /// blocked waiting for it, and neither ever runs. TestRunner's thread has one once a
-        /// functional test has run.
+        /// can afford to do. What it cannot do is wait while a SynchronizationContext that
+        /// posts to this thread is installed: Parquet.Net's read path resumes on the caller's
+        /// context, so the continuation is posted back to a thread which is blocked waiting
+        /// for it, and neither ever runs. TestRunner's thread acquires such a context as soon
+        /// as any earlier unit test constructs a WindowsForms control, and keeps it until a
+        /// functional test happens to run, which is how this hung on TeamCity. Reading without
+        /// one is load-bearing, not a precaution: an ordinary warm read is enough to deadlock.
         /// </summary>
-        private static T ReadParquet<T>(string path, System.Func<ParquetReader, T> readFunc)
+        private static T ReadParquet<T>(string path, Func<ParquetReader, T> readFunc)
         {
-            var saveContext = SynchronizationContext.Current;
-            SynchronizationContext.SetSynchronizationContext(null);
-            try
+            return ActionUtil.CallWithoutSynchronizationContext(() =>
             {
                 using var reader = ParquetReader.CreateAsync(path).GetAwaiter().GetResult();
                 return readFunc(reader);
-            }
-            finally
-            {
-                SynchronizationContext.SetSynchronizationContext(saveContext);
-            }
+            });
         }
     }
 }

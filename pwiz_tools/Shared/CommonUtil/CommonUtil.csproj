@@ -217,7 +217,6 @@
     <Compile Include="SystemUtil\ProgressStream.cs" />
     <Compile Include="SystemUtil\StreamEx.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
-    <Compile Include="SystemUtil\SynchronousStream.cs" />
     <Compile Include="Spectra\SpectrumMetadata.cs" />
     <Compile Include="Spectra\SpectrumMetadataTerm.cs" />
     <Compile Include="Spectra\SpectrumPrecursor.cs" />

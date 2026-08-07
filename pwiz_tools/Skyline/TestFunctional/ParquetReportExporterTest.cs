@@ -30,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -65,25 +66,31 @@ namespace pwiz.SkylineTestFunctional
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
                 rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;
-            using var reader = ParquetReader.CreateAsync(stream).ConfigureAwait(false).GetAwaiter().GetResult();
-            Assert.AreEqual(1, reader.Schema.Fields.Count);
-            // Exercise the data-read path so an array/list write or decode regression
-            // would surface here instead of only in downstream consumers.
-            using var groupReader = reader.OpenRowGroupReader(0);
-            var dataField = reader.Schema.GetDataFields().Single();
-            var col = groupReader.ReadColumnAsync(dataField).ConfigureAwait(false).GetAwaiter().GetResult();
-            Assert.IsNotNull(col.Data);
+            // Parquet.Net's reader resumes on the caller's SynchronizationContext, and this
+            // test runs on the thread which every other test in the process shares, so it
+            // reads without one.
+            ActionUtil.CallWithoutSynchronizationContext(() =>
+            {
+                using var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                Assert.AreEqual(1, reader.Schema.Fields.Count);
+                // Exercise the data-read path so an array/list write or decode regression
+                // would surface here instead of only in downstream consumers.
+                using var groupReader = reader.OpenRowGroupReader(0);
+                var dataField = reader.Schema.GetDataFields().Single();
+                var col = groupReader.ReadColumnAsync(dataField).GetAwaiter().GetResult();
+                Assert.IsNotNull(col.Data);
+                return true;
+            });
         }
 
         /// <summary>
         /// ParquetReportExporter.Export waits on Parquet.Net's async-only API with
         /// GetAwaiter().GetResult(), on the thread it was called on. That deadlocks if a
         /// continuation is posted back to that thread, which is blocked waiting for it.
-        /// Two separate things keep that from happening: the export hands Parquet.Net a
-        /// SynchronousStream, whose asynchronous methods finish their work before they
-        /// return, and Parquet.Net does not resume on the caller's SynchronizationContext.
-        /// This test installs a context, and a stream whose asynchronous methods would
-        /// suspend, and fails if either of those stops being true.
+        /// Parquet.Net does not resume on the caller's SynchronizationContext, so the exporter
+        /// does nothing to prevent this, and this test is what makes that safe to depend on:
+        /// it installs a context, and a stream whose asynchronous operations really do suspend,
+        /// and fails if the export ever posts a continuation to that context.
         ///
         /// The context runs the continuations it is given rather than dropping them, so a
         /// regression fails here instead of hanging the test run.
@@ -128,8 +135,8 @@ namespace pwiz.SkylineTestFunctional
                 SynchronizationContext.SetSynchronizationContext(saveContext);
             }
 
-            Assert.AreEqual(0, stream.AsyncOperationCount,
-                "The export called an asynchronous method on the stream it was given, so it is no longer wrapping it in a SynchronousStream and can suspend on stream I/O.");
+            Assert.AreNotEqual(0, stream.AsyncOperationCount,
+                "The export never performed an asynchronous stream operation, so it had nothing to suspend on and this test proved nothing.");
             Assert.AreEqual(0, context.PostCount,
                 "ParquetReportExporter posted {0} continuation(s) to the SynchronizationContext of the thread it was called on. This test lets them run, but a caller that is blocked waiting for the export would never run them, and the export would hang.",
                 context.PostCount);
@@ -164,10 +171,9 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// A stream whose asynchronous operations always finish on another thread, so that
-        /// an export which stopped wrapping it in a SynchronousStream would start suspending
-        /// on stream I/O. A MemoryStream would complete them inline and there would be
-        /// nothing to notice.
+        /// A stream whose asynchronous operations always finish on another thread. A
+        /// MemoryStream completes them inline, which means the awaits never suspend and no
+        /// continuation is ever posted, so the test would pass without proving anything.
         /// </summary>
         private class AsyncSuspendingStream : Stream
         {
