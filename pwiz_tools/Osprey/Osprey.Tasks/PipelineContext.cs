@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks
         /// duplicate). The one shared mutable buffer is registered like the rest:
         /// it is modeled as three single-producer milestone types over the same
         /// backing list (ScoredEntries -> PerFileScoring, CompactedEntries ->
-        /// FirstJoin, RescoredEntries -> PerFileRescore), so a consumer demanding
+        /// FirstPassFDR, RescoredEntries -> PerFileRescore), so a consumer demanding
         /// a given milestone resolves through this registry to the task that
         /// brings the buffer to that state. See PipelineByproducts.cs.
         /// </summary>
@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Tasks
         /// records byproduct types read via <see cref="TryGet{TInfo}"/>;
         /// <see cref="_milestoneByBuffer"/> records, per backing-list reference,
         /// the milestone type last published over it. Keying on the list reference
-        /// (not a static type order) makes the guard path-independent: the merge
+        /// (not a static type order) makes the guard path-independent: the reconciled-input
         /// path publishes RescoredEntries directly over the ScoredEntries buffer,
         /// skipping CompactedEntries.
         /// </summary>

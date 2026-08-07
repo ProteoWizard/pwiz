@@ -195,7 +195,7 @@ function Compare-DiagnosticsGolden {
 
     -NoTrainedModel is for a report emitted by a run that ADOPTED first-pass
     q-values from the .1st-pass.fdr_scores.bin sidecars instead of training
-    Percolator (FirstJoinTask.Rehydrate -- regression.ps1 mode 5). Exactly one
+    Percolator (FirstPassFdrTask.Rehydrate -- regression.ps1 mode 5). Exactly one
     metric is model-derived: featureCount comes from the FeatureContributions
     the trainer produces, and a run that never trained has none to report. The
     switch does NOT skip that metric -- it PINS it at 0, so the comparison stays

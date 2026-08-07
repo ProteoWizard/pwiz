@@ -58,7 +58,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// nested order the batch ReduceToPrecs walks perFileEntries, so _best.Values enumerates
         /// identically. So the streamed reduction reproduces the resident reduction
         /// element-for-element, while the 340M-row pre-compaction pool that OOM'd an 82-file
-        /// --model-diagnostics run at the join is never materialized -- the accumulator holds only
+        /// --model-diagnostics run at FirstPassFDR is never materialized -- the accumulator holds only
         /// ~unique-precursor / ~base_id-sized maps. (A future change that reorders projection rows
         /// within a file would threaten this last invariant -- keep the row order stable.)
         /// </summary>
