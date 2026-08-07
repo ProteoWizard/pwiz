@@ -49,11 +49,16 @@ namespace pwiz.Skyline.Controls
         private readonly CancellationTokenSource _cancellationTokenSource;
         private ManualResetEvent _completionEvent;
 
+        // The job the work was handed to when the user pressed "Run in Background". Set on the UI thread and read
+        // on the work's thread, which goes on reporting progress to it long after this dialog is gone.
+        private volatile RunningJob _backgroundJob;
+
         // these members should only be accessed in a block which locks on _lock
         #region synchronized members
         private readonly object _lock = new object();
         private bool _finished;
         private bool _windowShown;
+        private bool _backgrounded;
         #endregion
 
         /// <summary>
@@ -82,7 +87,11 @@ namespace pwiz.Skyline.Controls
         public string Message
         {
             get { return _message; }
-            set { _message = value; }
+            set
+            {
+                _message = value;
+                ReportBackgroundJobProgress();
+            }
         }
 
         public int ProgressValue
@@ -92,8 +101,25 @@ namespace pwiz.Skyline.Controls
             {
                 Assume.IsTrue(value <= 100);
                 _progressValue = value;
+                ReportBackgroundJobProgress();
             }
         }
+
+        /// <summary>
+        /// What this operation is called once it is running in the background ("Exporting report 'Peak Areas'").
+        /// Setting it is what offers the user the "Run in Background" button - an operation may be backgrounded
+        /// only if its caller says so, because most may not:
+        ///
+        /// <para>Pressing the button returns <see cref="PerformWork(Control,int,Action{IProgressMonitor})"/> to
+        /// its caller while the work goes on. So the work must be SELF-CONTAINED: everything that finishes the
+        /// operation - committing a file, reporting a result - has to happen inside the delegate, because the
+        /// caller resumes as soon as the button is pressed and there is nobody left to do it afterwards. An
+        /// operation that applies its result to the document when it lands may not be backgrounded at all: the
+        /// user goes on editing while it runs, and it would finish by overwriting what they did. Nor may work that
+        /// asks the user something part way through (the ShowDialog below), which has no window left to show it in
+        /// once this one has closed.</para>
+        /// </summary>
+        public string BackgroundJobDescription { get; set; }
 
         public override string DetailedMessage
         {
@@ -180,6 +206,7 @@ namespace pwiz.Skyline.Controls
 
                 progressBar.Value = Math.Max(0, _progressValue);
                 UpdateLabelMessage();
+                btnBackground.Visible = BackgroundJobDescription != null;
 
                 ShowDialog(parent);
             }
@@ -248,9 +275,9 @@ namespace pwiz.Skyline.Controls
         {
             lock (_lock)
             {
-                if (!_finished)
+                if (!_finished && !_backgrounded)
                 {
-                    // If the user is trying to close this form, then treat it the 
+                    // If the user is trying to close this form, then treat it the
                     // same as if they had hit "Cancel".
                     OnClickedCancel();
                     e.Cancel = true;
@@ -294,7 +321,29 @@ namespace pwiz.Skyline.Controls
                 {
                     _completionEvent?.Set();
                 }
+
+                FinishBackgroundJob();
             }
+        }
+
+        /// <summary>
+        /// Ends the job this work was sent to, if it was sent to one. This is where a backgrounded operation
+        /// reports what became of it: <see cref="PerformWork(Control,int,Action{ILongWaitBroker})"/> returned when
+        /// the user pressed the button, so the caller that would have been thrown the exception, or seen the
+        /// operation through, is long gone.
+        /// </summary>
+        private void FinishBackgroundJob()
+        {
+            var job = _backgroundJob;
+            if (job == null)
+                return;
+
+            // A cancel is not a failure to report - the same rule PerformWork applies to what it rethrows.
+            if (_exception != null && !(IsCanceled && _exception.HasException<OperationCanceledException>()))
+            {
+                job.Failed(_exception);
+            }
+            job.Dispose();
         }
 
         private void FinishDialog()
@@ -332,6 +381,42 @@ namespace pwiz.Skyline.Controls
         private void btnCancel_Click(object sender, EventArgs e)
         {
             OnClickedCancel();
+        }
+
+        private void btnBackground_Click(object sender, EventArgs e)
+        {
+            RunInBackground();
+        }
+
+        /// <summary>
+        /// Hands the running work to a <see cref="RunningJob"/> and closes this dialog, which returns
+        /// <see cref="PerformWork(Control,int,Action{ILongWaitBroker})"/> to its caller while the work goes on.
+        /// From here the job reports its progress to the main window's status bar, and cancelling the job is what
+        /// stops it - it is registered to trip this dialog's own cancellation, so the work goes on watching the
+        /// one token it always has.
+        /// </summary>
+        public void RunInBackground()
+        {
+            lock (_lock)
+            {
+                // The work may have finished while the user was reaching for the button, in which case there is
+                // nothing to hand over and this dialog is already closing.
+                if (_finished || _backgrounded)
+                    return;
+                _backgroundJob = RunningJobs.Start(BackgroundJobDescription);
+                _backgrounded = true;
+            }
+            _backgroundJob.CancellationToken.Register(() => _cancellationTokenSource.Cancel());
+            ReportBackgroundJobProgress();
+            Close();
+        }
+
+        // Once the work is in the background its progress belongs to the status bar and the job list, not to this
+        // dialog, which is gone. Every report the work makes passes through Message and ProgressValue, so this is
+        // the one place that has to forward.
+        private void ReportBackgroundJobProgress()
+        {
+            _backgroundJob?.UpdateProgress(_message, _progressValue);
         }
 
         private void OnClickedCancel()

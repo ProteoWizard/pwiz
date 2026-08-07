@@ -1413,7 +1413,6 @@
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
-    <Compile Include="ToolsUI\JobProgressStatus.cs" />
     <Compile Include="ToolsUI\JsonToolServer.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
@@ -1428,6 +1427,8 @@
     <Compile Include="ToolsUI\NativeSaveFileDialog.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
+    <Compile Include="Util\JobProgressStatus.cs" />
+    <Compile Include="Util\RunningJobs.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\FormGroup.cs" />
     <Compile Include="Util\HillSystemOrdering.cs" />

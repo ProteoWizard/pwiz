@@ -536,29 +536,16 @@ namespace pwiz.Skyline.ToolsUI
 
         // --- Jobs ---
 
-        // The cancellation of every job currently running, by its id: what CancelJob cancels, and what the work
-        // itself watches. Kept HERE rather than on the JobProgressStatus in the progress list because a status is
-        // immutable and freely copied, which leaves no one owner to dispose a source; an entry here is added when a
-        // job starts and removed -- and disposed -- when it ends. Static, like the progress list it parallels: a
-        // job is the process's, not any one server object's. Its lock guards every use of a source in it, so a
-        // source cannot be disposed out from under a cancel.
-        private static readonly Dictionary<Guid, CancellationTokenSource> _jobCancellations =
-            new Dictionary<Guid, CancellationTokenSource>();
-
         public JobInfo[] GetRunningJobs()
         {
-            lock (_jobCancellations)
+            return RunningJobs.Running.Select(job => new JobInfo
             {
-                return GetRunningJobStatuses().Select(job => new JobInfo
-                {
-                    Id = job.JobId.ToString(),
-                    Description = job.Description,
-                    Message = job.Message,
-                    PercentComplete = job.PercentComplete,
-                    CancelRequested = _jobCancellations.TryGetValue(job.JobId, out var cancellation) &&
-                                      cancellation.IsCancellationRequested
-                }).ToArray();
-            }
+                Id = job.JobId.ToString(),
+                Description = job.Description,
+                Message = job.Message,
+                PercentComplete = job.PercentComplete,
+                CancelRequested = RunningJobs.IsCancelRequested(job.JobId)
+            }).ToArray();
         }
 
         public ActionResult CancelJob(string jobId)
@@ -569,34 +556,17 @@ namespace pwiz.Skyline.ToolsUI
                     @"{0} is not a job id. Job ids come from get_running_jobs.", (jobId ?? string.Empty).SingleQuote()));
             }
 
-            lock (_jobCancellations)
+            if (RunningJobs.Cancel(id))
+                return new ActionResult { Completed = true };
+
+            // Not an error: the job most likely finished between the caller listing it and cancelling it, which is
+            // the outcome the caller wanted anyway.
+            return new ActionResult
             {
-                if (!_jobCancellations.TryGetValue(id, out var cancellation))
-                {
-                    // Not an error: the job most likely finished between the caller listing it and cancelling it,
-                    // which is the outcome the caller wanted anyway.
-                    return new ActionResult
-                    {
-                        Completed = false,
-                        Message = LlmInstruction.Format(
-                            @"No job {0} is running. It has most likely already finished.", jobId.SingleQuote())
-                    };
-                }
-
-                cancellation.Cancel();
-            }
-            return new ActionResult { Completed = true };
-        }
-
-        // The jobs started through this service that are still running. The main window holds the progress of
-        // everything that reports any, and being a JobProgressStatus is what says an operation came from here and
-        // is a client's to stop -- a results import or a library build the user started is not.
-        private static IEnumerable<JobProgressStatus> GetRunningJobStatuses()
-        {
-            var progressStatuses = Program.MainWindow?.ProgressStatuses;
-            if (progressStatuses == null)
-                return Array.Empty<JobProgressStatus>();
-            return progressStatuses.OfType<JobProgressStatus>();
+                Completed = false,
+                Message = LlmInstruction.Format(
+                    @"No job {0} is running. It has most likely already finished.", jobId.SingleQuote())
+            };
         }
 
         /// <summary>
@@ -611,38 +581,10 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         internal static T RunJob<T>(string description, Func<JobProgressStatus, CancellationToken, T> work)
         {
-            var job = new JobProgressStatus(description);
-            var cancellation = new CancellationTokenSource();
-            lock (_jobCancellations)
+            using (var job = RunningJobs.Start(description))
             {
-                _jobCancellations.Add(job.JobId, cancellation);
+                return work(job.Status, job.CancellationToken);
             }
-            ReportJobProgress(job);
-            try
-            {
-                return work(job, cancellation.Token);
-            }
-            finally
-            {
-                // Take the job back out of the progress list on EVERY path -- finished, failed or cancelled. The
-                // work reports its own progress against this same status (the same Id), so this final report
-                // replaces whatever it left there; if the work already reported a final status, there is nothing
-                // left to replace and this does nothing.
-                ReportJobProgress(cancellation.IsCancellationRequested ? job.Cancel() : job.Complete());
-                lock (_jobCancellations)
-                {
-                    _jobCancellations.Remove(job.JobId);
-                    cancellation.Dispose();
-                }
-            }
-        }
-
-        // Reports a job's status to the main window, which is what puts it into -- and takes it back out of -- the
-        // progress the status bar shows and GetRunningJobs reads. Does nothing before the main window exists (only
-        // the start page is up), where there is no progress list and no long verb to report to it.
-        private static void ReportJobProgress(IProgressStatus status)
-        {
-            ((IProgressMonitor) Program.MainWindow)?.UpdateProgress(status);
         }
 
         /// <summary>

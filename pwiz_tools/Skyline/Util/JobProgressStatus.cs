@@ -20,26 +20,26 @@
 using System;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.Skyline.ToolsUI
+namespace pwiz.Skyline.Util
 {
     /// <summary>
-    /// The progress status of a JOB: a long operation started through <see cref="SkylineTool.IJsonToolService"/>
-    /// which a client can list (GetRunningJobs) and stop (CancelJob) on a LATER call, after the call that started
-    /// it has been abandoned.
+    /// The progress status of a JOB: a long operation that goes on running with nobody waiting for it, which can
+    /// be listed and stopped afterwards by whoever comes along - a tool through
+    /// <see cref="SkylineTool.IJsonToolService"/>, once the call that started it has been abandoned, or the user,
+    /// once they have sent a <see cref="Controls.LongWaitDlg"/> to the background.
     ///
-    /// <para>Being a status of this type is what makes an operation a client's to control. The main window's
-    /// progress list holds the status of everything that reports progress - a results import the user started, a
-    /// library build, a background loader - and none of that is a tool's business to cancel. Only a
-    /// <see cref="JobProgressStatus"/> is reported to a client, and only by its <see cref="JobId"/> can anything
-    /// be cancelled.</para>
+    /// <para>Being a status of this type is what makes an operation controllable that way. The main window's
+    /// progress list holds the status of everything that reports progress - a results import, a library build, a
+    /// background loader - and most of that has an owner already. Only a <see cref="JobProgressStatus"/> is
+    /// reported as a job, and only by its <see cref="JobId"/> can one be cancelled.</para>
     ///
     /// <para><see cref="Description"/> says what the job IS ("Exporting report 'Peak Areas'") and does not change,
     /// unlike the inherited Message, which the work rewrites as it advances ("Writing row 5,000 / 20,000").</para>
     ///
-    /// <para>This is an identity only - what a client can be told about a job, and what it names to cancel one. The
+    /// <para>This is an identity only - what can be told about a job, and what names it to cancel one. The
     /// cancellation itself is NOT here: a status is immutable and freely copied (the work reports a new copy for
-    /// every progress update), which leaves no one place to own a CancellationTokenSource or to dispose it. The
-    /// server keeps those, keyed by <see cref="JobId"/>, for as long as the job runs.</para>
+    /// every progress update), which leaves no one place to own a CancellationTokenSource or to dispose it.
+    /// <see cref="RunningJobs"/> keeps those, keyed by <see cref="JobId"/>, for as long as the job runs.</para>
     /// </summary>
     public class JobProgressStatus : ProgressStatus
     {
@@ -50,8 +50,8 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Identifies this job to a client. It is what CancelJob takes, and it survives every immutable copy the
-        /// work makes as it reports progress, so the copy in the progress list names the same job.
+        /// Identifies this job. It is what a cancel names, and it survives every immutable copy the work makes as
+        /// it reports progress, so the copy in the progress list names the same job.
         /// </summary>
         public Guid JobId { get; }
 
