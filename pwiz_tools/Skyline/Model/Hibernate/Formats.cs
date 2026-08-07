@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public const string OneOverK0 = "0.####";
         public const string Percent = "0%";
         public const string PEAK_SCORE = "0.####";
-
+        public const string Integer = "0";
         public const string IonMobility = "0.###";
         public const string CCS = "0.##";
         public const string Skewness = "0.###";
