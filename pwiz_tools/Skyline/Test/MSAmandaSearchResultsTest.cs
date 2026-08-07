@@ -51,18 +51,20 @@ namespace pwiz.SkylineTest
                 new string('x', 70 * 1024) + qValue);
 
             // The one way a chunk-at-a-time scan misses a match is an accession split across two
-            // reads, so walk the accession through the offsets around the reader's 64K chunk. Sweep
-            // rather than aim: a StreamReader is free to return a short read, so no single padding
-            // length reliably lands the accession on the seam, but a run of them cannot all miss it.
-            for (int offset = -32; offset <= 32; offset++)
-                AssertQValuesFound(true, $"q-value at 64K{offset:+#;-#;+0}",
-                    new string('y', 64 * 1024 + offset) + qValue);
+            // reads. Shrink the buffer so the seam is exactly where this puts it - at 64K the seam
+            // depends on where StreamReader chose to stop, and padding aimed at it missed by 69
+            // characters, covering nothing. Walking the accession through a whole buffer's worth of
+            // offsets splits it in every possible place, including all ten interior splits.
+            const int bufferSize = 64;
+            for (int pad = 0; pad < bufferSize * 2; pad++)
+                AssertQValuesFound(true, $"q-value at offset {pad} with a {bufferSize}-char buffer",
+                    new string('y', pad) + qValue, bufferSize);
         }
 
-        private static void AssertQValuesFound(bool expected, string label, string body)
+        private static void AssertQValuesFound(bool expected, string label, string body, int bufferSize = 64 * 1024)
         {
             using var mzidGz = new MemoryStream(GzipMzid(body));
-            Assert.AreEqual(expected, MSAmandaSearchWrapper.HasPercolatorQValues(mzidGz), label);
+            Assert.AreEqual(expected, MSAmandaSearchWrapper.HasPercolatorQValues(mzidGz, bufferSize), label);
         }
 
         private static byte[] GzipMzid(string body)

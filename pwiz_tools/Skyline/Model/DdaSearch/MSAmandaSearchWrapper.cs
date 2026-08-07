@@ -423,7 +423,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             return HasPercolatorQValues(file);
         }
 
-        internal static bool HasPercolatorQValues(Stream mzidGzStream)
+        // Buffer size is a parameter only so a test can shrink it: at 64K, placing an accession on a
+        // read boundary means guessing where StreamReader chose to stop, and a test that guesses wrong
+        // silently covers nothing (as one here did until a mutation run caught it). With a small buffer
+        // the seam is wherever the test puts it.
+        internal static bool HasPercolatorQValues(Stream mzidGzStream, int bufferSize = 64 * 1024)
         {
             using var gzip = new GZipStream(mzidGzStream, CompressionMode.Decompress);
             using var reader = new StreamReader(gzip, Encoding.UTF8);
@@ -432,7 +436,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             // and one long line would otherwise be buffered whole. Carry the tail between reads so an
             // accession split across a boundary is still found.
             int carryLength = QVALUE_ACCESSIONS.Max(a => a.Length);
-            var buffer = new char[64 * 1024];
+            var buffer = new char[bufferSize];
             var carry = string.Empty;
             int read;
             while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
@@ -440,7 +444,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var text = carry + new string(buffer, 0, read);
                 if (QVALUE_ACCESSIONS.Any(a => text.IndexOf(a, StringComparison.Ordinal) >= 0))
                     return true;
-                carry = string.Empty; // MUTATION: no carry between reads
+                carry = text.Length > carryLength ? text.Substring(text.Length - carryLength) : text;
             }
             return false;
         }
