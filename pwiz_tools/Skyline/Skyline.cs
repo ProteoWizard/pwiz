@@ -2969,8 +2969,8 @@ namespace pwiz.Skyline
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.Message = SkylineResources.SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end;
-                // Nothing here needs the UI thread - a job leaves the list under its own lock, and only reports to
-                // the UI asynchronously - so the wait sees the last one go whether or not the dialog is up yet.
+                // The delay is what keeps this invisible in the ordinary case, where the jobs stop long before it
+                // elapses and no dialog is ever shown.
                 longWaitDlg.PerformWork(this, 500, (ILongWaitBroker broker) =>
                 {
                     while (!broker.IsCanceled && BackgroundJobs.Running.Length > 0)
