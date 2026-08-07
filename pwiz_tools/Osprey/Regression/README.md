@@ -79,10 +79,32 @@ artifact**, so the multi-GB spectra caches there are harmless):
    `ModelDiagnostics`, the report re-emitted from those sidecars against the same
    golden mode 1b uses.
 
-   Runs **last**, after mode 2: its merge rewrites the 2nd-pass sidecars and the
+   Runs after mode 2: its merge rewrites the 2nd-pass sidecars and the
    diagnostics report as well as the blib, none of which `Invoke-ResumeInvalidation`
    deletes, so running it earlier would leave mode 2 resuming on top of mode-5
    state.
+
+6. **mode 6 - library-fragment release engagement** (issue #4532). Asserts, from
+   each leg's own log, that the Stage 5 -> 6 library-fragment release RAN wherever
+   the library is held - straight-through, resume, the own-sidecar rehydrate, every
+   `--task PerFileRescoring` worker, and the `SecondPassFDR` node - and did **not**
+   run on `--task FirstPassFDR`, which loads with `OmitFragments` and so can only
+   ever report a saving it did not make.
+
+   No output comparator can make this assertion. The release is **output-neutral by
+   design** - that is its safety argument - so modes 1-5 pass identically whether it
+   ran or was deleted outright. They catch an *over*-release (the released-spectrum
+   tripwire throws) but are structurally blind to it silently not happening, and
+   every defect found reviewing #4534 was in that blind spot. Verified by
+   construction: with `OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` the other legs stay green
+   and only mode 6 goes red.
+
+   Asserts presence and non-zero counts, **never exact counts** - those move with any
+   scoring change. One run-wide check asserts the log pattern matched *somewhere*, so
+   a reworded C# line fails the gate instead of quietly satisfying the
+   "must not release" leg. Always on; there is no skip switch.
+
+   Runs **last**, after mode 5, because it reads the logs every leg above wrote.
 
 **modes 3 and 4** (the HPC 4-task worker chain, and the warm re-run cache-hit
 assertion) are described in `regression.ps1`'s own comment header, alongside why

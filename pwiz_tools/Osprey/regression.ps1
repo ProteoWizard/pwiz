@@ -946,7 +946,12 @@ function Test-LibraryFragmentRelease {
                 "first: released {2} of {3}") -f
                 $logName, $facts.Count, $facts[0].Released, $facts[0].Entries))
         }
-        return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+        # Matched is reported so the CALLER can tell "correctly released nothing" from
+        # "the pattern is dead". On its own an -ExpectNone check cannot: a reworded C#
+        # log line makes $facts empty and this branch reports PASS having verified
+        # nothing. The run-wide liveness assertion in the mode 6 block closes that -
+        # a negative assertion cannot fail closed by itself.
+        return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count }
     }
 
     foreach ($scope in $ExpectScopes) {
@@ -972,7 +977,7 @@ function Test-LibraryFragmentRelease {
                 "released tripwire") -f $logName, $scope))
         }
     }
-    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count }
 }
 
 # --- mode 3: HPC 4-task worker chain ------------------------------------------
@@ -1652,12 +1657,31 @@ foreach ($name in $selected) {
         Freed  = @($releaseScopeRescore)
     })
     if (-not $SkipResume) {
-        # The RESUME path, and the reason this leg is not optional: FirstJoinTask.Rehydrate
-        # shipped in #4534 never releasing at all. That is the run an operator reaches for
-        # AFTER the OOM this feature exists to prevent, so it is the worst possible leg to
-        # lose the saving on, and nothing but this line can see it.
+        # The resume leg exercises FirstJoinTask.RUN, not its rehydrate arm: mode 2's
+        # Invoke-ResumeInvalidation deletes the FirstPassFDR stamp, and mode 2 asserts
+        # -ExpectRan @('FirstPassFDR', ...) on this very log to prove it. Worth checking
+        # anyway - it is a second, independently-invalidated Run - but it is NOT rehydrate
+        # coverage. The rehydrate arms are covered below and on the phase-3 workers.
         $releaseChecks.Add(@{
-            Label = 'resume'; Log = (Join-Path $straightDir 'resume.log')
+            Label = 'resume (FirstPassFDR re-runs)'; Log = (Join-Path $straightDir 'resume.log')
+            Scopes = @($releaseScopeRescore, $releaseScopeReported)
+            Freed  = @($releaseScopeRescore)
+        })
+    }
+    if (-not $SkipRehydrate) {
+        # THE OWN-SIDECAR REHYDRATE ARM, and the reason it needs its own entry: the release
+        # shipped in #4534 not running on rehydrate at all, and that is the run an operator
+        # reaches for AFTER the OOM this feature exists to prevent - the worst possible leg
+        # to lose the saving on.
+        #
+        # No other check reaches it. The straight-through and resume legs both RUN
+        # FirstPassFDR (above); mode 3's phase-3 workers do enter Rehydrate but adopt a
+        # WORKER-supplied bundle, never FirstJoinTask.LoadOwnReconciliationBundle. Mode 5's
+        # leg is the only one that rebuilds the bundle from the run's OWN sidecars, so
+        # without this entry the own-sidecar call site is asserted zero times - delete the
+        # release from it, run -SkipHpcChain, and mode 6 still reports PASS.
+        $releaseChecks.Add(@{
+            Label = 'own-sidecar rehydrate'; Log = (Join-Path $straightDir 'rehydrate.log')
             Scopes = @($releaseScopeRescore, $releaseScopeReported)
             Freed  = @($releaseScopeRescore)
         })
@@ -1692,6 +1716,7 @@ foreach ($name in $selected) {
 
     Write-Progress-Tc "${name}: library-fragment release engagement (mode 6)"
     $m6Issues = [System.Collections.Generic.List[string]]::new()
+    $m6Matched = 0
     foreach ($check in $releaseChecks) {
         $r = if ($check.None) {
             Test-LibraryFragmentRelease -LogPath $check.Log -ExpectNone
@@ -1699,9 +1724,22 @@ foreach ($name in $selected) {
             Test-LibraryFragmentRelease -LogPath $check.Log `
                 -ExpectScopes $check.Scopes -RequireFreed $check.Freed
         }
+        $m6Matched += $r.Matched
         if (-not $r.Pass) {
             $r.Issues | ForEach-Object { $m6Issues.Add("$($check.Label): $_") }
         }
+    }
+    # Run-wide liveness. An -ExpectNone check PASSES on an empty result, so on its own it
+    # cannot tell "this leg correctly released nothing" from "the C# log wording changed
+    # and the pattern now matches nothing anywhere" - a negative assertion cannot fail
+    # closed. Today the scoped checks happen to fail on the same drift, but that is an
+    # accident of which legs are enabled: -SkipHpcChain -SkipResume -SkipRehydrate leaves
+    # only positive checks whose absence is indistinguishable from a dead regex. Asserting
+    # that SOMETHING matched somewhere makes the drift itself the failure.
+    if ($m6Matched -eq 0) {
+        $m6Issues.Add((("no leg logged a single release line matching '{0}' - the release " +
+            "is off for the whole run, or the C# wording drifted from this pattern and " +
+            "every assertion above is reading nothing") -f $releaseLinePattern))
     }
     if ($m6Issues.Count -eq 0) {
         $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS")
