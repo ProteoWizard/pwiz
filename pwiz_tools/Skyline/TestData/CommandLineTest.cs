@@ -81,6 +81,11 @@ namespace pwiz.SkylineTestData
             return AbstractUnitTestEx.RunCommand(args);
         }
 
+        private static string RunCommand(bool expectSuccess, params string[] args)
+        {
+            return AbstractUnitTestEx.RunCommand(expectSuccess, args);
+        }
+
         [TestMethod]
         public void ConsoleReplicateOutTest()
         {
@@ -219,6 +224,101 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, allFiles);
 
             Assert.IsNull(doc.Settings.MeasuredResults);
+        }
+
+        [TestMethod]
+        public void ConsoleReorderReplicatesTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = TestFilesDir.GetTestPath("Remove_Test.sky");
+            var outPath = TestFilesDir.GetTestPath("Reorder_Test_Out.sky");
+            var orderPath = TestFilesDir.GetTestPath("replicate-order.txt");
+            var originalDocument = ResultsUtil.DeserializeDocument(docPath);
+            var originalValues = GetReplicateValues(originalDocument);
+            var originalNames = originalDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray();
+            var requestedNames = new[] { originalNames[2], originalNames[0] };
+            File.WriteAllLines(orderPath, new[] { string.Empty, "  " + requestedNames[0] + "  ", requestedNames[1] });
+
+            RunCommand("--in=" + docPath,
+                "--reorder-replicates-file=" + orderPath,
+                "--out=" + outPath);
+
+            var reorderedDocument = ResultsUtil.DeserializeDocument(outPath);
+            CollectionAssert.AreEqual(requestedNames.Concat(originalNames.Skip(1).Where(name => name != requestedNames[0])).ToArray(),
+                reorderedDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray());
+            CollectionAssert.AreEquivalent(originalNames, reorderedDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray());
+            var reorderedValues = GetReplicateValues(reorderedDocument);
+            foreach (var replicateName in originalNames)
+            {
+                CollectionAssert.AreEqual(originalValues[replicateName].FilePaths, reorderedValues[replicateName].FilePaths);
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas,
+                    "Peak areas changed for replicate {0}", replicateName);
+            }
+
+            var reverseNames = originalNames.Reverse().ToArray();
+            File.WriteAllLines(orderPath, reverseNames);
+            RunCommand("--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath);
+            reorderedDocument = ResultsUtil.DeserializeDocument(outPath);
+            CollectionAssert.AreEqual(reverseNames,
+                reorderedDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray());
+            reorderedValues = GetReplicateValues(reorderedDocument);
+            foreach (var replicateName in originalNames)
+            {
+                CollectionAssert.AreEqual(originalValues[replicateName].FilePaths, reorderedValues[replicateName].FilePaths);
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas,
+                    "Peak areas changed for replicate {0} after full reversal", replicateName);
+            }
+
+            var savedOutput = File.ReadAllBytes(outPath);
+            var missingPath = orderPath + ".missing";
+            var output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + missingPath, "--out=" + outPath, "--overwrite");
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_, missingPath, string.Empty), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            File.WriteAllLines(orderPath, new[] { string.Empty, "   " });
+            output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_, orderPath), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            File.WriteAllLines(orderPath, new[] { originalNames[0], originalNames[0] });
+            output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_,
+                originalNames[0], orderPath), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            var unknownName = originalNames[0].ToLowerInvariant();
+            Assert.AreNotEqual(originalNames[0], unknownName);
+            File.WriteAllLines(orderPath, new[] { unknownName });
+            output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_,
+                unknownName, orderPath), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            File.WriteAllLines(orderPath, new[] { originalNames[0] });
+            var documentWithoutResults = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            output = RunCommand(false, "--in=" + documentWithoutResults, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_, orderPath), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+        }
+
+        private static Dictionary<string, (string[] FilePaths, float[] PeakAreas)> GetReplicateValues(SrmDocument document)
+        {
+            return document.MeasuredResults.Chromatograms.Select((chromatogramSet, replicateIndex) =>
+                new
+                {
+                    chromatogramSet.Name,
+                    FilePaths = chromatogramSet.MSDataFilePaths.Select(path => path.ToString()).ToArray(),
+                    PeakAreas = document.MoleculeTransitionGroups.SelectMany(group => group.Transitions)
+                        .SelectMany(transition => transition.GetSafeChromInfo(replicateIndex))
+                        .Select(chromInfo => chromInfo.Area)
+                        .ToArray()
+                }).ToDictionary(value => value.Name,
+                value => (value.FilePaths, value.PeakAreas));
         }
 
         [TestMethod]

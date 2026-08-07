@@ -1355,6 +1355,51 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("CommandLine_RemoveResults_Removing_results_before_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read replicate order file &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The document does not contain results replicates..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The replicate &apos;{0}&apos; was not found in the document..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The replicate name &apos;{0}&apos; appears more than once in the order file..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The replicate order file does not contain any replicate names..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Error: Failed to get optimization function {0}. {1}.
