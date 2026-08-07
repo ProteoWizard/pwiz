@@ -451,6 +451,30 @@
   <data name="upOneLevelButton.ToolTipText" xml:space="preserve">
     <value>Go Up One Level</value>
   </data>
+  <data name="refreshButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6
+        JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACXBIWXMAAA7CAAAOwgEVKEqAAAABPElE
+        QVQ4T62TvUoDQRSFDwpWVoKKrTb+ViqIj6Bgo6uSuTdBfAptIooQLOx8iTyA2Xs3YqUpbLSyESwU8a8S
+        e2VnJTM7CWuTDwaGc87cuzuXAXoOyQii+kAog/QRrD9uyUEYAYxugvQdRpdC6+/QK4yuhVYGx1u2SymZ
+        Cy1L1nkBJM+dRUxjLKvenM4bHmmBlIrMg/UFu/GQZ8oxSE+c0AWWWntPegaSPWeS3IFk1gn/QPEySK6d
+        wPqNarXPzxQSXQ6C5cMJpF+I6v1+ppC0QDqtNqy3hRcYYpJFsF45gfUIpId+phDW0/wlbjdHwfqEUjLu
+        57pSbszYbG6M1pANkN6jfDGRNzxYp0DyANaV0MqgZN1WT3+nEk/ayaTLdpWa9UyyGh7Ls3M+bB8KyQ1Y
+        30DyCZYWjO53fnYP+AWVFYGJctcsvQAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="refreshButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="refreshButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 24</value>
+  </data>
+  <data name="refreshButton.Text" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="refreshButton.ToolTipText" xml:space="preserve">
+    <value>Reload the current folder (re-queries the server for remote folders)</value>
+  </data>
   <data name="tilesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>138, 26</value>
   </data>
@@ -2322,6 +2346,12 @@
     <value>upOneLevelButton</value>
   </data>
   <data name="&gt;&gt;upOneLevelButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;refreshButton.Name" xml:space="preserve">
+    <value>refreshButton</value>
+  </data>
+  <data name="&gt;&gt;refreshButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;viewsDropDownButton.Name" xml:space="preserve">

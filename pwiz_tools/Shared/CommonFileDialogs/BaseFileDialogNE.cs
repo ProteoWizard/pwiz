@@ -1195,6 +1195,24 @@ namespace pwiz.CommonFileDialogs
                 SetCurrentDirectory( _previousDirectories.Pop());
         }
 
+        private void refreshButton_Click( object sender, EventArgs e )
+        {
+            RefreshCurrentDirectory();
+        }
+
+        /// <summary>
+        /// Re-reads the current directory. For a remote directory this discards the cached
+        /// remote session so its contents are fetched from the server again, rather than
+        /// served from the session cache (as F5 / a plain re-populate would do).
+        /// </summary>
+        public void RefreshCurrentDirectory()
+        {
+            _abortPopulateList = true;
+            if (_currentDirectory is RemoteUrl)
+                RemoteSession = null; // Drop cached contents so the server is queried again
+            populateListViewFromDirectory(_currentDirectory);
+        }
+
         private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )
         {
             var selected = listView.SelectedItems.OfType<ListViewItem>().ToList();

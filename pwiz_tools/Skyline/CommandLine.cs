@@ -33,6 +33,7 @@ using pwiz.Common.CommandLine;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -627,8 +628,8 @@ namespace pwiz.Skyline
             {
                 IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
 
-                MsDataFileUri[] files= HandleExceptions(commandArgs, 
-                    () => commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray(), 
+                MsDataFileUri[] files= HandleExceptions(commandArgs,
+                    () => commandArgs.ReplicateFile.Select(ResolveWatersConnectImportUri).SelectMany(DataSourceUtil.ListSubPaths).ToArray(),
                     x => _out.WriteException(Resources.Error___0_, x));
                 if (files == null)
                 {
@@ -3582,6 +3583,19 @@ namespace pwiz.Skyline
             ModifyDocument(d => d.ChangeSettings(newSettings));
 
             return true;
+        }
+
+        /// <summary>
+        /// Resolves a waters_connect data source specified on the command line to a concrete injection.
+        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection" or a path-form URL without
+        /// an injection id is navigated on the server (via the saved account) to fill in the ids the import
+        /// requires. Non-waters_connect and already-resolved URLs are returned unchanged.
+        /// </summary>
+        private static MsDataFileUri ResolveWatersConnectImportUri(MsDataFileUri uri)
+        {
+            if (uri is WatersConnectUrl watersConnectUrl && watersConnectUrl.InjectionId == null)
+                return watersConnectUrl.ResolveInjection();
+            return uri;
         }
 
         public bool SaveFile(string saveFile, CommandArgs commandArgs)
