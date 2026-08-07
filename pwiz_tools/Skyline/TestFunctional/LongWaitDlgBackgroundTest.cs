@@ -51,6 +51,8 @@ namespace pwiz.SkylineTestFunctional
         private readonly ManualResetEventSlim _releaseWork = new ManualResetEventSlim(false);
         // What StartJob reported, read once PerformWork has returned.
         private LongWaitDlg.JobOutcome _outcome;
+        // Whether the work stops when its job is cancelled. False makes a job that has to be waited out.
+        private bool _stopOnCancel = true;
 
         [TestMethod]
         public void TestLongWaitDlgBackground()
@@ -108,52 +110,70 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(WORK_MESSAGE, job.Message);
             AssertEx.AreEqual(WORK_PERCENT, job.PercentComplete);
 
-            TestExitBlocked();
+            TestExitAsksToStopJobs(job);
             TestCancelFromRunningJobsDlg(job);
-            TestExitTerminatesJobs();
+            TestExitWaitsForStoppedJobs();
         }
 
         /// <summary>
-        /// Skyline must refuse to close while a job is running: closing the window out from under work that is
-        /// still writing a file is what this is for. Cancel leaves everything as it was; View Jobs shows what is
-        /// running.
+        /// Exiting with a job running asks whether to stop it, naming the job when there is only one and
+        /// counting them when there are more. Answering Cancel leaves everything as it was.
         /// </summary>
-        private void TestExitBlocked()
+        private void TestExitAsksToStopJobs(JobProgressStatus job)
         {
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
-            RunUI(() => AssertEx.AreEqual(
-                SkylineResources.SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_still_running_,
+            RunUI(() => AssertEx.AreEqual(string.Format(
+                    SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_,
+                    job.Description),
                 messageDlg.Message));
             OkDialog(messageDlg, messageDlg.BtnCancelClick);
             AssertEx.IsFalse(SkylineWindow.IsDisposed);
 
-            // View Jobs, the leftmost button, opens the same list Tools > Running Jobs does.
-            var messageDlgAgain = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
-            var runningJobsDlg = ShowDialog<RunningJobsDlg>(messageDlgAgain.BtnYesClick);
-            RunUI(() => AssertEx.AreEqual(1, runningJobsDlg.JobCount));
-            OkDialog(runningJobsDlg, runningJobsDlg.Close);
-            WaitForClosedForm(messageDlgAgain);
+            // A second job, started directly rather than through a dialog, to see the counted message.
+            using (BackgroundJobs.Start(JOB_DESCRIPTION))
+            {
+                var messageDlgTwo = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
+                RunUI(() => AssertEx.AreEqual(string.Format(
+                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
+                        2),
+                    messageDlgTwo.Message));
+                OkDialog(messageDlgTwo, messageDlgTwo.BtnCancelClick);
+            }
             AssertEx.IsFalse(SkylineWindow.IsDisposed);
         }
 
         /// <summary>
-        /// Terminate Jobs, the middle button, stops everything that is running - but does not close, because the
-        /// jobs stop at their next cancellation check rather than at once.
+        /// Answering OK stops the jobs and then WAITS for them to end, because they stop at their own next
+        /// cancellation check. Giving up on that wait stays in Skyline - and a second attempt to exit goes
+        /// straight back to the wait, with nothing left to ask about.
         /// </summary>
-        private void TestExitTerminatesJobs()
+        private void TestExitWaitsForStoppedJobs()
         {
+            // A job that does NOT stop when asked, so the wait for it can be watched at all.
+            _stopOnCancel = false;
             ResetForNextRun();
             StartLongWait(JOB_DESCRIPTION);
-            var longWaitDlg = WaitForOpenForm<LongWaitDlg>();
+            var startedDlg = WaitForOpenForm<LongWaitDlg>();
             AssertEx.IsTrue(_workStarted.Wait(WAIT_TIME));
-            RunUI(longWaitDlg.RunInBackground);
-            WaitForClosedForm(longWaitDlg);
+            RunUI(startedDlg.RunInBackground);
+            WaitForClosedForm(startedDlg);
             WaitForPerformWorkReturned();
 
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
-            OkDialog(messageDlg, messageDlg.Btn1Click);
-            WaitForCondition(() => BackgroundJobs.Running.Length == 0);
+            var waitDlg = ShowDialog<LongWaitDlg>(messageDlg.ClickOk);
+            OkDialog(waitDlg, waitDlg.CancelButton.PerformClick);
             AssertEx.IsFalse(SkylineWindow.IsDisposed);
+            AssertEx.AreEqual(1, BackgroundJobs.Running.Length);
+
+            // Everything running has been asked to stop by now, so there is nothing left to ask the user: exiting
+            // goes straight to the wait.
+            var waitDlgAgain = ShowDialog<LongWaitDlg>(SkylineWindow.Close);
+            OkDialog(waitDlgAgain, waitDlgAgain.CancelButton.PerformClick);
+            AssertEx.IsFalse(SkylineWindow.IsDisposed);
+
+            // Let the job end, so the test can close Skyline the ordinary way.
+            _releaseWork.Set();
+            WaitForCondition(() => BackgroundJobs.Running.Length == 0);
         }
 
         /// <summary>
@@ -207,8 +227,9 @@ namespace pwiz.SkylineTestFunctional
             IProgressStatus status = new ProgressStatus(WORK_MESSAGE).ChangePercentComplete(WORK_PERCENT);
             progressMonitor.UpdateProgress(status);
             _workStarted.Set();
-            // Held here until the job is cancelled, or the test lets it go.
-            while (!progressMonitor.IsCanceled && !_releaseWork.Wait(50))
+            // Held here until the job is cancelled, or the test lets it go. A job that ignores the cancellation
+            // is how the wait for a stopping job is made watchable - see TestExitWaitsForStoppedJobs.
+            while (!(_stopOnCancel && progressMonitor.IsCanceled) && !_releaseWork.Wait(50))
             {
             }
         }

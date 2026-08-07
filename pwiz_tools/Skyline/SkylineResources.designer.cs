@@ -2870,30 +2870,31 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline cannot exit while background jobs are still running..
+        ///   Looks up a localized string similar to Background jobs must be stopped before exiting. Do you want to stop the {0} jobs that are still running?.
         /// </summary>
-        public static string SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_still_running_ {
+        public static string SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_st" +
-                        "ill_running_", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__" +
+                        "Do_you_want_to_stop_the__0__jobs_that_are_still_running_", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Terminate Jobs.
+        ///   Looks up a localized string similar to Background jobs must be stopped before exiting. The job &apos;{0}&apos; is still running. Do you want to stop it?.
         /// </summary>
-        public static string SkylineWindow_CheckBackgroundJobs_Terminate_Jobs {
+        public static string SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_ {
             get {
-                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Terminate_Jobs", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__" +
+                        "The_job___0___is_still_running__Do_you_want_to_stop_it_", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to View Jobs.
+        ///   Looks up a localized string similar to Waiting for background jobs to end.
         /// </summary>
-        public static string SkylineWindow_CheckBackgroundJobs_View_Jobs {
+        public static string SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end {
             get {
-                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_View_Jobs", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end", resourceCulture);
             }
         }
 

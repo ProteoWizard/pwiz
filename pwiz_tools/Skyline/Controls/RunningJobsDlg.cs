@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Controls
         private string GetProgressText(JobProgressStatus job)
         {
             if (BackgroundJobs.IsCancelRequested(job.JobId))
-                return ControlsResources.RunningJobsDlg_GetProgressText_Canceling;
+                return ControlsResources.RunningJobsDlg_GetProgressText_Stopping;
             if (job.PercentComplete < 0)
                 return string.Empty;
             return job.PercentComplete.ToString(@"0'%'", CultureInfo.CurrentCulture);
@@ -118,8 +118,8 @@ namespace pwiz.Skyline.Controls
 
         /// <summary>
         /// Asks the selected job to stop. It stops at its next cancellation check, so the row stays until it has -
-        /// reading "Canceling" in the meantime. Called Terminate in the UI, where "Cancel" would be read as
-        /// cancelling the dialog; it is cancellation underneath, which is all a job can be asked for.
+        /// reading "Stopping" in the meantime. Called Stop in the UI, where "Cancel" would be read as cancelling
+        /// the dialog; it is cancellation underneath, which is all a job can be asked for.
         /// </summary>
         public void CancelSelectedJob()
         {

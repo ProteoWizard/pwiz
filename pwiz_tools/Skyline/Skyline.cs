@@ -2923,36 +2923,63 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Refuses to close while background jobs are still running, and offers the two ways out of that: look at
-        /// what is running, or terminate all of it. A job goes on writing its file and reporting progress on its
-        /// own thread, and closing the window out from under one would leave it writing into a process that is
-        /// being torn down.
+        /// Sees the background jobs off before the window closes: asks whether to stop what is still running,
+        /// and then waits for it to stop. A job goes on writing its file and reporting progress on its own thread,
+        /// and closing the window out from under one would leave it writing into a process being torn down.
         ///
-        /// <para>Returns false in EVERY case where jobs were found, including after terminating them: terminating
-        /// is a request, and the jobs stop at their next cancellation check. Exiting again once they have gone is
-        /// what closes the window.</para>
+        /// <para>Returns false to stay in Skyline - the user said no, or gave up on the wait.</para>
         /// </summary>
         private bool CheckBackgroundJobs()
         {
-            if (BackgroundJobs.Running.Length == 0)
+            var running = BackgroundJobs.Running;
+            if (running.Length == 0)
             {
                 return true;
             }
 
-            var result = MultiButtonMsgDlg.Show(this,
-                SkylineResources.SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_still_running_,
-                SkylineResources.SkylineWindow_CheckBackgroundJobs_View_Jobs,
-                SkylineResources.SkylineWindow_CheckBackgroundJobs_Terminate_Jobs, true);
-            switch (result)
+            // Jobs that have already been asked to stop are not worth asking about again - they are only worth
+            // waiting for, which is what happens below.
+            var uncanceled = running.Where(job => !BackgroundJobs.IsCancelRequested(job.JobId)).ToArray();
+            if (uncanceled.Length > 0)
             {
-                case DialogResult.Yes:
-                    ShowRunningJobsDlg();
-                    break;
-                case DialogResult.No:
-                    BackgroundJobs.CancelAll();
-                    break;
+                string message = uncanceled.Length == 1
+                    ? string.Format(
+                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_,
+                        uncanceled[0].Description)
+                    : string.Format(
+                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
+                        uncanceled.Length);
+                if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                {
+                    return false;
+                }
+                BackgroundJobs.CancelAll();
             }
-            return false;
+
+            return WaitForBackgroundJobs();
+        }
+
+        /// <summary>
+        /// Waits for the stopping jobs to actually end, which they do at their own next cancellation check
+        /// rather than at once. The wait is itself cancellable: giving up on it stays in Skyline, with the jobs
+        /// still stopping.
+        /// </summary>
+        private bool WaitForBackgroundJobs()
+        {
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.Message = SkylineResources.SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end;
+                // Nothing here needs the UI thread - a job leaves the list under its own lock, and only reports to
+                // the UI asynchronously - so the wait sees the last one go whether or not the dialog is up yet.
+                longWaitDlg.PerformWork(this, 500, (ILongWaitBroker broker) =>
+                {
+                    while (!broker.IsCanceled && BackgroundJobs.Running.Length > 0)
+                    {
+                        Thread.Sleep(100);
+                    }
+                });
+                return !longWaitDlg.IsCanceled;
+            }
         }
 
         public void ShowImmediateWindow()

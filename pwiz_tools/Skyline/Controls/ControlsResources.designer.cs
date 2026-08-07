@@ -124,11 +124,11 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Canceling.
+        ///   Looks up a localized string similar to Stopping.
         /// </summary>
-        public static string RunningJobsDlg_GetProgressText_Canceling {
+        public static string RunningJobsDlg_GetProgressText_Stopping {
             get {
-                return ResourceManager.GetString("RunningJobsDlg_GetProgressText_Canceling", resourceCulture);
+                return ResourceManager.GetString("RunningJobsDlg_GetProgressText_Stopping", resourceCulture);
             }
         }
 
