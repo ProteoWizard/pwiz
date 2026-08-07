@@ -119,7 +119,7 @@ namespace pwiz.Osprey.Tasks
         /// takes it from here rather than re-deriving one of the two terms and silently
         /// dropping the other.
         ///
-        /// <para>Its one consumer is <c>FirstJoinTask.Rehydrate</c>, which uses it to build
+        /// <para>Its one consumer is <c>FirstPassFdrTask.Rehydrate</c>, which uses it to build
         /// the per-file <see cref="FirstPassSurvivorLoader"/> a resume publishes so Stage 6
         /// streams instead of holding the all-files survivor buffer (issue #4536). Null
         /// before <c>Apply</c> has run.</para>

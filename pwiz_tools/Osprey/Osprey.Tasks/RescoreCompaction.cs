@@ -254,12 +254,13 @@ namespace pwiz.Osprey.Tasks
             }
             dropped = actionsById.Count;
             inputs.ReconciliationActions = newActions;
-            // Hand the retained set back on the bundle. A resume needs it to rebuild any one
-            // file's survivors from disk (FirstPassSurvivorLoader), and re-deriving it at that
-            // point would mean re-reading the envelopes for the action term - the half that is
-            // NOT in GlobalFirstPassBaseIds. This method already holds both terms, and is the
-            // authority the streaming pre-filter is checked against above, so publishing it
-            // here is what keeps the rebuilt list equal to the buffer by construction.
+            // Hand the retained set back on the bundle. FirstPassFdrTask's rehydrate needs it to
+            // rebuild any one file's survivors from disk (FirstPassSurvivorLoader), and
+            // re-deriving it there would mean re-reading the envelopes for the action term - the
+            // half that is NOT in GlobalFirstPassBaseIds. This method already holds both terms,
+            // and is the authority the streaming pre-filter is checked against above, so
+            // publishing it here is what keeps the rebuilt list equal to the buffer by
+            // construction.
             inputs.RetainedBaseIds = firstPassBaseIds;
 
             return new Stats

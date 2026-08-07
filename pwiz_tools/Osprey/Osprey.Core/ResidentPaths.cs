@@ -104,10 +104,10 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string COMPACTED_ENTRIES_BUFFER = @"compacted-entries-buffer";
 
-        // resume-survivor-handoff was removed here by #4536, which gave FirstJoin's rehydrate
-        // its own per-file survivor loader: the arm streams like any computed run, so the token
-        // had nothing left to admit. Not to be re-added - a resume that cannot stream the
-        // Stage 6 handoff is a defect to fix, not a path to name.
+        // resume-survivor-handoff was removed here by #4536, which gave FirstPassFdrTask's
+        // rehydrate its own per-file survivor loader: the arm streams like any computed run, so
+        // the token had nothing left to admit. Not to be re-added - a resume that cannot stream
+        // the Stage 6 handoff is a defect to fix, not a path to name.
 
         /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
