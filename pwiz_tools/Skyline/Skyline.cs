@@ -4170,6 +4170,22 @@ namespace pwiz.Skyline
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
         }
 
+        /// <summary>
+        /// A snapshot of the progress being reported right now - what the status bar is showing, and everything
+        /// queued behind it. A copy, because the list is written by the threads doing the work, so it must not be
+        /// enumerated outside its lock.
+        /// </summary>
+        public IProgressStatus[] ProgressStatuses
+        {
+            get
+            {
+                lock (_listProgress)
+                {
+                    return _listProgress.ToArray();
+                }
+            }
+        }
+
         public int StatusBarHeight { get { return statusStrip.Height; } }
 
         public int StatusSelectionWidth
