@@ -104,4 +104,23 @@
     </Reference>
   </ItemGroup>
 
+  <!-- PwizFileInfoTest reads Agilent, Bruker and Thermo raw data. None of it is in git: the
+       .d/.raw fixtures ship inside Reader_<Vendor>_Test.data.tar.bz2 beside their reference
+       mzMLs, and .gitignore's blanket "*.d" rule (meant for C/C++ dependency files) covers the
+       extracted directories, so clean.bat's `git clean -X` deletes any copy left by an earlier
+       build. Unpack them the same way pwiz-sharp's reader test projects do, so this project
+       supplies its own fixtures instead of depending on what else happened to run here. -->
+  <ItemGroup>
+    <VendorTestArchives Include="$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data.tar.bz2">
+      <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Agilent</Parent>
+    </VendorTestArchives>
+    <VendorTestArchives Include="$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data.tar.bz2">
+      <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Bruker</Parent>
+    </VendorTestArchives>
+    <VendorTestArchives Include="$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data.tar.bz2">
+      <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo</Parent>
+    </VendorTestArchives>
+  </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\build\ExtractTestData.targets" />
+
 </Project>

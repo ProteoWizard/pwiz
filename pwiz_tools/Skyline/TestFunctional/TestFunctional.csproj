@@ -87,4 +87,15 @@
     <Reference Include="UIAutomationTypes" />
   </ItemGroup>
 
+  <!-- ConstantNeutralLossTest imports Agilent's RS080806_NL_448.2_001.d, which is not in git -
+       it ships inside Reader_Agilent_Test.data.tar.bz2, and clean.bat removes any extracted
+       copy (see TestData.csproj for the whole story). Unpack it the same way pwiz-sharp's
+       reader test projects do. -->
+  <ItemGroup>
+    <VendorTestArchives Include="$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data.tar.bz2">
+      <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Agilent</Parent>
+    </VendorTestArchives>
+  </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\build\ExtractTestData.targets" />
+
 </Project>

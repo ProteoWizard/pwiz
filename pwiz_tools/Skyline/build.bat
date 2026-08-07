@@ -130,30 +130,6 @@ for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
 if %EXIT% NEQ 0 goto error
 
 REM # ------------------------------------------------------------------------
-REM # Vendor test data
-REM #
-REM # The raw vendor fixtures (.d/.raw directories) are not in git -- they live in
-REM # Reader_<Vendor>_Test.data.tar.bz2 beside their reference mzMLs, and .gitignore's
-REM # blanket "*.d" rule (meant for C/C++ dependency files) covers the extracted
-REM # directories, so clean.bat's `git clean -X` removes them again.
-REM #
-REM # pwiz-sharp's test projects extract these via build/ExtractTestData.targets, but
-REM # this build does not build those projects, so nothing here ever unpacked them.
-REM # Skyline tests that read raw vendor data (ConstantNeutralLossTest reads Agilent's
-REM # RS080806_NL_448.2_001.d) then fail with "does not exist" on any agent whose
-REM # checkout has not had some *other* config extract them first -- which is exactly
-REM # what happened on the freshly provisioned agents while the older ones passed.
-REM #
-REM # Use the checked-in libraries\bsdtar.exe with -k, matching ExtractTestData.targets:
-REM # the reference mzMLs tracked in git are newer than the copies in the tarballs, so
-REM # existing files must be skipped rather than overwritten. bsdtar 2.7 reports each
-REM # skip as a warning and then exits 1, so its exit code says nothing -- a real
-REM # extraction failure surfaces as the tests missing their data.
-REM # ------------------------------------------------------------------------
-echo ##teamcity[progressMessage 'Extracting vendor test data']
-for %%V in (Agilent Bruker Thermo UIMF) do call :extract_vendor_data %%V
-
-REM # ------------------------------------------------------------------------
 REM # Test step
 REM #
 REM # Stage every project's net8 output into one bin\staging-net8\<Config> (the
@@ -257,19 +233,6 @@ goto :eof
 echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
 dotnet build "%~1" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
-goto :eof
-
-REM # Unpack one vendor's Reader_<Vendor>_Test.data.tar.bz2 next to its reference
-REM # mzMLs. Skipping existing files is required, not an optimization (see above), and
-REM # a missing archive is not an error: not every checkout carries every vendor's.
-REM # Failure to extract is deliberately not fatal -- the tests that need the fixtures
-REM # report it far more clearly than a build step can.
-:extract_vendor_data
-set "_VENDOR_DIR=%SCRIPT_DIR%\..\..\pwiz\data\vendor_readers\%~1"
-set "_VENDOR_TAR=%_VENDOR_DIR%\Reader_%~1_Test.data.tar.bz2"
-if not exist "%_VENDOR_TAR%" goto :eof
-"%SCRIPT_DIR%\..\..\libraries\bsdtar.exe" -xkf "%_VENDOR_TAR%" -C "%_VENDOR_DIR%" > nul 2>&1
-echo   %~1 vendor test data extracted
 goto :eof
 
 REM # Run one TestRunner pass from the staging dir (cwd is already %STAGE_DIR%).

@@ -5,11 +5,16 @@
     Reader_<Vendor>_Test.data.tar.bz2 archive into its containing directory so the
     .d/.raw/.wiff fixtures are available to VendorReaderTestHarness.
 
-    Importing test projects must set:
+    Importing test projects must set either:
       - VendorTestArchive  : absolute path to the .tar.bz2
       - VendorTestDataParent : directory into which to extract (the tarball's internal
         paths are rooted at Reader_<Vendor>_Test.data/, so this should be the folder
         *containing* Reader_<Vendor>_Test.data).
+    or, for a project whose tests read more than one vendor's raw data (Skyline's TestData
+    reads Agilent, Bruker and Thermo in a single assembly, which the property pair cannot
+    express), the VendorTestArchives item group, each item being the .tar.bz2 path with
+    Parent metadata naming its destination. The single-property form is folded into that
+    item group below so there is one code path.
 
     Uses the bsdtar binary checked in at libraries/bsdtar.exe rather than %WinDir%\System32\
     tar.exe. The system32 build of bsdtar isn't always present (Windows 10 1803+ shipped it,
@@ -31,10 +36,16 @@
     changed since the sentinel was touched.
     -->
 
+  <ItemGroup>
+    <VendorTestArchives Include="$(VendorTestArchive)" Condition="'$(VendorTestArchive)' != ''">
+      <Parent>$(VendorTestDataParent)</Parent>
+    </VendorTestArchives>
+  </ItemGroup>
+
   <Target Name="ExtractVendorTestData"
           BeforeTargets="BeforeBuild"
-          Condition="'$(VendorTestArchive)' != '' and Exists('$(VendorTestArchive)')"
-          Inputs="$(VendorTestArchive)"
+          Condition="'@(VendorTestArchives)' != ''"
+          Inputs="@(VendorTestArchives)"
           Outputs="$(IntermediateOutputPath)vendor-test-data.extracted">
     <PropertyGroup>
       <!-- libraries/bsdtar.exe is a Windows PE; running it off-Windows fails with
@@ -48,17 +59,23 @@
       <_TarExe Condition="'$(OS)' != 'Windows_NT'">tar</_TarExe>
       <_TarKeepArgs Condition="'$(OS)' != 'Windows_NT'">--skip-old-files -xf</_TarKeepArgs>
     </PropertyGroup>
-    <MakeDir Directories="$(VendorTestDataParent);$(IntermediateOutputPath)" />
-    <Message Importance="high" Text="Extracting $(VendorTestArchive) -&gt; $(VendorTestDataParent)" />
-    <Exec Command="&quot;$(_TarExe)&quot; $(_TarKeepArgs) &quot;$(VendorTestArchive)&quot; -C &quot;$(VendorTestDataParent)&quot;"
+    <!-- An archive a checkout does not carry is not an error; skip it rather than failing
+         the build over a vendor this machine was never going to test. -->
+    <MakeDir Directories="@(VendorTestArchives->'%(Parent)');$(IntermediateOutputPath)" />
+    <Message Importance="high" Text="Extracting %(VendorTestArchives.Identity) -&gt; %(VendorTestArchives.Parent)"
+             Condition="Exists('%(VendorTestArchives.Identity)')" />
+    <Exec Command="&quot;$(_TarExe)&quot; $(_TarKeepArgs) &quot;%(VendorTestArchives.Identity)&quot; -C &quot;%(VendorTestArchives.Parent)&quot;"
+          Condition="Exists('%(VendorTestArchives.Identity)')"
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output TaskParameter="ExitCode" PropertyName="_TarExitCode" />
     </Exec>
     <!-- Windows bsdtar 2.7 exits 1 just for reporting skipped files, so its exit code says
-         nothing; GNU tar exits 0 in skip-old-files mode unless something really went wrong. -->
-    <Warning Condition="'$(OS)' != 'Windows_NT' and '$(_TarExitCode)' != '0'"
-             Text="Extracting $(VendorTestArchive) failed (exit $(_TarExitCode)); vendor fixtures will be missing and their tests will report Inconclusive." />
+         nothing; GNU tar exits 0 in skip-old-files mode unless something really went wrong.
+         With several archives the Exec batches and this holds the last one's code, which is
+         enough to notice a broken extraction on Linux; the tests name the missing data anyway. -->
+    <Warning Condition="'$(OS)' != 'Windows_NT' and '$(_TarExitCode)' != '' and '$(_TarExitCode)' != '0'"
+             Text="Extracting vendor test data failed (exit $(_TarExitCode)); fixtures will be missing and their tests will report Inconclusive." />
     <Touch Files="$(IntermediateOutputPath)vendor-test-data.extracted" AlwaysCreate="true" />
   </Target>
 
