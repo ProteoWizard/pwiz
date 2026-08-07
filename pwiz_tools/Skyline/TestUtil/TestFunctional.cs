@@ -2971,10 +2971,14 @@ namespace pwiz.SkylineTestUtil
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 ClipboardEx.Release();
 #if !NET472
-                // Release net8 WinForms' ModalMenuFilter hold on the last active window (see
-                // ReleaseModalMenuFilterWindow) before closing, so SkylineWindow and its document
-                // can be collected and are not reported as a cross-test GC leak.
-                RunUI(ReleaseModalMenuFilterWindow);
+                // Release the two net8 WinForms holds on this window (see ReleaseModalMenuFilterWindow
+                // and ReleaseToolStripToolTips) before closing, so SkylineWindow and its document can be
+                // collected and are not reported as a cross-test GC leak.
+                RunUI(() =>
+                {
+                    ReleaseModalMenuFilterWindow();
+                    ReleaseToolStripToolTips();
+                });
 #endif
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
@@ -3014,6 +3018,54 @@ namespace pwiz.SkylineTestUtil
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (field != null)
                     field.SetValue(instance, System.Activator.CreateInstance(field.FieldType));
+            }
+        }
+
+        // WinForms shows a tool tip for the drop-down item a test selects, and arms the owning ToolTip's
+        // 5-second auto-pop timer to take it back down. Timer.Start() roots the timer with a GCHandle,
+        // and ToolTipTimer.Host is the drop-down, whose owner item's Click handler holds one of the
+        // Skyline menu classes - which holds SkylineWindow. A user's mouse leaving the item hides the
+        // tool tip and stops the timer, but a test drives menus without a mouse, so nothing hides it,
+        // and the UI message pump ends with the test before the timer could fire on its own. The handle
+        // is never released and SkylineWindow is reported as a GC leak (TestDiaFragPipeTutorial hit this
+        // whenever the document was slow enough for the tool tip to appear at all - 10 timers were still
+        // armed at the end of that test). So stop them, the way ToolTip.StopTimer() would. Field names
+        // verified against Microsoft.WindowsDesktop.App 8.0; the ToolStrip list is thread-static, so
+        // this must run on the UI thread.
+        private static void ReleaseToolStripToolTips()
+        {
+            const System.Reflection.BindingFlags nonPublicInstance =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            var toolStrips = typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_toolStripWeakArrayList",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                ?.GetValue(null) as System.Collections.IList;
+            if (toolStrips == null)
+                return; // No ToolStrip was ever created on this thread
+            var toolTipProperty = typeof(ToolStrip).GetProperty(@"ToolTip", nonPublicInstance);
+            var timerField = typeof(System.Windows.Forms.ToolTip).GetField(@"_timer", nonPublicInstance);
+            if (toolTipProperty == null || timerField == null)
+            {
+                // Say so rather than quietly doing nothing: without these the leak comes back, and a
+                // GC-leak failure in some unrelated test is a long way from the rename that caused it.
+                // Reported rather than thrown - this runs during teardown, which has to finish.
+                Program.AddTestException(new MissingMemberException(
+                    @"WinForms no longer has ToolStrip.ToolTip or ToolTip._timer, so tool tip timers " +
+                    @"left armed by a test can no longer be stopped. See ReleaseToolStripToolTips."));
+                return;
+            }
+            for (int i = 0; i < toolStrips.Count; i++)
+            {
+                // The collection holds weak references, so a collected ToolStrip reads as null here
+                if (toolStrips[i] is not ToolStrip toolStrip || toolStrip.IsDisposed)
+                    continue;
+                var toolTip = toolTipProperty.GetValue(toolStrip);
+                if (toolTip == null || timerField.GetValue(toolTip) is not System.Windows.Forms.Timer timer)
+                    continue;
+                // What ToolTip.StopTimer() does. Stop() releases the GCHandle Start() took out; the
+                // ToolTip itself stays usable and arms a fresh timer if it is shown again.
+                timer.Stop();
+                timer.Dispose();
+                timerField.SetValue(toolTip, null);
             }
         }
 #endif
