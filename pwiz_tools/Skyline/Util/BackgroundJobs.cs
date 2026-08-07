@@ -34,9 +34,9 @@ namespace pwiz.Skyline.Util
     /// <see cref="JobProgressStatus"/>), so a job's message and percentage are always the ones the work itself last
     /// reported - there is no second copy of that to keep up to date. What is kept here is only what the progress
     /// list cannot hold: each job's <see cref="CancellationTokenSource"/>, which has exactly one owner (the
-    /// <see cref="RunningJob"/> handed out by <see cref="Start"/>) and is disposed when that handle is.</para>
+    /// <see cref="BackgroundJob"/> handed out by <see cref="Start"/>) and is disposed when that handle is.</para>
     /// </summary>
-    public static class RunningJobs
+    public static class BackgroundJobs
     {
         // Guards every use of a source in it, so one cannot be disposed out from under a cancel.
         private static readonly Dictionary<Guid, CancellationTokenSource> _cancellations =
@@ -49,9 +49,9 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="description">What the job is, in terms the user will read in the status bar
         /// ("Exporting report 'Peak Areas'").</param>
-        public static RunningJob Start(string description)
+        public static BackgroundJob Start(string description)
         {
-            var job = new RunningJob(new JobProgressStatus(description));
+            var job = new BackgroundJob(new JobProgressStatus(description));
             lock (_cancellations)
             {
                 _cancellations.Add(job.JobId, job.CancellationTokenSource);
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Util
             ((IProgressMonitor) Program.MainWindow)?.UpdateProgress(status);
         }
 
-        internal static void Release(RunningJob job)
+        internal static void Release(BackgroundJob job)
         {
             lock (_cancellations)
             {
@@ -122,12 +122,12 @@ namespace pwiz.Skyline.Util
 
     /// <summary>
     /// A job while it runs: the identity the user and a tool see it by, the cancellation the work must watch, and
-    /// the means to report how it is going. Handed out by <see cref="RunningJobs.Start"/> and disposed by whoever
+    /// the means to report how it is going. Handed out by <see cref="BackgroundJobs.Start"/> and disposed by whoever
     /// runs the work, once it is over.
     /// </summary>
-    public sealed class RunningJob : IDisposable
+    public sealed class BackgroundJob : IDisposable
     {
-        internal RunningJob(JobProgressStatus status)
+        internal BackgroundJob(JobProgressStatus status)
         {
             Status = status;
         }
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Util
             if (percentComplete > 99)
                 percentComplete = 99;
             var status = Status.ChangeMessage(message ?? Status.Description);
-            RunningJobs.ReportProgress(status.ChangePercentComplete(percentComplete));
+            BackgroundJobs.ReportProgress(status.ChangePercentComplete(percentComplete));
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public void Failed(Exception exception)
         {
-            RunningJobs.ReportProgress(Status.ChangeErrorException(exception));
+            BackgroundJobs.ReportProgress(Status.ChangeErrorException(exception));
         }
 
         /// <summary>
@@ -177,8 +177,8 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public void Dispose()
         {
-            RunningJobs.ReportProgress(IsCancellationRequested ? Status.Cancel() : Status.Complete());
-            RunningJobs.Release(this);
+            BackgroundJobs.ReportProgress(IsCancellationRequested ? Status.Cancel() : Status.Complete());
+            BackgroundJobs.Release(this);
         }
     }
 }

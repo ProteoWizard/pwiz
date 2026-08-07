@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Util
     /// <para>This is an identity only - what can be told about a job, and what names it to cancel one. The
     /// cancellation itself is NOT here: a status is immutable and freely copied (the work reports a new copy for
     /// every progress update), which leaves no one place to own a CancellationTokenSource or to dispose it.
-    /// <see cref="RunningJobs"/> keeps those, keyed by <see cref="JobId"/>, for as long as the job runs.</para>
+    /// <see cref="BackgroundJobs"/> keeps those, keyed by <see cref="JobId"/>, for as long as the job runs.</para>
     /// </summary>
     public class JobProgressStatus : ProgressStatus
     {

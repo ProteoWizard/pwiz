@@ -124,6 +124,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Canceling.
+        /// </summary>
+        public static string RunningJobsDlg_GetProgressText_Canceling {
+            get {
+                return ResourceManager.GetString("RunningJobsDlg_GetProgressText_Canceling", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Field.
         /// </summary>
         public static string MessageBoxHelper_GetControlMessage_Field {

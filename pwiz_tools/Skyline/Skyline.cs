@@ -2894,6 +2894,26 @@ namespace pwiz.Skyline
             ShowImmediateWindow();
         }
 
+        private void runningJobsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRunningJobsDlg();
+        }
+
+        // The status bar is where a background job's progress shows, so double-clicking it is the direct way to
+        // the list the progress came from - the same dialog as Tools > Running Jobs.
+        private void statusProgress_DoubleClick(object sender, EventArgs e)
+        {
+            ShowRunningJobsDlg();
+        }
+
+        public void ShowRunningJobsDlg()
+        {
+            using (var dlg = new RunningJobsDlg())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
         public void ShowImmediateWindow()
         {
             if (_immediateWindow != null)

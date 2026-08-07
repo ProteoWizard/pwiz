@@ -139,6 +139,9 @@
   <data name="LongWaitDlg_PerformWork_canceled" xml:space="preserve">
     <value>canceled</value>
   </data>
+  <data name="RunningJobsDlg_GetProgressText_Canceling" xml:space="preserve">
+    <value>Canceling</value>
+  </data>
   <data name="MessageBoxHelper_GetControlMessage_Field" xml:space="preserve">
     <value>Field</value>
   </data>

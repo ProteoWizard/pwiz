@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls
 
         // The job the work was handed to when the user pressed "Run in Background". Set on the UI thread and read
         // on the work's thread, which goes on reporting progress to it long after this dialog is gone.
-        private volatile RunningJob _backgroundJob;
+        private volatile BackgroundJob _backgroundJob;
 
         // these members should only be accessed in a block which locks on _lock
         #region synchronized members
@@ -105,21 +105,18 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        /// <summary>
-        /// What this operation is called once it is running in the background ("Exporting report 'Peak Areas'").
-        /// Setting it is what offers the user the "Run in Background" button - an operation may be backgrounded
-        /// only if its caller says so, because most may not:
-        ///
-        /// <para>Pressing the button returns <see cref="PerformWork(Control,int,Action{IProgressMonitor})"/> to
-        /// its caller while the work goes on. So the work must be SELF-CONTAINED: everything that finishes the
-        /// operation - committing a file, reporting a result - has to happen inside the delegate, because the
-        /// caller resumes as soon as the button is pressed and there is nobody left to do it afterwards. An
-        /// operation that applies its result to the document when it lands may not be backgrounded at all: the
-        /// user goes on editing while it runs, and it would finish by overwriting what they did. Nor may work that
-        /// asks the user something part way through (the ShowDialog below), which has no window left to show it in
-        /// once this one has closed.</para>
-        /// </summary>
-        public string BackgroundJobDescription { get; set; }
+        /// <summary>What became of the work <see cref="StartJob"/> ran.</summary>
+        public enum JobOutcome
+        {
+            completed,
+            canceled,
+            /// <summary>The user sent it to the background; it is still running, as a job.</summary>
+            backgrounded
+        }
+
+        // What the work is called once it is running in the background. Set by StartJob only, which is what makes
+        // the button - and backgrounding at all - something a caller opts into.
+        private string _jobDescription;
 
         public override string DetailedMessage
         {
@@ -178,6 +175,39 @@ namespace pwiz.Skyline.Controls
             return progressWaitBroker.Status;
         }
 
+        /// <summary>
+        /// Runs work that the user may send to the background, and reports what became of it. The same as
+        /// <see cref="PerformWork(Control,int,Action{IProgressMonitor})"/> except that this dialog offers a "Run in
+        /// Background" button: pressing it closes the dialog and returns from here with
+        /// <see cref="JobOutcome.backgrounded"/>, leaving the work running as a job that reports to the status bar
+        /// and can be cancelled there (Tools > Running Jobs).
+        ///
+        /// <para>It is a separate method, and not an option on PerformWork, because the work has to be written for
+        /// it. The delegate OUTLIVES this call, so it must be SELF-CONTAINED: everything that finishes the
+        /// operation - committing a file, reporting a result - has to happen inside it, since the caller resumes
+        /// the moment the button is pressed and there is nobody left to do it afterwards. Work that applies its
+        /// result to the document when it lands may not be run this way at all - the user goes on editing while it
+        /// runs, and it would finish by overwriting what they did - nor may work that asks the user something part
+        /// way through (the ShowDialog below), which has no window left to show it in once this one has closed.
+        /// Everything else keeps calling PerformWork, whose delegate is always finished with by the time it
+        /// returns.</para>
+        /// </summary>
+        /// <param name="parent">The window the dialog belongs to.</param>
+        /// <param name="delayMillis">How long to let the work run before showing the dialog at all.</param>
+        /// <param name="jobDescription">What the job is called in the status bar and the job list once it is
+        /// backgrounded ("Exporting report 'Peak Areas'").</param>
+        /// <param name="performWork">The work. Must be self-contained - see above.</param>
+        public JobOutcome StartJob(Control parent, int delayMillis, string jobDescription,
+            Action<IProgressMonitor> performWork)
+        {
+            _jobDescription = jobDescription;
+            var progressWaitBroker = new ProgressWaitBroker(performWork);
+            PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);
+            if (_backgroundJob != null)
+                return JobOutcome.backgrounded;
+            return IsCanceled ? JobOutcome.canceled : JobOutcome.completed;
+        }
+
         public void PerformWork(Control parent, int delayMillis, [InstantHandle] Action<ILongWaitBroker> performWork)
         {
             _startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
@@ -206,7 +236,7 @@ namespace pwiz.Skyline.Controls
 
                 progressBar.Value = Math.Max(0, _progressValue);
                 UpdateLabelMessage();
-                btnBackground.Visible = BackgroundJobDescription != null;
+                btnBackground.Visible = _jobDescription != null;
 
                 ShowDialog(parent);
             }
@@ -389,21 +419,20 @@ namespace pwiz.Skyline.Controls
         }
 
         /// <summary>
-        /// Hands the running work to a <see cref="RunningJob"/> and closes this dialog, which returns
-        /// <see cref="PerformWork(Control,int,Action{ILongWaitBroker})"/> to its caller while the work goes on.
-        /// From here the job reports its progress to the main window's status bar, and cancelling the job is what
-        /// stops it - it is registered to trip this dialog's own cancellation, so the work goes on watching the
-        /// one token it always has.
+        /// Hands the running work to a <see cref="BackgroundJob"/> and closes this dialog, which returns
+        /// <see cref="StartJob"/> to its caller while the work goes on. From here the job reports its progress to
+        /// the main window's status bar, and cancelling the job is what stops it - it is registered to trip this
+        /// dialog's own cancellation, so the work goes on watching the one token it always has.
         /// </summary>
         public void RunInBackground()
         {
             lock (_lock)
             {
-                // The work may have finished while the user was reaching for the button, in which case there is
-                // nothing to hand over and this dialog is already closing.
-                if (_finished || _backgrounded)
+                // Nothing to hand over: the work either finished while the user was reaching for the button, or
+                // was never started by StartJob, the only caller that says what a job of it would be called.
+                if (_finished || _backgrounded || _jobDescription == null)
                     return;
-                _backgroundJob = RunningJobs.Start(BackgroundJobDescription);
+                _backgroundJob = BackgroundJobs.Start(_jobDescription);
                 _backgrounded = true;
             }
             _backgroundJob.CancellationToken.Register(() => _cancellationTokenSource.Cancel());

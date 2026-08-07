@@ -169,15 +169,15 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 using var longWaitDlg = new LongWaitDlg();
                 longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
-                // The export may be left to run in the background: it writes only its own file, and reads a
-                // snapshot of the document (GetSkylineDataSchema clones it), so nothing it does depends on what
-                // the user does next.
-                longWaitDlg.BackgroundJobDescription = string.Format(
-                    DatabindingResources.ExportLiveReportDlg_ExportReport_Exporting_report___0__, viewName.Value.Name);
                 IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
                 var dataSchema = GetSkylineDataSchema(true);
+                // StartJob, not PerformWork: the user may leave this export running in the background. It qualifies
+                // because it writes only its own file and reads a snapshot of the document (GetSkylineDataSchema
+                // clones it), so nothing it does depends on what the user does next.
+                var jobDescription = string.Format(
+                    DatabindingResources.ExportLiveReportDlg_ExportReport_Exporting_report___0__, viewName.Value.Name);
                 // ReSharper disable once RedundantLambdaParameterType
-                longWaitDlg.PerformWork(this, 1500, (IProgressMonitor progressMonitor) =>
+                var outcome = longWaitDlg.StartJob(this, 1500, jobDescription, (IProgressMonitor progressMonitor) =>
                 {
                     using (fileSaver)
                     {
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 });
                 // Backgrounding is not cancelling: the export is running, and this dialog is done with it.
-                return !longWaitDlg.IsCanceled;
+                return outcome != LongWaitDlg.JobOutcome.canceled;
             }
             catch (Exception x)
             {

@@ -538,13 +538,13 @@ namespace pwiz.Skyline.ToolsUI
 
         public JobInfo[] GetRunningJobs()
         {
-            return RunningJobs.Running.Select(job => new JobInfo
+            return BackgroundJobs.Running.Select(job => new JobInfo
             {
                 Id = job.JobId.ToString(),
                 Description = job.Description,
                 Message = job.Message,
                 PercentComplete = job.PercentComplete,
-                CancelRequested = RunningJobs.IsCancelRequested(job.JobId)
+                CancelRequested = BackgroundJobs.IsCancelRequested(job.JobId)
             }).ToArray();
         }
 
@@ -556,7 +556,7 @@ namespace pwiz.Skyline.ToolsUI
                     @"{0} is not a job id. Job ids come from get_running_jobs.", (jobId ?? string.Empty).SingleQuote()));
             }
 
-            if (RunningJobs.Cancel(id))
+            if (BackgroundJobs.Cancel(id))
                 return new ActionResult { Completed = true };
 
             // Not an error: the job most likely finished between the caller listing it and cancelling it, which is
@@ -581,7 +581,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         internal static T RunJob<T>(string description, Func<JobProgressStatus, CancellationToken, T> work)
         {
-            using (var job = RunningJobs.Start(description))
+            using (var job = BackgroundJobs.Start(description))
             {
                 return work(job.Status, job.CancellationToken);
             }
