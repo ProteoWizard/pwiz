@@ -1149,6 +1149,14 @@ namespace pwiz.Skyline
         {
             e.Cancel = false;
 
+            // Before anything else, including the offer to save: it would be worse to ask about saving and only
+            // then refuse to close.
+            if (!CheckBackgroundJobs())
+            {
+                e.Cancel = true;
+                return;
+            }
+
             if (!CheckSaveDocument())
             {
                 e.Cancel = true;
@@ -2912,6 +2920,39 @@ namespace pwiz.Skyline
             {
                 dlg.ShowDialog(this);
             }
+        }
+
+        /// <summary>
+        /// Refuses to close while background jobs are still running, and offers the two ways out of that: look at
+        /// what is running, or terminate all of it. A job goes on writing its file and reporting progress on its
+        /// own thread, and closing the window out from under one would leave it writing into a process that is
+        /// being torn down.
+        ///
+        /// <para>Returns false in EVERY case where jobs were found, including after terminating them: terminating
+        /// is a request, and the jobs stop at their next cancellation check. Exiting again once they have gone is
+        /// what closes the window.</para>
+        /// </summary>
+        private bool CheckBackgroundJobs()
+        {
+            if (BackgroundJobs.Running.Length == 0)
+            {
+                return true;
+            }
+
+            var result = MultiButtonMsgDlg.Show(this,
+                SkylineResources.SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_still_running_,
+                SkylineResources.SkylineWindow_CheckBackgroundJobs_View_Jobs,
+                SkylineResources.SkylineWindow_CheckBackgroundJobs_Terminate_Jobs, true);
+            switch (result)
+            {
+                case DialogResult.Yes:
+                    ShowRunningJobsDlg();
+                    break;
+                case DialogResult.No:
+                    BackgroundJobs.CancelAll();
+                    break;
+            }
+            return false;
         }
 
         public void ShowImmediateWindow()

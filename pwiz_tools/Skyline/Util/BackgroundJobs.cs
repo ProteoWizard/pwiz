@@ -92,6 +92,21 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Asks every running job to stop. Like <see cref="Cancel"/> it is a REQUEST: the jobs stop at their next
+        /// cancellation check, so they are still <see cref="Running"/> for a moment afterwards.
+        /// </summary>
+        public static void CancelAll()
+        {
+            lock (_cancellations)
+            {
+                foreach (var cancellation in _cancellations.Values)
+                {
+                    cancellation.Cancel();
+                }
+            }
+        }
+
+        /// <summary>
         /// True when this job has been asked to stop but has not yet stopped. False for a job that is not running.
         /// </summary>
         public static bool IsCancelRequested(Guid jobId)

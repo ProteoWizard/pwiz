@@ -2870,6 +2870,34 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline cannot exit while background jobs are still running..
+        /// </summary>
+        public static string SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_still_running_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_st" +
+                        "ill_running_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Terminate Jobs.
+        /// </summary>
+        public static string SkylineWindow_CheckBackgroundJobs_Terminate_Jobs {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Terminate_Jobs", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to View Jobs.
+        /// </summary>
+        public static string SkylineWindow_CheckBackgroundJobs_View_Jobs {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_View_Jobs", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to An unexpected error has prevented global settings changes from this session from being saved..
         /// </summary>
         public static string SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved {

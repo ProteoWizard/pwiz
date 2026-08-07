@@ -22,6 +22,8 @@ using System;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -106,7 +108,52 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(WORK_MESSAGE, job.Message);
             AssertEx.AreEqual(WORK_PERCENT, job.PercentComplete);
 
+            TestExitBlocked();
             TestCancelFromRunningJobsDlg(job);
+            TestExitTerminatesJobs();
+        }
+
+        /// <summary>
+        /// Skyline must refuse to close while a job is running: closing the window out from under work that is
+        /// still writing a file is what this is for. Cancel leaves everything as it was; View Jobs shows what is
+        /// running.
+        /// </summary>
+        private void TestExitBlocked()
+        {
+            var messageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
+            RunUI(() => AssertEx.AreEqual(
+                SkylineResources.SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_still_running_,
+                messageDlg.Message));
+            OkDialog(messageDlg, messageDlg.BtnCancelClick);
+            AssertEx.IsFalse(SkylineWindow.IsDisposed);
+
+            // View Jobs, the leftmost button, opens the same list Tools > Running Jobs does.
+            var messageDlgAgain = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
+            var runningJobsDlg = ShowDialog<RunningJobsDlg>(messageDlgAgain.BtnYesClick);
+            RunUI(() => AssertEx.AreEqual(1, runningJobsDlg.JobCount));
+            OkDialog(runningJobsDlg, runningJobsDlg.Close);
+            WaitForClosedForm(messageDlgAgain);
+            AssertEx.IsFalse(SkylineWindow.IsDisposed);
+        }
+
+        /// <summary>
+        /// Terminate Jobs, the middle button, stops everything that is running - but does not close, because the
+        /// jobs stop at their next cancellation check rather than at once.
+        /// </summary>
+        private void TestExitTerminatesJobs()
+        {
+            ResetForNextRun();
+            StartLongWait(JOB_DESCRIPTION);
+            var longWaitDlg = WaitForOpenForm<LongWaitDlg>();
+            AssertEx.IsTrue(_workStarted.Wait(WAIT_TIME));
+            RunUI(longWaitDlg.RunInBackground);
+            WaitForClosedForm(longWaitDlg);
+            WaitForPerformWorkReturned();
+
+            var messageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
+            OkDialog(messageDlg, messageDlg.Btn1Click);
+            WaitForCondition(() => BackgroundJobs.Running.Length == 0);
+            AssertEx.IsFalse(SkylineWindow.IsDisposed);
         }
 
         /// <summary>

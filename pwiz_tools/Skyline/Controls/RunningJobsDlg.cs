@@ -118,7 +118,8 @@ namespace pwiz.Skyline.Controls
 
         /// <summary>
         /// Asks the selected job to stop. It stops at its next cancellation check, so the row stays until it has -
-        /// reading "Canceling" in the meantime.
+        /// reading "Canceling" in the meantime. Called Terminate in the UI, where "Cancel" would be read as
+        /// cancelling the dialog; it is cancellation underneath, which is all a job can be asked for.
         /// </summary>
         public void CancelSelectedJob()
         {

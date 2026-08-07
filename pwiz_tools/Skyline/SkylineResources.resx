@@ -974,6 +974,15 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document" xml:space="preserve">
     <value>Failure attempting to modify the document.</value>
   </data>
+  <data name="SkylineWindow_CheckBackgroundJobs_Skyline_cannot_exit_while_background_jobs_are_still_running_" xml:space="preserve">
+    <value>Skyline cannot exit while background jobs are still running.</value>
+  </data>
+  <data name="SkylineWindow_CheckBackgroundJobs_Terminate_Jobs" xml:space="preserve">
+    <value>Terminate Jobs</value>
+  </data>
+  <data name="SkylineWindow_CheckBackgroundJobs_View_Jobs" xml:space="preserve">
+    <value>View Jobs</value>
+  </data>
   <data name="SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved" xml:space="preserve">
     <value>An unexpected error has prevented global settings changes from this session from being saved.</value>
   </data>
