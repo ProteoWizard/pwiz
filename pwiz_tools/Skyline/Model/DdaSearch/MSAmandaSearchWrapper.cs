@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var text = carry + new string(buffer, 0, read);
                 if (QVALUE_ACCESSIONS.Any(a => text.IndexOf(a, StringComparison.Ordinal) >= 0))
                     return true;
-                carry = text.Length > carryLength ? text.Substring(text.Length - carryLength) : text;
+                carry = string.Empty; // MUTATION: no carry between reads
             }
             return false;
         }
