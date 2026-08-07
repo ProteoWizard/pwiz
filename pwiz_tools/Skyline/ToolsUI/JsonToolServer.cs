@@ -157,6 +157,13 @@ namespace pwiz.Skyline.ToolsUI
         public string PipeName { get { return _pipeName; } }
 
         /// <summary>
+        /// Where Skyline says that the selection changed, for anyone who cares to watch. It lives here because
+        /// this is what already publishes where to find this Skyline (the connection file), and it is written
+        /// beside that, in the same directory and under the same pipe name.
+        /// </summary>
+        public SelectionChangeFile SelectionChangeFile { get; }
+
+        /// <summary>
         /// The JSON server stands alone: it needs no <see cref="ToolService"/> (the legacy BinaryFormatter
         /// service), only the name the two of them derive their pipe names from -- so it can be started by
         /// itself, before the main window exists (see Program.StartToolService).
@@ -165,6 +172,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             _pipeName = JsonToolConstants.GetJsonPipeName(toolServiceName);
             _serverThread = new Thread(ServerLoop) { IsBackground = true };
+            SelectionChangeFile = new SelectionChangeFile(JsonToolConstants.GetSelectionChangeFilePath(_pipeName));
 
             // Build method dictionary from IJsonToolService interface, mapped to
             // implementations on this class. Supports typed parameters and return values.
@@ -191,6 +199,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // Expected when shutting down
             }
+            SelectionChangeFile.Dispose();
             DeleteConnectionInfo();
         }
 
@@ -234,10 +243,16 @@ namespace pwiz.Skyline.ToolsUI
                 try
                 {
                     string json = File.ReadAllText(file);
-                    var obj = JsonConvert.DeserializeAnonymousType(json, new { process_id = 0 });
+                    var obj = JsonConvert.DeserializeAnonymousType(json, new { process_id = 0, pipe_name = string.Empty });
                     int pid = obj.process_id;
                     if (!IsSkylineProcess(pid))
+                    {
                         File.Delete(file);
+                        // The selection file says nothing about who wrote it -- it has no content to say it with --
+                        // so it is reaped with the connection file that names the same pipe.
+                        SelectionChangeFile.Delete(
+                            JsonToolConstants.GetSelectionChangeFilePath(obj.pipe_name ?? string.Empty));
+                    }
                 }
                 catch
                 {

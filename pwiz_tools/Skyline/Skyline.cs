@@ -1307,6 +1307,10 @@ namespace pwiz.Skyline
 
         private void sequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
+            // Say so for anyone watching. Only THAT it changed - a listener that wants to know what is selected
+            // now asks the service, which is the only answer that cannot already be stale.
+            Program.MainJsonToolServer?.SelectionChangeFile.SelectionChanged();
+
             // Hide any tool tips when selection changes
             SequenceTree.HideEffects();
 

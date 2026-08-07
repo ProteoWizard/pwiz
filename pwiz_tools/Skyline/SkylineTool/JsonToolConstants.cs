@@ -97,6 +97,7 @@ namespace SkylineTool
 
         public const string DEPLOY_FOLDER_NAME = @".skyline-mcp";
         public const string CONNECTION_FILE_PREFIX = @"connection-";
+        public const string SELECTION_FILE_PREFIX = @"selection-";
         public const string CONNECTION_FILE_EXT = @".json";
         public const string JSON_PIPE_PREFIX = @"SkylineMcpJson-";
 
@@ -116,6 +117,24 @@ namespace SkylineTool
         {
             return Path.Combine(GetConnectionDirectory(),
                 CONNECTION_FILE_PREFIX + pipeName + CONNECTION_FILE_EXT);
+        }
+
+        /// <summary>
+        /// The file Skyline rewrites every time the selection changes. Rewriting it IS the message - there is no
+        /// payload, and a listener that wants to know what is selected now asks the service (GetSelection), which
+        /// is the only answer that cannot be out of date by the time it is read.
+        ///
+        /// <para>This is how an interested process is told to ask again WITHOUT Skyline knowing that process
+        /// exists: nobody registers, nobody is sent anything, and a listener that dies, hangs, or never starts
+        /// costs nothing. Watch it with a FileSystemWatcher, which raises Changed on each rewrite.</para>
+        ///
+        /// <para>The file holds the time of the change, for a reader who opens it by hand; a listener needs
+        /// nothing out of it.</para>
+        /// </summary>
+        public static string GetSelectionChangeFilePath(string pipeName)
+        {
+            return Path.Combine(GetConnectionDirectory(),
+                SELECTION_FILE_PREFIX + pipeName + @".txt");
         }
     }
 }

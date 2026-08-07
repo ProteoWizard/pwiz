@@ -1414,6 +1414,7 @@
     </Compile>
     <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
     <Compile Include="ToolsUI\JsonToolServer.cs" />
+    <Compile Include="ToolsUI\SelectionChangeFile.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
     <Compile Include="ToolsUI\DialogWatcher.cs" />
