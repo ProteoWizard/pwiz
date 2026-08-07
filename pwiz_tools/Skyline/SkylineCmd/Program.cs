@@ -83,8 +83,16 @@ namespace pwiz.SkylineCmd
         {
             // SkylineCmd and Skyline must be in the same directory
             string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
+            // On .NET Framework the managed entry point is Skyline(.exe). On .NET (net8+)
+            // the .exe is a native apphost that Assembly.LoadFrom can't load, so load the
+            // managed assembly (Skyline-daily.dll) instead.
+#if NET472
             const string SKYLINE = @"Skyline.exe";
             const string SKYLINE_DAILY = @"Skyline-daily.exe"; // Keep -daily;
+#else
+            const string SKYLINE = @"Skyline.dll";
+            const string SKYLINE_DAILY = @"Skyline-daily.dll"; // Keep -daily;
+#endif
             foreach (var exeName in new []{SKYLINE, SKYLINE_DAILY})
             {
                 string exePath = Path.Combine(dirPath, exeName);

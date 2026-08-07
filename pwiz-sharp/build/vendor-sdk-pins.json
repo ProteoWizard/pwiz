@@ -1,0 +1,77 @@
+{
+  "$comment": [
+    "Single source of truth for vendor SDK pinning. Consumed by:",
+    "  - build/VendorPinsGenerator - emits pwiz/src/Vendor/Common/VendorSdkPins.generated.cs",
+    "    (the runtime resolver's pin table)",
+    "  - installer/build.ps1 - flattens 'prefixes' into the staging filter that strips",
+    "    vendor DLLs out of the MSI",
+    "Paths are repo-relative. Most archives live under pwiz_aux/msrc/utility/; Thermo on the",
+    "pwiz-sharp side has its own newer .NET-8-compatible copy under pwiz-sharp/vendor-archives/."
+  ],
+  "repo": "ProteoWizard/pwiz",
+  "vendors": [
+    {
+      "name": "Thermo",
+      "path": "pwiz-sharp/vendor-archives/vendor_api_Thermo.7z",
+      "prefixes": [ "ThermoFisher.", "OpenMcdf" ]
+    },
+    {
+      "name": "Bruker",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Bruker.7z",
+      "prefixes": [
+        "Bruker.", "BaseDataAccess", "BDal.", "CompassXtractMS", "EDAL", "Interop.EDAL",
+        "ProtocolBuffers", "BaseError", "BaseCommon", "Compass", "BaseTof", "timsdata",
+        "baf2sql", "mcd_lib"
+      ]
+    },
+    {
+      "name": "Bruker-linux",
+      "$comment": [
+        "Bruker is the one vendor whose Windows and Linux native libraries live in separate",
+        "archives (see Bruker.csproj: one archive per OS so nobody downloads binaries for a",
+        "platform they are not building for). Both answer to the same prefixes, so 'os' narrows",
+        "the match - without it Linux would fetch the 10.7 MB Windows archive and still not find",
+        "libtimsdata.so. Waters needs no equivalent: its single archive carries both platforms."
+      ],
+      "os": "linux",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Bruker_linux.7z",
+      "prefixes": [ "timsdata", "baf2sql" ]
+    },
+    {
+      "name": "Waters",
+      "path": "pwiz-sharp/vendor-archives/vendor_api_Waters.7z",
+      "prefixes": [ "MassLynxRaw", "libMassLynxRaw", "MassLynx" ]
+    },
+    {
+      "name": "Agilent",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Agilent.7z",
+      "prefixes": [
+        "Agilent.", "BaseDataAccess", "MIDAC.", "Mhdac.", "MassHunter.", "MassSpecDataReader",
+        "agtsampleinforw"
+      ]
+    },
+    {
+      "name": "ABI",
+      "path": "pwiz_aux/msrc/utility/vendor_api_ABI.7z",
+      "prefixes": [
+        "Clearcore2.", "Sciex.", "SCIEX.", "SciexToolKit", "Interop.", "OFX.Core.",
+        "ZipUtility", "protobuf-net"
+      ]
+    },
+    {
+      "name": "Shimadzu",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Shimadzu.7z",
+      "prefixes": [
+        "Shimadzu.", "QTFL", "GCMS", "GCMSProto", "QTFLProto", "DataReader", "IDQuantLSS",
+        "PeakIDEA", "PeakItgLSS", "MassLibrarySearch", "MassCalcWrap", "MassStandardSpectrum",
+        "DualProbeInterface", "IoModule", "LSSMng", "CompressedTLM", "CRHAKEI", "CPCNLSS",
+        "CLFIO", "LibDB", "MSMSDB"
+      ]
+    },
+    {
+      "name": "Mobilion",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Mobilion.7z",
+      "prefixes": [ "Mobilion.", "MBISDK", "MBI_SDK", "MobilionShim" ]
+    }
+  ]
+}

@@ -91,7 +91,7 @@ namespace SkylineTester
             {"fr-FR", "French"},
             {"tr-TR", "Turkish"},
             {"ja", "Japanese"},
-            {"zh-CHS", "Chinese"}
+            {"zh-Hans", "Chinese"}   // Was zh-CHS before the branch-wide zh-CHS -> zh-Hans resx rename
         };
 
         private static readonly string[] TEST_DLLS =
@@ -524,7 +524,12 @@ namespace SkylineTester
 
         public IEnumerable<TestInfo> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
-            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(ExeDir, testDll)).Where(info =>
+            // Load the tests from the selected build dir (where TestRunner will run them). On net472
+            // SkylineTester is deployed into that same bin, so ExeDir == the build; on net8 SkylineTester
+            // runs from its own project output while the test DLLs live in the staged build dir, so
+            // ExeDir has none of them -- reading from ExeDir there yields an empty tree (no test filter).
+            var testDir = GetSelectedBuildDir() ?? ExeDir;
+            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(testDir, testDll)).Where(info =>
                 (filterAttribute == null || !info.TestMethod.CustomAttributes.Any(attr => Equals(attr.AttributeType.Name, filterAttribute))) &&
                 (filterName == null || info.TestMethod.Name.Contains(filterName)));
         }
@@ -687,6 +692,7 @@ namespace SkylineTester
 
         private string[] GetPossibleBuildDirs()
         {
+#if NET472
             var dirs = new[]
             {
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
@@ -701,7 +707,64 @@ namespace SkylineTester
             if (_buildDebug)
                 dirs = dirs.Select(dir => dir.Replace(@"\Release", @"\Debug")).ToArray();
             return dirs;
+#else
+            // net8 tests run from a *staged* directory assembled by Stage-Net8Tests.ps1 that
+            // co-locates TestRunner.exe, the test DLLs, and Skyline-daily (the net8 analogue of the
+            // net472 single bin\x64\Release, which no longer exists because projects build to
+            // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit "bin"
+            // slot is populated with the most recent staging-net8*\Release build in the checkout;
+            // the other slots are unused (hidden).
+            var net8Staging = GetNet8StagingDir();
+            return new[]
+            {
+                null,          // bin (32 bit)      - n/a on net8
+                net8Staging,   // bin (64 bit)      - most recent staged net8 build in the checkout
+                null,          // Build (32 bit)
+                null,          // Build (64 bit)
+                null,          // Nightly (32 bit)
+                null,          // Nightly (64 bit)
+                null,          // zip (32 bit)
+                null,          // zip (64 bit)
+            };
+#endif
         }
+
+#if !NET472
+        // Locate the most recently staged net8 test directory in this checkout. Stage-Net8Tests.ps1
+        // assembles TestRunner.exe + the test DLLs + Skyline-daily under
+        // <checkout>\pwiz_tools\Skyline\bin\staging-net8[/-record/-validate]\Release. Find the
+        // checkout's Skyline dir (the ancestor named exactly "Skyline", not "SkylineTester") and
+        // pick the newest staging dir that actually contains TestRunner.exe.
+        private string GetNet8StagingDir()
+        {
+            var skylineDir = ExeDir;
+            while (skylineDir != null &&
+                   !string.Equals(Path.GetFileName(skylineDir), "Skyline", StringComparison.OrdinalIgnoreCase))
+                skylineDir = Path.GetDirectoryName(skylineDir);
+            if (skylineDir == null)
+                return null;
+            var binDir = Path.Combine(skylineDir, "bin");
+            if (!Directory.Exists(binDir))
+                return null;
+            try
+            {
+                var candidates = Directory.GetDirectories(binDir, "staging-net8*")
+                    .Select(d => Path.Combine(d, "Release"))
+                    .Where(d => File.Exists(Path.Combine(d, "TestRunner.exe")))
+                    .ToList();
+                // Prefer the canonical "staging-net8" (the full default staging) over workflow-specific
+                // subsets like "-record"/"-validate"; otherwise fall back to the most recent.
+                return candidates.FirstOrDefault(d =>
+                           string.Equals(Path.GetFileName(Path.GetDirectoryName(d)), "staging-net8",
+                               StringComparison.OrdinalIgnoreCase))
+                       ?? candidates.OrderByDescending(Directory.GetLastWriteTimeUtc).FirstOrDefault();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+#endif
 
         public void FindBuilds()
         {
@@ -731,14 +794,20 @@ namespace SkylineTester
                 }
             }
 
-            // Select first available build if previously selected build doesn't exist.
-            SelectBuild(buildDirs[(int) SelectedBuild] != null ? SelectedBuild : (BuildDirs) defaultIndex);
+            // Select first available build if previously selected build doesn't exist. When no build
+            // exists at all, defaultIndex stays int.MaxValue; keep SelectedBuild in range so
+            // GetSelectedBuildDir doesn't index out of bounds.
+            var newSelection = buildDirs[(int) SelectedBuild] != null ? SelectedBuild : (BuildDirs) defaultIndex;
+            if ((int) newSelection >= 0 && (int) newSelection < buildDirs.Length)
+                SelectBuild(newSelection);
         }
 
         private static void CheckBuildDirExistence(string[] buildDirs)
         {
             for (int i = 0; i < buildDirs.Length; i++)
             {
+                if (buildDirs[i] == null)
+                    continue;   // Unpopulated slot (e.g. the 32-bit slots on net8)
                 if (!File.Exists(Path.Combine(buildDirs[i], "Skyline.exe")) &&
                     !File.Exists(Path.Combine(buildDirs[i], "Skyline-daily.exe")))  // Keep -daily
                 {
@@ -777,7 +846,11 @@ namespace SkylineTester
         public string GetSelectedBuildDir()
         {
             var buildDirs = GetPossibleBuildDirs();
-            return buildDirs[(int) SelectedBuild];
+            // SelectedBuild can hold an out-of-range sentinel when no build directory was found
+            // (FindBuilds leaves defaultIndex at int.MaxValue). Guard so callers get null rather
+            // than an IndexOutOfRangeException.
+            int index = (int) SelectedBuild;
+            return index >= 0 && index < buildDirs.Length ? buildDirs[index] : null;
         }
 
         private string GetZipPath(int architecture)
@@ -1789,6 +1862,9 @@ namespace SkylineTester
         private void selectBuild_Click(object sender, EventArgs e)
         {
             SelectBuild((BuildDirs) selectBuildMenuItem.DropDownItems.IndexOf((ToolStripMenuItem)sender));
+            // The test tree is loaded from the selected build dir, so reload it when the user switches
+            // builds (net472 always read from a fixed ExeDir, so this was previously unnecessary).
+            StartBackgroundLoadTestSet();
         }
 
         private void selectBuildMenuOpening(object sender, EventArgs e)

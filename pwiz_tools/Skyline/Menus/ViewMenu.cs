@@ -30,6 +30,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;

@@ -1,0 +1,242 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+
+/// <summary>
+/// Regenerates pwiz/src/Vendor/Common/VendorSdkPins.generated.cs from the vendor 7z archives
+/// currently in the pwiz repo. Cross-platform replacement for the former
+/// installer/Refresh-VendorPins.ps1 -- the compile path runs on Linux build agents that have
+/// no pwsh, so this cannot be a PowerShell script.
+///
+/// For each vendor in build/vendor-sdk-pins.json, finds the most-recent commit that touched
+/// its archive (git log -1 -- path), builds a raw.githubusercontent.com URL pinned to that
+/// commit, and records the file's SHA-256. Pins are self-contained:
+///   - the commit SHA is in the URL, so GitHub serves byte-immutable content forever
+///   - the SHA-256 is recorded, so VendorSdkLoader rejects + re-downloads on mismatch
+///   - the short SHA in the cache key keeps multiple pwiz-sharp versions side by side
+///
+/// Usage: VendorPinsGenerator &lt;pwizRootPath&gt;
+/// </summary>
+internal static class Program
+{
+    private const string PINS_JSON = "pwiz-sharp/build/vendor-sdk-pins.json";
+    private const string OUTPUT_CS = "pwiz-sharp/pwiz/src/Vendor/Common/VendorSdkPins.generated.cs";
+
+    internal static int Main(string[] args)
+    {
+        if (args.Length != 1)
+        {
+            Console.Error.WriteLine("usage: VendorPinsGenerator <pwizRootPath>");
+            return 2;
+        }
+
+        string pwizRoot = Path.GetFullPath(args[0]);
+        string jsonPath = Path.Combine(pwizRoot, PINS_JSON.Replace('/', Path.DirectorySeparatorChar));
+        string outPath = Path.Combine(pwizRoot, OUTPUT_CS.Replace('/', Path.DirectorySeparatorChar));
+
+        if (!File.Exists(jsonPath))
+        {
+            Console.Error.WriteLine($"VendorPinsGenerator: {jsonPath} not found");
+            return 1;
+        }
+
+        // Pins are derived from git history, so a source tree without usable git history cannot
+        // regenerate them. That is a normal situation, not a broken one: a distribution building
+        // from a source tarball has no .git at all, and a git worktree whose gitdir points at a
+        // path the current OS cannot see (a Windows worktree entered from WSL) fails the same
+        // way. Keep an existing generated file and carry on; only fail when there is nothing to
+        // fall back to, because then the build really would produce a binary with no pins.
+        if (!IsGitUsable(pwizRoot))
+        {
+            if (File.Exists(outPath))
+            {
+                Console.WriteLine($"VendorPinsGenerator: git unusable in {pwizRoot}; " +
+                                  $"keeping the existing {OUTPUT_CS}");
+                return 0;
+            }
+            Console.Error.WriteLine($"VendorPinsGenerator: git unusable in {pwizRoot} and no " +
+                                    $"previously generated {OUTPUT_CS} to fall back on");
+            return 1;
+        }
+
+        using var doc = JsonDocument.Parse(File.ReadAllText(jsonPath));
+        string repo = doc.RootElement.GetProperty("repo").GetString();
+
+        var body = new List<string>();
+        foreach (var vendor in doc.RootElement.GetProperty("vendors").EnumerateArray())
+        {
+            string name = vendor.GetProperty("name").GetString();
+            string relPath = vendor.GetProperty("path").GetString();
+            string[] prefixes = vendor.GetProperty("prefixes").EnumerateArray()
+                                      .Select(p => p.GetString()).ToArray();
+            // Optional. Only vendors that need a separate archive per OS set it (Bruker), so
+            // that a prefix match can be narrowed - see VendorSdkPin.Os.
+            string os = vendor.TryGetProperty("os", out var osProp) ? osProp.GetString() : null;
+
+            string absPath = Path.Combine(pwizRoot, relPath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(absPath))
+            {
+                Console.WriteLine($"WARNING: {relPath} not found, skipping");
+                continue;
+            }
+
+            string commit = ResolvePinningCommit(pwizRoot, relPath);
+            if (commit.Length == 0)
+            {
+                // Present but never committed: the normal state while a vendor SDK is being
+                // swapped in. There is no commit to pin to yet, so skip rather than fail the
+                // build; the pin appears as soon as the archive is committed.
+                Console.WriteLine($"WARNING: {relPath} has no git history yet (uncommitted?), skipping pin");
+                continue;
+            }
+            string sha256 = Sha256Hex(absPath);
+            string url = $"https://raw.githubusercontent.com/{repo}/{commit}/{relPath}";
+
+            body.Add(FormatPin(name, commit, sha256, url, prefixes, os));
+            Console.WriteLine($"{name,-10}  {commit.AsSpan(0, 12)}  {sha256.AsSpan(0, 16)}...");
+        }
+
+        var lines = new List<string>
+        {
+            "// <auto-generated>",
+            "// Generated by pwiz-sharp/build/VendorPinsGenerator.",
+            "// Do not edit by hand - rerun the generator when a vendor SDK archive is updated.",
+            "// (No timestamp: git history is authoritative; embedding one would dirty the",
+            "// file on every installer build and pollute diffs.)",
+            "// </auto-generated>",
+            "",
+            "namespace Pwiz.Vendor.Common;",
+            "",
+            "/// <summary>Hardcoded vendor SDK pins baked in at installer-build time.</summary>",
+            "internal static class VendorSdkPins",
+            "{",
+            "    /// <summary>The pin table consumed by <see cref=\"VendorSdkLoader\"/>.",
+            "    /// One entry per vendor; URL contains the commit SHA so the fetch is byte-immutable.",
+            "    /// </summary>",
+            "    internal static readonly VendorSdkPin[] All =",
+            "    {",
+        };
+        lines.AddRange(body);
+        lines.Add("    };");
+        lines.Add("}");
+        lines.Add("");
+
+        // Write only when content changed - keeps msbuild incrementality clean.
+        string newContent = string.Join("\r\n", lines);
+        string prev = File.Exists(outPath) ? File.ReadAllText(outPath) : string.Empty;
+        if (!string.Equals(newContent, prev, StringComparison.Ordinal))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+            File.WriteAllText(outPath, newContent, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            Console.WriteLine($"\nwrote {OUTPUT_CS}");
+        }
+        else
+        {
+            Console.WriteLine($"\n(unchanged) {OUTPUT_CS}");
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// The commit the pin URL points at: the most recent one that touched this archive, so the
+    /// URL stays valid and byte-immutable even as the branch moves on.
+    /// </summary>
+    /// <summary>
+    /// True when git can actually read history for <paramref name="pwizRoot"/>. Checks by asking
+    /// for HEAD rather than by looking for a .git entry, because the failure this guards against
+    /// is a .git that exists but cannot be followed.
+    /// </summary>
+    private static bool IsGitUsable(string pwizRoot)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo("git")
+            {
+                WorkingDirectory = pwizRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            psi.ArgumentList.Add("rev-parse");
+            psi.ArgumentList.Add("HEAD");
+            using var proc = Process.Start(psi);
+            if (proc is null) return false;
+            proc.StandardOutput.ReadToEnd();
+            proc.StandardError.ReadToEnd();
+            proc.WaitForExit();
+            return proc.ExitCode == 0;
+        }
+        catch (Exception)
+        {
+            // git not on PATH at all.
+            return false;
+        }
+    }
+
+    private static string ResolvePinningCommit(string pwizRoot, string relPath)
+    {
+        var psi = new ProcessStartInfo("git")
+        {
+            WorkingDirectory = pwizRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        psi.ArgumentList.Add("log");
+        psi.ArgumentList.Add("-1");
+        psi.ArgumentList.Add("--format=%H");
+        psi.ArgumentList.Add("--");
+        psi.ArgumentList.Add(relPath);
+
+        using var proc = Process.Start(psi);
+        string stdout = proc.StandardOutput.ReadToEnd();
+        string stderr = proc.StandardError.ReadToEnd();
+        proc.WaitForExit();
+        if (proc.ExitCode != 0)
+            throw new InvalidOperationException($"git log failed for {relPath}: {stderr.Trim()}");
+
+        // Empty means "tracked path with no commits touching it" -- caller decides what to do.
+        return stdout.Trim();
+    }
+
+    private static string Sha256Hex(string absPath)
+    {
+        using var stream = File.OpenRead(absPath);
+        byte[] hash = SHA256.HashData(stream);
+        return Convert.ToHexString(hash);
+    }
+
+    /// <summary>
+    /// Formats one vendor entry as a C# array-initializer element. Layout is kept aligned with
+    /// the runtime source so diffs stay readable.
+    /// </summary>
+    private static string FormatPin(string name, string commit, string sha256, string url,
+        string[] prefixes, string os)
+    {
+        string prefixCsv = string.Join(", ", prefixes.Select(p => $"\"{p}\""));
+        var sb = new StringBuilder();
+        sb.Append("    new VendorSdkPin(\r\n");
+        sb.Append(CultureInfo.InvariantCulture, $"        Name: \"{name}\",\r\n");
+        sb.Append(CultureInfo.InvariantCulture, $"        Version: \"{commit.AsSpan(0, 12)}\",\r\n");
+        sb.Append(CultureInfo.InvariantCulture, $"        Url: \"{url}\",\r\n");
+        sb.Append(CultureInfo.InvariantCulture, $"        Sha256: \"{sha256}\",\r\n");
+        // Os is optional on the record, so emit it only when the vendor declares one - that
+        // keeps the generated file unchanged for the vendors that need a single archive.
+        if (!string.IsNullOrEmpty(os))
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"        AssemblyPrefixes: new[] {{ {prefixCsv} }},\r\n");
+            sb.Append(CultureInfo.InvariantCulture, $"        Os: \"{os}\"),");
+        }
+        else
+        {
+            sb.Append(CultureInfo.InvariantCulture, $"        AssemblyPrefixes: new[] {{ {prefixCsv} }}),");
+        }
+        return sb.ToString();
+    }
+}

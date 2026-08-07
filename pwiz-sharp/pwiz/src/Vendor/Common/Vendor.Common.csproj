@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Common</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Common</AssemblyName>
+    <Description>Runtime loader for vendor SDK assemblies. Resolves ThermoFisher.* / Clearcore2.* / MIDAC.* / etc. on demand by downloading the matching vendor_api_&lt;Vendor&gt;.7z from the manifest, extracting into a per-user cache, and Assembly.LoadFrom-ing the DLLs. Lets the installer MSI ship only pwiz-sharp's own DLLs; vendor SDKs come down on first use.</Description>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bundled 7-Zip for decrypting the password-protected vendor archives at runtime. Same
+         binaries the build-time ExtractXxxAssemblies targets use via $(SevenZaExe); ~750 KB,
+         a small price for not depending on a managed 7z library that handles AES encryption.
+
+         Per-OS, and it has to be: 7za.exe is a Windows PE, so shipping it in a Linux payload
+         gives VendorSdkLoader a file that exists and cannot execute - the download and hash
+         check both succeed and only the extraction fails. Nothing caught this before because
+         until native SDK resolution existed, no Linux process ever extracted a vendor archive
+         at runtime; the Linux build stages its native libraries at build time instead. -->
+    <None Condition="'$(OS)' == 'Windows_NT'" Include="$(PwizLibrariesPath)\7za.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>7za.exe</Link>
+    </None>
+    <None Condition="'$(OS)' != 'Windows_NT'" Include="$(PwizLibrariesPath)\7zz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>7zz</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- VendorSdkPins.generated.cs is .gitignored. It's regenerated on every build
+       below from the vendor 7z archives' SHA-256 + commit history. The
+       Compile Remove+Include pair ensures it's in the Compile list even when
+       the file doesn't exist at project-evaluation time (fresh checkout); the
+       BeforeTargets target creates it before CoreCompile reads source. -->
+  <ItemGroup>
+    <Compile Remove="VendorSdkPins.generated.cs" />
+    <Compile Include="VendorSdkPins.generated.cs" />
+  </ItemGroup>
+
+  <!-- Runs on every build, including Linux CI agents that have no pwsh, so the generator is a
+       plain net8.0 console tool rather than a PowerShell script.
+
+       WorkingDirectory / EnvironmentVariables mirror Agilent.csproj's AgilentPatcher call: the
+       child `dotnet run` must resolve its SDK from pwiz-sharp/global.json rather than inherit
+       the outer build's MSBuild, which may be a newer major version. -->
+  <PropertyGroup>
+    <VendorPinsGeneratorProj>$(PwizSharpRoot)build\VendorPinsGenerator\VendorPinsGenerator.csproj</VendorPinsGeneratorProj>
+  </PropertyGroup>
+  <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile">
+    <Exec Command="dotnet run --project &quot;$(VendorPinsGeneratorProj)&quot; -c Release -- &quot;$(PwizRepoRoot)&quot;"
+          WorkingDirectory="$(PwizSharpRoot)"
+          EnvironmentVariables="MSBUILD_EXE_PATH=;MSBuildSDKsPath=;MSBuildToolsPath=;MSBuildExtensionsPath=;DOTNET_HOST_PATH="
+          StandardOutputImportance="low" />
+  </Target>
+
+</Project>

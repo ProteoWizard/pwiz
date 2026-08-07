@@ -49,7 +49,8 @@ namespace SkylineTester
 
         private void buttonBrowse_Click(object sender, EventArgs e)
         {
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = "Select a folder to contain the zip file.";
                 dlg.ShowNewFolderButton = true;

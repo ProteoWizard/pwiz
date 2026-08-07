@@ -233,12 +233,13 @@ namespace pwiz.Skyline.Model.Optimization
                 {
                     //Check for a valid SQLite file and that it has our schema
                     //Allow only one thread at a time to read from the same path
-                    using (var sessionFactory = GetSessionFactory(path))
+                    // NOTE: sessionFactory ownership transfers to OptimizationDb - do
+                    // NOT `using` it. See IonMobilityDb.GetIonMobilityDb for the same
+                    // net472→net8 NHibernate lifecycle fix.
+                    var sessionFactory = GetSessionFactory(path);
+                    lock (sessionFactory)
                     {
-                        lock (sessionFactory)
-                        {
-                            return new OptimizationDb(path, sessionFactory).Load(loadMonitor, status);
-                        }
+                        return new OptimizationDb(path, sessionFactory).Load(loadMonitor, status);
                     }
                 }
                 catch (UnauthorizedAccessException)

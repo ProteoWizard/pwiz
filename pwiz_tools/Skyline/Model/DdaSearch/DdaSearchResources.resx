@@ -193,6 +193,18 @@
   <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results" xml:space="preserve">
     <value>Searching for persistent features in Hardklor results</value>
   </data>
+  <data name="MSAmandaSearchWrapper_Percolator_could_not_run" xml:space="preserve">
+    <value>Percolator at {0} could not run: {1}</value>
+  </data>
+  <data name="MSAmandaSearchWrapper_Percolator_not_found" xml:space="preserve">
+    <value>it was not found</value>
+  </data>
+  <data name="MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing" xml:space="preserve">
+    <value>Percolator in {0} runs, so the search produced no matches that passed its scoring.</value>
+  </data>
+  <data name="MSAmandaSearchWrapper_Run_No_Percolator_q_values" xml:space="preserve">
+    <value>MS Amanda produced no Percolator q-values in {0}, so no library can be built from this search. {1}</value>
+  </data>
   <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
     <value>Converting file "{0}" to {1}</value>
   </data>

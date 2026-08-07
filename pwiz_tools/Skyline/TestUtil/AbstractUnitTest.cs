@@ -163,7 +163,16 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public bool IsRunningInTestRunner
         {
-            get { return TestContext is TestRunnerContext; }
+            get
+            {
+#if NET472
+                return TestContext is TestRunnerContext;
+#else
+                // net8: TestRunnerContext is TestRunner.exe-only (see TestRunnerLib.csproj);
+                // when running via `dotnet test` we're not in TestRunner.
+                return false;
+#endif
+            }
         }
 
         /// <summary>

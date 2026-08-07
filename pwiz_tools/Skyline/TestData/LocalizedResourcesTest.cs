@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestData
 
         private void VerifyResourceManager(ResourceManager resourceManager)
         {
-            var cultureInfos = new[] { "ja", "zh-CHS" }.Select(CultureInfo.GetCultureInfo).ToList();
+            var cultureInfos = new[] { "ja", "zh-Hans" }.Select(CultureInfo.GetCultureInfo).ToList();
             foreach (DictionaryEntry invariantEntry in resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true).Cast<DictionaryEntry>().OrderBy(entry=>entry.Key))
             {
                 foreach (var cultureInfo in cultureInfos)

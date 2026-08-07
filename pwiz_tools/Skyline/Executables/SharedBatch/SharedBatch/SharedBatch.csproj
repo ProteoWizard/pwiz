@@ -1,174 +1,58 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- SharedBatch - WinForms library shared by SkylineBatch / AutoQC / LaunchBatch. Multi-target
+       net472;net8.0-windows (classic v4.7.2). net472 keeps the exact on-disk HintPath DLLs it always
+       used; net8 pulls the managed equivalents from NuGet. System.Collections.Immutable is built into
+       net8; the vestigial System.Management reference (no code uses it) is dropped. -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{9660E7B1-A0AD-4C2B-A395-350D4055640A}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>SharedBatch</RootNamespace>
     <AssemblyName>SharedBatch</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net">
-      <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
+  </ItemGroup>
+
+  <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the settings config provider -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- net472: the exact on-disk DLLs this project always compiled against + framework assemblies
+       the SDK doesn't auto-reference (System.Management for ProcessRunner, System.Security for
+       ProtectedData/DPAPI in TextUtil). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="DotNetZip"><HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
+    <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="System.Collections.Immutable"><HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath></Reference>
     <Reference Include="System.Management" />
     <Reference Include="System.Security" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="AlertDlg.cs" />
-    <Compile Include="ChildProcessTracker.cs" />
-    <Compile Include="ConfigManager.cs" />
-    <Compile Include="FileOpenedForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileOpenedForm.Designer.cs">
-      <DependentUpon>FileOpenedForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FilePathControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FilePathControl.Designer.cs">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FileSaver.cs" />
-    <Compile Include="FileUtil.cs" />
-    <Compile Include="FindSkylineForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FindSkylineForm.Designer.cs">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Interfaces.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="LongWaitDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LongWaitDlg.Designer.cs">
-      <DependentUpon>LongWaitDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="LongWaitOperation.cs" />
-    <Compile Include="MainFormUtils.cs" />
-    <Compile Include="PanoramaJsonObject.cs" />
-    <Compile Include="ProcessRunner.cs" />
-    <Compile Include="ProgramLog.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.cs" />
-    <Compile Include="ShareConfigsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ShareConfigsForm.Designer.cs">
-      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SkylineInstallations.cs" />
-    <Compile Include="SkylineSettings.cs" />
-    <Compile Include="SkylineTypeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SkylineTypeControl.Designer.cs">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="TextUtil.cs" />
-    <Compile Include="XMLUtil.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="FileOpenedForm.resx">
-      <DependentUpon>FileOpenedForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FilePathControl.resx">
-      <DependentUpon>FilePathControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FindSkylineForm.resx">
-      <DependentUpon>FindSkylineForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="LongWaitDlg.resx">
-      <DependentUpon>LongWaitDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ShareConfigsForm.resx">
-      <DependentUpon>ShareConfigsForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SkylineTypeControl.resx">
-      <DependentUpon>SkylineTypeControl.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>PublicSettingsSingleFileGenerator</Generator>
+      <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj">
-      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
+
 </Project>

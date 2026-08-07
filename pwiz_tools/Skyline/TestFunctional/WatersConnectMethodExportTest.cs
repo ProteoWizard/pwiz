@@ -330,8 +330,12 @@ namespace pwiz.SkylineTestFunctional
 
         private void SetRequestHandlers()
         {
-            // Since we do not need to connect to the actual server a dummy account suffices
-            Settings.Default.RemoteAccountList.Add(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount());
+            // Since we do not need to connect to the actual server a dummy account suffices, but it
+            // needs a non-empty username: on net8 IdentityModel validates the username client-side
+            // before sending the token request, so a blank username throws before reaching the mock
+            // auth handler (net472 sent the blank username to the server, which the mock tolerated).
+            Settings.Default.RemoteAccountList.Add(
+                RemoteAccountType.WATERS_CONNECT.GetEmptyAccount().ChangeUsername(@"skyline"));
 
             var wcHandler = new MockHttpMessageHandler();  
             // ReSharper disable StringIndexOfIsCultureSpecific.1

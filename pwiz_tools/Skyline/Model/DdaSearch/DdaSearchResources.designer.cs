@@ -358,6 +358,42 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Percolator at {0} could not run: {1}.
+        /// </summary>
+        public static string MSAmandaSearchWrapper_Percolator_could_not_run {
+            get {
+                return ResourceManager.GetString("MSAmandaSearchWrapper_Percolator_could_not_run", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to it was not found.
+        /// </summary>
+        public static string MSAmandaSearchWrapper_Percolator_not_found {
+            get {
+                return ResourceManager.GetString("MSAmandaSearchWrapper_Percolator_not_found", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Percolator in {0} runs, so the search produced no matches that passed its scoring..
+        /// </summary>
+        public static string MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing {
+            get {
+                return ResourceManager.GetString("MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to MS Amanda produced no Percolator q-values in {0}, so no library can be built from this search. {1}.
+        /// </summary>
+        public static string MSAmandaSearchWrapper_Run_No_Percolator_q_values {
+            get {
+                return ResourceManager.GetString("MSAmandaSearchWrapper_Run_No_Percolator_q_values", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Converting file &quot;{0}&quot; to {1}.
         /// </summary>
         public static string MsconvertDdaConverter_Run_Converting_file___0___to__1_ {

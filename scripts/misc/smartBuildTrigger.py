@@ -128,7 +128,9 @@ if (current_branch == "master" or current_branch.startswith("skyline_")) and len
                     triggers[target] = "merge to %s" % base_branch
 else:
     for path in changed_files:
-        if os.path.basename(path) == "smartBuildTrigger.py":
+        # Skip the trigger machinery itself — editing these files shouldn't fan out to "build
+        # everything" via the generic scripts/.* match further down.
+        if os.path.basename(path) in ("smartBuildTrigger.py", "vcs_trigger_and_paths_config.py"):
             continue
         triggered = False # only trigger once per path
         for tuple in matchPaths:
@@ -157,7 +159,14 @@ for targetKey in targets:
             notBuildingDueToChangedFiles[target] = targets[targetKey][target]
         elif isBaseBranchDict:
             for target2 in targets[targetKey][target]:
-                if target2 not in triggers and not base_branch == target:
+                if target2 in triggers:
+                    # target2 was promoted to top-level and triggered by a changed file;
+                    # record its display name so the trigger loop's building[trigger] lookup
+                    # succeeds. Targets reachable only via merge()'d matchPaths entries never
+                    # have their global dict mutated by promotion, so this is the only place
+                    # they enter building (e.g. ProteoWizard_SkylineWindowsNet).
+                    building[target2] = targets[targetKey][target][target2]
+                elif not base_branch == target:
                     notBuildingDueToBranch[target2] = targets[targetKey][target][target2]
         else:
             building[target] = targets[targetKey][target]
