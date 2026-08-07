@@ -212,11 +212,13 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # "No leg sets OSPREY_ALLOW_UNFIXED_RESIDENT" is necessary but NOT sufficient as a
 # statement of health, and reading it as sufficient is the trap: a token is only
 # required where a guard demands one, so a resident path that no guard covers is
-# invisible in a token audit. #4536 is exactly that - every resume hands Stage 6 the
-# all-files survivor buffer, and because FirstPassFdrTask.Rehydrate publishes no survivor
-# loader, Stage6ResidentHandoffGuardError no-ops and nothing asks for a token. Zero
-# tokens therefore does NOT mean zero gaps, and this table is what keeps the
-# difference legible.
+# invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
+# published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
+# asked for a token. The open example now is #4486: the survivor buffer is rebuilt for
+# SecondPassFDR to read, so it is resident from the end of Stage 6 to the end of Stage 7
+# on EVERY path, and no guard covers that because it is not a resume or a mode - it is
+# what Stage 7 takes as input. Zero tokens therefore does NOT mean zero gaps, and this
+# table is what keeps the difference legible.
 #
 # Printed in the run summary (not just parked in a comment) so every CI log states the
 # outstanding gaps, and so a fixed entry left here shows up as a stale line in output
@@ -1481,11 +1483,17 @@ foreach ($name in $selected) {
     # FirstPassFDR stamp and every .1st-pass.fdr_scores.bin + .reconciliation.json
     # sidecar valid, which is exactly the state that loader exists to serve.
     #
-    # Names exactly ONE token (below) and suppresses nothing else. Note what that does
-    # and does not buy: a regression that puts STAGE 5 back on the resident pool fails on
-    # PerFileScoringTask's guard (mdiag no longer has a token), but nothing guards
-    # FirstPassFDR's own loader, so a regression confined to it would NOT fail here.
-    # What catches that one is the marker below plus the memory trace in the log.
+    # Names NO token and suppresses nothing - #4536 removed the last one. Note what this
+    # leg does and does not buy: a regression that puts STAGE 5 back on the resident pool
+    # fails on PerFileScoringTask's guard, but nothing GUARDS FirstPassFDR's own survivor
+    # loader, so a regression confined to it does not fail on a guard here.
+    #
+    # It is still caught, by comparison rather than by a guard. Both sides of this leg go
+    # through FirstPassSurvivorLoader since #4536, so this leg alone cannot witness a
+    # loader fault that affects them equally - but mode 1 compares the straight-through
+    # blib against a COMMITTED golden that predates the loader, so a fault common to both
+    # sides fails there, and a fault confined to the resume fails this leg's
+    # rehydrate==straight compare. Plus the marker below and the memory trace in the log.
     if (-not $SkipRehydrate) {
         Write-Progress-Tc "${name}: Stage-5 rehydrate self-consistency (mode 5)"
         Invoke-SecondPassOnlyInvalidation -WorkDir $straightDir

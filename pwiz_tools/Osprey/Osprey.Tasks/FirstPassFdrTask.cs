@@ -615,42 +615,64 @@ namespace pwiz.Osprey.Tasks
             // Release here too, not just on Run. This path is a RESUME - which is exactly what
             // an operator does after the OOM this release exists to prevent - so skipping it
             // would leave the whole library resident in the one run that most needs it lean.
-            // The bundle carries both halves of the retained set: GlobalFirstPassBaseIds is a
-            // required field of the v3 reconciliation envelope, and PerFileGapFill was just
-            // published above.
-            _firstPassBaseIds = bundle.GlobalFirstPassBaseIds;
+            // The bundle carries both halves of the retained set: the base_id set below, and
+            // PerFileGapFill just published above.
+            //
+            // RetainedBaseIds, not GlobalFirstPassBaseIds: the compaction retains the global set
+            // UNION the planner's action targets, so the global set alone can be a strict subset
+            // of what survives. Releasing on the smaller set could free the library spectrum of
+            // an entry Stage 6 still rescores. That gap is believed unreachable today - the
+            // planner runs after compaction on the computed path, so its targets are already in
+            // the envelope's set - but the relationship is not symmetric: the retained set is a
+            // superset, so using it is safe whether or not the union is empty, and using the
+            // other one is safe only while the argument holds. Falls back for an empty join,
+            // where Apply never ran and nothing survived to release against.
+            _firstPassBaseIds = bundle.RetainedBaseIds ?? bundle.GlobalFirstPassBaseIds;
             _perFileGapFillForRescore = bundle.PerFileGapFill;
             ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
             ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
             ctx.Publish(new CompactedEntries(perFileEntries));
 
-            // The same per-file survivor source Run publishes, so Stage 6 streams on a resume
-            // exactly as it does on a computed run (issue #4536). Before this, the slot was
-            // published null here and every streamed branch in PerFileRescore was skipped,
-            // leaving the all-files survivor buffer live across the whole rescore and into
-            // SecondPassFDR - 88.9 M entries / 28 GB at 163 files. The buffer is the same one Run
-            // releases below; what a resume lacked was only the passing base_id set to rebuild
-            // it from, and the compaction just above now hands that back on the bundle.
+            // The same per-file survivor source Run publishes, so an arm that rescores streams
+            // exactly as a computed run does (issue #4536). Before this the slot was published
+            // null here, and PerFileRescore's streamed branches are all gated on it, so the
+            // all-files survivor buffer stayed live across the whole rescore. What a resume
+            // lacked was only the passing base_id set to rebuild from, and the compaction just
+            // above now hands that back on the bundle.
             if (!TryBuildResumeSurvivorLoader(ctx, bundle, perFileEntries, out _survivorLoader))
                 return false;  // missing parquet path; ExitCode already set
-            // With the loader in place this guard covers the resume for free - the same call
-            // Run makes, and the reason the interim resume-survivor-handoff token could be
-            // deleted with it. Checked BEFORE the release so a refused run fails with an
-            // actionable message rather than an OOM hours into Stage 6.
+            ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
+
+            // ... but only an arm that actually RESCORES gets anything from releasing the
+            // buffer, and this task's own bundle source is what says which arm this is. With a
+            // worker-supplied RescoreBundle, Stage 6 runs the rescore and refills one file at a
+            // time from the source above. Having built the bundle from our OWN sidecars, there
+            // is no rescore to run at all: PerFileRescore self-gates to a no-op (didPlan is
+            // false and RescoreBundle is null) and refills the WHOLE buffer immediately, so
+            // releasing here would buy a window no consumer uses and cost a full extra parquet
+            // + sidecar pass over every file to undo.
+            //
+            // The buffer is therefore still resident from here to the end of Stage 7 on that
+            // arm - as it is on EVERY arm, because Stage 6 deliberately rebuilds it for
+            // SecondPassFDR to read (PerFileRescoreTask's end-of-loop rebuild). That residency
+            // is a property of Stage 7's whole-run input, not of resuming, and it is #4486's
+            // to remove. This issue bounds the RESCORE window, which is the part Stage 6 owns.
+            bool rescoreWillStream = !builtOwnBundle && !config.StopAfterStage5;
+            // Same call Run makes. streamingAvailable is "this run will stream", not "a loader
+            // exists": passing the latter would refuse an OSPREY_STAGE6_STREAM_SURVIVORS=0
+            // resume whose behaviour is identical either way, which is a guard inventing work
+            // for an operator rather than preventing any.
             string handoffError = PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                _survivorLoader != null && !config.StopAfterStage5,
+                _survivorLoader != null && rescoreWillStream,
                 OspreyEnvironment.Stage6StreamSurvivors,
                 OspreyEnvironment.AllowUnfixedResident);
             if (handoffError != null)
                 throw new InvalidOperationException(handoffError);
-            ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
 
             // Drop the CONTENTS, keeping the outer per-file list (the shared buffer identity
-            // every milestone wraps), exactly as Run does after planning: Stage 6 refills one
-            // file at a time from the survivor source and empties it again after that file's
-            // reconciled parquet is written. Consensus targets were computed off the full
-            // buffer immediately above, which is the last reader that needs every file at once.
-            if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && !config.StopAfterStage5)
+            // every milestone wraps), exactly as Run does after planning. Consensus targets were
+            // computed off the full buffer immediately above, which is its last all-files reader.
+            if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && rescoreWillStream)
             {
                 foreach (var kvp in perFileEntries)
                 {

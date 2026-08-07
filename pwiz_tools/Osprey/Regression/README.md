@@ -113,10 +113,16 @@ comparing output alone cannot detect a cache-invalidation regression.
 **No** leg names a resident-pool token. Mode 5 was the last one that did
 (`OSPREY_ALLOW_UNFIXED_RESIDENT=resume-survivor-handoff`, because a resume could not stream
 the Stage 6 survivor handoff); issue #4536 gave the rehydrate its own per-file survivor
-loader, so that leg streams like the rest and the token is gone. An *inherited* value is
-cleared at startup unless a deliberate A/B switch needs it. Any token this gate is ever made
-to require must have an open issue to remove it, and the run summary prints the count so a
-required token is visible on every green run.
+loader, so that arm streams instead of needing one. An *inherited* value is cleared at
+startup unless a deliberate A/B switch needs it. Any token this gate is ever made to require
+must have an open issue to remove it, and the run summary prints the outstanding-gap table
+so a required token would be visible on every green run - today that table is empty and the
+summary prints `none`.
+
+Zero tokens is not zero O(files) paths, and the summary says only the former. The survivor
+buffer is rebuilt at the end of Stage 6 for `SecondPassFDR` to read, so it is resident from
+there to the end of Stage 7 on every path; no guard covers that because it is Stage 7's
+input rather than a mode or a resume. That is #4486.
 
 An ambient allowance on a standing gate can only mask the regression the gate exists to
 catch - which is how the former blanket `OSPREY_ALLOW_UNBOUNDED_MEMORY=1` let an
