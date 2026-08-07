@@ -112,7 +112,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         /// Writes the times of each file, identified by its database id rather than by its index,
         /// so that the cache format does not depend on the order of the sample files.
         /// </summary>
-        /// <param name="fileIds">The database id of each file, in file index order.</param>
         private static void WriteRetentionTimes(Stream stream, IndexedMultiArray<float> times, IList<int> fileIds)
         {
             int fileCount = 0;
@@ -139,8 +138,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
         }
 
-        /// <param name="fileIndexesById">The file index of each database file id. Times of files
-        /// which are not in here are dropped.</param>
         private static IndexedMultiArray<float> ReadRetentionTimes(Stream stream, IDictionary<int, int> fileIndexesById)
         {
             int fileCount = PrimitiveArrays.ReadOneValue<int>(stream);

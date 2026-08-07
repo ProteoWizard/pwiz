@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Constructs from the number of values at each index, and all of the values in index
-        /// order, which is the shape that <see cref="GetCounts"/> and <see cref="FlatValues"/>
+        /// order, which is the shape that <see cref="GetCount"/> and <see cref="FlatValues"/>
         /// return.
         /// </summary>
         public static IndexedMultiArray<T> FromCounts(IEnumerable<int> counts, T[] values)
