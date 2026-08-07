@@ -93,8 +93,8 @@ namespace pwiz.Osprey.Test
 
             // Each user-reachable trigger names its own token so the failure is diagnosable.
             // --model-diagnostics is NOT among them any more (#4505): it armed the pool on a
-            // full resume, where FirstJoin skipped its score pass and reported off the resident
-            // entries, and FirstJoin's rehydrate now streams that report instead.
+            // full resume, where FirstPassFDR skipped its score pass and reported off the resident
+            // entries, and FirstPassFDR's rehydrate now streams that report instead.
             //
             // Pinned on what the message MEANS, not on its prose. Two things have to hold,
             // and neither is "some error came back": mdiag has no trigger at all, so
@@ -133,7 +133,7 @@ namespace pwiz.Osprey.Test
             // A resident path with NO token is refused unconditionally - no value admits it.
             // This is the ratchet: when something we streamed goes resident again, as transfer
             // did, it cannot be waved through. It has to be fixed, or deliberately listed.
-            // (lean is the default config: Percolator, no fdrbench, no mdiag, not a merge.)
+            // (lean is the default config: Percolator, no fdrbench, no mdiag, not SecondPassFDR.)
             foreach (string token in new[] { null, "", ResidentPaths.HPC_MERGE, "anything" })
             {
                 Assert.IsNotNull(

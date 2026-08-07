@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Test
         public void TestLibraryFragmentRelease()
         {
             ValidateGapFillCandidatesAreRetained();
-            ValidateReportedPoolIsRetainedOnTheMergeNode();
+            ValidateReportedPoolIsRetainedOnSecondPassFdr();
             ValidateOnlyUnscorableFragmentsAreReleased();
             ValidateIdentityFieldsSurvive();
             ValidateEveryLegThatHoldsTheLibraryReleasesIt();
@@ -79,13 +79,13 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The merge node has no survivors + gap-fill pair to work from - FirstJoin is excluded
+        /// SecondPassFDR has no survivors + gap-fill pair to work from - FirstPassFDR is excluded
         /// from a --task SecondPassFDR pipeline - so it retains every base_id in the final
         /// reported pool instead. Decoys included: a decoy row must retain its base_id rather
         /// than being skipped, or a decoy whose paired target did not survive would have its
         /// spectrum pulled out from under the pool it is still in.
         /// </summary>
-        private static void ValidateReportedPoolIsRetainedOnTheMergeNode()
+        private static void ValidateReportedPoolIsRetainedOnSecondPassFdr()
         {
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
             {
@@ -161,9 +161,9 @@ namespace pwiz.Osprey.Test
         ///
         /// <para><c>--task SecondPassFDR</c> MUST release. That process holds the whole fragment
         /// set through second-pass Percolator, protein FDR and the blib write, and it is the one
-        /// place a distributed run can free it - <c>FirstJoinTask</c>, where the Stage 5 -&gt; 6
+        /// place a distributed run can free it - <c>FirstPassFdrTask</c>, where the Stage 5 -&gt; 6
         /// release lives, is excluded from that leg's pipeline entirely. It realized zero saving
-        /// until the merge node grew its own release, so this row is the regression guard for
+        /// until SecondPassFDR grew its own release, so this row is the regression guard for
         /// the distributed path, which is where memory hurts most.</para>
         ///
         /// <para><c>--task FirstPassFDR</c> MUST NOT. Its gap-fill plan is unpopulated (the
@@ -233,7 +233,7 @@ namespace pwiz.Osprey.Test
                 OspreyEnvironment.UseFdrProjection = false;
                 AssertSuffix(false, @"could have released, Stage 5 went resident instead",
                     new OspreyConfig());
-                // The merge node's release is its own and does not ride the Stage 5 path.
+                // SecondPassFDR's release is its own and does not ride the Stage 5 path.
                 AssertSuffix(true, @"--task SecondPassFDR ignores OSPREY_FDR_PROJECTION",
                     WithInputScores(c => c.ExpectReconciledInput = true));
                 OspreyEnvironment.UseFdrProjection = savedProjection;

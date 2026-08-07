@@ -49,7 +49,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Two things gate it: whether the LEG admits a release at all
         /// (<see cref="LegAdmitsRelease"/>, a pure function of the config) and whether the env
-        /// arms asked for one. The merge node is the exception to the second - its release is
+        /// arms asked for one. SecondPassFDR is the exception to the second - its release is
         /// its own, so it does not ride <c>OSPREY_FDR_PROJECTION</c>.</para>
         /// </summary>
         public static bool RunsOnThisLeg(PipelineContext ctx)
@@ -58,7 +58,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (!LegAdmitsRelease(ctx.Config))
                 return false;
-            // MergeNodeTask releases against the reported pool, which Stage 5's projection
+            // SecondPassFdrTask releases against the reported pool, which Stage 5's projection
             // path has no part in; everywhere else the release rides that path.
             return ctx.Config.ExpectReconciledInput || OspreyEnvironment.UseFdrProjection;
         }
@@ -104,11 +104,11 @@ namespace pwiz.Osprey.Tasks
         /// Stage 5, so there is no Stage 6/7 to save memory for.</para>
         ///
         /// <para><c>ExpectReconciledInput</c> (<c>--task SecondPassFDR</c>) releases from
-        /// <c>MergeNodeTask</c> instead of <c>FirstJoinTask</c>, which is excluded from that
+        /// <c>SecondPassFdrTask</c> instead of <c>FirstPassFdrTask</c>, which is excluded from that
         /// leg's pipeline entirely. See
         /// <see cref="BuildRetainedBaseIds(IEnumerable{KeyValuePair{string, List{FdrEntry}}})"/>.</para>
         ///
-        /// <para>Everywhere else the release rides <c>FirstJoinTask</c>'s projection path and
+        /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path and
         /// inherits its config conditions. <c>--fdrbench-pass 1</c> is the one that bites: it
         /// forces the RESIDENT first-pass pool, which computes no surviving base_id set to
         /// release against.</para>
@@ -165,10 +165,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The merge node's retained set: every base_id present in the final per-file pool.
+        /// SecondPassFDR's retained set: every base_id present in the final per-file pool.
         ///
-        /// <para>The merge node (<c>--task SecondPassFDR</c>) cannot use the survivors +
-        /// gap-fill form above, because <c>FirstJoinTask</c> - which computes both halves - is
+        /// <para>SecondPassFDR (<c>--task SecondPassFDR</c>) cannot use the survivors +
+        /// gap-fill form above, because <c>FirstPassFdrTask</c> - which computes both halves - is
         /// excluded from that leg's pipeline. It has the post-rescore pool instead, and that is
         /// the tighter statement of the same fact: everything Stage 7 and the blib write can
         /// reach is IN this pool. <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments for

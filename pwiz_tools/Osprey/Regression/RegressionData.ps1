@@ -177,21 +177,23 @@ function Get-RegressionData {
 
 <#
 .SYNOPSIS
-    Invalidate the Stage 5 join + blib so a re-run resumes (the rehydrate
+    Invalidate FirstPassFDR + the blib so a re-run resumes (the rehydrate
     paths fire) rather than recomputing from spectra.
 
 .DESCRIPTION
     Shared by regression.ps1 (mode 2) and the ai-side cumulative-coverage
     harness so there is ONE definition of what "resume" invalidates. The
     patterns key off the task Name values the C# tasks stamp into their
-    validity sidecars -- FirstJoinTask.Name is "FirstPassFDR" and
-    MergeNodeTask.Name is "SecondPassFDR", NOT the class names. A private
-    copy of this function once used the class names, matched zero files,
-    and silently produced a run that never resumed.
+    validity sidecars: FirstPassFdrTask.Name is "FirstPassFDR" and
+    SecondPassFdrTask.Name is "SecondPassFDR" - the same words as the class
+    names, differing only in the Fdr/FDR casing used for type names.
+    They did NOT always agree: the classes were FirstJoinTask and MergeNodeTask
+    until issue #4535, and a private copy of this function that used those class
+    names matched zero files and silently produced a run that never resumed.
 
     Deleting nothing is therefore treated as a hard failure: if the tokens
     ever drift from the C# Name values again, this throws instead of
-    yielding a green "resume" leg that only re-ran the merge.
+    yielding a green "resume" leg that only re-ran SecondPassFDR.
 
 .PARAMETER WorkDir
     The straight-through run directory to invalidate in place.
@@ -205,8 +207,8 @@ function Invoke-ResumeInvalidation {
     }
     if (-not $targets) {
         throw (("Invoke-ResumeInvalidation matched no files in '{0}'. The resume leg " +
-                "would not have resumed. Expected '*.FirstPassFDR.osprey.task' (FirstJoinTask.Name) " +
-                "and 'output.blib' + 'output.blib.SecondPassFDR.osprey.task' (MergeNodeTask.Name); " +
+                "would not have resumed. Expected '*.FirstPassFDR.osprey.task' (FirstPassFdrTask.Name) " +
+                "and 'output.blib' + 'output.blib.SecondPassFDR.osprey.task' (SecondPassFdrTask.Name); " +
                 "check those Name values have not changed.") -f $WorkDir)
     }
     $targets | Remove-Item -Force
@@ -219,10 +221,9 @@ function Invoke-ResumeInvalidation {
 
 .DESCRIPTION
     Named for the task NAMES the driver stamps and logs -- FirstPassFDR and
-    SecondPassFDR -- not for the C# class names (FirstJoinTask, MergeNodeTask) and
-    not for "the join" / "the merge node", which are the same metaphor applied to
-    two tasks that both join and so distinguish nothing. The stamp filenames below
-    carry the Name, so the Name is what this reads.
+    SecondPassFDR. The stamp filenames below carry the Name, so the Name is what
+    this reads, and since issue #4535 the class names (FirstPassFdrTask,
+    SecondPassFdrTask) are the same words.
 
     The narrower sibling of Invoke-ResumeInvalidation, and the only invalidation
     that reaches FirstPassFDR's REHYDRATE arm. Invoke-ResumeInvalidation deletes
@@ -230,13 +231,13 @@ function Invoke-ResumeInvalidation {
     RUNS and recomputes from the entries it is handed. Rehydrate is entered on the
     opposite state: FirstPassFDR's own outputs are still valid on disk, so the
     driver skips its Run, and a downstream task is the first to touch its state
-    (FirstJoinTask.LoadOwnReconciliationBundle then rebuilds the post-Stage-5
+    (FirstPassFdrTask.LoadOwnReconciliationBundle then rebuilds the post-Stage-5
     bundle from the .1st-pass.fdr_scores.bin + .reconciliation.json sidecars).
 
     Deleting the blib plus its SecondPassFDR stamp is exactly that state: every
     per-file parquet, every 1st-pass sidecar, and the FirstPassFDR stamp survive,
     so PerFileScoring / FirstPassFDR / PerFileRescoring must all report cache hits
-    while SecondPassFDR recomputes and demands FirstJoin's state on the way.
+    while SecondPassFDR recomputes and demands FirstPassFDR's state on the way.
 
     Deleting nothing is a hard failure, for Invoke-ResumeInvalidation's reason: a
     silently no-op invalidation yields a green leg that only compared a run
@@ -255,13 +256,13 @@ function Invoke-SecondPassOnlyInvalidation {
     # renames ONE of the two, and a single match is a truthy scalar that sails past a
     # `-not $targets` test: deleting only the stamp leaves the blib un-invalidated (the
     # leg then compares a stale blib to itself), and deleting only the blib leaves the
-    # merge cached (it never re-runs). Both surface downstream as a whole-run ABORTED
+    # SecondPassFDR leg cached (it never re-runs). Both surface downstream as a whole-run ABORTED
     # from regression.ps1's outer catch, skipping every remaining dataset, instead of
     # the named mode 5 failure the assertions here were written to produce.
     if ($targets.Count -lt 2) {
         throw (("Invoke-SecondPassOnlyInvalidation matched {1} of the 2 required files in '{0}'. " +
-                "The rehydrate leg would not have re-run the merge. Expected 'output.blib' + " +
-                "'output.blib.SecondPassFDR.osprey.task' (MergeNodeTask.Name); check that " +
+                "The rehydrate leg would not have re-run SecondPassFDR. Expected 'output.blib' + " +
+                "'output.blib.SecondPassFDR.osprey.task' (SecondPassFdrTask.Name); check that " +
                 "Name value has not changed.") -f $WorkDir, $targets.Count)
     }
     $targets | Remove-Item -Force

@@ -153,7 +153,7 @@ namespace pwiz.Osprey.Chromatography
             // locally varying fit (see RTCalibratorConfig.LinearFit). The fitted
             // values are evaluated at the same x, so every downstream consumer --
             // Predict, InversePredict, the .calibration.json model params, resume
-            // and the HPC merge -- is identical to the LOESS path.
+            // and the HPC SecondPassFDR run - is identical to the LOESS path.
             if (_config.LinearFit)
             {
                 double[] linearFitted = FitRobustLine(x, y);

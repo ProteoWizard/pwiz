@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Tasks
     /// boundary in the <c>Osprey-workflow.html</c> view -- each input
     /// file's Stage 1-4 work is independent of every other file's,
     /// so an HPC scheduler can fan this task out across N nodes and
-    /// the merge node only needs the resulting parquet sidecars.
+    /// SecondPassFDR only needs the resulting parquet sidecars.
     ///
     /// Phase A scope: this task is a thin orchestration wrapper that
     /// delegates to AnalysisPipeline's existing private (now
@@ -62,7 +62,7 @@ namespace pwiz.Osprey.Tasks
     ///
     /// Outputs (FullLibrary, LibraryById, PerFileEntries,
     /// PerFileCalibrations, PerFileIsolationMz, PerFileParquetPaths) are exposed
-    /// as instance properties for FirstJoinTask + downstream tasks to
+    /// as instance properties for FirstPassFdrTask + downstream tasks to
     /// consume after this one completes successfully.
     /// </summary>
     internal sealed class PerFileScoringTask : OspreyTask
@@ -90,7 +90,7 @@ namespace pwiz.Osprey.Tasks
 
         // Stage 1-4 byproducts this task publishes for downstream consumers to
         // pull by type. ScoredEntries is the first milestone of the shared
-        // mutable entry buffer (FirstJoin and PerFileRescore publish the later
+        // mutable entry buffer (FirstPassFDR and PerFileRescore publish the later
         // CompactedEntries / RescoredEntries milestones of the same backing
         // list); see PipelineByproducts.cs.
         public override IEnumerable<Type> Publishes => new[]
@@ -103,7 +103,7 @@ namespace pwiz.Osprey.Tasks
             // producer registry from this list, so an undeclared byproduct cannot be
             // lazily materialized and ctx.Get<T> throws UnknownByproductException on a
             // cache miss. Without this entry FdrProjections only resolves because
-            // FirstJoinTask happens to read ScoredEntries first, which materializes
+            // FirstPassFdrTask happens to read ScoredEntries first, which materializes
             // this task and co-publishes both -- an ordering coupling, not a contract.
             typeof(FdrProjections)
         };
@@ -136,7 +136,7 @@ namespace pwiz.Osprey.Tasks
         // dispatch finds every parquet's sibling .1st-pass.fdr_scores.bin
         // sidecar already on disk. Null otherwise. Carries the reconciliation
         // state that the worker-mode RescoreHydration.HydrateForRescore
-        // produces, sharing it with FirstJoinTask's reconciliation accessors
+        // produces, sharing it with FirstPassFdrTask's reconciliation accessors
         // so the worker entry-path collapse (next commit) does not need
         // a separate code path.
         private RescoreInputs _rescoreInputs;
@@ -148,7 +148,7 @@ namespace pwiz.Osprey.Tasks
         // type via ctx.Get<T>() rather than through producer-typed getters.
         //
         // _perFileEntries stays a live, mutable, shared
-        // List<KeyValuePair<string, List<FdrEntry>>>: FirstJoin compacts it and
+        // List<KeyValuePair<string, List<FdrEntry>>>: FirstPassFDR compacts it and
         // PerFileRescore overlays it in place on this one instance (the no-copy
         // hand-off is load-bearing at Astral scale). Its three in-place
         // milestones are the ScoredEntries / CompactedEntries / RescoredEntries
@@ -215,7 +215,7 @@ namespace pwiz.Osprey.Tasks
             // reconciliation can lazily load CWT candidates per file via
             // ParquetScoreCache.LoadCwtCandidatesFromParquet.
             var perFileParquetPaths = new Dictionary<string, string>();
-            // Decouple scoring from the join (issue #4355): during the scoring
+            // Decouple scoring from FirstPassFDR (issue #4355): during the scoring
             // loop below we record ONLY each scored file's name, in original
             // input order (by fileIdx -- the parallel branch re-collects by
             // input index, the sequential branch appends in that same order),
@@ -233,7 +233,7 @@ namespace pwiz.Osprey.Tasks
             // unmutated outer config. ProcessFile clones the config per
             // file and mutates FragmentTolerance during MS2 calibration,
             // so reading config.Identity.SearchParameterHash() inside ProcessFile
-            // would produce a hash that the join-only validator would
+            // would produce a hash that the --input-scores validator would
             // not recognize. Built unconditionally because Stage 6
             // reconciliation needs the per-file .scores.parquet on disk to
             // lazily load CWT candidates -- matches Rust's end-to-end
@@ -364,18 +364,18 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Now that every per-file scoring transient has been released,
-            // rematerialize the cold FdrEntry stubs the join needs by reloading
+            // rematerialize the cold FdrEntry stubs FirstPassFDR needs by reloading
             // them from each scored file's just-written .scores.parquet, in the
             // same order scoring produced (issue #4355). Only the scalar stub
             // fields are read back -- no PIN features / CWT / fragment arrays --
             // which is exactly the cold shape the straight-through path already
             // left here after ProcessFile spilled every file's full results and
-            // nulled those arrays (FirstJoin streams features back per file). The
+            // nulled those arrays (FirstPassFDR streams features back per file). The
             // live per-file RTCalibration objects in perFileCalibrations are NOT
             // reloaded: they are not stored in .scores.parquet, so they must stay
             // the live objects harvested during scoring.
-            // The lean path is valid only where FirstJoinTask actually consumes a
-            // projection. It must mirror that task's dispatch exactly (FirstJoinTask.cs:
+            // The lean path is valid only where FirstPassFdrTask actually consumes a
+            // projection. It must mirror that task's dispatch exactly (FirstPassFdrTask.cs:
             // UseFdrProjection && Percolator && !needsResidentFirstPassPool): any other
             // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
             // resident-pool consumer FDRBench pass 1, which walks the full pre-compaction
@@ -418,7 +418,7 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 // Issue #4397: rematerializing every file's FdrEntry stubs here cost
-                // ~53 GB on an 82-file Astral run (191M x ~280 B) purely so FirstJoin
+                // ~53 GB on an 82-file Astral run (191M x ~280 B) purely so FirstPassFDR
                 // could convert them into 32 B FdrProjection rows and drop them. Stream
                 // the projection rows straight out of each .scores.parquet instead --
                 // no FdrEntry is ever allocated. Peptide ids arrive in insertion order
@@ -488,7 +488,7 @@ namespace pwiz.Osprey.Tasks
             // FdrEntry stubs + PIN features straight from the parquets
             // (Stage 1 library still loads -- Stage 5+ needs it) instead of
             // recomputing them from spectra, then adopt any reconciliation
-            // bundle that the merge node will read. The compute-from-spectra
+            // bundle that SecondPassFDR will read. The compute-from-spectra
             // counterpart is Run.
             var config = ctx.Config;
 
@@ -500,7 +500,7 @@ namespace pwiz.Osprey.Tasks
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
             var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
             // Rehydrated from calibration.json's isolation_scheme by
-            // LoadJoinOnlyScores (the merge node has no mzML to extract from).
+            // LoadJoinOnlyScores (SecondPassFDR has no mzML to extract from).
             var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
             // fileName -> .scores.parquet path; LoadJoinOnlyScores already
             // knows each input parquet path and fills this in.
@@ -523,7 +523,7 @@ namespace pwiz.Osprey.Tasks
             // Compute the reconciled-2nd-pass-bundle predicate ONCE here and thread it to
             // both the loader (lean/fat choice) and the hydrator, so a sidecar appearing
             // between two separate disk reads cannot make them disagree (lean empty stubs
-            // + a firing bundle hydrator). Static on a real merge node; belt-and-suspenders.
+            // + a firing bundle hydrator). Static on a real SecondPassFDR node; belt-and-suspenders.
             bool hasReconSidecars = AllHaveReconSidecars(config);
             bool streamCompaction = ShouldStreamCompaction(config, hasReconSidecars, ctx);
             var swAllFiles = Stopwatch.StartNew();
@@ -633,15 +633,15 @@ namespace pwiz.Osprey.Tasks
             // features here -- ~53 GB across 82 files, the exact cost #4400 removed for
             // the Run path -- because this path had no lean branch. Mirror Run: stream
             // 32 B FdrProjection rows from each parquet unless an opt-in output genuinely
-            // needs the resident pool. FirstJoin consumes the projection set identically
+            // needs the resident pool. FirstPassFDR consumes the projection set identically
             // whether Run or this path produced it.
             //
             // --model-diagnostics is NOT a trigger, on a full resume or any other (#4505).
-            // It used to be: with every 1st-pass sidecar already on disk FirstJoin skips its
+            // It used to be: with every 1st-pass sidecar already on disk FirstPassFDR skips its
             // score pass, so the streaming accumulator was never fed and the report fell back
-            // to the batch ModelDiagnosticsReport.Write over the RESIDENT entries. FirstJoin's
+            // to the batch ModelDiagnosticsReport.Write over the RESIDENT entries. FirstPassFDR's
             // rehydrate now feeds that accumulator from the per-file load it already performs
-            // (FirstJoinTask.StreamOwnReconciliationBundle), off the same PRE-compaction rows,
+            // (FirstPassFdrTask.StreamOwnReconciliationBundle), off the same PRE-compaction rows,
             // so the report emits from this lean load at any file count.
             bool needsResidentPool = NeedsResidentPool(config);
             GuardResidentPool(config, needsResidentPool);
@@ -660,7 +660,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     int fileIdx = 0;
                     // Sequential in InputFiles order to match Run's "collect in original
-                    // order" -- downstream FirstJoin iterates perFileEntries.
+                    // order" -- downstream FirstPassFDR iterates perFileEntries.
                     foreach (string inputFile in config.InputFiles)
                     {
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
@@ -793,17 +793,17 @@ namespace pwiz.Osprey.Tasks
             // onto the instance field by ProcessFile (compute path only), so it is
             // published from the field rather than a Finalize local. Empty on a normal
             // run and on the rehydrate/resume paths (no calibration matches to shape) --
-            // FirstJoinTask reads it only under config.ModelDiagnostics and tolerates
+            // FirstPassFdrTask reads it only under config.ModelDiagnostics and tolerates
             // empty. See TODO-20260712 for the HPC-split persistence caveat.
             ctx.Publish(new PerFileCalibrationDiagnostics(_perFileCalibrationDiagnostics, _calibrationMassUnit));
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the merge paths and on FDRBench
-            // pass 1, which publish fat stubs above; FirstJoinTask falls back to ScoredEntries
+            // Lean first-pass rows (issue #4397). Null on the resident paths and on FDRBench
+            // pass 1, which publish fat stubs above; FirstPassFdrTask falls back to ScoredEntries
             // whenever this is null. A --model-diagnostics resume publishes a NON-null
             // projection since #4505 - it no longer needs resident entries, because
-            // FirstJoin's rehydrate streams the report off its own per-file load.
+            // FirstPassFDR's rehydrate streams the report off its own per-file load.
             ctx.Publish(new FdrProjections(projections));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
 
@@ -816,7 +816,7 @@ namespace pwiz.Osprey.Tasks
 
             // --task PerFileScoring: stop here. Per-file `.scores.parquet` files are
             // now on disk; a separate `--task FirstPassFDR` invocation (typically
-            // on a merge node) will pick them up and run Stage 5+.
+            // on a SecondPassFDR node) will pick them up and run Stage 5+.
             if (ctx.Config.NoJoin)
             {
                 ctx.LogInfo(string.Format(
@@ -914,7 +914,7 @@ namespace pwiz.Osprey.Tasks
             // before the SecondPassFDR skip, because that arm is not only about decoys:
             // TryPairSuppliedDecoys is the sole caller of DecoyPairingManifest.ApplyToLibrary,
             // which rewrites ProteinIds from the manifest's clean accessions. Testing
-            // ExpectReconciledInput first made this arm unreachable in the merge node - the one
+            // ExpectReconciledInput first made this arm unreachable in SecondPassFDR - the one
             // phase that writes the blib - so a distributed run with --decoy-pairing-manifest
             // emitted the library's per-peptide "sp|P12345_pep00001|GENE" accessions instead of
             // the clean ones, and computed protein parsimony and picked-protein FDR on them.
@@ -1211,7 +1211,7 @@ namespace pwiz.Osprey.Tasks
             // the Rust impl.
             // Guard: hash check against current --library and search params.
             // Aborts with a clear, file-named error if the operator points
-            // the merge node at parquets from a different scoring run.
+            // SecondPassFDR at parquets from a different scoring run.
             string validationError = ParquetScoreCache.ValidateScoresParquetGroup(
                 config.InputScores, config, OspreyVersion.Current);
             if (validationError != null)
@@ -1220,14 +1220,14 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 @"--input-scores: loading {0} per-file score parquet(s)",
                 config.InputScores.Count));
-            // Lean on the HPC merge/join too (#4400): a large first-pass merge node
+            // Lean on the HPC merge/join too (#4400): a large FirstPassFDR node
             // loading every worker's .scores.parquet used to rebuild the full fat
             // FdrEntry stubs + PIN features (~53 GB at 82 files) -- the same Stage-5
             // blowup the resume path had. Stream 32 B FdrProjection rows instead, unless
-            // the merge needs the resident pool (an opt-in feature output) or is a
-            // reconciled 2nd-pass bundle hydration (AllHaveReconSidecars -- FirstJoin
+            // this run needs the resident pool (an opt-in feature output) or is a
+            // reconciled 2nd-pass bundle hydration (AllHaveReconSidecars -- FirstPassFDR
             // skips Percolator there and HydrateReconciliationOverlay reads the fat stubs).
-            // Counts-only (issue #4355 struct-shrink S3, Stage B): the merge-node lean path builds
+            // Counts-only (issue #4355 struct-shrink S3, Stage B): the lean path builds
             // only per-file row counts; the 1st-pass streaming score path re-reads identity +
             // features from parquet, so the resident FdrProjection[] buffer is never allocated.
             bool needsResidentPool = NeedsResidentPool(config);
@@ -1263,11 +1263,11 @@ namespace pwiz.Osprey.Tasks
                 // discards ~52x of them, mostly the decoys and entrapment its FDP and
                 // calibration views are built from), and this load is the last place they all
                 // exist. Fold each file's rows into the same streaming accumulator the
-                // projection path uses, one file at a time, so FirstJoin's rehydrate can emit
+                // projection path uses, one file at a time, so FirstPassFDR's rehydrate can emit
                 // the identical report without the O(files) resident pool. Null (nothing
                 // constructed, nothing folded) off the report path.
                 var mdiagAccumulator = config.ModelDiagnostics
-                    ? FirstJoinTask.BuildModelDiagnosticsAccumulator(
+                    ? FirstPassFdrTask.BuildModelDiagnosticsAccumulator(
                         JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo)
                     : null;
                 // Same graceful handling as the batch twin in HydrateRescoreBundleIfPresent:
@@ -1314,7 +1314,7 @@ namespace pwiz.Osprey.Tasks
                     // Fail-fast corruption guard: the fat branch below throws on
                     // features.Count != stubs.Count; streaming scalars never loads
                     // features, so restore that check up front via a footer-only probe
-                    // (no feature memory). A merge node pointed at a foreign/truncated
+                    // (no feature memory). A SecondPassFDR node pointed at a foreign/truncated
                     // parquet missing the feature schema stops here rather than surfacing
                     // downstream. The scores-group hash check above (ValidateScoresParquetGroup)
                     // catches a wrong-library parquet; this catches a same-library corrupt one.
@@ -1358,7 +1358,7 @@ namespace pwiz.Osprey.Tasks
                     // Stubs only. This branch is the reconciled-bundle hydration
                     // (hasReconSidecars) where HydrateReconciliationOverlay reads the STUBS
                     // but never the features - RescoreHydration has no reference to
-                    // FdrEntry.Features at all - and FirstJoinTask nulls Features on every
+                    // FdrEntry.Features at all - and FirstPassFdrTask nulls Features on every
                     // hydrated entry before CompactFirstPass anyway, to keep the
                     // "Features != null means rescored" sentinel honest for Stage 6. Loading
                     // 21 doubles per row here only to null them cost ~800 MB per file at
@@ -1402,22 +1402,22 @@ namespace pwiz.Osprey.Tasks
         /// 2. Nothing in the run reads the PRE-compaction pool
         ///    (<see cref="PreCompactionPoolReason"/> finds no consumer).
         ///
-        /// Term 2 folds in what used to be a separate <c>NoJoin</c> condition: FirstJoin must
+        /// Term 2 folds in what used to be a separate <c>NoJoin</c> condition: FirstPassFDR must
         /// be EXCLUDED from this pipeline and reachable only through its bundle-adopt
-        /// Rehydrate, because a FirstJoin that Ran would train first-pass Percolator on
+        /// Rehydrate, because a FirstPassFDR that Ran would train first-pass Percolator on
         /// whatever <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
         /// With <c>InputScores</c> set and <c>StopAfterStage5</c> false, <c>NoJoin</c> is
-        /// exactly FirstJoin's exclusion condition, so a reconciled bundle WITHOUT it is one
+        /// exactly FirstPassFDR's exclusion condition, so a reconciled bundle WITHOUT it is one
         /// of the reasons the helper reports.
         ///
         /// What the resident-pool terms still filter that <c>NoJoin</c> does not: the
-        /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstJoin's rehydrate before it
+        /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstPassFDR's rehydrate before it
         /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
         /// silently post-compaction one), OSPREY_FDR_PROJECTION=0, a non-Percolator
         /// FdrMethod, and --fdrbench-pass 1. OSPREY_PASS2_QVALUE=transfer is NOT among them:
         /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
         /// own on-disk sidecar. The
-        /// --task SecondPassFDR merge is NOT among them: it sets ExpectReconciledInput, which
+        /// --task SecondPassFDR is NOT among them: it sets ExpectReconciledInput, which
         /// <c>--task</c> selection makes mutually exclusive with <c>NoJoin</c>, so term 2's
         /// NoJoin clause already excludes it.
         ///
@@ -1425,7 +1425,7 @@ namespace pwiz.Osprey.Tasks
         /// pre-compaction rows, but it consumes them one at a time:
         /// <see cref="ScoringTaskShared.FeedModelDiagnostics"/> folds every row into a
         /// ModelDiagnosticsData.Accumulator during this load, after the 1st-pass sidecar
-        /// overlay and before compaction drops the non-survivors, and FirstJoin reports from
+        /// overlay and before compaction drops the non-survivors, and FirstPassFDR reports from
         /// that reduction instead of from the pool. Same rows in, same report out, bounded
         /// memory - so the report no longer forces O(files).
         /// </summary>
@@ -1480,7 +1480,7 @@ namespace pwiz.Osprey.Tasks
                 return @"A non-Percolator FDR method";
             if (!OspreyEnvironment.UseFdrProjection)
                 return @"OSPREY_FDR_PROJECTION=0";
-            // FirstJoin is IN this pipeline, so it will Run and train first-pass Percolator
+            // FirstPassFDR is IN this pipeline, so it will Run and train first-pass Percolator
             // off ScoredEntries - which has to be the full pre-compaction pool, not the
             // survivors the streaming hydrate would leave. Unconditional on
             // hasReconSidecars: every reason above is a resident-pool consumer and returns
@@ -1558,7 +1558,7 @@ namespace pwiz.Osprey.Tasks
         /// Best-effort per-file calibration JSON load for Stage 6 reconciliation: the refined
         /// RT calibration plus the isolation-window coverage the gap-fill m/z filter needs.
         /// Mirrors osprey/src/pipeline.rs:2573-2588. A read failure is logged and swallowed -
-        /// a merge node with no calibration sibling still runs, with the filter disabled for
+        /// a SecondPassFDR node with no calibration sibling still runs, with the filter disabled for
         /// that file.
         /// </summary>
         private static void LoadJoinOnlyCalibration(
@@ -1598,7 +1598,7 @@ namespace pwiz.Osprey.Tasks
 
                         // Isolation-window coverage for the gap-fill m/z filter -- read
                         // independent of RT calibration from the isolation_scheme block, so
-                        // a merge node with no mzML still gets per-file coverage. Mirrors
+                        // a SecondPassFDR node with no mzML still gets per-file coverage. Mirrors
                         // Rust's isolation_intervals_from_cal (pipeline.rs).
                         var isoIntervals = IsolationIntervalsFromWindows(
                             calParams.Metadata?.IsolationScheme?.Windows);
@@ -1679,7 +1679,7 @@ namespace pwiz.Osprey.Tasks
                 // and overwrite the original parquet row's binary
                 // blob columns (fragment_mzs, ref_xic_*, bounds_*).
                 // Bundle path doesn't need PIN features downstream:
-                // FirstJoinTask skips Percolator on this path, so the
+                // FirstPassFdrTask skips Percolator on this path, so the
                 // SVM training input is irrelevant.
                 foreach (var kvp in perFileEntries)
                     foreach (var entry in kvp.Value)
@@ -1729,7 +1729,7 @@ namespace pwiz.Osprey.Tasks
         /// True when EVERY <c>--input-scores</c> parquet has both its first-pass
         /// <c>.fdr_scores.bin</c> and its <c>.reconciliation.json</c> sidecar -- the
         /// signature of a reconciled 2nd-pass merge whose <see cref="HydrateRescoreBundleIfPresent"/>
-        /// overlays q-values onto the resident stubs (FirstJoin skips Percolator there).
+        /// overlays q-values onto the resident stubs (FirstPassFDR skips Percolator there).
         /// <see cref="LoadJoinOnlyScores"/> reads this to keep the fat pool on that path,
         /// since the lean projection would drop the stubs the overlay needs.
         /// </summary>
@@ -1818,7 +1818,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// --model-diagnostics is NOT here: it streams its pass-1 report off the projection
         /// path via a ModelDiagnosticsData.Accumulator fed by the score-pass sink (mirrors the
-        /// FirstJoinTask join-gate that already dropped it), folding each pre-compaction row into
+        /// FirstPassFdrTask join-gate that already dropped it), folding each pre-compaction row into
         /// the reduced report rather than holding the whole-run pool resident -- which peaked
         /// ~100 GB on an 82-file mdiag run. The reductions are order-independent, so the streamed
         /// report is byte-identical to the resident build.
@@ -1863,7 +1863,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Fail fast when a run would build the RESIDENT first-pass pool -- an O(files) memory
-        /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstJoin.Rehydrate</c>
+        /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstPassFdrTask.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
         /// operator named THIS path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c>, throw with the token
         /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: the
@@ -2006,7 +2006,7 @@ namespace pwiz.Osprey.Tasks
         /// already resident for a reason with its own token
         /// (<see cref="ResidentPaths.PROJECTION_OFF"/> above all), so demanding a second token
         /// would mean two variables for one decision, and would fire on the plain
-        /// <c>--task SecondPassFDR</c> merge that <see cref="ResidentPaths.HPC_MERGE"/> already
+        /// <c>--task SecondPassFDR</c> run that <see cref="ResidentPaths.HPC_MERGE"/> already
         /// covers.</para>
         ///
         /// <para>That reasoning covers every caller of THIS guard, and deliberately leaves one
@@ -2058,7 +2058,7 @@ namespace pwiz.Osprey.Tasks
         /// condition had to be passed in rather than read off <paramref name="config"/> so that
         /// testing <c>config.ModelDiagnostics</c> alone could not make mdiag an unconditional
         /// catch-all absorbing any FUTURE arming condition - handing it a token CI exports.
-        /// FirstJoin's rehydrate now streams that report, so the flag arms nothing.</para>
+        /// FirstPassFDR's rehydrate now streams that report, so the flag arms nothing.</para>
         /// </summary>
         private static string ResidentPoolTrigger(OspreyConfig config, bool useFdrProjection)
         {
@@ -2296,7 +2296,7 @@ namespace pwiz.Osprey.Tasks
 
             // Harvest the CAL-view per-file diagnostics for the --model-diagnostics
             // HTML report. Only non-null on the compute path under config.ModelDiagnostics;
-            // FirstJoinTask assembles these into ModelDiagnosticsData.Cal. Keyed by file
+            // FirstPassFdrTask assembles these into ModelDiagnosticsData.Cal. Keyed by file
             // name in input order, mirroring the per-file calibration harvest below. The
             // ConcurrentDictionary field tolerates the parallel per-file fan-out.
             if (calDiagnostics != null)
@@ -2430,8 +2430,8 @@ namespace pwiz.Osprey.Tasks
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
                 // the retained buffer to bound memory -- all N files' entries are held at
-                // once for the join, and these arrays dominate. Features is reloaded before
-                // first-pass Percolator (FirstJoinTask); CWT / fragments / ref-XIC are
+                // once for FirstPassFDR, and these arrays dominate. Features is reloaded before
+                // first-pass Percolator (FirstPassFdrTask); CWT / fragments / ref-XIC are
                 // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
                 // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
                 // docs, which already document these as null on parquet-loaded stubs).
@@ -2650,7 +2650,7 @@ namespace pwiz.Osprey.Tasks
                         NumSampledPrecursors = numSampledPrecursorsForMetadata,
                         Timestamp = DateTime.UtcNow.ToString("o"),
                         // DIA isolation scheme (from the first MS2 cycle) so an HPC
-                        // merge node with no mzML can rehydrate the gap-fill m/z
+                        // SecondPassFDR node with no mzML can rehydrate the gap-fill m/z
                         // filter's per-file coverage. Mirrors Rust's
                         // CalibrationMetadata.isolation_scheme (pipeline.rs).
                         IsolationScheme = BuildIsolationScheme(isolationWindows)
@@ -2683,7 +2683,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Build the DIA <see cref="IsolationSchemeJson"/> block persisted in
         /// calibration.json from a file's first-cycle isolation windows, so an HPC
-        /// merge node (which has no mzML) can rehydrate the gap-fill m/z filter's
+        /// SecondPassFDR node (which has no mzML) can rehydrate the gap-fill m/z filter's
         /// coverage. Windows are stored as <c>[center, width]</c> pairs; the scalar
         /// summary fields (num_windows / mz_min / mz_max / typical_width /
         /// uniform_width) mirror Rust's IsolationScheme (osprey/src/pipeline.rs

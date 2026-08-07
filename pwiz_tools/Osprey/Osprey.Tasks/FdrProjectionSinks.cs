@@ -168,7 +168,7 @@ namespace pwiz.Osprey.Tasks
     /// resident (one file's buffer at a time). Empty survivor files are flushed with a
     /// 0-record sidecar in <see cref="OnFinish"/>. First-pass protein FDR + compaction now
     /// stream <c>run_peptide_qvalue</c> / <c>run_protein_qvalue</c> back off this sidecar
-    /// (see <c>FirstJoinTask.RunFirstPassProteinFdrStreaming</c>), so the resident
+    /// (see <c>FirstPassFdrTask.RunFirstPassProteinFdrStreaming</c>), so the resident
     /// <c>FdrProjectionOutputs</c> array the pre-S2 sink kept is gone; protein FDR patches
     /// each record's <c>[52..60]</c> straight onto the sidecar. The byte layout is
     /// single-sourced through <c>FdrScoresSidecar.WriteRecord</c>, so the phase-1 file is
