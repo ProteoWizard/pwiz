@@ -325,37 +325,40 @@ namespace pwiz.Skyline.Model.DdaSearch
         /// <summary>MS Amanda's bundled Percolator, which it runs itself (see BuildSettingsXml).</summary>
         private static string PercolatorDirectory => Path.Combine(MSAmandaDirectory, @"percolator");
 
-        // percolator.exe imports vcruntime140_1.dll, which MS Amanda's zip does not ship alongside the
-        // rest of the VC runtime it does bundle. Where the VC++ 2015-2022 x64 redistributable is
-        // installed the loader finds it in System32 and nobody notices; where it is not - a freshly
-        // provisioned machine - percolator cannot start, MS Amanda carries on, and the results come out
-        // with no q-values. Microsoft supports app-local deployment of the runtime, so put our copy
-        // beside the exe rather than requiring a machine-wide install.
-        private static readonly string PERCOLATOR_MISSING_DLL = @"vcruntime140_1.dll";
+        // MS Amanda's percolator folder is missing two links of its own dependency chain. Reading the
+        // import tables: percolator.exe needs vcruntime140_1.dll (so does the msvcp140.dll beside it),
+        // and it loads xerces-c_3_1.dll, which needs msvcr100.dll - the VC++ 2010 runtime, which the
+        // package does not ship either. Where those redistributables are installed the loader finds
+        // them in System32 and nobody notices; on a freshly provisioned machine percolator exits with
+        // 0xC0000135 before running, MS Amanda carries on, and the results come out with no q-values.
+        // Microsoft supports app-local deployment of the runtime, so put our copies beside the exe
+        // rather than requiring machine-wide installs - the same thing Agilent.csproj does for VC120.
+        private static readonly string[] PERCOLATOR_MISSING_DLLS = { @"vcruntime140_1.dll", @"msvcr100.dll" };
 
         private void StagePercolatorRuntime()
         {
-            try
-            {
-                if (!Directory.Exists(PercolatorDirectory))
-                    return; // No percolator to stage for; MS Amanda will report its own problem.
+            if (!Directory.Exists(PercolatorDirectory))
+                return; // No percolator to stage for; MS Amanda will report its own problem.
 
-                string destination = Path.Combine(PercolatorDirectory, PERCOLATOR_MISSING_DLL);
-                if (File.Exists(destination))
-                    return;
-
-                string source = Path.Combine(
-                    Path.GetDirectoryName(typeof(MSAmandaSearchWrapper).Assembly.Location) ?? string.Empty,
-                    PERCOLATOR_MISSING_DLL);
-                if (File.Exists(source))
-                    File.Copy(source, destination);
-            }
-            catch (Exception e)
+            string skylineDirectory = Path.GetDirectoryName(typeof(MSAmandaSearchWrapper).Assembly.Location) ?? string.Empty;
+            foreach (string dll in PERCOLATOR_MISSING_DLLS)
             {
-                // Staging is best-effort: the machine may already have the redistributable, and if it
-                // does not, the missing q-values are reported after the search with a better message.
-                Messages.WriteAsyncDebugMessage(@"Could not stage {0} for percolator: {1}",
-                    PERCOLATOR_MISSING_DLL, e.Message);
+                try
+                {
+                    string destination = Path.Combine(PercolatorDirectory, dll);
+                    if (File.Exists(destination))
+                        continue;
+
+                    string source = Path.Combine(skylineDirectory, dll);
+                    if (File.Exists(source))
+                        File.Copy(source, destination);
+                }
+                catch (Exception e)
+                {
+                    // Staging is best-effort: the machine may already have the redistributable, and if
+                    // it does not, percolator is probed after the search and reports the real reason.
+                    Messages.WriteAsyncDebugMessage(@"Could not stage {0} for percolator: {1}", dll, e.Message);
+                }
             }
         }
 

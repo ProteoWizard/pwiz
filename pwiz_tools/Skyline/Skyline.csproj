@@ -318,18 +318,25 @@
     </Content>
   </ItemGroup>
 
-  <!-- MS Amanda's bundled percolator.exe imports vcruntime140_1.dll, which its own zip does not
-       ship (it carries vcruntime140.dll, msvcp140.dll, concrt140.dll, vcomp140.dll and xerces).
-       On a machine with the VC++ 2015-2022 x64 redistributable installed the loader finds it in
-       System32; on a freshly provisioned CI agent it does not, percolator fails to start, and MS
-       Amanda writes an mzIdentML with no q-values at all - which only surfaces two steps later as
-       BlibBuild's "unsupported score type". Ship the DLL so MSAmandaSearchWrapper can stage it
-       next to percolator.exe after the tool is unzipped. Same app-local pattern the Agilent
-       reader uses for the VC120 runtime (see Agilent.csproj). -->
+  <!-- Two links of MS Amanda's percolator dependency chain that its own zip does not ship. It
+       carries vcruntime140.dll, msvcp140.dll, concrt140.dll, vcomp140.dll and xerces-c_3_1.dll,
+       but percolator.exe also imports vcruntime140_1.dll, and xerces imports msvcr100.dll (VC++
+       2010). Where those redistributables are installed the loader finds them in System32; on a
+       freshly provisioned CI agent it does not, percolator exits 0xC0000135 before running, and MS
+       Amanda writes an mzIdentML with no q-values at all. Ship both so MSAmandaSearchWrapper can
+       stage them next to percolator.exe after the tool is unzipped. Same app-local pattern the
+       Agilent reader uses for the VC120 runtime (see Agilent.csproj). -->
   <ItemGroup>
     <Content Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcruntime140_1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>vcruntime140_1.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <!-- percolator loads xerces-c_3_1.dll, which imports msvcr100.dll (VC++ 2010) - not shipped by
+         MS Amanda either, and no reason for a modern Windows image to carry it. -->
+    <Content Include="..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcr100.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>msvcr100.dll</Link>
       <Visible>false</Visible>
     </Content>
   </ItemGroup>
