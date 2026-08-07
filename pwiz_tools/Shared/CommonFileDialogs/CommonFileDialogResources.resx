@@ -124,4 +124,13 @@
   <data name="OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources" xml:space="preserve">
     <value>Please select one or more data sources.</value>
   </data>
+  <data name="BaseFileDialogNE_NewFolder" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="BaseFileDialogNE_BeginCreateNewFolder_New_folder" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="BaseFileDialogNE_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
 </root>
