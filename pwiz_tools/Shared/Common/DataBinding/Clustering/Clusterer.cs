@@ -54,6 +54,7 @@ namespace pwiz.Common.DataBinding.Clustering
             var rows = new List<List<double>>();
             foreach (var rowItem in RowItems)
             {
+                CancellationToken.ThrowIfCancellationRequested();
                 var rawValues = series.PropertyDescriptors.Select(pd => pd.GetValue(rowItem)).ToList();
                 var valuesToAdd = clusterValueTransform.TransformRow(rawValues)
                     .Select(value => value ?? clusterValueTransform.ValueForNull).ToList();

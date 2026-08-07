@@ -212,7 +212,7 @@
   <data name="SummarizationMethod_AVERAGING_Sum_of_transition_areas" xml:space="preserve">
     <value>トランジション領域の合計</value>
   </data>
-  <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
+  <data name="SummarizationMethod_LEGACY_MEDIANPOLISH_Legacy_Median_Polish" xml:space="preserve">
     <value>Tukeyの中央値分散分析</value>
   </data>
   <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">

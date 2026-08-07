@@ -235,6 +235,7 @@ namespace pwiz.SkylineTest
             var calcWeightedCoelution = new MQuestWeightedCoElutionCalc();
             var calcWeightedCrossShape = new NextGenCrossWeightedShapeCalc();
             var calcSignalNoise = new NextGenSignalNoiseCalc();
+            var calcSumCoelution = new SumCoelutionScoreCalc();
 
             var peptidePeakDatas = new List<MockPeptidePeakData<IDetailedPeakData>> { peptidePeakData, peptidePeakDataMs1 };
             // These scores are the same with or without an extra MS1 transition
@@ -245,6 +246,8 @@ namespace pwiz.SkylineTest
                 MQuestScoreEquals(calcWeightedShape, 0.3969832, peptideData);
                 MQuestScoreEquals(calcWeightedCoelution, 3.0, peptideData);
                 MQuestScoreEquals(calcSignalNoise, 1.3086293, peptideData);
+                // Sum coelution = Pearson correlation at shift 0 for the single pair (INTENS1, INTENS2)
+                MQuestScoreEquals(calcSumCoelution, 0.03129565, peptideData);
             }
             // The MS1-MS2 cross score differs when an MS1 transition is added
             MQuestScoreEquals(calcWeightedCrossShape, 0.94669, peptidePeakDataMs1);
