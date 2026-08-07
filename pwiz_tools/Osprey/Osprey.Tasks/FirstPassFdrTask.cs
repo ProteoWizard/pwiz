@@ -627,8 +627,8 @@ namespace pwiz.Osprey.Tasks
             // The same per-file survivor source Run publishes, so Stage 6 streams on a resume
             // exactly as it does on a computed run (issue #4536). Before this, the slot was
             // published null here and every streamed branch in PerFileRescore was skipped,
-            // leaving the all-files survivor buffer live across the whole rescore and into the
-            // merge - 88.9 M entries / 28 GB at 163 files. The buffer is the same one Run
+            // leaving the all-files survivor buffer live across the whole rescore and into
+            // SecondPassFDR - 88.9 M entries / 28 GB at 163 files. The buffer is the same one Run
             // releases below; what a resume lacked was only the passing base_id set to rebuild
             // it from, and the compaction just above now hands that back on the bundle.
             if (!TryBuildResumeSurvivorLoader(ctx, bundle, perFileEntries, out _survivorLoader))
