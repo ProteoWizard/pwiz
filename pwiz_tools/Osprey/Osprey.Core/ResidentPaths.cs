@@ -59,9 +59,9 @@ namespace pwiz.Osprey.Core
 
         // mdiag-full-resume is GONE (#4505), and this note is the record of the ratchet
         // shrinking rather than a gap. --model-diagnostics on a full resume took the resident
-        // pool because FirstJoin skipped its score pass (every 1st-pass sidecar already on
+        // pool because FirstPassFDR skipped its score pass (every 1st-pass sidecar already on
         // disk), so the streaming accumulator was never fed and the report fell back to the
-        // batch write over the resident entries. FirstJoin's rehydrate now feeds that
+        // batch write over the resident entries. FirstPassFDR's rehydrate now feeds that
         // accumulator from the per-file load it already performs, off the same PRE-compaction
         // rows, so the flag arms no resident path at any file count and no token can name one.
 

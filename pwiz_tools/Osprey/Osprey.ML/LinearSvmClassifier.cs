@@ -310,7 +310,7 @@ namespace pwiz.Osprey.ML
 
         /// <summary>
         /// Reconstruct a standardizer from persisted means/stds -- e.g. reloading a
-        /// frozen 1st-pass model in a distributed SecondPassFDR merge node that did not
+        /// frozen 1st-pass model in a distributed SecondPassFDR node that did not
         /// train pass 1 in-process. The arrays are exactly what <see cref="Means"/> and
         /// <see cref="Stds"/> return, so a scorer built from the reloaded model
         /// standardizes bit-identically to the in-process original.

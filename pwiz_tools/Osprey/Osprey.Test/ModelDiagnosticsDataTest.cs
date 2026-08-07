@@ -776,8 +776,8 @@ namespace pwiz.Osprey.Test
 
             // --- The Pass2 bundle survives a Newtonsoft round-trip (camelCase +
             // NaN-as-literal) -- the same serialization robustness the HTML embed relies
-            // on. (Pass2 itself is built at MergeNode and serialized only into the HTML,
-            // never through the FirstJoin->MergeNode data sidecar, which carries pass 1.)
+            // on. (Pass2 itself is built at SecondPassFDR and serialized only into the HTML,
+            // never through the FirstPassFDR->SecondPassFDR data sidecar, which carries pass 1.)
             var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
             data.Pass2 = retrain;
             var settings = new JsonSerializerSettings
@@ -795,8 +795,8 @@ namespace pwiz.Osprey.Test
         }
 
         // The pass-1 data model must survive a Newtonsoft round-trip (camelCase +
-        // NaN/Infinity as bare literals): FirstJoin stashes it to a sidecar and
-        // MergeNode reloads it to append the pass-2 views. Mirrors the settings in
+        // NaN/Infinity as bare literals): FirstPassFDR stashes it to a sidecar and
+        // SecondPassFDR reloads it to append the pass-2 views. Mirrors the settings in
         // ModelDiagnosticsReport.SidecarSettings -- the empty-bin NaN in the
         // win-fraction curve is the round-trip's sharp edge.
         private static void TestSidecarRoundTrip()
