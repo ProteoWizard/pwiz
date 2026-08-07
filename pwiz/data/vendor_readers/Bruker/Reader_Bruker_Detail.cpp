@@ -36,6 +36,21 @@ namespace Bruker {
 
 using namespace pwiz::util;
 
+namespace {
+
+// True if the path names a file, which every vendor path probed below is. A plain exists()
+// test would also accept a directory of that name, and on Windows, where paths are compared
+// case insensitively, that is easy to hit by accident: a directory named "FID" would
+// otherwise make everything containing it look like a Bruker acquisition. Deliberately not
+// is_regular_file(), which would also reject a file reached through a reparse point, as a
+// cloud storage placeholder is.
+bool exists_as_file(const bfs::path& filePath)
+{
+    return bfs::exists(filePath) && !bfs::is_directory(filePath);
+}
+
+} // namespace
+
 Reader_Bruker_Format format(const string& path)
 {
     bfs::path sourcePath(path);
@@ -48,7 +63,7 @@ Reader_Bruker_Format format(const string& path)
         // Note that direct paths to baf or u2 will fail to find a baf/u2 hybrid source
         std::string leaf = BFS_STRING(sourcePath.filename());
         bal::to_lower(leaf);
-        if (leaf == "fid" && !bfs::exists(sourcePath.parent_path() / "analysis.baf"))
+        if (leaf == "fid" && !exists_as_file(sourcePath.parent_path() / "analysis.baf"))
             return Reader_Bruker_Format_FID;
         else if(extension(sourcePath) == ".u2")
             return Reader_Bruker_Format_U2;
@@ -68,9 +83,9 @@ Reader_Bruker_Format format(const string& path)
 
     // Check for tdf-based data;
     // The directory should have a file named "Analysis.tdf"
-    if (bfs::exists(sourcePath / "Analysis.tdf") || bfs::exists(sourcePath / "analysis.tdf"))
+    if (exists_as_file(sourcePath / "Analysis.tdf") || exists_as_file(sourcePath / "analysis.tdf"))
         return Reader_Bruker_Format_TDF;
-    if (bfs::exists(sourcePath / "Analysis.tsf") || bfs::exists(sourcePath / "analysis.tsf"))
+    if (exists_as_file(sourcePath / "Analysis.tsf") || exists_as_file(sourcePath / "analysis.tsf"))
         return Reader_Bruker_Format_TSF;
 
     // TODO: 1SRef is not the only possible substring below, get more examples!
@@ -88,16 +103,16 @@ Reader_Bruker_Format format(const string& path)
         {
             if (BFS_STRING(itr->path().filename())[0] == '.') // HACK: skip ".svn"
                 continue;
-            else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
-                     bfs::exists(itr->path() / "1SRef/fid") ||
-                     bfs::exists(itr->path() / "1/1SLin/fid") ||
-                     bfs::exists(itr->path() / "1SLin/fid") ||
-                     bfs::exists(itr->path() / "1/1Ref/fid") ||
-                     bfs::exists(itr->path() / "1Ref/fid") ||
-                     bfs::exists(itr->path() / "1/1Lin/fid") ||
-                     bfs::exists(itr->path() / "1Lin/fid") ||
-                     (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
-                     (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
+            else if (exists_as_file(itr->path() / "1/1SRef/fid") ||
+                     exists_as_file(itr->path() / "1SRef/fid") ||
+                     exists_as_file(itr->path() / "1/1SLin/fid") ||
+                     exists_as_file(itr->path() / "1SLin/fid") ||
+                     exists_as_file(itr->path() / "1/1Ref/fid") ||
+                     exists_as_file(itr->path() / "1Ref/fid") ||
+                     exists_as_file(itr->path() / "1/1Lin/fid") ||
+                     exists_as_file(itr->path() / "1Lin/fid") ||
+                     (exists_as_file(itr->path() / "fid") && !exists_as_file(itr->path() / "Analysis.baf") && !exists_as_file(itr->path() / "analysis.baf")) ||
+                     (exists_as_file(sourcePath / "fid") && !exists_as_file(sourcePath / "Analysis.baf") && !exists_as_file(sourcePath / "analysis.baf")))
                     return Reader_Bruker_Format_FID;
             else
                 break;
@@ -105,17 +120,17 @@ Reader_Bruker_Format format(const string& path)
 
     // Check for yep-based data;
     // The directory should have a file named "Analysis.yep"
-    if (bfs::exists(sourcePath / "Analysis.yep") || bfs::exists(sourcePath / "analysis.yep"))
+    if (exists_as_file(sourcePath / "Analysis.yep") || exists_as_file(sourcePath / "analysis.yep"))
         return Reader_Bruker_Format_YEP;
 
     bfs::path sourceDirectory = *(--sourcePath.end());
 
     // Check for baf-based data;
     // The directory should have a file named "Analysis.baf"
-    if (bfs::exists(sourcePath / "Analysis.baf") || bfs::exists(sourcePath / "analysis.baf"))
+    if (exists_as_file(sourcePath / "Analysis.baf") || exists_as_file(sourcePath / "analysis.baf"))
     {
         // Check for baf/u2 hybrid data
-        if (bfs::exists(sourcePath / sourceDirectory.replace_extension(".u2")))
+        if (exists_as_file(sourcePath / sourceDirectory.replace_extension(".u2")))
             return Reader_Bruker_Format_BAF_and_U2;
         else
             return Reader_Bruker_Format_BAF;
@@ -123,7 +138,7 @@ Reader_Bruker_Format format(const string& path)
 
     // Check for u2-based data;
     // The directory should have a file named "<directory-name - ".d">.u2"
-    if (bfs::exists(sourcePath / sourceDirectory.replace_extension(".u2")))
+    if (exists_as_file(sourcePath / sourceDirectory.replace_extension(".u2")))
         return Reader_Bruker_Format_U2;
 
     return Reader_Bruker_Format_Unknown;
