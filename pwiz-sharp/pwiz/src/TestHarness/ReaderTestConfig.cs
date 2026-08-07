@@ -133,6 +133,15 @@ public sealed record ReaderTestConfig
     public bool TestMzmlbRoundTrip { get; set; } = true;
 
     /// <summary>
+    /// When true, the harness writes the in-memory MSData to mzPeak (Parquet-backed),
+    /// reads it back through <c>MzPeakReaderAdapter</c>, and diffs against the original
+    /// at the spectrum-data level. Same shape as the mzMLb check; mzPeak's column-typed
+    /// schema is the format under active development in this branch, so this round-trip
+    /// is the canary for translation regressions.
+    /// </summary>
+    public bool TestMzPeakRoundTrip { get; set; } = true;
+
+    /// <summary>
     /// When true, the HDF5-backed round-trip (<see cref="TestMzmlbRoundTrip"/>) still
     /// runs when the test process is being
     /// instrumented by a CLR coverage profiler. Each vendor designates one

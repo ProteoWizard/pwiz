@@ -19,6 +19,8 @@ public enum WriteFormat
     Mz5,
     /// <summary>mzMLb HDF5 format (unimplemented).</summary>
     MzMLb,
+    /// <summary>mzPeak Parquet-archive format.</summary>
+    MzPeak,
     /// <summary>pwiz internal text format (unimplemented).</summary>
     Text,
     /// <summary>Legacy MS1 text format.</summary>

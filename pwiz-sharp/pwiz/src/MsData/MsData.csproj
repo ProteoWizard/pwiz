@@ -26,6 +26,10 @@
          to read/write HDF5-backed mass-spec files. The 1.10 stream tracks
          HDF5 1.10.x — the same major version pwiz cpp builds against. -->
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
+    <!-- ParquetSharp wraps Apache Arrow's parquet-cpp with bundled native
+         binaries for win-x64 / linux-x64. Used by Reader_MzPeak / WriterMzPeak
+         for the nested-struct GroupNode schema mzPeak emits. -->
+    <PackageReference Include="ParquetSharp" Version="23.0.0.2" />
   </ItemGroup>
 
 </Project>
