@@ -45,6 +45,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Tools;
@@ -57,8 +58,6 @@ using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
 // compiling unchanged against the Skyline-typed instantiations.
 using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
 using ArgumentGroup = pwiz.Common.CommandLine.ArgumentGroup<pwiz.Skyline.CommandArgs>;
-// Aliased rather than importing the namespace, which collides with types used here
-using ReportFormat = pwiz.Skyline.Model.Databinding.ReportFormat;
 
 namespace pwiz.Skyline
 {
