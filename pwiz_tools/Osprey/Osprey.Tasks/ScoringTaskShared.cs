@@ -35,7 +35,7 @@ namespace pwiz.Osprey.Tasks
 {
     /// <summary>
     /// The shared plumbing the scoring tasks (<see cref="PerFileScoringTask"/>,
-    /// <see cref="PerFileRescoreTask"/>, <see cref="FirstJoinTask"/>) once
+    /// <see cref="PerFileRescoreTask"/>, <see cref="FirstPassFdrTask"/>) once
     /// inherited from the retired <c>AbstractScoringTask</c> base: the mzML read
     /// gate, the PIN feature width + base-id mask constants, the isolation-window
     /// extractor, and the nearest-MS1 lookup. None of it needs instance state, so
@@ -227,7 +227,7 @@ namespace pwiz.Osprey.Tasks
         /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
         /// `synthetic_input_from_parquet` helper.
         ///
-        /// <para>Lives here rather than on <see cref="FirstJoinTask"/> because
+        /// <para>Lives here rather than on <see cref="FirstPassFdrTask"/> because
         /// <see cref="FirstPassSurvivorLoader"/> needs the same resolution to find a
         /// file's 1st-pass sidecar, and a loader reaching into a task class for it
         /// would be the wrong direction of dependency.</para>
@@ -267,16 +267,16 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Reduce off one file's PRE-compaction stub pool everything a rehydrate used to
         /// read off the resident all-files pool. Only the run-level FDR passing-target count
-        /// is needed: FirstJoin's Stage 5 result line reports it per file, and the streaming
+        /// is needed: FirstPassFDR's Stage 5 result line reports it per file, and the streaming
         /// hydrate has already dropped the non-survivors by the time that line is written.
-        /// Identical predicate to <c>FirstJoinTask.LogFirstPassResults</c>.
+        /// Identical predicate to <c>FirstPassFdrTask.LogFirstPassResults</c>.
         ///
         /// <para>Shared by both callers of
         /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> -- the
         /// <c>--task PerFileRescoring</c> worker load in <see cref="PerFileScoringTask"/>
-        /// and the straight-through resume in <see cref="FirstJoinTask"/> - so the two
+        /// and the straight-through resume in <see cref="FirstPassFdrTask"/> - so the two
         /// cannot drift into reporting per-file counts under different predicates. NOT the
-        /// <c>--task SecondPassFDR</c> merge: that sets <c>ExpectReconciledInput</c>, the
+        /// <c>--task SecondPassFDR</c> run: that sets <c>ExpectReconciledInput</c>, the
         /// first branch of <c>PreCompactionPoolReason</c>, so it always takes the resident
         /// batch twin and is still O(files) (issue #4486).</para>
         /// </summary>

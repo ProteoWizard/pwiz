@@ -30,9 +30,9 @@ namespace pwiz.Osprey.FDR
     /// <summary>
     /// Owns protein-FDR orchestration shared by the Tasks layer: the first-pass
     /// run (pre-Stage-6, on the full pre-compaction pool) and the second-pass /
-    /// run-wide run (merge node, post Stage-6). Consolidates the glue that was
-    /// previously duplicated across three tasks (<c>FirstJoinTask</c>,
-    /// <c>MergeNodeTask</c>, <c>PerFileRescoreTask</c>) so FDR orchestration
+    /// run-wide run (SecondPassFDR, post Stage-6). Consolidates the glue that was
+    /// previously duplicated across three tasks (<c>FirstPassFdrTask</c>,
+    /// <c>SecondPassFdrTask</c>, <c>PerFileRescoreTask</c>) so FDR orchestration
     /// physically lives in the FDR project; the tasks call this through a thin
     /// facade, passing <c>ctx.LogInfo</c> as the log sink.
     ///
@@ -74,7 +74,7 @@ namespace pwiz.Osprey.FDR
         /// Emit the two first-pass protein-FDR summary lines (detected-peptide count +
         /// target groups passing run FDR) shared by the resident <see cref="FdrEntry"/>
         /// facade above and the projection path's streaming reducer
-        /// (<c>FirstJoinTask.RunFirstPassProteinFdrStreaming</c>, which assembles the same
+        /// (<c>FirstPassFdrTask.RunFirstPassProteinFdrStreaming</c>, which assembles the same
         /// <see cref="FirstPassProteinFdrResult"/> off the sidecar + parquet scalars rather
         /// than the resident buffer). <paramref name="logInfo"/> may be null (silent runs).
         /// </summary>
@@ -100,7 +100,7 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Second-pass / run-wide protein FDR (merge node, post Stage-6): collects
+        /// Second-pass / run-wide protein FDR (SecondPassFDR, post Stage-6): collects
         /// best peptide scores, gates the detected-peptide set on experiment-level
         /// q-value, builds parsimony, runs picked-protein FDR at
         /// <see cref="OspreyConfig.RunFdr"/>, and propagates both
@@ -111,7 +111,7 @@ namespace pwiz.Osprey.FDR
         /// FDR artifacts so the Tasks facade can emit the Stage-7 detected-peptides
         /// and protein-FDR diagnostic dumps + the <c>Stage7ProteinFdrOnly</c>
         /// early-exit WITHOUT recomputing them. Moved here from
-        /// <c>MergeNodeTask.RunProteinFdr</c> (the dump / early-exit blocks stay in
+        /// <c>SecondPassFdrTask.RunProteinFdr</c> (the dump / early-exit blocks stay in
         /// the Tasks facade -- see the type remarks for why).
         /// </summary>
         public static SecondPassProteinFdrResult RunSecondPass(

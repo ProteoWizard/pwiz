@@ -50,7 +50,7 @@
               task (the blib + its SecondPassFDR stamp), leaving the FirstPassFDR
               stamp and every 1st-pass sidecar valid, so the re-run rebuilds its
               post-Stage-5 bundle from those OWN sidecars
-              (FirstJoinTask.LoadOwnReconciliationBundle - the class name differs
+              (FirstPassFdrTask.LoadOwnReconciliationBundle - the class name differs
               from the task Name). That loader is what no other leg reaches: mode 2
               deletes the FirstPassFDR stamp so the task RUNS instead, mode 4
               invalidates nothing so nothing demands its state, and mode 3's
@@ -58,7 +58,7 @@
               WORKER-supplied bundle, never the own-sidecar loader. The leg asserts
               a marker logged from INSIDE that loader (a cache hit does not prove it
               ran, and neither does the generic rehydrate line, which a worker bundle
-              emits too), that the merge's blib still equals the straight-through one
+              emits too), that SecondPassFDR's blib still equals the straight-through one
               at 1e-9, and that the --model-diagnostics report re-emitted from those
               sidecars matches the golden. It is the ONE leg that names a token
               (resume-survivor-handoff, issue #4536); every other leg runs with
@@ -66,7 +66,7 @@
       mode 6  library-fragment release engagement (issue #4532) - asserts, from the
               legs' own logs, that the release RAN on every leg that holds the
               library (straight-through, resume, --task PerFileRescoring, and the
-              merge node) and did NOT run on --task FirstPassFDR, which loads with
+              SecondPassFDR node) and did NOT run on --task FirstPassFDR, which loads with
               OmitFragments and can therefore only fabricate a saving. The release
               is OUTPUT-NEUTRAL by design, which is its safety argument and also
               why modes 1-4 pass identically whether it ran or was deleted
@@ -113,7 +113,7 @@
 
 .PARAMETER SkipRehydrate
     Skip the mode-5 Stage-5 rehydrate leg. The overnight gate leaves it on: it is
-    the only leg that enters FirstJoinTask.Rehydrate at all, and it costs one merge
+    the only leg that enters FirstPassFdrTask.Rehydrate at all, and it costs one SecondPassFDR
     re-run. This switch is for fast local iteration, like -SkipHpcChain.
 
 .PARAMETER SkipHpcChain
@@ -213,7 +213,7 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # statement of health, and reading it as sufficient is the trap: a token is only
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 is exactly that - every resume hands Stage 6 the
-# all-files survivor buffer, and because FirstJoin.Rehydrate publishes no survivor
+# all-files survivor buffer, and because FirstPassFdrTask.Rehydrate publishes no survivor
 # loader, Stage6ResidentHandoffGuardError no-ops and nothing asks for a token. Zero
 # tokens therefore does NOT mean zero gaps, and this table is what keeps the
 # difference legible.
@@ -711,7 +711,7 @@ $coldScoreMarker   = 'Scoring file '
 $coldRescoreMarker = 'Re-scoring file '
 
 # The library-fragment release (issue #4532). Two scopes, distinguished by the
-# tail of the line: FirstJoinTask retains "for rescore + gap-fill", MergeNodeTask
+# tail of the line: FirstPassFdrTask retains "for rescore + gap-fill", SecondPassFdrTask
 # retains "for the reported pool". Captured rather than merely matched, because
 # the count is the whole point -- see Test-LibraryFragmentRelease.
 $releaseLinePattern =
@@ -817,7 +817,7 @@ function Test-TaskCacheHits {
 }
 
 # The line FirstPassFDR logs from the OWN-SIDECAR STREAMING arm specifically
-# (FirstJoinTask.StreamOwnReconciliationBundle).
+# (FirstPassFdrTask.StreamOwnReconciliationBundle).
 #
 # Deliberately not the 'Bundle hydration: skipping first-pass Percolator' line at the
 # top of Rehydrate. That one is emitted before the bundle source is even known, so a
@@ -830,7 +830,7 @@ function Test-TaskCacheHits {
 # Matched as a substring for the reason Get-TaskCacheMap matches its own: if the C#
 # wording drifts, mode 5 goes red naming the token it could not find rather than
 # passing vacuously.
-$firstJoinRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundle from'
+$firstPassFdrRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundle from'
 
 function Test-LogMarker {
     <#
@@ -899,15 +899,15 @@ function Test-LibraryFragmentRelease {
 
     Every defect /code-review found on #4534 was in the last two columns: the
     Rehydrate path never released, --task FirstPassFDR printed millions released
-    having freed ZERO bytes directly above a [MEM] probe, and the merge node
+    having freed ZERO bytes directly above a [MEM] probe, and the SecondPassFDR node
     realized nothing at all. None was an over-release. This closes that column.
 
     -ExpectScopes names the release scopes the log must contain. -RequireFreed
     names the subset that must additionally have freed a non-zero count; it is a
-    separate list because the merge node legitimately reports 0 on a
+    separate list because the SecondPassFDR node legitimately reports 0 on a
     straight-through run, where FirstJoin already released in the same process and
     ReleaseSpectrum is idempotent -- requiring non-zero there would fail every
-    in-process run, while requiring it on the HPC merge node is exactly the
+    in-process run, while requiring it on the HPC SecondPassFDR node is exactly the
     assertion that would have caught the zero-saving defect. -ExpectNone asserts
     the log contains no release line at all, which pins --task FirstPassFDR: it
     loads with OmitFragments, so a release there can only ever be the fabricated
@@ -1011,7 +1011,7 @@ function Copy-LibraryInto {
 }
 
 # Run the distributed --task pipeline end to end against copied inputs under
-# $ChainRoot and return the final merge-node blib. Each phase rehydrates the
+# $ChainRoot and return the final SecondPassFDR blib. Each phase rehydrates the
 # prior phase's on-disk sidecars, exactly as a multi-computer distribution would;
 # nothing is held in memory across phases. All inputs/sidecars are copied (never
 # referenced in place), so the read-only data dir is untouched.
@@ -1033,7 +1033,7 @@ function Invoke-HpcChain {
 
     # Phase logs are copied here as each phase finishes, because the phase DIRS are
     # freed mid-chain to bound peak disk (phases 1, 2 and every phase-3 worker go
-    # before the merge node even starts). A leg-level assertion therefore cannot read
+    # before the SecondPassFDR node even starts). A leg-level assertion therefore cannot read
     # them where they were written -- mode 6 found exactly that, seeing only phase 4.
     # A few KB of text survives; the multi-GB inputs still do not.
     $chainLogDir = Join-Path $ChainRoot 'logs'
@@ -1061,10 +1061,10 @@ function Invoke-HpcChain {
             Remove-Item -Force -ErrorAction SilentlyContinue
     }
 
-    # Phase 2: 1st-join (Stage 5). Consumes the per-file parquets, writes the
+    # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes the
     # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. A
     # 0-byte stub mzML lets the task derive sidecar paths without reading spectra.
-    $ph2 = Join-Path $ChainRoot 'phase2_firstjoin'
+    $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
     New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
     foreach ($s in $stemList) {
         Copy-Item (Join-Path $ph1 "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
@@ -1101,7 +1101,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
         # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
         # phase2 -> phase3 -> phase4 relay as the other Stage-5 sidecars: $ph2 is
-        # deleted below (before the merge node), so the merge node can only reach it
+        # deleted below (before SecondPassFDR), so SecondPassFDR can only reach it
         # via a phase-3 hop. Present only for the SVM/percolator framework; absent for
         # the GBDT golden, so guard with Test-Path.
         $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
@@ -1131,14 +1131,14 @@ function Invoke-HpcChain {
     }
 
     # Phases 1 and 2 are fully consumed once every rescore worker has copied its
-    # inputs (phase 4 reads only phase-3 outputs). Free them before the merge node.
+    # inputs (phase 4 reads only phase-3 outputs). Free them before SecondPassFDR.
     Remove-Scratch $ph1
     Remove-Scratch $ph2
 
-    # Phase 4: 2nd-join merge node (Stage 7 + blib). Consumes each worker's
+    # Phase 4: SecondPassFDR (Stage 7 + blib). Consumes each worker's
     # reconciled parquet + sidecars (never the original Stage 4 parquet, and never
     # an mzML -- a 0-byte stub provides path derivation only) and writes the blib.
-    $ph4 = Join-Path $ChainRoot 'phase4_mergenode'
+    $ph4 = Join-Path $ChainRoot 'phase4_SecondPassFDR'
     New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
     foreach ($s in $stemList) {
         $ph3 = $ph3Dirs[$s]
@@ -1146,7 +1146,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
-        # Ship the persisted 1st-pass model so the merge node can run the frozen 2nd-pass
+        # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
         # modes (transfer / transfer-compete / protein-compact) without re-training. Written
         # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
         # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
@@ -1157,7 +1157,7 @@ function Invoke-HpcChain {
         if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
         New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
     }
-    # The merge node now has every worker's reconciled output copied in; the phase-3
+    # SecondPassFDR now has every worker's reconciled output copied in; the phase-3
     # worker dirs are done.
     foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
     Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
@@ -1309,7 +1309,7 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR merge does
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR leg does
         # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
         # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
         # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
@@ -1359,7 +1359,7 @@ foreach ($name in $selected) {
             -NoColdScoring -NoColdRescoring
         # Byte identity on top of the cache assertion. A fully cached run never rewrites
         # the blib, so this normally hashes an untouched file; it is here to catch a
-        # partial regression that re-runs the merge node and writes a DIFFERENT blib
+        # partial regression that re-runs SecondPassFDR and writes a DIFFERENT blib
         # while the upstream tasks still report cache hits.
         #
         # A raw sha256 is legitimate ONLY under this leg's nothing-was-rewritten
@@ -1402,7 +1402,7 @@ foreach ($name in $selected) {
         # invalidation leaves every <stem>.1st-pass.fdr_scores.bin on disk, so under
         # --model-diagnostics Stage 5 held the RESIDENT per-file entries for the batch
         # ModelDiagnosticsReport.Write to read, which is O(files) and genuinely needed
-        # suppressing at 3 files. #4505 streamed that report off FirstJoin's own per-file load,
+        # suppressing at 3 files. #4505 streamed that report off FirstPassFDR's own per-file load,
         # so the trigger is gone and so is the token.
         #
         # Nothing here replaces it. An opt-in on this leg would mask exactly the regression the
@@ -1453,10 +1453,10 @@ foreach ($name in $selected) {
     # ---- mode 5: Stage-5 rehydrate (FirstPassFDR's rehydrate arm) ----
     # Runs AFTER mode 2, and the order is not arbitrary. Mode 5's SecondPassFDR run
     # rewrites more than output.blib: every <stem>.2nd-pass.fdr_scores.bin, the
-    # model-diagnostics report, and its .data.json are merge outputs too, and
+    # model-diagnostics report, and its .data.json are SecondPassFDR outputs too, and
     # Invoke-ResumeInvalidation deletes none of them. Running mode 5 first therefore
     # left mode 2 resuming on top of mode-5-produced pass-2 state, which feeds
-    # PerFileRescore's pass-2 self-gate and MergeNode's 2nd-pass rehydrate - so mode
+    # PerFileRescore's pass-2 self-gate and SecondPassFDR's 2nd-pass rehydrate - so mode
     # 2's oracle silently depended on whether -SkipRehydrate was passed, and a defect
     # that only appears when Stage 5 is rehydrated twice would hide behind mode 5's
     # own passing blib assertion. Ordering it last costs nothing: mode 2's resume
@@ -1475,7 +1475,7 @@ foreach ($name in $selected) {
     #
     # Task NAMES throughout, not class names: the driver stamps and logs
     # 'FirstPassFDR' and 'SecondPassFDR', while the classes behind them are
-    # FirstJoinTask and MergeNodeTask. Keying prose off the class names is how a
+    # FirstPassFdrTask and SecondPassFdrTask. Keying prose off the class names is how a
     # copy of the invalidation helper once matched zero files and produced a
     # 'resume' that never resumed (see Invoke-ResumeInvalidation).
     #
@@ -1490,21 +1490,21 @@ foreach ($name in $selected) {
     # Names exactly ONE token (below) and suppresses nothing else. Note what that does
     # and does not buy: a regression that puts STAGE 5 back on the resident pool fails on
     # PerFileScoringTask's guard (mdiag no longer has a token), but nothing guards
-    # FirstJoin's own loader, so a regression confined to it would NOT fail here.
+    # FirstPassFDR's own loader, so a regression confined to it would NOT fail here.
     # What catches that one is the marker below plus the memory trace in the log.
     if (-not $SkipRehydrate) {
         Write-Progress-Tc "${name}: Stage-5 rehydrate self-consistency (mode 5)"
         Invoke-SecondPassOnlyInvalidation -WorkDir $straightDir
         # Delete the straight-through run's report so the comparison below cannot pass
-        # against it. Nothing about the invalidation forces FirstJoin to re-emit the
+        # against it. Nothing about the invalidation forces FirstPassFDR to re-emit the
         # report - if the rehydrate arm stopped writing one, a surviving file from the
         # straight-through leg would compare EQUAL to the golden and the leg would go
         # green having tested nothing. Removing it makes "the report the rehydrate
         # produced" the only thing that can be compared.
-        # BOTH files. MergeNodeTask re-renders the HTML from output.model-diagnostics.data.json
+        # BOTH files. SecondPassFdrTask re-renders the HTML from output.model-diagnostics.data.json
         # during its pass-2 enrichment, inside a catch-all that swallows failures - so if any
         # earlier leg threw partway through that block, the .data.json survives, and deleting
-        # only the .html would let the merge rebuild a complete page from the PREVIOUS leg's
+        # only the .html would let SecondPassFDR rebuild a complete page from the PREVIOUS leg's
         # pass-1 data. The comparison would then pass against a report the rehydrate never
         # wrote, which is the exact regression this deletion exists to catch.
         if ($cfg.ModelDiagnostics) {
@@ -1532,7 +1532,7 @@ foreach ($name in $selected) {
         $rehydrateBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  rehydrate wall {0:mm\:ss}; blib {1:N0} bytes" -f $rRehydrate.Wall, (Get-Item $rehydrateBlib).Length)
 
-        # Three tasks kept their outputs; only the merge lost its stamp. Asserting
+        # Three tasks kept their outputs; only SecondPassFDR lost its stamp. Asserting
         # the ran side keeps the leg from going vacuous exactly as in mode 2.
         $m5cache = Test-TaskCacheHits -LogPath $rRehydrate.Log `
             -ExpectSkipped @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring') `
@@ -1541,7 +1541,7 @@ foreach ($name in $selected) {
         # ... and the FirstPassFDR cache hit above is NOT evidence the rehydrate arm
         # ran: a skipped task whose state nobody demands never enters Rehydrate at
         # all. This marker is the only thing that says it did.
-        $m5marker = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstJoinRehydrateMarker `
+        $m5marker = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstPassFdrRehydrateMarker `
             -Description 'FirstPassFDR streaming the post-Stage-5 bundle from its own sidecars'
         foreach ($issue in $m5marker.Issues) { $m5cache.Issues.Add($issue) }
         # Repair Pass after mutating Issues. Test-TaskCacheHits computed it at return
@@ -1578,7 +1578,7 @@ foreach ($name in $selected) {
         # -NoTrainedModel because this run adopted its q-values instead of training
         # Percolator, so featureCount is pinned at 0 rather than compared (see
         # Compare-DiagnosticsGolden). That is pre-existing resume behavior, not a
-        # property of the streamed report: FirstJoin's rehydrate has always passed a
+        # property of the streamed report: FirstPassFDR's rehydrate has always passed a
         # null FeatureContributions, on the resident batch write too. Every metric
         # the resume CAN reproduce - pool composition, the null-alignment density
         # ratio, the paired decoy-win fraction, and pass-1/pass-2 FDP at the reported
@@ -1646,7 +1646,7 @@ foreach ($name in $selected) {
     # The per-leg expectations are calibrated against an observed run, NOT derived from
     # reading the C# -- deriving them is how the original defects got in. Two surprises
     # from that observation are encoded here: --task PerFileRescoring DOES release
-    # (FirstJoinTask.Rehydrate is reached through a lazy Demand even though IsIncluded
+    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though IsIncluded
     # excludes it from that leg), and the warm re-run legitimately logs nothing at all
     # because a fully cached run does no work -- asserting a release there would be a
     # false red on every run.
@@ -1657,7 +1657,7 @@ foreach ($name in $selected) {
         Freed  = @($releaseScopeRescore)
     })
     if (-not $SkipResume) {
-        # The resume leg exercises FirstJoinTask.RUN, not its rehydrate arm: mode 2's
+        # The resume leg exercises FirstPassFdrTask.RUN, not its rehydrate arm: mode 2's
         # Invoke-ResumeInvalidation deletes the FirstPassFDR stamp, and mode 2 asserts
         # -ExpectRan @('FirstPassFDR', ...) on this very log to prove it. Worth checking
         # anyway - it is a second, independently-invalidated Run - but it is NOT rehydrate
@@ -1676,7 +1676,7 @@ foreach ($name in $selected) {
         #
         # No other check reaches it. The straight-through and resume legs both RUN
         # FirstPassFDR (above); mode 3's phase-3 workers do enter Rehydrate but adopt a
-        # WORKER-supplied bundle, never FirstJoinTask.LoadOwnReconciliationBundle. Mode 5's
+        # WORKER-supplied bundle, never FirstPassFdrTask.LoadOwnReconciliationBundle. Mode 5's
         # leg is the only one that rebuilds the bundle from the run's OWN sidecars, so
         # without this entry the own-sidecar call site is asserted zero times - delete the
         # release from it, run -SkipHpcChain, and mode 6 still reports PASS.
@@ -1703,12 +1703,12 @@ foreach ($name in $selected) {
                 Scopes = @($releaseScopeRescore); Freed = @($releaseScopeRescore)
             })
         }
-        # The merge node is the whole point of requiring a non-zero count anywhere: it is
+        # The SecondPassFDR node is the whole point of requiring a non-zero count anywhere: it is
         # the process that holds the fragment set through pass-2 Percolator, protein FDR
         # AND the blib write, and it realized ZERO saving until #4534 gave it its own
         # release. On the HPC chain it is the only release there is.
         $releaseChecks.Add(@{
-            Label = 'HPC merge node'
+            Label = 'HPC SecondPassFDR node'
             Log = (Join-Path $releaseLogDir 'phase4.log')
             Scopes = @($releaseScopeReported); Freed = @($releaseScopeReported)
         })

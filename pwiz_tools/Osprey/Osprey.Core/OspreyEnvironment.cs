@@ -158,7 +158,7 @@ namespace pwiz.Osprey.Core
         /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
         /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
         /// resident across first-pass Percolator + protein FDR + the sidecar write
-        /// + compaction. <c>FirstJoinTask</c> materializes the projection from the
+        /// + compaction. <c>FirstPassFdrTask</c> materializes the projection from the
         /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
         /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
         /// the just-written 1st-pass sidecar after compaction.
@@ -210,7 +210,7 @@ namespace pwiz.Osprey.Core
         /// read a saving here as recovering the library's total footprint.</para>
         ///
         /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
-        /// and <c>FirstJoinTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
+        /// and <c>FirstPassFdrTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
         /// after Stage 5, including entries already judged false. They read only the identity
         /// fields, never the spectra - so dropping entries would silently move protein FDR,
         /// while dropping fragments cannot. The blib write is safe for a separate reason:
@@ -418,7 +418,7 @@ namespace pwiz.Osprey.Core
         public const int MEAN_BEST_N_MAX = 64;
 
         /// <summary>
-        /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
+        /// OSPREY_PASS2_QVALUE: selects how the SecondPassFDR 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
         /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
         /// only the q-value step changes.
@@ -460,7 +460,7 @@ namespace pwiz.Osprey.Core
         /// recognized modes. Program startup ABORTS on this rather than falling back: silently
         /// substituting the default would report numbers the caller did not ask for, and the
         /// removed <c>percolator</c> token in particular is one that existing sweep scripts
-        /// still pass. Checked at startup, not at the merge node, so the run fails in seconds
+        /// still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
         /// instead of after Stage 1-5.</summary>
         public static readonly bool Pass2QValueUnrecognized = IsUnrecognizedPass2QValue(
             Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
@@ -719,7 +719,7 @@ namespace pwiz.Osprey.Core
         /// the byte-identity gate could not see it, because the gate always uses fresh directories.
         ///
         /// One helper rather than three copies: the suffix must be IDENTICAL across
-        /// <c>FirstJoinTask</c>, <c>PerFileRescoreTask</c> and <c>MergeNodeTask</c>. When only the
+        /// <c>FirstPassFdrTask</c>, <c>PerFileRescoreTask</c> and <c>SecondPassFdrTask</c>. When only the
         /// first had it, a flipped arm re-ran Stage 5 while the downstream reconciled parquets,
         /// 2nd-pass sidecars and .blib were reused from the OTHER arm - a self-inconsistent output
         /// set that no single task's key could have caught.
@@ -801,7 +801,7 @@ namespace pwiz.Osprey.Core
         /// True when <paramref name="normalizedAgg"/> names a mean(best-N) arm. Takes the arm as
         /// an ARGUMENT rather than reading <see cref="ExperimentAggMeanBest"/> so a consumer can
         /// ask about an arm RECORDED BY ANOTHER PROCESS - a distributed <c>--task SecondPassFDR</c>
-        /// merge node reloads the 1st-pass model from disk and must gate on the arm that trained
+        /// SecondPassFDR node reloads the 1st-pass model from disk and must gate on the arm that trained
         /// it, not on its own environment. Expects the normalized form
         /// (<see cref="ExperimentAgg"/>) as persisted alongside the model.
         /// </summary>

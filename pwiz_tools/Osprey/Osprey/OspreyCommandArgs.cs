@@ -739,7 +739,7 @@ namespace pwiz.Osprey
                 @"boundaries into four single-task workers &mdash; one node = one <code>--task</code>: " +
                 @"<code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all " +
                 @"files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; " +
-                @"<code>SecondPassFDR</code> (merge node). Pass the same <code>--library</code> and search " +
+                @"<code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search " +
                 @"options to every task; the parquet integrity check rejects inputs whose search/library " +
                 @"hash does not match.</p>");
             sb.AppendLine(@"<pre>");
@@ -758,8 +758,8 @@ namespace pwiz.Osprey
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p><code>--input-scores</code> takes a directory (globbed and sorted internally) " +
-                @"or an explicit file list (used in the order given). First-join reconciliation is " +
-                @"order-sensitive, so for the join tasks pass a directory or a deterministically sorted " +
+                @"or an explicit file list (used in the order given). FirstPassFDR reconciliation is " +
+                @"order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted " +
                 @"list. The rehydration sidecars must travel with their parquet into each worker's " +
                 @"working directory. Let the scheduler do the fan-out (one file per split process) rather " +
                 @"than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>");

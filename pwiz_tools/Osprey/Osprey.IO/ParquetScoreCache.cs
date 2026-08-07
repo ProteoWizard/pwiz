@@ -89,7 +89,7 @@ namespace pwiz.Osprey.IO
 
         // Schema column types and names are aligned with the Rust impl's
         // parquet schema (UInt32 for entry_id/scan_number, UInt8 for charge)
-        // so a C#-written parquet can be loaded by Rust's `--task FirstJoin`
+        // so a C#-written parquet can be loaded by Rust's `--join-at-pass=1`
         // (which does strict downcasts) and vice versa. Reading is also
         // strict: pre-2026-04-19 C#-written parquets used Int32 for these
         // fields and need to be regenerated via a fresh `--task PerFileScoring` run.
