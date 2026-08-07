@@ -919,7 +919,7 @@ namespace pwiz.Osprey.FDR
         /// (around line 4292). Caller is responsible for any logging, dump diagnostics,
         /// and downstream consumption.
         ///
-        /// Used by FirstJoinTask for the in-process pipeline (runs after first-pass FDR,
+        /// Used by FirstPassFdrTask for the in-process pipeline (runs after first-pass FDR,
         /// before compaction) and by PerFileRescoreTask for the <c>--task SecondPassFDR</c>
         /// rehydration path (runs after sidecar load, before compaction) so the protein-
         /// rescue branch of compaction has fresh <c>RunProteinQvalue</c> values matching

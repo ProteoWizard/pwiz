@@ -34,7 +34,7 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Round-trip tests for <see cref="FirstPassModelIO"/>: a reloaded 1st-pass model
-    /// (the sidecar a distributed SecondPassFDR merge node reads to run the frozen
+    /// (the sidecar a distributed SecondPassFDR node reads to run the frozen
     /// 2nd-pass modes) must score BIT-IDENTICALLY to the in-process original. Without
     /// bit-parity the pass-2-only path would report different q-values than a
     /// straight-through run under the same flag.
@@ -97,11 +97,11 @@ namespace pwiz.Osprey.Test
                 Assert.IsNotNull(reloaded, @"reloaded model should not be null");
 
                 // Pass-1 provenance survives the round trip. This is what lets a --task
-                // SecondPassFDR merge node - which never trained pass 1 - gate on the arm that
+                // SecondPassFDR node - which never trained pass 1 - gate on the arm that
                 // actually produced the q-values instead of on its own environment.
                 Assert.AreEqual(@"mean-best-3", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
 
-                // The protein-compact stratum rides in the same sidecar, and a merge node
+                // The protein-compact stratum rides in the same sidecar, and a SecondPassFDR node
                 // cannot rebuild it, so a lossy round trip would silently constrain the
                 // pass-2 competition to the wrong population.
                 Assert.IsNotNull(sidecar.StratumBaseIds, @"stratum should survive the round trip");
@@ -151,7 +151,7 @@ namespace pwiz.Osprey.Test
         public void TestFirstPassModelSaveDeclinesGbtAndDegenerate()
         {
             // No linear weights (the GBDT shape, or a degenerate/empty model) -> Save writes
-            // nothing so the merge node keeps its existing fail-fast rather than loading a
+            // nothing so SecondPassFDR keeps its existing fail-fast rather than loading a
             // sidecar it cannot score with.
             string path = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_decline_" + Guid.NewGuid().ToString(@"N") + @".json");
@@ -186,7 +186,7 @@ namespace pwiz.Osprey.Test
         public void TestFirstPassModelLoadRejectsCorruptOrInconsistent()
         {
             // Load's contract is null (fail-fast) on anything unreadable: it must never
-            // throw and crash the merge node, and never accept a shape-inconsistent model
+            // throw and crash SecondPassFDR, and never accept a shape-inconsistent model
             // that the frozen scorer would then crash on or silently mis-score with.
             AssertLoadsNull(@"{ not valid json", @"malformed JSON");
             AssertLoadsNull(@"{}", @"empty object (all fields null)");
@@ -208,7 +208,7 @@ namespace pwiz.Osprey.Test
 
             // A sidecar written BEFORE the arm was recorded must still load - the field was added
             // without bumping SchemaVersion precisely so pre-existing sidecars stay readable, and
-            // a merge node that could not read one would hard fail-fast instead of degrading.
+            // a SecondPassFDR node that could not read one would hard fail-fast instead of degrading.
             // The arm then reports null, which the caller must treat as UNKNOWN, not as "max".
             AssertLoadsWithArm(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
@@ -220,7 +220,7 @@ namespace pwiz.Osprey.Test
 
             // Same argument for the stratum: it was added to the same schema version, so a
             // sidecar written before it exists must load with a null stratum rather than fail.
-            // A merge node then keeps the protein-compact fail-fast, which is correct - an
+            // A SecondPassFDR node then keeps the protein-compact fail-fast, which is correct - an
             // EMPTY stratum would instead constrain the pass-2 competition to nothing.
             AssertLoadsWithStratum(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +

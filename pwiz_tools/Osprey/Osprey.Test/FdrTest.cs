@@ -2829,7 +2829,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The Stage-6 / merge-node scenario: after the pass-1 clamp lets a precursor pass on
+        /// The Stage-6 / SecondPassFDR scenario: after the pass-1 clamp lets a precursor pass on
         /// its one good run, reconciliation zeroes that run's q (moved peak -> run q back to
         /// the 1.0 default). Re-clamping against the final run q's raises the experiment q
         /// above threshold, so the precursor no longer reports -- the invariant Mike observed.

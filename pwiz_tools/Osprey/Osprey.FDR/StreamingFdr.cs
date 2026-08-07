@@ -230,7 +230,7 @@ namespace pwiz.Osprey.FDR
                 // stratum this mode exists to enforce.
                 //
                 // The score comparison is keyed by entry_id, so it means the same thing
-                // in-process and on a distributed merge node (an index-keyed source does NOT -
+                // in-process and on a distributed SecondPassFDR node (an index-keyed source does NOT -
                 // see #4484), and it needs no extra plumbing: both scores are already in hand.
                 //
                 // Admitted BY BASE_ID so a target and its paired decoy always enter together.

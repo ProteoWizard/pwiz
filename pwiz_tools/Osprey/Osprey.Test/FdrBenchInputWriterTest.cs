@@ -190,7 +190,7 @@ namespace pwiz.Osprey.Test
         {
             // An entry whose base id (EntryId & BASE_ID_MASK) is absent from the library still emits a
             // row -- with blank peptide and protein -- and increments Result.MissingLibrary, the counter
-            // that drives the MergeNodeTask operator warning. mod_peptide still comes from the entry.
+            // that drives the SecondPassFdrTask operator warning. mod_peptide still comes from the entry.
             var lib = new List<LibraryEntry> { MakeLib(1, @"PEPTIDE", @"PEPTIDE", 2, @"P1") };
             var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
             {

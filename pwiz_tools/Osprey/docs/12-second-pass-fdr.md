@@ -1,12 +1,12 @@
 # 12. Second-Pass FDR (C#)
 
-> Pipeline stage: Stage 7 (merge node). C#-originated; the Rust reference is
+> Pipeline stage: Stage 7 (`SecondPassFDR`). C#-originated; the Rust reference is
 > porting these modes back (maccoss/osprey#57), so there is no Rust `docs/` source
 > for this document. Corresponds to `Osprey.Tasks/Pass2FdrSidecar.cs`,
 > `Osprey.FDR/FrozenModelScorer.cs`, `Osprey.FDR/PercolatorFdr.cs`.
 
 After cross-run reconciliation (see [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md))
-re-scores moved / gap-filled peaks, the merge node recomputes FDR over the
+re-scores moved / gap-filled peaks, SecondPassFDR recomputes FDR over the
 reconciled entries to produce the **authoritative** experiment-level q-values that
 gate the `.blib` output. This is the "second pass." The FDR *framework* is the
 same one documented in [07-fdr-control.md](07-fdr-control.md); what differs is
@@ -109,7 +109,7 @@ reporting looser FDR than a cold run under the same flag.
 
 Because `protein-compact` is now the DEFAULT, this fail-fast reaches ordinary
 runs, not just explicitly flagged ones. That is why the first-pass model sidecar
-also carries the protein stratum: a distributed `--task SecondPassFDR` merge node
+also carries the protein stratum: a distributed `--task SecondPassFDR` node
 never trained pass 1 and cannot rebuild the stratum (that needs the full library
 plus the first-pass detected peptides), so both are reloaded from the sidecar.
 
