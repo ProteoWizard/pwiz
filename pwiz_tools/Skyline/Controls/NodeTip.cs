@@ -358,6 +358,19 @@ namespace pwiz.Skyline.Controls
             AddDetailRow(name, value, rt, StringAlignment.Near, rt.FontNormal, rt.FontNormal);
         }
 
+        /// <summary>
+        /// Adds a single-cell row marked as a header. Header rows are NOT included
+        /// in the per-column width calculation, so a long header doesn't widen the
+        /// following data rows' first column. Render uses the full table width.
+        /// </summary>
+        public void AddHeaderRow(string text, RenderTools rt, Font font = null)
+        {
+            var row = new RowDesc { IsHeader = true };
+            row.Add(new CellDesc(text, rt) { Font = font ?? rt.FontBold });
+            row.ColumnSpacing = COL_SPACING;
+            Add(row);
+        }
+
         private const string X80 =
             @"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
@@ -407,15 +420,25 @@ namespace pwiz.Skyline.Controls
                 float heightMax = 0f;
 
                 row.CalcDimensions(g);
-                for (int i = 0; i < row.Count; i++)
+                // Header rows are full-width: their text size doesn't contribute
+                // to column widths, but their height still grows the table.
+                if (!row.IsHeader)
                 {
-                    if (i == colWidths.Count)
-                        colWidths.Add(0f);
-                    SizeF sizeCell = row[i].SizeF;
-                    colWidths[i] = Math.Max(colWidths[i], sizeCell.Width);
-                    // Add spacing, if this is not the last column
-                    colWidths[i] += i < row.Count - 1 ? row.ColumnSpacing : 1;
-                    heightMax = Math.Max(heightMax, sizeCell.Height);
+                    for (int i = 0; i < row.Count; i++)
+                    {
+                        if (i == colWidths.Count)
+                            colWidths.Add(0f);
+                        SizeF sizeCell = row[i].SizeF;
+                        colWidths[i] = Math.Max(colWidths[i], sizeCell.Width);
+                        // Add spacing, if this is not the last column
+                        colWidths[i] += i < row.Count - 1 ? row.ColumnSpacing : 1;
+                        heightMax = Math.Max(heightMax, sizeCell.Height);
+                    }
+                }
+                else
+                {
+                    foreach (CellDesc cell in row)
+                        heightMax = Math.Max(heightMax, cell.SizeF.Height);
                 }
 
                 // Reset the heights all to the same value
@@ -425,17 +448,36 @@ namespace pwiz.Skyline.Controls
                 size.Height += heightMax;
             }
 
+            // Total the widths used. Header rows may push the table wider if
+            // the header text is longer than all data rows combined.
+            float dataTotalWidth = 0;
+            foreach (float width in colWidths)
+                dataTotalWidth += width;
+            float maxHeaderWidth = 0;
             foreach (RowDesc row in this)
             {
-                // Reset widths for each column to the same value
-                for (int i = 0; i < row.Count; i++)
-                    row[i].Width = colWidths[i];
+                if (row.IsHeader && row.Count > 0 && row[0].SizeF.Width > maxHeaderWidth)
+                    maxHeaderWidth = row[0].SizeF.Width;
+            }
+            float tableWidth = Math.Max(dataTotalWidth, maxHeaderWidth);
+
+            foreach (RowDesc row in this)
+            {
+                if (row.IsHeader)
+                {
+                    // Header gets the full table width in its single cell.
+                    if (row.Count > 0)
+                        row[0].Width = tableWidth;
+                }
+                else
+                {
+                    // Reset widths for each column to the same value
+                    for (int i = 0; i < row.Count; i++)
+                        row[i].Width = colWidths[i];
+                }
             }
 
-            // Total the widths used.
-            foreach (float width in colWidths)
-                size.Width += width;
-
+            size.Width += tableWidth;
             return size;
         }
 
@@ -469,6 +511,11 @@ namespace pwiz.Skyline.Controls
     public class RowDesc : List<CellDesc>
     {
         public int ColumnSpacing { get; set; }
+
+        // Header rows render as a single full-width cell and do NOT participate
+        // in the table's per-column width calculation. A long header therefore
+        // doesn't push the following data rows' columns to the right.
+        public bool IsHeader { get; set; }
 
         public void CalcDimensions(Graphics g)
         {

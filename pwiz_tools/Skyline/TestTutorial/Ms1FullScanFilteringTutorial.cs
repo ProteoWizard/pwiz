@@ -1035,6 +1035,7 @@ namespace pwiz.SkylineTestTutorial
                 {"ReplicateName","5b_MCF7_TiTip3"},
                 {"RetentionTime",33.19.ToString(CultureInfo.CurrentCulture)},
                 {"IsolationWindow","350:1600 (-625:+625)"},
+                {"PeakRetentionTime",37.93.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","1.4067-1.1"},
                 {"MSLevel","1"},
                 {"Instrument",PreferWiff ? new Dictionary<string, object> {

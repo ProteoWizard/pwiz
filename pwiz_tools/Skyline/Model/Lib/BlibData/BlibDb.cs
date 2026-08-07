@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 _dbRefSpectraPeaksProperties = new List<PropertyInfo>();
                 foreach (var property in typeof(DbRefSpectraPeaks).GetProperties())
                 {
-                    if (property.Name == "EntityClass" || property.Name == "Id")
+                    if (property.Name == @"EntityClass" || property.Name == @"Id")
                         continue;
                     _dbRefSpectraPeaksProperties.Add(property);
                 }
