@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -231,6 +232,53 @@ namespace pwiz.Skyline
 
         public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
         {
+            // If every file in the .zip is one a document opened in place can read, open the
+            // document directly from the .zip without extracting anything. Otherwise fall back
+            // to extracting.
+            try
+            {
+                if (new SrmDocumentSharing(zipPath).CanOpenInPlace())
+                    return OpenSharedFileInPlace(zipPath, parentWindow);
+            }
+            catch (Exception)
+            {
+                // Anything unexpected inspecting/opening the .zip in place -> just extract.
+            }
+            string documentPath = ExtractSharedFile(zipPath, parentWindow);
+            return documentPath != null && OpenFile(documentPath, parentWindow);
+        }
+
+        /// <summary>
+        /// Opens the document directly from the .zip, reading the .sky and its supporting files in
+        /// place. <see cref="SharedZipFilePath"/> is set so that operations needing files on disk
+        /// prompt to extract first (see <see cref="CheckDocumentExists"/>).
+        /// </summary>
+        private bool OpenSharedFileInPlace(string zipPath, FormEx parentWindow)
+        {
+            var zip = new ZipFileReader(zipPath);
+            var skyEntry = zip.Entries.FirstOrDefault(e =>
+                string.Equals(Path.GetExtension(e.FileName), SrmDocument.EXT, StringComparison.OrdinalIgnoreCase));
+            if (skyEntry == null)
+            {
+                string documentPath = ExtractSharedFile(zipPath, parentWindow);
+                return documentPath != null && OpenFile(documentPath, parentWindow);
+            }
+
+            // A path into the .zip looks like an ordinary path with the .zip as a component,
+            // e.g. C:\Doc.sky.zip\Doc.sky; FilePath handles reading such paths in place.
+            string skyPathInZip = zipPath + Path.DirectorySeparatorChar + skyEntry.FileName;
+            if (!OpenFile(skyPathInZip, parentWindow))
+                return false;
+            SharedZipFilePath = zipPath;
+            return true;
+        }
+
+        /// <summary>
+        /// Extracts a .sky.zip to a new folder next to it, and returns the path of the extracted
+        /// Skyline document, or null if the files could not be extracted.
+        /// </summary>
+        private string ExtractSharedFile(string zipPath, FormEx parentWindow = null)
+        {
             try
             {
                 var sharing = new SrmDocumentSharing(zipPath);
@@ -240,20 +288,20 @@ namespace pwiz.Skyline
                     longWaitDlg.Text = Resources.SkylineWindow_OpenSharedFile_Extracting_Files;
                     longWaitDlg.PerformWork(parentWindow ?? this, 1000, sharing.Extract);
                     if (longWaitDlg.IsCanceled)
-                        return false;
+                        return null;
                 }
 
                 // Remember the directory containing the newly extracted file
                 // as the active directory for the next open command.
                 Settings.Default.ActiveDirectory = Path.GetDirectoryName(sharing.DocumentPath);
 
-                return OpenFile(sharing.DocumentPath, parentWindow);
+                return sharing.DocumentPath;
             }
             catch (ZipException zipException)
             {
                 MessageDlg.ShowWithException(parentWindow ?? this, string.Format(SkylineResources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
                                                     zipPath), zipException);
-                return false;
+                return null;
             }
             catch (Exception e)
             {
@@ -261,7 +309,7 @@ namespace pwiz.Skyline
                         Resources.SkylineWindow_OpenSharedFile_Failure_extracting_Skyline_document_from_zip_file__0__,
                         zipPath), e.Message);
                 MessageDlg.ShowWithException(parentWindow ?? this, message, e);
-                return false;
+                return null;
             }
         }
 
@@ -304,6 +352,9 @@ namespace pwiz.Skyline
 
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
+            // Opening a document normally (from a file on disk) clears any in-place .zip backing.
+            SharedZipFilePath = null;
+
             // Remove any extraneous temporary chromatogram spill files.
             // ReSharper disable LocalizableElement
             var spillDirectory = Path.Combine(Path.GetDirectoryName(path) ?? "", "xic");
@@ -331,7 +382,8 @@ namespace pwiz.Skyline
                     longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        using var fileStream = File.OpenRead(path);
+                        // The .sky may live inside an in-place .sky.zip (path like <zip>\doc.sky).
+                        using var fileStream = new FilePath(path).OpenSequentialStream();
                         using var progressStream = new ProgressStream(fileStream);
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
                         using var hashingStream = new HashingStream(progressStream, true);
@@ -469,7 +521,7 @@ namespace pwiz.Skyline
             if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.HasDocumentLibrary)
             {
                 docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
-                if (!File.Exists(docLibFile))
+                if (!new FilePath(docLibFile).Exists())
                 {
                     MessageDlg.Show(parent, string.Format(SkylineResources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_spectral_library__0__for_this_document__Without_the_library__no_spectrum_ID_information_will_be_available_, docLibFile));
                 }
@@ -498,6 +550,10 @@ namespace pwiz.Skyline
                         pathLibrary = Path.Combine(Settings.Default.LibraryDirectory ?? string.Empty, fileName);
                         if (File.Exists(pathLibrary))
                             return CreateLibrarySpec(library, librarySpec, pathLibrary, false);
+                        // Or stored inside an in-place .sky.zip next to the document.
+                        var pathInZip = new FilePath(Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName));
+                        if (pathInZip.IsInZipFile && pathInZip.Exists())
+                            return CreateLibrarySpec(library, librarySpec, pathInZip.Path, false);
                     }
 
                     using (var dlg = new MissingFileDlg())
@@ -801,6 +857,10 @@ namespace pwiz.Skyline
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory ?? string.Empty, fileName ?? string.Empty);
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
+            // Or stored inside an in-place .sky.zip next to the document.
+            var pathInZip = new FilePath(Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty));
+            if (pathInZip.IsInZipFile && pathInZip.Exists())
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathInZip.Path);
             using (var dlg = new MissingFileDlg())
             {
                 dlg.FileHint = fileName;
@@ -829,22 +889,27 @@ namespace pwiz.Skyline
             string pathCache = ChromatogramCache.FinalPathForName(path, null);
             if (!document.Settings.HasResults)
             {
-                try
+                // A cache file inside an in-place .sky.zip cannot (and need not) be deleted.
+                if (!new FilePath(pathCache).IsInZipFile)
                 {
-                    // On open, make sure a document with no results does not have a
-                    // data cache file, since one may have been left behind on a Save As.
-                    FileEx.SafeDelete(pathCache);
-                }
-                catch (Exception e)
-                {
-                    MessageDlg.ShowException(parent ?? this, e);
+                    try
+                    {
+                        // On open, make sure a document with no results does not have a
+                        // data cache file, since one may have been left behind on a Save As.
+                        FileEx.SafeDelete(pathCache);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageDlg.ShowException(parent ?? this, e);
+                    }
                 }
             }
-            else if (!File.Exists(pathCache) &&
+            // The cache (.skyd) may be inside an in-place .sky.zip, so check via FilePath.
+            else if (!new FilePath(pathCache).Exists() &&
                 // For backward compatibility, check to see if any per-replicate
                 // cache files exist.
-                !File.Exists(ChromatogramCache.FinalPathForName(path,
-                    document.Settings.MeasuredResults.Chromatograms[0].Name)))
+                !new FilePath(ChromatogramCache.FinalPathForName(path,
+                    document.Settings.MeasuredResults.Chromatograms[0].Name)).Exists())
             {
                 // It has become clear that showing a message box about rebuilding
                 // the cache on open is shocking to people, and they immediately
@@ -1105,10 +1170,16 @@ namespace pwiz.Skyline
 
         public bool SaveDocument()
         {
+            // A document opened directly (in place) from a .sky.zip has no .sky on disk to save
+            // back to; extract everything to a folder and reopen from there first, and then save
+            // the document that was reopened from that folder.
+            if (SharedZipFilePath != null && !CheckDocumentExists(null))
+                return false;
+
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
                 return SaveDocumentAs();
-            
+
             return SaveDocument(fileName);
         }
 
@@ -1590,7 +1661,8 @@ namespace pwiz.Skyline
                     else if (DocumentFilePath != null)
                     {
                         string viewFilePath = GetViewFile(DocumentFilePath);
-                        if (File.Exists(viewFilePath))
+                        // The .sky.view may be inside the .sky.zip the document was opened from
+                        if (new FilePath(viewFilePath).Exists())
                         {
                             sharing.ViewFilePath = viewFilePath;
                         }
@@ -3732,8 +3804,34 @@ namespace pwiz.Skyline
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
         }
 
+        /// <summary>
+        /// When the current document was opened directly (in place) from a .sky.zip without
+        /// extracting, this is the path of that .zip; otherwise null. Operations that need the
+        /// document's files on disk prompt to extract first (see <see cref="CheckDocumentExists"/>).
+        /// </summary>
+        public string SharedZipFilePath { get; set; }
+
         private bool CheckDocumentExists(String errorMsg)
         {
+            // A document opened directly from a .zip has no files on disk to modify. Extract
+            // everything to a folder, and then point the document that is already open at the
+            // extracted files. The document itself is left alone, so that any changes made to it
+            // since it was opened are still there to be saved.
+            if (SharedZipFilePath != null)
+            {
+                string pathInZip = DocumentFilePath;
+                string documentPath = ExtractSharedFile(SharedZipFilePath, this);
+                if (documentPath == null)
+                    return false;
+
+                DocumentFilePath = documentPath;
+                SharedZipFilePath = null;
+                SetActiveFile(documentPath);
+                // The path inside the .zip is no longer worth offering to reopen now that its
+                // files have been extracted.
+                Settings.Default.MruList.Remove(pathInZip);
+            }
+
             if (string.IsNullOrEmpty(DocumentFilePath))
             {
                 if (MultiButtonMsgDlg.Show(this,errorMsg,Resources.OK) == DialogResult.Cancel)

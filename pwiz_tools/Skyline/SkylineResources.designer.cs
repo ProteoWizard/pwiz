@@ -2950,7 +2950,7 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..
         /// </summary>

@@ -1,0 +1,115 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Data.SQLite;
+using System.IO;
+using System.Reflection;
+using pwiz.Common.Database.FileSystems;
+using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil.PInvoke;
+
+namespace pwiz.Common.Database
+{
+    /// <summary>
+    /// Opens a SQLite database (e.g. a .blib spectral library) that is stored UNCOMPRESSED at a
+    /// byte range inside a .zip, in place, without extracting it. This is done with the native
+    /// loadable extension "slicevfs.dll", which registers a read-only "slicevfs" VFS that exposes
+    /// only the slice of the file's bytes at a given offset and length. The offset and length are
+    /// passed as URI parameters.
+    /// </summary>
+    public static class SqliteSliceVfs
+    {
+        public const string VFS_NAME = "slicevfs";
+        private const string EXTENSION_DLL = "slicevfs.dll";
+        private const string EXTENSION_INIT = "sqlite3_slicevfs_init";
+
+        private static readonly object RegisterLock = new object();
+        private static bool _registered;
+
+        /// <summary>
+        /// Opens a SQLite connection to a database that may be an ordinary file or stored
+        /// uncompressed inside a .zip. If the path is inside a .zip, it is opened read-only in place
+        /// through the zip VFS; otherwise it is opened normally.
+        /// </summary>
+        public static SQLiteConnection OpenConnection(string path)
+        {
+            var entry = new FilePath(path).GetZipEntry();
+            if (entry != null && entry.IsStored)
+                return OpenConnection(entry.ZipFileReader.ZipPath, entry.GetStoredDataOffset(), entry.UncompressedSize);
+            return SqliteOperations.OpenConnection(path);
+        }
+
+        /// <summary>
+        /// Opens a read-only connection to a SQLite database stored uncompressed inside a .zip.
+        /// </summary>
+        /// <param name="zipFilePath">The .zip (container) file on disk.</param>
+        /// <param name="dataOffset">Offset of the database's data inside the .zip.</param>
+        /// <param name="length">Length of the database.</param>
+        public static SQLiteConnection OpenConnection(string zipFilePath, long dataOffset, long length)
+        {
+            var connection = new SQLiteConnection(GetConnectionString(zipFilePath, dataOffset, length));
+            connection.Open();
+            return connection;
+        }
+
+        /// <summary>
+        /// Returns a read-only SQLite connection string that opens the database stored uncompressed
+        /// at the given byte range inside a .zip, through the zip VFS. The VFS is registered as a
+        /// side effect. Use this when a caller (e.g. NHibernate) needs the connection string rather
+        /// than an already-open <see cref="SQLiteConnection"/>.
+        /// </summary>
+        public static string GetConnectionString(string zipFilePath, long dataOffset, long length)
+        {
+            EnsureVfsRegistered();
+            var uri = new Uri(zipFilePath).AbsoluteUri + @"?ofs=" + dataOffset + @"&len=" + length + @"&vfs=" + VFS_NAME;
+            return @"FullUri=""" + uri + @""";Version=3;Read Only=True;";
+        }
+
+        /// <summary>
+        /// Registers the "slicevfs" VFS with SQLite the first time it is needed. The extension DLL
+        /// is pinned in memory for the process lifetime, because the registered VFS lives inside it.
+        /// </summary>
+        private static void EnsureVfsRegistered()
+        {
+            lock (RegisterLock)
+            {
+                if (_registered)
+                    return;
+                var dllPath = GetExtensionDllPath();
+                // Pin the DLL so it is never unloaded (the registered VFS struct/functions live in it).
+                if (Kernel32.LoadLibrary(dllPath) == IntPtr.Zero)
+                    throw new IOException(string.Format(
+                        Resources.SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_, dllPath));
+                using (var connection = new SQLiteConnection(@"Data Source=:memory:;Version=3;"))
+                {
+                    connection.Open();
+                    connection.EnableExtensions(true);
+                    connection.LoadExtension(dllPath, EXTENSION_INIT);
+                }
+                _registered = true;
+            }
+        }
+
+        private static string GetExtensionDllPath()
+        {
+            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
+            return Path.Combine(dir, EXTENSION_DLL);
+        }
+    }
+}

@@ -62,8 +62,6 @@ namespace pwiz.Skyline.Model
             SrmDocument previous = e.DocumentPrevious;
             if (IsStateChanged(document, previous))
             {
-                CloseRemovedStreams(document, previous);
-
                 if (IsLoaded(document))
                     EndProcessing(document);
                 else
@@ -88,23 +86,6 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void CloseRemovedStreams(SrmDocument document, SrmDocument previous)
-        {
-            // Finish all cached streams from the previous document, which are no longer
-            // in the current document.
-            HashSet<int> set = new HashSet<int>();
-            foreach (var id in GetOpenStreams(document))
-                set.Add(id.GlobalIndex);
-            foreach (var id in GetOpenStreams(previous))
-            {
-                if (!set.Contains(id.GlobalIndex))
-                {
-                    // DebugLog.Info(@"{0}. {1} - {2}", id.GlobalIndex, id.GetType(), id.IsOpen ? @"removed" : @"checked");
-                    id.CloseStream();
-                }
-            }
-        }
-
         // For use on container shutdown, clear anything cached to restore minimal memory footprint
         public abstract void ClearCache();
 
@@ -124,10 +105,13 @@ namespace pwiz.Skyline.Model
                     return;
                 }
 
-                LoadBackground(container, document, docCurrent);
+                using (new DocumentStreams(container, document))
+                {
+                    LoadBackground(container, document, docCurrent);
 
-                // Did the container change out its document while we were working?
-                EndProcessingNotInContainer(container);
+                    // Did the container change out its document while we were working?
+                    EndProcessingNotInContainer(container);
+                }
 
                 if (!IsMultiThreadAware)
                 {
@@ -185,14 +169,6 @@ namespace pwiz.Skyline.Model
             return IsNotLoadedExplained(document) == null;
         }
 
-
-        /// <summary>
-        /// Gets the set of streams open in the specified document for this background
-        /// loader type.
-        /// </summary>
-        /// <param name="document">The document to inspect</param>
-        /// <returns>The set of open streams</returns>
-        protected abstract IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document);
 
         /// <summary>
         /// Indicates when an existing loading operation is no longer necessary

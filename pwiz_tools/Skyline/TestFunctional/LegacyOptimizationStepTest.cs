@@ -16,9 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -96,7 +96,8 @@ namespace pwiz.SkylineTestFunctional
 
         private ChromatogramCache.RawData LoadChromatogramRawData(SrmDocument document)
         {
-            using (var stream = File.OpenRead(document.Settings.MeasuredResults.CachePaths.Single()))
+            // The shared document is opened in place, so its .skyd is inside of the .sky.zip
+            using (var stream = new FilePath(document.Settings.MeasuredResults.CachePaths.Single()).OpenRandomAccessStream())
             {
                 ChromatogramCache.LoadStructs(stream, new ProgressStatus(), new SilentProgressMonitor(),
                     out var rawData);

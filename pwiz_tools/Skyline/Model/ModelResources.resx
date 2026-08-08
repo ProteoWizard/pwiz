@@ -706,6 +706,9 @@ If you want to inspect the raw data, use a viewer like SeeMS (download from prot
   <data name="SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__" xml:space="preserve">
     <value>Compressing {0}</value>
   </data>
+  <data name="SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Storing__0_" xml:space="preserve">
+    <value>Storing {0}</value>
+  </data>
   <data name="SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates" xml:space="preserve">
     <value>Results found in document with no replicates.</value>
   </data>

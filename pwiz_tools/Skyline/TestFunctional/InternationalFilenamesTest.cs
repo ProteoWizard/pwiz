@@ -54,27 +54,24 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SkylineWindow.SaveDocument(documentPath);
                 });
-                AssertFileExists(documentPath);
-                AssertFileExists(TestFilesDir.GetTestPath(testFilename + ".blib"));
+                AssertEx.FileExists(documentPath);
+                AssertEx.FileExists(TestFilesDir.GetTestPath(testFilename + ".blib"));
                 var sharedFilePath = TestFilesDir.GetTestPath(testFilename + ".sky.zip");
                 RunUI(()=>
                 {
                     SkylineWindow.ShareDocument(sharedFilePath, ShareType.COMPLETE);
                 });
-                AssertFileExists(sharedFilePath);
+                AssertEx.FileExists(sharedFilePath);
                 RunUI(()=>SkylineWindow.OpenSharedFile(sharedFilePath));
                 WaitForDocumentLoaded();
-                AssertFileExists(Path.Combine(TestFilesDir.GetTestPath(testFilename), testFilename + ".sky"));
-                AssertFileExists(Path.Combine(TestFilesDir.GetTestPath(testFilename), testFilename + ".blib"));
+                // This shared file contains only files that can be used in place, so it is opened
+                // directly from the .zip without extracting anything.
+                AssertEx.FileExists(Path.Combine(sharedFilePath, testFilename + ".sky"));
+                AssertEx.FileExists(Path.Combine(sharedFilePath, testFilename + ".blib"));
                 var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault();
                 Assert.IsNotNull(library);
                 Assert.AreNotEqual(0, library.FileCount);
             }
-        }
-
-        private static void AssertFileExists(string path)
-        {
-            Assert.IsTrue(File.Exists(path), "File {0} does not exist", path);
         }
     }
 }
