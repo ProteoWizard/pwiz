@@ -138,6 +138,9 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   
   const SpectrumIdentity& spectrumIdentity(size_t index) const
   {
+    if (index >= index_.size())
+      throw runtime_error("[SpectrumList_MSn::spectrumIdentity] Index out of bounds");
+
     return index_[index];
   }
   

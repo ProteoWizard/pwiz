@@ -57,6 +57,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
     
     const SpectrumIdentity& spectrumIdentity(size_t index) const
     {
+        if (index >= index_.size())
+            throw runtime_error("[SpectrumList_MGF::spectrumIdentity] Index out of bounds");
+
         return index_[index];
     }
 
