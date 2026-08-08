@@ -240,6 +240,18 @@ namespace pwiz.SkylineTestData
             var requestedNames = new[] { originalNames[2], originalNames[0] };
             File.WriteAllLines(orderPath, new[] { string.Empty, "  " + requestedNames[0] + "  ", requestedNames[1] });
 
+            using (var documentContainer = new ResultsMemoryDocumentContainer(null, docPath))
+            {
+                documentContainer.SetDocument(originalDocument, null, true);
+                var loadedValues = GetReplicateValues(documentContainer.Document);
+                foreach (var replicateName in originalNames)
+                {
+                    CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas,
+                        loadedValues[replicateName].PeakAreas,
+                        "Peak areas changed while loading the document container for replicate {0}", replicateName);
+                }
+            }
+
             var directReorderedDocument = new ElementReorderer(CancellationToken.None, originalDocument).SetNewOrder(
                 requestedNames.Select(name => ReplicateRef.FromChromatogramSet(originalDocument.MeasuredResults.Chromatograms
                     .First(chromatogramSet => chromatogramSet.Name == name))));
