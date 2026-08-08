@@ -2100,6 +2100,7 @@ namespace pwiz.Skyline.ToolsUI
                         docPair => AuditLogEntry.CreateSimpleEntry(
                             MessageType.ran_command_line,
                             docPair.NewDocumentType, args));
+                    Program.MainWindow.Document.Settings.UpdateLists(Program.MainWindow.DocumentFilePath);
                 }
 
                 return capture.ToString();
