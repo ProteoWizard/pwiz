@@ -1950,9 +1950,10 @@ namespace pwiz.Osprey.Tasks
         /// set the per-file loader needs. Those runs are exempt HERE because they are already
         /// resident for a reason with its own token
         /// (<see cref="ResidentPaths.PROJECTION_OFF"/> above all), so demanding a second token
-        /// would mean two variables for one decision, and would fire on the plain
-        /// <c>--task SecondPassFDR</c> run that <see cref="ResidentPaths.HPC_MERGE"/> already
-        /// covers.</para>
+        /// would mean two variables for one decision. The example this clause used to give -
+        /// the plain <c>--task SecondPassFDR</c> run, covered by the former hpc-merge token -
+        /// is gone with #4486: that node streams its reconciled-input load, so it needs no
+        /// token at all and never reaches this exemption as a resident run.</para>
         ///
         /// <para>The exemption used to leave a gap it could not see: a lean straight-through
         /// resume needs no first-pass token at all since #4505, so "already resident under
