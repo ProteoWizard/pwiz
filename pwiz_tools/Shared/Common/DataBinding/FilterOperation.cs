@@ -51,6 +51,10 @@ namespace pwiz.Common.DataBinding
 
         public static readonly IFilterOperation OP_IS_NOT_BLANK = new OpIsNotBlank();
 
+        public static readonly IFilterOperation OP_IS_DECLARED = new OpIsDeclared();
+
+        public static readonly IFilterOperation OP_IS_NOT_DECLARED = new OpIsNotDeclared();
+
         public static readonly IFilterOperation OP_IS_GREATER_THAN = new OpIsGreaterThan();
 
         public static readonly IFilterOperation OP_IS_LESS_THAN = new OpIsLessThan();
@@ -79,7 +83,9 @@ namespace pwiz.Common.DataBinding
             OP_CONTAINS,
             OP_NOT_CONTAINS,
             OP_STARTS_WITH,
-            OP_NOT_STARTS_WITH
+            OP_NOT_STARTS_WITH,
+            OP_IS_DECLARED,
+            OP_IS_NOT_DECLARED
         });
 
         private static readonly IDictionary<string, IFilterOperation> DictFilterOperations =
@@ -355,6 +361,61 @@ namespace pwiz.Common.DataBinding
             public override bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
                 return columnDescriptor.CanBeBlank();
+            }
+        }
+
+        /// <summary>
+        /// "Is Declared"/"Is Not Declared" test only for the presence of a value, not its content: a
+        /// column is "declared" when its value is non-null. This distinguishes a present-but-value-less
+        /// entry (which reads as non-null, e.g. an mzML CV flag term captured with an empty value) from an
+        /// absent one (null), a distinction Is Blank/Is Not Blank cannot make because an empty value is
+        /// blank. It is deliberately not offered in the general report/quick filters, which gate on
+        /// <see cref="IsValidFor(IFilterHandler)"/>: presence is meaningful for the dynamic mzML
+        /// CV/user-parameter spectrum columns, but for an ordinary column it is redundant with Is Blank/Has
+        /// Any Value. Those columns cannot be told apart by filter handler here, so this returns false
+        /// everywhere and relies on the spectrum-filter editor, which lists every operation ungated.
+        /// </summary>
+        class OpIsDeclared : UnaryFilterOperation
+        {
+            public OpIsDeclared() : base(@"isdeclared")
+            {
+            }
+
+            public override string DisplayName
+            {
+                get { return Resources.FilterOperations_Is_Declared; }
+            }
+
+            protected override bool Matches(IFilterHandler filterHandler, object columnValue)
+            {
+                return columnValue != null;
+            }
+
+            public override bool IsValidFor(IFilterHandler filterHandler)
+            {
+                return false;
+            }
+        }
+
+        class OpIsNotDeclared : UnaryFilterOperation
+        {
+            public OpIsNotDeclared() : base(@"isnotdeclared")
+            {
+            }
+
+            public override string DisplayName
+            {
+                get { return Resources.FilterOperations_Is_Not_Declared; }
+            }
+
+            protected override bool Matches(IFilterHandler filterHandler, object columnValue)
+            {
+                return columnValue == null;
+            }
+
+            public override bool IsValidFor(IFilterHandler filterHandler)
+            {
+                return false;
             }
         }
 

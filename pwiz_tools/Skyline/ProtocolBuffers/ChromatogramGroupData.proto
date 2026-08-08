@@ -48,8 +48,18 @@ message ResultFileMetaDataProto {
 		bool negativeCharge = 12;
 		int32 msLevel = 13;
 		google.protobuf.DoubleValue constantNeutralLoss = 14;
-		reserved 15; // was google.protobuf.DoubleValue sourceOffsetVoltage 
+		reserved 15; // was google.protobuf.DoubleValue sourceOffsetVoltage
 		double sourceOffsetVoltage = 16;
+		repeated int32 otherParamIndex = 17; // one-based indexes into "otherParams"
+	}
+
+	message OtherParam {
+		string accession = 1;
+		string name = 2;
+		string value = 3;
+		string unit = 4;
+		string definition = 5;
+		string unitAccession = 6;
 	}
 
 	message Precursor {
@@ -70,6 +80,7 @@ message ResultFileMetaDataProto {
 	repeated string scanDescriptions = 3;
 	repeated string analyzers = 4;
 	repeated ScanWindow scanWindows = 5;
+	repeated OtherParam otherParams = 6;
 }
 message ChromatogramGroupIdsProto {
 	enum FilterOperation {
@@ -86,6 +97,8 @@ message ChromatogramGroupIdsProto {
 		FILTER_OP_NOT_CONTAINS = 10;
 		FITLER_OP_STARTS_WITH = 11;
 		FILTER_OP_NOT_STARTS_WITH = 12;
+		FILTER_OP_IS_DECLARED = 13;
+		FILTER_OP_IS_NOT_DECLARED = 14;
 	}
 	message AccessionNumber {
 		int32 typeName = 1;

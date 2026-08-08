@@ -289,6 +289,12 @@
   <data name="FilterOperations_Is_Not_Blank" xml:space="preserve">
     <value>Is Not Blank</value>
   </data>
+  <data name="FilterOperations_Is_Declared" xml:space="preserve">
+    <value>Is Declared</value>
+  </data>
+  <data name="FilterOperations_Is_Not_Declared" xml:space="preserve">
+    <value>Is Not Declared</value>
+  </data>
   <data name="FilterOperations_Is_Greater_Than" xml:space="preserve">
     <value>Is Greater Than</value>
   </data>

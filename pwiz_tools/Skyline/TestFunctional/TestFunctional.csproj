@@ -246,6 +246,7 @@
     <Compile Include="MissingOptStepsTest.cs" />
     <Compile Include="MixedPolarityFullScanTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
+    <Compile Include="CvSpectrumFilterTest.cs" />
     <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectCandidatePeakTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
