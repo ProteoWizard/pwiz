@@ -214,11 +214,13 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
 # published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
-# asked for a token. The open example now is #4486: the survivor buffer is rebuilt for
+# asked for a token. #4486 was the standing example: the survivor buffer is rebuilt for
 # SecondPassFDR to read, so it is resident from the end of Stage 6 to the end of Stage 7
 # on EVERY path, and no guard covers that because it is not a resume or a mode - it is
-# what Stage 7 takes as input. Zero tokens therefore does NOT mean zero gaps, and this
-# table is what keeps the difference legible.
+# what Stage 7 takes as input. It is still uncovered, and now MEASURED: 0.196 GB/file
+# live, post-GC, which is not what fails at scale. What did was the --task SecondPassFDR
+# pre-compaction RELOAD at 2.07 GB/file (~186 GB projected at 82 files), streamed by
+# #4486. Zero tokens therefore does NOT mean zero gaps, and this table keeps that legible.
 #
 # Printed in the run summary (not just parked in a comment) so every CI log states the
 # outstanding gaps, and so a fixed entry left here shows up as a stale line in output
@@ -236,8 +238,9 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 #     to justify in review, not a line to add and move on.
 $knownResidentGaps = @()
 # Reachable only outside this gate, tokened, each with an open issue:
-#   #4486  hpc-merge      -- --task SecondPassFDR reconciled-input merge (Stage 7 peak)
 #   #4507  fdrbench-pass1 -- --fdrbench-pass 1 walks the pre-compaction pool
+# hpc-merge is GONE (#4486): --task SecondPassFDR takes the bounded streaming hydrate, so
+# mode 3's join node needs no token. That is the ratchet shrinking a third time.
 # By design rather than unfinished, so no issue: projection-off and
 # compacted-entries-buffer (the A/B byte-identity oracles) and non-percolator-fdr.
 

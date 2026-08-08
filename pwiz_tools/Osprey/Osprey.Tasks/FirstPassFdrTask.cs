@@ -78,9 +78,22 @@ namespace pwiz.Osprey.Tasks
         /// (stops at Stage 1-4), --task PerFileRescoring, and the --task SecondPassFDR
         /// stage (where it rehydrates the bundle rather than recomputing).
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public override bool IsIncluded(PipelineContext ctx) => IsIncludedFor(ctx.Config);
+
+        /// <summary>
+        /// Pure membership predicate behind <see cref="IsIncluded"/>, exposed so a caller
+        /// that needs to know whether first-pass Percolator trains in THIS process asks the
+        /// one definition instead of re-deriving it.
+        ///
+        /// <para><see cref="PerFileScoringTask"/>'s pre-compaction-pool decision used
+        /// <c>!NoJoin</c> as a proxy for exactly this question. That proxy is right for every
+        /// task except <c>--task SecondPassFDR</c>, which leaves <c>NoJoin</c> false while
+        /// setting <c>ExpectReconciledInput</c> - so this task is EXCLUDED, nothing trains,
+        /// and the resident pre-compaction pool the proxy forced was pure waste at O(files)
+        /// (issue #4486). Calling the predicate keeps the two from drifting again.</para>
+        /// </summary>
+        internal static bool IsIncludedFor(OspreyConfig c)
         {
-            var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
             // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
             // invariant: StopAfterStage5 is set by --task FirstPassFDR, which

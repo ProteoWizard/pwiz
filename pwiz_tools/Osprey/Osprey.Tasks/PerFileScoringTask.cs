@@ -1466,8 +1466,6 @@ namespace pwiz.Osprey.Tasks
         private static string PreCompactionPoolReason(
             OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
         {
-            if (config.ExpectReconciledInput)
-                return @"The reconciled-input merge (--task SecondPassFDR, tracked in #4486)";
             if (ctx.Diagnostics?.DumpPercolator ?? false)
                 return @"OSPREY_DUMP_PERCOLATOR";
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
@@ -1485,8 +1483,15 @@ namespace pwiz.Osprey.Tasks
             // survivors the streaming hydrate would leave. Unconditional on
             // hasReconSidecars: every reason above is a resident-pool consumer and returns
             // first, so reaching here means none of them applies.
-            if (!config.NoJoin)
-                return @"A reconciled-bundle rehydrate outside the streaming gate";
+            //
+            // Ask the task's own membership predicate rather than the former `!NoJoin` proxy
+            // (#4486). The two agree on every task but --task SecondPassFDR, which leaves
+            // NoJoin false while setting ExpectReconciledInput: FirstPassFdrTask is excluded
+            // there, so nothing trains, and the proxy was forcing an O(files) resident pool
+            // for a consumer that does not exist. Re-deriving membership here is what let
+            // them drift, so this defers to the one definition.
+            if (FirstPassFdrTask.IsIncludedFor(config))
+                return @"First-pass Percolator training in this process";
             // No bundle at all. The reconciliation envelope is what carries the compaction
             // predicate, so without it there is nothing to compact against at load time and
             // streaming cannot run. Last because every reason above names a real consumer,
@@ -1844,8 +1849,15 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool NeedsResidentPool(OspreyConfig config, bool useFdrProjection)
         {
-            return config.ExpectReconciledInput ||
-                   !useFdrProjection ||
+            // ExpectReconciledInput (--task SecondPassFDR) was the first entry here and is
+            // GONE (#4486). It never named a consumer: FirstPassFdrTask is excluded on that
+            // node so nothing trains, and every pass-2 consumer streams from disk one file at
+            // a time - the frozen transfer-compete / protein-compact competition off each
+            // file's .1st-pass.fdr_scores.bin scalars, the feature reload off each file's
+            // reconciled parquet. It forced the fat load whose features
+            // HydrateRescoreBundleIfPresent then nulls unread, so the node paid ~800 MB per
+            // file to throw it away, on top of holding every file's pre-compaction stubs.
+            return !useFdrProjection ||
                    !config.FdrMethod.UsesPercolatorFramework() ||
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
         }
@@ -1998,8 +2010,9 @@ namespace pwiz.Osprey.Tasks
         {
             if (!useFdrProjection)
                 return ResidentPaths.PROJECTION_OFF;
-            if (config.ExpectReconciledInput)
-                return ResidentPaths.HPC_MERGE;
+            // ExpectReconciledInput -> HPC_MERGE was here and is GONE with the token (#4486):
+            // --task SecondPassFDR now streams its load, so it never reaches this method at
+            // all. See NeedsResidentPool for why nothing on that node reads the pool.
             if (!config.FdrMethod.UsesPercolatorFramework())
                 return ResidentPaths.NON_PERCOLATOR_FDR;
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
