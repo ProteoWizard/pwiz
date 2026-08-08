@@ -107,6 +107,22 @@ namespace pwiz.Osprey.Test
                     PerFileScoringTask.ResidentPoolGuardError(hpc, true, token, true), token);
             }
 
+            // Taking ExpectReconciledInput out of NeedsResidentPool made the LEAN counts-only
+            // load newly reachable on the merge, and that path adds an EMPTY entry list per
+            // file - Stage 7 would have written a near-empty .blib with no error. It is
+            // suppressed by its own term, not as a side effect of the resident predicate, and
+            // the case that matters is a merge whose inputs are MISSING a .reconciliation.json
+            // (one partially copied file is enough to make AllHaveReconSidecars false).
+            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(hpc, hasReconSidecars: false, useFdrProjection: true),
+                "the reconciled-input merge must never take the lean counts-only load");
+            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(hpc, hasReconSidecars: true, useFdrProjection: true));
+            // A reconciled bundle excludes it for the other reason (the overlay reads stubs),
+            // and the plain projection run is exactly what the lean path exists for.
+            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(lean, hasReconSidecars: true, useFdrProjection: true));
+            Assert.IsTrue(PerFileScoringTask.CanUseLeanProjection(lean, hasReconSidecars: false, useFdrProjection: true));
+            // A resident-pool consumer keeps the fat load, so the lean path stays off there too.
+            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(fdrbench1, hasReconSidecars: false, useFdrProjection: true));
+
             // Each user-reachable trigger names its own token so the failure is diagnosable.
             // --model-diagnostics is NOT among them any more (#4505): it armed the pool on a
             // full resume, where FirstPassFDR skipped its score pass and reported off the resident

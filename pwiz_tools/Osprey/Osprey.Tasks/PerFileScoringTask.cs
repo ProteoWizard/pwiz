@@ -1231,7 +1231,7 @@ namespace pwiz.Osprey.Tasks
             // only per-file row counts; the 1st-pass streaming score path re-reads identity +
             // features from parquet, so the resident FdrProjection[] buffer is never allocated.
             bool needsResidentPool = NeedsResidentPool(config);
-            var builder = (!needsResidentPool && !hasReconSidecars)
+            var builder = CanUseLeanProjection(config, hasReconSidecars, OspreyEnvironment.UseFdrProjection)
                 ? new FdrProjectionSet.Builder(countsOnly: true)
                 : null;
             // The reconciled-bundle hydration (hasReconSidecars) needs the STUBS but not
@@ -1860,6 +1860,33 @@ namespace pwiz.Osprey.Tasks
             return !useFdrProjection ||
                    !config.FdrMethod.UsesPercolatorFramework() ||
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+        }
+
+        /// <summary>
+        /// Whether the <c>--input-scores</c> load may take the LEAN counts-only
+        /// <see cref="FdrProjection"/> path, which streams 32 B rows and adds an EMPTY
+        /// <see cref="FdrEntry"/> list per file. Two consumers need real stubs and so exclude it:
+        /// a reconciled bundle (<paramref name="hasReconSidecars"/>), whose overlay reads them,
+        /// and the reconciled-input merge, whose Stage 7 IS the consumer of the entry lists.
+        ///
+        /// <para>The <c>ExpectReconciledInput</c> term looks redundant with
+        /// <paramref name="hasReconSidecars"/> - a <c>--task SecondPassFDR</c> node normally has
+        /// both sidecars per input - and it is not. <see cref="AllHaveReconSidecars"/> is false if
+        /// even ONE input is missing a <c>.reconciliation.json</c>, e.g. a partially copied HPC
+        /// chain. Before #4486 that case was covered accidentally, because
+        /// <see cref="NeedsResidentPool(OspreyConfig, bool)"/> returned true for the merge and
+        /// suppressed the lean path; taking <c>ExpectReconciledInput</c> out of it made the lean
+        /// newly reachable there, and it would have handed Stage 7 empty per-file lists - a
+        /// near-empty <c>.blib</c>, written with no error. Stated explicitly here so the
+        /// exclusion survives on its own reasoning rather than as a side effect of another
+        /// predicate.</para>
+        /// </summary>
+        internal static bool CanUseLeanProjection(
+            OspreyConfig config, bool hasReconSidecars, bool useFdrProjection)
+        {
+            return !NeedsResidentPool(config, useFdrProjection)
+                   && !hasReconSidecars
+                   && !config.ExpectReconciledInput;
         }
 
         /// <summary>
