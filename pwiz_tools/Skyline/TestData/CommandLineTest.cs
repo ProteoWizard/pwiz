@@ -251,6 +251,16 @@ namespace pwiz.SkylineTestData
                     "Peak areas changed during direct ElementReorderer call for replicate {0}", replicateName);
             }
 
+            var directOutPath = TestFilesDir.GetTestPath("Reorder_Direct_Out.sky");
+            new CommandLine().SaveDocument(directReorderedDocument, directOutPath, new StringWriter());
+            var directSavedValues = GetReplicateValues(ResultsUtil.DeserializeDocument(directOutPath));
+            foreach (var replicateName in originalNames)
+            {
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas,
+                    directSavedValues[replicateName].PeakAreas,
+                    "Peak areas changed during direct save/reopen for replicate {0}", replicateName);
+            }
+
             RunCommand("--in=" + docPath,
                 "--reorder-replicates-file=" + orderPath,
                 "--out=" + outPath);
