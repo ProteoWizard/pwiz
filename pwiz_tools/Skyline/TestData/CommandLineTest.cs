@@ -42,6 +42,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -238,6 +239,17 @@ namespace pwiz.SkylineTestData
             var originalNames = originalDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray();
             var requestedNames = new[] { originalNames[2], originalNames[0] };
             File.WriteAllLines(orderPath, new[] { string.Empty, "  " + requestedNames[0] + "  ", requestedNames[1] });
+
+            var directReorderedDocument = new ElementReorderer(CancellationToken.None, originalDocument).SetNewOrder(
+                requestedNames.Select(name => ReplicateRef.FromChromatogramSet(originalDocument.MeasuredResults.Chromatograms
+                    .First(chromatogramSet => chromatogramSet.Name == name))));
+            var directReorderedValues = GetReplicateValues(directReorderedDocument);
+            foreach (var replicateName in originalNames)
+            {
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas,
+                    directReorderedValues[replicateName].PeakAreas,
+                    "Peak areas changed during direct ElementReorderer call for replicate {0}", replicateName);
+            }
 
             RunCommand("--in=" + docPath,
                 "--reorder-replicates-file=" + orderPath,
