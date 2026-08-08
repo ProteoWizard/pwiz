@@ -820,6 +820,12 @@
   <data name="immediateWindowToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Immediate Window</value>
   </data>
+  <data name="runningJobsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>178, 22</value>
+  </data>
+  <data name="runningJobsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Running Jobs...</value>
+  </data>
   <data name="toolStripSeparator47.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>
   </data>
@@ -1539,6 +1545,12 @@
     <value>immediateWindowToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;immediateWindowToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runningJobsMenuItem.Name" xml:space="preserve">
+    <value>runningJobsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;runningJobsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator47.Name" xml:space="preserve">

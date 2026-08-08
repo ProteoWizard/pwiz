@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Controls
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LongWaitDlg));
             this.btnCancel = new System.Windows.Forms.Button();
+            this.btnBackground = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.labelMessage = new System.Windows.Forms.Label();
             this.timerUpdate = new System.Windows.Forms.Timer(this.components);
@@ -46,7 +47,14 @@ namespace pwiz.Skyline.Controls
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
+            //
+            // btnBackground
+            //
+            resources.ApplyResources(this.btnBackground, "btnBackground");
+            this.btnBackground.Name = "btnBackground";
+            this.btnBackground.UseVisualStyleBackColor = true;
+            this.btnBackground.Click += new System.EventHandler(this.btnBackground_Click);
+            //
             // progressBar
             // 
             resources.ApplyResources(this.progressBar, "progressBar");
@@ -80,6 +88,7 @@ namespace pwiz.Skyline.Controls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.progressBar);
+            this.Controls.Add(this.btnBackground);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.panel1);
             this.MaximizeBox = false;
@@ -95,6 +104,7 @@ namespace pwiz.Skyline.Controls
         #endregion
 
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button btnBackground;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.Timer timerUpdate;

@@ -534,6 +534,8 @@
     <Compile Include="LabelPeakPickingTest.cs" />
     <Compile Include="TargetResolverTest.cs" />
     <Compile Include="TicNormalizationTest.cs" />
+    <Compile Include="JsonToolJobsTest.cs" />
+    <Compile Include="LongWaitDlgBackgroundTest.cs" />
     <Compile Include="JsonToolServerTest.cs" />
     <Compile Include="JsonToolServerSettingsTest.cs" />
     <Compile Include="SkylineMcpTest.cs" />

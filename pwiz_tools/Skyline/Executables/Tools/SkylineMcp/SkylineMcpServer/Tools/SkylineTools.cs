@@ -1184,6 +1184,50 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_get_running_jobs"),
+     Description("List the operations THIS connection started that Skyline is still working on. " +
+        "A call that timed out keeps running as a job, so this is how to see whether it is still going, " +
+        "how far along it is, and get the id needed to stop it with skyline_cancel_job. " +
+        "Work the user started (importing results, building a library) is not listed and cannot be cancelled here.")]
+    public static string GetRunningJobs()
+    {
+        return Invoke(connection =>
+        {
+            var jobs = connection.GetRunningJobs();
+            if (jobs.Length == 0)
+                return "No jobs are running.";
+
+            var sb = new StringBuilder();
+            foreach (var job in jobs)
+            {
+                sb.Append($"{job.Id}  {job.Description}");
+                if (job.PercentComplete >= 0)
+                    sb.Append($"  {job.PercentComplete}%");
+                if (!string.IsNullOrEmpty(job.Message))
+                    sb.Append($"  {job.Message}");
+                if (job.CancelRequested)
+                    sb.Append("  (cancel requested)");
+                sb.AppendLine();
+            }
+            return sb.ToString().TrimEnd();
+        });
+    }
+
+    [McpServerTool(Name = "skyline_cancel_job"),
+     Description("Ask a running job to stop, by the id skyline_get_running_jobs reports. " +
+        "The job stops at its next cancellation check, so call skyline_get_running_jobs again to see it go.")]
+    public static string CancelJob(
+        [Description("Job id from skyline_get_running_jobs.")] string jobId)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.CancelJob(jobId);
+            if (!result.Completed)
+                return result.Message ?? $"No job {jobId} is running.";
+            return $"Job {jobId} has been asked to stop. Call skyline_get_running_jobs to see whether it has.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_get_undo_redo"),
      Description("Get the full undo/redo stack with descriptions and indices. " +
         "Index -1 = most recent undoable change, -2 = next oldest, etc. " +
@@ -1475,8 +1519,9 @@ public static class SkylineTools
     private const string CALL_TIMED_OUT_MESSAGE =
         "This call did not finish in time and was abandoned, so the connection to Skyline was dropped and Skyline " +
         "can accept new commands again. Skyline is STILL DOING the work it started (a long document load, an " +
-        "import) -- nothing was undone or cancelled. Call skyline_get_open_forms to find the progress dialog, then " +
-        "skyline_dismiss_with_cancel_button on it to actually cancel the operation, or simply wait and retry.";
+        "import) -- nothing was undone or cancelled. Call skyline_get_running_jobs to see what is still running and " +
+        "skyline_cancel_job to stop it; for work running behind a progress dialog, call skyline_get_open_forms to " +
+        "find the dialog and skyline_dismiss_with_cancel_button on it. Or simply wait and retry.";
 
     /// <summary>
     /// Runs one call to Skyline, giving up after <see cref="CallTimeout"/>. The deadline is applied to the response

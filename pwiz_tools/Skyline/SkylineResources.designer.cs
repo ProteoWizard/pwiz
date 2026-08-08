@@ -2870,6 +2870,35 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Background jobs must be stopped before exiting. Do you want to stop the {0} jobs that are still running?.
+        /// </summary>
+        public static string SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__" +
+                        "Do_you_want_to_stop_the__0__jobs_that_are_still_running_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Background jobs must be stopped before exiting. The job &apos;{0}&apos; is still running. Do you want to stop it?.
+        /// </summary>
+        public static string SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__" +
+                        "The_job___0___is_still_running__Do_you_want_to_stop_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for background jobs to end.
+        /// </summary>
+        public static string SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end {
+            get {
+                return ResourceManager.GetString("SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to An unexpected error has prevented global settings changes from this session from being saved..
         /// </summary>
         public static string SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved {
