@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -102,9 +103,121 @@ namespace pwiz.SkylineTestData
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Bruker, "Hela_QC_PASEF_Slot1-first-6-frames.d"), 1, 23340182);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Mobilion, "ExampleTuneMix_binned5" + ExtensionTestContext.ExtMobilionRaw), 29, 60899367);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw"), 30, 32992246);
-            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 2, 3286253);
+            // Was 2 points peaking at 3286253, which was the lockspray scan's own TIC - the global
+            // chromatogram summed the lockmass function even though ignoreCalibrationScans keeps its
+            // spectra out of the file. Only the low energy function remains.
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 1, 2912084);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDMRM_Short_noLM.raw"), 0, 0);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDDDA_Short_noLM.raw"), 1, 3692876);
+        }
+
+        /// <summary>
+        /// Waters lockspray scans have to be recognized whether or not the writer labeled them with
+        /// MS:1000928, and the waters_connect nativeID dialect must not be read as if it carried
+        /// MassLynx function numbers.
+        /// </summary>
+        [TestMethod]
+        public void TestWatersCalibrationSpectrum()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\WatersLockmassMzml.zip");
+
+            // Same three spectra either way - lockspray is function 3, and it sorts first. Our own
+            // msconvert writes the untagged form. The tagged one stands in for a writer that labels,
+            // declaring "calibration spectrum" as the lockspray scan's sole spectrum type exactly as
+            // the UIMF reader does - that term is a child of "spectrum type" but not of "mass
+            // spectrum", so it replaces MS1 rather than joining it, while the ms level still says 1.
+            VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_untagged.mzML"), false);
+            VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_tagged.mzML"), true);
+
+            // And the shape that was reported broken, where reading channels as functions discarded
+            // every spectrum in the file
+            VerifyWatersConnectSpectra(TestFilesDir.GetTestPath("MSe_Short_watersconnect.mzML"));
+
+            // MassLynx nativeIDs carry a function number, in every layout our Waters reader emits -
+            // including the DDA merged form, whose trailing "scans=1-5" is not a plain integer
+            AssertEx.AreEqual(1, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=1 process=0 scan=1"));
+            AssertEx.AreEqual(3, MsDataSpectrum.WatersFunctionNumberFromNativeId("function=3 process=0 scan=1"));
+            AssertEx.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 block=3"));
+            AssertEx.AreEqual(2, MsDataSpectrum.WatersFunctionNumberFromNativeId("merged=1 function=2 process=0 scans=1-5"));
+
+            // waters_connect numbers channels, which are not function numbers, so nothing may be inferred -
+            // and nothing else carries one either
+            foreach (var idWithoutFunction in new[]
+                     {
+                         "channel=2 process=0 spectrum=1 scan=1",
+                         "channel=3 process=0 spectra=19,21 scan=20",
+                         "controllerType=0 controllerNumber=1 scan=5",
+                         "scan=1", "", null
+                     })
+            {
+                AssertEx.IsNull(MsDataSpectrum.WatersFunctionNumberFromNativeId(idWithoutFunction), idWithoutFunction);
+            }
+        }
+
+        private static void VerifyLockmassSpectrum(string path, bool expectLabeled)
+        {
+            using var msDataFile = new MsDataFileImpl(path);
+            AssertEx.AreEqual(3, msDataFile.SpectrumCount, path);
+            var lockmassFunctions = new List<int>();
+            for (var i = 0; i < msDataFile.SpectrumCount; i++)
+            {
+                var spectrum = msDataFile.GetSpectrum(i);
+                // Only the tagged file labels its lockspray scan, and only that scan
+                AssertEx.AreEqual(expectLabeled && spectrum.WatersFunctionNumber == 3, spectrum.IsCalibrationSpectrum, path);
+                if (msDataFile.IsWatersLockmassSpectrum(spectrum))
+                    lockmassFunctions.Add(spectrum.WatersFunctionNumber ?? 0);
+            }
+            // Either way, function 3 and only function 3 is treated as lockspray
+            CollectionAssert.AreEqual(new[] { 3 }, lockmassFunctions, path);
+
+            // In these files the lockspray sorts first, so the function-number heuristic would identify it
+            // even with no tag - which means the assertions above cannot tell whether MS:1000928 is being
+            // honored. Check that directly: a labeled spectrum carrying no function number to fall back
+            // on, as a waters_connect file would produce, must still be recognized. Id is deliberately
+            // left unset - IsWatersLockmassSpectrum no longer reads it, and setting it would suggest
+            // otherwise.
+            var taggedWithoutFunction = new MsDataSpectrum { IsCalibrationSpectrum = true, WatersFunctionNumber = null };
+            AssertEx.IsTrue(msDataFile.IsWatersLockmassSpectrum(taggedWithoutFunction), path);
+
+            // And the converse: no tag and no function number is not something to guess about
+            var untaggedWithoutFunction = new MsDataSpectrum { IsCalibrationSpectrum = false, WatersFunctionNumber = null };
+            AssertEx.IsFalse(msDataFile.IsWatersLockmassSpectrum(untaggedWithoutFunction), path);
+        }
+
+        /// <summary>
+        /// A waters_connect file, as DATA Convert writes it: channel numbers rather than function
+        /// numbers, and no lockspray scans at all, since DATA Convert lockmass corrects and drops
+        /// them. Every spectrum must survive. Reading the channel number as a function number set
+        /// the lockmass function from the leading MS1 and then discarded it and everything above
+        /// it - all 57,164 spectra in the file Hans reported.
+        /// </summary>
+        private static void VerifyWatersConnectSpectra(string path)
+        {
+            using var msDataFile = new MsDataFileImpl(path);
+
+            // The file declares MS:1000526, so Skyline applies its Waters handling to it. That is
+            // what made the bug reachable, and without it this test would pass no matter what the
+            // lockmass code did.
+            AssertEx.IsTrue(msDataFile.IsWatersFile, path);
+
+            // A sanity check on the fixture. What decides whether these spectra reach a chromatogram
+            // is IsWatersLockmassSpectrum below - the reader hands them over either way.
+            AssertEx.AreEqual(2, msDataFile.SpectrumCount, path);
+
+            var msLevels = new List<int>();
+            for (var i = 0; i < msDataFile.SpectrumCount; i++)
+            {
+                var spectrum = msDataFile.GetSpectrum(i);
+                // The channel= dialect carries no function number, and nothing here is labeled MS:1000928,
+                // so there is nothing to identify a lockspray scan and nothing may be inferred.
+                AssertEx.IsNull(spectrum.WatersFunctionNumber, path);
+                AssertEx.IsFalse(spectrum.IsCalibrationSpectrum, path);
+                AssertEx.IsFalse(msDataFile.IsWatersLockmassSpectrum(spectrum), path);
+                msLevels.Add(spectrum.Level);
+            }
+
+            // With no function number to key on, the MSe level falls back to the declared ms level
+            CollectionAssert.AreEqual(new[] { 1, 2 }, msLevels, path);
         }
 
         [TestMethod]

@@ -518,6 +518,64 @@ void testMSLevelSet(SpectrumListPtr sl)
     }
 }
 
+
+// "calibration spectrum" is a child of "spectrum type" but not of "mass spectrum", and the UIMF
+// reader writes it as the sole type on a frame that still carries an ms level. Such a spectrum must
+// be filtered on the level it declares, not treated as ms level 0 the way a type-only spectrum is.
+// Uses its own list, since the shared one is pinned by exact sizes and ids throughout this file.
+void testMSLevelSetCalibrationSpectrum()
+{
+    if (os_) *os_ << "testMSLevelSetCalibrationSpectrum:\n";
+
+    SpectrumListSimplePtr sl(new SpectrumListSimple);
+
+    SpectrumPtr ms1(new Spectrum);
+    ms1->index = 0;
+    ms1->id = "scan=1";
+    ms1->set(MS_ms_level, 1);
+    ms1->set(MS_MS1_spectrum);
+    sl->spectra.push_back(ms1);
+
+    SpectrumPtr calibration(new Spectrum);
+    calibration->index = 1;
+    calibration->id = "scan=2";
+    calibration->set(MS_ms_level, 1);
+    calibration->set(MS_calibration_spectrum);
+    sl->spectra.push_back(calibration);
+
+    // A spectrum type with no ms level at all is what the level 0 rule is for
+    SpectrumPtr emission(new Spectrum);
+    emission->index = 2;
+    emission->id = "scan=3";
+    emission->set(MS_emission_spectrum);
+    sl->spectra.push_back(emission);
+
+    {
+        SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(1)));
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+        // The calibration spectrum declares ms level 1, so asking for level 1 must keep it
+        unit_assert_operator_equal(2, filter.size());
+        unit_assert(filter.spectrumIdentity(0).id == "scan=1");
+        unit_assert(filter.spectrumIdentity(1).id == "scan=2");
+    }
+
+    {
+        SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(0)));
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+        // And asking for level 0 must not, leaving only the spectrum that declares no level
+        unit_assert_operator_equal(1, filter.size());
+        unit_assert(filter.spectrumIdentity(0).id == "scan=3");
+    }
+}
+
 void testMS2Activation(SpectrumListPtr sl)
 {
     if (os_) *os_ << "testMS2Activation:\n";
@@ -840,6 +898,7 @@ void test()
     testScanEventSet(sl);
     testScanTimeRange(sl);
     testMSLevelSet(sl);
+    testMSLevelSetCalibrationSpectrum();
     testMS2Activation(sl);
     testMassAnalyzerFilter(sl);
     testMZPresentFilter(sl);
