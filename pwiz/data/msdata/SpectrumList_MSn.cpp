@@ -168,7 +168,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   SpectrumPtr spectrum(size_t index, bool getBinaryData) const
   {
     boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
-    if (index > index_.size())
+    if (index >= index_.size())
       throw runtime_error("[SpectrumList_MSn::spectrum] Index out of bounds");
     
     // allocate Spectrum object and read it in
