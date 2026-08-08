@@ -28,17 +28,154 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/functional/hash.hpp>
+#include <algorithm>
+#include <numeric>
 
 
 namespace {
     boost::mutex m;
+
+// A spectrum needs more peaks than this before finding it in m/z order is taken as evidence
+// about the writer rather than as coincidence.
+const size_t MIN_PEAK_COUNT_FOR_MZ_SORT_CHECK = 10;
+
+
+/// Whether the peaks run along some axis other than m/z, in which case they must be left exactly
+/// as they are and say nothing about the writer.
+///
+/// Two ways that happens. The mobility axis of a combined ion mobility scan, or a scanning
+/// quadrupole position: m/z then ascends only within each block, and a global sort would destroy
+/// the structure rather than repair it. Or the x-axis is not m/z at all - Spectrum::getMZArray()
+/// also returns a wavelength array, which the Agilent, Thermo and Bruker readers use for a
+/// diode-array trace, and judging a UV trace as if it were m/z would let it settle the verdict for
+/// every real spectrum in the file.
+///
+/// Asked by name, not by counting arrays: counting cannot tell an ordering axis from an ordinary
+/// per-peak extra like signal-to-noise, and would refuse to repair any spectrum carrying one.
+/// hasCVParamChild covers the whole ion mobility family and, like hasCVParam, looks into
+/// referenceableParamGroups - mzML writers commonly factor the repeated binaryDataArray terms out
+/// into one, where a plain scan of cvParams would miss them.
+bool hasNonMzOrderingAxis(const pwiz::msdata::Spectrum& spectrum)
+{
+    using namespace pwiz::cv;
+
+    // the ion mobility term is asked for with its children, which covers the whole family - mean,
+    // raw, inverse reduced, deconvoluted; getArrayByCVID looks into referenceableParamGroups too,
+    // where mzML writers commonly factor out the repeated binaryDataArray terms
+    return spectrum.getArrayByCVID(MS_ion_mobility_array, true).get() != NULL ||
+           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_lower_bound_m_z_array).get() != NULL ||
+           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_upper_bound_m_z_array).get() != NULL ||
+           spectrum.getArrayByCVID(MS_wavelength_array).get() != NULL;
 }
+
+
+/// One array gathered into the given permutation of peak indexes, ready to be swapped in.
+template <typename T>
+std::vector<T> permuted(const std::vector<size_t>& order, const pwiz::util::BinaryData<T>& data)
+{
+    std::vector<T> result(order.size());
+    for (size_t i = 0; i < order.size(); ++i)
+        result[i] = data[order[i]];
+    return result;
+}
+
+} // namespace
 
 PWIZ_API_DECL void pwiz::msdata::ListBase::warn_once(const char * msg) const
 {
     boost::lock_guard<boost::mutex> g(m);
     if (warn_msg_hashes_.insert(hash(msg)).second) // .second is true iff value is new
         cerr << msg << std::endl;
+}
+
+
+PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const SpectrumPtr& spectrum) const
+{
+    if (!spectrum.get() || // Empty
+        mzOrderVerdict_.load() == MzOrderVerdict::writerSortsByMz) // Already established this file is fine
+        return;
+
+    // Nothing to reorder, and nothing to learn, until the binary data is actually here. Tested
+    // first because a metadata-only read still carries the array objects with their cvParams - IO
+    // builds those and skips only the base64 decode - so without this every metadata pass would pay
+    // for the scans below and, having no data, could never settle the verdict to stop paying.
+    // Sizes come off the arrays rather than from defaultArrayLength, which is only guaranteed from
+    // DetailLevel_FullMetadata up.
+    bool hasPeakData = false;
+    for (size_t i = 0; i < spectrum->binaryDataArrayPtrs.size() && !hasPeakData; ++i)
+        hasPeakData = spectrum->binaryDataArrayPtrs[i].get() &&
+                      spectrum->binaryDataArrayPtrs[i]->data.size() >= 2;
+    if (!hasPeakData)
+        return;
+
+    if (hasNonMzOrderingAxis(*spectrum))
+        return;
+
+    BinaryDataArrayPtr mzArray = spectrum->getMZArray();
+    BinaryDataArrayPtr intensityArray = spectrum->getIntensityArray();
+    if (!mzArray.get() || !intensityArray.get())
+        return;
+
+    auto& mzs = mzArray->data;
+    if (mzs.size() != intensityArray->data.size() || // Sanity check, flagged elsewhere if wrong
+        mzs.size() < 2) // Indeterminate sortedness
+        return;
+
+    if (std::is_sorted(mzs.begin(), mzs.end()))
+    {
+        // Seems fine - but a short list can be in order by chance, so it does not settle anything
+        MzOrderVerdict expected = MzOrderVerdict::unsettled;
+        if (mzs.size() > MIN_PEAK_COUNT_FOR_MZ_SORT_CHECK)
+            mzOrderVerdict_.compare_exchange_strong(expected, MzOrderVerdict::writerSortsByMz);
+        return;
+    }
+
+    // One spectrum out of order condemns the file, and always wins: a writer cannot be talked back
+    // into good standing by a later spectrum that happens to ascend. The exchange also tells us
+    // whether this is the first such spectrum, which is what the warning below is keyed on.
+    bool firstSpectrumOutOfOrder =
+        mzOrderVerdict_.exchange(MzOrderVerdict::writerDoesNotSortByMz) != MzOrderVerdict::writerDoesNotSortByMz;
+
+    // Every array holding one value per peak travels with the m/z it belongs to, identified by
+    // length the way ThresholdFilter::getExtraArrays does it. A spectrum may carry a
+    // signal-to-noise, baseline, resolution or charge array alongside the two, and leaving any of
+    // them behind would put every value against the wrong peak - each one plausible and all of them
+    // wrong, which is worse than the disorder being repaired. Integer arrays are a separate member
+    // of Spectrum and are just as per-peak, so they are carried too.
+    // Stable, so peaks sharing an m/z keep the order the writer gave them.
+    std::vector<size_t> order(mzs.size());
+    std::iota(order.begin(), order.end(), size_t(0));
+    std::stable_sort(order.begin(), order.end(),
+                     [&mzs](size_t a, size_t b) { return mzs[a] < mzs[b]; });
+
+    // Every array is gathered first and only swapped in once they all succeeded. Doing it one array
+    // at a time would let a throw part way through leave m/z sorted against unsorted intensities -
+    // every value plausible and every pairing wrong - and nothing could detect it afterwards, since
+    // the m/z axis would by then ascend and this function would take the "seems fine" branch
+    // forever. The swap itself cannot throw.
+    std::vector<std::pair<pwiz::util::BinaryData<double>*, std::vector<double> > > doubleArrays;
+    for (size_t i = 0; i < spectrum->binaryDataArrayPtrs.size(); ++i)
+        if (spectrum->binaryDataArrayPtrs[i].get() &&
+            spectrum->binaryDataArrayPtrs[i]->data.size() == order.size())
+            doubleArrays.push_back(std::make_pair(&spectrum->binaryDataArrayPtrs[i]->data,
+                                                 permuted(order, spectrum->binaryDataArrayPtrs[i]->data)));
+
+    typedef IntegerDataArray::value_type IntegerValue;
+    std::vector<std::pair<pwiz::util::BinaryData<IntegerValue>*, std::vector<IntegerValue> > > integerArrays;
+    for (size_t i = 0; i < spectrum->integerDataArrayPtrs.size(); ++i)
+        if (spectrum->integerDataArrayPtrs[i].get() &&
+            spectrum->integerDataArrayPtrs[i]->data.size() == order.size())
+            integerArrays.push_back(std::make_pair(&spectrum->integerDataArrayPtrs[i]->data,
+                                                  permuted(order, spectrum->integerDataArrayPtrs[i]->data)));
+
+    for (size_t i = 0; i < doubleArrays.size(); ++i)
+        doubleArrays[i].first->swap(doubleArrays[i].second);
+    for (size_t i = 0; i < integerArrays.size(); ++i)
+        integerArrays[i].first->swap(integerArrays[i].second);
+
+    if (firstSpectrumOutOfOrder)
+        warn_once(("[SpectrumListBase] peaks were not written in ascending m/z order (first seen at \"" +
+                   spectrum->id + "\"). Reordering them in memory before use.").c_str());
 }
 
 
