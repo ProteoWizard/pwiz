@@ -335,7 +335,15 @@ namespace pwiz.Osprey.Tasks
             // than keeping it live through the loop - is the whole point: it is resident
             // from here to the end of Stage 7 instead of for the entire rescore. Identical
             // to what the resume path reconstructs, which regression.ps1 mode 2 gates.
-            if (survivorLoader != null)
+            //
+            // Skipped when SecondPassFDR will not run in THIS process, because it is the only
+            // reader of RescoredEntries and the rebuild exists solely to serve it. That is the
+            // ordinary case for a --task PerFileRescoring worker (NoJoin, so
+            // SecondPassFdrTask.IsIncluded is false), where the block would otherwise re-read
+            // every .scores.parquet and 1st-pass sidecar and then re-read the
+            // .scores-reconciled.parquet this task has just written - a full extra pass per
+            // worker, per file, for a buffer the process exits without touching.
+            if (survivorLoader != null && SecondPassFdrWillRun(ctx))
             {
                 if (!MaterializeAllSurvivors(survivorLoader, ctx))
                     return false;
@@ -1636,6 +1644,23 @@ namespace pwiz.Osprey.Tasks
             if (!OspreyEnvironment.Stage6StreamSurvivors)
                 return null;
             return ctx.TryGet<FirstPassSurvivorSource>(out var source) ? source?.Value : null;
+        }
+
+        /// <summary>
+        /// True when <see cref="SecondPassFdrTask"/> is part of THIS process's pipeline, i.e.
+        /// when the <c>RescoredEntries</c> milestone will actually be read. Asked of the task
+        /// itself rather than re-derived from the config, so the answer cannot drift from
+        /// <see cref="OspreyTask.IsIncluded"/> - a second copy of that truth table is how a
+        /// worker ends up doing whole-run work nothing in the process consumes.
+        /// </summary>
+        private static bool SecondPassFdrWillRun(PipelineContext ctx)
+        {
+            foreach (var task in ctx.Tasks)
+            {
+                if (task is SecondPassFdrTask)
+                    return task.IsIncluded(ctx);
+            }
+            return false;
         }
 
         /// <summary>

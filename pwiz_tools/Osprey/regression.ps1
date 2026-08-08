@@ -60,9 +60,9 @@
               ran, and neither does the generic rehydrate line, which a worker bundle
               emits too), that SecondPassFDR's blib still equals the straight-through one
               at 1e-9, and that the --model-diagnostics report re-emitted from those
-              sidecars matches the golden. It is the ONE leg that names a token
-              (resume-survivor-handoff, issue #4536); every other leg runs with
-              nothing suppressed.
+              sidecars matches the golden. Like every other leg it names no token:
+              #4536 gave the rehydrate its own per-file survivor loader, so it streams
+              the Stage 6 handoff instead of needing one.
       mode 6  library-fragment release engagement (issue #4532) - asserts, from the
               legs' own logs, that the release RAN on every leg that holds the
               library (straight-through, resume, --task PerFileRescoring, and the
@@ -212,11 +212,13 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # "No leg sets OSPREY_ALLOW_UNFIXED_RESIDENT" is necessary but NOT sufficient as a
 # statement of health, and reading it as sufficient is the trap: a token is only
 # required where a guard demands one, so a resident path that no guard covers is
-# invisible in a token audit. #4536 is exactly that - every resume hands Stage 6 the
-# all-files survivor buffer, and because FirstPassFdrTask.Rehydrate publishes no survivor
-# loader, Stage6ResidentHandoffGuardError no-ops and nothing asks for a token. Zero
-# tokens therefore does NOT mean zero gaps, and this table is what keeps the
-# difference legible.
+# invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
+# published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
+# asked for a token. The open example now is #4486: the survivor buffer is rebuilt for
+# SecondPassFDR to read, so it is resident from the end of Stage 6 to the end of Stage 7
+# on EVERY path, and no guard covers that because it is not a resume or a mode - it is
+# what Stage 7 takes as input. Zero tokens therefore does NOT mean zero gaps, and this
+# table is what keeps the difference legible.
 #
 # Printed in the run summary (not just parked in a comment) so every CI log states the
 # outstanding gaps, and so a fixed entry left here shows up as a stale line in output
@@ -227,18 +229,12 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 #   * warning alone on a default path = INSUFFICIENT, allowed only as an interim
 #     tripwire with an open issue against it
 #   * any token this gate REQUIRES must have an open issue to remove it, and the token
-#     comes OUT of the gate when the issue lands. One is required today
-#     (resume-survivor-handoff, mode 5, issue #4536); driving that to zero is the goal.
-#     It is a DEDICATED token, not a borrowed one: compacted-entries-buffer names the same
-#     physical buffer, and reusing it would have let this leg simultaneously admit an
-#     OSPREY_STAGE6_STREAM_SURVIVORS=0 regression on the computed path that #4530 already
-#     fixed. One token admits one path, or the high-water mark leaks.
-$knownResidentGaps = @(
-    @{ Issue = '#4536'
-       Token = 'resume-survivor-handoff'
-       Path  = 'Stage 6 post-compaction survivor buffer on a resume (28 GB at 163 files)'
-       Legs  = 'mode 5 only - it is the only leg that rehydrates Stage 5; mode 2 recomputes it, so it streams' }
-)
+#     comes OUT of the gate when the issue lands. NONE is required today: #4536 gave the
+#     rehydrate its own per-file survivor loader, so mode 5 streams the Stage 6 handoff
+#     like every other leg and resume-survivor-handoff - the last entry here - came out
+#     with it. Zero is the invariant, not a milestone: a new entry below is a regression
+#     to justify in review, not a line to add and move on.
+$knownResidentGaps = @()
 # Reachable only outside this gate, tokened, each with an open issue:
 #   #4486  hpc-merge      -- --task SecondPassFDR reconciled-input merge (Stage 7 peak)
 #   #4507  fdrbench-pass1 -- --fdrbench-pass 1 walks the pre-compaction pool
@@ -1487,11 +1483,17 @@ foreach ($name in $selected) {
     # FirstPassFDR stamp and every .1st-pass.fdr_scores.bin + .reconciliation.json
     # sidecar valid, which is exactly the state that loader exists to serve.
     #
-    # Names exactly ONE token (below) and suppresses nothing else. Note what that does
-    # and does not buy: a regression that puts STAGE 5 back on the resident pool fails on
-    # PerFileScoringTask's guard (mdiag no longer has a token), but nothing guards
-    # FirstPassFDR's own loader, so a regression confined to it would NOT fail here.
-    # What catches that one is the marker below plus the memory trace in the log.
+    # Names NO token and suppresses nothing - #4536 removed the last one. Note what this
+    # leg does and does not buy: a regression that puts STAGE 5 back on the resident pool
+    # fails on PerFileScoringTask's guard, but nothing GUARDS FirstPassFDR's own survivor
+    # loader, so a regression confined to it does not fail on a guard here.
+    #
+    # It is still caught, by comparison rather than by a guard. Both sides of this leg go
+    # through FirstPassSurvivorLoader since #4536, so this leg alone cannot witness a
+    # loader fault that affects them equally - but mode 1 compares the straight-through
+    # blib against a COMMITTED golden that predates the loader, so a fault common to both
+    # sides fails there, and a fault confined to the resume fails this leg's
+    # rehydrate==straight compare. Plus the marker below and the memory trace in the log.
     if (-not $SkipRehydrate) {
         Write-Progress-Tc "${name}: Stage-5 rehydrate self-consistency (mode 5)"
         Invoke-SecondPassOnlyInvalidation -WorkDir $straightDir
@@ -1512,23 +1514,13 @@ foreach ($name in $selected) {
             Remove-Item -LiteralPath ($diagHtml -replace '\.html$', '.data.json') `
                 -Force -ErrorAction SilentlyContinue
         }
-        # The ONE token this gate requires, scoped to this leg alone and listed in
-        # $knownResidentGaps above. DEDICATED to this path (#4536), deliberately not the
-        # compacted-entries-buffer token that names the same buffer on the computed path:
-        # sharing it would have made this leg admit a regression #4530 already fixed. A resume cannot stream the Stage 6 survivor handoff
-        # (only a computed Stage 5 builds the per-file loader), so FirstPassFDR's rehydrate
-        # arm REFUSES to run without it - that refusal is the point, and issue #4536 is what
-        # takes both the refusal and this assignment back out. Set here rather than at
-        # script scope so every OTHER leg still runs with nothing suppressed: an ambient
-        # value would let a resident regression anywhere else ride along, which is precisely
-        # the failure the named-token ratchet replaced.
-        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = 'resume-survivor-handoff'
-        try {
-            $rRehydrate = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-                -WorkDir $straightDir -LogName 'rehydrate.log' -Spec $cfg -Manifest $inputs.Manifest
-        } finally {
-            Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-        }
+        # No token. This leg used to set OSPREY_ALLOW_UNFIXED_RESIDENT=resume-survivor-handoff
+        # because a resume could not stream the Stage 6 survivor handoff - only a computed
+        # Stage 5 built the per-file loader - and FirstPassFDR's rehydrate arm refused to run
+        # without it. #4536 gave the rehydrate its own loader, so the arm streams and the token
+        # no longer exists; running with nothing suppressed is what now makes this leg prove it.
+        $rRehydrate = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'rehydrate.log' -Spec $cfg -Manifest $inputs.Manifest
         $rehydrateBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  rehydrate wall {0:mm\:ss}; blib {1:N0} bytes" -f $rRehydrate.Wall, (Get-Item $rehydrateBlib).Length)
 

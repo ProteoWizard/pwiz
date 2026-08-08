@@ -104,28 +104,10 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string COMPACTED_ENTRIES_BUFFER = @"compacted-entries-buffer";
 
-        /// <summary>
-        /// A straight-through RESUME that rebuilds its first-pass state from its own sidecars:
-        /// only a computed Stage 5 produces the per-file survivor loader, so the rehydrate arm
-        /// hands Stage 6 the all-files post-compaction buffer instead. Tracked by issue #4536.
-        ///
-        /// <para>Deliberately its OWN token rather than reusing
-        /// <see cref="COMPACTED_ENTRIES_BUFFER"/>, which would have been the convenient choice
-        /// - both name the same buffer. Sharing would have let one unfixed path hold the door
-        /// open for a DIFFERENT one that is already fixed: any leg naming the shared token to
-        /// admit this resume would simultaneously admit an
-        /// <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> regression on the computed path that #4530
-        /// closed. A token has to admit exactly one path or the high-water mark leaks, which
-        /// is the entire reason the boolean was replaced by names.</para>
-        ///
-        /// <para>This ADDS to the list, which the class remarks say must only shrink. Same
-        /// justification as <see cref="COMPACTED_ENTRIES_BUFFER"/>: it names a path that was
-        /// previously unnamed and UNGUARDED - it ran on any multi-file resume with nothing
-        /// required and nothing reported - rather than re-admitting one that had been fixed.
-        /// Naming it is the ratchet reaching further, not running backwards. It goes when
-        /// #4536 gives the rehydrate its own survivor loader.</para>
-        /// </summary>
-        public static readonly string RESUME_SURVIVOR_HANDOFF = @"resume-survivor-handoff";
+        // resume-survivor-handoff was removed here by #4536, which gave FirstPassFdrTask's
+        // rehydrate its own per-file survivor loader: the arm streams like any computed run, so
+        // the token had nothing left to admit. Not to be re-added - a resume that cannot stream
+        // the Stage 6 handoff is a defect to fix, not a path to name.
 
         /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
@@ -134,7 +116,7 @@ namespace pwiz.Osprey.Core
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
             HPC_MERGE, FDRBENCH_PASS1, NON_PERCOLATOR_FDR, PROJECTION_OFF,
-            COMPACTED_ENTRIES_BUFFER, RESUME_SURVIVOR_HANDOFF
+            COMPACTED_ENTRIES_BUFFER
         };
     }
 }

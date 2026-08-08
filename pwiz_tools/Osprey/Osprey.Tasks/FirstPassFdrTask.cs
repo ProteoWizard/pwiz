@@ -129,19 +129,21 @@ namespace pwiz.Osprey.Tasks
         /// release the library fragments nothing can score any more. Null on the legacy resident
         /// path, which simply skips the release.
         ///
-        /// <para>This is the same set <see cref="_survivorLoader"/> holds privately, and it is a
-        /// separate field on purpose rather than by oversight: the loader is built only on the
-        /// projection path, while <see cref="Rehydrate"/> - the resume, and the one run that most
-        /// needs a lean library - has no loader and takes the set off the reconciliation bundle
-        /// instead. One field that both paths can fill beats an accessor that is null on
-        /// half of them.</para></summary>
+        /// <para>This is the LIBRARY-retention set, and it stays a separate field from the one
+        /// <see cref="_survivorLoader"/> filters on rather than collapsing into it: the two are
+        /// the same on the projection path but not on <see cref="Rehydrate"/>, which takes this
+        /// one off the reconciliation bundle (<c>GlobalFirstPassBaseIds</c>) while the loader
+        /// filters on the compaction's retained set - that union'd with the planner's action
+        /// targets. Feeding either set to the other's consumer would be wrong in one direction
+        /// or the other.</para></summary>
         private HashSet<uint> _firstPassBaseIds;
 
         // Rebuilds any one file's survivors from its .scores.parquet + finalized
         // 1st-pass sidecar, so a per-file consumer never needs the all-files buffer
-        // (issue #4526). Set on the projection path, which is the only one that
-        // computes the passing base_id set here; null on the legacy resident and
-        // rehydrate paths, whose consumers fall back to CompactedEntries.
+        // (issues #4526, #4536). Set on the projection path from the passing base_id set
+        // computed here, and on the rehydrate path from the retained set the compaction
+        // hands back on the bundle; null only on the legacy resident path, whose consumers
+        // fall back to CompactedEntries.
         private FirstPassSurvivorLoader _survivorLoader;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
@@ -569,30 +571,6 @@ namespace pwiz.Osprey.Tasks
             bool builtOwnBundle = bundle == null;
             if (builtOwnBundle)
             {
-                // Refuse the O(files) Stage 6 handoff BEFORE the load, not after: this
-                // rebuild reads every sidecar and parquet, so checking afterwards would
-                // spend minutes (hours at scale) only to abort. See
-                // PerFileScoringTask.ResumeResidentHandoffGuardError and issue #4536.
-                //
-                // Restricted to a STRAIGHT-THROUGH resume. A null bundle also occurs in worker
-                // mode when the .reconciliation.json sidecars are simply absent (a --task
-                // PerFileRescoring node pointed at parquets whose FirstPassFDR has not run) -
-                // that is a missing-input fault, and answering it with a memory-token refusal
-                // would name the wrong problem, quote that worker's slice as if it were the
-                // all-files buffer, and offer a remediation ("re-run without resuming") that
-                // means nothing to a --task worker. Those runs fall through to the load, which
-                // reports the envelope that is actually missing.
-                bool straightThroughResume =
-                    config.InputScores == null || config.InputScores.Count == 0;
-                if (straightThroughResume)
-                {
-                    string resumeHandoffError = PerFileScoringTask.ResumeResidentHandoffGuardError(
-                        perFileEntries.Count, OspreyEnvironment.AllowUnfixedResident,
-                        PerFileScoringTask.NeedsResidentPoolForRun(config));
-                    if (resumeHandoffError != null)
-                        throw new InvalidOperationException(resumeHandoffError);
-                }
-
                 bundle = LoadOwnReconciliationBundle(ctx, perFileEntries);
                 if (bundle == null)
                     return false;  // load failure; ExitCode already set
@@ -637,56 +615,145 @@ namespace pwiz.Osprey.Tasks
             // Release here too, not just on Run. This path is a RESUME - which is exactly what
             // an operator does after the OOM this release exists to prevent - so skipping it
             // would leave the whole library resident in the one run that most needs it lean.
-            // The bundle carries both halves of the retained set: GlobalFirstPassBaseIds is a
-            // required field of the v3 reconciliation envelope, and PerFileGapFill was just
-            // published above.
-            _firstPassBaseIds = bundle.GlobalFirstPassBaseIds;
+            // The bundle carries both halves of the retained set: the base_id set below, and
+            // PerFileGapFill just published above.
+            //
+            // RetainedBaseIds, not GlobalFirstPassBaseIds: the compaction retains the global set
+            // UNION the planner's action targets, so the global set alone can be a strict subset
+            // of what survives. Releasing on the smaller set could free the library spectrum of
+            // an entry Stage 6 still rescores. That gap is believed unreachable today - the
+            // planner runs after compaction on the computed path, so its targets are already in
+            // the envelope's set - but the relationship is not symmetric: the retained set is a
+            // superset, so using it is safe whether or not the union is empty, and using the
+            // other one is safe only while the argument holds. Falls back for an empty join,
+            // where Apply never ran and nothing survived to release against.
+            _firstPassBaseIds = bundle.RetainedBaseIds ?? bundle.GlobalFirstPassBaseIds;
             _perFileGapFillForRescore = bundle.PerFileGapFill;
             ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
             ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
             ctx.Publish(new CompactedEntries(perFileEntries));
-            // Null off the projection path (legacy resident / rehydrate), where a
-            // consumer falls back to the buffer above.
+
+            // The same per-file survivor source Run publishes, so an arm that rescores streams
+            // exactly as a computed run does (issue #4536). Before this the slot was published
+            // null here, and PerFileRescore's streamed branches are all gated on it, so the
+            // all-files survivor buffer stayed live across the whole rescore. What a resume
+            // lacked was only the passing base_id set to rebuild from, and the compaction just
+            // above now hands that back on the bundle.
+            if (!TryBuildResumeSurvivorLoader(ctx, bundle, perFileEntries, out _survivorLoader))
+                return false;  // missing parquet path; ExitCode already set
             ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
-            // ... and a null loader is exactly what leaves Stage 6 on the RESIDENT
-            // post-compaction handoff: PerFileRescore's streamed branches are all gated on
-            // this slot, so with nothing to stream from, the all-files survivor buffer
-            // published above stays live across the whole rescore and into SecondPassFDR. Run
-            // guards that with Stage6ResidentHandoffGuardError; the guard cannot fire here,
-            // because it deliberately no-ops when streaming is unavailable on the grounds
-            // that such runs are "already resident for a reason with its own token" - which
-            // was true of every rehydrate that used to reach this point (an mdiag full
-            // resume needed the resident first-pass pool) and is NOT true now that a lean
-            // resume gets here. Warn rather than throw, matching WarnPreCompactionPool: the
-            // mdiag full resume reached Stage 6 this way before #4505 too, so refusing it
-            // would turn a working configuration into a failing one.
+
+            // ... but only an arm that actually RESCORES gets anything from releasing the
+            // buffer, and this task's own bundle source is what says which arm this is. With a
+            // worker-supplied RescoreBundle, Stage 6 runs the rescore and refills one file at a
+            // time from the source above. Having built the bundle from our OWN sidecars, there
+            // is no rescore to run at all: PerFileRescore self-gates to a no-op (didPlan is
+            // false and RescoreBundle is null) and refills the WHOLE buffer immediately, so
+            // releasing here would buy a window no consumer uses and cost a full extra parquet
+            // + sidecar pass over every file to undo.
             //
-            // NOT covered by #4526, which is CLOSED: #4530 bounded this handoff by giving
-            // Run a per-file survivor loader, and the rehydrate arm never got one, so the
-            // resident fallback survives here. Tracked by #4536.
-            //
-            // This is the SECOND half of token + warning. Reaching this line means the
-            // operator named resume-survivor-handoff (the guard above refused the run
-            // otherwise), so the warning explains what that token bought rather than
-            // annotating something nobody asked for. A warning WITHOUT the refusal would be
-            // the insufficient case: on a default path there is no request to explain, and
-            // the line reads as normal within a week. Both halves go when #4536 gives the
-            // rehydrate its own survivor loader.
-            if (builtOwnBundle && !config.StopAfterStage5 && perFileEntries.Count > 1)
+            // The buffer is therefore still resident from here to the end of Stage 7 on that
+            // arm - as it is on EVERY arm, because Stage 6 deliberately rebuilds it for
+            // SecondPassFDR to read (PerFileRescoreTask's end-of-loop rebuild). That residency
+            // is a property of Stage 7's whole-run input, not of resuming, and it is #4486's
+            // to remove. This issue bounds the RESCORE window, which is the part Stage 6 owns.
+            bool rescoreWillStream = !builtOwnBundle && !config.StopAfterStage5;
+            // Same call Run makes. streamingAvailable is "this run will stream", not "a loader
+            // exists": passing the latter would refuse an OSPREY_STAGE6_STREAM_SURVIVORS=0
+            // resume whose behaviour is identical either way, which is a guard inventing work
+            // for an operator rather than preventing any.
+            string handoffError = PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                _survivorLoader != null && rescoreWillStream,
+                OspreyEnvironment.Stage6StreamSurvivors,
+                OspreyEnvironment.AllowUnfixedResident);
+            if (handoffError != null)
+                throw new InvalidOperationException(handoffError);
+
+            // Drop the CONTENTS, keeping the outer per-file list (the shared buffer identity
+            // every milestone wraps), exactly as Run does after planning. Consensus targets were
+            // computed off the full buffer immediately above, which is its last all-files reader.
+            if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && rescoreWillStream)
             {
-                ctx.LogWarning(string.Format(
-                    @"OSPREY_ALLOW_UNFIXED_RESIDENT={1}: Stage 6 takes the RESIDENT " +
-                    @"post-compaction handoff on this resume. The survivor buffer for all " +
-                    @"{0} files stays in memory for the whole rescore, so memory here grows " +
-                    @"O(files) - 28 GB at 163 files when last measured. Only a computed " +
-                    @"Stage 5 produces the per-file survivor loader (issue #4536).",
-                    perFileEntries.Count, ResidentPaths.RESUME_SURVIVOR_HANDOFF));
+                foreach (var kvp in perFileEntries)
+                {
+                    kvp.Value.Clear();
+                    kvp.Value.TrimExcess();
+                }
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"resume-handoff-released",
+                    string.Format(@"(post-GC, survivors released after rehydrate, files={0})",
+                        perFileEntries.Count));
             }
             // The bundle-adopt / resume path never plans, so the rescore gate is
             // false (PerFileRescore falls back to the no-op unless a worker
             // RescoreBundle is present). Mirrors the old "FirstPassFDR rehydrates ->
             // DidPlan is false" semantics, now as a published slot.
             ctx.Publish(new PlanningPerformed(false));
+            return true;
+        }
+
+        /// <summary>
+        /// The resume counterpart of the loader <see cref="ReloadFirstPassSurvivors"/> builds on
+        /// the projection path: rebuild any ONE file's post-compaction survivors from its
+        /// <c>.scores.parquet</c> plus its finalized <c>.1st-pass.fdr_scores.bin</c>, so Stage 6
+        /// refills a file at a time instead of reading them off a buffer somebody had to hold
+        /// for the whole rescore (issue #4536).
+        ///
+        /// <para>The set to filter to is <see cref="RescoreInputs.RetainedBaseIds"/>, taken off
+        /// the bundle the compaction just ran on rather than
+        /// <see cref="RescoreInputs.GlobalFirstPassBaseIds"/>. The two are NOT the same set:
+        /// compaction retains the global one UNION the base_ids of every planner action target,
+        /// and a target rescued by a sibling file's evidence is in the second term only.
+        /// Filtering to the global set alone would drop exactly those entries on the rebuild,
+        /// leaving them their stale Stage 4 boundaries in the blib - the divergence
+        /// <see cref="RescoreCompaction"/>'s union step exists to prevent.</para>
+        ///
+        /// <para>Returns true with a NULL loader ONLY for an empty join, which is also the only
+        /// case where a null loader costs nothing: there is no survivor buffer to bound. Any
+        /// other missing precondition returns false with
+        /// <see cref="PipelineContext.ExitCode"/> set, rather than falling back to the resident
+        /// handoff. That asymmetry is the point of the issue this fixes: a silent fallback is
+        /// how an O(files) path reached a default run in the first place, and
+        /// <c>Stage6ResidentHandoffGuardError</c> cannot catch it - it reads a null loader as
+        /// "this run could not stream" and exempts it. So the preconditions are faults here,
+        /// where they can still be reported.</para>
+        /// </summary>
+        private static bool TryBuildResumeSurvivorLoader(
+            PipelineContext ctx,
+            RescoreInputs bundle,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            out FirstPassSurvivorLoader loader)
+        {
+            loader = null;
+            if (bundle.RetainedBaseIds == null)
+            {
+                // Null means CompactFirstPass skipped RescoreCompaction.Apply, which it does
+                // only for an empty join. Checked rather than assumed: if some later change
+                // gives Apply a second skip, the loader would go null on a populated run and
+                // Stage 6 would silently take the resident buffer again - the exact regression
+                // shape that produced this issue, and one no guard downstream can see.
+                if (perFileEntries.Count == 0)
+                    return true;
+                ctx.LogError(string.Format(
+                    @"Resume rehydrate: the first-pass compaction published no retained base_id " +
+                    @"set for {0} joined file(s), so the Stage 6 survivor handoff cannot be " +
+                    @"streamed. RescoreCompaction.Apply must run whenever any file is joined.",
+                    perFileEntries.Count));
+                ctx.ExitCode = 1;
+                return false;
+            }
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            foreach (var kvp in perFileEntries)
+            {
+                if (perFileParquetPaths != null && perFileParquetPaths.ContainsKey(kvp.Key))
+                    continue;
+                ctx.LogError(string.Format(
+                    @"Resume rehydrate: no scores parquet path published for {0}, so its " +
+                    @"first-pass survivors cannot be rebuilt for the Stage 6 rescore.", kvp.Key));
+                ctx.ExitCode = 1;
+                return false;
+            }
+            loader = new FirstPassSurvivorLoader(
+                perFileParquetPaths, ctx.Config, bundle.RetainedBaseIds);
             return true;
         }
 

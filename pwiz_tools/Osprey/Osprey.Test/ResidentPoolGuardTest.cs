@@ -148,15 +148,13 @@ namespace pwiz.Osprey.Test
             // membership and order but not the text, and the text is what an operator types
             // into OSPREY_ALLOW_UNFIXED_RESIDENT. Renaming a value would otherwise compile and
             // pass here while silently invalidating every written-down invocation.
-            // 'mdiag-full-resume' is GONE (#4505) - the ratchet shrinking.
-            // 'resume-survivor-handoff' is ADDED (#4536), which the class remarks allow only
-            // because it names a path that was previously unnamed AND unguarded, not one that
-            // had been fixed.
+            // 'mdiag-full-resume' is GONE (#4505) and 'resume-survivor-handoff' is GONE (#4536,
+            // the rehydrate got its own survivor loader) - the ratchet shrinking twice.
             CollectionAssert.AreEqual(
                 new[]
                 {
                     "hpc-merge", "fdrbench-pass1", "non-percolator-fdr",
-                    "projection-off", "compacted-entries-buffer", "resume-survivor-handoff"
+                    "projection-off", "compacted-entries-buffer"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
 
@@ -229,12 +227,17 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(wrongToken);
             StringAssert.Contains(wrongToken, ResidentPaths.PROJECTION_OFF);
 
-            AssertResumeHandoffGuard();
-
             // A run that cannot stream at all (no per-file survivor source: the legacy resident
-            // and rehydrate paths never compute the passing base_id set) is NOT guarded here.
-            // It is already resident for a reason carrying its own token, and demanding a
-            // second one would make a single decision need two environment variables.
+            // path never computes the passing base_id set) is NOT guarded here. It is already
+            // resident for a reason carrying its own token, and demanding a second one would
+            // make a single decision need two environment variables.
+            //
+            // The RESUME is no longer in that category and must not drift back into it. Since
+            // #4536 the rehydrate builds its own survivor loader, so a resume arrives with
+            // streamingAvailable TRUE and is refused/admitted by the assertions above - the
+            // same ones a computed run gets. The interim resume-side guard and its dedicated
+            // resume-survivor-handoff token are gone with it; the KNOWN_UNFIXED assertion
+            // above is what keeps the token from coming back.
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(false, false, null));
 
             // SEVERAL paths may be named at once. A run can legitimately trip more than one,
@@ -256,73 +259,5 @@ namespace pwiz.Osprey.Test
                 true, false, ResidentPaths.PROJECTION_OFF + "," + ResidentPaths.HPC_MERGE));
         }
 
-        /// <summary>
-        /// The RESUME Stage 6 handoff guard: a straight-through resume rebuilding its bundle
-        /// from its own sidecars cannot stream the survivor handoff, so it must NAME
-        /// <see cref="ResidentPaths.RESUME_SURVIVOR_HANDOFF"/> or be refused.
-        ///
-        /// <para>Pins both halves of the rule, because only having both is the policy: omit
-        /// the token and the run FAILS with an actionable message; name it and the run
-        /// proceeds (the caller then warns). A warning alone on an untokened default path is
-        /// what this guard exists to stop being possible - that state shipped briefly while
-        /// #4505 was in review, and is exactly how an O(files) path reaches a user who never
-        /// asked for one.</para>
-        /// </summary>
-        private static void AssertResumeHandoffGuard()
-        {
-            // Unnamed: refused, and the message names the token to set plus the file count
-            // that makes it O(files), so the operator can judge the cost rather than guess.
-            string err = PerFileScoringTask.ResumeResidentHandoffGuardError(82, null, false);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err,
-                "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.RESUME_SURVIVOR_HANDOFF);
-            StringAssert.Contains(err, "82");
-
-            // Named: admitted. Case-insensitive and list-tolerant, like every other token.
-            Assert.IsNull(PerFileScoringTask.ResumeResidentHandoffGuardError(
-                82, ResidentPaths.RESUME_SURVIVOR_HANDOFF, false));
-            Assert.IsNull(PerFileScoringTask.ResumeResidentHandoffGuardError(
-                82, ResidentPaths.RESUME_SURVIVOR_HANDOFF.ToUpperInvariant(), false));
-            Assert.IsNull(PerFileScoringTask.ResumeResidentHandoffGuardError(
-                82, ResidentPaths.PROJECTION_OFF + "," + ResidentPaths.RESUME_SURVIVOR_HANDOFF, false));
-
-            // COMPACTED_ENTRIES_BUFFER must NOT admit it, and this pair of assertions is what
-            // the separate-token decision rests on. Both name the same physical buffer, so
-            // reusing it here would have been the convenient choice - and would have meant any
-            // leg admitting this unfixed resume ALSO admitted an
-            // OSPREY_STAGE6_STREAM_SURVIVORS=0 regression on the computed path that #4530
-            // already closed. One token, one path, or the high-water mark leaks.
-            string sharedToken = PerFileScoringTask.ResumeResidentHandoffGuardError(
-                82, ResidentPaths.COMPACTED_ENTRIES_BUFFER, false);
-            Assert.IsNotNull(sharedToken);
-            StringAssert.Contains(sharedToken, ResidentPaths.COMPACTED_ENTRIES_BUFFER);
-            // ... and symmetrically, this run's token does not re-open the computed-path
-            // handoff that #4530 fixed.
-            Assert.IsNotNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, ResidentPaths.RESUME_SURVIVOR_HANDOFF));
-
-            // A DIFFERENT token does not admit it, and the message says what was supplied so
-            // a stale value does not read like an unset one.
-            string wrong = PerFileScoringTask.ResumeResidentHandoffGuardError(
-                82, ResidentPaths.HPC_MERGE, false);
-            Assert.IsNotNull(wrong);
-            StringAssert.Contains(wrong, ResidentPaths.HPC_MERGE);
-
-            // Single-file join: "all files" is one file, so there is no O(files) growth to
-            // refuse and an ordinary one-file resume must not demand a token to run.
-            Assert.IsNull(PerFileScoringTask.ResumeResidentHandoffGuardError(1, null, false));
-            Assert.IsNull(PerFileScoringTask.ResumeResidentHandoffGuardError(0, null, false));
-            // Two IS O(files) - the threshold is "more than one", not "many". A guard that
-            // waited for a big number would let the growth establish itself unnoticed.
-            Assert.IsNotNull(PerFileScoringTask.ResumeResidentHandoffGuardError(2, null, false));
-
-            // A run already resident under a token it HAD to name (projection-off,
-            // fdrbench-pass1, ...) is exempt with no token of its own. Without this, an
-            // OSPREY_FDR_PROJECTION=0 resume needed TWO tokens and neither message mentioned
-            // the other, so setting the one it named failed again naming a different one.
-            Assert.IsNull(PerFileScoringTask.ResumeResidentHandoffGuardError(82, null, true));
-            Assert.IsNull(PerFileScoringTask.ResumeResidentHandoffGuardError(
-                82, ResidentPaths.PROJECTION_OFF, true));
-        }
     }
 }

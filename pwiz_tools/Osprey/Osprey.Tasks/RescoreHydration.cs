@@ -110,6 +110,23 @@ namespace pwiz.Osprey.Tasks
         public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
 
         /// <summary>
+        /// The set of base_ids the compaction actually RETAINED:
+        /// <see cref="GlobalFirstPassBaseIds"/> unioned with the base_ids of every entry
+        /// the planner emitted a reconciliation action for. Set by
+        /// <see cref="RescoreCompaction.Apply"/>, which is the single authority on the
+        /// retained set across every bundle arm (worker-supplied, own-sidecar batch,
+        /// own-sidecar streaming), so a consumer that has to reproduce the survivor list
+        /// takes it from here rather than re-deriving one of the two terms and silently
+        /// dropping the other.
+        ///
+        /// <para>Its one consumer is <c>FirstPassFdrTask.Rehydrate</c>, which uses it to build
+        /// the per-file <see cref="FirstPassSurvivorLoader"/> a resume publishes so Stage 6
+        /// streams instead of holding the all-files survivor buffer (issue #4536). Null
+        /// before <c>Apply</c> has run.</para>
+        /// </summary>
+        public HashSet<uint> RetainedBaseIds { get; set; }
+
+        /// <summary>
         /// Per-file PRE-compaction tallies captured by
         /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>. That hydrate
         /// compacts each file as it loads and therefore never holds more than ONE

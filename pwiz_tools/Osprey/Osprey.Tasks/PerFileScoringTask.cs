@@ -1829,17 +1829,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// <see cref="NeedsResidentPool(OspreyConfig)"/> for callers outside this class:
-        /// "this run already requires a resident-pool token of its own". Only
-        /// <see cref="ResumeResidentHandoffGuardError"/>'s caller needs it, to avoid charging
-        /// a second token for one decision.
-        /// </summary>
-        internal static bool NeedsResidentPoolForRun(OspreyConfig config)
-        {
-            return NeedsResidentPool(config);
-        }
-
-        /// <summary>
         /// Pure core of <see cref="NeedsResidentPool(OspreyConfig)"/> (the env static is passed
         /// in so it is unit testable), and the single definition of the trigger set.
         /// <c>OSPREY_PASS2_QVALUE=transfer</c> is NOT a trigger and must not become one again:
@@ -1937,62 +1926,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The RESUME counterpart of <see cref="Stage6ResidentHandoffGuardError"/>, and the
-        /// reason that one cannot serve here: it exempts runs that cannot stream, on the
-        /// grounds that they are resident under a token of their own. A straight-through
-        /// resume rebuilding its bundle from its own sidecars has NO such token - since #4505
-        /// it needs none at all - yet it still hands Stage 6 the all-files survivor buffer,
-        /// because only a computed Stage 5 produces the per-file loader. Left unguarded that
-        /// is an O(files) path on a DEFAULT user path with nothing asked for and nothing said,
-        /// which is the one shape the ratchet exists to forbid.
-        ///
-        /// <para>So it is refused unless named, exactly like every other resident path: omit
-        /// the token and the run fails loudly with an actionable message; name it and the run
-        /// proceeds with a warning saying what was granted. A warning ALONE would be the
-        /// insufficient case - on a default path there is no request to explain.</para>
-        ///
-        /// <para>Silent for a single-file join, where "all files" is one file and there is no
-        /// O(files) growth to refuse, and silent when <paramref name="alreadyResidentByToken"/>
-        /// says this run is resident under a token it already had to name. Tracked by issue
-        /// #4536: when the rehydrate gets its own survivor loader this guard goes away with
-        /// the buffer.</para>
-        /// </summary>
-        internal static string ResumeResidentHandoffGuardError(
-            int joinedFileCount, string allowUnfixedResident, bool alreadyResidentByToken)
-        {
-            if (joinedFileCount <= 1)
-                return null;
-            // Already resident for a reason that carries its OWN token (projection-off,
-            // fdrbench-pass1, non-percolator-fdr, hpc-merge): demanding a second one would
-            // tell the operator to set two variables for one decision, and neither message
-            // mentions the other, so the natural fix - set the token it names - fails again
-            // naming a different token. Same exemption Stage6ResidentHandoffGuardError makes,
-            // for the same reason. The rule this guard enforces is about the UNTOKENED
-            // default path; a run that already asked for residency has asked.
-            if (alreadyResidentByToken)
-                return null;
-            if (OspreyEnvironment.NamesResidentPath(
-                    allowUnfixedResident, ResidentPaths.RESUME_SURVIVOR_HANDOFF))
-            {
-                return null;
-            }
-            string suppliedOnResume = string.IsNullOrEmpty(allowUnfixedResident)
-                ? string.Empty
-                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}', which does " +
-                                @"not name this path.", allowUnfixedResident);
-            return string.Format(
-                @"This resume rebuilds its first-pass state from its own sidecars, which leaves " +
-                @"Stage 6 on the '{0}' RESIDENT path: the survivor buffer for all {1} files " +
-                @"stays in memory for the whole rescore and grows O(files) - 28 GB at 163 " +
-                @"files when last measured. Only a computed Stage 5 produces the per-file " +
-                @"survivor loader, so a resume cannot stream it (issue #4536). Set " +
-                @"OSPREY_ALLOW_UNFIXED_RESIDENT={0} to accept that and proceed, or re-run " +
-                @"without resuming so Stage 5 is computed; otherwise this path is " +
-                @"unavailable.{2}",
-                ResidentPaths.RESUME_SURVIVOR_HANDOFF, joinedFileCount, suppliedOnResume);
-        }
-
-        /// <summary>
         /// The same refusal, one stage later: the guard above stops at the compaction line, and
         /// the POST-compaction survivor handoff is O(files) too - 88.9 M entries / 28 GB at 163
         /// files, live for the whole Stage 6 rescore (issue #4526). Stage 6 streams that buffer
@@ -2001,20 +1934,21 @@ namespace pwiz.Osprey.Tasks
         /// to be available. Returns the actionable error, or <c>null</c> when the run streams.
         ///
         /// <para><paramref name="streamingAvailable"/> is false when this run could not stream
-        /// whatever the flag says - the resident and rehydrate paths never compute the passing
-        /// base_id set the per-file loader needs. Those runs are exempt HERE because they are
-        /// already resident for a reason with its own token
+        /// whatever the flag says - the legacy resident path never computes the passing base_id
+        /// set the per-file loader needs. Those runs are exempt HERE because they are already
+        /// resident for a reason with its own token
         /// (<see cref="ResidentPaths.PROJECTION_OFF"/> above all), so demanding a second token
         /// would mean two variables for one decision, and would fire on the plain
         /// <c>--task SecondPassFDR</c> run that <see cref="ResidentPaths.HPC_MERGE"/> already
         /// covers.</para>
         ///
-        /// <para>That reasoning covers every caller of THIS guard, and deliberately leaves one
-        /// gap it cannot see: a lean straight-through resume needs no first-pass token at all
-        /// since #4505, so "already resident under another token" is false for it. That case
-        /// is refused by <see cref="ResumeResidentHandoffGuardError"/> instead, at the point
-        /// where the rehydrate decides to rebuild its own bundle. Both guards disappear when
-        /// #4536 gives the rehydrate a survivor loader.</para>
+        /// <para>The exemption used to leave a gap it could not see: a lean straight-through
+        /// resume needs no first-pass token at all since #4505, so "already resident under
+        /// another token" was false for it, yet it took the handoff anyway because only a
+        /// computed Stage 5 built the loader. #4536 closed that by giving the rehydrate its own
+        /// loader, so a resume now reaches this guard with streaming AVAILABLE and is covered by
+        /// the same call Run makes - which is what retired the interim resume-side guard and its
+        /// dedicated token.</para>
         /// </summary>
         internal static string Stage6ResidentHandoffGuardError(
             bool streamingAvailable, bool streamingEnabled, string allowUnfixedResident)
