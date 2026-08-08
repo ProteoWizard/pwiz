@@ -700,7 +700,8 @@ namespace pwiz.Skyline.Model.Lib
 
             var setLibKeys = new HashSet<LibKey>(rows);
             var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
-            var fileIndexesById = FileIndexesById(librarySourceFiles);
+            var fileIdToIndex = Enumerable.Range(0, librarySourceFiles.Count)
+                .ToDictionary(i => librarySourceFiles[i].Id);
 
             int threadCount = ParallelEx.GetThreadCount(4);
             int rowsRead = 0;
@@ -728,7 +729,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     proteinsBySpectraID.TryGetValue(row.id, out var protein);
                     int? fileIndex = null;
-                    if (row.fileId.HasValue && fileIndexesById.TryGetValue(row.fileId.Value, out int iFile))
+                    if (row.fileId.HasValue && fileIdToIndex.TryGetValue(row.fileId.Value, out int iFile))
                     {
                         fileIndex = iFile;
                     }
@@ -836,10 +837,7 @@ namespace pwiz.Skyline.Model.Lib
             if (hasRetentionTimesTable) // Only a filtered library will have this table
             {
                 status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_, blibFilePath));
-                var retentionTimeReader = new RetentionTimeReader(FilePath, schemaVer)
-                {
-                    FileIndexesById = fileIndexesById
-                };
+                var retentionTimeReader = new RetentionTimeReader(FilePath, schemaVer, fileIdToIndex);
                 retentionTimeReader.ReadAllRows(loader, ref status, rows);
                 if (loader.IsCanceled)
                 {
@@ -886,22 +884,6 @@ namespace pwiz.Skyline.Model.Lib
             EnsureConnections(sm);
             loader.UpdateProgress(status.ChangeSegments(segmentCount - 1, segmentCount).Complete());
             return true;
-        }
-
-        /// <summary>
-        /// Returns the index that each spectrum source file will have in <see cref="LibraryFiles"/>,
-        /// keyed by the file's id in the library database. Retention times and ion mobilities are
-        /// stored by index rather than by id.
-        /// </summary>
-        private static Dictionary<int, int> FileIndexesById(IList<BiblioLiteSourceInfo> librarySourceFiles)
-        {
-            var fileIndexesById = new Dictionary<int, int>(librarySourceFiles.Count);
-            for (int fileIndex = librarySourceFiles.Count - 1; fileIndex >= 0; fileIndex--)
-            {
-                fileIndexesById[librarySourceFiles[fileIndex].Id] = fileIndex;
-            }
-
-            return fileIndexesById;
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
@@ -2099,17 +2081,18 @@ namespace pwiz.Skyline.Model.Lib
             private int _completedSpectraCount;
             private int _refSpectraCount;
 
-            public RetentionTimeReader(string dbPath, int schemaVer)
+            public RetentionTimeReader(string dbPath, int schemaVer, Dictionary<int, int> fileIdToIndex)
             {
                 _dbPath = dbPath;
                 _schemaVer = schemaVer;
+                FileIdToIndex = fileIdToIndex;
             }
 
             /// <summary>
             /// The index in <see cref="LibraryFiles"/> of each spectrum source file, keyed by the
             /// file's id in the library database. Rows for files which are not in here are skipped.
             /// </summary>
-            public IDictionary<int, int> FileIndexesById { get; set; } = new Dictionary<int, int>();
+            public IDictionary<int, int> FileIdToIndex { get; private set; }
 
             /// <summary>
             /// True if any row pointed at a spectrum in the redundant library. Libraries which were
@@ -2207,7 +2190,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Everything here is keyed by the file's index in LibraryFiles rather than by
                     // its id in the library database.
-                    if (!FileIndexesById.TryGetValue(fileId.Value, out int fileIndex))
+                    if (!FileIdToIndex.TryGetValue(fileId.Value, out int fileIndex))
                     {
                         continue;
                     }
@@ -2226,7 +2209,7 @@ namespace pwiz.Skyline.Model.Lib
                     var peakBounds = ReadPeakBounds(row);
                     if (peakBounds != null)
                     {
-                        explicitPeakBounds ??= new ExplicitPeakBounds[FileIndexesById.Count];
+                        explicitPeakBounds ??= new ExplicitPeakBounds[FileIdToIndex.Count];
                         explicitPeakBounds[fileIndex] ??= peakBounds;
                     }
                 }
