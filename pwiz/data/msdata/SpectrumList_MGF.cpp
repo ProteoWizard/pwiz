@@ -115,6 +115,8 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         // resolve any references into the MSData object
         References::resolve(*result, msd_);
 
+        ensureMzAscending(result);
+
         return result;
     }
 

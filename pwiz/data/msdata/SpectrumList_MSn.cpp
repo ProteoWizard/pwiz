@@ -192,6 +192,8 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     // resolve any references into the MSData object
     References::resolve(*result, msd_);
     
+    ensureMzAscending(result);
+
     return result;
   }
   
