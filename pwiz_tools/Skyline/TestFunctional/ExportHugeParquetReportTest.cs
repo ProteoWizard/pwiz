@@ -71,8 +71,15 @@ namespace pwiz.SkylineTestFunctional
                 exportReportDlg.OkDialog(csvFilePath, TextUtil.CsvSeparator);
             });
             using var csvReader = new DsvFileReader(csvFilePath, TextUtil.CsvSeparator);
-            using var reader = ParquetReader.CreateAsync(parquetFilePath).GetAwaiter().GetResult();
-            Assert.AreEqual(TextUtil.SpaceSeparate(ParquetReportExporter.MakeValidColumnNames(csvReader.FieldNames)), TextUtil.SpaceSeparate(reader.Schema.Fields.Select(f => f.Name)));
+            // Parquet.Net's reader resumes on the caller's SynchronizationContext, which the
+            // thread running DoTest happens not to have. Read without one anyway, so that
+            // moving this line inside a RunUI does not turn it into a deadlock.
+            var parquetColumnNames = ActionUtil.CallWithoutSynchronizationContext(() =>
+            {
+                using var reader = ParquetReader.CreateAsync(parquetFilePath).GetAwaiter().GetResult();
+                return reader.Schema.Fields.Select(f => f.Name).ToArray();
+            });
+            Assert.AreEqual(TextUtil.SpaceSeparate(ParquetReportExporter.MakeValidColumnNames(csvReader.FieldNames)), TextUtil.SpaceSeparate(parquetColumnNames));
         }
     }
 }

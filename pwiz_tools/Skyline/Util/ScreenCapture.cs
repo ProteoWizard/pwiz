@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -248,7 +247,7 @@ namespace pwiz.Skyline.Util
         private static List<Rectangle> GetForeignWindowRects(Rectangle screenRect,
             IntPtr targetHandle)
         {
-            uint currentPid = (uint)Process.GetCurrentProcess().Id;
+            uint currentPid = Kernel32.GetCurrentProcessId();
             var foreignRects = new List<Rectangle>();
             var scalingFactor = GetScalingFactor();
 

@@ -34,8 +34,8 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Unit tests for <see cref="Pass2FdrSidecar"/>, the merge-node 2nd-pass FDR
-    /// sidecar step extracted from MergeNodeTask.Run. Covers the pure
+    /// Unit tests for <see cref="Pass2FdrSidecar"/>, the SecondPassFDR 2nd-pass FDR
+    /// sidecar step extracted from SecondPassFdrTask.Run. Covers the pure
     /// <see cref="Pass2FdrSidecar.MapFeaturesByIdentity"/> seam (the
     /// reconciled-feature overlay) that previously rode only the nightly
     /// regression, plus the increment (A) scan-omitted 2nd-pass projection sort

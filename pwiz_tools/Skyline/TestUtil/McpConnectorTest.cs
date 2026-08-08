@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
 namespace pwiz.SkylineTestUtil
@@ -220,9 +221,14 @@ namespace pwiz.SkylineTestUtil
 
         private string ResolveNow(Func<FormInfo, bool> predicate, string description)
         {
-            var id = McpConnector.GetOpenForms().FirstOrDefault(predicate)?.Id;
-            Assert.IsNotNull(id, "Expected {0} to be open already, but it was not.", description);
-            return id;
+            var openForms = McpConnector.GetOpenForms();
+            var match = openForms.FirstOrDefault(predicate);
+            if (match == null)
+            {
+                Assert.Fail("Expected {0} to be open, but it was not. Open forms: {1}", description, TextUtil.SpaceSeparate(openForms.Select(form=>form.Id)));
+            }
+
+            return match.Id;
         }
 
         /// <summary>

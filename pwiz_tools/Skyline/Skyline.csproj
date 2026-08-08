@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>159</ApplicationRevision>
-    <ApplicationVersion>26.1.1.159</ApplicationVersion>
+    <ApplicationRevision>209</ApplicationRevision>
+    <ApplicationVersion>26.1.1.209</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -724,6 +724,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Results\IndexedMultiArray.cs" />
     <Compile Include="Model\Results\ReplicatePositions.cs" />
     <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
     <Compile Include="Model\WatersConnect\MethodModel.cs" />
@@ -7186,7 +7187,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\add-pro32.bmp" />
-    <Content Include="SkylineCmd.exe.config">
+    <!-- Skyline runs inside the SkylineCmd.exe process, so the CLR uses SkylineCmd.exe.config
+         for binding policy. Publish the config MSBuild generates for Skyline under that name
+         rather than maintaining a second one by hand, which silently went stale and broke
+         .parquet export from the command line. Include it from obj rather than bin: the
+         content copy runs before _CopyAppConfigFile, so bin fails a cold build with MSB3113
+         while succeeding on every incremental one. -->
+    <Content Include="obj\$(Platform)\$(Configuration)\$(AssemblyName).exe.config">
+      <Link>SkylineCmd.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\$(Configuration)\SkylineCmd.exe">

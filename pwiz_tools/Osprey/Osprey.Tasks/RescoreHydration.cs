@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 
@@ -92,7 +93,7 @@ namespace pwiz.Osprey.Tasks
         /// they can compute the join-wide reconciliation parameter hash —
         /// the worker's <c>OspreyConfig.InputFiles</c> only has its single
         /// parquet, but the hash that the downstream
-        /// <c>--task SecondPassFDR</c> merge node validates is computed over
+        /// <c>--task SecondPassFDR</c> node validates is computed over
         /// all files. Empty list when reading a v1 envelope (the worker
         /// falls back to its <c>InputFiles</c> stems in that case).
         /// </summary>
@@ -101,15 +102,73 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Join-wide set of base_ids that survived first-pass compaction, read
         /// from the <c>reconciliation.json</c> envelope's <c>first_pass_base_ids</c>
-        /// (v3 required field) that FirstJoin wrote with every file in memory.
+        /// (v3 required field) that FirstPassFDR wrote with every file in memory.
         /// <see cref="RescoreCompaction"/> compacts to exactly this set so an HPC
         /// per-file worker keeps the same cross-file entries the in-memory
         /// straight-through pipeline keeps.
         /// </summary>
         public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
 
+        /// <summary>
+        /// Per-file PRE-compaction tallies captured by
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>. That hydrate
+        /// compacts each file as it loads and therefore never holds more than ONE
+        /// file's pre-compaction pool, so the counts a caller used to take off the
+        /// resident all-files pool have to be reduced during the load instead.
+        /// Null on the batch <see cref="RescoreHydration.HydrateReconciliationOverlay"/>,
+        /// whose caller still has that pool and counts it directly.
+        ///
+        /// Indexed by FILE INDEX, positionally aligned with <see cref="PerFileEntries"/>,
+        /// not keyed by file name: two <c>--input-scores</c> paths in different
+        /// directories can share a stem, and a name-keyed map silently let the second
+        /// overwrite the first's tally. When non-null this list is COMPLETE - one entry
+        /// per file, in load order - so a consumer that cannot find a file's tally has a
+        /// real inconsistency, not a fallback case.
+        /// </summary>
+        public List<PreCompactionTally> PreCompactionTallies { get; set; }
+
+        /// <summary>
+        /// The <c>--model-diagnostics</c> pass-1 report reduction, folded row by row off the
+        /// same PRE-compaction pools <see cref="PreCompactionTallies"/> is reduced from, while
+        /// each file was briefly resident during
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>. The report needs the
+        /// pre-compaction entries (compaction discards ~52x of them, mostly the decoys and
+        /// entrapment the FDP and calibration views are built from), so on the streaming
+        /// hydrate it has to be accumulated during the load rather than built afterwards off a
+        /// pool that no longer exists. Null unless <c>--model-diagnostics</c> is set, so the
+        /// default path allocates nothing; the batch
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> also leaves it null -
+        /// its caller still holds the all-files pre-compaction pool and builds the report from
+        /// it directly.
+        ///
+        /// Has exactly ONE reader, <c>FirstPassFdrTask</c>'s rehydrate, which nulls this property
+        /// as soon as it has written the report. The bundle travels on a published byproduct
+        /// slot that lives for the whole process, so an accumulator left set here would pin
+        /// its ~1-2 GB through Stage 6 and SecondPassFDR with nothing left to read it.
+        /// </summary>
+        public ModelDiagnosticsData.Accumulator ModelDiagnosticsAccumulator { get; set; }
+
         /// <summary>Total non-Keep reconciliation actions across all files.</summary>
         public int TotalActions => ReconciliationActions.Count;
+
+        /// <summary>
+        /// Total PRE-compaction stubs across all files, or 0 when
+        /// <see cref="PreCompactionTallies"/> is null (batch hydrate). Accumulated as
+        /// <c>long</c>: a file carries ~4.2 M pre-compaction stubs, so an <c>int</c> sum
+        /// overflows past ~505 files and would report a negative total.
+        /// </summary>
+        public long TotalPreCompactionStubs
+        {
+            get
+            {
+                if (PreCompactionTallies == null)
+                    return 0;
+                long n = 0;
+                foreach (var tally in PreCompactionTallies)
+                    n += tally.Stubs;
+                return n;
+            }
+        }
 
         /// <summary>Total stubs across all files.</summary>
         public int TotalStubs
@@ -134,6 +193,29 @@ namespace pwiz.Osprey.Tasks
                 return n;
             }
         }
+    }
+
+    /// <summary>
+    /// One file's PRE-compaction reductions, captured while that file's full stub
+    /// list is briefly resident during
+    /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>. These are the only
+    /// two quantities the rehydrate path used to read off the all-files
+    /// pre-compaction pool: the stub count (the "total scored entries" figure and
+    /// its zero guard) and the run-level FDR passing-target count (the per-file
+    /// Stage 5 result line). Reducing them per file keeps both exact without
+    /// holding more than one file's pool.
+    /// </summary>
+    public class PreCompactionTally
+    {
+        /// <summary>Stubs loaded from this file's parquet, before compaction.</summary>
+        public int Stubs { get; set; }
+
+        /// <summary>
+        /// Non-decoy stubs in this file passing run-level FDR, before compaction.
+        /// The caller owns the predicate (it needs <c>OspreyConfig</c>); this type
+        /// only carries the result.
+        /// </summary>
+        public int PassingTargets { get; set; }
     }
 
     /// <summary>
@@ -213,7 +295,7 @@ namespace pwiz.Osprey.Tasks
         /// wrapper (which loads stubs first) and the in-pipeline joinOnly
         /// dispatch (which already has stubs loaded with PIN features +
         /// calibration siblings, and just needs the rescore overlay added
-        /// to share state with FirstJoin / PerFileRescore).
+        /// to share state with FirstPassFDR / PerFileRescore).
         ///
         /// The returned <see cref="RescoreInputs"/> references the SAME
         /// <see cref="FdrEntry"/> list objects passed in
@@ -238,161 +320,215 @@ namespace pwiz.Osprey.Tasks
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
             var reconciliationActions = new Dictionary<(string, int), ReconcileAction>();
-            // Captured from the first envelope's file_stems field (v2+);
-            // every subsequent envelope must carry the same set so the
-            // worker's join-wide reconciliation hash matches the planner's.
-            // Mirrors the consistency check in Rust hydrate_for_rescore.
-            List<string> joinFileStems = null;
-            // Join-wide passing base_id set from the reconciliation.json envelope
-            // (v3 required field, identical in every file's envelope). Populated
-            // from the first envelope in the loop below; RescoreCompaction compacts
-            // to exactly this set so a per-file worker matches the in-memory run.
-            HashSet<uint> globalBaseIds = null;
+            // Cross-envelope agreement on file_stems + first_pass_base_ids, captured
+            // from the first envelope and checked against every sibling.
+            var consistency = new EnvelopeConsistency();
 
-            for (int i = 0; i < perFileEntries.Count; i++)
+            // Per-file progress. This loop reads a sidecar + a reconciliation envelope for
+            // every file and was silent throughout: on a 20-file resume it produced a 35 s
+            // gap in the log, the kind that reads as a hang. ProgressReporter also emits a
+            // HEARTBEAT_SECONDS (30 s) tick, so one slow file cannot reopen the gap.
+            using (var hydrateProgress = new ProgressReporter(
+                       @"Hydrating reconciliation bundle", perFileEntries.Count))
             {
-                string parquetPath = parquetPaths[i];
-                string syntheticInput = SyntheticInputFromParquet(parquetPath);
-                string fileName = perFileEntries[i].Key;
-                var stubs = perFileEntries[i].Value;
+                for (int i = 0; i < perFileEntries.Count; i++)
+                {
+                    hydrateProgress.Report(i);
+                    string parquetPath = parquetPaths[i];
+                    string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                    string fileName = perFileEntries[i].Key;
+                    var stubs = perFileEntries[i].Value;
 
-                // Overlay SVM scores + 4 q-values + PEP + RunProteinQvalue
-                // from .1st-pass.fdr_scores.bin v3. expected_pass = FirstPass:
-                // the planner's actions were computed against first-pass FDR,
-                // and the worker compaction predicate uses first-pass q-values.
-                string sidecarPath = FdrScoresSidecar.Pass1Path(syntheticInput);
-                if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass))
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateReconciliationOverlay: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
-                        "(expected at {1})", fileName, sidecarPath));
-                }
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
+                        nameof(HydrateReconciliationOverlay));
 
-                // Parse reconciliation.json.
-                string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-                ReconciliationFile envelope;
-                try
-                {
-                    envelope = ReconciliationFile.Load(reconPath);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateReconciliationOverlay: failed to read {0}: {1}",
-                        reconPath, ex.Message), ex);
-                }
+                    string reconPath = ReconciliationFile.PathForInput(syntheticInput);
+                    var envelope = LoadEnvelope(reconPath, nameof(HydrateReconciliationOverlay));
+                    consistency.Check(envelope, reconPath, nameof(HydrateReconciliationOverlay));
 
-                // Capture the join-wide passing base_id set from the envelope
-                // (v3 required field; identical in every file's envelope by
-                // construction). Validate that every sibling envelope agrees:
-                // a mismatch means the on-disk envelopes were produced by
-                // different planner steps (corrupted hand-off), and silently
-                // taking the first file's set would compact its siblings against
-                // the wrong base_ids. Mirrors the file_stems consistency check
-                // below.
-                var envelopeBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds);
-                if (globalBaseIds == null)
-                {
-                    globalBaseIds = envelopeBaseIds;
-                }
-                else if (!globalBaseIds.SetEquals(envelopeBaseIds))
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateReconciliationOverlay: reconciliation.json {0} carries a " +
-                        "different first_pass_base_ids set than its siblings (planner " +
-                        "inconsistency): {1} vs {2} base_ids.",
-                        reconPath, globalBaseIds.Count, envelopeBaseIds.Count));
-                }
+                    // Build entry_id -> vec_idx map from the loaded stubs so the
+                    // planner's entry_id-keyed actions can be rehomed onto
+                    // (file_name, vec_idx) keys the rescore engine consumes.
+                    var idToIdx = new Dictionary<uint, int>(stubs.Count);
+                    for (int idx = 0; idx < stubs.Count; idx++)
+                        idToIdx[stubs[idx].EntryId] = idx;
 
-                // Capture / validate file_stems across all envelopes.
-                // ReconciliationFile.Load already rejects any envelope whose
-                // format_version != CurrentFormatVersion (currently 3), so by
-                // the time we reach here `envelope.FileStems` must be the
-                // planner's full join file set -- a non-empty list, identical
-                // across every envelope produced by a single planner step.
-                // Any disagreement (including unexpected empty stems) means
-                // the on-disk envelopes were produced by different planner
-                // steps and indicates a corrupted hand-off. Mirrors the
-                // consistency check in Rust's hydrate_for_rescore.
-                var envelopeStems = NormalizeStems(envelope.FileStems);
-                if (joinFileStems == null)
-                {
-                    joinFileStems = envelopeStems;
+                    MapPlannedActions(PlanActions(envelope), fileName, reconPath, idToIdx,
+                        reconciliationActions, nameof(HydrateReconciliationOverlay));
+                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
                 }
-                else if (!StemsEqual(joinFileStems, envelopeStems))
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateReconciliationOverlay: reconciliation.json {0} carries a " +
-                        "different file_stems set than its siblings (planner inconsistency). " +
-                        "Expected: [{1}]; got: [{2}]",
-                        reconPath,
-                        string.Join(", ", joinFileStems),
-                        string.Join(", ", envelopeStems)));
-                }
+                hydrateProgress.Report(perFileEntries.Count);
+            }
 
-                // Build entry_id -> vec_idx map from the loaded stubs so the
-                // planner's entry_id-keyed actions can be rehomed onto
-                // (file_name, vec_idx) keys the rescore engine consumes.
-                var idToIdx = new Dictionary<uint, int>(stubs.Count);
-                for (int idx = 0; idx < stubs.Count; idx++)
-                    idToIdx[stubs[idx].EntryId] = idx;
+            return new RescoreInputs
+            {
+                PerFileEntries = perFileEntries,
+                ReconciliationActions = reconciliationActions,
+                RefinedCalibrations = refinedCalibrations,
+                PerFileGapFill = perFileGapFill,
+                PerFileConsensusTargets = null,
+                JoinFileStems = consistency.JoinFileStems ?? new List<string>(),
+                GlobalFirstPassBaseIds = consistency.GlobalBaseIds,
+            };
+        }
 
-                if (envelope.UseCwtPeakActions != null)
+        /// <summary>
+        /// File-count-bounded twin of <see cref="HydrateReconciliationOverlay"/>: produces
+        /// the SAME post-compaction bundle without ever holding more than ONE file's
+        /// pre-compaction stub pool. The batch twin materializes every file's full Stage-4
+        /// stub list (~4.25 M rows, ~1.19 GB per file) and only lets
+        /// <see cref="RescoreCompaction"/> discard the ~52x non-survivors afterwards, so its
+        /// peak is O(files) - ~104 GB projected at 82 files.
+        ///
+        /// This works because the compaction predicate does not depend on the loaded pool.
+        /// <see cref="RescoreCompaction.Apply"/> retains (a) the join-wide
+        /// <c>first_pass_base_ids</c> the v3 envelope carries and (b) the base_ids of every
+        /// entry the planner emitted an action for, whose <c>entry_id</c>s the same envelope
+        /// carries. Both come off the SMALL on-disk envelopes, so a pre-pass over the
+        /// envelopes alone fixes the retained set before a single parquet row is read:
+        ///
+        ///   pass 1 - read every <c>reconciliation.json</c> (small), run the sibling
+        ///            consistency checks, and union the retain set;
+        ///   pass 2 - per file, in <paramref name="parquetPaths"/> order: load that file's
+        ///            stubs, overlay its <c>.1st-pass.fdr_scores.bin</c>, compact to the
+        ///            retain set, keep ONLY the survivors, move on.
+        ///
+        /// The result is the state <see cref="RescoreCompaction.Apply"/> would have produced,
+        /// so the caller still runs <c>Apply</c> afterwards: it re-derives the identical
+        /// retain set, finds nothing left to remove, and rebuilds the action map exactly as
+        /// on the batch path. <c>Apply</c> therefore stays the single authority on both the
+        /// survivor set and the <c>vec_idx</c> remap, and this method is a provably
+        /// conservative pre-filter in front of it.
+        ///
+        /// <paramref name="perFileEntries"/> must be EMPTY on entry; survivors are appended
+        /// to it in <paramref name="parquetPaths"/> order and the returned bundle references
+        /// that same list object (the shared mutable buffer contract the batch twin has).
+        /// <paramref name="loadStubs"/> is called once per file with
+        /// <c>(fileIndex, fileName, parquetPath)</c> and must return that file's FULL
+        /// pre-compaction stub list. <paramref name="onStubsHydrated"/> is called with
+        /// <c>(fileIndex, fileName, fullStubList, tally)</c> just before that list is
+        /// compacted - the caller's one look at a file's pre-compaction pool, where it fills
+        /// in <see cref="PreCompactionTally.PassingTargets"/> and anything else it used to
+        /// reduce off the resident all-files pool (the <c>--model-diagnostics</c> report
+        /// accumulator is fed there too, which is why the file index is passed); it may be null.
+        /// </summary>
+        public static RescoreInputs HydrateCompactedStreaming(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IList<string> parquetPaths,
+            Func<int, string, string, List<FdrEntry>> loadStubs,
+            Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated)
+        {
+            if (perFileEntries == null)
+                throw new ArgumentNullException(nameof(perFileEntries));
+            if (parquetPaths == null)
+                throw new ArgumentNullException(nameof(parquetPaths));
+            if (loadStubs == null)
+                throw new ArgumentNullException(nameof(loadStubs));
+            if (perFileEntries.Count != 0)
+            {
+                throw new InvalidDataException(string.Format(
+                    "HydrateCompactedStreaming: perFileEntries must be empty on entry (got {0})",
+                    perFileEntries.Count));
+            }
+            if (parquetPaths.Count == 0)
+                throw new InvalidDataException("HydrateCompactedStreaming: parquetPaths is empty");
+
+            int nFiles = parquetPaths.Count;
+            var refinedCalibrations = new Dictionary<string, RTCalibration>();
+            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
+            var reconciliationActions = new Dictionary<(string, int), ReconcileAction>();
+            // Positionally aligned with perFileEntries (both are appended in parquetPaths
+            // order), so a consumer indexes rather than looks a file up by stem - two
+            // --input-scores paths in different directories can share a stem.
+            var tallies = new List<PreCompactionTally>(nFiles);
+            var consistency = new EnvelopeConsistency();
+
+            // Pass 1: envelopes only. Everything kept here is small and is retained by the
+            // returned bundle anyway (actions, gap-fill, refined calibrations) EXCEPT the
+            // per-file first_pass_base_ids array, which is dropped with its envelope as soon
+            // as the sibling check has consumed it - only the single shared set survives.
+            var fileNames = new List<string>(nFiles);
+            var syntheticInputs = new List<string>(nFiles);
+            var reconPaths = new List<string>(nFiles);
+            var plannedByFile = new List<List<PlannedAction>>(nFiles);
+            // The retained set: the join-wide first-pass base_ids UNION the base_ids of every
+            // planner action target, across ALL files. Both terms are what
+            // RescoreCompaction.Apply unions, and the union has to be complete before ANY
+            // file is filtered - file A can retain a base_id only because file B has an
+            // action on it.
+            var retainBaseIds = new HashSet<uint>();
+            // One reporter across BOTH passes, 2 * nFiles units. Pass 1 reads only the small
+            // on-disk envelopes and finishes in seconds, so a reporter scoped to it alone
+            // printed 100% before a single parquet row was read and then left pass 2 - the
+            // ~1.19 GB per-file load that runs for minutes a file - completely unreported.
+            // Spanning both keeps the heartbeat on the pass that actually takes the time.
+            using (var hydrateProgress = new ProgressReporter(
+                       @"Hydrating reconciliation bundle", 2L * nFiles))
+            {
+                for (int i = 0; i < nFiles; i++)
                 {
-                    foreach (var entry in envelope.UseCwtPeakActions)
+                    hydrateProgress.Report(i);
+                    string syntheticInput = SyntheticInputFromParquet(parquetPaths[i]);
+                    string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
+                    if (string.IsNullOrEmpty(fileName))
                     {
-                        if (!idToIdx.TryGetValue(entry.EntryId, out int vecIdx))
-                        {
-                            throw new InvalidDataException(string.Format(
-                                "HydrateReconciliationOverlay: use_cwt_peak entry_id {0} in {1} not found " +
-                                "in stubs (parquet drift?)", entry.EntryId, reconPath));
-                        }
-                        reconciliationActions[(fileName, vecIdx)] = new ReconcileAction.UseCwtPeak(
-                            (int)entry.CandidateIdx, entry.StartRt, entry.ApexRt, entry.EndRt);
+                        throw new InvalidDataException(string.Format(
+                            "HydrateCompactedStreaming: could not derive file_name from parquet path {0}",
+                            parquetPaths[i]));
                     }
-                }
+                    string reconPath = ReconciliationFile.PathForInput(syntheticInput);
+                    var envelope = LoadEnvelope(reconPath, nameof(HydrateCompactedStreaming));
+                    consistency.Check(envelope, reconPath, nameof(HydrateCompactedStreaming));
 
-                if (envelope.ForcedIntegrationActions != null)
+                    var planned = PlanActions(envelope);
+                    foreach (var action in planned)
+                        retainBaseIds.Add(action.EntryId & ScoringTaskShared.BASE_ID_MASK);
+                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
+
+                    fileNames.Add(fileName);
+                    syntheticInputs.Add(syntheticInput);
+                    reconPaths.Add(reconPath);
+                    plannedByFile.Add(planned);
+                }
+                retainBaseIds.UnionWith(consistency.GlobalBaseIds);
+
+                // Pass 2: one file's pre-compaction pool resident at a time.
+                for (int i = 0; i < nFiles; i++)
                 {
-                    foreach (var entry in envelope.ForcedIntegrationActions)
+                    hydrateProgress.Report(nFiles + i);
+                    string fileName = fileNames[i];
+                    var stubs = loadStubs(i, fileName, parquetPaths[i]);
+                    if (stubs == null)
                     {
-                        if (!idToIdx.TryGetValue(entry.EntryId, out int vecIdx))
-                        {
-                            throw new InvalidDataException(string.Format(
-                                "HydrateReconciliationOverlay: forced_integration entry_id {0} in {1} not " +
-                                "found in stubs (parquet drift?)", entry.EntryId, reconPath));
-                        }
-                        reconciliationActions[(fileName, vecIdx)] = new ReconcileAction.ForcedIntegration(
-                            entry.ExpectedRt, entry.HalfWidth);
+                        throw new InvalidDataException(string.Format(
+                            "HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
                     }
-                }
+                    // The sidecar overlay needs the FULL pre-compaction list: it was written
+                    // pre-compaction and its reader requires the stub list to be a superset of
+                    // its records. Same order as the batch twin - overlay, then compact.
+                    OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
+                        nameof(HydrateCompactedStreaming));
 
-                if (envelope.RefinedRtCalibration != null)
-                {
-                    var cal = RTCalibration.FromModelParams(
-                        envelope.RefinedRtCalibration.LibraryRts,
-                        envelope.RefinedRtCalibration.FittedRts,
-                        envelope.RefinedRtCalibration.AbsResiduals,
-                        envelope.RefinedRtCalibration.ResidualSd);
-                    refinedCalibrations[fileName] = cal;
-                }
+                    // The caller's one look at this file's full pre-compaction pool: it fills
+                    // in whatever it used to reduce off the resident all-files pool.
+                    var tally = new PreCompactionTally { Stubs = stubs.Count };
+                    onStubsHydrated?.Invoke(i, fileName, stubs, tally);
+                    tallies.Add(tally);
 
-                if (envelope.GapFillTargets != null && envelope.GapFillTargets.Count > 0)
-                {
-                    var gapFill = new List<GapFillTarget>(envelope.GapFillTargets.Count);
-                    foreach (var g in envelope.GapFillTargets)
-                    {
-                        gapFill.Add(new GapFillTarget
-                        {
-                            TargetEntryId = g.TargetEntryId,
-                            DecoyEntryId = g.DecoyEntryId,
-                            ExpectedRt = g.ExpectedRt,
-                            HalfWidth = g.HalfWidth,
-                            ModifiedSequence = g.ModifiedSequence,
-                            Charge = g.Charge,
-                        });
-                    }
-                    perFileGapFill[fileName] = gapFill;
+                    stubs.RemoveAll(e => !retainBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+                    stubs.TrimExcess();
+
+                    // Map the planner's actions onto POST-compaction vec_idx. Every action's
+                    // base_id is in the retain set by construction above, so an action entry
+                    // present in the parquet is guaranteed to have survived; a miss here means
+                    // the same parquet drift the batch twin rejects, with the same message.
+                    var idToIdx = new Dictionary<uint, int>(stubs.Count);
+                    for (int idx = 0; idx < stubs.Count; idx++)
+                        idToIdx[stubs[idx].EntryId] = idx;
+                    MapPlannedActions(plannedByFile[i], fileName, reconPaths[i], idToIdx,
+                        reconciliationActions, nameof(HydrateCompactedStreaming));
+
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
             }
 
@@ -403,9 +539,224 @@ namespace pwiz.Osprey.Tasks
                 RefinedCalibrations = refinedCalibrations,
                 PerFileGapFill = perFileGapFill,
                 PerFileConsensusTargets = null,
-                JoinFileStems = joinFileStems ?? new List<string>(),
-                GlobalFirstPassBaseIds = globalBaseIds,
+                JoinFileStems = consistency.JoinFileStems ?? new List<string>(),
+                GlobalFirstPassBaseIds = consistency.GlobalBaseIds,
+                PreCompactionTallies = tallies,
             };
+        }
+
+        /// <summary>
+        /// Overlay SVM scores + 4 q-values + PEP + RunProteinQvalue from
+        /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> v3 onto <paramref name="stubs"/>.
+        /// <c>expected_pass = FirstPass</c>: the planner's actions were computed against
+        /// first-pass FDR, and the compaction predicate uses first-pass q-values. The stub
+        /// list must be the FULL pre-compaction set - the sidecar was written before
+        /// compaction and its reader requires a superset of its records.
+        /// </summary>
+        private static void OverlayFirstPassSidecar(
+            string syntheticInput, string fileName, List<FdrEntry> stubs, string context)
+        {
+            string sidecarPath = FdrScoresSidecar.Pass1Path(syntheticInput);
+            if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass))
+            {
+                throw new InvalidDataException(string.Format(
+                    "{0}: failed to overlay .1st-pass.fdr_scores.bin for {1} (expected at {2})",
+                    context, fileName, sidecarPath));
+            }
+        }
+
+        /// <summary>
+        /// Read one <c>reconciliation.json</c> envelope, wrapping any reader failure in
+        /// <see cref="InvalidDataException"/> with the offending path named.
+        /// </summary>
+        private static ReconciliationFile LoadEnvelope(string reconPath, string context)
+        {
+            try
+            {
+                return ReconciliationFile.Load(reconPath);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(
+                    "{0}: failed to read {1}: {2}", context, reconPath, ex.Message), ex);
+            }
+        }
+
+        /// <summary>
+        /// The planner's non-Keep actions for one file, flattened out of the envelope's two
+        /// homogeneous arrays in the order the hydrators consume them (<c>use_cwt_peak</c>
+        /// first, then <c>forced_integration</c>, each in envelope order). Both hydrate paths
+        /// go through this so they agree on action content, on which action wins when the
+        /// planner emitted two for one <c>entry_id</c> (the later one, as a
+        /// <c>vec_idx</c>-keyed assignment would), and on which missing <c>entry_id</c>
+        /// raises the drift error first.
+        /// </summary>
+        private static List<PlannedAction> PlanActions(ReconciliationFile envelope)
+        {
+            var planned = new List<PlannedAction>(
+                (envelope.UseCwtPeakActions?.Count ?? 0) + (envelope.ForcedIntegrationActions?.Count ?? 0));
+            if (envelope.UseCwtPeakActions != null)
+            {
+                foreach (var entry in envelope.UseCwtPeakActions)
+                {
+                    planned.Add(new PlannedAction(entry.EntryId, @"use_cwt_peak",
+                        new ReconcileAction.UseCwtPeak(
+                            (int)entry.CandidateIdx, entry.StartRt, entry.ApexRt, entry.EndRt)));
+                }
+            }
+            if (envelope.ForcedIntegrationActions != null)
+            {
+                foreach (var entry in envelope.ForcedIntegrationActions)
+                {
+                    planned.Add(new PlannedAction(entry.EntryId, @"forced_integration",
+                        new ReconcileAction.ForcedIntegration(entry.ExpectedRt, entry.HalfWidth)));
+                }
+            }
+            return planned;
+        }
+
+        /// <summary>
+        /// Rehome one file's <see cref="PlanActions"/> output from <c>entry_id</c> onto the
+        /// <c>(file_name, vec_idx)</c> keys the rescore engine consumes, using
+        /// <paramref name="idToIdx"/> over whichever stub list the caller holds (the full
+        /// pre-compaction list on the batch path, the survivors on the streaming path). An
+        /// <c>entry_id</c> the stub list does not carry is parquet/boundary drift and stops
+        /// the run: a Stage 6 worker proceeding with missing actions would scramble gap-fill.
+        /// </summary>
+        private static void MapPlannedActions(
+            List<PlannedAction> planned,
+            string fileName,
+            string reconPath,
+            Dictionary<uint, int> idToIdx,
+            Dictionary<(string, int), ReconcileAction> reconciliationActions,
+            string context)
+        {
+            foreach (var action in planned)
+            {
+                if (!idToIdx.TryGetValue(action.EntryId, out int vecIdx))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "{0}: {1} entry_id {2} in {3} not found in stubs (parquet drift?)",
+                        context, action.Kind, action.EntryId, reconPath));
+                }
+                reconciliationActions[(fileName, vecIdx)] = action.Action;
+            }
+        }
+
+        /// <summary>
+        /// Capture one envelope's refined RT calibration and gap-fill targets into the
+        /// per-file dictionaries. A null <c>refined_rt_calibration</c> (Stage 5 refit failed)
+        /// and an empty gap-fill list both leave the file absent, which is how the rescore
+        /// engine reads "nothing to do here".
+        /// </summary>
+        private static void CaptureCalibrationAndGapFill(
+            ReconciliationFile envelope,
+            string fileName,
+            Dictionary<string, RTCalibration> refinedCalibrations,
+            Dictionary<string, List<GapFillTarget>> perFileGapFill)
+        {
+            if (envelope.RefinedRtCalibration != null)
+            {
+                refinedCalibrations[fileName] = RTCalibration.FromModelParams(
+                    envelope.RefinedRtCalibration.LibraryRts,
+                    envelope.RefinedRtCalibration.FittedRts,
+                    envelope.RefinedRtCalibration.AbsResiduals,
+                    envelope.RefinedRtCalibration.ResidualSd);
+            }
+
+            if (envelope.GapFillTargets != null && envelope.GapFillTargets.Count > 0)
+            {
+                var gapFill = new List<GapFillTarget>(envelope.GapFillTargets.Count);
+                foreach (var g in envelope.GapFillTargets)
+                {
+                    gapFill.Add(new GapFillTarget
+                    {
+                        TargetEntryId = g.TargetEntryId,
+                        DecoyEntryId = g.DecoyEntryId,
+                        ExpectedRt = g.ExpectedRt,
+                        HalfWidth = g.HalfWidth,
+                        ModifiedSequence = g.ModifiedSequence,
+                        Charge = g.Charge,
+                    });
+                }
+                perFileGapFill[fileName] = gapFill;
+            }
+        }
+
+        /// <summary>
+        /// One planner action paired with the <c>entry_id</c> it targets and the envelope
+        /// array it came from (used only to name the array in the drift error).
+        /// </summary>
+        private sealed class PlannedAction
+        {
+            public uint EntryId { get; }
+            public string Kind { get; }
+            public ReconcileAction Action { get; }
+
+            public PlannedAction(uint entryId, string kind, ReconcileAction action)
+            {
+                EntryId = entryId;
+                Kind = kind;
+                Action = action;
+            }
+        }
+
+        /// <summary>
+        /// The two fields every sibling <c>reconciliation.json</c> in a join must agree on,
+        /// captured from the first envelope seen and checked against the rest. A disagreement
+        /// means the on-disk envelopes came from different planner steps (corrupted
+        /// hand-off): silently taking the first file's values would compact its siblings
+        /// against the wrong base_ids and compute a join-wide reconciliation hash the SecondPassFDR
+        /// node rejects. Mirrors the consistency checks in Rust's <c>hydrate_for_rescore</c>.
+        /// </summary>
+        private sealed class EnvelopeConsistency
+        {
+            /// <summary>
+            /// Join-wide first-pass passing base_ids (v3 required field), identical in every
+            /// file's envelope by construction. <see cref="RescoreCompaction"/> compacts to
+            /// exactly this set (unioned with the action targets) so a per-file worker keeps
+            /// the same entries the in-memory straight-through pipeline keeps.
+            /// </summary>
+            public HashSet<uint> GlobalBaseIds { get; private set; }
+
+            /// <summary>Full set of file stems participating in the planner's join (v2+).</summary>
+            public List<string> JoinFileStems { get; private set; }
+
+            public void Check(ReconciliationFile envelope, string reconPath, string context)
+            {
+                var envelopeBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds);
+                if (GlobalBaseIds == null)
+                {
+                    GlobalBaseIds = envelopeBaseIds;
+                }
+                else if (!GlobalBaseIds.SetEquals(envelopeBaseIds))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "{0}: reconciliation.json {1} carries a different first_pass_base_ids " +
+                        "set than its siblings (planner inconsistency): {2} vs {3} base_ids.",
+                        context, reconPath, GlobalBaseIds.Count, envelopeBaseIds.Count));
+                }
+
+                // ReconciliationFile.Load already rejects any envelope whose format_version
+                // != CurrentFormatVersion (currently 3), so FileStems here must be the
+                // planner's full join file set -- a non-empty list, identical across every
+                // envelope produced by a single planner step. Any disagreement (including
+                // unexpected empty stems) indicates a corrupted hand-off.
+                var envelopeStems = NormalizeStems(envelope.FileStems);
+                if (JoinFileStems == null)
+                {
+                    JoinFileStems = envelopeStems;
+                }
+                else if (!StemsEqual(JoinFileStems, envelopeStems))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "{0}: reconciliation.json {1} carries a different file_stems set than " +
+                        "its siblings (planner inconsistency). Expected: [{2}]; got: [{3}]",
+                        context, reconPath,
+                        string.Join(", ", JoinFileStems),
+                        string.Join(", ", envelopeStems)));
+                }
+            }
         }
 
         /// <summary>

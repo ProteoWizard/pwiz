@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <!-- Tasks is the pipeline layer: the task bodies (scoring, calibration,
-       first-join, merge, per-file rescore) call into every domain library.
+       FirstPassFDR, SecondPassFDR, per-file rescore) call into every domain library.
        Diagnostics carries IOspreyDiagnostics, which PipelineContext exposes so
        tasks emit dumps through the context instead of the exe-only static
        facade. Nothing below Tasks references Tasks, so this stays acyclic. -->

@@ -30,7 +30,7 @@ using pwiz.Osprey.FDR.Reconciliation;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Stage 6 planning subsystem extracted from <see cref="FirstJoinTask"/>.
+    /// Stage 6 planning subsystem extracted from <see cref="FirstPassFdrTask"/>.
     /// Runs the four cross-file planning phases that produce the rescore plan
     /// <see cref="PerFileRescoreTask"/> executes: multi-charge consensus per
     /// file, cross-run consensus RTs, per-file calibration refit, and
@@ -43,13 +43,13 @@ namespace pwiz.Osprey.Tasks
     /// <c>OspreyDiagnosticsLog.ExitAfterDump</c>), preserving the Stage-6 dump
     /// call order bisection relies on. Pure planning -- writing the
     /// .reconciliation.json envelopes and publishing the typed byproduct slots
-    /// stays in <see cref="FirstJoinTask"/>.
+    /// stays in <see cref="FirstPassFdrTask"/>.
     /// </summary>
     internal sealed class Stage6Planner
     {
         /// <summary>
         /// The four cross-file planning byproducts Stage 6 produces. Consumed by
-        /// <see cref="FirstJoinTask"/> to write the reconciliation envelopes and
+        /// <see cref="FirstPassFdrTask"/> to write the reconciliation envelopes and
         /// to publish the typed byproduct slots <see cref="PerFileRescoreTask"/>
         /// reads. <see cref="ReconciliationActions"/> is null when reconciliation
         /// was skipped (single-file / empty consensus).
