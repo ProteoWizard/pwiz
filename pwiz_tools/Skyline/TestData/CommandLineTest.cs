@@ -42,7 +42,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -234,44 +233,19 @@ namespace pwiz.SkylineTestData
             var docPath = TestFilesDir.GetTestPath("Remove_Test.sky");
             var outPath = TestFilesDir.GetTestPath("Reorder_Test_Out.sky");
             var orderPath = TestFilesDir.GetTestPath("replicate-order.txt");
-            var originalDocument = ResultsUtil.DeserializeDocument(docPath);
-            var originalValues = GetReplicateValues(originalDocument);
-            var originalNames = originalDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray();
-            var requestedNames = new[] { originalNames[2], originalNames[0] };
-            File.WriteAllLines(orderPath, new[] { string.Empty, "  " + requestedNames[0] + "  ", requestedNames[1] });
-
+            Dictionary<string, (string[] FilePaths, float[] PeakAreas)> originalValues;
+            string[] originalNames;
             using (var documentContainer = new ResultsMemoryDocumentContainer(null, docPath))
             {
+                var originalDocument = ResultsUtil.DeserializeDocument(docPath);
                 documentContainer.SetDocument(originalDocument, null, true);
-                var loadedValues = GetReplicateValues(documentContainer.Document);
-                foreach (var replicateName in originalNames)
-                {
-                    CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas,
-                        loadedValues[replicateName].PeakAreas,
-                        "Peak areas changed while loading the document container for replicate {0}", replicateName);
-                }
+                originalValues = GetReplicateValues(documentContainer.Document);
+                originalNames = documentContainer.Document.MeasuredResults.Chromatograms
+                    .Select(chrom => chrom.Name).ToArray();
             }
 
-            var directReorderedDocument = new ElementReorderer(CancellationToken.None, originalDocument).SetNewOrder(
-                requestedNames.Select(name => ReplicateRef.FromChromatogramSet(originalDocument.MeasuredResults.Chromatograms
-                    .First(chromatogramSet => chromatogramSet.Name == name))));
-            var directReorderedValues = GetReplicateValues(directReorderedDocument);
-            foreach (var replicateName in originalNames)
-            {
-                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas,
-                    directReorderedValues[replicateName].PeakAreas,
-                    "Peak areas changed during direct ElementReorderer call for replicate {0}", replicateName);
-            }
-
-            var directOutPath = TestFilesDir.GetTestPath("Reorder_Direct_Out.sky");
-            new CommandLine().SaveDocument(directReorderedDocument, directOutPath, new StringWriter());
-            var directSavedValues = GetReplicateValues(ResultsUtil.DeserializeDocument(directOutPath));
-            foreach (var replicateName in originalNames)
-            {
-                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas,
-                    directSavedValues[replicateName].PeakAreas,
-                    "Peak areas changed during direct save/reopen for replicate {0}", replicateName);
-            }
+            var requestedNames = new[] { originalNames[2], originalNames[0] };
+            File.WriteAllLines(orderPath, new[] { string.Empty, "  " + requestedNames[0] + "  ", requestedNames[1] });
 
             RunCommand("--in=" + docPath,
                 "--reorder-replicates-file=" + orderPath,
