@@ -200,7 +200,12 @@ namespace pwiz.Osprey.Tasks
                 swProtein.Elapsed.TotalSeconds));
             // Parsimony + picked-protein TDC are genuinely whole-run, so this probe is what
             // decides whether they are a REASON Stage 7 must hold every file at once or
-            // merely a consumer of a pool held for other reasons (#4486).
+            // merely a consumer of a pool held for other reasons (#4486). The pre-GC line is
+            // not optional here: parsimony builds whole-run scratch (best score per peptide,
+            // protein groups, the target/decoy competition) and the forced collection below
+            // destroys it, so without this the substep reports a ~0 delta and gets written
+            // off as a consumer even if it transiently doubled the heap.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 protein FDR (pre-GC)");
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-protein-fdr",
                 memDetail);
 

@@ -486,7 +486,30 @@ namespace pwiz.Osprey.Tasks
                 // Runs unconditionally (not gated on --protein-fdr), matching Rust where
                 // first-pass protein FDR is gated only on !can_skip_fdr || expect_reconciled_input
                 // (pipeline.rs:4529). Mirrors Rust pipeline.rs:4292-4358.
-                if (bundle.PerFileEntries.Count > 0)
+                //
+                // SKIPPED when the bundle arrives ALREADY COMPACTED (#4486). The streaming
+                // hydrate compacts each file as it loads - RescoreHydration's
+                // stubs.RemoveAll(...) runs before perFileEntries.Add(...) - so on that path
+                // "BEFORE compaction" above is no longer true and this call would recompute
+                // over survivors only. That is not a smaller sample of the same thing: the
+                // target side is q-gated (ProteinFdr.RunFirstPass) while the decoy side is
+                // deliberately NOT, because the decoys ARE the null. Compaction retains only
+                // passing base_ids, so the null loses most of its members and every
+                // propagated protein q comes out anti-conservatively LOW.
+                //
+                // Skipping is not a loss of information. OverlayFirstPassSidecar has already
+                // written RunProteinQvalue onto every stub from the 1st-pass sidecar
+                // (FdrScoresSidecar offset 52), and that is the value the straight-through
+                // pipeline itself computed pre-compaction - i.e. exactly what this recompute
+                // exists to reproduce. What is given up is only Rust's inline re-derivation
+                // absorbing ULP-level drift in the post-rehydration inputs; a
+                // straight-through-consistent value beats a wrong-population one.
+                //
+                // PreCompactionTallies is the same "was this pre-compacted" signal
+                // RescoreCompaction.Apply keys its own invariant on, so the two cannot
+                // disagree about which path they are on.
+                bool preCompacted = bundle.PreCompactionTallies != null;
+                if (bundle.PerFileEntries.Count > 0 && !preCompacted)
                 {
                     var fullLibrary = ctx.Get<FullLibrary>().Value;
                     // Silent (logInfo: null) -- the rehydration recompute runs
@@ -496,9 +519,19 @@ namespace pwiz.Osprey.Tasks
                         bundle.PerFileEntries, fullLibrary, ctx.Config, null);
                 }
                 var stats = RescoreCompaction.Apply(bundle);
+                // On the streaming hydrate stats.EntriesBefore EQUALS EntriesAfter by
+                // construction - RescoreCompaction sums an already-compacted pool and makes
+                // "removes nothing" a hard invariant - so reporting it raw prints
+                // "N -> N entries" where ~350 M stubs were actually reduced, which is
+                // indistinguishable from a broken retain set. TotalPreCompactionStubs is the
+                // real figure on that path, and FirstPassFdrTask reads it for the same
+                // reason (#4486).
+                long entriesBefore = preCompacted
+                    ? bundle.TotalPreCompactionStubs
+                    : stats.EntriesBefore;
                 ctx.LogInfo(string.Format(
                     @"--task SecondPassFDR compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                    stats.EntriesBefore, stats.EntriesAfter,
+                    entriesBefore, stats.EntriesAfter,
                     stats.FirstPassBaseIds, stats.DroppedActions));
             }
             return true;
