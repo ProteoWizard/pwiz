@@ -371,47 +371,58 @@ namespace pwiz.Osprey.Tasks
                 // summary log below.
                 if (pass2Projections == null)
                 {
-                    foreach (var kvp in perFileEntries)
+                    // Per-file progress: this writes one .2nd-pass.fdr_scores.bin per file
+                    // (~4.8 GB across 82) and was silent, which with the reload loop below is
+                    // the 38s gap perfviz reports between the competition's [STAGE-WALL] line
+                    // and the next probe (#4486). IO-paced, like the other disk loops here.
+                    using (var writeProgress = new ProgressReporter(
+                        string.Format(@"Writing 2nd-pass FDR scores for {0} file(s)", perFileEntries.Count),
+                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
-                        string fileName = kvp.Key;
-                        if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
-                            continue;
-                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
-                        if (File.Exists(pass2Path))
+                        long nWrittenReported = 0;
+                        foreach (var kvp in perFileEntries)
                         {
-                            pass2Tally.AlreadyOnDisk++;
-                            continue;
-                        }
-                        try
-                        {
-                            FdrScoresSidecar.Write(
-                                pass2Path, kvp.Value, FdrScoresSidecar.Pass.SecondPass);
-                            pass2Tally.Written++;
-                        }
-                        catch (Exception ex)
-                        {
-                            ctx.LogWarning(string.Format(
-                                @"Failed to write 2nd-pass FDR sidecar for {0}: {1}",
-                                fileName, ex.Message));
-                            pass2Tally.Failures++;
-                            continue;
-                        }
-                        // Inline per-file validity sidecar: same content
-                        // the end-of-Run WriteTaskSidecars would produce,
-                        // written immediately so an early Environment.Exit
-                        // does not strand the binary without its metadata.
-                        try
-                        {
-                            TaskValiditySidecar.Write(pass2Path, taskName, OspreyVersion.Current,
-                                taskValidityKey,
-                                new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                                    ParquetScoreCache.GetScoresPath(inputFile3)) });
-                        }
-                        catch (Exception ex)
-                        {
-                            ctx.LogWarning(string.Format(
-                                @"Failed to write {0} sidecar for {1}: {2}",
-                                taskName, pass2Path, ex.Message));
+                            writeProgress.Report(++nWrittenReported);
+                            string fileName = kvp.Key;
+                            if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
+                                continue;
+                            string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
+                            if (File.Exists(pass2Path))
+                            {
+                                pass2Tally.AlreadyOnDisk++;
+                                continue;
+                            }
+                            try
+                            {
+                                FdrScoresSidecar.Write(
+                                    pass2Path, kvp.Value, FdrScoresSidecar.Pass.SecondPass);
+                                pass2Tally.Written++;
+                            }
+                            catch (Exception ex)
+                            {
+                                ctx.LogWarning(string.Format(
+                                    @"Failed to write 2nd-pass FDR sidecar for {0}: {1}",
+                                    fileName, ex.Message));
+                                pass2Tally.Failures++;
+                                continue;
+                            }
+                            // Inline per-file validity sidecar: same content
+                            // the end-of-Run WriteTaskSidecars would produce,
+                            // written immediately so an early Environment.Exit
+                            // does not strand the binary without its metadata.
+                            try
+                            {
+                                TaskValiditySidecar.Write(pass2Path, taskName, OspreyVersion.Current,
+                                    taskValidityKey,
+                                    new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                                        ParquetScoreCache.GetScoresPath(inputFile3)) });
+                            }
+                            catch (Exception ex)
+                            {
+                                ctx.LogWarning(string.Format(
+                                    @"Failed to write {0} sidecar for {1}: {2}",
+                                    taskName, pass2Path, ex.Message));
+                            }
                         }
                     }
                 }
@@ -446,31 +457,42 @@ namespace pwiz.Osprey.Tasks
                     inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
                 int filesReloaded = 0;
                 int filesMissing = 0;
-                foreach (var kvp in perFileEntries)
+                // Per-file progress: reads back every file's just-written sidecar and rebuilds
+                // an entry_id map over that file's survivors. Silent, and the second half of
+                // the 38s gap between the competition's [STAGE-WALL] line and the next probe
+                // (#4486); the write loop above is the first half.
+                using (var reloadProgress = new ProgressReporter(
+                    string.Format(@"Reloading 2nd-pass FDR scores for {0} file(s)", perFileEntries.Count),
+                    perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                 {
-                    if (!inputByName.TryGetValue(kvp.Key, out string inputFile4))
-                        continue;
-                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile4);
-                    if (!File.Exists(pass2Path))
+                    long nReloadReported = 0;
+                    foreach (var kvp in perFileEntries)
                     {
-                        filesMissing++;
-                        continue;
-                    }
-                    var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
-                    foreach (var e in kvp.Value)
-                        byEntryId[e.EntryId] = e;
-                    if (FdrScoresSidecar.TryReadOverlay(
-                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
-                    {
-                        filesReloaded++;
-                    }
-                    else
-                    {
-                        filesMissing++;
-                        ctx.LogWarning(string.Format(
-                            "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
-                            "protein FDR will use stale 1st-pass q-values",
-                            kvp.Key, pass2Path));
+                        reloadProgress.Report(++nReloadReported);
+                        if (!inputByName.TryGetValue(kvp.Key, out string inputFile4))
+                            continue;
+                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile4);
+                        if (!File.Exists(pass2Path))
+                        {
+                            filesMissing++;
+                            continue;
+                        }
+                        var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
+                        foreach (var e in kvp.Value)
+                            byEntryId[e.EntryId] = e;
+                        if (FdrScoresSidecar.TryReadOverlay(
+                                pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
+                        {
+                            filesReloaded++;
+                        }
+                        else
+                        {
+                            filesMissing++;
+                            ctx.LogWarning(string.Format(
+                                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
+                                "protein FDR will use stale 1st-pass q-values",
+                                kvp.Key, pass2Path));
+                        }
                     }
                 }
                 if (filesReloaded > 0)

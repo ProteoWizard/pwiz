@@ -491,19 +491,32 @@ namespace pwiz.Osprey.Tasks
                 // hydrate compacts each file as it loads - RescoreHydration's
                 // stubs.RemoveAll(...) runs before perFileEntries.Add(...) - so on that path
                 // "BEFORE compaction" above is no longer true and this call would recompute
-                // over survivors only. That is not a smaller sample of the same thing: the
-                // target side is q-gated (ProteinFdr.RunFirstPass) while the decoy side is
-                // deliberately NOT, because the decoys ARE the null. Compaction retains only
-                // passing base_ids, so the null loses most of its members and every
-                // propagated protein q comes out anti-conservatively LOW.
+                // over survivors only.
                 //
-                // Skipping is not a loss of information. OverlayFirstPassSidecar has already
-                // written RunProteinQvalue onto every stub from the 1st-pass sidecar
-                // (FdrScoresSidecar offset 52), and that is the value the straight-through
-                // pipeline itself computed pre-compaction - i.e. exactly what this recompute
-                // exists to reproduce. What is given up is only Rust's inline re-derivation
-                // absorbing ULP-level drift in the post-rehydration inputs; a
-                // straight-through-consistent value beats a wrong-population one.
+                // The reason to skip is the SHAPE of that subset, not a measured defect. The
+                // retained set is driven by which TARGETS passed, and a target and its paired
+                // decoy share a base_id, so retaining a base_id retains both. That drops the
+                // high-scoring decoys whose own targets did not pass - precisely the ones that
+                // would compete near the threshold - which biases any FDR recomputed on the
+                // survivors OPTIMISTIC. Subsetting without that bias needs a composite-score
+                // cutoff admitting targets AND decoys above it plus their pairs, which this
+                // pool is not. So do not run an FDR over it.
+                //
+                // Two things this comment previously asserted are MEASURED FALSE (#4486), and
+                // must not be restored:
+                //   * That recomputing here over the compacted pool drives protein q
+                //     anti-conservatively low. A/B on StellarGenDecoyEntrap: recompute over the
+                //     compacted pool vs over the uncompacted pool is BYTE-IDENTICAL across all
+                //     260,419 records. This statistic is insensitive to the bias above (its
+                //     decoy side comes from q-gated detected peptides either way), so the skip
+                //     is a conservative choice, not a bug fix. It moves 740 records (0.28%)
+                //     upward and changes no output.
+                //   * That the 1st-pass sidecar's RunProteinQvalue is "what the straight-through
+                //     pipeline computed". It is not: the join node's value differs from
+                //     straight-through for 12.46% of records (1.57% at 82 files), always lower.
+                //     That divergence is PRE-EXISTING - master's routing differs by 12.74% - and
+                //     is tracked separately in #4553, which also covers the regression.ps1 gap
+                //     that lets it pass green (mode 3 compares the blib, never these sidecars).
                 //
                 // PreCompactionTallies is the same "was this pre-compacted" signal
                 // RescoreCompaction.Apply keys its own invariant on, so the two cannot
