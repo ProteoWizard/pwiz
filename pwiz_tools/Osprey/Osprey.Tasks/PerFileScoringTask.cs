@@ -1291,10 +1291,41 @@ namespace pwiz.Osprey.Tasks
                 // projection path uses, one file at a time, so FirstPassFDR's rehydrate can emit
                 // the identical report without the O(files) resident pool. Null (nothing
                 // constructed, nothing folded) off the report path.
-                var mdiagAccumulator = config.ModelDiagnostics
-                    ? FirstPassFdrTask.BuildModelDiagnosticsAccumulator(
-                        JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo)
-                    : null;
+                // Built only when its READER will run in this process (#4486). The one
+                // reader/nuller pair is FirstPassFdrTask's rehydrate, and on
+                // --task SecondPassFDR that task is excluded - which this branch newly
+                // reaches, since before #4486 the merge never streamed. Building it there
+                // folds every pre-compaction row of every file into an accumulator nothing
+                // will ever read, and nothing will ever null: it travels on a published
+                // byproduct slot that lives for the whole process, so it would pin the
+                // ~1-2 GB FirstPassFdrTask documents straight through Stage 7 - on the exact
+                // node this streaming change exists to shrink.
+                bool mdiagHasReader = config.ModelDiagnostics &&
+                                      FirstPassFdrTask.IsIncludedFor(config);
+                // Guarded like the sibling call in FirstPassFdrTask: reading the decoy-pairing
+                // manifest can throw (IO, OOM), and an opt-in HTML report must not take the
+                // search down with it. Here it would kill the run for a report that cannot
+                // even be written.
+                ModelDiagnosticsData.Accumulator mdiagAccumulator = null;
+                if (mdiagHasReader)
+                {
+                    try
+                    {
+                        mdiagAccumulator = FirstPassFdrTask.BuildModelDiagnosticsAccumulator(
+                            JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"--model-diagnostics: could not build the pass-1 report accumulator ({0}); the report will be omitted.",
+                            ex.Message));
+                    }
+                }
+                else if (config.ModelDiagnostics)
+                {
+                    ctx.LogInfo(
+                        @"--model-diagnostics: no pass-1 report on this node (FirstPassFDR does not run here); skipping its accumulator.");
+                }
                 // Same graceful handling as the batch twin in HydrateRescoreBundleIfPresent:
                 // a corrupt or mismatched sidecar is an operator-facing error line and a
                 // non-zero exit code, not an unhandled stack trace.
