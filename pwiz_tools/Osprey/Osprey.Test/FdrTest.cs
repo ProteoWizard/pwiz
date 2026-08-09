@@ -3471,24 +3471,30 @@ namespace pwiz.Osprey.Test
             // Resident oracle: q per observation (winner obs carry the competition q).
             var residentQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
 
-            // Streaming: single file, no score override, survivors = the stratum targets.
+            // Streaming: single file, no score override, survivors = the stratum targets. The
+            // streamed form emits per file rather than returning whole-run maps, so the run q
+            // arrives through the callback and experiment q is asked for per survivor.
             const string F = "f";
-            var survivors = new List<(string, uint)>();
-            for (uint b = 1; b <= 20; b++) survivors.Add((F, b));   // target entryId == base_id
-            (uint[] eids, double[] scs) Read(string _)
-                => ((uint[])ids.Clone(), (double[])sc.Clone());
-            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
-                new[] { F }, Read,
-                new Dictionary<(string, uint), double>(), survivors,
-                out _, out var expQ, out _, stratum);
+            var survivorIds = new HashSet<uint>();
+            for (uint b = 1; b <= 20; b++) survivorIds.Add(b);   // target entryId == base_id
+            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov) Read(string _)
+                => ((uint[])ids.Clone(), (double[])sc.Clone(), new Dictionary<uint, double>());
+            var runQ = new Dictionary<uint, double>();
+            void OnFileRunQ(string _, IReadOnlyDictionary<uint, double> fileRunQ)
+            {
+                foreach (var kv in fileRunQ) runQ[kv.Key] = kv.Value;
+            }
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                new[] { F }, Read, survivorIds, OnFileRunQ, stratum);
 
             for (uint b = 1; b <= 20; b++)
             {
                 int win = -1;
                 for (int i = 0; i < ids.Length; i++)
                     if ((ids[i] & 0x7FFFFFFFu) == b && !lb[i]) win = i;   // target obs = the winner
-                Assert.IsTrue(expQ.TryGetValue((F, b), out double sq),
-                    "streaming must report exp q for stratum survivor " + b);
+                Assert.IsTrue(runQ.TryGetValue(b, out double rq),
+                    "streaming must report run q for stratum survivor " + b);
+                double sq = competition.ExperimentQ(b, rq);
                 Assert.AreEqual(residentQ[win], sq, 1e-9,
                     "streaming stratified exp q must match the resident oracle for base_id " + b);
             }

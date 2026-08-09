@@ -525,67 +525,50 @@ namespace pwiz.Osprey.Tasks
             var sw = Stopwatch.StartNew();
             int nFeatures = scorer.NumFeatures;
 
-            // 1. Frozen-model score for each reconciled survivor, STREAMED one file at a
-            //    time: load that file's reconciled PIN features, score with the frozen 1st-pass
-            //    weights, keep only the scalar score, and release the features before the next
-            //    file. The ~300k paired targets+decoys are never all resident -- peak memory is
-            //    one file's features (flat in file count, <= the retrain's streaming ingest).
-            //    Uses the SAME loader + identity key the resident reload used
-            //    (LoadReconciledFeaturesByIdentity keyed by (EntryId,Charge,ScanNumber), the
-            //    MapFeaturesByIdentity key), so each survivor's score is byte-identical to the
-            //    old resident path. Keyed by (file, entry_id); entry_id is unique per file.
-            var survivorScore = new Dictionary<(string, uint), double>();
-            // Announce BEFORE the loop, not after it. This reads one reconciled parquet per file
-            // and on a 163-file Astral set that is ~212 GB off disk - measured at 34.9 min with
-            // no console output at all, because the summary line below is only reached once the
-            // loop finishes. A silent phase that long is indistinguishable from a hang, and it
-            // was read as one during the first 163-file run.
-            using (var progress = new ProgressReporter(
-                string.Format("{0}: reloading frozen-model features from {1} file(s)",
-                    mode, perFileEntries.Count),
-                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            // 1. Reported survivors indexed by file for the per-file emit below, plus the one
+            //    genuinely global set: every survivor entry_id. The best-of-runs floor is a
+            //    per-entry_id minimum across files, so that set has to span the run - but it is
+            //    O(distinct entry_ids), not O(files x entry_ids).
+            //
+            //    What used to sit here was a separate whole-run pass that loaded EVERY file's
+            //    reconciled PIN features and stashed all of their frozen-model scores in one
+            //    Dictionary<(file, entry_id), double> (~3.8 GB at 82 files, #4486). The scoring
+            //    is per file by nature, so it now happens one file at a time inside ReadFile
+            //    below: same loader and identity key (LoadReconciledFeaturesByIdentity keyed by
+            //    (EntryId,Charge,ScanNumber)), same scores, one file's worth resident, and one
+            //    fewer pass over the reconciled parquets.
+            //
+            //    Distinct file keys are an INVARIANT here, asserted rather than assumed. Two
+            //    --input-scores paths in different directories can share a stem
+            //    (RescoreHydration.PreCompactionTallies is index-keyed for exactly that reason),
+            //    and every per-file structure on this path is name-keyed: a duplicate stem would
+            //    silently give one of the two the other's sidecar and leave its entries with a
+            //    mixture of refreshed and stale q-values. The same guard sits at the head of
+            //    PercolatorScorer.ScoreProjectionAndComputeFdrInPlace, for the same reason - a
+            //    bounded per-file pass cannot tolerate what a whole-run keyed map merged. This
+            //    hazard predates the per-file emit (sidecarByKey was already last-wins); the
+            //    assert is what makes it visible instead of silent (see #4486 review finding 4).
+            var entriesByFile = new Dictionary<string, List<FdrEntry>>(
+                perFileEntries.Count, StringComparer.Ordinal);
+            var survivorEntryIds = new HashSet<uint>();
+            long survivorObservations = 0;
+            foreach (var kvp in perFileEntries)
             {
-                long nDone = 0;
-                foreach (var kvp in perFileEntries)
+                if (entriesByFile.ContainsKey(kvp.Key))
                 {
-                    progress.Report(++nDone);
-                    if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoreParquetPath))
-                        continue;
-                    string effectiveParquetPath =
-                        ParquetScoreCache.EffectiveScoresPathFromScoresPath(scoreParquetPath);
-                    Dictionary<(uint, byte, uint), double[]> featByIdentity;
-                    try
-                    {
-                        featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogWarning(string.Format(
-                            "{0}: failed to reload PIN features from {1}: {2}",
-                            mode, effectiveParquetPath, ex.Message));
-                        continue;
-                    }
-                    foreach (var e in kvp.Value)
-                    {
-                        if (featByIdentity.TryGetValue(
-                                (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
-                            feats != null && feats.Length == nFeatures)
-                        {
-                            survivorScore[(kvp.Key, e.EntryId)] = scorer.Score(feats);
-                        }
-                    }
-                    // featByIdentity released here (one file resident at a time).
+                    throw new InvalidOperationException(string.Format(
+                        @"{0}: duplicate per-file key '{1}'; the streamed per-file competition " +
+                        @"requires one entry list per file.",
+                        mode, kvp.Key));
                 }
+                entriesByFile[kvp.Key] = kvp.Value;
+                survivorObservations += kvp.Value.Count;
+                foreach (var e in kvp.Value)
+                    survivorEntryIds.Add(e.EntryId);
             }
 
-            // 2. Reported survivors to emit (every post-reconciliation entry) + per-file scalar
-            //    sidecar paths. Validate every sidecar up front so we fail fast (and fall back to
-            //    the retrain) before streaming any file.
-            var survivors = new List<(string, uint)>();
-            foreach (var kvp in perFileEntries)
-                foreach (var e in kvp.Value)
-                    survivors.Add((kvp.Key, e.EntryId));
-
+            // 2. Per-file scalar sidecar paths. Validate every sidecar up front so we fail fast
+            //    (and fall back to the retrain) before streaming any file.
             var fileKeys = new List<string>(perFileEntries.Count);
             // Pass-1 experiment q for the OFF-STRATUM peaks Stage 6 changed, read from the
             // sidecar because the post-rescore overlay already zeroed the in-memory value. Only
@@ -614,9 +597,9 @@ namespace pwiz.Osprey.Tasks
 
             ctx.LogInfo(string.Format(
                 "OSPREY_PASS2_QVALUE={0}: recomputing q/PEP by streaming {1} file(s), frozen-model " +
-                "scores swapped in for {2} reconciled survivors -- no retrain, one file resident at a " +
-                "time{3}.",
-                mode, fileKeys.Count, survivorScore.Count,
+                "scores swapped in for up to {2} reconciled survivor observations - no retrain, one " +
+                "file resident at a time{3}.",
+                mode, fileKeys.Count, survivorObservations,
                 proteinCompact ? ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"
                                : ", full-population null"));
 
@@ -676,30 +659,82 @@ namespace pwiz.Osprey.Tasks
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
-            // 3. Streamed full-population competition + run/experiment precursor q + PEP. Only one
-            //    file's scalars are resident at a time; the cross-file state is bounded by the
-            //    number of distinct precursors, not the total observation count -- so peak memory
-            //    is flat in file count (the 32/64 GB many-file target).
-            Dictionary<(string, uint), double> runQ, expQ, pep;
-            // The streaming competition reads one file's scalars per call and is otherwise silent;
-            // at 163 files that was a 9.6 min gap immediately after the line above announced it.
-            // readFileScalars is invoked exactly once per file (StreamingFdr.cs:180, single pass),
-            // so counting calls here is an honest per-file progress signal without threading a
-            // callback through the FDR layer.
+            // 3. Streamed full-population competition + run/experiment precursor q + PEP. One
+            //    file's features, scalars and run q are resident at a time; the cross-file state
+            //    is bounded by the number of distinct precursors and distinct survivor entry_ids,
+            //    so peak memory is flat in file count (the 32/64 GB many-file target). Run q is
+            //    written onto each file's entries as that file finishes; experiment q and PEP are
+            //    derived per entry afterwards from the bounded state this returns, so no
+            //    (file, entry_id)-keyed result map is ever built.
+            StreamingFdr.StreamedCompetitionState competition;
+            long nScored = 0;
+            // The streamed phase is otherwise silent; at 163 files that was a 9.6 min gap
+            // immediately after the line above announced it. ReadFile is invoked exactly once per
+            // file, so counting calls here is an honest per-file progress signal without threading
+            // a callback through the FDR layer. It now covers the frozen-model feature reload too
+            // (folded in below), which is the expensive half and used to have its own reporter.
             using (var progress = new ProgressReporter(
-                string.Format("{0}: reading per-file scalars for the streamed competition ({1} file(s))",
-                    mode, fileKeys.Count),
+                string.Format("{0}: streaming the competition over {1} file(s)", mode, fileKeys.Count),
                 fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nRead = 0;
 
-                (uint[] entryIds, double[] scores) ReadFile(string fileKey)
+                (uint[] entryIds, double[] scores, IReadOnlyDictionary<uint, double> survivorScores)
+                    ReadFile(string fileKey)
                 {
+                    // Frozen-model score for THIS file's reconciled survivors: load its PIN
+                    // features, score with the frozen 1st-pass weights, keep only the scalar
+                    // score, and release the features on the way out. Same loader and identity
+                    // key the resident reload used, so each survivor's score is byte-identical.
+                    var fileScores = new Dictionary<uint, double>();
+                    string effectiveParquetPath = ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                        perFileParquetPaths[fileKey]);
+                    try
+                    {
+                        var featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
+                        foreach (var e in entriesByFile[fileKey])
+                        {
+                            if (featByIdentity.TryGetValue(
+                                    (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
+                                feats != null && feats.Length == nFeatures)
+                            {
+                                fileScores[e.EntryId] = scorer.Score(feats);
+                            }
+                        }
+                        // featByIdentity released here (one file resident at a time).
+                    }
+                    catch (Exception ex)
+                    {
+                        // Same disposition as the old whole-run pass: this file contributes no
+                        // swapped-in scores and competes on its stored 1st-pass ones.
+                        ctx.LogWarning(string.Format(
+                            "{0}: failed to reload PIN features from {1}: {2}",
+                            mode, effectiveParquetPath, ex.Message));
+                    }
+                    nScored += fileScores.Count;
+
                     FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
                     if (stratumBaseIds != null)
-                        StashOffStratumPass1ExperimentQ(fileKey, sidecarByKey[fileKey], eids, scs);
+                        StashOffStratumPass1ExperimentQ(fileKey, sidecarByKey[fileKey], eids, scs, fileScores);
                     progress.Report(++nRead);
-                    return (eids, scs);
+                    return (eids, scs, fileScores);
+                }
+
+                // Write this file's run q onto its entries while the map is still in hand, then
+                // let it go. Those entries are already resident (they are Stage 7's input), so
+                // this costs nothing, where holding every file's run q to the end of the run cost
+                // ~3.8 GB at 82 files. An entry absent from the map won no competition in this
+                // file and takes the 1.0 default the streamed form used to fill in centrally.
+                void ApplyFileRunQ(string fileKey, IReadOnlyDictionary<uint, double> fileRunQ)
+                {
+                    foreach (var e in entriesByFile[fileKey])
+                    {
+                        double rq = fileRunQ.TryGetValue(e.EntryId, out double v) ? v : 1.0;
+                        e.RunPrecursorQvalue = rq;
+                        // Precursor-level path: keep peptide q in step with precursor q for the
+                        // reported set (peptide-level FDR is not the target here).
+                        e.RunPeptideQvalue = rq;
+                    }
                 }
 
                 // Capture the pass-1 experiment q of the off-stratum peaks Stage 6 changed, so
@@ -707,13 +742,13 @@ namespace pwiz.Osprey.Tasks
                 // uses: the recomputed frozen-model score differs from the sidecar score. The
                 // set is small, and the second sidecar pass is skipped entirely when it is empty.
                 void StashOffStratumPass1ExperimentQ(string fileKey, string sidecarPath,
-                    uint[] eids, double[] scs)
+                    uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> fileScores)
                 {
                     var wanted = new HashSet<uint>();
                     for (int i = 0; i < eids.Length; i++)
                     {
                         if (!stratumBaseIds.Contains(eids[i] & 0x7FFFFFFFu) &&
-                            survivorScore.TryGetValue((fileKey, eids[i]), out double ov) &&
+                            fileScores.TryGetValue(eids[i], out double ov) &&
                             ov != scs[i])
                             wanted.Add(eids[i]);
                     }
@@ -729,39 +764,32 @@ namespace pwiz.Osprey.Tasks
                     });
                 }
 
-                StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
-                    fileKeys, ReadFile, survivorScore, survivors,
-                    out runQ, out expQ, out pep, stratumBaseIds);
+                competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                    fileKeys, ReadFile, survivorEntryIds, ApplyFileRunQ, stratumBaseIds);
             }
 
-            // 4. Map the recomputed q/PEP back onto the reported survivor entries. Under
-            //    protein-compact, an OFF-stratum survivor got q=1.0 from the (constrained)
-            //    competition -- skip it so it KEEPS its already-passing 1st-pass q rather
-            //    than being dropped (report = pass1 U stratum passers).
+            // 4. Finish each reported survivor from the bounded competition state, one file at a
+            //    time. Run q was written per file as the stream advanced, so what is left here is
+            //    experiment q and PEP - both derived per entry from O(distinct) maps instead of
+            //    read out of a whole-run (file, entry_id)-keyed result dictionary.
             int nMapped = 0;
             foreach (var kvp in perFileEntries)
                 foreach (var e in kvp.Value)
                 {
-                    var key = (kvp.Key, e.EntryId);
                     if (proteinCompact && !stratumBaseIds.Contains(e.EntryId & 0x7FFFFFFFu))
                     {
-                        // Off-stratum survivors keep their 1st-pass q (report = pass1 U stratum
-                        // passers). Only the RUN-level q of a peak Stage 6 changed is refreshed:
-                        // that peak competed above on its recalculated score, and leaving it on
-                        // the q=1 sentinel the overlay wrote would read as a confident rejection
-                        // rather than "not yet computed". An unchanged one never competed, so it
-                        // is absent from runQ and keeps everything.
+                        // Off-stratum survivors keep their 1st-pass EXPERIMENT q (report = pass1 U
+                        // stratum passers). That q is a pass-1 property anchored on the
+                        // best-scoring peak, and reconciliation corrects peaks TOWARD that anchor
+                        // rather than moving it, so a changed peak was not the one that set the
+                        // maximum and cannot become it. Carrying the pass-1 value is therefore
+                        // exact, and it is what keeps the re-scoping additive.
                         //
-                        // The EXPERIMENT q is never recomputed here. It is a pass-1 property
-                        // anchored on the best-scoring peak, and reconciliation corrects peaks
-                        // TOWARD that anchor rather than moving it, so a changed peak was not the
-                        // one that set the maximum and cannot become it. Carrying the pass-1
-                        // value is therefore exact, and it is what keeps the re-scoping additive.
-                        if (!runQ.TryGetValue(key, out double rqOff))
-                            continue;
-                        e.RunPrecursorQvalue = rqOff;
-                        e.RunPeptideQvalue = rqOff;
-                        if (pass1ExpQByKey.TryGetValue(key, out var q1))
+                        // Their RUN q was refreshed with everyone else's: a peak Stage 6 changed
+                        // competed above on its recalculated score, and one that did not compete
+                        // takes the 1.0 that says so, rather than a stale q describing a peak that
+                        // no longer exists (the post-rescore overlay zeroes it for that reason).
+                        if (pass1ExpQByKey.TryGetValue((kvp.Key, e.EntryId), out var q1))
                         {
                             e.ExperimentPrecursorQvalue = q1.prec;
                             e.ExperimentPeptideQvalue = q1.pep;
@@ -769,20 +797,18 @@ namespace pwiz.Osprey.Tasks
                         nMapped++;
                         continue;
                     }
-                    if (!runQ.TryGetValue(key, out double rq))
-                        continue;
-                    e.RunPrecursorQvalue = rq;
-                    e.ExperimentPrecursorQvalue = expQ[key];
-                    e.Pep = pep[key];
+                    double eq = competition.ExperimentQ(e.EntryId, e.RunPrecursorQvalue);
+                    e.ExperimentPrecursorQvalue = eq;
                     // Precursor-level path: keep peptide q in step with precursor q for the
                     // reported set (peptide-level FDR is not the target here).
-                    e.RunPeptideQvalue = rq;
-                    e.ExperimentPeptideQvalue = expQ[key];
+                    e.ExperimentPeptideQvalue = eq;
+                    e.Pep = competition.Pep(kvp.Key, e.EntryId);
                     nMapped++;
                 }
             ctx.LogInfo(string.Format(
-                "{0}: mapped recomputed q onto {1} reported survivors in {2:F1}s.",
-                mode, nMapped, sw.Elapsed.TotalSeconds));
+                "{0}: mapped recomputed q onto {1} reported survivors ({2} frozen-model scores " +
+                "swapped in) in {3:F1}s.",
+                mode, nMapped, nScored, sw.Elapsed.TotalSeconds));
             return true;
         }
 
