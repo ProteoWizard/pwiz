@@ -68,7 +68,19 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public class Stats
         {
-            /// <summary>Total stubs across all files BEFORE compaction.</summary>
+            /// <summary>
+            /// Total stubs across all files as <see cref="Apply"/> found them - which is
+            /// "before compaction" only on the batch hydrate.
+            ///
+            /// On a bundle from <see cref="RescoreHydration.HydrateCompactedStreaming"/>
+            /// (marked by a non-null <see cref="RescoreInputs.PreCompactionTallies"/>) the
+            /// buffer arrives ALREADY compacted to the same retained set <see cref="Apply"/>
+            /// re-derives, so this equals <see cref="EntriesAfter"/> and is NOT the
+            /// pre-compaction total. A caller that wants the real pre-compaction figure on
+            /// that path must read <see cref="RescoreInputs.TotalPreCompactionStubs"/>, which
+            /// the streaming hydrate reduced per file while each file's full pool was briefly
+            /// resident.
+            /// </summary>
             public int EntriesBefore { get; set; }
 
             /// <summary>Total stubs across all files AFTER compaction.</summary>
@@ -95,7 +107,7 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RescoreInputs.ReconciliationActions"/> with
         /// post-compaction <c>vec_idx</c> values.
         ///
-        /// Retained set: the join-wide first-pass base_id set that FirstJoin
+        /// Retained set: the join-wide first-pass base_id set that FirstPassFDR
         /// computed with every file in memory and persisted in the
         /// <c>reconciliation.json</c> envelope (v3 <c>first_pass_base_ids</c>,
         /// <see cref="RescoreInputs.GlobalFirstPassBaseIds"/>). Consuming it here
@@ -106,15 +118,15 @@ namespace pwiz.Osprey.Tasks
         /// silently diverge from the in-memory run (regression mode3).
         ///
         /// The survival predicate itself -- the peptide/precursor FDR gate plus
-        /// the protein-FDR rescue -- is applied UPSTREAM by FirstJoin when it
-        /// builds that set (<see cref="FirstJoinTask"/>'s compaction), matching
+        /// the protein-FDR rescue -- is applied UPSTREAM by FirstPassFDR when it
+        /// builds that set (<see cref="FirstPassFdrTask"/>'s compaction), matching
         /// Rust's <c>rescore::run_rescore</c>. This method only consumes the set.
         /// </summary>
         public static Stats Apply(RescoreInputs inputs)
         {
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
 
-            // 1. The join-wide passing base_id set is authoritative: FirstJoin
+            // 1. The join-wide passing base_id set is authoritative: FirstPassFDR
             //    computed it with every file in memory and persisted it in the
             //    reconciliation.json envelope. A worker missing it would have to
             //    recompute a PER-FILE subset and silently diverge from the
@@ -202,6 +214,22 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in inputs.PerFileEntries)
                 entriesAfter += kvp.Value.Count;
 
+            // Streaming pre-filter invariant. A bundle carrying per-file tallies came from
+            // HydrateCompactedStreaming, which already retained exactly the set derived
+            // above - the join-wide first-pass base_ids unioned with every planner action
+            // target - so this pass must have found nothing left to remove. Documented as
+            // "a provably conservative pre-filter in front of Apply"; check it rather than
+            // rely on it, because a divergence would mean the streamed survivor set differs
+            // from the resident twin's and every downstream number would shift silently.
+            if (inputs.PreCompactionTallies != null && entriesAfter != entriesBefore)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "RescoreCompaction: the streamed bundle was pre-compacted to a different " +
+                    "set than Apply re-derives ({0} entries in, {1} retained). The streaming " +
+                    "hydrate and Apply must agree on the retained set.",
+                    entriesBefore, entriesAfter));
+            }
+
             // 4. Rebuild reconciliation_actions with post-compaction
             //    vec_idx. Walk the now-compact list, look up each entry's
             //    (file, entry_id) in actionsById, and drop the matched
@@ -226,6 +254,14 @@ namespace pwiz.Osprey.Tasks
             }
             dropped = actionsById.Count;
             inputs.ReconciliationActions = newActions;
+            // Hand the retained set back on the bundle. FirstPassFdrTask's rehydrate needs it to
+            // rebuild any one file's survivors from disk (FirstPassSurvivorLoader), and
+            // re-deriving it there would mean re-reading the envelopes for the action term - the
+            // half that is NOT in GlobalFirstPassBaseIds. This method already holds both terms,
+            // and is the authority the streaming pre-filter is checked against above, so
+            // publishing it here is what keeps the rebuilt list equal to the buffer by
+            // construction.
+            inputs.RetainedBaseIds = firstPassBaseIds;
 
             return new Stats
             {

@@ -1,10 +1,8 @@
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -98,10 +96,6 @@ namespace pwiz.Skyline.ToolsUI
         /// the caller, who must drive it. A transient one is ridden through -- waiting for it is the right thing to
         /// do, because it will finish on its own.</para></summary>
         public abstract bool IsTransient { get; }
-        /// <summary>Whether the form/dialog is still on screen (a managed form: not disposed, handle created and
-        /// visible; a native dialog: its window is visible). Must be read on the owning UI thread for a managed
-        /// form. Its negation is "dismissed".</summary>
-        public abstract bool IsOpen { get; }
         /// <summary>Whether this is a progress form actively reporting work in flight (an
         /// <see cref="ILongWaitForm"/> mid-operation). It is what tells the message-loop watchdog that a wait is
         /// getting somewhere -- work IS advancing -- rather than stuck; false for a native dialog.</summary>
@@ -140,32 +134,43 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.GetOptions.CallNow(FindElement(controlId, UiActions.GetOptions)));
         }
 
-        /// <summary>Every top-level window of this process that is a managed Form (visible) or a native modal dialog,
+        /// <summary>Every top-level window of this process that is an open managed Form or a native modal dialog,
         /// each wrapped as the connector window abstraction that drives it. Enumerated purely from Win32 + a
         /// Control.FromHandle lookup, so it is safe on any thread. Top-level only -- a form docked inside the main
         /// window is a child window and does not appear here (JsonUiService.GetOpenFormElements adds those).</summary>
         public static IEnumerable<StandaloneWindow> GetTopLevelWindows(CancellationToken cancellationToken)
         {
-            var processId = (uint)Process.GetCurrentProcess().Id;
+            var processId = Kernel32.GetCurrentProcessId();
             foreach (var hwnd in User32.EnumWindows())
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                if (windowProcessId != processId || !User32.IsWindowVisible(hwnd))
+                if (windowProcessId != processId)
                     continue;
-                if (Control.FromHandle(hwnd) is Form)
+
+                switch (Control.FromHandle(hwnd))
                 {
-                    yield return NewStandaloneWindow(hwnd, cancellationToken);
-                }
-                else
-                {
-                    // A non-managed top-level window is only a window the connector can drive when it is a native
-                    // DIALOG. The process has other unmanaged top-level windows (message-only and helper windows,
-                    // each with no caption), and wrapping those would list them as forms with the id "Dialog:" that
-                    // nothing can resolve. Create returns null for anything that is not a "#32770", and picks the
-                    // subclass that drives the ones that are (Open / Save / folder browser).
-                    var dialog = NativeDialog.Create(hwnd, cancellationToken);
-                    if (dialog != null)
-                        yield return dialog;
+                    case Form form:
+                        if (form.Visible)
+                        {
+                            var standaloneForm = StandaloneForm.Create(form, hwnd, cancellationToken);
+                            if (standaloneForm != null)
+                            {
+                                yield return standaloneForm;
+                            }
+                        }
+
+                        break;
+                    case { }:
+                        // A child control is not a top-level window to drive, so skip it.
+                        break;
+                    default:
+                        if (User32.IsWindowVisible(hwnd))
+                        {
+                            var nativeDialog = NativeDialog.Create(hwnd, cancellationToken);
+                            if (nativeDialog != null)
+                                yield return nativeDialog;
+                        }
+                        break;
                 }
             }
         }
@@ -175,19 +180,25 @@ namespace pwiz.Skyline.ToolsUI
         // is a native window, which NativeDialog.Create classifies. CLASSIFY, do not just wrap: the kind is half of
         // the FormId, so a window enumerated here must come back with the same id it has anywhere else (a Save
         // dialog is "SaveFileDialog:Save As" here as well as in GetOpenDialogs) -- otherwise the id a wait reports
-        // in ActionResult.FormId would not resolve. Create returns null for a window that is not a dialog at all,
-        // which is then driven generically.
+        // in ActionResult.FormId would not resolve.
+        //
+        // NULL when the window is not one the connector can drive: a child control, or an unmanaged window that is
+        // not a dialog. Callers enumerate windows they did not choose -- the process has plenty of unmanaged
+        // top-level windows (tooltips, message-only and helper windows, each with no caption) -- so "not one of
+        // ours" is an ordinary result rather than an error, and there is nothing a caller could do with an
+        // exception about it anyway.
         internal static StandaloneWindow NewStandaloneWindow(IntPtr hwnd, CancellationToken cancellationToken)
         {
             switch (Control.FromHandle(hwnd))
             {
                 case Form form:
                     return StandaloneForm.Create(form, hwnd, cancellationToken);
-                case { } control:
-                    throw new ArgumentException(new LlmInstruction($@"{control.GetType().Name} is not a form"));
+                case { }:
+                    return null;    // a child control is not a top-level window to drive
                 default:
-                    return NativeDialog.Create(hwnd, cancellationToken)
-                           ?? NativeDialog.MakeNativeDialog(hwnd, cancellationToken);
+                    // Null for anything that is not a "#32770"; picks the subclass that drives the ones that are
+                    // (Open / Save / folder browser), else the generic dialog.
+                    return NativeDialog.Create(hwnd, cancellationToken);
             }
         }
 
@@ -196,7 +207,7 @@ namespace pwiz.Skyline.ToolsUI
         /// so it is safe off the UI thread (the connector's cheap "did a new modal appear" check).</summary>
         private static IList<IntPtr> EnumModalWindowHandles()
         {
-            var processId = (uint)Process.GetCurrentProcess().Id;
+            var processId = Kernel32.GetCurrentProcessId();
             return User32.EnumWindows().Where(hwnd =>
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
@@ -204,15 +215,25 @@ namespace pwiz.Skyline.ToolsUI
             }).ToList();
         }
 
-        /// <summary>Every modal dialog currently open in this process, each wrapped as the connector window abstraction
-        /// that drives it. A single Win32 enumeration (<see cref="EnumModalWindowHandles"/>) is the sole source, so
-        /// managed and native modals are discovered the same way (see <see cref="NewStandaloneWindow"/>). Going
-        /// handle -> Form avoids reading Form.Handle (which trips the cross-thread check) and needs no Form/handle
-        /// pairing, so it is safe off the UI thread -- both the enumeration and Control.FromHandle are a lookup,
-        /// never a UI touch.</summary>
+        /// <summary>Every modal dialog currently open in this process THAT THE CONNECTOR CAN DRIVE, each wrapped as
+        /// the abstraction that drives it. A single Win32 enumeration (<see cref="EnumModalWindowHandles"/>) is the
+        /// sole source, so managed and native modals are discovered the same way. Going handle -> Form avoids
+        /// reading Form.Handle (which trips the cross-thread check) and needs no Form/handle pairing, so it is safe
+        /// off the UI thread -- both the enumeration and Control.FromHandle are a lookup, never a UI touch.
+        ///
+        /// <para>A window this cannot classify is SKIPPED rather than wrapped generically, because this list is what
+        /// makes a connector action stop and report "the operation did not complete because this dialog is open".
+        /// Stopping for a window we cannot drive helps nobody: there is no verb that would dismiss it, so the client
+        /// is stuck either way -- and it is worse than doing nothing, because <see cref="EnumModalWindowHandles"/>
+        /// recognizes a modal only by the shape of its window (visible, enabled, owner disabled), which any
+        /// transient unmanaged helper window can wear for an instant. That is what made TestJsonToolServer fail
+        /// intermittently in nightly, reporting a dialog with the unresolvable id "Dialog:" that had already
+        /// vanished by the time the failure was logged.</para></summary>
         public static IEnumerable<StandaloneWindow> GetModalDialogs(CancellationToken cancellationToken)
         {
-            return EnumModalWindowHandles().Select(hwnd => NewStandaloneWindow(hwnd, cancellationToken));
+            return EnumModalWindowHandles()
+                .Select(hwnd => NewStandaloneWindow(hwnd, cancellationToken))
+                .Where(modal => modal != null);
         }
 
         /// <summary>Whether the window is a modal dialog blocking its owner -- visible and enabled, with an owner

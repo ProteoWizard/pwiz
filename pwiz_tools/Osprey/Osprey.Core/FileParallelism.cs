@@ -225,12 +225,26 @@ namespace pwiz.Osprey.Core
         {
             try
             {
-                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                if (string.IsNullOrEmpty(path))
+                    return 0;
+                if (File.Exists(path))
                     return new FileInfo(path).Length;
+                // A vendor bundle is a DIRECTORY (Agilent .d, Bruker .d, Waters .raw).
+                // Sizing it at 0 does not merely lose precision: EstimatePerFileBytes
+                // returns 0 for the whole set, ResolveAuto takes its no-signal branch
+                // and runs at the full core count with NO memory budget at all. That is
+                // the opposite of conservative on exactly the largest inputs.
+                var dir = new DirectoryInfo(path);
+                if (!dir.Exists)
+                    return 0;
+                long total = 0;
+                foreach (var f in dir.EnumerateFiles(@"*", SearchOption.AllDirectories))
+                    total += f.Length;
+                return total;
             }
             catch (Exception)
             {
-                // Unreadable path -- treat as unknown size (0), never throw from a
+                // Unreadable path - treat as unknown size (0), never throw from a
                 // sizing hint.
             }
             return 0;

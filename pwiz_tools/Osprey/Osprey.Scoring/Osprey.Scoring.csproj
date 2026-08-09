@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <!-- Pick-model JSON (OSPREY_PICK_LDA_MODEL) parse in PickLdaModel. Newtonsoft is the
          tree's JSON library (Osprey.Chromatography / Osprey.IO); declared explicitly here so
