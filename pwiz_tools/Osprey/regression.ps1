@@ -236,7 +236,19 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 #     like every other leg and resume-survivor-handoff - the last entry here - came out
 #     with it. Zero is the invariant, not a milestone: a new entry below is a regression
 #     to justify in review, not a line to add and move on.
-$knownResidentGaps = @()
+$knownResidentGaps = @(
+    # Untokened by nature, which is exactly why it belongs here: no guard demands a token
+    # for it, so a token audit cannot see it and a green gate printed "none" while every
+    # leg walked it. Measured 2026-08-09 on 82 files rather than estimated - the preamble
+    # above names it, and a table that omits the one gap the preamble names is worse than
+    # no table. Token NONE, so it does not inflate the required-token count below.
+    @{
+        Issue = '#4486'
+        Token = 'NONE'
+        Path  = 'Stage 6 rebuilds the whole-run survivor buffer for SecondPassFDR to read; resident from the end of Stage 6 to the end of Stage 7.'
+        Legs  = 'Every leg of every dataset. 24.43 GB live post-GC at 82 files (0.197 GB/file); ~103 GB projected at 500.'
+    }
+)
 # Reachable only outside this gate, tokened, each with an open issue:
 #   #4507  fdrbench-pass1 -- --fdrbench-pass 1 walks the pre-compaction pool
 # hpc-merge is GONE (#4486): --task SecondPassFDR takes the bounded streaming hydrate, so
