@@ -130,9 +130,16 @@ PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const Spect
         return;
     }
 
-    // One spectrum out of order condemns the file, and always wins: a writer cannot be talked back
-    // into good standing by a later spectrum that happens to ascend. The exchange also tells us
-    // whether this is the first such spectrum, which is what the warning below is keyed on.
+    // One spectrum out of order condemns the file, and the condemnation is permanent: a writer
+    // cannot be talked back into good standing by a later spectrum that happens to ascend, because
+    // the compare_exchange above only fires from unsettled.
+    // It does not hold the other way round. A file settled as sorted stops being examined at all,
+    // at the top of this function, so a writer that sorts some spectra and not others is only
+    // corrected up to the first long ascending one. That is the price of settling the question
+    // instead of re-asking it for every spectrum of every file; the converter this was written for
+    // got every spectrum wrong, so the settled answer is the right one to pay for.
+    // The exchange also tells us whether this is the first such spectrum, which the warning below
+    // is keyed on.
     bool firstSpectrumOutOfOrder =
         mzOrderVerdict_.exchange(MzOrderVerdict::writerDoesNotSortByMz) != MzOrderVerdict::writerDoesNotSortByMz;
 
