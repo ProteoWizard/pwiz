@@ -278,6 +278,24 @@ namespace pwiz.Osprey
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
                 }
+                // A token that names nothing admits nothing, so the run proceeds - but say so
+                // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
+                // its reconciled-input load, making it the first previously-VALID token to
+                // become invalid, and committed automation still passes it. Silence there is
+                // the bad outcome: the operator believes they granted an allowance, and if the
+                // run later needs a real one the guard says only "does not name this path",
+                // which reads as a typo rather than a retirement. A warning, not an error -
+                // unlike OSPREY_PASS2_QVALUE above, a stale allowance cannot change any
+                // reported number, it can only fail to permit something.
+                if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
+                {
+                    LogWarning(string.Format(
+                        "OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' names no known resident path, so it " +
+                        "grants nothing. Recognized: {1}. ('hpc-merge' was retired - the " +
+                        "--task SecondPassFDR reconciled-input load streams and needs no allowance.)",
+                        OspreyEnvironment.AllowUnfixedResident,
+                        string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
+                }
                 LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
