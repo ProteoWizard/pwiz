@@ -245,7 +245,7 @@ namespace pwiz.SkylineTestData
             }
 
             var requestedNames = new[] { originalNames[2], originalNames[0] };
-            File.WriteAllLines(orderPath, new[] { string.Empty, "  " + requestedNames[0] + "  ", requestedNames[1] });
+            File.WriteAllLines(orderPath, new[] { string.Empty, new string(' ', 2) + requestedNames[0] + new string(' ', 2), requestedNames[1] });
 
             RunCommand("--in=" + docPath,
                 "--reorder-replicates-file=" + orderPath,
@@ -284,7 +284,7 @@ namespace pwiz.SkylineTestData
                 SkylineResources.CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_, missingPath, string.Empty), output);
             CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
 
-            File.WriteAllLines(orderPath, new[] { string.Empty, "   " });
+            File.WriteAllLines(orderPath, new[] { string.Empty, new string(' ', 3) });
             output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
             CheckRunCommandOutputContains(string.Format(
                 SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_, orderPath), output);
