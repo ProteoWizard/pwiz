@@ -287,5 +287,52 @@ namespace pwiz.Osprey.Test
                 true, false, ResidentPaths.PROJECTION_OFF + "," + ResidentPaths.FDRBENCH_PASS1));
         }
 
+        /// <summary>
+        /// The predicate the pre-compaction-pool decision now defers to (#4486).
+        /// <c>PreCompactionPoolReason</c> used to ask <c>!NoJoin</c> as a stand-in for "will
+        /// first-pass Percolator train in this process", which agreed with the real rule for
+        /// every task except <c>--task SecondPassFDR</c> - and that one disagreement forced an
+        /// O(files) resident pool for a consumer that does not exist.
+        ///
+        /// <para>Pinned as a TRUTH TABLE over the flag combinations <c>Program</c> derives from
+        /// <c>--task</c>, not as a single case, because the defect was a predicate that was
+        /// right four times out of five. A future task flag that re-splits membership has to
+        /// come through here.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFirstPassMembershipAcrossTasks()
+        {
+            var scores = new[] { "a.scores.parquet" };
+
+            // Straight-through (-i, no --task): FirstPassFDR runs.
+            Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(new OspreyConfig()));
+
+            // --task PerFileScoring / PerFileRescoring set NoJoin: excluded, they stop before
+            // the join.
+            Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
+                new OspreyConfig { NoJoin = true }));
+            Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
+                new OspreyConfig { NoJoin = true, InputScores = scores.ToList() }));
+
+            // --task FirstPassFDR sets StopAfterStage5: it IS the first-pass node.
+            Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(
+                new OspreyConfig { StopAfterStage5 = true, InputScores = scores.ToList() }));
+
+            // The full --input-scores pipeline (no --task): runs.
+            Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(
+                new OspreyConfig { InputScores = scores.ToList() }));
+
+            // --task SecondPassFDR: NoJoin FALSE, so the old !NoJoin proxy said "runs" - but
+            // ExpectReconciledInput excludes it. This single row is the whole change.
+            Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
+                new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() }),
+                "--task SecondPassFDR must not be treated as running first-pass Percolator");
+
+            // And the consequence the loader draws from it: that node, and only that node, may
+            // take the file-count-bounded lean/streaming route rather than the resident pool.
+            Assert.IsFalse(PerFileScoringTask.NeedsResidentPool(
+                new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() },
+                useFdrProjection: true));
+        }
     }
 }
