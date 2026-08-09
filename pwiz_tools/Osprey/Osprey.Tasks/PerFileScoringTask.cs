@@ -1337,7 +1337,16 @@ namespace pwiz.Osprey.Tasks
                             perFileCalibrations, perFileIsolationMz, ctx),
                         (fileIdx, fileName, stubs, tally) =>
                         {
-                            ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
+                            // PassingTargets has the same single reader as the accumulator
+                            // above - FirstPassFdrTask's per-file Stage 5 result line - so on
+                            // a node where that task is excluded this evaluates
+                            // EffectiveRunQvalue <= RunFdr for every stub (~4.2 M per file,
+                            // ~344 M at 82 files) to fill a field nothing reads, touching each
+                            // file's pool a second time while it is the resident working set
+                            // (#4486). tally.Stubs is set by the hydrate itself, so the count
+                            // the compaction line reports is unaffected.
+                            if (mdiagHasReader || FirstPassFdrTask.IsIncludedFor(config))
+                                ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
                             if (mdiagAccumulator != null)
                                 ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
                         }), ctx);
