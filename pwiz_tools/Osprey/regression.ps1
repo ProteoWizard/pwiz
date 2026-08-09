@@ -1320,10 +1320,11 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR leg does
-        # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
-        # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
-        # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here, and mode 3's SecondPassFDR leg no
+        # longer needs one: since #4486 it streams the reconciled-input load (one file's
+        # pre-compaction pool resident at a time) instead of taking the RESIDENT first-pass
+        # pool, so no leg of this chain arms the guard at all. Keeping the opt-in would be
+        # actively harmful:
         # it wrapped the whole chain and would mask a genuine guard regression on any
         # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
         # what mode 3 exists to exercise.
