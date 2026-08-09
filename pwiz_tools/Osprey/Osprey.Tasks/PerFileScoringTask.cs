@@ -1256,12 +1256,13 @@ namespace pwiz.Osprey.Tasks
             bool loadFeatures = needsResidentPool;
 
             // The --input-files paths at :381 and :644 THROW on the same O(files) situation.
-            // This one must not: every configuration that reaches this loader worked before
-            // the streaming hydrate landed - the --task SecondPassFDR reconciled-input merge
-            // (Stage 7, deliberately deferred to issue #4486), a --task FirstPassFDR re-run
-            // over parquets whose sidecars are already on disk, and the OSPREY_DUMP_PERCOLATOR
-            // bisection dump, which by design keeps the resident path. Throwing would break
-            // all three. Warn with the consumer named instead, so an operator who meets the
+            // This one must not: every configuration that still reaches the resident branches
+            // worked before the streaming hydrate landed - a --task FirstPassFDR re-run over
+            // parquets whose sidecars are already on disk, and the OSPREY_DUMP_PERCOLATOR
+            // bisection dump, which by design keeps the resident path. (The --task
+            // SecondPassFDR merge was the third of these until #4486 streamed it; it is listed
+            // here only because that is what this justification used to rest on.) Throwing
+            // would break the rest. Warn with the consumer named instead, so an operator who meets the
             // O(files) peak at scale knows which knob put them on it. When the streaming
             // hydrate below takes the load the pool is bounded and there is nothing to say.
             // Warn on exactly the condition that SELECTS the resident loop below, rather than
@@ -1429,8 +1430,14 @@ namespace pwiz.Osprey.Tasks
                     // 21 doubles per row here only to null them cost ~800 MB per file at
                     // ~4.2M rows, the dominant term in the O(files) rehydrate peak.
                     //
-                    // Only safe because NeedsResidentPool is false: that is what says no
-                    // resident 2nd-pass Percolator will read entry.Features later.
+                    // Safe because nothing on this path reads entry.Features afterwards. That
+                    // USED to be phrased as "NeedsResidentPool is false says so", which stopped
+                    // being true when #4486 took ExpectReconciledInput out of that predicate:
+                    // the merge node now has NeedsResidentPool false AND does run a 2nd-pass
+                    // Percolator. It is still safe there, for a different reason - Pass2FdrSidecar
+                    // reloads the features it needs from each reconciled parquet rather than
+                    // reading them off these stubs - so state the reason rather than a predicate
+                    // that no longer implies it.
                     var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
                     // Keep the fail-fast the feature load used to provide: a foreign or
                     // truncated parquet missing the PIN schema must stop here, not surface
