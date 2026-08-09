@@ -61,6 +61,173 @@ namespace pwiz.Osprey.Test
             TestPassingSetHonorsFdrLevel();
             TestCalibrationBuildCalFile();
             TestStreamingAccumulatorMatchesBatch();
+            TestPeakCoAssignment();
+            TestModelDiagnosticsPanelTokens();
+        }
+
+        // The opt-in panel tokens on --model-diagnostics. The property under test is that the
+        // BARE flag stays cheap: every command line written before the expensive panels existed
+        // must keep its old cost, which is what makes adding a panel a safe change.
+        private static void TestModelDiagnosticsPanelTokens()
+        {
+            Assert.AreEqual(0, ModelDiagnosticsFeatures.Parse(null).Count);
+            Assert.AreEqual(0, ModelDiagnosticsFeatures.Parse(string.Empty).Count);
+
+            var one = ModelDiagnosticsFeatures.Parse(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT);
+            Assert.IsTrue(one.Contains(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
+
+            // Case and surrounding whitespace are forgiving; the token itself is not.
+            Assert.IsTrue(ModelDiagnosticsFeatures.Parse(@" Peak-CoAssignment ")
+                .Contains(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
+            Assert.AreEqual(ModelDiagnosticsFeatures.ALL_TOKENS.Count,
+                ModelDiagnosticsFeatures.Parse(ModelDiagnosticsFeatures.ALL).Count);
+
+            // A misspelled panel is a hard error naming the legal values, NOT a silent skip: a
+            // silently-ignored typo looks exactly like a panel that had nothing to report, and the
+            // user waits for output that never arrives.
+            try
+            {
+                ModelDiagnosticsFeatures.Parse(@"peak-coassign");
+                Assert.Fail(@"an unknown panel token must throw");
+            }
+            catch (System.ArgumentException ex)
+            {
+                Assert.IsTrue(ex.Message.Contains(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
+            }
+
+            // The config gate is AND-ed with --model-diagnostics itself, so naming a panel without
+            // the report cannot switch the work on.
+            var config = new OspreyConfig
+            {
+                ModelDiagnostics = false,
+                ModelDiagnosticsPanels = ModelDiagnosticsFeatures.Parse(ModelDiagnosticsFeatures.ALL),
+            };
+            Assert.IsFalse(config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
+            config.ModelDiagnostics = true;
+            Assert.IsTrue(config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
+        }
+
+        // Single-peak multiple-ID co-assignment (issue #4522) on a fixture where every reported
+        // number is derived by hand. Two runs; m/z and apex RT chosen so each pair lands
+        // unambiguously inside one |dRT| histogram bin (bin width 0.005 min), well clear of the
+        // edges, so the assertions do not depend on floating-point luck.
+        //
+        // file1                      m/z        apex    score   q
+        //   A   z2  target          500.000    10.000    9.0    ok    the strong explanation
+        //   A   z2  target (dup)    500.000    10.150    2.0    ok    pre-compaction second peak
+        //   A   z3  target          333.670    10.000    5.0    ok    SAME sequence, other charge
+        //   B   z2  target          500.004    10.018    3.0    ok    co-assigned, A outscores it
+        //   E   z2  entrapment      500.005    10.032    4.0    ok    co-assigned, A outscores it
+        //   X   z2  decoy           500.006    10.008    1.0    ok    co-assigned, A and B outscore
+        //   F   z2  target          500.002    10.010   20.0    FAIL  q-failing; must not partner
+        // file2
+        //   A   z2  target          500.000    30.000    6.0    ok    same precursor, no partner
+        //   C   z2  target          700.000    20.000    8.0    ok    partner 0.202 min away
+        //   D   z2  target          700.005    20.202    2.0    ok    C outscores it, but far in RT
+        private static void TestPeakCoAssignment()
+        {
+            var mz = new Dictionary<uint, double>
+            {
+                { 1, 500.000 }, { 6, 333.670 }, { 2, 500.004 }, { 3, 700.000 },
+                { 4, 700.005 }, { 7, 500.002 }, { 201, 500.005 }, { 1 | DECOY_BIT, 500.006 },
+            };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
+                { 3, EntrapmentClass.Target }, { 4, EntrapmentClass.Target },
+                { 6, EntrapmentClass.Target }, { 7, EntrapmentClass.Target },
+                { 201, EntrapmentClass.PTarget },
+            };
+            var f1 = new List<FdrEntry>
+            {
+                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000),
+                CoEntry(1, false, 2.0, 0.001, "A", 2, 10.150),
+                CoEntry(6, false, 5.0, 0.001, "A", 3, 10.000),
+                CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018),
+                CoEntry(201, false, 4.0, 0.003, "E", 2, 10.032),
+                CoEntry(1 | DECOY_BIT, true, 1.0, 0.004, "X", 2, 10.008),
+                CoEntry(7, false, 20.0, 0.500, "F", 2, 10.010),
+            };
+            var f2 = new List<FdrEntry>
+            {
+                CoEntry(1, false, 6.0, 0.001, "A", 2, 30.000),
+                CoEntry(3, false, 8.0, 0.001, "C", 2, 20.000),
+                CoEntry(4, false, 2.0, 0.002, "D", 2, 20.202),
+            };
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(f1, f2), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+            // "Detected" is reported at both q scopes; the fixture sets run and experiment q
+            // equal, so both scopes see the same rows and the run scope stands for both here.
+            var scope = data.Run;
+
+            // Detected targets are A z2, A z3, B, C, D - F fails q and is excluded from BOTH the
+            // denominator and the partner pool. If F leaked in it would outscore A (20.0 vs 9.0)
+            // and give A a better-scoring partner, so NBetter would be 2.
+            Assert.AreEqual(5, scope.Target.N);
+            Assert.AreEqual(2, scope.Target.NShared);      // A (partner B) and B (partner A)
+            Assert.AreEqual(1, scope.Target.NBetter);      // only B is outscored by its partner
+            Assert.AreEqual(0.2, scope.Target.BetterFraction, 1e-12);
+
+            // Entrapment and decoys are false by construction, so NBetter is how much of each
+            // would disappear under a best-match-wins rule on doubly-claimed peaks: all of it
+            // here, against a 0.2 target base rate.
+            Assert.IsNotNull(scope.Entrapment);
+            Assert.AreEqual(1, scope.Entrapment.N);
+            Assert.AreEqual(1, scope.Entrapment.NBetter);
+            Assert.AreEqual(5.0, scope.Enrichment, 1e-12);
+
+            Assert.IsNotNull(scope.Decoy);
+            Assert.AreEqual(1, scope.Decoy.N);
+            Assert.AreEqual(1, scope.Decoy.NBetter);
+            Assert.AreEqual(5.0, scope.DecoyEnrichment, 1e-12);
+
+            // None of these pairs is a PTM positional isomer - the sequences differ outright - so
+            // the whole "would go away" count survives the caveat subtraction.
+            Assert.AreEqual(0, scope.Entrapment.NBetterSameBaseSequence);
+            Assert.AreEqual(0, scope.Target.NBetterSameBaseSequence);
+            Assert.AreEqual(@"PEPTIDE",
+                ModelDiagnosticsData.CoAssignmentAccumulator.StripModifications(@"PEPT[+79.966]IDE"));
+
+            // The tolerance ladder falls out of the retained per-precursor minima: B is co-assigned
+            // at 0.018 min and D at 0.202, so the target rate steps 0 -> 1/5 at 0.02 and 1/5 -> 2/5
+            // at 0.25. This is the sensitivity the issue insists on showing rather than baking in.
+            CollectionAssert.AreEqual(new[] { 0.01, 0.02, 0.05, 0.10, 0.25 }, data.ToleranceLadder);
+            Assert.AreEqual(0.0, scope.Target.BetterByTolerance[0], 1e-12);
+            Assert.AreEqual(0.2, scope.Target.BetterByTolerance[1], 1e-12);
+            Assert.AreEqual(0.2, scope.Target.BetterByTolerance[3], 1e-12);
+            Assert.AreEqual(0.4, scope.Target.BetterByTolerance[4], 1e-12);
+
+            // MATCHING IS ON PRECURSOR m/z, NOT NEUTRAL MASS. "A" at z2 and z3 have identical
+            // neutral mass and identical apex RT, so a neutral-mass test would pair them - which
+            // is the only reason the prototype needed a same-sequence exclusion. Under m/z they
+            // are 500.000 vs 333.670 and cannot pair, so the z3 row contributes no co-assignment
+            // and the ladder's first entry stays 0 (a neutral-mass regression makes it 1/5).
+            Assert.AreEqual(0.0, scope.Target.BetterByTolerance[0], 1e-12);
+
+            // Pre-compaction dedup: A's second row in file1 (score 2.0, apex 10.150) must lose to
+            // its best-scoring row, so A's nearest partner is B at 0.018 min. Had the duplicate
+            // won, the histogram would carry 0.132 instead.
+            int binWidth200 = 200;                          // 50 bins over 0.25 min
+            Assert.AreEqual(2, scope.DeltaRtTarget[(int)(0.018 * binWidth200)]);   // A<->B, both directions
+            Assert.AreEqual(2, scope.DeltaRtTarget[(int)(0.202 * binWidth200)]);   // C<->D, both directions
+            Assert.IsNotNull(scope.DeltaRtEntrapment);
+            Assert.AreEqual(1, scope.DeltaRtEntrapment[(int)(0.032 * binWidth200)]);
+
+            // Runs are scanned independently: A is in both files, and its file2 peak at 30.0 min
+            // has no partner. Nothing pairs across runs, which would not be a shared peak at all.
+            Assert.AreEqual(4, scope.WorstOffenders.Count);
+            Assert.AreEqual(@"X", scope.WorstOffenders[0].ModifiedSequence);
+            Assert.AreEqual(8.0, scope.WorstOffenders[0].ScoreGap, 1e-12);
+            Assert.AreEqual(@"A", scope.WorstOffenders[0].PartnerModifiedSequence);
+            Assert.AreEqual(@"file1", scope.WorstOffenders[0].File);
+
+            // No resolvable library m/z means the panel cannot be computed at all, and must say so
+            // by returning null rather than reporting a zero co-assignment rate.
+            Assert.IsNull(ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(f1, f2), cls, id => double.NaN, 0.01, FdrLevel.Precursor, 1, false));
         }
 
         // The streaming pass-1 accumulator (fed per-row off the projection score-pass sink so an
@@ -1136,6 +1303,16 @@ namespace pwiz.Osprey.Test
                 ModifiedSequence = seq,
                 Charge = charge,
             };
+        }
+
+        // An entry carrying a detection apex RT, for the peak co-assignment panel (the only card
+        // that reads FdrEntry.ApexRt).
+        private static FdrEntry CoEntry(uint id, bool decoy, double score, double q,
+            string seq, byte charge, double apexRt)
+        {
+            var entry = Entry(id, decoy, score, q, seq, charge);
+            entry.ApexRt = apexRt;
+            return entry;
         }
 
         // An entry with distinct per-run and experiment-wide precursor q (for the

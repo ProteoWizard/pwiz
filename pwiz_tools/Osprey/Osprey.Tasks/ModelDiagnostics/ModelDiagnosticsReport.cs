@@ -88,7 +88,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
                 var data = ModelDiagnosticsData.Build(
                     perFileEntries, contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel);
+                    entrapmentRatio, config.RunFdr, config.FdrLevel,
+                    BuildPrecursorMzLookup(libraryById, config));
                 // The CAL view: per-file calibration diagnostics captured at Stage 3
                 // (null when none were captured -- a resumed run, or no files calibrated).
                 // Serialized into the pass-1 data sidecar below, so it round-trips into
@@ -136,17 +137,23 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// accumulator's streamed reductions reproduce the resident reductions (they are
         /// order-independent). Any failure is logged and swallowed; a diagnostics artifact never
         /// aborts a real run.
+        ///
+        /// <c>coAssignment</c> is the pass-1 peak co-assignment panel (issue #4522), built by
+        /// <see cref="PeakCoAssignmentSource"/> off the per-file FDR sidecars rather than the
+        /// streamed fold, which carries no apex RT. Null leaves the panel out.
         /// </summary>
         public static void WriteFromAccumulator(
             ModelDiagnosticsData.Accumulator accumulator,
             FeatureContributions contributions,
             ModelDiagnosticsData.CalibrationData cal,
             OspreyConfig config,
-            Action<string> logInfo)
+            Action<string> logInfo,
+            ModelDiagnosticsData.CoAssignmentData coAssignment = null)
         {
             try
             {
                 var data = accumulator.Build(contributions);
+                data.CoAssignment = coAssignment;
                 // The CAL view: per-file calibration diagnostics captured at Stage 3 (null when
                 // none were captured -- a resumed run, or no files calibrated). Serialized into the
                 // pass-1 data sidecar below so it round-trips into WritePass2AndFinalize's reloaded
@@ -218,7 +225,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // half is always built (FdpViews empty without an entrapment pool).
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel);
+                    entrapmentRatio, config.RunFdr, config.FdrLevel,
+                    BuildPrecursorMzLookup(libraryById, config));
 
                 string outPath = RenderAndWrite(data, config);
                 // Consume the FirstPassFDR -> SecondPassFDR hand-off sidecar unconditionally
@@ -354,6 +362,31 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 entrapmentRatio = (double)nPTarget / nTarget;
 
             pairing.LogSummary(logInfo);
+        }
+
+        /// <summary>
+        /// Library precursor m/z by FULL entry id (decoy bit included) for the co-assignment
+        /// panel, or null when there is no library to read. A decoy resolves to its own entry,
+        /// which carries the same m/z as its target by construction.
+        ///
+        /// <para>A lookup rather than a materialized map on purpose: the panel needs m/z only for
+        /// DETECTED rows, a small fraction of a library that reaches 6.3M entries on the Astral
+        /// runs, and the library is already resident wherever this is called.</para>
+        ///
+        /// <para>Returns null - which skips the panel entirely - unless the run opted into
+        /// <see cref="ModelDiagnosticsFeatures.PEAK_COASSIGNMENT"/>. Gating here rather than at
+        /// each call site means a new caller cannot accidentally turn the expensive panel back
+        /// on.</para>
+        /// </summary>
+        internal static Func<uint, double> BuildPrecursorMzLookup(
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById, OspreyConfig config)
+        {
+            if (libraryById == null ||
+                !config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT))
+                return null;
+            return entryId => libraryById.TryGetValue(entryId, out var lib) && lib != null
+                ? lib.PrecursorMz
+                : double.NaN;
         }
 
         /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base-id.</summary>

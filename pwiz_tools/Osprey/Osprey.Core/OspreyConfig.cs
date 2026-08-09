@@ -234,6 +234,22 @@ namespace pwiz.Osprey.Core
         public bool ModelDiagnostics { get; set; }
 
         /// <summary>
+        /// The opt-in <c>--model-diagnostics</c> panels this run enabled by name (see
+        /// <see cref="ModelDiagnosticsFeatures"/>). Empty for a bare <c>--model-diagnostics</c>,
+        /// which writes the standard report only - so the expensive panels never turn on by
+        /// accident and an existing command line keeps its old cost. Runtime toggle only, like
+        /// <see cref="ModelDiagnostics"/> itself: intentionally NOT part of any identity hash.
+        /// </summary>
+        public HashSet<string> ModelDiagnosticsPanels { get; set; } = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>True when the named opt-in diagnostics panel is enabled for this run.</summary>
+        public bool HasModelDiagnosticsPanel(string token)
+        {
+            return ModelDiagnostics && ModelDiagnosticsPanels != null &&
+                   ModelDiagnosticsPanels.Contains(token);
+        }
+
+        /// <summary>
         /// --timestamp: prefix each output line with [yyyy/MM/dd HH:mm:ss]. Runtime
         /// output decoration only -- not part of any identity hash.
         /// </summary>

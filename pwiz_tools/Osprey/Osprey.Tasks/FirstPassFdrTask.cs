@@ -1128,14 +1128,24 @@ namespace pwiz.Osprey.Tasks
                 // Same file order either way: the accumulator was seeded with the input-file
                 // order and perFileEntries keeps every file's key even once compacted.
                 var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
+                var libraryById = ctx.Get<LibraryById>().Value;
                 if (mdiagAccumulator != null)
                 {
+                    // The peak co-assignment panel (issue #4522) needs each row's detection apex
+                    // RT, which the streamed fold never sees. On THIS path the pre-compaction
+                    // pool is resident and carries ApexRt, so read it straight off the entries -
+                    // no sidecar/parquet rejoin needed (that is the streaming path's problem).
+                    var coAssignment = config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT)
+                        ? ModelDiagnosticsData.BuildCoAssignment(
+                            perFileEntries, mdiagAccumulator.ClassByBaseId,
+                            ModelDiagnosticsReport.BuildPrecursorMzLookup(libraryById, config),
+                            config.RunFdr, config.FdrLevel, 1, false)
+                        : null;
                     ModelDiagnosticsReport.WriteFromAccumulator(
-                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo);
+                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment);
                 }
                 else
                 {
-                    var libraryById = ctx.Get<LibraryById>().Value;
                     ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
                 }
             }
@@ -2396,8 +2406,18 @@ namespace pwiz.Osprey.Tasks
             if (mdiagAccumulator != null)
             {
                 var cal = BuildCalibrationData(ctx, projections.PerFile.ConvertAll(kv => kv.Key));
+                // The peak co-assignment panel (issue #4522) needs each row's DETECTION apex RT,
+                // which the streamed fold never sees: this path carries no RT at all. Rebuild it
+                // from the per-file sidecars just flushed by the score pass, joined to their
+                // parquet apex_rt. Reusing the accumulator's classification avoids re-running the
+                // multi-minute library classification for the same answer.
+                var coAssignment = config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT)
+                    ? PeakCoAssignmentSource.Build(
+                        projections.PerFile.ConvertAll(kv => kv.Key), perFileParquetPaths, config,
+                        mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value, ctx.LogInfo)
+                    : null;
                 ModelDiagnosticsReport.WriteFromAccumulator(
-                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo);
+                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment);
             }
 
             // First-pass protein FDR streamed off the per-file sidecar + parquet scalars

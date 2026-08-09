@@ -369,6 +369,13 @@ $datasets = [ordered]@{
         StripDecoys      = $true
         Resolution       = 'unit'
         ModelDiagnostics = $true
+        # The one leg that opts into peak co-assignment (issue #4522). This dataset because the
+        # panel's whole point is the ENTRAPMENT-labelled rate against the target base rate, and
+        # this is the only leg carrying generated decoys AND retained entrapment - the other legs
+        # would exercise the code with an empty entrapment row. Naming it here rather than
+        # everywhere keeps the gate's wall clock honest: the panel re-reads two parquet columns
+        # per file, and one leg is enough for the golden to catch a regression.
+        DiagnosticsPanels = 'peak-coassignment'
         MaxPass1Fdp      = 0.02
     }
     # Astral carries no entrapment, so its tier-2 bound is the null-alignment tilt.
@@ -520,7 +527,15 @@ function Get-DatasetCliArgs {
     # for and does nothing at all without --fdrbench (OspreyCommandArgs warns, and
     # FdrBenchInputWriter returns early on an empty output path), so passing it here
     # only produced a warning on every invocation.
-    if ($Spec.ModelDiagnostics) { $extra += '--model-diagnostics' }
+    # The expensive --model-diagnostics panels are opt-in by name (see
+    # ModelDiagnosticsFeatures), so a bare flag would leave them untested by this gate.
+    # DiagnosticsPanels names them per dataset rather than turning them on everywhere: the
+    # panels cost real time, and one leg exercising a panel is enough for the golden to catch a
+    # regression in it.
+    if ($Spec.ModelDiagnostics) {
+        if ($Spec.DiagnosticsPanels) { $extra += @('--model-diagnostics', $Spec.DiagnosticsPanels) }
+        else { $extra += '--model-diagnostics' }
+    }
     return $extra
 }
 
