@@ -61,9 +61,13 @@ $vendorSdkPrefixes = (Get-Content -Raw $pinsJson | ConvertFrom-Json).vendors |
     ForEach-Object { $_.prefixes } | Sort-Object -Unique
 
 # 1. Refresh vendor SDK pins.
+#    --require-all-pins because step 3 strips every vendor SDK from the payload (it filters on
+#    the very prefixes this table supplies), leaving the pinned URLs as the installed app's only
+#    route to a vendor SDK. Without it an uncommitted archive just warns, the installer builds
+#    green, and the missing vendor shows up as "Unable to load DLL '<x>'" on a user's machine.
 Write-Host "==> VendorPinsGenerator" -ForegroundColor Cyan
 $pinsGenProj = Join-Path $pwizSharp "build/VendorPinsGenerator/VendorPinsGenerator.csproj"
-dotnet run --project $pinsGenProj -c Release -- (Split-Path -Parent $pwizSharp)
+dotnet run --project $pinsGenProj -c Release -- (Split-Path -Parent $pwizSharp) --require-all-pins
 if ($LASTEXITCODE -ne 0) { throw "VendorPinsGenerator failed (exit $LASTEXITCODE)" }
 
 # 2. Build MSConvertGUI + SeeMS Release. MSConvertGUI's chain produces

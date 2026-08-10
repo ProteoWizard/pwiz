@@ -21,7 +21,17 @@ using System.Text.Json;
 ///   - the SHA-256 is recorded, so VendorSdkLoader rejects + re-downloads on mismatch
 ///   - the short SHA in the cache key keeps multiple pwiz-sharp versions side by side
 ///
-/// Usage: VendorPinsGenerator &lt;pwizRootPath&gt;
+/// Usage: VendorPinsGenerator &lt;pwizRootPath&gt; [--require-all-pins]
+///
+/// <para><c>--require-all-pins</c> turns a skipped vendor into a build failure. The installer
+/// build passes it, because a skipped pin there is unshippable: <c>installer/build.ps1</c>
+/// strips every vendor SDK from the payload (it filters on exactly these prefixes) and relies
+/// on <c>VendorSdkLoader</c> fetching the archive from the pinned URL at run time. With no pin
+/// there is no URL, so the installed application simply has no support for that vendor - which
+/// surfaces only as an opaque "Unable to load DLL 'timsdata'" at the point of use. Ordinary
+/// <c>dotnet build</c> does NOT pass it: a warning is right there, because vendor DLLs are
+/// copied app-local in a dev build and an uncommitted archive is the normal state while an SDK
+/// is being swapped in.</para>
 /// </summary>
 internal static class Program
 {
@@ -30,13 +40,15 @@ internal static class Program
 
     internal static int Main(string[] args)
     {
-        if (args.Length != 1)
+        bool requireAllPins = args.Any(a => a.Equals("--require-all-pins", StringComparison.Ordinal));
+        var positional = args.Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToArray();
+        if (positional.Length != 1)
         {
-            Console.Error.WriteLine("usage: VendorPinsGenerator <pwizRootPath>");
+            Console.Error.WriteLine("usage: VendorPinsGenerator <pwizRootPath> [--require-all-pins]");
             return 2;
         }
 
-        string pwizRoot = Path.GetFullPath(args[0]);
+        string pwizRoot = Path.GetFullPath(positional[0]);
         string jsonPath = Path.Combine(pwizRoot, PINS_JSON.Replace('/', Path.DirectorySeparatorChar));
         string outPath = Path.Combine(pwizRoot, OUTPUT_CS.Replace('/', Path.DirectorySeparatorChar));
 
@@ -69,6 +81,7 @@ internal static class Program
         string repo = doc.RootElement.GetProperty("repo").GetString();
 
         var body = new List<string>();
+        var skipped = new List<string>();
         foreach (var vendor in doc.RootElement.GetProperty("vendors").EnumerateArray())
         {
             string name = vendor.GetProperty("name").GetString();
@@ -83,6 +96,7 @@ internal static class Program
             if (!File.Exists(absPath))
             {
                 Console.WriteLine($"WARNING: {relPath} not found, skipping");
+                skipped.Add($"{name}: {relPath} not found");
                 continue;
             }
 
@@ -93,6 +107,7 @@ internal static class Program
                 // swapped in. There is no commit to pin to yet, so skip rather than fail the
                 // build; the pin appears as soon as the archive is committed.
                 Console.WriteLine($"WARNING: {relPath} has no git history yet (uncommitted?), skipping pin");
+                skipped.Add($"{name}: {relPath} has no git history yet (uncommitted?)");
                 continue;
             }
             string sha256 = Sha256Hex(absPath);
@@ -100,6 +115,26 @@ internal static class Program
 
             body.Add(FormatPin(name, commit, sha256, url, prefixes, os));
             Console.WriteLine($"{name,-10}  {commit.AsSpan(0, 12)}  {sha256.AsSpan(0, 16)}...");
+        }
+
+        // A skipped vendor is only tolerable for a dev build, where the vendor DLLs sit
+        // app-local next to the binaries. Anything that ships (the installer) strips them and
+        // depends entirely on these pins, so refuse to produce a pin table that would silently
+        // yield an application with no support for that vendor.
+        if (requireAllPins && skipped.Count > 0)
+        {
+            Console.Error.WriteLine(
+                "VendorPinsGenerator: --require-all-pins was requested but these vendors " +
+                "produced no pin:");
+            foreach (string s in skipped)
+                Console.Error.WriteLine($"    {s}");
+            Console.Error.WriteLine(
+                "A shipped build resolves vendor SDKs ONLY through this pin table, so an " +
+                "unpinned vendor means that vendor is unsupported in the built artifact.\n" +
+                "Commit AND push the archive (the pin URL is a commit-pinned " +
+                "raw.githubusercontent.com fetch, so an unpushed commit still 404s at run time), " +
+                "then re-run.");
+            return 1;
         }
 
         var lines = new List<string>
