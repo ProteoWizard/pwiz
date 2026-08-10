@@ -1346,7 +1346,7 @@ foreach ($name in $selected) {
         # field for field. Those sidecars are also the REHYDRATION input for the distributed
         # and resume paths, which is why a silent divergence here is not cosmetic.
         $chainDir = Split-Path $chainBlib -Parent
-        $m3s = Compare-Pass2Sidecars -ExpectedDir $straightDir -ActualDir $chainDir -Tolerance $Tolerance
+        $m3s = Compare-FdrSidecars -ExpectedDir $straightDir -ActualDir $chainDir -Pass 2 -Tolerance $Tolerance
         if ($m3s.Pass) {
             $summaryLines.Add("$name mode3 (per-file FDR sidecars==straight): PASS")
         } else {

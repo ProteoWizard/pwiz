@@ -195,6 +195,24 @@ namespace pwiz.Osprey.Tasks
                         "them here from the reconciled features (reused distributed-run code path).",
                         missingPass2, totalFiles));
                     var swPass2 = Stopwatch.StartNew();
+
+                    // Stage 6's post-rescore overlay calls FdrEntry.ResetScores(), which clears
+                    // eight fields. Pass 2 recomputes only five of them, and which five depends
+                    // on the mode and on whether a survivor is on-stratum, so three can reach the
+                    // 2nd-pass sidecar at their reset defaults (issue #4553):
+                    //   Score              - no frozen mode wrote one back at all
+                    //   Pep                - written only on the on-stratum path
+                    //   RunProteinQvalue   - written by NO mode; first-pass protein FDR is its
+                    //                        only producer, and the second-pass one writes
+                    //                        ExperimentProteinQvalue instead
+                    // Seeding all three from the 1st-pass sidecar reproduces exactly what the
+                    // distributed route has in hand at this point, which is why that route never
+                    // showed the loss: it must rehydrate from that same sidecar, and the sidecar
+                    // carries all seven scalars. Whatever pass 2 genuinely recomputes then
+                    // overwrites the seed. Done ahead of the mode dispatch because the loss is
+                    // not specific to one mode.
+                    RestorePass1Scalars(ctx, perFileEntries, inputByFileName);
+
                     // --model-diagnostics needs the resident 2nd-pass model: its feature
                     // contributions feed the pass-2 model view, and the projection 2nd pass
                     // streams through a sink and produces none. Route --model-diagnostics to
@@ -507,6 +525,92 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Re-seed each survivor's <see cref="FdrEntry.Score"/>, <see cref="FdrEntry.Pep"/> and
+        /// <see cref="FdrEntry.RunProteinQvalue"/> from that file's
+        /// <c>.1st-pass.fdr_scores.bin</c>.
+        ///
+        /// <para>These are the three of <see cref="FdrEntry.ResetScores"/>'s eight fields that
+        /// pass 2 does not reliably recompute: no frozen mode wrote <c>Score</c> at all,
+        /// <c>Pep</c> is written only for on-stratum survivors, and <c>RunProteinQvalue</c> is
+        /// written by no mode at all. Left unseeded they reach the 2nd-pass sidecar at their
+        /// reset defaults, where a q-value of 1.0 reads as a confident rejection and a
+        /// <c>Score</c> of 0 sits exactly ON the discriminant's accept/reject boundary
+        /// (issue #4553).</para>
+        ///
+        /// <para>Seeding, not overriding: whatever pass 2 genuinely recomputes is written after
+        /// this and wins. What is left is the pass-1 value, which is precisely what the
+        /// distributed route holds at the same point - it rehydrates from this same sidecar -
+        /// so the two routes agree by construction rather than by coincidence.</para>
+        ///
+        /// <para>An entry Stage 6 did not touch already holds these values, so the write is a
+        /// no-op for it; a gap-fill entry is absent from the sidecar and correctly keeps the
+        /// defaults, which is where the distributed route leaves it too (its own overlay runs
+        /// before gap-fill appends). One file's records stream at a time.</para>
+        /// </summary>
+        private static void RestorePass1Scalars(
+            PipelineContext ctx,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<string, string> inputByFileName)
+        {
+            int nRestored = 0;
+            int filesRead = 0;
+            var unreadable = new List<string>();
+            foreach (var kvp in perFileEntries)
+            {
+                if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
+                    continue;
+                string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+                if (!File.Exists(pass1Path))
+                {
+                    unreadable.Add(kvp.Key);
+                    continue;
+                }
+                var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
+                foreach (var e in kvp.Value)
+                    byEntryId[e.EntryId] = e;
+
+                int nFile = 0;
+                bool ok = FdrScoresSidecar.ReadRecords(
+                    pass1Path, FdrScoresSidecar.Pass.FirstPass,
+                    rec =>
+                    {
+                        if (!byEntryId.TryGetValue(rec.EntryId, out FdrEntry entry))
+                            return;
+                        entry.Score = rec.Score;
+                        entry.Pep = rec.Pep;
+                        entry.RunProteinQvalue = rec.RunProteinQvalue;
+                        nFile++;
+                    });
+                if (ok)
+                {
+                    filesRead++;
+                    nRestored += nFile;
+                }
+                else
+                {
+                    unreadable.Add(kvp.Key);
+                }
+            }
+
+            // A missing or corrupt 1st-pass sidecar is reported, not thrown on: none of these
+            // three fields is an input to a pass-2 computation, so the run stays correct in
+            // every other respect, and the frozen modes have their own fail-fast for a sidecar
+            // they genuinely need. Silence, though, would leave the reset defaults looking
+            // computed.
+            if (unreadable.Count > 0)
+            {
+                ctx.LogWarning(string.Format(
+                    "1st-pass Score/Pep/RunProteinQvalue could not be restored for {0} file(s) " +
+                    "(no readable 1st-pass sidecar): [{1}]. Their 2nd-pass sidecars will carry " +
+                    "reset defaults for peaks Stage 6 changed.",
+                    unreadable.Count, string.Join(", ", unreadable)));
+            }
+            ctx.LogVerbose(string.Format(
+                "Restored 1st-pass Score/Pep/RunProteinQvalue onto {0} survivor(s) across {1} file(s).",
+                nRestored, filesRead));
+        }
+
+        /// <summary>
         /// OSPREY_PASS2_QVALUE=transfer-compete (full-population form). Recompute the reported
         /// precursor q-values + PEP by re-running the target-decoy competition over the ENTIRE
         /// 1st-pass population -- read as SCALARS from each file's persisted
@@ -769,7 +873,13 @@ namespace pwiz.Osprey.Tasks
                                     (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
                                 feats != null && feats.Length == nFeatures)
                             {
-                                fileScores[e.EntryId] = scorer.Score(feats);
+                                double frozenScore = scorer.Score(feats);
+                                fileScores[e.EntryId] = frozenScore;
+                                // This is the score the entry COMPETES on below, so it is the one
+                                // the 2nd-pass sidecar must carry. RestorePass1Scalars seeded the
+                                // 1st-pass value, which is what a survivor whose features did not
+                                // resolve keeps - and which is what it competes on too.
+                                e.Score = frozenScore;
                             }
                         }
                         // featByIdentity released here (one file resident at a time).
