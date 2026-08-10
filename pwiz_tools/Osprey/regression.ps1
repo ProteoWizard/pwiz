@@ -246,7 +246,11 @@ $knownResidentGaps = @(
         Issue = '#4486'
         Token = 'NONE'
         Path  = 'Stage 6 rebuilds the whole-run survivor buffer for SecondPassFDR to read; resident from the end of Stage 6 to the end of Stage 7.'
-        Legs  = 'Every leg of every dataset. 24.43 GB live post-GC at 82 files (0.197 GB/file); ~103 GB projected at 500.'
+        # One model, stated explicitly: a fixed library term plus a per-file slope, both from
+        # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
+        # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
+        # not 0.197), which is unreadable in a summary that prints on every CI run.
+        Legs  = 'Every leg of every dataset. ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500.'
     }
 )
 # Reachable only outside this gate, tokened, each with an open issue:

@@ -95,17 +95,21 @@ namespace pwiz.Osprey.Test
 
             // --task SecondPassFDR takes NO resident pool since #4486: FirstPassFdrTask is
             // excluded on that node, so nothing trains off the pre-compaction pool, and every
-            // pass-2 consumer streams from disk one file at a time. It therefore arms no guard,
-            // and - the ratchet property - no token can admit it if it ever goes resident
-            // again, because 'hpc-merge' is not on the list any more. The old path cost
+            // pass-2 consumer streams from disk one file at a time. The old path cost
             // 2.07 GB per file, which made the final HPC join impossible at 82 files.
+            //
+            // This is the production-reachable assertion, and the ONLY one this config still
+            // supports. A four-token loop over ResidentPoolGuardError(hpc, true, ...) used to
+            // follow and was removed as duplicative: ResidentPoolTrigger no longer reads
+            // ExpectReconciledInput at all, so that loop executed byte-identically to the
+            // `lean` loop below - same branch, same tokens, no new coverage. It also could not
+            // deliver the ratchet it claimed: a future change re-adding a trigger under a NEW
+            // token would be named by none of {null, "", "hpc-merge", "anything"} and every
+            // assertion would still pass. TestFirstPassMembershipAcrossTasks pins the property
+            // that actually guards this - that FirstPassFdrTask is excluded here - and the
+            // retired token is pinned by KNOWN_UNFIXED not containing it.
             var hpc = new OspreyConfig { ExpectReconciledInput = true };
             AssertNeedsResidentPool(false, hpc);
-            foreach (string token in new[] { null, "", "hpc-merge", "anything" })
-            {
-                Assert.IsNotNull(
-                    PerFileScoringTask.ResidentPoolGuardError(hpc, true, token, true), token);
-            }
 
             // Taking ExpectReconciledInput out of NeedsResidentPool made the LEAN counts-only
             // load newly reachable on the merge, and that path adds an EMPTY entry list per
@@ -328,8 +332,17 @@ namespace pwiz.Osprey.Test
                 new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() }),
                 "--task SecondPassFDR must not be treated as running first-pass Percolator");
 
-            // And the consequence the loader draws from it: that node, and only that node, may
-            // take the file-count-bounded lean/streaming route rather than the resident pool.
+            // And the consequence the loader draws from it: the merge no longer demands the
+            // RESIDENT pool, so it can take the file-count-bounded STREAMING hydrate.
+            //
+            // Two things this must not be read as saying, both of which the assertions above
+            // contradict. It is NOT the only node on the bounded route: --task PerFileRescoring
+            // was the original consumer of HydrateCompactedStreaming, and a straight-through
+            // lean resume takes it too. And it does NOT license the LEAN counts-only projection
+            // for this config - CanUseLeanProjection is asserted FALSE for it earlier in this
+            // file, because that path hands Stage 7 empty per-file lists and would write a
+            // near-empty .blib with no error. Streaming hydrate and lean projection are
+            // different routes; only the first is what this row unlocks.
             Assert.IsFalse(PerFileScoringTask.NeedsResidentPool(
                 new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() },
                 useFdrProjection: true));

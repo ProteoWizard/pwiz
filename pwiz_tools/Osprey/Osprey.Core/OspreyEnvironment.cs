@@ -537,6 +537,17 @@ namespace pwiz.Osprey.Core
                     t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase)));
 
         /// <summary>
+        /// Just the unrecognized tokens of <see cref="AllowUnfixedResident"/>, comma separated.
+        /// The warning names THESE rather than the whole value: the flag is a list and
+        /// <c>NamesResidentPath</c> tests each token independently, so a value pairing a retired
+        /// token with a live one still grants the live one. Empty when every token is known.
+        /// </summary>
+        public static readonly string UnrecognizedResidentTokens =
+            string.Join(@", ", SplitResidentTokens(AllowUnfixedResident).Where(
+                v => !ResidentPaths.KNOWN_UNFIXED.Any(
+                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase))));
+
+        /// <summary>
         /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
         /// <paramref name="token"/>. Case-insensitive, matching how the rest of the CLI parses
         /// tokens: the guard's message names the exact token to set, so rejecting the operator's

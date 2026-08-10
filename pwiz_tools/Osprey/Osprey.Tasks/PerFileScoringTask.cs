@@ -643,8 +643,6 @@ namespace pwiz.Osprey.Tasks
             // rehydrate now feeds that accumulator from the per-file load it already performs
             // (FirstPassFdrTask.StreamOwnReconciliationBundle), off the same PRE-compaction rows,
             // so the report emits from this lean load at any file count.
-            bool needsResidentPool = NeedsResidentPool(config);
-            GuardResidentPool(config, needsResidentPool);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -660,10 +658,20 @@ namespace pwiz.Osprey.Tasks
             // (Run routes InputScores runs away from Rehydrate), but re-deriving the rule at
             // one call site and importing it at the other is precisely the drift this change
             // exists to remove. hasReconSidecars is false here: this path has no bundle.
+            // ARM THE GUARD ON THE SAME DECISION, for the reason the branch below states: the
+            // fat path IS the resident pool here, so guarding on a separate NeedsResidentPool
+            // let a config with needsResidentPool false but builder null (ExpectReconciledInput)
+            // take the O(files) fat load with the guard disarmed and no warning. Two predicates
+            // that can disagree about one choice is the drift this change removes; the guard is
+            // the third reader of that choice and has to key off it too. Placed inside the
+            // InputFiles block because with no input files nothing loads and a guard here would
+            // only produce a false positive.
             var builder = CanUseLeanProjection(config, hasReconSidecars: false,
                                                OspreyEnvironment.UseFdrProjection)
                 ? new FdrProjectionSet.Builder(countsOnly: true)
                 : null;
+                GuardResidentPool(config, needsResidentPool: builder == null);
+
                 // Per-file progress so this all-files load is not a silent multi-minute
                 // stall on a large resume (the phase that looked hung on the 82-file run).
                 using (var loadProgress = new ProgressReporter(@"Loading scored entries", config.InputFiles.Count))
@@ -1253,6 +1261,18 @@ namespace pwiz.Osprey.Tasks
             // The reconciled-bundle hydration (hasReconSidecars) needs the STUBS but not
             // their PIN features, so only a genuine resident pool loads features. See the
             // stubs-only branch below for why that is safe.
+            //
+            // This one KEEPS NeedsResidentPool deliberately, where the fat/lean choice above
+            // moved to the builder. They answer different questions and the predicates diverged
+            // when ExpectReconciledInput left NeedsResidentPool (#4486): "does a consumer read
+            // Features off THESE stubs" (fdrbench-pass1, a non-Percolator FdrMethod,
+            // OSPREY_FDR_PROJECTION=0) is still exactly NeedsResidentPool, while "may this load
+            // go lean" additionally excludes the reconciled-input merge. Do not "fix" this by
+            // copying the builder decision: the merge does not read Features off these stubs -
+            // both pass-2 shapes reload them per file from the reconciled parquet
+            // (ComputePass2TransferCompeteFull's own read, or ComputePass2Resident's), and
+            // EffectiveScoresPathFromScoresPath falls back to the original parquet when no
+            // reconciled one exists, so the reload does not depend on hasReconSidecars either.
             bool loadFeatures = needsResidentPool;
 
             // The --input-files paths at :381 and :644 THROW on the same O(files) situation.
@@ -1292,41 +1312,10 @@ namespace pwiz.Osprey.Tasks
                 // projection path uses, one file at a time, so FirstPassFDR's rehydrate can emit
                 // the identical report without the O(files) resident pool. Null (nothing
                 // constructed, nothing folded) off the report path.
-                // Built only when its READER will run in this process (#4486). The one
-                // reader/nuller pair is FirstPassFdrTask's rehydrate, and on
-                // --task SecondPassFDR that task is excluded - which this branch newly
-                // reaches, since before #4486 the merge never streamed. Building it there
-                // folds every pre-compaction row of every file into an accumulator nothing
-                // will ever read, and nothing will ever null: it travels on a published
-                // byproduct slot that lives for the whole process, so it would pin the
-                // ~1-2 GB FirstPassFdrTask documents straight through Stage 7 - on the exact
-                // node this streaming change exists to shrink.
-                bool mdiagHasReader = config.ModelDiagnostics &&
-                                      FirstPassFdrTask.IsIncludedFor(config);
-                // Guarded like the sibling call in FirstPassFdrTask: reading the decoy-pairing
-                // manifest can throw (IO, OOM), and an opt-in HTML report must not take the
-                // search down with it. Here it would kill the run for a report that cannot
-                // even be written.
-                ModelDiagnosticsData.Accumulator mdiagAccumulator = null;
-                if (mdiagHasReader)
-                {
-                    try
-                    {
-                        mdiagAccumulator = FirstPassFdrTask.BuildModelDiagnosticsAccumulator(
-                            JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo);
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogWarning(string.Format(
-                            @"--model-diagnostics: could not build the pass-1 report accumulator ({0}); the report will be omitted.",
-                            ex.Message));
-                    }
-                }
-                else if (config.ModelDiagnostics)
-                {
-                    ctx.LogInfo(
-                        @"--model-diagnostics: no pass-1 report on this node (FirstPassFDR does not run here); skipping its accumulator.");
-                }
+                var mdiagAccumulator = config.ModelDiagnostics
+                    ? FirstPassFdrTask.BuildModelDiagnosticsAccumulator(
+                        JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo)
+                    : null;
                 // Same graceful handling as the batch twin in HydrateRescoreBundleIfPresent:
                 // a corrupt or mismatched sidecar is an operator-facing error line and a
                 // non-zero exit code, not an unhandled stack trace.
@@ -1338,16 +1327,7 @@ namespace pwiz.Osprey.Tasks
                             perFileCalibrations, perFileIsolationMz, ctx),
                         (fileIdx, fileName, stubs, tally) =>
                         {
-                            // PassingTargets has the same single reader as the accumulator
-                            // above - FirstPassFdrTask's per-file Stage 5 result line - so on
-                            // a node where that task is excluded this evaluates
-                            // EffectiveRunQvalue <= RunFdr for every stub (~4.2 M per file,
-                            // ~344 M at 82 files) to fill a field nothing reads, touching each
-                            // file's pool a second time while it is the resident working set
-                            // (#4486). tally.Stubs is set by the hydrate itself, so the count
-                            // the compaction line reports is unaffected.
-                            if (mdiagHasReader || FirstPassFdrTask.IsIncludedFor(config))
-                                ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
+                            ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
                             if (mdiagAccumulator != null)
                                 ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
                         }), ctx);

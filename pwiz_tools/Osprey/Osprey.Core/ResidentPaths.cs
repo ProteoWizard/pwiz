@@ -49,8 +49,9 @@ namespace pwiz.Osprey.Core
         // (--task SecondPassFDR) on the same file-count-bounded streaming hydrate every other
         // reconciled-bundle path already used. It never named a real consumer: FirstPassFdrTask
         // is excluded on that node, and each pass-2 consumer streams from disk one file at a
-        // time, so the pool it forced was loaded and discarded - 2.07 GB per file, ~186 GB
-        // projected at 82 files, which made the final join impossible on any HPC node. Not to
+        // time, so the pool it forced was loaded and discarded - a measured 2.21 GB/file
+        // (7.6 GB after file 1 to 40.8 GB after file 16), i.e. ~186 GB projected at 82 files,
+        // which made the final join impossible on any HPC node. Not to
         // be re-added: a join that cannot stream its input is a defect to fix, not a path to
         // name.
 

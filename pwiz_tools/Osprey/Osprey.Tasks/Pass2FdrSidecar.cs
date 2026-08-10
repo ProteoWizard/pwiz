@@ -514,10 +514,17 @@ namespace pwiz.Osprey.Tasks
         /// in (the FROZEN 1st-pass model applied to their reconciled features). Because &gt;99% of
         /// scores are unchanged, the recomputed q lands on the calibrated 1st-pass value; the
         /// reconciled minority get honest full-population q. No 2nd-pass retrain and no
-        /// reduced-pool null (the null is the full 1st-pass decoy set). No features are held
-        /// resident -- only flat scalar arrays. Writes q/PEP onto the reported survivor entries in
-        /// place. Returns false (caller falls back to the retrain) when the frozen model or any
-        /// 1st-pass scalar sidecar is missing.
+        /// reduced-pool null (the null is the full 1st-pass decoy set). ONE FILE's PIN feature
+        /// map is resident at a time - the frozen-model scoring moved inside this method's
+        /// per-file read (#4486), so it is the largest allocation on the path, released before
+        /// the next file; the cross-file state is flat scalar arrays and O(distinct) maps.
+        /// Writes q/PEP onto the reported survivor entries in
+        /// place. Returns false when the frozen model or any 1st-pass scalar sidecar is missing;
+        /// the caller then THROWS with actionable guidance - an explicitly requested frozen mode
+        /// must never silently degrade to the anti-conservative retrain. (This said "caller falls
+        /// back to the retrain", which is the opposite of the fail-fast the caller implements.)
+        /// Every `return false` is placed BEFORE any survivor is mutated, so a refusal leaves the
+        /// pool untouched.
         /// </summary>
         private static bool ComputePass2TransferCompeteFull(
             PipelineContext ctx,
@@ -560,30 +567,37 @@ namespace pwiz.Osprey.Tasks
             //    (EntryId,Charge,ScanNumber)), same scores, one file's worth resident, and one
             //    fewer pass over the reconciled parquets.
             //
-            //    Distinct file keys are an INVARIANT here, asserted rather than assumed. Two
-            //    --input-scores paths in different directories can share a stem
+            //    Two --input-scores paths in different directories CAN share a stem
             //    (RescoreHydration.PreCompactionTallies is index-keyed for exactly that reason),
-            //    and every per-file structure on this path is name-keyed: a duplicate stem would
-            //    silently give one of the two the other's sidecar and leave its entries with a
-            //    mixture of refreshed and stale q-values. The same guard sits at the head of
-            //    PercolatorScorer.ScoreProjectionAndComputeFdrInPlace, for the same reason - a
-            //    bounded per-file pass cannot tolerate what a whole-run keyed map merged. This
-            //    hazard predates the per-file emit (sidecarByKey was already last-wins); the
-            //    assert is what makes it visible instead of silent (see #4486 review finding 4).
+            //    so a same-stem pair is MERGED here rather than last-wins. The whole-run map
+            //    this replaced merged them implicitly - it was keyed (file, entry_id) and the
+            //    map-back walked perFileEntries - so keeping only one list would have left the
+            //    other's entries with a mixture of refreshed and stale q-values, which is worse
+            //    than the pre-existing hazard. Merging reproduces the old disposition. A hard
+            //    throw was tried here and removed: it fired at Stage 7, after hours of Stages
+            //    1-6, for a condition knowable at argument-parse time, while the sibling
+            //    sidecarByKey below and the projection path's own per-file map stayed
+            //    last-wins - so it converted one silent inconsistency into a late abort
+            //    without making the class of input any safer.
             var entriesByFile = new Dictionary<string, List<FdrEntry>>(
                 perFileEntries.Count, StringComparer.Ordinal);
             var survivorEntryIds = new HashSet<uint>();
             long survivorObservations = 0;
             foreach (var kvp in perFileEntries)
             {
-                if (entriesByFile.ContainsKey(kvp.Key))
+                if (entriesByFile.TryGetValue(kvp.Key, out var merged))
                 {
-                    throw new InvalidOperationException(string.Format(
-                        @"{0}: duplicate per-file key '{1}'; the streamed per-file competition " +
-                        @"requires one entry list per file.",
-                        mode, kvp.Key));
+                    // New list, never AddRange onto the caller's: perFileEntries is the live
+                    // Stage 7 survivor buffer and must not gain entries as a side effect.
+                    var combined = new List<FdrEntry>(merged.Count + kvp.Value.Count);
+                    combined.AddRange(merged);
+                    combined.AddRange(kvp.Value);
+                    entriesByFile[kvp.Key] = combined;
                 }
-                entriesByFile[kvp.Key] = kvp.Value;
+                else
+                {
+                    entriesByFile[kvp.Key] = kvp.Value;
+                }
                 survivorObservations += kvp.Value.Count;
                 foreach (var e in kvp.Value)
                     survivorEntryIds.Add(e.EntryId);
@@ -708,13 +722,40 @@ namespace pwiz.Osprey.Tasks
                     // features, score with the frozen 1st-pass weights, keep only the scalar
                     // score, and release the features on the way out. Same loader and identity
                     // key the resident reload used, so each survivor's score is byte-identical.
-                    var fileScores = new Dictionary<uint, double>();
+                    // Both lookups are established by the validation loop above (every file has
+                    // a parquet path or this method already returned false; entriesByFile is
+                    // built from the same perFileEntries fileKeys comes from). Resolved OUTSIDE
+                    // the try so a key miss cannot be reported as a parquet failure.
                     string effectiveParquetPath = ParquetScoreCache.EffectiveScoresPathFromScoresPath(
                         perFileParquetPaths[fileKey]);
+                    var fileEntries = entriesByFile[fileKey];
+
+                    // ONLY the load is guarded, as it was before this method took over the
+                    // scoring. Widening the try over the scoring loop would let a mid-loop
+                    // throw leave a PARTIALLY swapped-in map: the competition would then run
+                    // on a mixed population, and under protein-compact the unscored remainder
+                    // would also be missing from changedBaseIds, so those peaks would never be
+                    // admitted and would be stamped run q 1.0 - all under a warning blaming a
+                    // load that succeeded. Failure here is all-or-nothing per file.
+                    Dictionary<(uint, byte, uint), double[]> featByIdentity;
                     try
                     {
-                        var featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
-                        foreach (var e in entriesByFile[fileKey])
+                        featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Same disposition as the old whole-run pass: this file contributes no
+                        // swapped-in scores and competes on its stored 1st-pass ones.
+                        ctx.LogWarning(string.Format(
+                            "{0}: failed to reload PIN features from {1}: {2}",
+                            mode, effectiveParquetPath, ex.Message));
+                        featByIdentity = null;
+                    }
+
+                    var fileScores = new Dictionary<uint, double>();
+                    if (featByIdentity != null)
+                    {
+                        foreach (var e in fileEntries)
                         {
                             if (featByIdentity.TryGetValue(
                                     (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
@@ -724,14 +765,6 @@ namespace pwiz.Osprey.Tasks
                             }
                         }
                         // featByIdentity released here (one file resident at a time).
-                    }
-                    catch (Exception ex)
-                    {
-                        // Same disposition as the old whole-run pass: this file contributes no
-                        // swapped-in scores and competes on its stored 1st-pass ones.
-                        ctx.LogWarning(string.Format(
-                            "{0}: failed to reload PIN features from {1}: {2}",
-                            mode, effectiveParquetPath, ex.Message));
                     }
                     nScored += fileScores.Count;
 
