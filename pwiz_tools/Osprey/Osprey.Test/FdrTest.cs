@@ -2829,7 +2829,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The Stage-6 / merge-node scenario: after the pass-1 clamp lets a precursor pass on
+        /// The Stage-6 / SecondPassFDR scenario: after the pass-1 clamp lets a precursor pass on
         /// its one good run, reconciliation zeroes that run's q (moved peak -> run q back to
         /// the 1.0 default). Re-clamping against the final run q's raises the experiment q
         /// above threshold, so the precursor no longer reports -- the invariant Mike observed.
@@ -3471,27 +3471,137 @@ namespace pwiz.Osprey.Test
             // Resident oracle: q per observation (winner obs carry the competition q).
             var residentQ = PercolatorQValues.ComputeStratifiedCompetitionQvalues(sc, lb, ids, stratum);
 
-            // Streaming: single file, no score override, survivors = the stratum targets.
+            // Streaming: single file, no score override, survivors = the stratum targets. The
+            // streamed form emits per file rather than returning whole-run maps, so the run q
+            // arrives through the callback and experiment q is asked for per survivor.
             const string F = "f";
-            var survivors = new List<(string, uint)>();
-            for (uint b = 1; b <= 20; b++) survivors.Add((F, b));   // target entryId == base_id
-            (uint[] eids, double[] scs) Read(string _)
-                => ((uint[])ids.Clone(), (double[])sc.Clone());
-            StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
-                new[] { F }, Read,
-                new Dictionary<(string, uint), double>(), survivors,
-                out _, out var expQ, out _, stratum);
+            var survivorIds = new HashSet<uint>();
+            for (uint b = 1; b <= 20; b++) survivorIds.Add(b);   // target entryId == base_id
+            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov) Read(string _)
+                => ((uint[])ids.Clone(), (double[])sc.Clone(), new Dictionary<uint, double>());
+            var runQ = new Dictionary<uint, double>();
+            void OnFileRunQ(string _, IReadOnlyDictionary<uint, double> fileRunQ)
+            {
+                foreach (var kv in fileRunQ) runQ[kv.Key] = kv.Value;
+            }
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                new[] { F }, Read, survivorIds, OnFileRunQ, stratum);
 
             for (uint b = 1; b <= 20; b++)
             {
                 int win = -1;
                 for (int i = 0; i < ids.Length; i++)
                     if ((ids[i] & 0x7FFFFFFFu) == b && !lb[i]) win = i;   // target obs = the winner
-                Assert.IsTrue(expQ.TryGetValue((F, b), out double sq),
-                    "streaming must report exp q for stratum survivor " + b);
+                Assert.IsTrue(runQ.TryGetValue(b, out double rq),
+                    "streaming must report run q for stratum survivor " + b);
+                double sq = competition.ExperimentQ(b, rq);
                 Assert.AreEqual(residentQ[win], sq, 1e-9,
                     "streaming stratified exp q must match the resident oracle for base_id " + b);
             }
+        }
+
+        /// <summary>
+        /// The MULTI-FILE branches of <c>StreamingFdr.StreamedCompetitionState</c>, which the
+        /// single-file test above cannot reach: with one file <c>ExperimentQ</c> short-circuits
+        /// to the run q it was handed and <c>Pep</c> is never consulted, so the clamp and the
+        /// winner-locator both go unexercised. Those two methods are where the retired
+        /// per-survivor loop's arithmetic now lives, so they need coverage that fails when
+        /// either is wrong.
+        ///
+        /// Pins three properties the deleted loop guaranteed:
+        /// experiment q is the base_id winner's q FLOORED UP to that entry's best run q
+        /// (issue #4390); an entry that won no competition anywhere floors at 1.0; and PEP is
+        /// real ONLY on the single experiment-winner observation of a base_id, 1.0 on every
+        /// other file's observation of the same precursor.
+        ///
+        /// VERIFIED BY MUTATION, so the coverage claim is measured rather than asserted:
+        /// dropping the <c>_fileKeys[loc.fileIdx] == fileKey</c> term from <c>Pep</c> turns this
+        /// test RED. Deleting the <c>eq &lt; floorQ</c> clamp does NOT - on this population the
+        /// base_id winner's q never lands below the entry's best run q, so the clamp assertion
+        /// below is true but not discriminating. Forcing it to bind needs an experiment q
+        /// strictly better than every per-file run q, which cannot happen for a target survivor
+        /// here: the target's experiment score IS its max across files, so it also won in that
+        /// file and carries the matching run q. The clamp therefore remains covered only by the
+        /// byte-parity gate (regression.ps1 mode 1/3); do not read this test as pinning it.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamedCompetitionStateMultiFile()
+        {
+            // Two files, same 12 precursors. File B scores every target higher, so B holds the
+            // experiment winner for each base_id and A's observations must report PEP 1.0.
+            const string FA = "a";
+            const string FB = "b";
+            var eids = new List<uint>();
+            var scoresA = new List<double>();
+            var scoresB = new List<double>();
+            // base_ids 1-8 are target-winners; 9-12 are decoy-winners, so the PEP estimator
+            // is fit over BOTH classes. With an all-target winner set the KDE is degenerate
+            // and PosteriorError returns 1.0 for everything, which would make the assertions
+            // below vacuous rather than failing - the first draft of this test did exactly that.
+            for (uint b = 1; b <= 12; b++)
+            {
+                bool decoyWins = b > 8;
+                eids.Add(b);                        // target: entryId == base_id
+                scoresA.Add((decoyWins ? 0.1 : 1.0) + b * 0.1);
+                scoresB.Add((decoyWins ? 0.2 : 3.0) + b * 0.1);   // B wins the experiment competition
+                eids.Add(b | 0x80000000u);          // paired decoy
+                scoresA.Add((decoyWins ? 2.0 : 0.2) + b * 0.01);
+                scoresB.Add((decoyWins ? 4.0 : 0.3) + b * 0.01);
+            }
+            var idArr = eids.ToArray();
+            var survivorIds = new HashSet<uint>();
+            for (uint b = 1; b <= 12; b++) survivorIds.Add(b);
+
+            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov) Read(string key)
+                => ((uint[])idArr.Clone(),
+                    (key == FA ? scoresA : scoresB).ToArray(),
+                    new Dictionary<uint, double>());
+
+            var runQByFile = new Dictionary<string, Dictionary<uint, double>>();
+            void OnFileRunQ(string key, IReadOnlyDictionary<uint, double> fileRunQ)
+            {
+                runQByFile[key] = new Dictionary<uint, double>(fileRunQ.Count);
+                foreach (var kv in fileRunQ) runQByFile[key][kv.Key] = kv.Value;
+            }
+
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                new[] { FA, FB }, Read, survivorIds, OnFileRunQ);
+
+            Assert.IsTrue(runQByFile.ContainsKey(FA) && runQByFile.ContainsKey(FB),
+                "each file must receive its own run q");
+
+            int pepReal = 0;
+            for (uint b = 1; b <= 8; b++)       // the target-winner base_ids
+            {
+                double rqA = runQByFile[FA].TryGetValue(b, out double a) ? a : 1.0;
+                double rqB = runQByFile[FB].TryGetValue(b, out double v) ? v : 1.0;
+                double best = Math.Min(rqA, rqB);
+
+                // The clamp: experiment q is never better than the entry's best run q. A
+                // swapped floor/eq, or returning the base_id q unfloored, breaks this.
+                double eqA = competition.ExperimentQ(b, rqA);
+                double eqB = competition.ExperimentQ(b, rqB);
+                Assert.AreEqual(eqA, eqB, 1e-12,
+                    "experiment q must not depend on which file's run q is passed in");
+                Assert.IsTrue(eqA >= best - 1e-12,
+                    string.Format("experiment q {0} must be floored up to best run q {1}", eqA, best));
+
+                // PEP is real on exactly one file's observation of each base_id.
+                double pepA = competition.Pep(FA, b);
+                double pepB = competition.Pep(FB, b);
+                Assert.IsTrue(pepA == 1.0 || pepB == 1.0,
+                    "PEP must be 1.0 on at least one of the two files for base_id " + b);
+                if (pepA != 1.0 || pepB != 1.0) pepReal++;
+                // B holds the winner for every base_id here, so A must report the 1.0 default.
+                Assert.AreEqual(1.0, pepA, 1e-12,
+                    "the losing file's observation must report PEP 1.0 for base_id " + b);
+            }
+            Assert.IsTrue(pepReal > 0,
+                "at least one base_id must carry a real PEP, or the winner locator is dead");
+
+            // An entry_id that is a survivor but won nothing anywhere floors at 1.0.
+            Assert.AreEqual(1.0, competition.ExperimentQ(9999u, 1.0), 1e-12,
+                "an entry with no competition anywhere must report experiment q 1.0");
         }
 
         /// <summary>

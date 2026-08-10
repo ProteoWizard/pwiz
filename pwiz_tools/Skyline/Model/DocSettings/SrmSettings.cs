@@ -1383,7 +1383,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
+                result.AddRange(library.GetRetentionTimesWithSequences(targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
                     foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))

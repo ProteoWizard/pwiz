@@ -356,7 +356,7 @@
 </g>
 
 <!-- ================================================================= -->
-<!-- TASK 2 of 4: FirstPassFDR (Stage 5, first join / coordinator node)  -->
+<!-- TASK 2 of 4: FirstPassFDR (Stage 5, join / coordinator node)        -->
 <!-- ================================================================= -->
 <path class="flow" d="M 600 1380 L 600 1394" marker-end="url(#arrow)"/>
 
@@ -369,7 +369,7 @@
 </g>
 
 <!-- ================================================================= -->
-<!-- STAGE 5 FIRST-PASS FDR + RECONCILIATION PLANNING (FIRST JOIN)      -->
+<!-- STAGE 5 FIRST-PASS FDR + RECONCILIATION PLANNING                   -->
 <!-- ================================================================= -->
 <path class="flow" d="M 600 1460 L 600 1478" marker-end="url(#arrow)"/>
 
@@ -378,7 +378,7 @@
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR + reconciliation planning</text>
   <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
-  <text class="phase-note"  x="60" y="58">First join in the pipeline. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
+  <text class="phase-note"  x="60" y="58">First-pass FDR across all files. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
   <text class="phase-note"  x="60" y="72">refits per-file calibration, and emits a per-(file, entry) reconciliation plan. All work that needs all-file representation lives here.</text>
 
   <!-- Sub-phase 1: first-pass Percolator -->
@@ -463,14 +463,14 @@
 </g>
 
 <!-- ================================================================= -->
-<!-- TASK 4 of 4: SecondPassFDR (Stage 7, merge node / second join)      -->
+<!-- TASK 4 of 4: SecondPassFDR (Stage 7, join / aggregator node)        -->
 <!-- ================================================================= -->
 <path class="flow" d="M 600 2340 L 600 2354" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 2356)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR</text>
-  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">merge node &#183; second join</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; final aggregation</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores-reconciled.parquet (via --input-scores; falls back to &lt;stem&gt;.scores.parquet for no-work files)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;output&gt;.blib, &lt;stem&gt;.2nd-pass.fdr_scores.bin (when Stage 6 rescored)   &#183;   validity  &lt;out&gt;.SecondPassFDR.osprey.task</text>
 </g>
@@ -481,10 +481,10 @@
 <!-- One stage, three sub-steps. There is no per-file fan-out and no    -->
 <!-- sidecar / rehydration boundary between second-pass Percolator,     -->
 <!-- protein parsimony / picked-protein FDR, and .blib SQLite output;   -->
-<!-- they all run on the merge node in a single process. Mirrors the    -->
+<!-- they all run on SecondPassFDR in a single process. Mirrors the     -->
 <!-- way Stage 5 already absorbs many sub-steps (first-pass Percolator, -->
 <!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
-<!-- planning) under the first-join phase.                              -->
+<!-- planning) under the FirstPassFDR phase.                            -->
 <!-- ================================================================= -->
 <path class="flow" d="M 600 2420 L 600 2438" marker-end="url(#arrow)"/>
 
@@ -492,7 +492,7 @@
   <rect class="phase-bg" x="40" y="0" width="1120" height="230" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
   <text class="phase-title" x="60" y="42">Post-join: second-pass Percolator + protein FDR + .blib output</text>
-  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — final merge-node phase (no further per-file fan-out)</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join - final SecondPassFDR phase (no further per-file fan-out)</text>
 
   <rect class="st-done" x="80" y="62" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="82" text-anchor="middle">Single Percolator pass on the reconciled + gap-filled pool</text>

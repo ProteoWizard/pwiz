@@ -46,6 +46,34 @@
               Stage 5 first, so it never exercises the all-cached case; it now
               carries the same skip assertion for the tasks its invalidation leaves
               valid. See Test-TaskCacheHits for the driver log lines both key on.
+      mode 5  Stage-5 rehydrate self-consistency - invalidates ONLY the SecondPassFDR
+              task (the blib + its SecondPassFDR stamp), leaving the FirstPassFDR
+              stamp and every 1st-pass sidecar valid, so the re-run rebuilds its
+              post-Stage-5 bundle from those OWN sidecars
+              (FirstPassFdrTask.LoadOwnReconciliationBundle - the class name differs
+              from the task Name). That loader is what no other leg reaches: mode 2
+              deletes the FirstPassFDR stamp so the task RUNS instead, mode 4
+              invalidates nothing so nothing demands its state, and mode 3's
+              PerFileRescoring phase does enter the rehydrate arm but adopts a
+              WORKER-supplied bundle, never the own-sidecar loader. The leg asserts
+              a marker logged from INSIDE that loader (a cache hit does not prove it
+              ran, and neither does the generic rehydrate line, which a worker bundle
+              emits too), that SecondPassFDR's blib still equals the straight-through one
+              at 1e-9, and that the --model-diagnostics report re-emitted from those
+              sidecars matches the golden. Like every other leg it names no token:
+              #4536 gave the rehydrate its own per-file survivor loader, so it streams
+              the Stage 6 handoff instead of needing one.
+      mode 6  library-fragment release engagement (issue #4532) - asserts, from the
+              legs' own logs, that the release RAN on every leg that holds the
+              library (straight-through, resume, --task PerFileRescoring, and the
+              SecondPassFDR node) and did NOT run on --task FirstPassFDR, which loads with
+              OmitFragments and can therefore only fabricate a saving. The release
+              is OUTPUT-NEUTRAL by design, which is its safety argument and also
+              why modes 1-4 pass identically whether it ran or was deleted
+              outright: they can catch an OVER-release (the tripwire throws) but
+              are structurally blind to it silently not happening. Every defect
+              found reviewing #4534 was in that blind spot. Asserts presence and
+              non-zero counts, never exact counts. See Test-LibraryFragmentRelease.
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -82,6 +110,11 @@
     is the only leg that can see a cache-invalidation regression, and a fully
     cached re-run costs seconds because it runs no task at all. This switch exists
     for the same fast-local-iteration reason as -SkipHpcChain.
+
+.PARAMETER SkipRehydrate
+    Skip the mode-5 Stage-5 rehydrate leg. The overnight gate leaves it on: it is
+    the only leg that enters FirstPassFdrTask.Rehydrate at all, and it costs one SecondPassFDR
+    re-run. This switch is for fast local iteration, like -SkipHpcChain.
 
 .PARAMETER SkipHpcChain
     Skip the mode-3 HPC 4-task worker-chain leg. The overnight gate leaves it on
@@ -136,6 +169,7 @@ param(
     [switch]$CreateGolden,
     [switch]$SkipResume,
     [switch]$SkipWarmRerun,
+    [switch]$SkipRehydrate,
     [switch]$SkipHpcChain,
     [string]$DownloadsPath,
     [int]$Threads = 16,
@@ -164,6 +198,92 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 # golden stays green without the comparator skipping the field. Must match the
 # osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
+
+# No leg of this gate may run under a resident-pool allowance, so clear any INHERITED
+# one rather than merely declining to set it. A TeamCity agent, or a developer shell
+# that just ran a Stage 6 A/B, can have OSPREY_ALLOW_UNFIXED_RESIDENT exported; every
+# leg of every dataset would then run under that blanket and a regression back onto an
+# O(files) resident pool would pass fully green. That is the ten-day
+# OSPREY_PASS2_QVALUE=transfer failure the named-token ratchet was built to stop, so
+# "the gate sets it nowhere" has to mean the variable is UNSET when Osprey reads it,
+# not just that this script never assigns it. Announced rather than silent: an operator
+# who deliberately exported it should see why their run behaves differently here.
+# --- Known O(files) resident gaps, stated where the gate can be read -----------
+# "No leg sets OSPREY_ALLOW_UNFIXED_RESIDENT" is necessary but NOT sufficient as a
+# statement of health, and reading it as sufficient is the trap: a token is only
+# required where a guard demands one, so a resident path that no guard covers is
+# invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
+# published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
+# asked for a token. #4486 was the standing example: the survivor buffer is rebuilt for
+# SecondPassFDR to read, so it is resident from the end of Stage 6 to the end of Stage 7
+# on EVERY path, and no guard covers that because it is not a resume or a mode - it is
+# what Stage 7 takes as input. It is still uncovered, and now MEASURED: 0.196 GB/file
+# live, post-GC, which is not what fails at scale. What did was the --task SecondPassFDR
+# pre-compaction RELOAD at 2.07 GB/file (~186 GB projected at 82 files), streamed by
+# #4486. Zero tokens therefore does NOT mean zero gaps, and this table keeps that legible.
+#
+# Printed in the run summary (not just parked in a comment) so every CI log states the
+# outstanding gaps, and so a fixed entry left here shows up as a stale line in output
+# rather than as a comment nobody re-reads.
+#
+# Rules, from ai/docs/osprey-development-guide.md:
+#   * token + warning = an operator asked for residency and was told what they got
+#   * warning alone on a default path = INSUFFICIENT, allowed only as an interim
+#     tripwire with an open issue against it
+#   * any token this gate REQUIRES must have an open issue to remove it, and the token
+#     comes OUT of the gate when the issue lands. NONE is required today: #4536 gave the
+#     rehydrate its own per-file survivor loader, so mode 5 streams the Stage 6 handoff
+#     like every other leg and resume-survivor-handoff - the last entry here - came out
+#     with it. Zero is the invariant, not a milestone: a new entry below is a regression
+#     to justify in review, not a line to add and move on.
+$knownResidentGaps = @(
+    # Untokened by nature, which is exactly why it belongs here: no guard demands a token
+    # for it, so a token audit cannot see it and a green gate printed "none" while every
+    # leg walked it. Measured 2026-08-09 on 82 files rather than estimated - the preamble
+    # above names it, and a table that omits the one gap the preamble names is worse than
+    # no table. Token NONE, so it does not inflate the required-token count below.
+    @{
+        Issue = '#4486'
+        Token = 'NONE'
+        Path  = 'Stage 6 rebuilds the whole-run survivor buffer for SecondPassFDR to read; resident from the end of Stage 6 to the end of Stage 7.'
+        # One model, stated explicitly: a fixed library term plus a per-file slope, both from
+        # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
+        # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
+        # not 0.197), which is unreadable in a summary that prints on every CI run.
+        Legs  = 'Every leg of every dataset. ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500.'
+    }
+)
+# Reachable only outside this gate, tokened, each with an open issue:
+#   #4507  fdrbench-pass1 -- --fdrbench-pass 1 walks the pre-compaction pool
+# hpc-merge is GONE (#4486): --task SecondPassFDR takes the bounded streaming hydrate, so
+# mode 3's join node needs no token. That is the ratchet shrinking a third time.
+# By design rather than unfinished, so no issue: projection-off and
+# compacted-entries-buffer (the A/B byte-identity oracles) and non-percolator-fdr.
+
+# Preserved and RESTORED at the end of the run (see the finally block): this mutates the
+# process environment, so a developer running the gate in their interactive shell would
+# otherwise silently lose an exported token for the rest of the session.
+$script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
+# An operator running a deliberate A/B needs their token: OSPREY_STAGE6_STREAM_SURVIVORS=0
+# and OSPREY_FDR_PROJECTION=0 force resident paths ON PURPOSE, and clearing the token that
+# admits them would abort the gate on its first leg with a guard error - making the very
+# comparison this harness exists to support impossible to run. Ambient tokens are stripped
+# ONLY when no such switch is set, which is the case the clearing is aimed at.
+$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or ($env:OSPREY_FDR_PROJECTION -eq '0')
+if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
+    if ($abSwitchSet) {
+        # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
+        # formatted and '{0}' survives verbatim into the output.
+        Write-Host (("Keeping inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - an A/B switch " +
+            "(OSPREY_STAGE6_STREAM_SURVIVORS/OSPREY_FDR_PROJECTION=0) is set and needs it.") `
+            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
+    } else {
+        Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
+            "gate may run under an ambient resident-pool allowance.") `
+            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
+        Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
+    }
+}
 
 # Every Osprey invocation in this run is timestamped and mem-stamped, so each leg's log
 # doubles as a memory-band trace: `[yyyy/MM/dd HH:mm:ss]<TAB>managedMB<TAB>privateMB<TAB>`.
@@ -605,6 +725,15 @@ $taskRunMarker  = ':starting'
 $coldScoreMarker   = 'Scoring file '
 $coldRescoreMarker = 'Re-scoring file '
 
+# The library-fragment release (issue #4532). Two scopes, distinguished by the
+# tail of the line: FirstPassFdrTask retains "for rescore + gap-fill", SecondPassFdrTask
+# retains "for the reported pool". Captured rather than merely matched, because
+# the count is the whole point -- see Test-LibraryFragmentRelease.
+$releaseLinePattern =
+    'Released library fragments for (\d+) of (\d+) entries \((\d+) base_ids retained for ([^)]+)\)'
+$releaseScopeRescore  = 'rescore + gap-fill'
+$releaseScopeReported = 'the reported pool'
+
 function Get-TaskCacheMap {
     <#
     Classify every canonical task in one run log as 'skipped' (cache hit), 'ran'
@@ -702,6 +831,170 @@ function Test-TaskCacheHits {
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
 
+# The line FirstPassFDR logs from the OWN-SIDECAR STREAMING arm specifically
+# (FirstPassFdrTask.StreamOwnReconciliationBundle).
+#
+# Deliberately not the 'Bundle hydration: skipping first-pass Percolator' line at the
+# top of Rehydrate. That one is emitted before the bundle source is even known, so a
+# worker-supplied bundle logs it too - it witnesses "Rehydrate ran", which is NOT what
+# mode 5 is here to prove. Mode 3's PerFileRescoring phase also enters Rehydrate (with
+# a worker bundle), so "Rehydrate ran" is not even unique to this leg. What IS unique
+# is LoadOwnReconciliationBundle rebuilding the bundle from this run's own sidecars,
+# and this marker is emitted from inside it.
+#
+# Matched as a substring for the reason Get-TaskCacheMap matches its own: if the C#
+# wording drifts, mode 5 goes red naming the token it could not find rather than
+# passing vacuously.
+$firstPassFdrRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundle from'
+
+function Test-LogMarker {
+    <#
+    Assert a run log contains a marker line proving a specific code path executed.
+    Returns the { Pass; Issues } shape every other comparator returns, so a caller
+    reports it exactly like any other leg. -Description names what the marker
+    proves, so a failure says which path did not run rather than quoting a string.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$LogPath,
+        [Parameter(Mandatory = $true)][string]$Marker,
+        [Parameter(Mandatory = $true)][string]$Description
+    )
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) {
+        $issues.Add("run log not found: $LogPath")
+        return @{ Pass = $false; Issues = $issues }
+    }
+    $logName = Split-Path -Leaf $LogPath
+    $lines = @(Get-Content -LiteralPath $LogPath)
+    $found = @($lines | Where-Object { $_.Contains($Marker) })
+    if ($found.Count -eq 0) {
+        $issues.Add((("{0}: no line containing '{1}' - {2} did not happen, or the C# log " +
+            "wording has drifted and this assertion is no longer reading anything") -f
+            $logName, $Marker, $Description))
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+}
+
+function Get-ReleaseLogFacts {
+    <#
+    Parse every library-fragment release line out of one leg's log. Returns an
+    array of { Released; Entries; Retained; Scope } in log order, empty when the
+    leg logged none.
+    #>
+    param([Parameter(Mandatory = $true)][string]$LogPath)
+    $facts = [System.Collections.Generic.List[hashtable]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) { return $facts }
+    foreach ($line in (Get-Content -LiteralPath $LogPath)) {
+        if ($line -match $releaseLinePattern) {
+            $facts.Add(@{
+                Released = [int]$Matches[1]
+                Entries  = [int]$Matches[2]
+                Retained = [int]$Matches[3]
+                Scope    = $Matches[4]
+            })
+        }
+    }
+    return $facts
+}
+
+function Test-LibraryFragmentRelease {
+    <#
+    Assert that the library-fragment release (#4532) actually RAN on the legs that
+    must release, and did NOT run on the leg that must not.
+
+    This is the one leg-level assertion the blib comparators structurally cannot
+    make. The release is OUTPUT-NEUTRAL by design -- that is its safety argument --
+    so mode 1 proves it is HARMLESS, never that it HAPPENED. Deleting the
+    production call site leaves every other mode green. Split the failure modes:
+
+      * releases TOO MUCH -> the released-spectrum tripwire throws when Stage 6 or
+        the blib reads a released entry, and the leg dies. Already covered.
+      * does NOT run      -> output byte-identical, saving silently gone.
+      * runs but frees 0  -> output identical, log claims a saving it never made.
+
+    Every defect /code-review found on #4534 was in the last two columns: the
+    Rehydrate path never released, --task FirstPassFDR printed millions released
+    having freed ZERO bytes directly above a [MEM] probe, and the SecondPassFDR node
+    realized nothing at all. None was an over-release. This closes that column.
+
+    -ExpectScopes names the release scopes the log must contain. -RequireFreed
+    names the subset that must additionally have freed a non-zero count; it is a
+    separate list because the SecondPassFDR node legitimately reports 0 on a
+    straight-through run, where FirstJoin already released in the same process and
+    ReleaseSpectrum is idempotent -- requiring non-zero there would fail every
+    in-process run, while requiring it on the HPC SecondPassFDR node is exactly the
+    assertion that would have caught the zero-saving defect. -ExpectNone asserts
+    the log contains no release line at all, which pins --task FirstPassFDR: it
+    loads with OmitFragments, so a release there can only ever be the fabricated
+    kind.
+
+    Asserts PRESENCE and non-zero, never exact counts -- those move with any
+    scoring change, and a gate that cries wolf stops being read.
+
+    Returns the { Pass; Issues } shape every other comparator returns.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$LogPath,
+        [string[]]$ExpectScopes = @(),
+        [string[]]$RequireFreed = @(),
+        [switch]$ExpectNone
+    )
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) {
+        $issues.Add("release assertion: run log not found: $LogPath")
+        return @{ Pass = $false; Issues = $issues }
+    }
+    $logName = Split-Path -Leaf $LogPath
+    # @() is REQUIRED, not defensive habit. A function returning a List<T> UNROLLS it
+    # into the pipeline, so this arrives as $null for an empty result and -- the case
+    # that bites -- as a BARE HASHTABLE for a single result, whose .Count is its KEY
+    # count (3) and whose [0] is $null. A one-line log is exactly what the ExpectNone
+    # leg looks like when it fires, so without this the fabricated-saving failure
+    # message renders its counts blank precisely when someone needs to read them.
+    $facts = @(Get-ReleaseLogFacts -LogPath $LogPath)
+
+    if ($ExpectNone) {
+        if ($facts.Count -gt 0) {
+            $issues.Add((("{0}: {1} release line(s), expected NONE - this leg loads the " +
+                "library with OmitFragments, so every entry already holds the shared " +
+                "Array.Empty and a release here frees nothing while reporting that it did; " +
+                "first: released {2} of {3}") -f
+                $logName, $facts.Count, $facts[0].Released, $facts[0].Entries))
+        }
+        # Matched is reported so the CALLER can tell "correctly released nothing" from
+        # "the pattern is dead". On its own an -ExpectNone check cannot: a reworded C#
+        # log line makes $facts empty and this branch reports PASS having verified
+        # nothing. The run-wide liveness assertion in the mode 6 block closes that -
+        # a negative assertion cannot fail closed by itself.
+        return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count }
+    }
+
+    foreach ($scope in $ExpectScopes) {
+        $matching = @($facts | Where-Object { $_.Scope -eq $scope })
+        if ($matching.Count -eq 0) {
+            $issues.Add((("{0}: no release line for scope '{1}' - either the release no " +
+                "longer runs on this leg (the saving is gone and nothing else can see it), " +
+                "or the C# log wording drifted from this assertion and it is reading " +
+                "nothing. Scopes present: {2}") -f
+                $logName, $scope,
+                $(if ($facts.Count) { ($facts.Scope | Sort-Object -Unique) -join ', ' } else { '(none)' })))
+            continue
+        }
+        if ($RequireFreed -notcontains $scope) { continue }
+        if ($matching[0].Released -le 0) {
+            $issues.Add((("{0}: release line for scope '{1}' freed 0 of {2} entries - the " +
+                "call site ran but released nothing, which is the fabricated-saving shape") -f
+                $logName, $scope, $matching[0].Entries))
+        }
+        if ($matching[0].Retained -le 0) {
+            $issues.Add((("{0}: release line for scope '{1}' retained 0 base_ids - the " +
+                "retained set is empty, so the next reader of any spectrum will trip the " +
+                "released tripwire") -f $logName, $scope))
+        }
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count }
+}
+
 # --- mode 3: HPC 4-task worker chain ------------------------------------------
 # Low-level runner for a single --task phase: CWD = its own scratch dir so the
 # task's CWD-relative outputs (parquets, sidecars, blib) land there, mirroring a
@@ -733,7 +1026,7 @@ function Copy-LibraryInto {
 }
 
 # Run the distributed --task pipeline end to end against copied inputs under
-# $ChainRoot and return the final merge-node blib. Each phase rehydrates the
+# $ChainRoot and return the final SecondPassFDR blib. Each phase rehydrates the
 # prior phase's on-disk sidecars, exactly as a multi-computer distribution would;
 # nothing is held in memory across phases. All inputs/sidecars are copied (never
 # referenced in place), so the read-only data dir is untouched.
@@ -753,6 +1046,14 @@ function Invoke-HpcChain {
     $mzmlByStem = @{}
     foreach ($m in $Mzmls) { $mzmlByStem[[IO.Path]::GetFileNameWithoutExtension($m)] = $m }
 
+    # Phase logs are copied here as each phase finishes, because the phase DIRS are
+    # freed mid-chain to bound peak disk (phases 1, 2 and every phase-3 worker go
+    # before the SecondPassFDR node even starts). A leg-level assertion therefore cannot read
+    # them where they were written -- mode 6 found exactly that, seeing only phase 4.
+    # A few KB of text survives; the multi-GB inputs still do not.
+    $chainLogDir = Join-Path $ChainRoot 'logs'
+    New-Item -ItemType Directory -Path $chainLogDir -Force | Out-Null
+
     # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
     # <stem>.calibration.json per file.
     $ph1 = Join-Path $ChainRoot 'phase1_scoring'
@@ -766,6 +1067,7 @@ function Invoke-HpcChain {
     $a1 += $extraArgs
     $a1 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
+    Copy-Item (Join-Path $ph1 'phase1.log') (Join-Path $chainLogDir 'phase1.log') -Force
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
     # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
@@ -774,10 +1076,10 @@ function Invoke-HpcChain {
             Remove-Item -Force -ErrorAction SilentlyContinue
     }
 
-    # Phase 2: 1st-join (Stage 5). Consumes the per-file parquets, writes the
+    # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes the
     # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. A
     # 0-byte stub mzML lets the task derive sidecar paths without reading spectra.
-    $ph2 = Join-Path $ChainRoot 'phase2_firstjoin'
+    $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
     New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
     foreach ($s in $stemList) {
         Copy-Item (Join-Path $ph1 "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
@@ -792,6 +1094,7 @@ function Invoke-HpcChain {
     $a2 += $extraArgs
     $a2 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
+    Copy-Item (Join-Path $ph2 'phase2.log') (Join-Path $chainLogDir 'phase2.log') -Force
 
     # Phase 3: per-file rescore workers (Stage 6), one independent worker per
     # file. Stage 6 STREAMS its MS2 from the .spectra.bin cache phase 1 wrote (there is
@@ -813,7 +1116,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
         # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
         # phase2 -> phase3 -> phase4 relay as the other Stage-5 sidecars: $ph2 is
-        # deleted below (before the merge node), so the merge node can only reach it
+        # deleted below (before SecondPassFDR), so SecondPassFDR can only reach it
         # via a phase-3 hop. Present only for the SVM/percolator framework; absent for
         # the GBDT golden, so guard with Test-Path.
         $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
@@ -825,6 +1128,7 @@ function Invoke-HpcChain {
         $a3 += $extraArgs
         $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
+        Copy-Item (Join-Path $ph3 'phase3.log') (Join-Path $chainLogDir "phase3_$s.log") -Force
         # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
         # consumes only those plus the calibration / reconciliation / 1st-pass
         # sidecars copied above -- never this worker's spectra cache, input
@@ -842,14 +1146,14 @@ function Invoke-HpcChain {
     }
 
     # Phases 1 and 2 are fully consumed once every rescore worker has copied its
-    # inputs (phase 4 reads only phase-3 outputs). Free them before the merge node.
+    # inputs (phase 4 reads only phase-3 outputs). Free them before SecondPassFDR.
     Remove-Scratch $ph1
     Remove-Scratch $ph2
 
-    # Phase 4: 2nd-join merge node (Stage 7 + blib). Consumes each worker's
+    # Phase 4: SecondPassFDR (Stage 7 + blib). Consumes each worker's
     # reconciled parquet + sidecars (never the original Stage 4 parquet, and never
     # an mzML -- a 0-byte stub provides path derivation only) and writes the blib.
-    $ph4 = Join-Path $ChainRoot 'phase4_mergenode'
+    $ph4 = Join-Path $ChainRoot 'phase4_SecondPassFDR'
     New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
     foreach ($s in $stemList) {
         $ph3 = $ph3Dirs[$s]
@@ -857,7 +1161,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
-        # Ship the persisted 1st-pass model so the merge node can run the frozen 2nd-pass
+        # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
         # modes (transfer / transfer-compete / protein-compact) without re-training. Written
         # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
         # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
@@ -868,7 +1172,7 @@ function Invoke-HpcChain {
         if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
         New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
     }
-    # The merge node now has every worker's reconciled output copied in; the phase-3
+    # SecondPassFDR now has every worker's reconciled output copied in; the phase-3
     # worker dirs are done.
     foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
     Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
@@ -879,6 +1183,7 @@ function Invoke-HpcChain {
     $a4 += $extraArgs
     $a4 += $memStampArgs
     Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
+    Copy-Item (Join-Path $ph4 'phase4.log') (Join-Path $chainLogDir 'phase4.log') -Force
 
     return (Join-Path $ph4 'output.blib')
 }
@@ -1019,10 +1324,11 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR merge does
-        # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
-        # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
-        # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here, and mode 3's SecondPassFDR leg no
+        # longer needs one: since #4486 it streams the reconciled-input load (one file's
+        # pre-compaction pool resident at a time) instead of taking the RESIDENT first-pass
+        # pool, so no leg of this chain arms the guard at all. Keeping the opt-in would be
+        # actively harmful:
         # it wrapped the whole chain and would mask a genuine guard regression on any
         # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
         # what mode 3 exists to exercise.
@@ -1069,7 +1375,7 @@ foreach ($name in $selected) {
             -NoColdScoring -NoColdRescoring
         # Byte identity on top of the cache assertion. A fully cached run never rewrites
         # the blib, so this normally hashes an untouched file; it is here to catch a
-        # partial regression that re-runs the merge node and writes a DIFFERENT blib
+        # partial regression that re-runs SecondPassFDR and writes a DIFFERENT blib
         # while the upstream tasks still report cache hits.
         #
         # A raw sha256 is legitimate ONLY under this leg's nothing-was-rewritten
@@ -1094,56 +1400,33 @@ foreach ($name in $selected) {
         }
     }
 
+    # The pristine straight-through blib, kept aside for BOTH legs below that re-run
+    # into $straightDir in place. Taken ONCE, here, so each leg is compared against
+    # the straight-through output rather than against whatever the previous leg left:
+    # mode 2 and mode 5 both rewrite output.blib, so a per-leg copy would make the
+    # second leg's oracle the first leg's product. Placed after mode 4, whose
+    # byte-identity assertion needs the dir untouched.
+    $coldBlib = Join-Path $straightDir 'output_cold.blib'
+    Copy-Item $straightBlib $coldBlib -Force
+
     # ---- mode 2: resume vs straight-through self-consistency ----
     if (-not $SkipResume) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
-        $coldBlib = Join-Path $straightDir 'output_cold.blib'
-        Copy-Item $straightBlib $coldBlib -Force
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        # Scoped opt-in, and ONLY for this leg. A FULL resume with --model-diagnostics is a
-        # genuinely O(files) path that is not fixed yet: the invalidation leaves every
-        # <stem>.1st-pass.fdr_scores.bin on disk, so FirstJoin skips the first-pass score
-        # pass and emits the report through the batch ModelDiagnosticsReport.Write, which
-        # reads the RESIDENT per-file entries (PerFileScoringTask.cs, needsResidentPool at
-        # the --input-files rehydrate). The guard is therefore RIGHT to throw here, and
-        # suppressing it is the honest thing to do only because these are 3-file datasets.
+        # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, and this leg is the reason the variable is
+        # now unset on EVERY leg of the gate. It used to name mdiag-full-resume: the
+        # invalidation leaves every <stem>.1st-pass.fdr_scores.bin on disk, so under
+        # --model-diagnostics Stage 5 held the RESIDENT per-file entries for the batch
+        # ModelDiagnosticsReport.Write to read, which is O(files) and genuinely needed
+        # suppressing at 3 files. #4505 streamed that report off FirstPassFDR's own per-file load,
+        # so the trigger is gone and so is the token.
         #
-        # This is NOT the scale case. --model-diagnostics over --input-scores streams the
-        # report off ModelDiagnosticsData.Accumulator one file at a time and needs no opt-in
-        # at any file count. What remains is the full-resume batch report, tracked in #4505;
-        # the fix is to feed the same accumulator during the resume's per-file load and
-        # report from it, and it is already written and verified on the closed #4437 branch.
-        #
-        # mode 3 above deliberately has NO opt-in: its old one wrapped the entire HPC chain
-        # and would mask a guard regression on any --input-scores worker.
-        # Names the ONE path it needs, so what CI depends on is visible rather than ambient.
-        # The former blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 would also have waved through any
-        # OTHER resident path this leg happened to take - which is how a transfer regression
-        # rode along unnoticed. An unlisted path now fails here even with this set.
-        #
-        # ADDS its token to whatever the caller named rather than replacing it, and restores the
-        # original afterwards. Replacing it made the A/B that this gate exists to support
-        # impossible to run: an operator proving the streamed Stage 6 handoff bounded sets
-        # OSPREY_STAGE6_STREAM_SURVIVORS=0 with OSPREY_ALLOW_UNFIXED_RESIDENT=
-        # compacted-entries-buffer, and this line then dropped that token and aborted the leg on
-        # the guard. Appending keeps every admitted path individually named, which is the
-        # property that matters.
-        $priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = if ([string]::IsNullOrWhiteSpace($priorAllowResident)) {
-            'mdiag-full-resume'
-        } else {
-            "$priorAllowResident,mdiag-full-resume"
-        }
-        try {
-            $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-                -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
-        } finally {
-            if ([string]::IsNullOrWhiteSpace($priorAllowResident)) {
-                Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-            } else {
-                $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $priorAllowResident
-            }
-        }
+        # Nothing here replaces it. An opt-in on this leg would mask exactly the regression the
+        # leg exists to catch, which is why mode 3 and mode 4 never had one either: the former
+        # blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 wrapped a whole leg and let a transfer
+        # regression ride along unnoticed for ten days.
+        $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
 
@@ -1183,6 +1466,302 @@ foreach ($name in $selected) {
         }
     }
 
+    # ---- mode 5: Stage-5 rehydrate (FirstPassFDR's rehydrate arm) ----
+    # Runs AFTER mode 2, and the order is not arbitrary. Mode 5's SecondPassFDR run
+    # rewrites more than output.blib: every <stem>.2nd-pass.fdr_scores.bin, the
+    # model-diagnostics report, and its .data.json are SecondPassFDR outputs too, and
+    # Invoke-ResumeInvalidation deletes none of them. Running mode 5 first therefore
+    # left mode 2 resuming on top of mode-5-produced pass-2 state, which feeds
+    # PerFileRescore's pass-2 self-gate and SecondPassFDR's 2nd-pass rehydrate - so mode
+    # 2's oracle silently depended on whether -SkipRehydrate was passed, and a defect
+    # that only appears when Stage 5 is rehydrated twice would hide behind mode 5's
+    # own passing blib assertion. Ordering it last costs nothing: mode 2's resume
+    # re-runs FirstPassFDR and SecondPassFDR, so it leaves exactly the all-valid state
+    # mode 5 needs, and mode 5 still compares against the pristine $coldBlib.
+    #
+    # Stated plainly, because the coupling MOVED rather than vanished: mode 2 rewrites
+    # every .1st-pass.fdr_scores.bin and .reconciliation.json (its invalidation deletes
+    # the FirstPassFDR stamp, so that task RUNS), and mode 5 then streams its bundle from
+    # those recomputed sidecars. Under -SkipResume it streams the ORIGINAL straight-through
+    # sidecars instead. Both are valid Stage 5 states and mode 2 asserts they agree at 1e-9,
+    # so neither is a wrong input - but they are not the SAME input, and a bisection that
+    # reproduces a mode 5 failure must match the switch combination that produced it.
+    # Removing the coupling entirely needs a second work dir, which costs a full
+    # straight-through run per dataset.
+    #
+    # Task NAMES throughout, not class names: the driver stamps and logs
+    # 'FirstPassFDR' and 'SecondPassFDR', while the classes behind them are
+    # FirstPassFdrTask and SecondPassFdrTask. Keying prose off the class names is how a
+    # copy of the invalidation helper once matched zero files and produced a
+    # 'resume' that never resumed (see Invoke-ResumeInvalidation).
+    #
+    # The one leg that reaches FirstPassFDR's OWN-SIDECAR bundle loader. Mode 2
+    # deletes that task's validity stamp, so it RUNS there; mode 4 invalidates
+    # nothing, so nothing demands its state; mode 3's PerFileRescoring phase does
+    # enter the rehydrate arm, but with a worker-supplied bundle, so it never calls
+    # LoadOwnReconciliationBundle. Invalidating ONLY SecondPassFDR leaves the
+    # FirstPassFDR stamp and every .1st-pass.fdr_scores.bin + .reconciliation.json
+    # sidecar valid, which is exactly the state that loader exists to serve.
+    #
+    # Names NO token and suppresses nothing - #4536 removed the last one. Note what this
+    # leg does and does not buy: a regression that puts STAGE 5 back on the resident pool
+    # fails on PerFileScoringTask's guard, but nothing GUARDS FirstPassFDR's own survivor
+    # loader, so a regression confined to it does not fail on a guard here.
+    #
+    # It is still caught, by comparison rather than by a guard. Both sides of this leg go
+    # through FirstPassSurvivorLoader since #4536, so this leg alone cannot witness a
+    # loader fault that affects them equally - but mode 1 compares the straight-through
+    # blib against a COMMITTED golden that predates the loader, so a fault common to both
+    # sides fails there, and a fault confined to the resume fails this leg's
+    # rehydrate==straight compare. Plus the marker below and the memory trace in the log.
+    if (-not $SkipRehydrate) {
+        Write-Progress-Tc "${name}: Stage-5 rehydrate self-consistency (mode 5)"
+        Invoke-SecondPassOnlyInvalidation -WorkDir $straightDir
+        # Delete the straight-through run's report so the comparison below cannot pass
+        # against it. Nothing about the invalidation forces FirstPassFDR to re-emit the
+        # report - if the rehydrate arm stopped writing one, a surviving file from the
+        # straight-through leg would compare EQUAL to the golden and the leg would go
+        # green having tested nothing. Removing it makes "the report the rehydrate
+        # produced" the only thing that can be compared.
+        # BOTH files. SecondPassFdrTask re-renders the HTML from output.model-diagnostics.data.json
+        # during its pass-2 enrichment, inside a catch-all that swallows failures - so if any
+        # earlier leg threw partway through that block, the .data.json survives, and deleting
+        # only the .html would let SecondPassFDR rebuild a complete page from the PREVIOUS leg's
+        # pass-1 data. The comparison would then pass against a report the rehydrate never
+        # wrote, which is the exact regression this deletion exists to catch.
+        if ($cfg.ModelDiagnostics) {
+            Remove-Item -LiteralPath $diagHtml -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath ($diagHtml -replace '\.html$', '.data.json') `
+                -Force -ErrorAction SilentlyContinue
+        }
+        # No token. This leg used to set OSPREY_ALLOW_UNFIXED_RESIDENT=resume-survivor-handoff
+        # because a resume could not stream the Stage 6 survivor handoff - only a computed
+        # Stage 5 built the per-file loader - and FirstPassFDR's rehydrate arm refused to run
+        # without it. #4536 gave the rehydrate its own loader, so the arm streams and the token
+        # no longer exists; running with nothing suppressed is what now makes this leg prove it.
+        $rRehydrate = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'rehydrate.log' -Spec $cfg -Manifest $inputs.Manifest
+        $rehydrateBlib = Join-Path $straightDir 'output.blib'
+        Write-Host ("  rehydrate wall {0:mm\:ss}; blib {1:N0} bytes" -f $rRehydrate.Wall, (Get-Item $rehydrateBlib).Length)
+
+        # Three tasks kept their outputs; only SecondPassFDR lost its stamp. Asserting
+        # the ran side keeps the leg from going vacuous exactly as in mode 2.
+        $m5cache = Test-TaskCacheHits -LogPath $rRehydrate.Log `
+            -ExpectSkipped @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring') `
+            -ExpectRan @('SecondPassFDR') `
+            -NoColdScoring -NoColdRescoring
+        # ... and the FirstPassFDR cache hit above is NOT evidence the rehydrate arm
+        # ran: a skipped task whose state nobody demands never enters Rehydrate at
+        # all. This marker is the only thing that says it did.
+        $m5marker = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstPassFdrRehydrateMarker `
+            -Description 'FirstPassFDR streaming the post-Stage-5 bundle from its own sidecars'
+        foreach ($issue in $m5marker.Issues) { $m5cache.Issues.Add($issue) }
+        # Repair Pass after mutating Issues. Test-TaskCacheHits computed it at return
+        # time, so appending above leaves Pass $true with a non-empty Issues list. Every
+        # other leg in this file reports off .Pass; leaving it stale here means the first
+        # edit toward that house style silently turns a MISSING rehydrate marker into a
+        # mode 5 PASS - green on exactly the regression this leg exists to catch.
+        $m5cache.Pass = ($m5cache.Issues.Count -eq 0)
+        if ($m5cache.Pass) {
+            $summaryLines.Add("$name mode5 (rehydrate entered + cache hits): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode5 (rehydrate entered + cache hits): FAIL - $($m5cache.Issues.Count) issue(s)"
+            $m5cache.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode5 (rehydrate entered + cache hits): FAIL ($($m5cache.Issues.Count) issues)")
+        }
+
+        $m5 = Compare-BlibFull -BlibExpected $coldBlib -BlibActual $rehydrateBlib -Tolerance $Tolerance
+        if ($m5.Pass) {
+            $summaryLines.Add("$name mode5 (rehydrate==straight): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode5 (rehydrate==straight): FAIL - $($m5.Issues.Count) issue(s)"
+            $m5.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode5 (rehydrate==straight): FAIL ($($m5.Issues.Count) issues)")
+        }
+
+        # The rehydrate re-emits the --model-diagnostics report from the 1st-pass
+        # sidecars rather than from a just-scored pool, which is the substitution
+        # #4505 is about. Comparing it to the SAME golden mode 1b compares the
+        # straight-through report against is what makes the two reports equivalent
+        # rather than merely both present.
+        #
+        # -NoTrainedModel because this run adopted its q-values instead of training
+        # Percolator, so featureCount is pinned at 0 rather than compared (see
+        # Compare-DiagnosticsGolden). That is pre-existing resume behavior, not a
+        # property of the streamed report: FirstPassFDR's rehydrate has always passed a
+        # null FeatureContributions, on the resident batch write too. Every metric
+        # the resume CAN reproduce - pool composition, the null-alignment density
+        # ratio, the paired decoy-win fraction, and pass-1/pass-2 FDP at the reported
+        # q - is still compared at $Tolerance, and those are exactly the reductions
+        # the streaming accumulator had to reproduce row for row.
+        if ($cfg.ModelDiagnostics) {
+            # try/catch, not just Test-Path. Absence is only ONE way this fails: a report that
+            # exists but carries no JSON payload, or a truncated one, throws out of
+            # Get-DiagnosticsPayload / ConvertFrom-Json, and with $ErrorActionPreference='Stop'
+            # that unwinds past the dataset loop into the outer catch - which is deliberately
+            # NOT per-dataset, so the WHOLE run reports ABORTED and every remaining dataset is
+            # skipped. Mode 1b compares the straight-through report first with no guard, so
+            # this bites in exactly one case: straight-through fine, REHYDRATE report
+            # malformed - precisely the regression this leg exists to catch.
+            $m5d = $null
+            try {
+                if (Test-Path -LiteralPath $diagHtml) {
+                    $m5d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
+                        -Tolerance $Tolerance -NoTrainedModel
+                } else {
+                    $m5d = [pscustomobject]@{ Pass = $false; Issues = [System.Collections.Generic.List[string]]@(
+                        "diagnostics: the rehydrate wrote no model-diagnostics report at $diagHtml") }
+                }
+            } catch {
+                $m5d = [pscustomobject]@{ Pass = $false; Issues = [System.Collections.Generic.List[string]]@(
+                    ("diagnostics: the rehydrate's report at {0} could not be read: {1}" -f $diagHtml, $_.Exception.Message)) }
+            }
+            if ($m5d.Pass) {
+                $summaryLines.Add("$name mode5 (rehydrate diagnostics vs golden): PASS")
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc "$name mode5 (rehydrate diagnostics vs golden): FAIL - $($m5d.Issues.Count) issue(s)"
+                $m5d.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                $summaryLines.Add("$name mode5 (rehydrate diagnostics vs golden): FAIL ($($m5d.Issues.Count) issues)")
+            }
+
+            # Tier 2, the same absolute bounds mode 1b applies to the straight-through
+            # report. Without it this leg has only the golden compare, and the golden is
+            # regenerable: once a bad calibration is blessed by -CreateGolden, comparing the
+            # rehydrate report against the poisoned baseline passes forever. That would leave
+            # the one leg specifically exercising the streamed accumulator with no independent
+            # correctness floor. $bounds is already computed per dataset, so this is free.
+            $m5bounds = Get-SanityBounds $cfg
+            $m5s = Test-DiagnosticsSanity -HtmlPath $diagHtml @m5bounds
+            if ($m5s.Pass) {
+                $summaryLines.Add("$name mode5 (rehydrate FDR sanity bounds): PASS")
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc "$name mode5 (rehydrate FDR sanity bounds): FAIL - calibration is out of bounds"
+                $m5s.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                $summaryLines.Add("$name mode5 (rehydrate FDR sanity bounds): FAIL ($($m5s.Issues.Count) issues)")
+            }
+        }
+    }
+
+    # ---- mode 6: the library-fragment release engaged on every leg that holds the library ----
+    # Runs LAST because it reads the logs of all the legs above -- straight-through,
+    # resume, and every phase of the HPC chain -- and they have to have been written.
+    #
+    # This is the assertion the blib comparators cannot make. The release is
+    # output-neutral by design, so modes 1-4 pass identically whether it ran or was
+    # deleted outright; #4534's review found three separate wirings where it silently
+    # did not run, every one caught by a human reading these same logs by hand.
+    #
+    # The per-leg expectations are calibrated against an observed run, NOT derived from
+    # reading the C# -- deriving them is how the original defects got in. Two surprises
+    # from that observation are encoded here: --task PerFileRescoring DOES release
+    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though IsIncluded
+    # excludes it from that leg), and the warm re-run legitimately logs nothing at all
+    # because a fully cached run does no work -- asserting a release there would be a
+    # false red on every run.
+    $releaseChecks = [System.Collections.Generic.List[hashtable]]::new()
+    $releaseChecks.Add(@{
+        Label = 'straight-through'; Log = (Join-Path $straightDir 'straight.log')
+        Scopes = @($releaseScopeRescore, $releaseScopeReported)
+        Freed  = @($releaseScopeRescore)
+    })
+    if (-not $SkipResume) {
+        # The resume leg exercises FirstPassFdrTask.RUN, not its rehydrate arm: mode 2's
+        # Invoke-ResumeInvalidation deletes the FirstPassFDR stamp, and mode 2 asserts
+        # -ExpectRan @('FirstPassFDR', ...) on this very log to prove it. Worth checking
+        # anyway - it is a second, independently-invalidated Run - but it is NOT rehydrate
+        # coverage. The rehydrate arms are covered below and on the phase-3 workers.
+        $releaseChecks.Add(@{
+            Label = 'resume (FirstPassFDR re-runs)'; Log = (Join-Path $straightDir 'resume.log')
+            Scopes = @($releaseScopeRescore, $releaseScopeReported)
+            Freed  = @($releaseScopeRescore)
+        })
+    }
+    if (-not $SkipRehydrate) {
+        # THE OWN-SIDECAR REHYDRATE ARM, and the reason it needs its own entry: the release
+        # shipped in #4534 not running on rehydrate at all, and that is the run an operator
+        # reaches for AFTER the OOM this feature exists to prevent - the worst possible leg
+        # to lose the saving on.
+        #
+        # No other check reaches it. The straight-through and resume legs both RUN
+        # FirstPassFDR (above); mode 3's phase-3 workers do enter Rehydrate but adopt a
+        # WORKER-supplied bundle, never FirstPassFdrTask.LoadOwnReconciliationBundle. Mode 5's
+        # leg is the only one that rebuilds the bundle from the run's OWN sidecars, so
+        # without this entry the own-sidecar call site is asserted zero times - delete the
+        # release from it, run -SkipHpcChain, and mode 6 still reports PASS.
+        $releaseChecks.Add(@{
+            Label = 'own-sidecar rehydrate'; Log = (Join-Path $straightDir 'rehydrate.log')
+            Scopes = @($releaseScopeRescore, $releaseScopeReported)
+            Freed  = @($releaseScopeRescore)
+        })
+    }
+    if (-not $SkipHpcChain) {
+        # Read the PRESERVED copies under chain\logs, not the phase dirs: phases 1, 2
+        # and every phase-3 worker are freed mid-chain to bound peak disk, so by the
+        # time this runs only phase 4's dir still exists.
+        $releaseLogDir = Join-Path $runRoot "$name\chain\logs"
+        $releaseChecks.Add(@{
+            Label = 'HPC --task FirstPassFDR'
+            Log = (Join-Path $releaseLogDir 'phase2.log'); None = $true
+        })
+        foreach ($mzml in $inputs.Mzmls) {
+            $stem = [IO.Path]::GetFileNameWithoutExtension($mzml)
+            $releaseChecks.Add(@{
+                Label = "HPC --task PerFileRescoring ($stem)"
+                Log = (Join-Path $releaseLogDir "phase3_$stem.log")
+                Scopes = @($releaseScopeRescore); Freed = @($releaseScopeRescore)
+            })
+        }
+        # The SecondPassFDR node is the whole point of requiring a non-zero count anywhere: it is
+        # the process that holds the fragment set through pass-2 Percolator, protein FDR
+        # AND the blib write, and it realized ZERO saving until #4534 gave it its own
+        # release. On the HPC chain it is the only release there is.
+        $releaseChecks.Add(@{
+            Label = 'HPC SecondPassFDR node'
+            Log = (Join-Path $releaseLogDir 'phase4.log')
+            Scopes = @($releaseScopeReported); Freed = @($releaseScopeReported)
+        })
+    }
+
+    Write-Progress-Tc "${name}: library-fragment release engagement (mode 6)"
+    $m6Issues = [System.Collections.Generic.List[string]]::new()
+    $m6Matched = 0
+    foreach ($check in $releaseChecks) {
+        $r = if ($check.None) {
+            Test-LibraryFragmentRelease -LogPath $check.Log -ExpectNone
+        } else {
+            Test-LibraryFragmentRelease -LogPath $check.Log `
+                -ExpectScopes $check.Scopes -RequireFreed $check.Freed
+        }
+        $m6Matched += $r.Matched
+        if (-not $r.Pass) {
+            $r.Issues | ForEach-Object { $m6Issues.Add("$($check.Label): $_") }
+        }
+    }
+    # Run-wide liveness. An -ExpectNone check PASSES on an empty result, so on its own it
+    # cannot tell "this leg correctly released nothing" from "the C# log wording changed
+    # and the pattern now matches nothing anywhere" - a negative assertion cannot fail
+    # closed. Today the scoped checks happen to fail on the same drift, but that is an
+    # accident of which legs are enabled: -SkipHpcChain -SkipResume -SkipRehydrate leaves
+    # only positive checks whose absence is indistinguishable from a dead regex. Asserting
+    # that SOMETHING matched somewhere makes the drift itself the failure.
+    if ($m6Matched -eq 0) {
+        $m6Issues.Add((("no leg logged a single release line matching '{0}' - the release " +
+            "is off for the whole run, or the C# wording drifted from this pattern and " +
+            "every assertion above is reading nothing") -f $releaseLinePattern))
+    }
+    if ($m6Issues.Count -eq 0) {
+        $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS")
+    } else {
+        $overallFail = $true
+        Write-Problem-Tc "$name mode6 (library-fragment release engaged): FAIL - $($m6Issues.Count) issue(s)"
+        $m6Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+        $summaryLines.Add("$name mode6 (library-fragment release engaged): FAIL ($($m6Issues.Count) issues)")
+    }
+
     # All legs for this dataset are done -- free its scratch now so peak disk stays
     # at ~one dataset (the next dataset / the perf-gate step gets the space back).
     Remove-Scratch (Join-Path $runRoot $name)
@@ -1205,6 +1784,12 @@ catch {
     Write-Host ($_.ScriptStackTrace) -ForegroundColor DarkGray
 }
 finally {
+    # Restore the operator's environment, whatever happened above.
+    if ([string]::IsNullOrWhiteSpace($script:priorAllowResident)) {
+        Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
+    } else {
+        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $script:priorAllowResident
+    }
     # Safety net for a dataset that threw before its own cleanup -- drop the whole
     # run root. Raw input data lives outside $runRoot and is untouched.
     Remove-Scratch $runRoot
@@ -1231,6 +1816,27 @@ foreach ($d in $watchedDirs) {
 Write-Host ""
 Write-Host "=== Osprey regression summary ===" -ForegroundColor Cyan
 $summaryLines | ForEach-Object { Write-Host "  $_" }
+
+# The gaps this gate KNOWS it still traverses. Printed green-or-red runs alike: these
+# are not failures (the legs above passed), they are the O(files) paths a passing gate
+# is nonetheless walking, and a passing gate is exactly when nobody goes looking.
+Write-Host ""
+Write-Host "=== Known O(files) resident paths this gate still traverses ===" -ForegroundColor Cyan
+if ($knownResidentGaps.Count -eq 0) {
+    Write-Host "  none" -ForegroundColor Green
+} else {
+    foreach ($g in $knownResidentGaps) {
+        Write-Host ("  {0}  token: {1}" -f $g.Issue, $g.Token) -ForegroundColor Yellow
+        Write-Host ("      {0}" -f $g.Path)
+        Write-Host ("      {0}" -f $g.Legs)
+    }
+    # DERIVED, not typed. A literal count reads identically before and after a gap is
+    # closed, so it can never report the invariant it claims to state - and a hardcoded 0
+    # sitting three lines under a table naming a required token is worse than no line.
+    $requiredTokens = @($knownResidentGaps | Where-Object { $_.Token -and $_.Token -ne 'NONE' })
+    Write-Host (("  Tokens REQUIRED by this gate: {0} (target: 0). Each must have an open " +
+        "issue to remove it.") -f $requiredTokens.Count)
+}
 # No artifacts are published, and the run's scratch under TestResults is deleted on
 # completion (the downloaded raw input data is kept). A red gate's diagnosis lives in
 # the build log (every per-file log is Tee'd to the console TeamCity captures) and
