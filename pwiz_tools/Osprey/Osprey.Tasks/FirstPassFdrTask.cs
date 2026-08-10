@@ -1131,14 +1131,25 @@ namespace pwiz.Osprey.Tasks
                 var libraryById = ctx.Get<LibraryById>().Value;
                 if (mdiagAccumulator != null)
                 {
-                    // The peak co-assignment panel (issue #4522) needs each row's detection apex
-                    // RT, which the streamed fold never sees. On THIS path the pre-compaction
-                    // pool is resident and carries ApexRt, so read it straight off the entries -
-                    // no sidecar/parquet rejoin needed (that is the streaming path's problem).
-                    var coAssignment = ModelDiagnosticsData.BuildCoAssignment(
-                        perFileEntries, mdiagAccumulator.ClassByBaseId,
-                        ModelDiagnosticsReport.BuildPrecursorMzLookup(libraryById),
-                        config.RunFdr, config.FdrLevel, 1, false);
+                    // The peak co-assignment panel (issue #4522) is built from the per-file FDR
+                    // sidecars, NOT from perFileEntries - the same source the projection path
+                    // uses, so there is one implementation of this panel rather than two.
+                    //
+                    // A non-null mdiagAccumulator means this is the bounded rehydrate path, and
+                    // the remarks on this method say what that implies: perFileEntries "has
+                    // already lost the ~52x non-survivors - mostly the decoys and entrapment",
+                    // so building the report off it "would silently produce a plausible WRONG
+                    // page". That is precisely what the earlier resident build did here. It
+                    // agreed with the sidecar build on the acceptance boundary (0.0120) and on
+                    // the accepted count (28,926) and still reported 72 detected decoys against
+                    // 468, because compaction had already dropped the rest - target denominators
+                    // intact, decoy class quietly gutted. The regression then overwrote the
+                    // straight-through report with this one, so every measurement taken after a
+                    // full run was the wrong page.
+                    var coAssignment = PeakCoAssignmentSource.Build(
+                        perFileEntries.ConvertAll(kv => kv.Key),
+                        ctx.Get<PerFileParquetPaths>().Value, config,
+                        mdiagAccumulator.ClassByBaseId, libraryById, ctx.LogInfo);
                     ModelDiagnosticsReport.WriteFromAccumulator(
                         mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment);
                 }

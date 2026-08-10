@@ -338,7 +338,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     int wc0 = 0, woc0 = 0;
                     builder.ObserveCutoff(f,
                         Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId, haveManifest, ref wc0, ref woc0),
-                        e.EntryId, e.Score, e.EffectiveRunQvalue(fdrLevel),
+                        e.EntryId, e.Score, e.ExperimentAggregateScore, e.EffectiveRunQvalue(fdrLevel),
                         e.EffectiveExperimentQvalue(fdrLevel), runFdr);
                 }
             }
@@ -363,8 +363,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     if (double.IsNaN(mz) || mz <= 0)
                         continue;
                     anyMz = true;
+                    // Tag decoy keys. A decoy carries its target's modified sequence, so an
+                    // untagged decoy key equals its target's and the precursor registry merges
+                    // the two, dropping the decoy. Same rule as the pass-1 source builds.
+                    string key = e.IsDecoy
+                        ? e.ModifiedSequence + "|" + e.Charge + "|decoy"
+                        : e.ModifiedSequence + "|" + e.Charge;
                     builder.AddRow(f,
-                        new CoAssignmentRow(e.ModifiedSequence + "|" + e.Charge, e.EntryId,
+                        new CoAssignmentRow(key, e.EntryId,
                             e.ModifiedSequence, e.Charge, mz, e.ApexRt, e.Score, cls),
                         runQ, expQ, runFdr);
                 }
@@ -405,10 +411,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private bool _sealed;
 
             // The score each scope's competition actually ranks on, per precursor (entry id).
-            // RUN scope: the precursor's best score WITHIN a file. EXPERIMENT scope: its best
-            // across all files - the experiment aggregate, which is what the experiment-wide
-            // competition ranks on. Comparing a decoy's per-run row score against an
-            // experiment-scope cutoff mixes two different rankings and is simply wrong.
+            // RUN scope: the precursor's best score WITHIN a file, reduced here from the per-row
+            // scores. EXPERIMENT scope: the PERSISTED experiment aggregate (sidecar v4, issue
+            // #4522) - the value the experiment-wide competition ranked the entry on, handed to
+            // ObserveCutoff rather than rebuilt here. Comparing a decoy's per-run row score
+            // against an experiment-scope cutoff mixes two different rankings and is simply wrong.
+            //
+            // Rebuilding the aggregate locally would be a max over rows, which is right ONLY for
+            // the default aggregation; under OSPREY_EXPERIMENT_AGG mean-best-N the competition
+            // ranks on the mean of the best N per-run scores and a max-based cutoff is silently
+            // wrong on exactly the arms where the aggregation is being studied. Reading the
+            // persisted value removes that whole class of error.
             //
             // Recorded for EVERY class, not just accepted rows: a decoy needs its own aggregate to
             // compare against the cutoff and has no q to pre-filter on. Bounded by the number of
@@ -431,6 +444,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// exactly the ones the FDR estimate is counting.</para>
             /// </summary>
             public void ObserveCutoff(int fileIdx, EntrapmentClass cls, uint entryId, double score,
+                double experimentAggregateScore,
                 double runQvalue, double experimentQvalue, double runFdr)
             {
                 if (!_runBest.TryGetValue(fileIdx, out var byEntry))
@@ -440,8 +454,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
                 if (!byEntry.TryGetValue(entryId, out double cur) || score > cur)
                     byEntry[entryId] = score;
-                if (!_experimentBest.TryGetValue(entryId, out double e) || score > e)
-                    _experimentBest[entryId] = score;
+                // Every row of an entry carries the same persisted aggregate, so this is a read,
+                // not a reduction. Taking the max anyway is defensive against rows that never went
+                // through an experiment competition and still hold the 0.0 default (a gap-fill stub
+                // left by FdrEntry.ResetScores): one such row must not pull a real entry's
+                // aggregate down to zero and drag the acceptance boundary with it.
+                if (!_experimentBest.TryGetValue(entryId, out double e) || experimentAggregateScore > e)
+                    _experimentBest[entryId] = experimentAggregateScore;
                 if (IsDecoyClass(cls))
                     return;   // decoys define the boundary; they do not set it
                 if (runQvalue <= runFdr)
@@ -488,9 +507,57 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         (double.IsNaN(_experimentCutoff) || v < _experimentCutoff))
                         _experimentCutoff = v;
                 }
+                _acceptedForCutoff = _experimentAccepted.Count;
                 _runAccepted.Clear();
                 _experimentAccepted.Clear();
                 _sealed = true;
+            }
+
+            private int _acceptedForCutoff;
+
+            /// <summary>
+            /// The experiment-scope acceptance boundary and the number of accepted
+            /// target/entrapment precursors that produced it, for the run log.
+            ///
+            /// <para>Worth logging permanently rather than deleting after the bug it was added
+            /// for: the decoy row is the one number on this panel with no independent check on
+            /// the page, so a boundary that silently drifts (or collapses onto a zeroed score)
+            /// looks exactly like a real result. Printing the boundary makes the panel
+            /// self-diagnosing - the value can be compared against the report's own score
+            /// distribution by eye.</para>
+            /// </summary>
+            public double ExperimentCutoff => _experimentCutoff;
+
+            /// <summary>Accepted precursor count behind <see cref="ExperimentCutoff"/>.</summary>
+            public int AcceptedForCutoff => _acceptedForCutoff;
+
+            /// <summary>The run-scope acceptance boundary for one file, or NaN if it has none.</summary>
+            public double RunCutoff(int fileIdx)
+            {
+                return _runCutoff.TryGetValue(fileIdx, out double v) ? v : double.NaN;
+            }
+
+            /// <summary>
+            /// Count of distinct precursors whose experiment aggregate clears
+            /// <see cref="ExperimentCutoff"/>, split by whether they are decoys. Diagnostic only:
+            /// it reports what the inclusion rule sees, so a disagreement with the panel's own
+            /// tallies localizes the fault to everything AFTER the rule.
+            /// </summary>
+            public void CountAboveExperimentCutoff(out int decoys, out int nonDecoys)
+            {
+                decoys = 0;
+                nonDecoys = 0;
+                if (double.IsNaN(_experimentCutoff))
+                    return;
+                foreach (var kv in _experimentBest)
+                {
+                    if (kv.Value < _experimentCutoff)
+                        continue;
+                    if ((kv.Key & 0x80000000u) != 0)
+                        decoys++;
+                    else
+                        nonDecoys++;
+                }
             }
 
             /// <summary>
@@ -545,8 +612,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     _experiment.AddDetectedRow(fileIdx, row);
                     _any = true;
+                    if (isDecoy)
+                    {
+                        _experimentDecoyIds.Add(row.EntryId);
+                        _experimentDecoyKeys.Add(row.Key);
+                    }
                 }
             }
+
+            // Distinct decoy precursors that reached the experiment scope, counted two ways: by
+            // entry id and by the precursor KEY the panel tallies on. They must agree. If they do
+            // not, two library entries are producing one key and the panel is merging distinct
+            // precursors - which under-reports the decoy class without any other symptom.
+            private readonly HashSet<uint> _experimentDecoyIds = new HashSet<uint>();
+            private readonly HashSet<string> _experimentDecoyKeys = new HashSet<string>(StringComparer.Ordinal);
+
+            /// <summary>Distinct decoy entry ids admitted at experiment scope.</summary>
+            public int ExperimentDecoyIdCount => _experimentDecoyIds.Count;
+
+            /// <summary>Distinct decoy precursor KEYS admitted at experiment scope.</summary>
+            public int ExperimentDecoyKeyCount => _experimentDecoyKeys.Count;
 
             private static bool IsDecoyClass(EntrapmentClass cls)
             {

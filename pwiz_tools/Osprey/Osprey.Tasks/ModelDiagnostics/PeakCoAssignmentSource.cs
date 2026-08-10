@@ -103,11 +103,28 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     bool dec = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                     builder.ObserveCutoff(fileIdx,
                         ModelDiagnosticsData.ClassifyEntry(dec, rec.EntryId, classByBaseId), rec.EntryId, rec.Score,
+                        rec.ExperimentAggregateScore,
                         EffectiveQvalue(rec, config.FdrLevel, true),
                         EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
                 });
             }
             builder.SealCutoffs();
+
+            // Name the acceptance boundary in the log. The decoy row is the only class on this
+            // panel gated by score rather than by its own q, so it is the only one with no
+            // independent check on the page - a boundary that drifts produces a plausible-looking
+            // number instead of an obvious failure. Printing the boundary, the accepted count
+            // behind it, and how many precursors clear it makes the panel self-diagnosing.
+            builder.CountAboveExperimentCutoff(out int aboveDecoys, out int aboveNonDecoys);
+            logInfo(string.Format(
+                @"[MODEL-DIAGNOSTICS] peak co-assignment boundary (pass 1): experiment {0:F4} from {1} accepted precursor(s); {2} decoy + {3} non-decoy precursor(s) clear it",
+                builder.ExperimentCutoff, builder.AcceptedForCutoff, aboveDecoys, aboveNonDecoys));
+            for (int f = 0; f < fileNames.Count; f++)
+            {
+                logInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] peak co-assignment boundary (pass 1): run {0} = {1:F4}",
+                    fileNames[f], builder.RunCutoff(f)));
+            }
 
             int totalDetected = 0, totalUnresolved = 0;
             for (int f = 0; f < fileNames.Count; f++)
@@ -128,6 +145,22 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
 
             var data = builder.Build();
+
+            // Admitted must equal tallied. These were 468 and 72 while the decoy key collided with
+            // its target's and the precursor registry silently kept only the first arrival - a
+            // whole class 6.5x under-reported with nothing in the output to say so. The panel has
+            // no independent check on its decoy row, so this comparison is the check.
+            int admitted = builder.ExperimentDecoyIdCount;
+            int tallied = data?.Experiment?.Decoy?.N ?? 0;
+            logInfo(string.Format(
+                @"[MODEL-DIAGNOSTICS] peak co-assignment (pass 1): decoy precursors admitted {0}, tallied {1}",
+                admitted, tallied));
+            if (admitted != tallied)
+            {
+                logInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] peak co-assignment WARNING: {0} decoy precursor(s) cleared the experiment boundary but {1} reached the panel; the decoy row is under-reported.",
+                    admitted, tallied));
+            }
             if (data == null)
             {
                 logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment: no detected rows resolved to a library m/z; panel omitted.");
@@ -246,12 +279,17 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     nUnresolved++;
                     return;
                 }
-                // Identity from the library entry that actually resolved. On the base-id
-                // fallback that is the TARGET's sequence, so tag the key to keep the decoy a
-                // distinct precursor rather than merging it into its twin.
-                bool viaTwin = (lib.Id & LibraryEntry.DECOY_ID_BIT) != (rec.EntryId & LibraryEntry.DECOY_ID_BIT);
+                // Identity from the library entry that actually resolved. Tag EVERY decoy's key,
+                // not just one resolved via the base-id fallback: a decoy's library entry carries
+                // its target's modified sequence, so an untagged decoy key is byte-identical to
+                // its target's. The precursor registry keeps the first arrival for a key and skips
+                // the rest, so an untagged decoy is silently absorbed into its target's bucket and
+                // never counted - measured at 396 of 468 admitted decoys (the panel reported 72).
+                // Keying on the decoy BIT rather than on which library entry resolved covers the
+                // fallback and own-entry cases with one rule.
+                bool rowIsDecoy = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                 string modSeq = lib.ModifiedSequence ?? lib.Sequence;
-                string key = viaTwin
+                string key = rowIsDecoy
                     ? modSeq + "|" + lib.Charge + "|decoy"
                     : modSeq + "|" + lib.Charge;
                 builder.AddRow(fileIdx, new ModelDiagnosticsData.CoAssignmentRow(
