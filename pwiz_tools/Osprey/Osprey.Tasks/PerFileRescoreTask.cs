@@ -486,7 +486,43 @@ namespace pwiz.Osprey.Tasks
                 // Runs unconditionally (not gated on --protein-fdr), matching Rust where
                 // first-pass protein FDR is gated only on !can_skip_fdr || expect_reconciled_input
                 // (pipeline.rs:4529). Mirrors Rust pipeline.rs:4292-4358.
-                if (bundle.PerFileEntries.Count > 0)
+                //
+                // SKIPPED when the bundle arrives ALREADY COMPACTED (#4486). The streaming
+                // hydrate compacts each file as it loads - RescoreHydration's
+                // stubs.RemoveAll(...) runs before perFileEntries.Add(...) - so on that path
+                // "BEFORE compaction" above is no longer true and this call would recompute
+                // over survivors only.
+                //
+                // The reason to skip is the SHAPE of that subset, not a measured defect. The
+                // retained set is driven by which TARGETS passed, and a target and its paired
+                // decoy share a base_id, so retaining a base_id retains both. That drops the
+                // high-scoring decoys whose own targets did not pass - precisely the ones that
+                // would compete near the threshold - which biases any FDR recomputed on the
+                // survivors OPTIMISTIC. Subsetting without that bias needs a composite-score
+                // cutoff admitting targets AND decoys above it plus their pairs, which this
+                // pool is not. So do not run an FDR over it.
+                //
+                // Two things this comment previously asserted are MEASURED FALSE (#4486), and
+                // must not be restored:
+                //   * That recomputing here over the compacted pool drives protein q
+                //     anti-conservatively low. A/B on StellarGenDecoyEntrap: recompute over the
+                //     compacted pool vs over the uncompacted pool is BYTE-IDENTICAL across all
+                //     260,419 records. This statistic is insensitive to the bias above (its
+                //     decoy side comes from q-gated detected peptides either way), so the skip
+                //     is a conservative choice, not a bug fix. It moves 740 records (0.28%)
+                //     upward and changes no output.
+                //   * That the 1st-pass sidecar's RunProteinQvalue is "what the straight-through
+                //     pipeline computed". It is not: the join node's value differs from
+                //     straight-through for 12.46% of records (1.57% at 82 files), always lower.
+                //     That divergence is PRE-EXISTING - master's routing differs by 12.74% - and
+                //     is tracked separately in #4553, which also covers the regression.ps1 gap
+                //     that lets it pass green (mode 3 compares the blib, never these sidecars).
+                //
+                // PreCompactionTallies is the same "was this pre-compacted" signal
+                // RescoreCompaction.Apply keys its own invariant on, so the two cannot
+                // disagree about which path they are on.
+                bool preCompacted = bundle.PreCompactionTallies != null;
+                if (bundle.PerFileEntries.Count > 0 && !preCompacted)
                 {
                     var fullLibrary = ctx.Get<FullLibrary>().Value;
                     // Silent (logInfo: null) -- the rehydration recompute runs
@@ -496,9 +532,19 @@ namespace pwiz.Osprey.Tasks
                         bundle.PerFileEntries, fullLibrary, ctx.Config, null);
                 }
                 var stats = RescoreCompaction.Apply(bundle);
+                // On the streaming hydrate stats.EntriesBefore EQUALS EntriesAfter by
+                // construction - RescoreCompaction sums an already-compacted pool and makes
+                // "removes nothing" a hard invariant - so reporting it raw prints
+                // "N -> N entries" where ~350 M stubs were actually reduced, which is
+                // indistinguishable from a broken retain set. TotalPreCompactionStubs is the
+                // real figure on that path, and FirstPassFdrTask reads it for the same
+                // reason (#4486).
+                long entriesBefore = preCompacted
+                    ? bundle.TotalPreCompactionStubs
+                    : stats.EntriesBefore;
                 ctx.LogInfo(string.Format(
                     @"--task SecondPassFDR compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                    stats.EntriesBefore, stats.EntriesAfter,
+                    entriesBefore, stats.EntriesAfter,
                     stats.FirstPassBaseIds, stats.DroppedActions));
             }
             return true;

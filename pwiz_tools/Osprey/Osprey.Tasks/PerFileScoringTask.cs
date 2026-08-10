@@ -643,8 +643,6 @@ namespace pwiz.Osprey.Tasks
             // rehydrate now feeds that accumulator from the per-file load it already performs
             // (FirstPassFdrTask.StreamOwnReconciliationBundle), off the same PRE-compaction rows,
             // so the report emits from this lean load at any file count.
-            bool needsResidentPool = NeedsResidentPool(config);
-            GuardResidentPool(config, needsResidentPool);
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -653,7 +651,27 @@ namespace pwiz.Osprey.Tasks
                 // Counts-only (issue #4355 struct-shrink S3, Stage B): the resume lean path builds
                 // only per-file row counts; the 1st-pass streaming score path re-reads identity +
                 // features from parquet, so no resident FdrProjection[] buffer is allocated.
-                var builder = needsResidentPool ? null : new FdrProjectionSet.Builder(countsOnly: true);
+                // Same predicate as the --input-scores loader, not a re-derivation of it (#4486).
+                // This site gated on bare NeedsResidentPool, which no longer excludes
+                // ExpectReconciledInput, so an ExpectReconciledInput config arriving here would
+                // take the lean branch and add an EMPTY entry list per file. Not reachable today
+                // (Run routes InputScores runs away from Rehydrate), but re-deriving the rule at
+                // one call site and importing it at the other is precisely the drift this change
+                // exists to remove. hasReconSidecars is false here: this path has no bundle.
+                // ARM THE GUARD ON THE SAME DECISION, for the reason the branch below states: the
+                // fat path IS the resident pool here, so guarding on a separate NeedsResidentPool
+                // let a config with needsResidentPool false but builder null (ExpectReconciledInput)
+                // take the O(files) fat load with the guard disarmed and no warning. Two predicates
+                // that can disagree about one choice is the drift this change removes; the guard is
+                // the third reader of that choice and has to key off it too. Placed inside the
+                // InputFiles block because with no input files nothing loads and a guard here would
+                // only produce a false positive.
+                var builder = CanUseLeanProjection(config, hasReconSidecars: false,
+                                                   OspreyEnvironment.UseFdrProjection)
+                    ? new FdrProjectionSet.Builder(countsOnly: true)
+                    : null;
+                GuardResidentPool(config, needsResidentPool: builder == null);
+
                 // Per-file progress so this all-files load is not a silent multi-minute
                 // stall on a large resume (the phase that looked hung on the 82-file run).
                 using (var loadProgress = new ProgressReporter(@"Loading scored entries", config.InputFiles.Count))
@@ -665,7 +683,13 @@ namespace pwiz.Osprey.Tasks
                     {
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-                        if (needsResidentPool)
+                        // Branch on the BUILDER, not on needsResidentPool. The two used to be
+                        // exact complements here; CanUseLeanProjection has a third term, so a
+                        // config with needsResidentPool false that still may not go lean
+                        // (ExpectReconciledInput) would otherwise take the lean branch with a
+                        // null builder and throw. Keying both off one value is what makes the
+                        // fat/lean choice a single decision rather than two that can disagree.
+                        if (builder == null)
                         {
                             // Fat path: an opt-in output reads every entry's resident
                             // features. Strict load: CanRehydrate already certified these
@@ -1231,24 +1255,46 @@ namespace pwiz.Osprey.Tasks
             // only per-file row counts; the 1st-pass streaming score path re-reads identity +
             // features from parquet, so the resident FdrProjection[] buffer is never allocated.
             bool needsResidentPool = NeedsResidentPool(config);
-            var builder = (!needsResidentPool && !hasReconSidecars)
+            var builder = CanUseLeanProjection(config, hasReconSidecars, OspreyEnvironment.UseFdrProjection)
                 ? new FdrProjectionSet.Builder(countsOnly: true)
                 : null;
             // The reconciled-bundle hydration (hasReconSidecars) needs the STUBS but not
             // their PIN features, so only a genuine resident pool loads features. See the
             // stubs-only branch below for why that is safe.
+            //
+            // This one KEEPS NeedsResidentPool deliberately, where the fat/lean choice above
+            // moved to the builder. They answer different questions and the predicates diverged
+            // when ExpectReconciledInput left NeedsResidentPool (#4486): "does a consumer read
+            // Features off THESE stubs" (fdrbench-pass1, a non-Percolator FdrMethod,
+            // OSPREY_FDR_PROJECTION=0) is still exactly NeedsResidentPool, while "may this load
+            // go lean" additionally excludes the reconciled-input merge. Do not "fix" this by
+            // copying the builder decision: the merge does not read Features off these stubs -
+            // both pass-2 shapes reload them per file from the reconciled parquet
+            // (ComputePass2TransferCompeteFull's own read, or ComputePass2Resident's), and
+            // EffectiveScoresPathFromScoresPath falls back to the original parquet when no
+            // reconciled one exists, so the reload does not depend on hasReconSidecars either.
             bool loadFeatures = needsResidentPool;
 
             // The --input-files paths at :381 and :644 THROW on the same O(files) situation.
-            // This one must not: every configuration that reaches this loader worked before
-            // the streaming hydrate landed - the --task SecondPassFDR reconciled-input merge
-            // (Stage 7, deliberately deferred to issue #4486), a --task FirstPassFDR re-run
-            // over parquets whose sidecars are already on disk, and the OSPREY_DUMP_PERCOLATOR
-            // bisection dump, which by design keeps the resident path. Throwing would break
-            // all three. Warn with the consumer named instead, so an operator who meets the
+            // This one must not: every configuration that still reaches the resident branches
+            // worked before the streaming hydrate landed - a --task FirstPassFDR re-run over
+            // parquets whose sidecars are already on disk, and the OSPREY_DUMP_PERCOLATOR
+            // bisection dump, which by design keeps the resident path. (The --task
+            // SecondPassFDR merge was the third of these until #4486 streamed it; it is listed
+            // here only because that is what this justification used to rest on.) Throwing
+            // would break the rest. Warn with the consumer named instead, so an operator who meets the
             // O(files) peak at scale knows which knob put them on it. When the streaming
             // hydrate below takes the load the pool is bounded and there is nothing to say.
-            if (needsResidentPool || (hasReconSidecars && !streamCompaction))
+            // Warn on exactly the condition that SELECTS the resident loop below, rather than
+            // on a hand-listed set of configs that can drift from it (#4486). The old test
+            // was `needsResidentPool || (hasReconSidecars && !streamCompaction)`, and the new
+            // CanUseLeanProjection term opened a case it does not cover: a reconciled-input
+            // merge whose inputs are missing a .reconciliation.json takes the resident loop
+            // with needsResidentPool false, hasReconSidecars false and streamCompaction
+            // false, so every term was false and the O(files) load happened SILENTLY. The
+            // resident loop runs iff it neither streams nor takes the lean builder, so that
+            // is what this asks.
+            if (!streamCompaction && builder == null)
                 WarnPreCompactionPool(config, hasReconSidecars, ctx);
 
             // Bounded reconciled-bundle rehydrate: hand the per-file stub load to the
@@ -1364,8 +1410,14 @@ namespace pwiz.Osprey.Tasks
                     // 21 doubles per row here only to null them cost ~800 MB per file at
                     // ~4.2M rows, the dominant term in the O(files) rehydrate peak.
                     //
-                    // Only safe because NeedsResidentPool is false: that is what says no
-                    // resident 2nd-pass Percolator will read entry.Features later.
+                    // Safe because nothing on this path reads entry.Features afterwards. That
+                    // USED to be phrased as "NeedsResidentPool is false says so", which stopped
+                    // being true when #4486 took ExpectReconciledInput out of that predicate:
+                    // the merge node now has NeedsResidentPool false AND does run a 2nd-pass
+                    // Percolator. It is still safe there, for a different reason - Pass2FdrSidecar
+                    // reloads the features it needs from each reconciled parquet rather than
+                    // reading them off these stubs - so state the reason rather than a predicate
+                    // that no longer implies it.
                     var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
                     // Keep the fail-fast the feature load used to provide: a foreign or
                     // truncated parquet missing the PIN schema must stop here, not surface
@@ -1402,13 +1454,14 @@ namespace pwiz.Osprey.Tasks
         /// 2. Nothing in the run reads the PRE-compaction pool
         ///    (<see cref="PreCompactionPoolReason"/> finds no consumer).
         ///
-        /// Term 2 folds in what used to be a separate <c>NoJoin</c> condition: FirstPassFDR must
+        /// Term 2 asks <see cref="FirstPassFdrTask.IsIncludedFor"/> directly: FirstPassFDR must
         /// be EXCLUDED from this pipeline and reachable only through its bundle-adopt
         /// Rehydrate, because a FirstPassFDR that Ran would train first-pass Percolator on
         /// whatever <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
-        /// With <c>InputScores</c> set and <c>StopAfterStage5</c> false, <c>NoJoin</c> is
-        /// exactly FirstPassFDR's exclusion condition, so a reconciled bundle WITHOUT it is one
-        /// of the reasons the helper reports.
+        /// It used to test <c>!NoJoin</c> as a stand-in for that, which was right for every
+        /// task except <c>--task SecondPassFDR</c> - NoJoin false, ExpectReconciledInput true,
+        /// FirstPassFdrTask excluded - so the proxy forced an O(files) resident pool for a
+        /// consumer that does not exist (#4486).
         ///
         /// What the resident-pool terms still filter that <c>NoJoin</c> does not: the
         /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstPassFDR's rehydrate before it
@@ -1416,10 +1469,9 @@ namespace pwiz.Osprey.Tasks
         /// silently post-compaction one), OSPREY_FDR_PROJECTION=0, a non-Percolator
         /// FdrMethod, and --fdrbench-pass 1. OSPREY_PASS2_QVALUE=transfer is NOT among them:
         /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
-        /// own on-disk sidecar. The
-        /// --task SecondPassFDR is NOT among them: it sets ExpectReconciledInput, which
-        /// <c>--task</c> selection makes mutually exclusive with <c>NoJoin</c>, so term 2's
-        /// NoJoin clause already excludes it.
+        /// own on-disk sidecar. <c>--task SecondPassFDR</c> is not among them either, and
+        /// since #4486 that is the point rather than an aside: it is the one task that
+        /// reaches here with FirstPassFdrTask excluded, so it STREAMS.
         ///
         /// --model-diagnostics needs no exclusion at all any more. It needs the same
         /// pre-compaction rows, but it consumes them one at a time:
@@ -1466,8 +1518,6 @@ namespace pwiz.Osprey.Tasks
         private static string PreCompactionPoolReason(
             OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
         {
-            if (config.ExpectReconciledInput)
-                return @"The reconciled-input merge (--task SecondPassFDR, tracked in #4486)";
             if (ctx.Diagnostics?.DumpPercolator ?? false)
                 return @"OSPREY_DUMP_PERCOLATOR";
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
@@ -1485,8 +1535,15 @@ namespace pwiz.Osprey.Tasks
             // survivors the streaming hydrate would leave. Unconditional on
             // hasReconSidecars: every reason above is a resident-pool consumer and returns
             // first, so reaching here means none of them applies.
-            if (!config.NoJoin)
-                return @"A reconciled-bundle rehydrate outside the streaming gate";
+            //
+            // Ask the task's own membership predicate rather than the former `!NoJoin` proxy
+            // (#4486). The two agree on every task but --task SecondPassFDR, which leaves
+            // NoJoin false while setting ExpectReconciledInput: FirstPassFdrTask is excluded
+            // there, so nothing trains, and the proxy was forcing an O(files) resident pool
+            // for a consumer that does not exist. Re-deriving membership here is what let
+            // them drift, so this defers to the one definition.
+            if (FirstPassFdrTask.IsIncludedFor(config))
+                return @"First-pass Percolator training in this process";
             // No bundle at all. The reconciliation envelope is what carries the compaction
             // predicate, so without it there is nothing to compact against at load time and
             // streaming cannot run. Last because every reason above names a real consumer,
@@ -1661,8 +1718,10 @@ namespace pwiz.Osprey.Tasks
                 // Already hydrated when the loader took the file-count-bounded streaming
                 // path (ShouldStreamCompaction): it has to own the hydrate, because the
                 // sidecar overlay and the compaction have to happen inside its per-file
-                // loop for the pre-compaction pool to stay one-file-at-a-time. The tail
-                // below (feature null-out + the summary line) is shared by both paths.
+                // loop for the pre-compaction pool to stay one-file-at-a-time. The summary
+                // line below is shared by both paths; the feature null-out is NOT - see
+                // where it is guarded.
+                bool streamed = _rescoreInputs != null;
                 if (_rescoreInputs == null)
                 {
                     _rescoreInputs = HydrateRescoreBundleOrNull(
@@ -1681,9 +1740,20 @@ namespace pwiz.Osprey.Tasks
                 // Bundle path doesn't need PIN features downstream:
                 // FirstPassFdrTask skips Percolator on this path, so the
                 // SVM training input is irrelevant.
-                foreach (var kvp in perFileEntries)
-                    foreach (var entry in kvp.Value)
-                        entry.Features = null;
+                // Skipped on the streaming arm, where it is provably a no-op (#4486):
+                // LoadJoinOnlyScoresForFile never loads features and OverlayFirstPassSidecar
+                // writes only scores / q-values, so Features is already null on every entry.
+                // It is not free to run anyway - FirstPassFdrTask guards the identical loop
+                // for the same reason, at "~88.9 M reference writes at 163 files, each
+                // tripping the GC write barrier and dirtying the card table over the whole
+                // survivor buffer" - and here it would run immediately before Stage 7 adopts
+                // that buffer and the stage7-inherited probe tries to measure it.
+                if (!streamed)
+                {
+                    foreach (var kvp in perFileEntries)
+                        foreach (var entry in kvp.Value)
+                            entry.Features = null;
+                }
                 ctx.LogInfo(string.Format(
                     @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
                     @"{2} refined RT calibration(s), {3} gap-fill target(s))",
@@ -1806,8 +1876,10 @@ namespace pwiz.Osprey.Tasks
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
         /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
         /// output reads every entry's in-memory features/scores (FDRBench pass 1),
-        /// when the projection path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR),
-        /// or on the reconciled-input worker join. OSPREY_PASS2_QVALUE=transfer no longer
+        /// or when the projection path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator
+        /// FDR). The reconciled-input worker join is NO LONGER one of them (#4486): it
+        /// takes the streaming compacted hydrate, one file's pool resident at a time.
+        /// OSPREY_PASS2_QVALUE=transfer no longer
         /// forces the resident pool -- the per-run-only redesign maps each adjusted peak
         /// through that file's own 1st-pass (score -> run q) sidecar table at pass 2, so
         /// transfer takes the SAME lean projection first-pass path as the default (see
@@ -1844,10 +1916,44 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool NeedsResidentPool(OspreyConfig config, bool useFdrProjection)
         {
-            return config.ExpectReconciledInput ||
-                   !useFdrProjection ||
+            // ExpectReconciledInput (--task SecondPassFDR) was the first entry here and is
+            // GONE (#4486). It never named a consumer: FirstPassFdrTask is excluded on that
+            // node so nothing trains, and every pass-2 consumer streams from disk one file at
+            // a time - the frozen transfer-compete / protein-compact competition off each
+            // file's .1st-pass.fdr_scores.bin scalars, the feature reload off each file's
+            // reconciled parquet. It forced the fat load whose features
+            // HydrateRescoreBundleIfPresent then nulls unread, so the node paid ~800 MB per
+            // file to throw it away, on top of holding every file's pre-compaction stubs.
+            return !useFdrProjection ||
                    !config.FdrMethod.UsesPercolatorFramework() ||
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+        }
+
+        /// <summary>
+        /// Whether the <c>--input-scores</c> load may take the LEAN counts-only
+        /// <see cref="FdrProjection"/> path, which streams 32 B rows and adds an EMPTY
+        /// <see cref="FdrEntry"/> list per file. Two consumers need real stubs and so exclude it:
+        /// a reconciled bundle (<paramref name="hasReconSidecars"/>), whose overlay reads them,
+        /// and the reconciled-input merge, whose Stage 7 IS the consumer of the entry lists.
+        ///
+        /// <para>The <c>ExpectReconciledInput</c> term looks redundant with
+        /// <paramref name="hasReconSidecars"/> - a <c>--task SecondPassFDR</c> node normally has
+        /// both sidecars per input - and it is not. <see cref="AllHaveReconSidecars"/> is false if
+        /// even ONE input is missing a <c>.reconciliation.json</c>, e.g. a partially copied HPC
+        /// chain. Before #4486 that case was covered accidentally, because
+        /// <see cref="NeedsResidentPool(OspreyConfig, bool)"/> returned true for the merge and
+        /// suppressed the lean path; taking <c>ExpectReconciledInput</c> out of it made the lean
+        /// newly reachable there, and it would have handed Stage 7 empty per-file lists - a
+        /// near-empty <c>.blib</c>, written with no error. Stated explicitly here so the
+        /// exclusion survives on its own reasoning rather than as a side effect of another
+        /// predicate.</para>
+        /// </summary>
+        internal static bool CanUseLeanProjection(
+            OspreyConfig config, bool hasReconSidecars, bool useFdrProjection)
+        {
+            return !NeedsResidentPool(config, useFdrProjection)
+                   && !hasReconSidecars
+                   && !config.ExpectReconciledInput;
         }
 
         /// <summary>
@@ -1938,9 +2044,10 @@ namespace pwiz.Osprey.Tasks
         /// set the per-file loader needs. Those runs are exempt HERE because they are already
         /// resident for a reason with its own token
         /// (<see cref="ResidentPaths.PROJECTION_OFF"/> above all), so demanding a second token
-        /// would mean two variables for one decision, and would fire on the plain
-        /// <c>--task SecondPassFDR</c> run that <see cref="ResidentPaths.HPC_MERGE"/> already
-        /// covers.</para>
+        /// would mean two variables for one decision. The example this clause used to give -
+        /// the plain <c>--task SecondPassFDR</c> run, covered by the former hpc-merge token -
+        /// is gone with #4486: that node streams its reconciled-input load, so it needs no
+        /// token at all and never reaches this exemption as a resident run.</para>
         ///
         /// <para>The exemption used to leave a gap it could not see: a lean straight-through
         /// resume needs no first-pass token at all since #4505, so "already resident under
@@ -1998,8 +2105,9 @@ namespace pwiz.Osprey.Tasks
         {
             if (!useFdrProjection)
                 return ResidentPaths.PROJECTION_OFF;
-            if (config.ExpectReconciledInput)
-                return ResidentPaths.HPC_MERGE;
+            // ExpectReconciledInput -> HPC_MERGE was here and is GONE with the token (#4486):
+            // --task SecondPassFDR now streams its load, so it never reaches this method at
+            // all. See NeedsResidentPool for why nothing on that node reads the pool.
             if (!config.FdrMethod.UsesPercolatorFramework())
                 return ResidentPaths.NON_PERCOLATOR_FDR;
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)

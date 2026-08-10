@@ -491,7 +491,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=hpc-merge</c>. Legal values are
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=fdrbench-pass1</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
         /// that is not on that list, is refused no matter what this is set to.
         ///
@@ -535,6 +535,17 @@ namespace pwiz.Osprey.Core
             SplitResidentTokens(AllowUnfixedResident).Any(
                 v => !ResidentPaths.KNOWN_UNFIXED.Any(
                     t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase)));
+
+        /// <summary>
+        /// Just the unrecognized tokens of <see cref="AllowUnfixedResident"/>, comma separated.
+        /// The warning names THESE rather than the whole value: the flag is a list and
+        /// <c>NamesResidentPath</c> tests each token independently, so a value pairing a retired
+        /// token with a live one still grants the live one. Empty when every token is known.
+        /// </summary>
+        public static readonly string UnrecognizedResidentTokens =
+            string.Join(@", ", SplitResidentTokens(AllowUnfixedResident).Where(
+                v => !ResidentPaths.KNOWN_UNFIXED.Any(
+                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase))));
 
         /// <summary>
         /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
