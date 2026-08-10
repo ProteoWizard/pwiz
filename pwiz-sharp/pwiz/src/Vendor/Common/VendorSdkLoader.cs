@@ -163,6 +163,15 @@ public static class VendorSdkLoader
         return matches.FirstOrDefault(v => v.Os is not null) ?? matches.FirstOrDefault();
     }
 
+    /// <summary>
+    /// True for a satellite (resource) assembly bind, which the vendor archives never satisfy.
+    /// Both spellings are checked: culture-qualified probes carry a <see cref="AssemblyName.CultureName"/>,
+    /// while the neutral-culture probe only shows up as a ".resources" suffix.
+    /// </summary>
+    private static bool IsSatelliteAssembly(AssemblyName name) =>
+        !string.IsNullOrEmpty(name.CultureName) ||
+        (name.Name?.EndsWith(".resources", StringComparison.OrdinalIgnoreCase) ?? false);
+
     private static IntPtr ResolveNativeLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
         var entry = FindPin(libraryName);
@@ -216,6 +225,15 @@ public static class VendorSdkLoader
 
     private static Assembly? OnAssemblyResolving(AssemblyLoadContext context, AssemblyName name)
     {
+        // A satellite assembly ("<Assembly>.resources", usually culture-qualified) missing is
+        // NORMAL: the runtime probes for one per culture and falls back to the neutral resources
+        // baked into the main assembly when there is none. No vendor SDK ships satellites, so
+        // routing these through the pin table turned every localized string lookup into a
+        // "could not supply ... from the ABI vendor SDK" report on stderr - three per WIFF
+        // conversion - accusing the archive of a packaging gap that does not exist, and burying
+        // the real errors next to it.
+        if (IsSatelliteAssembly(name)) return null;
+
         // Pick the vendor whose AssemblyPrefixes match the requested simple-name. The pin table
         // keeps prefix sets disjoint across vendors, so at most one vendor matches; FindPin
         // narrows the remaining per-OS ambiguity within a vendor.

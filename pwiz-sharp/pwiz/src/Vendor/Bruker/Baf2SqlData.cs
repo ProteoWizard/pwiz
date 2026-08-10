@@ -361,8 +361,9 @@ internal sealed class Baf2SqlData : IBrukerData
     }
 
     /// <inheritdoc/>
-    public IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel)
+    public IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel, bool passEntireDiaPasefFrame = false)
     {
+        _ = passEntireDiaPasefFrame;   // BAF has no diaPASEF whole-frame mode.
         foreach (var row in _rows)
         {
             if (preferOnlyMsLevel == 1 && row.MsLevel != 1) continue;

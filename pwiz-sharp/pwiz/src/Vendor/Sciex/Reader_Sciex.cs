@@ -50,7 +50,16 @@ public sealed class Reader_Sciex : IReader, IMultiSampleReader
         throw new VendorSupportNotEnabledException(
             "Sciex WIFF sample enumeration requires the vendor SDK.");
 #else
-        // Wiff2 uses the same sample-info API surface (unified provider).
+        // .wiff and .wiff2 do NOT share a sample-info API: WiffFile.EnumerateSampleNames goes
+        // through AnalystWiffDataProvider, which cannot open a .wiff2 at all. Sending .wiff2
+        // here made this report a single sample for a 12-sample file, so msconvert-sharp
+        // converted only the first one where msconvert wrote all 12. Dispatch the same way
+        // AbstractWiffFile.Open does; the .wiff path stays on the cheap no-sample-open route.
+        if (filename.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase))
+        {
+            using var wiff2 = AbstractWiffFile.Open(filename);
+            return wiff2.AllSampleNames;
+        }
         return WiffFile.EnumerateSampleNames(filename);
 #endif
     }
@@ -180,16 +189,27 @@ public sealed class Reader_Sciex : IReader, IMultiSampleReader
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
-        if (!string.IsNullOrEmpty(wiff.StartTimestampUtc))
-            result.Run.StartTimeStamp = wiff.StartTimestampUtc;
+        // Sciex is one of the three readers whose host-zone shift cpp gates on the config flag
+        // (Reader_ABI.cpp: getSampleAcquisitionTime(sample, adjustUnknownTimeZonesToHostTimeZone)).
+        var timeConfig = config ?? new ReaderConfig();
+        string? startTime = ReaderConfig.FormatStartTimeStamp(
+            wiff.StartTimestampRaw, timeConfig.AdjustUnknownTimeZonesToHostTimeZone);
+        if (!string.IsNullOrEmpty(startTime))
+            result.Run.StartTimeStamp = startTime;
 
         bool simAsSpectra = config?.SimAsSpectra ?? false;
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;
         bool globalChromsAreMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
+        // cpp SpectrumList_ABI.cpp:254/:261 — ignoreZeroIntensityPoints reaches both getData
+        // and getDataSize, so it changes defaultArrayLength as well as the arrays.
+        bool ignoreZeroIntensityPoints = config?.IgnoreZeroIntensityPoints ?? false;
+        // cpp SpectrumList_ABI.cpp:240/:298 — acceptZeroLengthSpectra changes both which cycles
+        // get indexed and whether the base-peak cvParams are emitted.
+        bool acceptZeroLengthSpectra = config?.AcceptZeroLengthSpectra ?? false;
         // SpectrumList owns the underlying wiff handle; ChromatogramList shares the same
         // reference so we can iterate both lists during conversion. cpp uses the same pattern
         // (one shared WiffFilePtr).
-        result.Run.SpectrumList = new SpectrumList_Sciex(wiff, ownsWiff: true, ic, simAsSpectra, srmAsSpectra)
+        result.Run.SpectrumList = new SpectrumList_Sciex(wiff, ownsWiff: true, ic, simAsSpectra, srmAsSpectra, ignoreZeroIntensityPoints, acceptZeroLengthSpectra)
         {
             Dp = dpReader,
         };

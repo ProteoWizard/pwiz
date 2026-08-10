@@ -121,6 +121,15 @@ public sealed class TdfMetadata : IDisposable
     /// <summary>Max scan number across all frames (i.e. the TIMS ramp depth).</summary>
     public int MaxNumScans { get; }
 
+    /// <summary>
+    /// True when a diaPASEF window group's isolation windows cover essentially the whole TIMS ramp
+    /// — one isolation m/z per mobility scan, i.e. Bruker's DiagonalPASEF / synchro schemes. Mirrors
+    /// the C++ heuristic <c>passEntireDiaPasefFrame_ |= (maxNumScans - countMaxIsolationMzPerGroup
+    /// &lt; 10)</c> (TimsData.cpp:308-311, "based on MCC email 2/11/2025"). Always false when this
+    /// is not a diaPASEF analysis.
+    /// </summary>
+    public bool IsDiagonalPasef { get; }
+
     /// <summary>Number of distinct TimsCalibration values used across frames (minimum 1).</summary>
     public int CalibrationCount { get; }
 
@@ -141,6 +150,9 @@ public sealed class TdfMetadata : IDisposable
         HasPrmPasefData = !HasPasefData && !HasDiaPasefData && TableHasRows("PrmFrameMsMsInfo");
         MaxNumScans = (int)QueryScalar<long>("SELECT IFNULL(MAX(NumScans), 0) FROM Frames");
         CalibrationCount = (int)QueryScalar<long>("SELECT IFNULL(MAX(TimsCalibration), 1) FROM Frames");
+        IsDiagonalPasef = HasDiaPasefData && TableExists("DiaFrameMsMsWindows") &&
+            MaxNumScans - QueryScalar<long>(
+                "SELECT IFNULL(MAX(cnt), 0) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup)") < 10;
     }
 
     /// <summary>Total number of rows in the <c>Frames</c> table.</summary>
@@ -204,20 +216,26 @@ public sealed class TdfMetadata : IDisposable
     /// aggregating MIN(ScanNumBegin) / MAX(ScanNumEnd) — so consecutive rows of the same window
     /// group with identical isolation become one range.
     /// </summary>
+    /// <param name="groupByFrameOnly">
+    /// When true, collapse every window of a frame into a single entry spanning the frame's whole
+    /// active scan range — the C++ <c>passEntireDiaPasefFrame_</c> variant of the query
+    /// (TimsData.cpp:451-456). The returned <c>IsolationMz</c> / <c>IsolationWidth</c> are then an
+    /// arbitrary one of the frame's windows, exactly as in C++.
+    /// </param>
     /// <remarks>
     /// ScanNumEnd in the TDF is exclusive; we subtract 1 so <c>ScanEnd</c> is inclusive, matching
     /// pwiz C++ conventions. Returns empty when no DIA tables are present.
     /// </remarks>
-    public IEnumerable<DiaFrameWindow> EnumerateDiaFrameWindows()
+    public IEnumerable<DiaFrameWindow> EnumerateDiaFrameWindows(bool groupByFrameOnly = false)
     {
         if (!HasDiaPasefData) yield break;
 
-        const string sql =
+        string sql =
             "SELECT f.Frame, MIN(w.ScanNumBegin), MAX(w.ScanNumEnd), w.IsolationMz, w.IsolationWidth, " +
             "       AVG(w.CollisionEnergy), f.WindowGroup " +
             "FROM DiaFrameMsMsInfo f " +
             "JOIN DiaFrameMsMsWindows w ON w.WindowGroup = f.WindowGroup " +
-            "GROUP BY f.Frame, w.IsolationMz, w.IsolationWidth " +
+            (groupByFrameOnly ? "GROUP BY f.Frame " : "GROUP BY f.Frame, w.IsolationMz, w.IsolationWidth ") +
             "ORDER BY f.Frame, MIN(w.ScanNumBegin)";
         using var cmd = _conn.CreateCommand();
         cmd.CommandText = sql;
@@ -270,6 +288,28 @@ public sealed class TdfMetadata : IDisposable
                 AvgScanNumber: reader.IsDBNull(8) ? 0.0 : reader.GetDouble(8),
                 Intensity: reader.IsDBNull(9) ? 0.0 : reader.GetDouble(9));
         }
+    }
+
+    /// <summary>
+    /// Enumerates the frame id of every <c>PrmFrameMsMsInfo</c> row (joined to <c>PrmTargets</c>)
+    /// in frame + scanBegin order, so a PRM-PASEF frame carrying N targeted isolation windows
+    /// yields its id N times. Mirrors the C++ PRM query in TimsData.cpp:604-608, which drives one
+    /// TIC / BPC point per targeted window. Empty unless this is a PRM-PASEF analysis.
+    /// </summary>
+    public IEnumerable<long> EnumeratePrmFrameIds()
+    {
+        if (!HasPrmPasefData) yield break;
+
+        const string sql =
+            "SELECT f.Frame " +
+            "FROM PrmFrameMsMsInfo f " +
+            "JOIN PrmTargets t ON t.Id = f.Target " +
+            "ORDER BY f.Frame, f.ScanNumBegin";
+        using var cmd = _conn.CreateCommand();
+        cmd.CommandText = sql;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            yield return reader.GetInt64(0);
     }
 
     /// <summary>

@@ -34,31 +34,57 @@ internal sealed class Wiff2File : AbstractWiffFile
     public override string WiffPath { get; }
     public override int SampleNumber { get; }
     public override int SampleCount => _allSamples.Count;
-    public override string SampleName => _msSample.SampleName ?? string.Empty;
+    /// <summary>
+    /// The open sample's name, with cpp's duplicate-count suffix applied when another sample in
+    /// the file shares it (<c>WiffFile2.ipp:373-392</c> builds the same list). Taken from the
+    /// whole sample list rather than <c>_msSample.SampleName</c>, since a duplicate's " (2)"
+    /// can only be known from the names preceding it. Cached: the list does not change.
+    /// </summary>
+    public override string SampleName => _uniqueSampleName ??= ResolveUniqueSampleName();
+    private string? _uniqueSampleName;
+
+    public override string[] AllSampleNames
+    {
+        get
+        {
+            var names = new List<string>(_allSamples.Count);
+            foreach (var s in _allSamples)
+                names.Add(s.SampleName ?? string.Empty);
+            return DisambiguateSampleNames(names);
+        }
+    }
+
+    private string ResolveUniqueSampleName()
+    {
+        var unique = AllSampleNames;
+        int index0 = SampleNumber - 1;
+        return index0 >= 0 && index0 < unique.Length
+            ? unique[index0]
+            : _msSample.SampleName ?? string.Empty;
+    }
     public override int ExperimentCount => _experiments.Length;
     public override AbstractWiffExperiment GetExperiment(int experimentIndex) => _experiments[experimentIndex];
 
-    public override string? StartTimestampUtc
+    public override DateTime StartTimestampRaw
     {
         get
         {
             try
             {
-                if (string.IsNullOrEmpty(_msSample.StartTimestamp)) return null;
-                // cpp WiffFile2.ipp:484-500 + VendorReaderTestHarness.cpp:343 (which forces
-                // adjustToHostTime=false): parse the SDK timestamp via .NET DateTime.Parse
-                // — for TZ-tagged input that converts to system local — then emit the
-                // resulting LOCAL components Z-suffixed without further conversion. Matches
-                // both the cpp reader's runtime output and the test reference mzMLs, which
-                // were generated on the same agent's local timezone.
+                if (string.IsNullOrEmpty(_msSample.StartTimestamp)) return default;
+                // cpp WiffFile2.ipp:484-500 parses the SDK timestamp with DateTime::Parse —
+                // which for TZ-tagged input converts to system local — and then takes those
+                // LOCAL components as a zone-less ptime. Whether that gets shifted to the host
+                // zone afterwards is the caller's decision (Reader_ABI passes the config flag),
+                // so this returns the parsed value and does not format or shift it.
                 if (DateTime.TryParse(_msSample.StartTimestamp,
                         System.Globalization.CultureInfo.InvariantCulture,
                         System.Globalization.DateTimeStyles.None,
                         out var dt))
-                    return dt.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
+                    return dt;
             }
             catch { }
-            return null;
+            return default;
         }
     }
 

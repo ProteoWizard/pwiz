@@ -192,9 +192,10 @@ public sealed class Reader_UNIFI : IReader
         dp.ProcessingMethods.Add(pm);
         result.DataProcessings.Add(dp);
 
-        // Acquisition timestamp via the shared FormatStartTimeStamp helper so the
-        // adjustUnknownTimeZonesToHostTimeZone flag is honored.
-        string? startTime = config.FormatStartTimeStamp(client.AcquisitionStartTimeUtc);
+        // cpp Reader_UNIFI.cpp:154 encodes getAcquisitionStartTime() directly and never consults
+        // adjustUnknownTimeZonesToHostTimeZone — UNIFI's timestamp already carries a zone.
+        string? startTime = ReaderConfig.FormatStartTimeStamp(
+            client.AcquisitionStartTimeUtc, adjustToHostTimeZone: false);
         if (startTime is not null) result.Run.StartTimeStamp = startTime;
 
         // cpp Reader_UNIFI.cpp:147-151: a single placeholder InstrumentConfiguration with the

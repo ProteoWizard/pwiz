@@ -15,8 +15,7 @@ namespace Pwiz.Vendor.Agilent.Tests;
 ///   - combineIonMobilitySpectra = true on IM-only fixtures (ImsSynth*, GFb_4Scan_TimeSegs)
 ///   - + globalChromatogramsAreMs1Only + indexRange=(0,0) on a subset (lines 67-71)
 ///   - + ignoreZeroIntensityPoints on IM (line 73)
-///   - + isolationMzAndMobilityFilter=(40,1) on IM (lines 76-77)
-/// All tiers are exercised — the IM combine-mode parity gap is closed.
+/// The last cpp tier (+ isolationMzAndMobilityFilter=(40,1), lines 76-77) is not run here.
 /// </summary>
 [TestClass]
 public class ReaderAgilentTests
@@ -124,22 +123,32 @@ public class ReaderAgilentTests
 
     // -------------------- IM fixtures --------------------
     //
-    // cpp Reader_Agilent_Test.cpp:64-77 runs three additional config tiers on every IM
-    // fixture (combineIonMobilitySpectra; +ignoreZeroIntensityPoints; +isolationMzAndMobilityFilter).
-    // Each combineIMS pass produces ~100 combined spectra (one per frame) vs ~1200 drift bins
-    // without combine. The C# port currently emits drift bins, so the harness diff against
-    // *-combineIMS.mzML references fails on spectrum count. Re-enable these once
-    // SpectrumList_Agilent grows a per-frame combine path.
+    // cpp Reader_Agilent_Test.cpp runs the DEFAULT config over every .d (line 62,
+    // IsDirectory()) and only then adds the combineIonMobilitySpectra tiers (lines 64-77). For an
+    // IM fixture the default tier is not a duplicate of the combine tier: it is the one that
+    // exercises the uncombined drift-bin spectrum list — ~1200 spectra (one per non-empty drift
+    // bin) against <run>.mzML, versus ~100 combined frames against <run>-combineIMS.mzML.
+    // Both tiers run here for the same reason cpp runs both.
 
-    // IM fixtures use combineIonMobilitySpectra=true to match the cpp test config tier
-    // (Reader_Agilent_Test.cpp:64-65). Reference mzMLs are named <run>-combineIMS.mzML.
+    // cpp Reader_Agilent_Test.cpp:73 adds ignoreZeroIntensityPoints on top of the combine tier
+    // (msconvert --ignoreMissingZeroSamples). It steers the reference filename to
+    // *-ignoreZeros-combineIMS.mzML, which the pwiz test tree ships for all three ImsSynth
+    // fixtures. Kept as a separate ReaderTestConfig rather than a field mutation so each tier
+    // reads like its cpp counterpart.
+    private static ReaderTestConfig CombineIgnoreZeros() => new()
+    {
+        CombineIonMobilitySpectra = true,
+        IgnoreZeroIntensityPoints = true,
+    };
 
     [TestMethod]
     public void Reader_Agilent_ImsSynthAllIons()
     {
         var ctx = SetUp("ImsSynthAllIons.d");
         if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
         ctx.Run(new ReaderTestConfig { CombineIonMobilitySpectra = true });
+        ctx.Run(CombineIgnoreZeros());
         ctx.Check();
     }
 
@@ -148,7 +157,9 @@ public class ReaderAgilentTests
     {
         var ctx = SetUp("ImsSynthCCS.d");
         if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
         ctx.Run(new ReaderTestConfig { CombineIonMobilitySpectra = true });
+        ctx.Run(CombineIgnoreZeros());
         ctx.Check();
     }
 
@@ -157,16 +168,66 @@ public class ReaderAgilentTests
     {
         var ctx = SetUp("ImsSynth_Chrom.d");
         if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
         ctx.Run(new ReaderTestConfig { CombineIonMobilitySpectra = true });
+        ctx.Run(CombineIgnoreZeros());
         ctx.Check();
+    }
+
+    /// <summary>
+    /// cpp <c>SpectrumList_Agilent.cpp:678</c>: on the IM, non-combined index path the flag
+    /// swaps MIDAC's non-empty-drift-bin list (plus the last-bin readback probe) for a plain
+    /// walk of every bin, so the empty bins come through as zero-length spectra. Measured
+    /// against cpp msconvert on this fixture: 701 spectra by default, 2832 with the flag, of
+    /// which 2131 are zero-length.
+    /// </summary>
+    [TestMethod]
+    public void Reader_Agilent_AcceptZeroLengthSpectra_EmitsEveryDriftBin()
+    {
+        string? root = FindTestDataRoot();
+        if (root is null) { Assert.Inconclusive("Agilent test data tree not found."); return; }
+        string d = Path.Combine(root, "ImsSynthCCS.d");
+        if (!Directory.Exists(d)) { Assert.Inconclusive("ImsSynthCCS.d not present."); return; }
+
+        static (int Count, int ZeroLength) Read(string path, bool acceptZeroLength)
+        {
+            var msd = new Pwiz.Data.MsData.MSData();
+            new Reader_Agilent().Read(path, msd, new Pwiz.Data.MsData.Readers.ReaderConfig
+            {
+                AcceptZeroLengthSpectra = acceptZeroLength,
+            });
+            var list = msd.Run.SpectrumList!;
+            int zeroLength = 0;
+            for (int i = 0; i < list.Count; i++)
+                if (list.GetSpectrum(i).DefaultArrayLength == 0) zeroLength++;
+            return (list.Count, zeroLength);
+        }
+
+        var off = Read(d, acceptZeroLength: false);
+        var on = Read(d, acceptZeroLength: true);
+
+        Assert.AreEqual(701, off.Count, "default spectrum count changed");
+        Assert.AreEqual(0, off.ZeroLength, "the default path must not emit zero-length spectra");
+        Assert.AreEqual(2832, on.Count, "--acceptZeroLengthSpectra spectrum count changed");
+        Assert.AreEqual(2131, on.ZeroLength, "empty drift bins should come through as zero-length spectra");
     }
 
     [TestMethod]
     public void Reader_Agilent_GFb_4Scan_TimeSegs_1530_100ng()
     {
-        // cpp Reader_Agilent_Test.cpp:67-71 runs GFb only with the
-        // globalChromatogramsAreMs1Only + indexRange=(0,0) config tier — those flags steer
-        // the reference filename to *-combineIMS-globalChromatogramsAreMs1Only.mzML.
+        // cpp Reader_Agilent_Test.cpp:67-71 adds the globalChromatogramsAreMs1Only +
+        // indexRange=(0,0) tier for GFb on top of the default one — those flags steer the
+        // reference filename to *-combineIMS-globalChromatogramsAreMs1Only.mzML.
+        // The default (uncombined) tier is deliberately NOT run here, unlike the three
+        // ImsSynth* fixtures. GFb is a TandemQuadrupole acquisition whose AcqData has an
+        // IMSFrame.bin but no actual IM data (MidacFileAccess.FileHasImsData is false), so it
+        // reads through the plain scan-record path and adds nothing to drift-bin coverage. It
+        // also fails that tier on a pre-existing float-rendering residual unrelated to this
+        // reader: 4 of its 182 spectra have a TIC that is an exact 6-significant-digit tie
+        // (e.g. 2851615, confirmed identical from both MHDAC sources), which cpp's karma
+        // float5 policy renders "2.85161e06" and PwizFloat renders "2.85162e06". That is the
+        // shared-formatter difference tracked as the msconvert-parity "cvParam value differs"
+        // class, not something SpectrumList_Agilent controls.
         var ctx = SetUp("GFb_4Scan_TimeSegs_1530_100ng.d");
         if (ctx is null) return;
         ctx.Run(new ReaderTestConfig

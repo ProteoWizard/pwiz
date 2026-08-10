@@ -144,7 +144,11 @@ public sealed class Reader_Thermo : IReader
 
         result.Run.Id = Path.GetFileNameWithoutExtension(filename);
         result.Run.DefaultSourceFile = sourceFile;
-        result.Run.StartTimeStamp = raw.CreationDate;
+        // Thermo's timestamp carries no zone, so it is one of the three readers whose shift cpp
+        // gates on the config flag (Reader_Thermo.cpp: getCreationDate(adjustUnknownTimeZones...)).
+        result.Run.StartTimeStamp = ReaderConfig.FormatStartTimeStamp(
+            raw.CreationDateRaw,
+            config?.AdjustUnknownTimeZonesToHostTimeZone ?? true) ?? string.Empty;
         if (result.InstrumentConfigurations.Count > 0)
             result.Run.DefaultInstrumentConfiguration = result.InstrumentConfigurations[0];
         bool simAsSpectra = config?.SimAsSpectra ?? false;

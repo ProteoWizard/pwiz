@@ -68,10 +68,18 @@ public interface IBrukerData : IDisposable
     void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays);
 
     /// <summary>
-    /// Yields one point per frame for the TIC / BPC chromatograms, honoring
-    /// <paramref name="preferOnlyMsLevel"/> (0 = all, 1 = MS1 only, 2 = MS2+ only).
+    /// Yields the points of the TIC / BPC chromatograms, honoring
+    /// <paramref name="preferOnlyMsLevel"/> (0 = all, 1 = MS1 only, 2 = MS2+ only). One point per
+    /// frame, except for TDF PASEF acquisitions where each MS2 frame contributes one point per
+    /// MS/MS-info row (DDA precursor, or diaPASEF / PRM isolation window) at interpolated times.
     /// </summary>
-    IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel);
+    /// <param name="preferOnlyMsLevel">0 = all, 1 = MS1 only, 2 = MS2+ only.</param>
+    /// <param name="passEntireDiaPasefFrame">
+    /// The reader config's whole-frame diaPASEF flag. When set (or auto-detected for diagonal
+    /// PASEF), a diaPASEF MS2 frame contributes a single point instead of one per isolation
+    /// window — matching the C++ query switch in TimsData.cpp:451-456.
+    /// </param>
+    IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel, bool passEntireDiaPasefFrame = false);
 
     /// <summary>Reads the LC traces (pressure, flow, UV, etc.) from <c>chromatography-data.sqlite</c>.</summary>
     List<LcTrace> ReadLcTraces();

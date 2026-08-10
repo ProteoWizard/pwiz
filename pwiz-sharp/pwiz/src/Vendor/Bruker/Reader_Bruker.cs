@@ -74,13 +74,17 @@ public sealed class Reader_Bruker : IReader
         // includeIsolationArrays adds the two scanning-quadrupole m/z arrays (only used by the
         // whole-frame path). Both are honored only for TDF diaPASEF combined mode.
         bool passEntireDiaPasefFrame = config?.PassEntireDiaPasefFrame ?? false;
-        bool includeIsolationArrays = config?.IncludeIsolationArrays ?? false;
-        // TODO(diagonal-autodetect): pwiz C++ (TimsData.cpp:308-311) auto-enables passEntire for
-        // DiagonalPASEF/MiDIA when (maxNumScans - maxWindowsPerGroup) < 10. Not ported here: the
-        // ReaderConfig flag is a plain bool so we cannot distinguish an explicit false (e.g.
-        // Skyline's IsolationSchemeReader passes passEntireDiaPasefFrame:false) from a default,
-        // and auto-overriding it would change isolation-scheme detection on diagonal data. Standard
-        // diaPASEF (the failing tests) sets the flag explicitly, so the core fix does not need it.
+        // `?? true` matches a default-constructed cpp Reader::Config (Reader.cpp:56), so a null
+        // config behaves like the default one rather than opting out.
+        bool includeIsolationArrays = config?.IncludeIsolationArrays ?? true;
+        // NB: this flag is only the CALLER's request. pwiz C++ auto-enables it for
+        // DiagonalPASEF/MiDIA when (maxNumScans - maxWindowsPerGroup) < 10 and does so with `|=`
+        // in the TimsData ctor (TimsData.cpp:311), so an explicit `false` from the caller is
+        // intentionally overridden on diagonal data; every consumer then reads the OR-ed value via
+        // isPassEntireDiaPasefFrame() (TimsData.cpp:816). We match that in TdfData: the OR against
+        // TdfMetadata.IsDiagonalPasef happens where the flag is consumed (BuildSpectrumIndex and
+        // EnumerateChromatogramPoints), covering spectra and chromatograms alike. Do NOT "fix"
+        // this to honor a caller's explicit false — that would be the divergence from C++.
         var format = DetectFormat(filename);
         if (format != BrukerFormat.Tdf && format != BrukerFormat.Tsf && format != BrukerFormat.Baf)
             throw new NotSupportedException(
@@ -142,12 +146,16 @@ public sealed class Reader_Bruker : IReader
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 
-        // pwiz C++ non-centroid combineIMS reference mzMLs omit the chromatogramList entirely
-        // (each combined spectrum already carries the TIC of its merged frame range), but the
-        // centroid-combineIMS refs include it — so suppress only when combine is on AND peak
-        // picking is off.
-        if (!combineIonMobilitySpectra || peakPicking)
-            result.Run.ChromatogramList = new ChromatogramList_Bruker(data, spectrumList, preferOnlyMsLevel) { Dp = dpReader };
+        // Always emit the chromatogram list, as cpp does unconditionally (Reader_Bruker.cpp:255-257).
+        // This used to be suppressed for combineIMS-without-peak-picking to match the
+        // -combineIMS/-combineIMS-ms1/-combineIMS-ms2 reference mzMLs, which have no
+        // chromatogramList. Those references are leftovers from an older revision of
+        // Reader_Bruker_Test.cpp: line 131 sets config.peakPicking = true before every combineIMS
+        // tier and never clears it, so cpp only ever writes the -centroid ones now and nothing
+        // regenerates or checks the others. Live msconvert emits 22 chromatograms for exactly the
+        // config the suppression covered, so the suppression made ordinary
+        // `--combineIonMobilitySpectra` conversions differ from msconvert.
+        result.Run.ChromatogramList = new ChromatogramList_Bruker(data, spectrumList, preferOnlyMsLevel, passEntireDiaPasefFrame) { Dp = dpReader };
     }
 
     private static void AddSourceFiles(MSData result, string analysisDir, BrukerFormat format)

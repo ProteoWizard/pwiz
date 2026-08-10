@@ -26,6 +26,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     private readonly bool _ddaProcessing;
     private readonly bool _combineIonMobilitySpectra;
     private readonly bool _ignoreCalibrationScans;
+    private readonly bool _ignoreZeroIntensityPoints;
     private readonly bool _reportSonarBins;
     private readonly IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow> _mobilityFilter;
     private readonly List<IndexEntry> _index = new();
@@ -65,7 +66,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         bool srmAsSpectra, bool ddaProcessing = false, bool combineIonMobilitySpectra = false,
         bool ignoreCalibrationScans = false,
         IReadOnlyList<Pwiz.Data.Common.Chemistry.MzMobilityWindow>? mobilityFilter = null,
-        bool reportSonarBins = false)
+        bool reportSonarBins = false, bool ignoreZeroIntensityPoints = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
@@ -75,6 +76,7 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         _ddaProcessing = ddaProcessing;
         _combineIonMobilitySpectra = combineIonMobilitySpectra;
         _ignoreCalibrationScans = ignoreCalibrationScans;
+        _ignoreZeroIntensityPoints = ignoreZeroIntensityPoints;
         _mobilityFilter = mobilityFilter ?? Array.Empty<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
         _reportSonarBins = reportSonarBins;
         _ddaIsolationOffsets = new Lazy<(float, float)?>(_data.GetDdaIsolationWindowOffsets);
@@ -600,6 +602,11 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
                 var (binMz, binInt) = _data.ReadDriftScan(ie.Function, ie.Block, s);
                 for (int i = 0; i < binMz.Length; i++)
                 {
+                    // pwiz C++ SpectrumList_Waters.cpp:581 — ignoreZeroIntensityPoints
+                    // (msconvert --ignoreMissingZeroSamples) drops the zero-intensity samples
+                    // the MassLynx drift scans carry, which also shrinks defaultArrayLength.
+                    if (_ignoreZeroIntensityPoints && binInt[i] == 0)
+                        continue;
                     mzList.Add(binMz[i]);
                     intList.Add(binInt[i]);
                     if (isSonar)

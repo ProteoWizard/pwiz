@@ -157,9 +157,10 @@ public sealed class Reader_Mobilion : IReader
 
         // cpp Reader_Mobilion.cpp:154-164: timestamp comes through as
         // "yyyy-MM-dd HH:mm:ss[.fffff]"; cpp trims the fractional seconds before the
-        // boost parse, then encodes as XML datetime. Match — and route through
-        // FormatStartTimeStamp so the adjustUnknownTimeZonesToHostTimeZone flag is
-        // honored the same way it is for other vendor readers.
+        // boost parse, then encodes as XML datetime — with NO host-zone shift, because
+        // Mobilion is not one of the readers that consults
+        // adjustUnknownTimeZonesToHostTimeZone. Adjusting here (and converting to UTC first)
+        // put these timestamps 8 hours out instead of matching msconvert.
         string? timestamp = data.ReadGlobalString(MobilionAttr.ACQ_TIMESTAMP);
         if (!string.IsNullOrEmpty(timestamp))
         {
@@ -168,7 +169,7 @@ public sealed class Reader_Mobilion : IReader
             if (DateTime.TryParseExact(trimmed, "yyyy-MM-dd HH:mm:ss",
                     CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var dt))
             {
-                string? startTime = config.FormatStartTimeStamp(dt.ToUniversalTime());
+                string? startTime = ReaderConfig.FormatStartTimeStamp(dt, adjustToHostTimeZone: false);
                 if (startTime is not null) result.Run.StartTimeStamp = startTime;
             }
         }

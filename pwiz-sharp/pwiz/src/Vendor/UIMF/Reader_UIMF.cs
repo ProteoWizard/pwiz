@@ -114,14 +114,12 @@ public sealed class Reader_UIMF : IReader
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
-        // Acquisition timestamp via the shared FormatStartTimeStamp helper so the
-        // adjustUnknownTimeZonesToHostTimeZone flag is honored. cpp passes a
-        // local_date_time with no zone (UIMFReader.cpp:223-224), which on encoding becomes
-        // a naive timestamp; FormatStartTimeStamp handles the equivalent here.
+        // cpp passes a local_date_time with no zone (UIMFReader.cpp:223-224) and never consults
+        // adjustUnknownTimeZonesToHostTimeZone for UIMF, so the value is emitted as read.
         var acq = data.GetAcquisitionTimeUtc();
         if (acq is DateTime utc)
         {
-            string? startTime = config.FormatStartTimeStamp(utc);
+            string? startTime = ReaderConfig.FormatStartTimeStamp(utc, adjustToHostTimeZone: false);
             if (startTime is not null) result.Run.StartTimeStamp = startTime;
         }
 

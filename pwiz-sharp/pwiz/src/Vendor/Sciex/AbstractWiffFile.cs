@@ -25,6 +25,51 @@ public abstract class AbstractWiffFile : IDisposable
     /// <summary>Sample name for the open sample, or empty if the SDK doesn't expose one.</summary>
     public abstract string SampleName { get; }
 
+    /// <summary>
+    /// Every sample name in the file, in sample order and already disambiguated - the array cpp
+    /// returns from <c>WiffFile::getSampleNames()</c>. <see cref="SampleName"/> is this indexed
+    /// by <see cref="SampleNumber"/>.
+    /// </summary>
+    /// <remarks>
+    /// Needed because the two WIFF generations enumerate through different SDKs: the .wiff path
+    /// can do it without opening a sample (<see cref="WiffFile.EnumerateSampleNames"/>), but
+    /// .wiff2 only reaches its sample list through the side-by-side plugin, so a caller that
+    /// wants the count or the names for a .wiff2 has to go through an opened instance.
+    /// </remarks>
+    public abstract string[] AllSampleNames { get; }
+
+    /// <summary>
+    /// Makes duplicate sample names unique by appending the duplicate count, in place:
+    /// <c>foo, bar, foo (2), foobar, bar (2), foo (3)</c>.
+    /// </summary>
+    /// <remarks>
+    /// Port of the identical loop in cpp <c>WiffFileImpl::getSampleNames</c>
+    /// (<c>WiffFile.cpp:314-333</c>) and <c>WiffFile2Impl::getSampleNames</c>
+    /// (<c>WiffFile2.ipp:373-392</c>). Both wiff generations do this, so it lives here.
+    /// It matters because the run id is <c>&lt;wiff-stem&gt;-&lt;sampleName&gt;</c> and msconvert
+    /// names the output file after the run id: two samples sharing a name would otherwise
+    /// produce one output that overwrites the other. Counting is over the RAW name, so the
+    /// suffix a name receives does not depend on suffixes handed out earlier.
+    /// </remarks>
+    /// <remarks>
+    /// <c>protected</c> rather than <c>internal</c> because <see cref="WiffFile"/> and the wiff2
+    /// plugin's <c>Wiff2File</c> live in different assemblies; both reach it as subclasses.
+    /// </remarks>
+    protected static string[] DisambiguateSampleNames(IReadOnlyList<string> names)
+    {
+        ArgumentNullException.ThrowIfNull(names);
+        var result = new string[names.Count];
+        var duplicateCount = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (int i = 0; i < names.Count; i++)
+        {
+            string name = names[i] ?? string.Empty;
+            duplicateCount.TryGetValue(name, out int seen);
+            duplicateCount[name] = seen + 1;
+            result[i] = seen == 0 ? name : $"{name} ({seen + 1})";
+        }
+        return result;
+    }
+
     /// <summary>Number of experiments in the selected sample.</summary>
     public abstract int ExperimentCount { get; }
 
@@ -32,7 +77,13 @@ public abstract class AbstractWiffFile : IDisposable
     public abstract AbstractWiffExperiment GetExperiment(int experimentIndex);
 
     /// <summary>Acquisition timestamp pre-formatted as <c>yyyy-MM-ddTHH:mm:ssZ</c>, or null.</summary>
-    public abstract string? StartTimestampUtc { get; }
+    /// <summary>
+    /// Acquisition time as the SDK reports it, with no time zone applied and no formatting.
+    /// cpp shifts this to the host's zone only when <c>adjustUnknownTimeZonesToHostTimeZone</c>
+    /// is set (Reader_ABI.cpp), so the decision belongs to the reader, not here.
+    /// <see cref="DateTime.MinValue"/> when unavailable.
+    /// </summary>
+    public abstract DateTime StartTimestampRaw { get; }
 
     /// <summary>Instrument model name from the first MS device, or null.</summary>
     public abstract string? InstrumentModelName { get; }

@@ -26,19 +26,18 @@ internal sealed class WiffFile : AbstractWiffFile
     public override int SampleNumber { get; }
     public override int SampleCount { get; }
     public override string SampleName => _sampleName;
+    public override string[] AllSampleNames => EnumerateSampleNames(WiffPath);
     public override int ExperimentCount => _experiments.Length;
     public override AbstractWiffExperiment GetExperiment(int experimentIndex) => _experiments[experimentIndex];
 
-    public override string? StartTimestampUtc
+    public override DateTime StartTimestampRaw
     {
         get
         {
-            try
-            {
-                return _sample.Details.AcquisitionDateTime
-                    .ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
-            }
-            catch { return null; }
+            // Zone-less as the SDK reports it; Reader_Sciex applies cpp's host-zone shift
+            // (WiffFile.ipp getSampleAcquisitionTime) under the config flag.
+            try { return _sample.Details.AcquisitionDateTime; }
+            catch { return default; }
         }
     }
 
@@ -117,16 +116,14 @@ internal sealed class WiffFile : AbstractWiffFile
         // locked. It exposes .Close() (not IDisposable) to release those. Also force
         // a GC + finalizer pass - the Sciex SDK sometimes enqueues finalizers rather
         // than closing the file synchronously (see WiffFile.Dispose comments).
-        // The current Clearcore2 SDK hands back the comma form ("rfp9,after,h,1") from both
-        // Batch.GetSampleNames() and GetBasicSampleInfos().SampleName, where cpp's
-        // WiffFile::getSampleNames() returns the underscore form ("rfp9_after_h_1"). Normalize
-        // here (see NormalizeSampleName) so the run id and enumerated names match cpp / net472.
+        // Sample names are passed through EXACTLY as the SDK reports them, commas and all, as
+        // cpp does - see the note on the ctor's name resolution below.
         var provider = new AnalystWiffDataProvider();
         var names = new List<string>();
         try
         {
             foreach (var info in provider.GetBasicSampleInfos(wiffPath))
-                names.Add(NormalizeSampleName(info.SampleName));
+                names.Add(info.SampleName ?? string.Empty);
         }
         finally
         {
@@ -134,20 +131,11 @@ internal sealed class WiffFile : AbstractWiffFile
             System.GC.Collect();
             System.GC.WaitForPendingFinalizers();
         }
-        return names.ToArray();
+        // cpp returns the disambiguated list from getSampleNames(), and both the run id and
+        // ReadIds are built from it, so duplicates must be resolved here rather than at either
+        // call site (AbstractWiffFile.DisambiguateSampleNames).
+        return DisambiguateSampleNames(names);
     }
-
-    /// <summary>
-    /// Normalize a Clearcore2 sample name to the form cpp's <c>WiffFile::getSampleNames()</c>
-    /// (and legacy pwiz.CLI) return: the current Clearcore2 .NET SDK yields the comma form
-    /// ("rfp9,after,h,1") for a sample the WIFF stores as "rfp9_after_h_1". Both cpp and
-    /// Skyline's <c>SampleHelp.EscapeSampleId</c> treat commas as name-illegal and map them to
-    /// '_', so Skyline builds the requested sample path from the underscore name; the run id
-    /// ("&lt;wiff&gt;-&lt;sampleName&gt;") only matches that path when the reader normalizes here
-    /// too. Without this, multi-sample WIFF command-line import matched nothing (no results).
-    /// </summary>
-    internal static string NormalizeSampleName(string sampleName)
-        => string.IsNullOrEmpty(sampleName) ? sampleName ?? string.Empty : sampleName.Replace(',', '_');
 
     public WiffFile(string wiffPath, int sampleIndex0)
     {
@@ -170,14 +158,27 @@ internal sealed class WiffFile : AbstractWiffFile
         _msSample = _sample.MassSpectrometerSample;
 
         // cpp emits run id as "<wiff_base>-<sampleName>" for multi-sample wiffs.
+        // Resolve the name from the WHOLE disambiguated list rather than reading the one sample:
+        // cpp indexes getSampleNames()[sampleIndex], and a duplicate's " (2)" suffix can only be
+        // known by looking at the names before it.
+        //
+        // The SDK's name is used verbatim - notably commas are NOT rewritten to '_'. cpp does no
+        // such rewrite either (Reader_ABI.cpp:72 takes the run id straight from
+        // getSampleNames()[sample-1], and WiffFile.cpp:308-336 only de-duplicates), so msconvert
+        // writes "051309_digestion-rfp9,after,h,1.mzML" - the name Skyline's own fixtures use
+        // (SmallWiffTest.cs:183). Rewriting here made msconvert-sharp disagree with msconvert on
+        // every multi-sample WIFF filename. Skyline is unaffected: it escapes every id it gets
+        // from ReadIds itself (SampleHelp.EscapeSampleId via DataSourceUtil.cs:409, which maps
+        // ',' '.' ';' -> '_', a superset of the old rewrite) and then opens the sample BY INDEX,
+        // never by name.
         try
         {
-            int idx = 0;
+            var allNames = new List<string>();
             foreach (var info in _provider.GetBasicSampleInfos(wiffPath))
-            {
-                if (idx == sampleIndex0) { _sampleName = NormalizeSampleName(info.SampleName); break; }
-                idx++;
-            }
+                allNames.Add(info.SampleName ?? string.Empty);
+            var unique = DisambiguateSampleNames(allNames);
+            if (sampleIndex0 >= 0 && sampleIndex0 < unique.Length)
+                _sampleName = unique[sampleIndex0];
         }
         catch { }
 

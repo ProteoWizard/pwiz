@@ -43,10 +43,15 @@ public sealed class ThermoRawFile : IDisposable
     /// the source filename without its extension, matching cpp.</summary>
     public string RunId { get; }
 
-    /// <summary>Acquisition timestamp encoded for mzML <c>startTimeStamp</c>. cpp emits the
-    /// instrument's local-clock value verbatim with a "Z" suffix; we mirror that
-    /// (strictly incorrect ISO-8601 but matches the reference mzML fixtures byte-for-byte).</summary>
-    public string CreationDate { get; }
+    /// <summary>
+    /// Acquisition timestamp exactly as the SDK reports it: the instrument's local-clock
+    /// reading, carrying no time zone. Thermo does not tell us which zone it came from, which
+    /// is why cpp treats it as the HOST's zone and shifts it - see
+    /// <c>RawFileImpl::getCreationDate</c> and <c>ReaderConfig.FormatStartTimeStamp</c>.
+    /// Formatting belongs to the reader, which knows the config; this stays raw.
+    /// <see cref="DateTime.MinValue"/> when the SDK will not give one up.
+    /// </summary>
+    public DateTime CreationDateRaw { get; }
 
     /// <summary>Opens <paramref name="filename"/>, validates it carries usable MS data, selects
     /// the first MS controller, and reads the run header / acquisition timestamp.</summary>
@@ -81,9 +86,9 @@ public sealed class ThermoRawFile : IDisposable
             RunId = Path.GetFileNameWithoutExtension(filename);
             try
             {
-                CreationDate = Raw.FileHeader.CreationDate.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
+                CreationDateRaw = Raw.FileHeader.CreationDate;
             }
-            catch { CreationDate = string.Empty; }
+            catch { CreationDateRaw = default; }
         }
         catch
         {

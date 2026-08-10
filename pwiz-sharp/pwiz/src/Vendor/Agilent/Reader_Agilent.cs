@@ -241,7 +241,12 @@ public sealed class Reader_Agilent : IReader
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;
         bool globalChromsAreMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
         bool combineIms = config?.CombineIonMobilitySpectra ?? false;
-        result.Run.SpectrumList = new SpectrumList_Agilent(raw, ownsRaw: true, ic, simAsSpectra, srmAsSpectra, combineIms)
+        // cpp SpectrumList_Agilent.cpp:434/:541 — only consumed on the combine-IMS path.
+        bool ignoreZeroIntensityPoints = config?.IgnoreZeroIntensityPoints ?? false;
+        // cpp SpectrumList_Agilent.cpp:678 — only consumed on the IM, non-combined index path,
+        // where it swaps "non-empty drift bins" for "every drift bin".
+        bool acceptZeroLengthSpectra = config?.AcceptZeroLengthSpectra ?? false;
+        result.Run.SpectrumList = new SpectrumList_Agilent(raw, ownsRaw: true, ic, simAsSpectra, srmAsSpectra, combineIms, ignoreZeroIntensityPoints, acceptZeroLengthSpectra)
         {
             Dp = dpReader,
         };

@@ -18,6 +18,7 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
     private readonly IBrukerData _data;
     private readonly SpectrumList_Bruker? _spectrumList;
     private readonly int _preferOnlyMsLevel;
+    private readonly bool _passEntireDiaPasefFrame;
     private readonly List<IndexEntry> _index = new();
     private readonly List<LcTrace> _lcTraces;
 
@@ -46,12 +47,21 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
     /// <c>spectrumList[i]</c> for each chromatogram point — matches pwiz C++
     /// ChromatogramList_Bruker.cpp:155-156 which calls <c>getMSSpectrum(i)->getMSMSStage()</c>.
     /// </summary>
-    public ChromatogramList_Bruker(IBrukerData data, SpectrumList_Bruker? spectrumList, int preferOnlyMsLevel)
+    /// <param name="data">The opened Bruker analysis handle.</param>
+    /// <param name="spectrumList">Sibling spectrum list used to key the <c>ms level</c> array.</param>
+    /// <param name="preferOnlyMsLevel">0 = all, 1 = MS1 only, 2 = MS2+ only.</param>
+    /// <param name="passEntireDiaPasefFrame">
+    /// The reader config's whole-frame diaPASEF flag: it selects how many TIC/BPC points a
+    /// diaPASEF MS2 frame contributes (one, versus one per isolation window).
+    /// </param>
+    public ChromatogramList_Bruker(IBrukerData data, SpectrumList_Bruker? spectrumList, int preferOnlyMsLevel,
+                                   bool passEntireDiaPasefFrame = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _spectrumList = spectrumList;
         _preferOnlyMsLevel = preferOnlyMsLevel;
+        _passEntireDiaPasefFrame = passEntireDiaPasefFrame;
 
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
         _index.Add(new IndexEntry { Index = 1, Id = "BPC", Kind = CVID.MS_basepeak_chromatogram });
@@ -97,9 +107,12 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
 
     private Chromatogram FillGlobalChromatogram(Chromatogram chrom, CVID kind)
     {
-        var times = new List<double>();
-        var intensities = new List<double>();
-        foreach (var p in _data.EnumerateChromatogramPoints(_preferOnlyMsLevel))
+        // Materialize once: for TDF PASEF a point list costs several SQLite queries, and this
+        // method is called for both the TIC and the BPC.
+        var points = _data.EnumerateChromatogramPoints(_preferOnlyMsLevel, _passEntireDiaPasefFrame).ToList();
+        var times = new List<double>(points.Count);
+        var intensities = new List<double>(points.Count);
+        foreach (var p in points)
         {
             times.Add(p.RetentionTimeSeconds);
             intensities.Add(kind == CVID.MS_TIC_chromatogram ? p.TotalIonCurrent : p.BasePeakIntensity);
@@ -109,21 +122,17 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
         // mirrors the FIRST N spectra's ms levels. Without a sibling spectrum list we fall
         // back to per-point classification (same value either way for non-PASEF, where
         // chromatogram[i] corresponds 1:1 to spectrum[i]).
-        var msLevels = new List<long>(times.Count);
+        var msLevels = new List<long>(points.Count);
         if (_spectrumList is not null)
         {
             int specCount = _spectrumList.Count;
-            for (int i = 0; i < times.Count; i++)
+            for (int i = 0; i < points.Count; i++)
                 msLevels.Add(i < specCount ? _spectrumList.GetMsLevelByIndex(i) : 0);
         }
         else
         {
-            int idx = 0;
-            foreach (var p in _data.EnumerateChromatogramPoints(_preferOnlyMsLevel))
-            {
+            foreach (var p in points)
                 msLevels.Add(p.MsLevel);
-                if (++idx >= times.Count) break;
-            }
         }
 
         chrom.DefaultArrayLength = times.Count;

@@ -95,10 +95,19 @@ public sealed class ReaderConfig
     /// <c>pwiz::msdata::Reader::Config::ignoreZeroIntensityPoints</c>.
     /// </summary>
     /// <remarks>
-    /// This flag is currently advisory: it round-trips through <see cref="ReaderConfig"/> but
-    /// no pwiz-sharp reader acts on it yet. The downstream filter
-    /// <c>SpectrumList_ZeroSamplesFilter</c> (in <c>Pwiz.Analysis</c>) covers the common case
-    /// when applied via <c>--filter "zeroSamples removeExtra"</c>.
+    /// Honored by the same readers that consume it in cpp, and only on the paths cpp consumes
+    /// it on — msconvert exposes it as <c>--ignoreMissingZeroSamples</c>:
+    /// <list type="bullet">
+    /// <item>Sciex (<c>SpectrumList_ABI.cpp:254</c>/<c>:261</c>) — suppresses the SDK's
+    /// synthetic framing zeros, changing both the arrays and <c>defaultArrayLength</c>.</item>
+    /// <item>Agilent (<c>SpectrumList_Agilent.cpp:434</c>/<c>:541</c>) — combine-IMS only.</item>
+    /// <item>Waters (<c>SpectrumList_Waters.cpp:581</c>) — combine-IMS only.</item>
+    /// <item>Mobilion (<c>SpectrumList_Mobilion.cpp:182</c>/<c>:305</c>) and
+    /// UIMF (<c>SpectrumList_UIMF.cpp:141</c>).</item>
+    /// </list>
+    /// Bruker ignores it in cpp too (its uses are commented out). For the vendors that never
+    /// look at it, the downstream filter <c>SpectrumList_ZeroSamplesFilter</c> (in
+    /// <c>Pwiz.Analysis</c>) covers the common case via <c>--filter "zeroSamples removeExtra"</c>.
     /// </remarks>
     public bool IgnoreZeroIntensityPoints { get; set; }
 
@@ -109,9 +118,23 @@ public sealed class ReaderConfig
     /// <c>pwiz::msdata::Reader::Config::acceptZeroLengthSpectra</c>.
     /// </summary>
     /// <remarks>
-    /// Advisory like <see cref="IgnoreZeroIntensityPoints"/> — no pwiz-sharp reader currently
-    /// applies the filter. Round-tripping ensures SeeMS and msconvert-sharp can request it
-    /// today and behavior fills in as readers are upgraded.
+    /// Its documented purpose in cpp is "skip expensive checking for empty spectra when opening
+    /// a file", so it is a performance knob as much as a content one. Honored by the same
+    /// readers that consume it in cpp, and only on the paths cpp consumes it on — msconvert
+    /// exposes it as <c>--acceptZeroLengthSpectra</c>:
+    /// <list type="bullet">
+    /// <item>Sciex (<c>SpectrumList_ABI.cpp:298</c>) — the index is built off the TIC instead of
+    /// the BPC and the per-cycle <c>getDataSize</c> probe is skipped, so empty cycles survive
+    /// (on wiff2 zero-intensity cycles are still dropped, and Product experiments still require
+    /// precursor info). Also (<c>SpectrumList_ABI.cpp:240</c>) suppresses the
+    /// <c>base peak m/z</c> / <c>base peak intensity</c> cvParams, whose lookup is what forces
+    /// the SDK to build the base-peak chromatogram.</item>
+    /// <item>Agilent (<c>SpectrumList_Agilent.cpp:678</c>) — ion-mobility, non-combined only:
+    /// every drift bin is indexed instead of only MIDAC's non-empty ones.</item>
+    /// </list>
+    /// UIMF (<c>SpectrumList_UIMF.cpp:236</c>) and UNIFI (<c>SpectrumList_UNIFI.cpp:195</c>) have
+    /// their uses commented out in cpp, so those readers deliberately ignore it here too. No
+    /// other vendor consumes it.
     /// </remarks>
     public bool AcceptZeroLengthSpectra { get; set; }
 
@@ -121,8 +144,8 @@ public sealed class ReaderConfig
     /// <c>pwiz::msdata::Reader::Config::allowMsMsWithoutPrecursor</c>.
     /// </summary>
     /// <remarks>
-    /// Advisory like the two above — round-tripped through the API so callers (SeeMS,
-    /// msconvert-sharp) can pass it without the option silently disappearing.
+    /// Advisory like <see cref="AcceptZeroLengthSpectra"/> — round-tripped through the API so
+    /// callers (SeeMS, msconvert-sharp) can pass it without the option silently disappearing.
     /// </remarks>
     public bool AllowMsMsWithoutPrecursor { get; set; }
 
@@ -155,9 +178,18 @@ public sealed class ReaderConfig
     /// <summary>
     /// Encodes <paramref name="sdkDate"/> as an mzML <c>startTimeStamp</c> attribute string
     /// (<c>YYYY-MM-DDTHH:MM:SSZ</c>), applying the cpp-equivalent host-tz adjustment when
-    /// <see cref="AdjustUnknownTimeZonesToHostTimeZone"/> is set. Returns <c>null</c> for the
-    /// default <see cref="DateTime"/>.
+    /// <paramref name="adjustToHostTimeZone"/> is set. Returns <c>null</c> for the default
+    /// <see cref="DateTime"/>.
     /// </summary>
+    /// <param name="sdkDate">The vendor SDK's acquisition time, unmodified.</param>
+    /// <param name="adjustToHostTimeZone">
+    /// Passed per call rather than read from <see cref="AdjustUnknownTimeZonesToHostTimeZone"/>,
+    /// because cpp decides per READER, not globally: only Thermo, ABI and Shimadzu honour the
+    /// config flag (their SDKs return a zone-less timestamp). Agilent passes a literal
+    /// <c>false</c> - "all but the oldest Agilent formats state their time zones" - and Bruker,
+    /// Mobilion, Waters, UIMF and UNIFI never adjust at all. Readers that adjusted here when
+    /// cpp did not were the reason msconvert-sharp's timestamps drifted from msconvert's.
+    /// </param>
     /// <remarks>
     /// Mirrors cpp <c>ShimadzuReader.cpp:365-388</c> / <c>WiffFile.cpp::getSampleAcquisitionTime</c>:
     /// take the SDK's <see cref="DateTime"/> (typically <c>Kind=Local</c> on the host), convert
@@ -166,18 +198,25 @@ public sealed class ReaderConfig
     /// with a <c>Z</c> suffix. cpp's logic is questionable as a "real" UTC value but it's the
     /// canonical msconvert behavior, so we match byte-for-byte.
     /// </remarks>
-    public string? FormatStartTimeStamp(DateTime sdkDate)
+    public static string? FormatStartTimeStamp(DateTime sdkDate, bool adjustToHostTimeZone)
     {
         if (sdkDate == default) return null;
-        DateTime utc = sdkDate.ToUniversalTime();
-        if (AdjustUnknownTimeZonesToHostTimeZone)
+
+        // cpp works from the SDK's NAIVE wall-clock reading (a boost ptime, which carries no
+        // zone) and adds the offset to it. Converting first with ToUniversalTime would apply
+        // the offset a second time whenever the SDK hands back Kind=Local/Unspecified - which
+        // is what made Mobilion timestamps land 8 hours out instead of 4.
+        DateTime stamp = DateTime.SpecifyKind(sdkDate, DateTimeKind.Unspecified);
+        if (adjustToHostTimeZone)
         {
-            // GetUtcOffset is local-minus-UTC (e.g. -04:00 on EDT). Subtracting a negative
-            // value adds, mirroring cpp's `pt + (universal_time - local_time)`.
-            TimeSpan localOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
-            utc = utc.Subtract(localOffset);
+            // cpp: pt + (universal_time() - local_time()), i.e. plus the host's current offset
+            // from UTC. GetUtcOffset returns local-minus-UTC (-04:00 on EDT), so subtracting it
+            // adds the same amount. Both use "now" rather than the file's date, so a file
+            // acquired under the other side of DST gets today's offset - matching cpp, quirk
+            // and all.
+            stamp -= TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
         }
-        return $"{utc.Year:D4}-{utc.Month:D2}-{utc.Day:D2}T{utc.Hour:D2}:{utc.Minute:D2}:{utc.Second:D2}Z";
+        return $"{stamp.Year:D4}-{stamp.Month:D2}-{stamp.Day:D2}T{stamp.Hour:D2}:{stamp.Minute:D2}:{stamp.Second:D2}Z";
     }
 
     /// <summary>
@@ -203,9 +242,18 @@ public sealed class ReaderConfig
 
     /// <summary>
     /// When true, Bruker isolation-window arrays are included in the emitted spectra.
-    /// Default false: Skyline infers isolation from WindowGroup/IM cvParams. Round-tripped.
     /// </summary>
-    public bool IncludeIsolationArrays { get; set; }
+    /// <remarks>
+    /// Defaults to <c>true</c>, matching cpp <c>Reader.cpp:56</c>. It has exactly one effect in
+    /// either tree: <c>SpectrumList_Bruker.cpp:442</c> gates the scanning-quadrupole lower/upper
+    /// bound m/z arrays on <c>isPassEntireDiaPasefFrame() &amp;&amp; includeIsolationArrays</c>, so it
+    /// reaches nothing outside whole-frame diaPASEF Bruker MS2 spectra.
+    /// This defaulted to <c>false</c> while the whole-frame path was unreachable in pwiz-sharp,
+    /// so the old "Skyline infers isolation from WindowGroup/IM cvParams" rationale was never
+    /// exercised - and Skyline, reading Bruker through the cpp reader, has always received these
+    /// arrays. Emitting 3 arrays where msconvert emits 5 was the divergence, not the parity.
+    /// </remarks>
+    public bool IncludeIsolationArrays { get; set; } = true;
 
     /// <summary>
     /// When true (Waters lockmass), spectra flagged as calibration/lockmass are omitted

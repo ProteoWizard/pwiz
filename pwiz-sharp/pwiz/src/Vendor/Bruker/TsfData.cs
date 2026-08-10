@@ -42,8 +42,9 @@ internal sealed class TsfData : IBrukerData
 
     public IEnumerable<DiaFrameWindow> EnumerateDiaFrameWindows() => Array.Empty<DiaFrameWindow>();
 
-    public IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel)
+    public IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel, bool passEntireDiaPasefFrame = false)
     {
+        _ = passEntireDiaPasefFrame;   // TSF has no diaPASEF whole-frame mode.
         foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
         {
             yield return new BrukerChromatogramPoint(

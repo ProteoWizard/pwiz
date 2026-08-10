@@ -224,11 +224,18 @@ public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectr
         if (intensities.Length == 0)
             return (Array.Empty<double>(), Array.Empty<double>());
 
-        // First pass: count gaps so we can size the output exactly. (gap test mirrors
-        // cpp's size_t-subtraction wrap; see GetCombinedSpectrumData for the rationale.)
+        // First pass: count gaps so we can size the output exactly. NOTE the gap test is
+        // SIGNED here, unlike GetCombinedSpectrumData: cpp declares this path's indices as
+        // `std::vector<int64_t> tofSampleIndices` (SpectrumList_Mobilion.cpp:202) and so
+        // compares `tofSampleIndices[i] - tofSampleIndices[i - 1] > 1` in signed arithmetic
+        // (cpp:227), where a decreasing pair is NOT a gap. The combined path's indices come
+        // from COOArray::columnIndices, which is `std::vector<size_t>` (MBISparse.h:40), so
+        // there the same expression wraps on underflow and a decrease IS a gap. Using ulong
+        // here would insert two spurious zero-padding points wherever the SDK handed back a
+        // non-ascending pair.
         int gaps = 0;
         for (int i = 1; i < intensities.Length; i++)
-            if ((ulong)tof[i] - (ulong)tof[i - 1] > 1UL) gaps++;
+            if (tof[i] - tof[i - 1] > 1L) gaps++;
         int actualPoints = 2 + intensities.Length + 2 * gaps;
 
         // Build TOF-index + intensity arrays for the expanded output, then convert all
@@ -245,7 +252,8 @@ public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectr
         tofs[p] = tof[0];     intOut[p] = intensities[0]; p++;
         for (int i = 1; i < intensities.Length; i++)
         {
-            if ((ulong)tof[i] - (ulong)tof[i - 1] > 1UL)
+            // Signed, to match cpp:227 — must stay in lockstep with the sizing pass above.
+            if (tof[i] - tof[i - 1] > 1L)
             {
                 tofs[p] = tof[i - 1] + 1; intOut[p] = 0; p++;
                 tofs[p] = tof[i] - 1;     intOut[p] = 0; p++;

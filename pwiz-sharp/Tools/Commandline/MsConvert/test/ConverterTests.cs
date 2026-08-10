@@ -158,6 +158,53 @@ public class ConverterTests
         Assert.AreEqual(100.0, ms1.Params.CvParam(CVID.MS_base_peak_intensity).ValueAs<double>(), 1e-9);
     }
 
+    /// <summary>
+    /// A vendor-level CLI toggle that parses but is never copied onto <c>ReaderConfig</c> is
+    /// dead for every vendor, and nothing downstream reports it.
+    /// <c>--ignoreMissingZeroSamples</c> was exactly that: it lands on a differently named
+    /// ReaderConfig field (<c>IgnoreZeroIntensityPoints</c>, cpp msconvert.cpp:453-454), and the
+    /// copy was simply absent.
+    /// <para>
+    /// <c>--acceptZeroLengthSpectra</c> was the same defect: parsed, never copied, and no reader
+    /// read the field either. Both halves are wired now — Sciex
+    /// (<c>SpectrumList_ABI.cpp:240</c>/<c>:298</c>) and Agilent
+    /// (<c>SpectrumList_Agilent.cpp:678</c>) honor it, matching the only two vendors that
+    /// consume it in cpp.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void BuildReaderConfig_CopiesVendorLevelTogglesTheReadersHonor()
+    {
+        var all = new MsConvertConfig
+        {
+            SimAsSpectra = true,
+            SrmAsSpectra = true,
+            CombineIonMobilitySpectra = true,
+            DdaProcessing = true,
+            IgnoreCalibrationScans = true,
+            IgnoreMissingZeroSamples = true,
+            AcceptZeroLengthSpectra = true,
+        };
+        var on = new Converter(all).BuildReaderConfig();
+        var off = new Converter(new MsConvertConfig()).BuildReaderConfig();
+
+        (string Name, bool On, bool Off)[] cases =
+        {
+            ("SimAsSpectra", on.SimAsSpectra, off.SimAsSpectra),
+            ("SrmAsSpectra", on.SrmAsSpectra, off.SrmAsSpectra),
+            ("CombineIonMobilitySpectra", on.CombineIonMobilitySpectra, off.CombineIonMobilitySpectra),
+            ("DdaProcessing", on.DdaProcessing, off.DdaProcessing),
+            ("IgnoreCalibrationScans", on.IgnoreCalibrationScans, off.IgnoreCalibrationScans),
+            ("IgnoreZeroIntensityPoints", on.IgnoreZeroIntensityPoints, off.IgnoreZeroIntensityPoints),
+            ("AcceptZeroLengthSpectra", on.AcceptZeroLengthSpectra, off.AcceptZeroLengthSpectra),
+        };
+        foreach (var (name, isOn, isOff) in cases)
+        {
+            Assert.IsTrue(isOn, $"ReaderConfig.{name} was not set from the command line");
+            Assert.IsFalse(isOff, $"ReaderConfig.{name} defaults to true");
+        }
+    }
+
     [TestMethod]
     public void Run_MissingInput_ReportsErrorButContinues()
     {

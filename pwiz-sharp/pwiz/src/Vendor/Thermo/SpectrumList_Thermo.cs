@@ -211,8 +211,13 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             if (filter.ScanMode == ScanModeType.Sim && !_simAsSpectra)
                 continue;
             // SRM scans become per-transition chromatograms (Q1, Q3) unless srmAsSpectra=true,
-            // matching pwiz C++ ChromatogramList_Thermo.cpp:413-479.
-            if (filter.ScanMode == ScanModeType.Srm && !_srmAsSpectra)
+            // matching pwiz C++ ChromatogramList_Thermo.cpp:413-479 — but only when the
+            // chromatogram list will actually take them. ChromatogramList_Thermo drops windows
+            // wider than MaxSrmScanRange (they alias several ions, so they aren't transitions),
+            // so an SRM scan with such a window has to stay a spectrum or its data is lost
+            // entirely. Port of cpp SpectrumList_Thermo.cpp:894-916 "hasExcessiveSrmScanRange".
+            if (filter.ScanMode == ScanModeType.Srm && !_srmAsSpectra
+                && !HasExcessiveSrmScanRange(filter))
                 continue;
 
             var entry = new IndexEntry
@@ -239,6 +244,28 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
 
         // Restore MS as the active controller so subsequent MS-side reads see the right state.
         try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
+    }
+
+    /// <summary>
+    /// True when any of the scan's bracketed m/z windows is wider than
+    /// <see cref="ChromatogramList_Thermo.MaxSrmScanRange"/> — cpp's
+    /// <c>SpectrumList_Thermo.cpp:899-911</c> loop over <c>scanInfo->scanRange(i)</c>, which on
+    /// the RawFileReader path is exactly <c>filter.GetMassRange(i).Low/High</c>
+    /// (RawFile.cpp:1710).
+    /// </summary>
+    private static bool HasExcessiveSrmScanRange(IScanFilter filter)
+    {
+        try
+        {
+            for (int i = 0; i < filter.MassRangeCount; i++)
+            {
+                var range = filter.GetMassRange(i);
+                if (range.High - range.Low > ChromatogramList_Thermo.MaxSrmScanRange)
+                    return true;
+            }
+        }
+        catch { /* filter without usable mass ranges — treat as a normal transition */ }
+        return false;
     }
 
     private void AddPdaIndex()

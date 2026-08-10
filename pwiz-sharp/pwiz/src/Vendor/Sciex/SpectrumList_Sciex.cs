@@ -21,6 +21,8 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
     private readonly InstrumentConfiguration? _defaultIc;
     private readonly bool _simAsSpectra;
     private readonly bool _srmAsSpectra;
+    private readonly bool _ignoreZeroIntensityPoints;
+    private readonly bool _acceptZeroLengthSpectra;
     private readonly List<IndexEntry> _index = new();
 
     /// <summary>DataProcessing emitted as the document's <c>defaultDataProcessingRef</c>.</summary>
@@ -30,10 +32,17 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
     public override DataProcessing? DataProcessing => Dp;
 
     /// <summary>Wraps <paramref name="wiff"/>; <paramref name="ownsWiff"/> selects whether
-    /// disposing the list disposes the wiff.</summary>
+    /// disposing the list disposes the wiff. <paramref name="ignoreZeroIntensityPoints"/> is
+    /// cpp <c>Reader::Config::ignoreZeroIntensityPoints</c> (msconvert
+    /// <c>--ignoreMissingZeroSamples</c>): when set, the SDK is asked NOT to synthesize the
+    /// flanking zero samples around profile peaks. <paramref name="acceptZeroLengthSpectra"/>
+    /// is cpp <c>Reader::Config::acceptZeroLengthSpectra</c> (msconvert
+    /// <c>--acceptZeroLengthSpectra</c>): when set, the index is built from the TIC without
+    /// probing each cycle for content, so empty cycles survive into the output.</summary>
     public SpectrumList_Sciex(AbstractWiffFile wiff, bool ownsWiff,
         InstrumentConfiguration? defaultInstrumentConfiguration,
-        bool simAsSpectra, bool srmAsSpectra)
+        bool simAsSpectra, bool srmAsSpectra, bool ignoreZeroIntensityPoints = false,
+        bool acceptZeroLengthSpectra = false)
     {
         ArgumentNullException.ThrowIfNull(wiff);
         _wiff = wiff;
@@ -41,6 +50,8 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         _defaultIc = defaultInstrumentConfiguration;
         _simAsSpectra = simAsSpectra;
         _srmAsSpectra = srmAsSpectra;
+        _ignoreZeroIntensityPoints = ignoreZeroIntensityPoints;
+        _acceptZeroLengthSpectra = acceptZeroLengthSpectra;
         CreateIndex();
     }
 
@@ -65,6 +76,10 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         // experiments. Native id includes period/cycle/experiment in the cpp order.
         var sortedByTime = new SortedDictionary<double, List<(int Experiment, int Cycle, WiffExperimentType Type, int MsLevel)>>();
 
+        // cpp SpectrumList_ABI.cpp:283 — the acceptZeroLengthSpectra branch keeps every wiff1
+        // TIC cycle regardless of intensity, but still drops zero-intensity cycles on wiff2.
+        bool isWiff2 = _wiff.WiffPath.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase);
+
         for (int e = 0; e < _wiff.ExperimentCount; e++)
         {
             AbstractWiffExperiment exp;
@@ -77,12 +92,35 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             if (expType == WiffExperimentType.MRM && !_srmAsSpectra) continue;
             if (expType == WiffExperimentType.SIM && !_simAsSpectra) continue;
 
-            var (times, intensities) = exp.GetBpc();
-            if (times.Length == 0) (times, intensities) = exp.GetTic();
+            double[] times, intensities;
+            if (_acceptZeroLengthSpectra)
+            {
+                // cpp SpectrumList_ABI.cpp:298-306: the flag's whole point is to skip the
+                // expensive per-cycle emptiness probe, so the index is built off the TIC alone
+                // (never the BPC, which some SDK paths compute by scanning the spectra).
+                (times, intensities) = exp.GetTic();
+            }
+            else
+            {
+                (times, intensities) = exp.GetBpc();
+                if (times.Length == 0) (times, intensities) = exp.GetTic();
+            }
 
             int n = Math.Min(times.Length, intensities.Length);
             for (int i = 0; i < n; i++)
             {
+                if (_acceptZeroLengthSpectra)
+                {
+                    // cpp SpectrumList_ABI.cpp:303-305. wiff1 keeps every cycle (that is what
+                    // "accept zero length spectra" buys you); wiff2 still needs intensity > 0
+                    // because its TIC is padded across experiments. Product (MS2) experiments
+                    // additionally require precursor info, which is the one per-cycle read cpp
+                    // still pays for on this branch.
+                    if (isWiff2 && intensities[i] <= 0) continue;
+                    if (expType == WiffExperimentType.Product
+                        && exp.GetSpectrum(i + 1, addZeros: false, centroid: false)?.HasPrecursorInfo != true)
+                        continue;
+                }
                 // cpp SpectrumList_ABI::createIndex drops empty cycles purely on the per-cycle
                 // BPC (fallback TIC) intensity being > 0 — it does NOT read each spectrum. An
                 // earlier port revision added a per-cycle exp.GetSpectrum(...) peak probe here to
@@ -92,7 +130,7 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 // full-scan graph's load timeout on .NET 8. The probe was also redundant:
                 // intensities[i] is the cycle's base-peak (or TIC) value, so intensities[i] > 0
                 // already guarantees the spectrum has a point > 0. Match cpp: intensity check only.
-                if (intensities[i] <= 0) continue;
+                else if (intensities[i] <= 0) continue;
 
                 if (!sortedByTime.TryGetValue(times[i], out var list))
                 {
@@ -158,13 +196,17 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
 
         // Profile vs centroid + AddZeros padding for profile data are handled inside the
         // AbstractWiffSpectrum implementation (legacy: AddZeros via Clearcore2; wiff2: AddFramingZeros
-        // via the SDK request). cpp WiffFile2.ipp:803 always passes addZeros=true (regardless
-        // of doCentroid); mirror that so the SDK returns the same point density and the swath
-        // centroid output matches the cpp reference exactly (765 points/spectrum on the
-        // swath.api fixture, vs 255 with addZeros=false). Fetched here (before scan-window /
-        // start-time emission) because the spectrum's StartTimeMinutes is the cpp-equivalent
-        // start time and is preferred over the experiment-cycle RT when the SDK reports it.
-        var ms = exp.GetSpectrum(ie.Cycle, addZeros: true, centroid: centroid);
+        // via the SDK request). cpp SpectrumList_ABI.cpp:254/:261 passes
+        // config_.ignoreZeroIntensityPoints into both getData and getDataSize, and both WIFF
+        // SDK layers turn it into "don't add zeros": legacy WiffFile.cpp:836/:872 gate
+        // AddZeros(spectrum, 1) on !ignoreZeroIntensityPoints, and WiffFile2.ipp:803/:812 pass
+        // addZeros = !ignoreZeroIntensityPoints as the request's AddFramingZeros. So the
+        // default (flag off) is addZeros=true, which is what makes the swath centroid output
+        // match the cpp reference exactly (765 points/spectrum on the swath.api fixture, vs 255
+        // with addZeros=false). Fetched here (before scan-window / start-time emission) because
+        // the spectrum's StartTimeMinutes is the cpp-equivalent start time and is preferred
+        // over the experiment-cycle RT when the SDK reports it.
+        var ms = exp.GetSpectrum(ie.Cycle, addZeros: !_ignoreZeroIntensityPoints, centroid: centroid);
 
         // cpp SpectrumList_ABI.cpp:139-141: scan_start_time comes from the spectrum's
         // StartRT, not the experiment's per-cycle RT (the latter is one cycle later for
@@ -240,12 +282,18 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             // Base peak (MS_base_peak_intensity / MS_base_peak_m_z): legacy WIFF surfaces these
             // per-spectrum; wiff2 doesn't. WiffSpectrum.BasePeak returns null on wiff2 so the
             // CV params are emitted only when the SDK actually has them, matching cpp.
+            //
+            // cpp SpectrumList_ABI.cpp:240 is `if (!config_.acceptZeroLengthSpectra &&
+            // spectrum->getBasePeakY() > 0)`: the base-peak lookup forces the SDK to build the
+            // whole experiment's base-peak chromatogram, which is exactly the expensive work
+            // acceptZeroLengthSpectra exists to avoid, so the flag suppresses both cvParams.
+            // The `> 0` half is already inside GetBasePeak (it returns null for y <= 0).
             double[] xs = ms.XValues;
             double[] ys = ms.YValues;
             int len = Math.Min(xs.Length, ys.Length);
 
             spec.Params.Set(CVID.MS_total_ion_current, exp.GetCycleTic(ie.Cycle), CVID.MS_number_of_detector_counts);
-            if (ms.BasePeak is var (bpMz, bpIntensity))
+            if (!_acceptZeroLengthSpectra && ms.BasePeak is var (bpMz, bpIntensity))
             {
                 spec.Params.Set(CVID.MS_base_peak_m_z, bpMz, CVID.MS_m_z);
                 spec.Params.Set(CVID.MS_base_peak_intensity, bpIntensity, CVID.MS_number_of_detector_counts);

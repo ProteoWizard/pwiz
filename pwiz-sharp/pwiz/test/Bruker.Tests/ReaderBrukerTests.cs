@@ -65,27 +65,38 @@ public class ReaderBrukerTests
     public void Reader_Bruker_Hela_QC_PASEF_Slot1_first_6_frames()
     {
         // PASEF TDF fixture.
-        // Coverage: base + 6 combineIMS variants (combineIMS, +ms1, +ms2, +centroid,
-        // +ms1-centroid, +ms2-centroid). The mobility-array multiset diff lets us run with
-        // SortAndJitter=false even though the cpp references were generated with it on.
+        // Coverage: base + the 3 combineIMS-centroid variants. Every combineIMS config carries
+        // PeakPicking for the same reason spelled out in Reader_Bruker_ThyroglobMRM000003 below:
+        // Reader_Bruker_Test.cpp:131 sets config.peakPicking before every combineIMS tier and
+        // never clears it, so -combineIMS-centroid / -ms1-centroid / -ms2-centroid are the only
+        // combineIMS references cpp writes today.
+        //
+        // The non-centroid -combineIMS, -combineIMS-ms1 and -combineIMS-ms2 references are
+        // leftovers from an older cpp revision - nothing generates or checks them there. Running
+        // against them was asserting our own output back at us, and it cost something real: they
+        // have no chromatogramList, so matching them meant the reader suppressed the chromatogram
+        // list for combineIMS-without-peak-picking, which made ordinary
+        // `msconvert-sharp --combineIonMobilitySpectra` differ from msconvert (0 chromatograms
+        // vs 22). The suppression is gone; these tiers go with it.
+        //
         // NOTE: Reference mzMLs also exist for non-combineIMS ms1/ms2/centroid variants and
         // globalChromatogramsAreMs1Only/ms2-noMsMsWithoutPrecursor-centroid; not yet covered.
+        // Non-COMBINED ion mobility is deliberately not covered on either side - the uncombined
+        // form of this data is far too large to keep as a reference (cpp's own uncombined PASEF
+        // tier is commented out at Reader_Bruker_Test.cpp:156-158).
         var ctx = SetUp("Hela_QC_PASEF_Slot1-first-6-frames.d");
         if (ctx is null) return;
 
         ctx.Run(new ReaderTestConfig());
 
-        var combineIms = new ReaderTestConfig { CombineIonMobilitySpectra = true };
-        ctx.Run(combineIms);
-        ctx.Run(combineIms with { PreferOnlyMsLevel = 1 });
-        ctx.Run(combineIms with { PreferOnlyMsLevel = 2 });
         // CombineIMS + PeakPicking variants: pwiz cpp takes a vendor-centroid path that
         // preserves per-scan mobility arrays + emits CCS / collision_energy userParams; our
         // SpectrumList_PeakPicker reduces the merged profile to CWT centroids and drops
         // mobility. Tracked separately; harness scaffolding kept so the variants stay visible.
-        ctx.Run(combineIms with { PeakPicking = true });
-        ctx.Run(combineIms with { PreferOnlyMsLevel = 1, PeakPicking = true });
-        ctx.Run(combineIms with { PreferOnlyMsLevel = 2, PeakPicking = true });
+        var combineIms = new ReaderTestConfig { CombineIonMobilitySpectra = true, PeakPicking = true };
+        ctx.Run(combineIms);
+        ctx.Run(combineIms with { PreferOnlyMsLevel = 1 });
+        ctx.Run(combineIms with { PreferOnlyMsLevel = 2 });
 
         ctx.Check();
     }

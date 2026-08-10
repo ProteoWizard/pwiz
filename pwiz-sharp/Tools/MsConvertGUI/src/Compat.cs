@@ -57,7 +57,10 @@ namespace MSConvertGUI
             DdaProcessing = ddaProcessing,
             IgnoreCalibrationScans = ignoreCalibrationScans,
             AcceptZeroLengthSpectra = acceptZeroLengthSpectra,
-            // IgnoreMissingZeroSamples: cpp ReaderConfig has it, pwiz-sharp's doesn't yet.
+            // cpp names the option --ignoreMissingZeroSamples but stores it in
+            // Reader::Config::ignoreZeroIntensityPoints (msconvert.cpp:453-454); pwiz-sharp
+            // keeps the cpp field name, so the shim has to bridge the two spellings.
+            IgnoreZeroIntensityPoints = ignoreMissingZeroSamples,
         };
     }
 

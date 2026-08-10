@@ -40,7 +40,6 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         public double Q3;          // SRM only — product m/z
         public double HalfWidth;   // SIM: ½ Q1 isolation width; SRM: ½ Q3 product window
         public PolarityType Polarity;
-        public List<int> Scans = new();
         // Non-MS-device sources (Pump Pressure / UV / CAD):
         public Device Device = Device.MS;
         public int DeviceChannel;  // 1-based
@@ -62,11 +61,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         bool hasSim = false, hasSrm = false;
         RunInvariant(() =>
         {
-            if (!simAsSpectra)
-                hasSim = BuildSimIndex();
-
-            if (!srmAsSpectra)
-                hasSrm = BuildSrmIndex();
+            (hasSim, hasSrm) = BuildFilterIndex(simAsSpectra, srmAsSpectra);
 
             // Analog/UV controllers: LC pump pressure, UV absorbance, CAD, etc. pwiz C++ iterates
             // these and picks a CV term based on the device's Y-axis label.
@@ -136,168 +131,131 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
     }
 
     /// <summary>
-    /// Builds one chromatogram per unique SIM filter the SDK reports (via
-    /// <c>GetAutoFilters</c>) and matches pwiz C++ <c>ChromatogramList_Thermo.cpp:404-503</c>
-    /// which iterates <c>RawFile::getFilters()</c>. Iterating auto-filters (rather than each
-    /// scan) lets the SDK collapse near-overlapping SIM windows that target the same
-    /// quadrupole position — scan-iteration mistakenly emits both as separate chromatograms.
+    /// Builds the SIM and SRM chromatogram index in a single pass over the SDK's auto filters
+    /// (<c>GetAutoFilters</c>), mirroring pwiz C++ <c>ChromatogramList_Thermo.cpp:406-518</c>
+    /// which loops once over <c>RawFile::getFilters()</c> and switches on the filter's scan type.
+    /// One chromatogram is emitted per (filter, bracketed m/z window) pair.
     /// </summary>
     /// <remarks>
-    /// Matches pwiz C++ <c>polarityStringForFilter</c> — only prepends "- " for negative
+    /// <para>Deliberately does NOT collapse windows that repeat across filters. A multiplexed
+    /// (msx) acquisition schedules the same quadrupole window in several scan events, so the same
+    /// "SIM SIC q1" / "SRM SIC q1,q3" id can be produced more than once; cpp's
+    /// <c>addChromatogram</c> push_backs unconditionally, so the reference output contains those
+    /// repeats and de-duplicating here desynchronizes every downstream chromatogram index.</para>
+    /// <para>Matches pwiz C++ <c>polarityStringForFilter</c> — only prepends "- " for negative
     /// polarity; positive mode has an empty prefix for backward-compat (see
     /// ChromatogramListBase.hpp line 53). The bracketed m/z range comes from the filter
     /// STRING (clean 4-decimal doubles); <c>filter.GetMassRange(j).Low/High</c> would return
-    /// float-extended doubles that print at 10 sig figs and diverge from the cpp reference.
+    /// float-extended doubles that print at 10 sig figs and diverge from the cpp reference.</para>
     /// </remarks>
-    private bool BuildSimIndex()
+    private (bool HasSim, bool HasSrm) BuildFilterIndex(bool simAsSpectra, bool srmAsSpectra)
     {
-        var byKey = new Dictionary<string, IndexEntry>(StringComparer.Ordinal);
-        var autoFilters = _raw.Raw.GetAutoFilters();
-        // Map filter -> first scan number, so FillSimChromatogram can look up a representative
-        // scan to feed back to the SDK's GetChromatogramDataEx (the new RawFileReader rejects
-        // the abbreviated "SIM ms [..]" filter, so we hand it the canonical filter from a real
-        // SIM scan via Scans[0]).
-        var firstScanByFilter = new Dictionary<string, int>(StringComparer.Ordinal);
-        for (int scan = _raw.FirstScan; scan <= _raw.LastScan; scan++)
-        {
-            var f = _raw.Raw.GetFilterForScanNumber(scan);
-            if (f.ScanMode != ScanModeType.Sim) continue;
-            string fs = f.ToString();
-            if (!firstScanByFilter.ContainsKey(fs))
-                firstScanByFilter[fs] = scan;
-        }
-
-        foreach (var filterString in autoFilters)
+        bool hasSim = false, hasSrm = false;
+        foreach (var filterString in _raw.Raw.GetAutoFilters())
         {
             if (filterString is null) continue;
-            // GetAutoFilters returns every filter type (Full, SIM, MRM, etc.); pick out SIM
-            // entries — both single-window ("SIM ms [a-b]") and multiplexed ("SIM msx ms [a-b,
-            // c-d, ...]") variants. cpp classifies structurally via
-            // scanInfo->scanType()==ScanType_SIM; the textual check is equivalent and avoids
-            // re-parsing the filter through the SDK.
-            if (!filterString.Contains(" SIM ms [", StringComparison.Ordinal)
-                && !filterString.Contains(" SIM msx ms [", StringComparison.Ordinal)) continue;
-            if (!firstScanByFilter.TryGetValue(filterString, out int sampleScan)) continue;
+
+            // GetAutoFilters returns every filter type (Full, SIM, SRM, ...). cpp classifies
+            // structurally via scanInfo->scanType(); the textual check is equivalent and avoids
+            // re-parsing the filter through the SDK. SIM appears both as single-window
+            // ("SIM ms [a-b]") and multiplexed ("SIM msx ms [a-b, c-d, ...]"); "SRM ms" matches
+            // "SRM ms2", "SRM ms3", etc. — each MS-order is a valid transition filter.
+            bool isSim = filterString.Contains(" SIM ms [", StringComparison.Ordinal)
+                         || filterString.Contains(" SIM msx ms [", StringComparison.Ordinal);
+            bool isSrm = !isSim && filterString.Contains(" SRM ms", StringComparison.Ordinal);
+            if (!isSim && !isSrm) continue;
+
+            // cpp breaks out of the scan-type switch (adding nothing) when the caller asked for
+            // these scans as spectra instead.
+            if (isSim && simAsSpectra) continue;
+            if (isSrm && srmAsSpectra) continue;
 
             var stringRanges = ParseSimMassRanges(filterString);
             if (stringRanges.Count == 0) continue;
 
-            // Polarity sign appears as " + " or " - " in the filter; reuse the per-scan filter
-            // object since it already exposes Polarity as an enum.
-            var sampleFilter = _raw.Raw.GetFilterForScanNumber(sampleScan);
-            var pol = sampleFilter.Polarity;
+            var pol = ParsePolarity(filterString);
             string polStr = pol == PolarityType.Negative ? "- " : "";
 
-            foreach (var (lo, hi) in stringRanges)
+            if (isSim)
             {
-                double q1 = (lo + hi) / 2.0;
-                double halfWidth = (hi - lo) / 2.0;
-                string key = polStr + q1.ToString("G10", CultureInfo.InvariantCulture);
-                if (!byKey.TryGetValue(key, out var entry))
+                foreach (var (lo, hi) in stringRanges)
                 {
-                    string id = polStr + "SIM SIC " + q1.ToString("G10", CultureInfo.InvariantCulture);
-                    entry = new IndexEntry
+                    double q1 = (lo + hi) / 2.0;
+                    string q1Str = q1.ToString("G10", CultureInfo.InvariantCulture);
+                    _index.Add(new IndexEntry
                     {
-                        Id = id,
+                        Index = _index.Count,
+                        Id = polStr + "SIM SIC " + q1Str,
                         Kind = CVID.MS_SIM_chromatogram,
                         Q1 = q1,
-                        HalfWidth = halfWidth,
+                        HalfWidth = (hi - lo) / 2.0,
                         Polarity = pol,
-                    };
-                    byKey.Add(key, entry);
+                    });
+                    hasSim = true;
                 }
-                entry.Scans.Add(sampleScan);
             }
-        }
-        if (byKey.Count == 0) return false;
-        foreach (var entry in byKey.Values)
-        {
-            entry.Index = _index.Count;
-            _index.Add(entry);
-        }
-        return true;
-    }
-
-    /// <summary>
-    /// Builds one chromatogram per (Q1, Q3) SRM transition encoded in the SDK's auto filters.
-    /// Filter strings look like <c>"+ c NSI SRM ms2 572.792 [724.375-724.377, 837.459-837.461]"</c>;
-    /// each bracketed window becomes one chromatogram with id <c>"SRM SIC Q1,Q3midpoint"</c>.
-    /// Mirrors pwiz C++ <c>ChromatogramList_Thermo.cpp:413-479</c>.
-    /// </summary>
-    /// <remarks>
-    /// pwiz C++ skips windows wider than <see cref="MaxSrmScanRange"/> (these aren't true SRM
-    /// transitions but wide-window scans that would alias multiple ions). The id format uses
-    /// G10 for both Q1 and the per-window Q3 midpoint — same precision-trimming as SIM ids.
-    /// </remarks>
-    private bool BuildSrmIndex()
-    {
-        var byKey = new Dictionary<string, IndexEntry>(StringComparer.Ordinal);
-        var autoFilters = _raw.Raw.GetAutoFilters();
-        var firstScanByFilter = new Dictionary<string, int>(StringComparer.Ordinal);
-        for (int scan = _raw.FirstScan; scan <= _raw.LastScan; scan++)
-        {
-            var f = _raw.Raw.GetFilterForScanNumber(scan);
-            if (f.ScanMode != ScanModeType.Srm) continue;
-            string fs = f.ToString();
-            if (!firstScanByFilter.ContainsKey(fs))
-                firstScanByFilter[fs] = scan;
-        }
-
-        foreach (var filterString in autoFilters)
-        {
-            if (filterString is null) continue;
-            // Filter substring "SRM ms" matches "SRM ms2", "SRM ms3", etc. — each MS-order
-            // is a valid transition filter.
-            if (!filterString.Contains(" SRM ms", StringComparison.Ordinal)) continue;
-            if (!firstScanByFilter.TryGetValue(filterString, out int sampleScan)) continue;
-
-            // SRM filter format: "[polarity] [calibrant?] SRM ms<n> <Q1> [<lo>-<hi>, ...]"
-            // Parse Q1 from between "SRM ms" and "[", and ranges from inside "[...]"
-            double? q1 = ParseSrmQ1(filterString);
-            if (q1 is null) continue;
-            var stringRanges = ParseSimMassRanges(filterString); // same bracketed-list shape
-            if (stringRanges.Count == 0) continue;
-
-            var sampleFilter = _raw.Raw.GetFilterForScanNumber(sampleScan);
-            var pol = sampleFilter.Polarity;
-            string polStr = pol == PolarityType.Negative ? "- " : "";
-
-            foreach (var (lo, hi) in stringRanges)
+            else
             {
-                double scanRange = hi - lo;
-                if (scanRange > MaxSrmScanRange) continue; // not a real transition
-                double filterQ3 = (lo + hi) / 2.0;
-                double halfWidth = scanRange / 2.0;
+                // SRM filter format: "[polarity] [calibrant?] SRM ms<n> <Q1> [<lo>-<hi>, ...]"
+                double? q1 = ParseSrmQ1(filterString);
+                if (q1 is null) continue;
                 string q1Str = q1.Value.ToString("G10", CultureInfo.InvariantCulture);
-                string q3Str = filterQ3.ToString("G10", CultureInfo.InvariantCulture);
-                string key = polStr + q1Str + "," + q3Str;
-                if (!byKey.TryGetValue(key, out var entry))
+
+                foreach (var (lo, hi) in stringRanges)
                 {
-                    string id = polStr + "SRM SIC " + q1Str + "," + q3Str;
-                    entry = new IndexEntry
+                    double scanRange = hi - lo;
+                    if (scanRange > MaxSrmScanRange) continue; // not a real transition
+                    double filterQ3 = (lo + hi) / 2.0;
+                    string q3Str = filterQ3.ToString("G10", CultureInfo.InvariantCulture);
+                    _index.Add(new IndexEntry
                     {
-                        Id = id,
+                        Index = _index.Count,
+                        Id = polStr + "SRM SIC " + q1Str + "," + q3Str,
                         Kind = CVID.MS_SRM_chromatogram,
                         Q1 = q1.Value,
                         Q3 = filterQ3,
-                        HalfWidth = halfWidth,
+                        HalfWidth = scanRange / 2.0,
                         Polarity = pol,
-                    };
-                    byKey.Add(key, entry);
+                    });
+                    hasSrm = true;
                 }
-                entry.Scans.Add(sampleScan);
             }
         }
-        if (byKey.Count == 0) return false;
-        foreach (var entry in byKey.Values)
-        {
-            entry.Index = _index.Count;
-            _index.Add(entry);
-        }
-        return true;
+        return (hasSim, hasSrm);
     }
 
-    private const double MaxSrmScanRange = 1.0; // matches Reader_Thermo_Detail.hpp
+    /// <summary>
+    /// Reads the polarity out of a scan-filter string. cpp reconstructs a ScanInfo from the
+    /// filter string (<c>getScanInfoFromFilterString</c>) and reads <c>polarityType()</c> off it;
+    /// ask the SDK to do the same parse, falling back to the bare "+"/"-" token the filter
+    /// grammar puts between the analyzer and the ionization mode.
+    /// </summary>
+    private PolarityType ParsePolarity(string filterString)
+    {
+        try
+        {
+            var parsed = _raw.Raw.GetFilterFromString(filterString);
+            if (parsed is not null)
+                return parsed.Polarity;
+        }
+        catch { /* unparseable filter — fall through to the textual scan */ }
+
+        foreach (var token in filterString.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (token.Length != 1) continue;
+            if (token[0] == '+') return PolarityType.Positive;
+            if (token[0] == '-') return PolarityType.Negative;
+        }
+        // cpp leaves polarityType CVID_Unknown here: no polarity cvParam and no "- " id prefix.
+        return PolarityType.Any;
+    }
+
+    /// <summary>
+    /// Widest bracketed window still treated as a real SRM transition (matches
+    /// <c>MAX_SRM_SCAN_RANGE</c> in cpp Reader_Thermo_Detail.hpp). Anything wider is skipped
+    /// here, which is why <see cref="SpectrumList_Thermo"/> has to keep such scans as spectra.
+    /// </summary>
+    internal const double MaxSrmScanRange = 1.0;
 
     /// <summary>Parses the precursor m/z (Q1) out of an SRM filter string like
     /// <c>"+ c NSI SRM ms2 572.792 [724.375-724.377, ...]"</c>. Returns null when the
@@ -502,14 +460,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, entry.HalfWidth, CVID.MS_m_z);
 
         // Ask Thermo for the chromatogram over the SIM's Q1 ± halfWidth window — mirrors C++
-        // getChromatogramData(Type_MassRange, "SIM ms [...]", Q1-hw, Q1+hw, ...). The new
-        // RawFileReader API rejects the abbreviated "SIM ms [..]" string with
-        // InvalidFilterFormatException; cpp's older Xcalibur API accepts it as a substring
-        // match. Pass the full canonical filter from a representative SIM scan instead so
-        // RawFileReader's strict parser is happy and the trace still selects only this SIM.
-        string canonicalFilter = entry.Scans.Count > 0
-            ? _raw.Raw.GetFilterForScanNumber(entry.Scans[0]).ToString()
-            : "";
+        // getChromatogramData(Type_MassRange, "SIM ms [...]", Q1-hw, Q1+hw, ...).
         // Pass the abbreviated "SIM ms [LO-HI]" filter via the (filter, ranges) constructor —
         // this is what cpp's RawFileThreadImpl::getChromatogramData does. The constructor
         // accepts the abbreviated form (the property setter rejects it as
@@ -524,7 +475,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         {
             Trace = TraceType.MassRange,
         };
-        var data = _raw.Raw.GetChromatogramDataEx(new[] { settings }, -1, -1, new MassOptions());
+        var data = GetFilteredChromatogramData(settings);
         if (data?.PositionsArray?.Length > 0 && data.PositionsArray[0] is { } times
             && data.IntensitiesArray?[0] is { } intensities)
         {
@@ -569,7 +520,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         {
             Trace = TraceType.MassRange,
         };
-        var data = _raw.Raw.GetChromatogramDataEx(new[] { settings }, -1, -1, new MassOptions());
+        var data = GetFilteredChromatogramData(settings);
         if (data?.PositionsArray?.Length > 0 && data.PositionsArray[0] is { } times
             && data.IntensitiesArray?[0] is { } intensities)
         {
@@ -579,6 +530,23 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         }
         return chrom;
     }
+
+    /// <summary>
+    /// Runs one mass-range trace, honoring the scan filter carried by <paramref name="settings"/>.
+    /// </summary>
+    /// <remarks>
+    /// Must be <c>GetChromatogramData</c>, not <c>GetChromatogramDataEx</c>: the Ex overload
+    /// silently ignores the settings' Filter and extracts the mass range from every scan in the
+    /// file. For SRM that merges transitions that share a Q3 but differ in Q1 (e.g.
+    /// "SRM SIC 112.039,68.049" and "SRM SIC 112.087,68.049" both came back with the union's
+    /// 236 points instead of 119 and 117). cpp calls the same non-Ex overload —
+    /// RawFile.cpp:2858 <c>raw_-&gt;GetChromatogramData(settings, firstScan, lastScan)</c>.
+    /// (-1, -1 is the SDK's documented "all data", equivalent to cpp's first/last scan.)
+    /// </remarks>
+    private ThermoFisher.CommonCore.Data.Interfaces.IChromatogramData GetFilteredChromatogramData(
+        ChromatogramTraceSettings settings) =>
+        _raw.Raw.GetChromatogramData(
+            new ThermoFisher.CommonCore.Data.Interfaces.IChromatogramSettings[] { settings }, -1, -1);
 
     /// <summary>
     /// Parses bracketed m/z ranges from a Thermo SIM filter string. Examples:

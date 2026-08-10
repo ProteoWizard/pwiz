@@ -50,11 +50,20 @@ internal sealed class TdfData : IBrukerData
 
     public IEnumerable<DiaFrameWindow> EnumerateDiaFrameWindows() => _meta.EnumerateDiaFrameWindows();
 
-    public IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel)
+    /// <summary>
+    /// True when the analysis carries PASEF MS/MS info of any flavor — DDA precursors, diaPASEF
+    /// windows or PRM targets. Mirrors pwiz C++ <c>hasPASEFData_ = isDdaPasef | isDiaPasef |
+    /// isPrmPasef</c> (TimsData.cpp:219). Deliberately broader than <see cref="HasPasefData"/>,
+    /// which (like the C++ <c>isDdaPasef</c>) means "has DDA precursors" and gates the spectrum
+    /// index.
+    /// </summary>
+    private bool HasAnyPasefData => _meta.HasPasefData || _meta.HasDiaPasefData || _meta.HasPrmPasefData;
+
+    public IEnumerable<BrukerChromatogramPoint> EnumerateChromatogramPoints(int preferOnlyMsLevel, bool passEntireDiaPasefFrame = false)
     {
-        // When there are no PASEF DDA precursors, each frame contributes a single point —
-        // matches pwiz C++ for non-PASEF and DIA-PASEF data.
-        if (!HasPasefData || preferOnlyMsLevel == 1)
+        // Without any PASEF MS/MS info (or when only MS1 is wanted) each frame contributes a
+        // single point — matches pwiz C++ TimsData.cpp:250-256.
+        if (!HasAnyPasefData || preferOnlyMsLevel == 1)
         {
             foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
             {
@@ -68,22 +77,42 @@ internal sealed class TdfData : IBrukerData
             yield break;
         }
 
-        // PASEF DDA: interleave MS1 frame TIC points with interpolated MS2 points derived from
-        // per-precursor intensities. Mirrors pwiz C++ TimsData.cpp:380-443 (inner loop) and
-        // lines 668-689 (final flush) — MS2 intensities accumulated per frame are distributed
-        // evenly across the time span from the last MS2 frame to the next.
-        foreach (var p in BuildPasefChromatogramPoints(preferOnlyMsLevel))
+        // PASEF (DDA, diaPASEF or PRM): interleave MS1 frame TIC points with interpolated MS2
+        // points. Mirrors pwiz C++ TimsData.cpp:373-690 (inner loops at :380-443 for DDA,
+        // :444-561 for DIA, :602-665 for PRM, plus the final flush at :668-689) — MS2 intensities
+        // accumulated per frame are distributed evenly across the time span from the last MS2
+        // frame to the next. Note this yields one MS2 point per MS/MS-info ROW (per DDA precursor
+        // / per DIA or PRM isolation window), NOT one per MS2 frame.
+        // C++ ORs the caller's flag with the DiagonalPASEF auto-detect before choosing the query
+        // (TimsData.cpp:311 `passEntireDiaPasefFrame_ |= ...`), so do the same here.
+        foreach (var p in BuildPasefChromatogramPoints(preferOnlyMsLevel, passEntireDiaPasefFrame || _meta.IsDiagonalPasef))
             yield return p;
     }
 
-    private List<BrukerChromatogramPoint> BuildPasefChromatogramPoints(int preferOnlyMsLevel)
+    /// <summary>
+    /// One MS/MS-info row of whichever PASEF flavor this analysis uses: the frame it belongs to,
+    /// plus the intensity pwiz C++ pushes for it — the measured precursor intensity for DDA
+    /// (TimsData.cpp:441), or null for DIA (:560) and PRM (:664), which both push the frame TIC.
+    /// Rows come back in (frame, scanBegin) order, matching the C++ queries.
+    /// </summary>
+    private IEnumerable<(long FrameId, double? Intensity)> EnumerateMs2InfoRows(bool passEntireDiaPasefFrame)
+    {
+        if (_meta.HasPasefData)
+            return _meta.EnumeratePasefPrecursors().Select(p => (FrameId: p.FrameId, Intensity: (double?)p.Intensity));
+        if (_meta.HasDiaPasefData)
+            return _meta.EnumerateDiaFrameWindows(passEntireDiaPasefFrame).Select(w => (FrameId: w.FrameId, Intensity: (double?)null));
+        if (_meta.HasPrmPasefData)
+            return _meta.EnumeratePrmFrameIds().Select(id => (FrameId: id, Intensity: (double?)null));
+        return Array.Empty<(long FrameId, double? Intensity)>();
+    }
+
+    private List<BrukerChromatogramPoint> BuildPasefChromatogramPoints(int preferOnlyMsLevel, bool passEntireDiaPasefFrame)
     {
         var output = new List<BrukerChromatogramPoint>();
         var ms1Frames = preferOnlyMsLevel != 2
             ? _meta.EnumerateFrames(1).Where(f => f.NumPeaks > 0).ToList()
             : new List<TdfFrame>();
         var ms2FramesById = _meta.EnumerateFrames(2).Where(f => f.NumPeaks > 0).ToDictionary(f => f.FrameId);
-        var precursors = _meta.EnumeratePasefPrecursors().ToList();
 
         int ms1Idx = 0;
         double lastMs2Time = 0, ms2Time = 0;
@@ -103,9 +132,9 @@ internal sealed class TdfData : IBrukerData
             ms2Intensities.Clear();
         }
 
-        foreach (var info in precursors)
+        foreach (var (frameId, intensity) in EnumerateMs2InfoRows(passEntireDiaPasefFrame))
         {
-            if (!ms2FramesById.TryGetValue(info.FrameId, out var frame)) continue;
+            if (!ms2FramesById.TryGetValue(frameId, out var frame)) continue;
 
             // Interleave MS1 points whose time is before this PASEF frame.
             while (ms1Idx < ms1Frames.Count && ms1Frames[ms1Idx].RetentionTimeSeconds < frame.RetentionTimeSeconds)
@@ -120,7 +149,10 @@ internal sealed class TdfData : IBrukerData
                 FlushMs2(frame.RetentionTimeSeconds);
 
             ms2Time = frame.RetentionTimeSeconds;
-            ms2Intensities.Add(info.Intensity);
+            // DIA / PRM have no per-window intensity, so C++ repeats the frame TIC for each
+            // window (TimsData.cpp:492-494 "there's no way to get accurate numbers without
+            // accessing binary data").
+            ms2Intensities.Add(intensity ?? frame.SummedIntensities);
         }
 
         // Final flush for the last MS2 frame's accumulated intensities.
@@ -150,6 +182,11 @@ internal sealed class TdfData : IBrukerData
         public bool Combined;  // true when combineIonMobilitySpectra
         public bool WholeFrame;   // true for passEntire diaPASEF (one spectrum per frame/window group)
         public int WindowGroup;   // diaPASEF window group (set when WholeFrame)
+        // The effective (config OR'd with the diagonal auto-detect) passEntire flag for a diaPASEF
+        // MS2 spectrum. pwiz C++ SpectrumList_Bruker.cpp:286 computes exactly this and uses it to
+        // reshape the precursor block of EVERY diaPASEF MS2 spectrum, combined or not — not just
+        // the whole-frame combined ones.
+        public bool PassEntireDia;
     }
 
     /// <summary>
@@ -184,8 +221,15 @@ internal sealed class TdfData : IBrukerData
     public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool passEntireDiaPasefFrame)
     {
         var index = new List<BrukerIndexEntry>();
+        // pwiz C++ ORs the caller's flag with the DiagonalPASEF auto-detect once, in the TimsData
+        // ctor (TimsData.cpp:130 then :311 `passEntireDiaPasefFrame_ |= ...`), and every later
+        // consumer reads the OR-ed member back through isPassEntireDiaPasefFrame()
+        // (TimsData.cpp:816, SpectrumList_Bruker.cpp:286, TimsData.cpp:1035). So an explicit
+        // `false` from the caller IS intentionally overridden on diagonal data — do not "fix"
+        // this to respect the caller's false, that would be the divergence.
+        bool passEntire = passEntireDiaPasefFrame || _meta.IsDiagonalPasef;
         var diaByFrame = HasDiaPasefData
-            ? _meta.EnumerateDiaFrameWindows()
+            ? _meta.EnumerateDiaFrameWindows(passEntire)
                 .GroupBy(w => w.FrameId)
                 .ToDictionary(g => g.Key, g => g.ToList())
             : new Dictionary<long, List<DiaFrameWindow>>();
@@ -222,7 +266,7 @@ internal sealed class TdfData : IBrukerData
                 // DIA-PASEF whole-frame (passEntire): one combined spectrum per frame covering all
                 // active scans of its window group, with per-peak isolation arrays. Mirrors pwiz C++
                 // isPassEntireDiaPasefFrame (SpectrumList_Bruker.cpp:432-490, TimsData.cpp:1035-1116).
-                if (passEntireDiaPasefFrame && frame.MsMsType != MsMsType.Ms1 &&
+                if (passEntire && frame.MsMsType != MsMsType.Ms1 &&
                     diaByFrame.TryGetValue(frame.FrameId, out var wholeFrameWindows) && wholeFrameWindows.Count > 0)
                 {
                     int wg = wholeFrameWindows[0].WindowGroup;
@@ -247,7 +291,7 @@ internal sealed class TdfData : IBrukerData
                         if (lastScan < w.ScanBegin) continue;
                         index.Add(MakeCombinedEntry(
                             index.Count, frame, w.ScanBegin, lastScan,
-                            new Tag { Frame = frame, ScanBegin = w.ScanBegin, ScanEnd = lastScan, DiaWindow = w, Combined = true }));
+                            new Tag { Frame = frame, ScanBegin = w.ScanBegin, ScanEnd = lastScan, DiaWindow = w, Combined = true, PassEntireDia = passEntire }));
                     }
                     continue;
                 }
@@ -272,7 +316,7 @@ internal sealed class TdfData : IBrukerData
                             Index = index.Count,
                             Id = "frame=" + frame.FrameId.ToString(CultureInfo.InvariantCulture) +
                                  " scan=" + (scan + 1).ToString(CultureInfo.InvariantCulture),
-                            Tag = new Tag { Frame = frame, ScanBegin = scan, ScanEnd = scan, DiaWindow = w },
+                            Tag = new Tag { Frame = frame, ScanBegin = scan, ScanEnd = scan, DiaWindow = w, PassEntireDia = passEntire },
                             MsLevel = 2,
                         });
                 }
@@ -454,7 +498,16 @@ internal sealed class TdfData : IBrukerData
         }
 
         if (tag.DiaWindow is not null)
-            AddDiaPrecursor(spec, tag.DiaWindow, omitMsLevelUserParam: tag.Combined);
+        {
+            // pwiz C++ SpectrumList_Bruker.cpp:343/350-357/366-368: when the effective
+            // passEntire flag is on, a diaPASEF MS2 spectrum declares the window GROUP's overall
+            // isolation range and drops the selectedIon and the collision energy (both vary
+            // within the frame). This applies to per-scan spectra too, not just combined ones.
+            if (tag.PassEntireDia && GetWgIsoCache().TryGetValue(tag.DiaWindow.WindowGroup, out var wgIso))
+                AddWholeFramePrecursor(spec, wgIso);
+            else
+                AddDiaPrecursor(spec, tag.DiaWindow, omitMsLevelUserParam: tag.Combined);
+        }
         else if (tag.PasefPrecursor is not null)
             // Centroid+combined re-emits the precursor extras (peak intensity, CCS, collision
             // energy) — pwiz C++'s centroid path goes through the PasefMsMs API which carries

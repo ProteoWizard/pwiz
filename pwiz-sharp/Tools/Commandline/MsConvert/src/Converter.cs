@@ -121,46 +121,66 @@ public sealed class Converter
 
     private void ConvertInputAllRuns(string input, Pwiz.Util.Misc.IntegerSet? runIndexSet)
     {
-        // No set → single conversion with the reader's default RunIndex (0).
+        // cpp builds one MSData per run of the input and writes every one of them
+        // (msconvert.cpp:1030-1066); --runIndexSet only narrows that list. Converting just run 0
+        // silently dropped every sample after the first of a multi-sample WIFF.
+        int runCount = GetRunCount(input);
+
         if (runIndexSet is null || runIndexSet.IsEmpty)
         {
-            ConvertOne(input, runIndex: 0, runIndexSuffixed: false);
+            for (int i = 0; i < runCount; i++)
+                ConvertOne(input, runIndex: i);
             return;
         }
 
-        // Iterate the requested run indices. We can't cheaply enumerate "how many runs does this
-        // file have?" without opening it, so we just attempt each index and let the reader
-        // throw or silently produce identical output for out-of-range indices. Suffix outputs
-        // when the set has more than one index so files don't collide.
-        bool multi = runIndexSet.Intervals.Count > 1 || runIndexSet.Count > 1;
+        // cpp keeps only the requested indices that actually exist and fails when none do
+        // ("No runs correspond to the specified indices"); it does NOT invent a suffix for the
+        // survivors, because run ids are already unique per run.
         int matched = 0;
         foreach (int idx in runIndexSet)
         {
-            ConvertOne(input, runIndex: idx, runIndexSuffixed: multi);
+            if (idx < 0 || idx >= runCount) continue;
+            ConvertOne(input, runIndex: idx);
             matched++;
         }
         if (matched == 0)
             throw new InvalidOperationException("No runs correspond to the specified runIndexSet");
     }
 
-    private void ConvertOne(string input, int runIndex, bool runIndexSuffixed)
+    /// <summary>
+    /// Number of runs (samples) in <paramref name="input"/>. Only multi-sample containers
+    /// (Sciex WIFF/WIFF2, Shimadzu multi-run .lcd) have more than one.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately NOT <c>ReaderList.ReadIds</c>: for a reader that is not
+    /// <see cref="IMultiSampleReader"/> that method does a full read and returns every SPECTRUM
+    /// id, which would be both wrong (spectra are not runs) and ruinously expensive here.
+    /// A file whose reader cannot be identified is left to fail later in the read, where the
+    /// error message is about the actual problem.
+    /// </remarks>
+    private int GetRunCount(string input)
+    {
+        try
+        {
+            if (_readers.IdentifyReader(input, null) is IMultiSampleReader multi)
+                return Math.Max(1, multi.EnumerateSampleNames(input).Length);
+        }
+        catch (Exception ex) when (_config.Verbose)
+        {
+            _log.WriteLine($"could not enumerate runs in {input}, assuming 1: {ex.Message}");
+        }
+        catch { /* fall through to the single-run default */ }
+        return 1;
+    }
+
+    private void ConvertOne(string input, int runIndex)
     {
         if (_config.Verbose) _log.WriteLine($"reading {input} (runIndex={runIndex})");
 
         // `using` releases native vendor handles (Thermo IRawFileThreadManager, Bruker timsdata,
         // etc.) once the output is written.
         using var msd = ReadAndProcess(input, runIndex);
-        string outPath = BuildOutputPath(input, msd);
-        if (runIndexSuffixed)
-        {
-            // Insert "-<runIndex>" before the extension so multiple runs don't overwrite each
-            // other. cpp does similar with its own outputFilename helper.
-            string dir = Path.GetDirectoryName(outPath) ?? string.Empty;
-            string name = Path.GetFileNameWithoutExtension(outPath);
-            string ext = Path.GetExtension(outPath);
-            outPath = Path.Combine(dir, $"{name}-{runIndex}{ext}");
-        }
-        WriteOutput(msd, outPath);
+        WriteOutput(msd, BuildOutputPath(input, msd));
     }
 
     private void ConvertMerged(Pwiz.Util.Misc.IntegerSet? runIndexSet)
@@ -331,24 +351,56 @@ public sealed class Converter
         string ext = _config.OutputExtension ?? DefaultExtension(_config.WriteConfig.Format);
         if (!ext.StartsWith('.')) ext = "." + ext;
 
-        string name;
+        // Ported from cpp Config::outputFilename (msconvert.cpp:82-117); the ORDER matters, so
+        // keep the three steps in cpp's sequence: pick the run id, normalize a known extension
+        // off it, then sanitize. cpp msconvert names the output by the run id, which vendor
+        // readers populate as <input-stem>-<sample-name> for multi-sample formats (Sciex WIFF /
+        // WIFF2) and <input-stem> otherwise, so multi-sample WIFFs get one disambiguated mzML
+        // per sample rather than colliding across runs.
+        string runId = msd.Run.Id ?? string.Empty;
         if (!string.IsNullOrEmpty(_config.OutFile))
-        {
-            name = _config.OutFile;
-        }
-        else
-        {
-            // cpp msconvert names the output by the run id, which vendor readers populate as
-            // <input-stem>-<sample-name> for multi-sample formats (Sciex WIFF / WIFF2) and
-            // <input-stem> otherwise. Mirror that so multi-sample WIFFs get one
-            // disambiguated mzML per sample (e.g. PressureTrace1-6500SysSuit1269.mzML)
-            // rather than colliding on PressureTrace1.mzML across runs.
-            string baseName = !string.IsNullOrEmpty(msd.Run.Id)
-                ? msd.Run.Id
-                : Path.GetFileNameWithoutExtension(input);
-            name = baseName + ext;
-        }
-        return Path.Combine(_config.OutputPath, name);
+            runId = _config.OutFile;
+
+        if (string.IsNullOrEmpty(runId))
+            runId = Path.GetFileNameWithoutExtension(input);
+        else if (KnownOutputExtensions.Contains(Path.GetExtension(runId)))
+            runId = Path.GetFileNameWithoutExtension(runId);
+
+        return Path.Combine(_config.OutputPath, SanitizeRunId(runId) + ext);
+    }
+
+    /// <summary>
+    /// Extensions cpp strips off a run id before appending the real output extension
+    /// (msconvert.cpp:95-106), so a run id that already looks like an output file does not end
+    /// up doubled. Compared case-insensitively, as cpp lower-cases before matching.
+    /// </summary>
+    private static readonly HashSet<string> KnownOutputExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".mzML", ".mzXML", ".xml", ".mgf", ".ms1", ".cms1", ".ms2", ".cms2", ".mzMLb", ".mz5"
+    };
+
+    /// <summary>
+    /// Replaces characters that cannot appear in a filename with <c>_</c>, mirroring cpp
+    /// <c>msconvert.cpp:109-113</c>. Without this a Sciex sample name such as
+    /// <c>4kSV 0.25/141 CV</c> is read by Windows as a missing subdirectory and the conversion
+    /// dies with "Could not find a part of the path"; a sample name containing a newline fails
+    /// with "The filename, directory name, or volume label syntax is incorrect".
+    /// </summary>
+    /// <remarks>
+    /// cpp's list is the Windows one, a superset of POSIX, and it is applied on every platform
+    /// so a given input yields the same output name everywhere. cpp iterates <c>char</c>, where
+    /// the <c>c &gt;= 0</c> guard leaves UTF-8 continuation bytes (negative as signed char)
+    /// alone; iterating C# UTF-16 chars is equivalent, since every non-ASCII char exceeds 0x7F
+    /// and so fails both the control-character and the illegal-character tests.
+    /// </remarks>
+    internal static string SanitizeRunId(string runId)
+    {
+        const string illegal = "\\/*:?<>|\"";
+        var chars = runId.ToCharArray();
+        for (int i = 0; i < chars.Length; i++)
+            if (chars[i] < 0x20 || chars[i] == 0x7F || illegal.Contains(chars[i]))
+                chars[i] = '_';
+        return new string(chars);
     }
 
     private static string DefaultExtension(WriteFormat format) => format switch
@@ -395,12 +447,27 @@ public sealed class Converter
         if (_config.SingleThreaded > 0) _log.WriteLine("note: --singleThreaded is a no-op (msconvert-sharp is single-threaded today)");
     }
 
-    private ReaderConfig BuildReaderConfig() => new()
+    /// <summary>
+    /// Projects the parsed command line onto the <see cref="ReaderConfig"/> the vendor readers
+    /// actually consult. Internal (not private) so the mapping is unit-testable: a flag that
+    /// parses fine but never lands here is silently dead for every vendor, which is what
+    /// happened to <c>--ignoreMissingZeroSamples</c>.
+    /// </summary>
+    internal ReaderConfig BuildReaderConfig() => new()
     {
         SimAsSpectra = _config.SimAsSpectra,
         SrmAsSpectra = _config.SrmAsSpectra,
         CombineIonMobilitySpectra = _config.CombineIonMobilitySpectra,
         DdaProcessing = _config.DdaProcessing,
         IgnoreCalibrationScans = _config.IgnoreCalibrationScans,
+        // cpp msconvert.cpp:453-454 binds --ignoreMissingZeroSamples straight onto
+        // Reader::Config::ignoreZeroIntensityPoints; the two names differ, which is exactly
+        // why this copy was missing and the option was dead wiring for every vendor.
+        IgnoreZeroIntensityPoints = _config.IgnoreMissingZeroSamples,
+        // cpp msconvert's Config derives from Reader::Config, so --acceptZeroLengthSpectra binds
+        // straight onto the reader's field (msconvert.cpp:450-451). Here the two configs are
+        // separate types, so the copy has to be explicit; without it the flag Skyline passes on
+        // every Hardklor / msconvert-DDA / DIA-Umpire / EncyclopeDIA conversion was inert.
+        AcceptZeroLengthSpectra = _config.AcceptZeroLengthSpectra,
     };
 }

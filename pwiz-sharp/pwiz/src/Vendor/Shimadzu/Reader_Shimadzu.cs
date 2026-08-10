@@ -148,7 +148,10 @@ public sealed class Reader_Shimadzu : IReader
 
         // Acquisition timestamp. Encoding (incl. the cpp-equivalent host-tz adjustment) lives
         // on ReaderConfig so every vendor reader can share the same logic + flag wiring.
-        string? startTime = config.FormatStartTimeStamp(raw.AnalysisDateRaw);
+        // Shimadzu is one of the three readers where cpp gates the shift on the config flag
+        // (Reader_Shimadzu.cpp: getAnalysisDate(config.adjustUnknownTimeZonesToHostTimeZone)).
+        string? startTime = ReaderConfig.FormatStartTimeStamp(
+            raw.AnalysisDateRaw, config.AdjustUnknownTimeZonesToHostTimeZone);
         if (startTime is not null)
             result.Run.StartTimeStamp = startTime;
 

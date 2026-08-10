@@ -144,6 +144,46 @@ public class ReaderSciexTests
         ctx.Check();
     }
 
+    /// <summary>
+    /// cpp <c>SpectrumList_ABI.cpp:298</c> (index built off the TIC, keeping wiff1 cycles the
+    /// BPC-plus-getDataSize probe would have dropped) and <c>:240</c> (base-peak cvParams
+    /// suppressed, because looking them up is the expensive work the flag exists to skip).
+    /// Measured against cpp msconvert on this fixture's first sample: 2651 spectra with
+    /// base-peak params by default, 4762 without them under <c>--acceptZeroLengthSpectra</c>.
+    /// </summary>
+    [TestMethod]
+    public void Reader_Sciex_AcceptZeroLengthSpectra_KeepsEmptyCyclesAndDropsBasePeak()
+    {
+        string? root = FindTestDataRoot();
+        if (root is null) { Assert.Inconclusive("Sciex test data tree not found."); return; }
+        string wiff = Path.Combine(root, "Enolase_repeats_AQv1.4.2.wiff");
+        if (!File.Exists(wiff)) { Assert.Inconclusive("Enolase_repeats_AQv1.4.2.wiff not present."); return; }
+
+        static (int Count, int WithBasePeak) Read(string path, bool acceptZeroLength)
+        {
+            var msd = new Pwiz.Data.MsData.MSData();
+            new Reader_Sciex().Read(path, msd, new Pwiz.Data.MsData.Readers.ReaderConfig
+            {
+                SrmAsSpectra = true,
+                AcceptZeroLengthSpectra = acceptZeroLength,
+            });
+            var list = msd.Run.SpectrumList!;
+            int withBasePeak = 0;
+            for (int i = 0; i < list.Count; i++)
+                if (list.GetSpectrum(i).Params.HasCVParam(Pwiz.Data.Common.Cv.CVID.MS_base_peak_intensity))
+                    withBasePeak++;
+            return (list.Count, withBasePeak);
+        }
+
+        var off = Read(wiff, acceptZeroLength: false);
+        var on = Read(wiff, acceptZeroLength: true);
+
+        Assert.AreEqual(2651, off.Count, "default spectrum count changed");
+        Assert.AreEqual(4762, on.Count, "--acceptZeroLengthSpectra spectrum count changed");
+        Assert.AreEqual(off.Count, off.WithBasePeak, "every default spectrum should carry base-peak params");
+        Assert.AreEqual(0, on.WithBasePeak, "acceptZeroLengthSpectra must suppress base-peak params");
+    }
+
     private static FixtureRunContext? SetUp(string fixtureFileName)
     {
         // pwiz-sharp-only fixtures live under <test-bin>/Reference/. Cpp-tree fixtures

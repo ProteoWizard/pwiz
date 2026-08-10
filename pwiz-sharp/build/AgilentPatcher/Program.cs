@@ -15,6 +15,9 @@
 // - BaseCommon.dll: EventHelper.FireEventAsynchronously — replace AsyncFire.BeginInvoke
 //   with a direct synchronous call to EventHelper.InvokeDelegate (the static method that
 //   AsyncFire was bound to anyway).
+// - BaseDataAccess.dll: MsDataReader.UncompressData — route its two
+//   Stream.Read(byte[], int, int) calls (one on a DeflateStream, one on a GZipStream)
+//   through a looping ReadFully helper. See PatchUncompressDataPartialReads for why.
 //
 // The two AsyncCallback methods (ReadNonMSDeviceRelatedInfoCallBack /
 // ReadPendingFileInfoDelegateCallBack) become unreachable; their bodies still reference
@@ -94,7 +97,154 @@ sealed class AgilentPatcher
         if (patched == 0)
             throw new InvalidOperationException("No BeginInvoke patches applied to DataFileMgr — IL pattern may have changed.");
 
+        PatchUncompressDataPartialReads(module);
+
         module.Write();
+    }
+
+    // .NET Framework's DeflateStream/GZipStream.Read(byte[], int, int) looped internally until
+    // the caller's buffer was full or the stream ended. .NET Core 3.0 changed them to return as
+    // soon as the inflater has produced anything — in practice ~13.5 KB per call regardless of
+    // how much more is available (verified: a single Read of a 279560-byte deflate payload
+    // returns 13588 on .NET 8).
+    //
+    // Agilent's MsDataReader.UncompressData issues exactly ONE Read for the whole spectrum and
+    // then compares the returned count with MSSpectrumParams.UncompressedByteCount:
+    //
+    //     new DeflateStream(new MemoryStream(compressed), Decompress, true)
+    //         .Read(outBuff, 0, uncompressedByteCount) == uncompressedByteCount
+    //         ? ok : throw new InvalidDataException(
+    //               "The data bytes read from the uncompressed data do not match the bytes stored")
+    //
+    // So on .NET 8 every spectrum whose uncompressed block exceeds ~13.5 KB fails to read. The
+    // reader sees an exception for each such spectrum; the C++ reader, hosted on .NET Framework,
+    // reads them all. Concretely: wash2.d's ~35000-point profile spectra are ALL unreadable
+    // under .NET 8 and readable under C++.
+    //
+    // Rewriting the two Read call sites to a looping helper restores the .NET Framework
+    // semantics the SDK was written against. UncompressData is the only method in the whole SDK
+    // that decompresses (verified by scanning every BaseDataAccess / BaseCommon / BaseTof /
+    // MassSpecDataReader / MIDAC method for a DeflateStream/GZipStream construction), so the
+    // patch is confined to it: every other Stream.Read in the SDK is over a FileStream or
+    // MemoryStream, which never returned short counts on either runtime.
+    static void PatchUncompressDataPartialReads(ModuleDefinition module)
+    {
+        var msDataReader = module.GetType("Agilent.MassSpectrometry.DataAnalysis.MsDataReader")
+            ?? throw new InvalidOperationException("MsDataReader type not found");
+        var uncompress = msDataReader.Methods.FirstOrDefault(m => m.Name == "UncompressData" && m.HasBody)
+            ?? throw new InvalidOperationException("MsDataReader.UncompressData not found");
+
+        var readCalls = uncompress.Body.Instructions
+            .Where(i => (i.OpCode == OpCodes.Callvirt || i.OpCode == OpCodes.Call) &&
+                        i.Operand is MethodReference mr && IsStreamRead(mr))
+            .ToList();
+        if (readCalls.Count == 0)
+            throw new InvalidOperationException(
+                "No Stream.Read(byte[],int,int) call found in MsDataReader.UncompressData — IL pattern may have changed.");
+
+        var streamRead = (MethodReference)readCalls[0].Operand;
+        var readFully = EnsureReadFullyHelper(module, streamRead);
+
+        var il = uncompress.Body.GetILProcessor();
+        foreach (var call in readCalls)
+            il.Replace(call, il.Create(OpCodes.Call, readFully));
+
+        Console.WriteLine($"  patched {uncompress.FullName} ({readCalls.Count} partial-read call site(s))");
+    }
+
+    static bool IsStreamRead(MethodReference mr)
+    {
+        if (mr.Name != "Read" || mr.Parameters.Count != 3) return false;
+        string declaring = mr.DeclaringType?.FullName ?? string.Empty;
+        return declaring == "System.IO.Stream" ||
+               declaring == "System.IO.Compression.DeflateStream" ||
+               declaring == "System.IO.Compression.GZipStream";
+    }
+
+    // Injects, once per module:
+    //
+    //     internal static int Pwiz.AgilentPatch.StreamCompat.ReadFully(
+    //         Stream stream, byte[] buffer, int offset, int count)
+    //     {
+    //         int total = 0;
+    //         while (total < count)
+    //         {
+    //             int n = stream.Read(buffer, offset + total, count - total);
+    //             if (n <= 0) break;
+    //             total += n;
+    //         }
+    //         return total;
+    //     }
+    //
+    // Its signature is (Stream, byte[], int, int) -> int so a `callvirt Stream::Read` can be
+    // swapped for a `call ReadFully` with no other stack changes: the instance becomes arg 0.
+    static MethodReference EnsureReadFullyHelper(ModuleDefinition module, MethodReference streamRead)
+    {
+        const string Namespace = "Pwiz.AgilentPatch";
+        const string TypeName = "StreamCompat";
+        const string MethodName = "ReadFully";
+
+        var existing = module.GetType(Namespace, TypeName);
+        if (existing != null)
+            return existing.Methods.First(m => m.Name == MethodName);
+
+        var holder = new TypeDefinition(Namespace, TypeName,
+            TypeAttributes.Class | TypeAttributes.NotPublic | TypeAttributes.Abstract |
+            TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            module.TypeSystem.Object);
+        module.Types.Add(holder);
+
+        var method = new MethodDefinition(MethodName,
+            MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.HideBySig,
+            module.TypeSystem.Int32);
+        method.Parameters.Add(new ParameterDefinition("stream", ParameterAttributes.None, streamRead.DeclaringType));
+        method.Parameters.Add(new ParameterDefinition("buffer", ParameterAttributes.None, new ArrayType(module.TypeSystem.Byte)));
+        method.Parameters.Add(new ParameterDefinition("offset", ParameterAttributes.None, module.TypeSystem.Int32));
+        method.Parameters.Add(new ParameterDefinition("count", ParameterAttributes.None, module.TypeSystem.Int32));
+        holder.Methods.Add(method);
+
+        var body = method.Body;
+        body.InitLocals = true;
+        var total = new VariableDefinition(module.TypeSystem.Int32);   // V_0
+        var read = new VariableDefinition(module.TypeSystem.Int32);    // V_1
+        body.Variables.Add(total);
+        body.Variables.Add(read);
+
+        var il = body.GetILProcessor();
+        var loopStart = il.Create(OpCodes.Ldarg_0);
+        var loopCondition = il.Create(OpCodes.Ldloc_0);
+        var done = il.Create(OpCodes.Ldloc_0);
+
+        il.Emit(OpCodes.Ldc_I4_0);
+        il.Emit(OpCodes.Stloc_0);
+        il.Emit(OpCodes.Br, loopCondition);
+
+        il.Append(loopStart);                       // stream
+        il.Emit(OpCodes.Ldarg_1);                   // buffer
+        il.Emit(OpCodes.Ldarg_2);                   // offset
+        il.Emit(OpCodes.Ldloc_0);
+        il.Emit(OpCodes.Add);                       // offset + total
+        il.Emit(OpCodes.Ldarg_3);                   // count
+        il.Emit(OpCodes.Ldloc_0);
+        il.Emit(OpCodes.Sub);                       // count - total
+        il.Emit(OpCodes.Callvirt, streamRead);
+        il.Emit(OpCodes.Stloc_1);
+        il.Emit(OpCodes.Ldloc_1);
+        il.Emit(OpCodes.Ldc_I4_0);
+        il.Emit(OpCodes.Ble, done);                 // n <= 0 -> stop (end of stream)
+        il.Emit(OpCodes.Ldloc_0);
+        il.Emit(OpCodes.Ldloc_1);
+        il.Emit(OpCodes.Add);
+        il.Emit(OpCodes.Stloc_0);                   // total += n
+
+        il.Append(loopCondition);
+        il.Emit(OpCodes.Ldarg_3);
+        il.Emit(OpCodes.Blt, loopStart);            // total < count -> keep reading
+
+        il.Append(done);
+        il.Emit(OpCodes.Ret);
+
+        return method;
     }
 
     static bool PatchReadNonMSInfoBeginInvoke(MethodDefinition method,

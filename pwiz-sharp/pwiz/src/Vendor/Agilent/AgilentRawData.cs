@@ -156,6 +156,23 @@ public sealed class AgilentRawData : IDisposable
     /// <summary>Number of IM frames in the file. 0 when not an IM file.</summary>
     public int ImsFrameCount => ImsFrameNumbers.Length;
 
+    /// <summary>
+    /// Drift bins per IM frame. cpp reads this off a frame — <c>FrameImpl</c>'s ctor sets
+    /// <c>numDriftBins_ = imsReader->FileInfo->MaxNonTfsMsPerFrame</c> (MidacData.cpp:430-434) —
+    /// but it is a file-level constant, so no frame needs to be materialized to get it. It scales
+    /// the uncombined-IM spectrum ids: <c>scanId = frameIndex * driftBinsPerFrame + driftBin</c>.
+    /// </summary>
+    public int ImsDriftBinsPerFrame
+    {
+        get
+        {
+            var reader = ImsReader;
+            if (reader is null) return 0;
+            try { return reader.FileInfo?.MaxNonTfsMsPerFrame ?? 0; }
+            catch { return 0; }
+        }
+    }
+
     /// <summary>1-based frame number for the i-th IM frame (0-based <paramref name="i"/>).
     /// Returns the value MIDAC expects for <c>FrameInfo</c> / <c>FrameMs</c> calls.</summary>
     public int ImsFrameNumber(int i)
@@ -335,7 +352,18 @@ public sealed class AgilentRawData : IDisposable
         // The 3-arg overload takes (scanId, peakFilterMS1, peakFilterMSn, storageType). Passing
         // null for the peak filters means "no filtering". rowIndex here is the row, not scan id —
         // the SDK overloads on int treat the int as a row when called via this signature.
-        return _reader.GetSpectrum(rowIndex, null, null, storage);
+        try
+        {
+            return _reader.GetSpectrum(rowIndex, null, null, storage);
+        }
+        catch (Exception ex)
+        {
+            // cpp's CATCH_AND_FORWARD around the same call (MassHunterData.cpp:706-710) rethrows
+            // with the failing function's name attached. Keep the SDK exception as InnerException
+            // so an SDK-level cause (e.g. a decompression failure) is still diagnosable.
+            throw new IOException(
+                $"[AgilentRawData.GetSpectrumByRow] row {rowIndex} of {Path} could not be read: {ex.Message}", ex);
+        }
     }
 
     // ---------- TIC / BPC helpers ----------

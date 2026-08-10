@@ -235,13 +235,18 @@ public class TimsBinaryDataSmokeTests
         Assert.AreEqual("BPC", msd.Run.ChromatogramList.ChromatogramIdentity(1).Id);
 
         var tic = msd.Run.ChromatogramList.GetChromatogram(0, getBinaryData: true);
-        Assert.IsTrue(tic.DefaultArrayLength > 0);
+        // A diaPASEF MS2 frame contributes one point PER ISOLATION WINDOW, not one per frame:
+        // pwiz C++ TimsData.cpp:485-498 spreads the frame's TIC over its windows at interpolated
+        // times. diaPASEF.d has 1 MS1 frame + 4 MS2 frames x 2 windows, so 1 + 8 = 9 points
+        // (the frame count, 5, is what a per-frame reading would wrongly give).
+        Assert.AreEqual(9, tic.DefaultArrayLength);
         Assert.AreEqual(tic.DefaultArrayLength, tic.BinaryDataArrays[0].Data.Count);
         var times = tic.BinaryDataArrays[0].Data;
         for (int i = 1; i < times.Count; i++)
             Assert.IsTrue(times[i] >= times[i - 1], $"Times not sorted at index {i}");
         Assert.AreEqual(1, tic.IntegerDataArrays.Count);
         Assert.IsTrue(tic.IntegerDataArrays[0].HasCVParam(Pwiz.Data.Common.Cv.CVID.MS_non_standard_data_array));
+        Assert.AreEqual(tic.DefaultArrayLength, tic.IntegerDataArrays[0].Data.Count);
     }
 
     [TestMethod]
