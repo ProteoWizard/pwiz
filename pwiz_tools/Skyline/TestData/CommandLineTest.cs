@@ -247,9 +247,9 @@ namespace pwiz.SkylineTestData
             var requestedNames = new[] { originalNames[2], originalNames[0] };
             File.WriteAllLines(orderPath, new[] { string.Empty, new string(' ', 2) + requestedNames[0] + new string(' ', 2), requestedNames[1] });
 
-            RunCommand("--in=" + docPath,
-                "--reorder-replicates-file=" + orderPath,
-                "--out=" + outPath);
+            RunCommand(CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath,
+                CommandArgs.ARG_OUT + outPath);
 
             var reorderedDocument = ResultsUtil.DeserializeDocument(outPath);
             CollectionAssert.AreEqual(requestedNames.Concat(originalNames.Skip(1).Where(name => name != requestedNames[0])).ToArray(),
@@ -259,13 +259,13 @@ namespace pwiz.SkylineTestData
             foreach (var replicateName in originalNames)
             {
                 CollectionAssert.AreEqual(originalValues[replicateName].FilePaths, reorderedValues[replicateName].FilePaths);
-                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas,
-                    "Peak areas changed for replicate {0}", replicateName);
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas);
             }
 
             var reverseNames = originalNames.Reverse().ToArray();
             File.WriteAllLines(orderPath, reverseNames);
-            RunCommand("--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath);
+            RunCommand(CommandArgs.ARG_IN + docPath, CommandArgs.ARG_REORDER_REPLICATES + orderPath,
+                CommandArgs.ARG_OUT + outPath);
             reorderedDocument = ResultsUtil.DeserializeDocument(outPath);
             CollectionAssert.AreEqual(reverseNames,
                 reorderedDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray());
@@ -273,25 +273,30 @@ namespace pwiz.SkylineTestData
             foreach (var replicateName in originalNames)
             {
                 CollectionAssert.AreEqual(originalValues[replicateName].FilePaths, reorderedValues[replicateName].FilePaths);
-                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas,
-                    "Peak areas changed for replicate {0} after full reversal", replicateName);
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas);
             }
 
             var savedOutput = File.ReadAllBytes(outPath);
             var missingPath = orderPath + ".missing";
-            var output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + missingPath, "--out=" + outPath, "--overwrite");
+            var output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + missingPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
             CheckRunCommandOutputContains(string.Format(
                 SkylineResources.CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_, missingPath, string.Empty), output);
             CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
 
             File.WriteAllLines(orderPath, new[] { string.Empty, new string(' ', 3) });
-            output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
             CheckRunCommandOutputContains(string.Format(
                 SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_, orderPath), output);
             CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
 
             File.WriteAllLines(orderPath, new[] { originalNames[0], originalNames[0] });
-            output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
             CheckRunCommandOutputContains(string.Format(
                 SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_,
                 originalNames[0], orderPath), output);
@@ -300,7 +305,9 @@ namespace pwiz.SkylineTestData
             var unknownName = originalNames[0].ToLowerInvariant();
             Assert.AreNotEqual(originalNames[0], unknownName);
             File.WriteAllLines(orderPath, new[] { unknownName });
-            output = RunCommand(false, "--in=" + docPath, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
             CheckRunCommandOutputContains(string.Format(
                 SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_,
                 unknownName, orderPath), output);
@@ -308,7 +315,9 @@ namespace pwiz.SkylineTestData
 
             File.WriteAllLines(orderPath, new[] { originalNames[0] });
             var documentWithoutResults = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            output = RunCommand(false, "--in=" + documentWithoutResults, "--reorder-replicates-file=" + orderPath, "--out=" + outPath, "--overwrite");
+            output = RunCommand(false, CommandArgs.ARG_IN + documentWithoutResults,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
             CheckRunCommandOutputContains(string.Format(
                 SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_, orderPath), output);
             CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));

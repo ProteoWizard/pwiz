@@ -2573,20 +2573,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Removing results replicates.
-        /// </summary>
-        public static string CommandArgs_GROUP_REMOVE_Removing_results_replicates {
-            get {
-                return ResourceManager.GetString("CommandArgs_GROUP_REMOVE_Removing_results_replicates", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Managing results replicates.
         /// </summary>
-        public static string CommandArgs_GROUP_REPLICATES_Managing_results_replicates {
+        public static string CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates {
             get {
-                return ResourceManager.GetString("CommandArgs_GROUP_REPLICATES_Managing_results_replicates", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates", resourceCulture);
             }
         }
         
