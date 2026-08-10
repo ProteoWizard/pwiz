@@ -275,10 +275,12 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> -- the
         /// <c>--task PerFileRescoring</c> worker load in <see cref="PerFileScoringTask"/>
         /// and the straight-through resume in <see cref="FirstPassFdrTask"/> - so the two
-        /// cannot drift into reporting per-file counts under different predicates. NOT the
-        /// <c>--task SecondPassFDR</c> run: that sets <c>ExpectReconciledInput</c>, the
-        /// first branch of <c>PreCompactionPoolReason</c>, so it always takes the resident
-        /// batch twin and is still O(files) (issue #4486).</para>
+        /// cannot drift into reporting per-file counts under different predicates. The
+        /// <c>--task SecondPassFDR</c> merge takes that SAME streaming hydrate since #4486
+        /// (it no longer routes to the resident batch twin), but it skips this tally: the
+        /// only reader of <c>PassingTargets</c> is FirstPassFDR's per-file Stage 5 result
+        /// line, and that task is excluded on the merge node, so filling the field there
+        /// would walk every stub to produce a number nothing reads.</para>
         /// </summary>
         internal static void TallyPreCompaction(
             OspreyConfig config, List<FdrEntry> stubs, PreCompactionTally tally)

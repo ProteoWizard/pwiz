@@ -138,6 +138,19 @@ namespace pwiz.Osprey.Tasks
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
+            // Stage 7's INHERITED baseline, post-GC, before this stage does any work
+            // (#4486). Every figure that issue has ever quoted came from --memstamp, i.e.
+            // GC.GetTotalMemory(false), which includes uncollected garbage and so cannot
+            // tell a live survivor pool from Server-GC committed-but-free gray - which is
+            // precisely the question. The demand above has already materialized
+            // RescoredEntries, so this measures what Stage 7 is handed rather than what it
+            // builds; the probes below then attribute each substep's own contribution.
+            int nFiles = perFileEntries.Count;
+            string memDetail = string.Format(@"(files={0})", nFiles);
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 start (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-inherited",
+                string.Format(@"(post-GC, entering Stage 7, files={0})", nFiles));
+
             ReleaseUnscorableLibraryFragments(perFileEntries, fullLibrary, ctx);
 
             // The 2nd-pass Percolator model, captured for the model-diagnostics
@@ -162,6 +175,12 @@ namespace pwiz.Osprey.Tasks
                 pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
                     ctx, perFileEntries, perFileParquetPaths,
                     Name, ValidityKey(ctx));
+                // The substep the 2026-07-31 characterization on #4486 located the churn in:
+                // it reloads every file's reconciled features, so the pre-GC line carries the
+                // transient reload peak and the post-GC line what survives it.
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 pass-2 scored (pre-GC)");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pass2-scored",
+                    memDetail);
             }
 
             // Protein-level FDR. Always runs (parsimony + picked-protein at the
@@ -179,6 +198,16 @@ namespace pwiz.Osprey.Tasks
             swProtein.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
                 swProtein.Elapsed.TotalSeconds));
+            // Parsimony + picked-protein TDC are genuinely whole-run, so this probe is what
+            // decides whether they are a REASON Stage 7 must hold every file at once or
+            // merely a consumer of a pool held for other reasons (#4486). The pre-GC line is
+            // not optional here: parsimony builds whole-run scratch (best score per peptide,
+            // protein groups, the target/decoy competition) and the forced collection below
+            // destroys it, so without this the substep reports a ~0 delta and gets written
+            // off as a consumer even if it transiently doubled the heap.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 protein FDR (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-protein-fdr",
+                memDetail);
 
             // Re-clamp experiment q to each entry's best run q on the FINAL post-Stage-6
             // pool. The pass-1 (and any pass-2) Percolator already clamped, but Stage 6
@@ -196,6 +225,12 @@ namespace pwiz.Osprey.Tasks
             swBlib.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
+            // The blib write builds several whole-run indexes over the pool (passing
+            // precursors, best-per-precursor, shared boundaries, cross-file observations),
+            // so it is the other candidate reason the pool cannot be consumed per file.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 blib written (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-blib-written",
+                memDetail);
 
             // FDRBench input TSV (pass 2): the peptides we report - the final merged/rescored set
             // written to the output - each with its final second-pass q-value and raw SVM
@@ -279,6 +314,11 @@ namespace pwiz.Osprey.Tasks
                 @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the reported pool)",
                 released, fullLibrary.Count, retained.Count));
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after library-fragment release");
+            // Post-GC counterpart, so the release's actual recovery is attributable rather
+            // than inferred: the pre-GC line above cannot show it, because the dropped
+            // fragment arrays are garbage that has not been collected yet (#4486).
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-fragments-released",
+                string.Format(@"(files={0}, released={1})", perFileEntries.Count, released));
         }
 
         /// <summary>
