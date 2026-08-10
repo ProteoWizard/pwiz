@@ -214,11 +214,13 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
 # published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
-# asked for a token. The open example now is #4486: the survivor buffer is rebuilt for
+# asked for a token. #4486 was the standing example: the survivor buffer is rebuilt for
 # SecondPassFDR to read, so it is resident from the end of Stage 6 to the end of Stage 7
 # on EVERY path, and no guard covers that because it is not a resume or a mode - it is
-# what Stage 7 takes as input. Zero tokens therefore does NOT mean zero gaps, and this
-# table is what keeps the difference legible.
+# what Stage 7 takes as input. It is still uncovered, and now MEASURED: 0.196 GB/file
+# live, post-GC, which is not what fails at scale. What did was the --task SecondPassFDR
+# pre-compaction RELOAD at 2.07 GB/file (~186 GB projected at 82 files), streamed by
+# #4486. Zero tokens therefore does NOT mean zero gaps, and this table keeps that legible.
 #
 # Printed in the run summary (not just parked in a comment) so every CI log states the
 # outstanding gaps, and so a fixed entry left here shows up as a stale line in output
@@ -234,10 +236,27 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 #     like every other leg and resume-survivor-handoff - the last entry here - came out
 #     with it. Zero is the invariant, not a milestone: a new entry below is a regression
 #     to justify in review, not a line to add and move on.
-$knownResidentGaps = @()
+$knownResidentGaps = @(
+    # Untokened by nature, which is exactly why it belongs here: no guard demands a token
+    # for it, so a token audit cannot see it and a green gate printed "none" while every
+    # leg walked it. Measured 2026-08-09 on 82 files rather than estimated - the preamble
+    # above names it, and a table that omits the one gap the preamble names is worse than
+    # no table. Token NONE, so it does not inflate the required-token count below.
+    @{
+        Issue = '#4486'
+        Token = 'NONE'
+        Path  = 'Stage 6 rebuilds the whole-run survivor buffer for SecondPassFDR to read; resident from the end of Stage 6 to the end of Stage 7.'
+        # One model, stated explicitly: a fixed library term plus a per-file slope, both from
+        # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
+        # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
+        # not 0.197), which is unreadable in a summary that prints on every CI run.
+        Legs  = 'Every leg of every dataset. ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500.'
+    }
+)
 # Reachable only outside this gate, tokened, each with an open issue:
-#   #4486  hpc-merge      -- --task SecondPassFDR reconciled-input merge (Stage 7 peak)
 #   #4507  fdrbench-pass1 -- --fdrbench-pass 1 walks the pre-compaction pool
+# hpc-merge is GONE (#4486): --task SecondPassFDR takes the bounded streaming hydrate, so
+# mode 3's join node needs no token. That is the ratchet shrinking a third time.
 # By design rather than unfinished, so no issue: projection-off and
 # compacted-entries-buffer (the A/B byte-identity oracles) and non-percolator-fdr.
 
@@ -1305,10 +1324,11 @@ foreach ($name in $selected) {
         Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
         $chainRoot = Join-Path $runRoot "$name\chain"
         $sw3 = [Diagnostics.Stopwatch]::StartNew()
-        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here. mode 3's SecondPassFDR leg does
-        # still take the RESIDENT first-pass pool (ExpectReconciledInput -- Stage 7, tracked
-        # in #4486), but that path now WARNS naming the consumer instead of throwing, so the
-        # chain runs with nothing suppressed. Keeping the opt-in would be actively harmful:
+        # No OSPREY_ALLOW_UNBOUNDED_MEMORY opt-in here, and mode 3's SecondPassFDR leg no
+        # longer needs one: since #4486 it streams the reconciled-input load (one file's
+        # pre-compaction pool resident at a time) instead of taking the RESIDENT first-pass
+        # pool, so no leg of this chain arms the guard at all. Keeping the opt-in would be
+        # actively harmful:
         # it wrapped the whole chain and would mask a genuine guard regression on any
         # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
         # what mode 3 exists to exercise.

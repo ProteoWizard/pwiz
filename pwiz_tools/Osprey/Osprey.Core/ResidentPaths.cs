@@ -45,11 +45,15 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class ResidentPaths
     {
-        /// <summary>
-        /// The HPC reconciled-input merge (<c>--task SecondPassFDR</c>), which loads every
-        /// worker's entries to reconcile them. Tracked by issue #4486.
-        /// </summary>
-        public static readonly string HPC_MERGE = @"hpc-merge";
+        // hpc-merge was removed here by #4486, which put the HPC reconciled-input merge
+        // (--task SecondPassFDR) on the same file-count-bounded streaming hydrate every other
+        // reconciled-bundle path already used. It never named a real consumer: FirstPassFdrTask
+        // is excluded on that node, and each pass-2 consumer streams from disk one file at a
+        // time, so the pool it forced was loaded and discarded - a measured 2.21 GB/file
+        // (7.6 GB after file 1 to 40.8 GB after file 16), i.e. ~186 GB projected at 82 files,
+        // which made the final join impossible on any HPC node. Not to
+        // be re-added: a join that cannot stream its input is a defect to fix, not a path to
+        // name.
 
         /// <summary>
         /// <c>--fdrbench-pass 1</c>, which reads the full pre-compaction first-pass pool
@@ -115,8 +119,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
-            HPC_MERGE, FDRBENCH_PASS1, NON_PERCOLATOR_FDR, PROJECTION_OFF,
-            COMPACTED_ENTRIES_BUFFER
+            FDRBENCH_PASS1, NON_PERCOLATOR_FDR, PROJECTION_OFF, COMPACTED_ENTRIES_BUFFER
         };
     }
 }
