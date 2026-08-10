@@ -1342,18 +1342,36 @@ foreach ($name in $selected) {
         # every <stem>.2nd-pass.fdr_scores.bin passed this leg green (#4553). Peptide counts,
         # protein-group counts and the blib are all identical while it happens, so this is
         # the only assertion that can see it. The straight-through run's own sidecars are the
-        # oracle -- same inputs, same library, so the distributed tasks must reproduce them
+        # oracle - same inputs, same library, so the distributed tasks must reproduce them
         # field for field. Those sidecars are also the REHYDRATION input for the distributed
         # and resume paths, which is why a silent divergence here is not cosmetic.
+        #
+        # Both passes: pass 1 is now an INPUT to pass 2 (the restore seeds from it), so a
+        # Stage-5 divergence would otherwise surface here as a pass-2 defect and send the
+        # reader to the wrong stage.
         $chainDir = Split-Path $chainBlib -Parent
-        $m3s = Compare-FdrSidecars -ExpectedDir $straightDir -ActualDir $chainDir -Pass 2 -Tolerance $Tolerance
-        if ($m3s.Pass) {
-            $summaryLines.Add("$name mode3 (per-file FDR sidecars==straight): PASS")
+        $m3sIssues = [System.Collections.Generic.List[string]]::new()
+        $m3sCompared = 0
+        foreach ($sidecarPass in 1, 2) {
+            $cmp = Compare-FdrSidecars -ExpectedDir $straightDir -ActualDir $chainDir `
+                -Pass $sidecarPass -Tolerance $Tolerance
+            $cmp.Issues | ForEach-Object { $m3sIssues.Add("pass${sidecarPass}: $_") }
+            $m3sCompared += $cmp.Compared
+        }
+        # Liveness: a comparison that verified nothing is not a passing comparison. Empty or
+        # absent sidecars satisfy every field check trivially while breaking every resume,
+        # and the rest of this harness fails closed on the same shape (Invoke-ResumeInvalidation
+        # throws when it matches no files, mode 6 adds an issue when nothing matched).
+        if ($m3sCompared -eq 0) {
+            $m3sIssues.Add("compared 0 sidecar records across both passes - the gate verified nothing")
+        }
+        if ($m3sIssues.Count -eq 0) {
+            $summaryLines.Add("$name mode3 (per-file FDR sidecars==straight): PASS ($('{0:N0}' -f $m3sCompared) records)")
         } else {
             $overallFail = $true
-            Write-Problem-Tc "$name mode3 (per-file FDR sidecars==straight): FAIL -- $($m3s.Issues.Count) issue(s)"
-            $m3s.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-            $summaryLines.Add("$name mode3 (per-file FDR sidecars==straight): FAIL ($($m3s.Issues.Count) issues)")
+            Write-Problem-Tc "$name mode3 (per-file FDR sidecars==straight): FAIL - $($m3sIssues.Count) issue(s)"
+            $m3sIssues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode3 (per-file FDR sidecars==straight): FAIL ($($m3sIssues.Count) issues)")
         }
 
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
