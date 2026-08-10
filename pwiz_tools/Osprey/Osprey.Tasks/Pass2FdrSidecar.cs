@@ -605,6 +605,13 @@ namespace pwiz.Osprey.Tasks
                         pair.Key.Score = pair.Value.Score;
                         pair.Key.Pep = pair.Value.Pep;
                         pair.Key.RunProteinQvalue = pair.Value.RunProteinQvalue;
+                        // The FOURTH field of the same five-of-eight gap (sidecar v4, issue
+                        // #4522). ResetScores clears it with Score, and no frozen 2nd-pass mode
+                        // writes it back, so it lands in the 2nd-pass sidecar at 0.0 for every
+                        // peak Stage 6 touched. That is the whole population this method exists
+                        // to repair, and it is why the seed should follow the record rather than
+                        // an enumerated list: the list has now grown twice.
+                        pair.Key.ExperimentAggregateScore = pair.Value.ExperimentAggregateScore;
                     }
                     filesRead++;
                     nRestored += staged.Count;
@@ -631,15 +638,15 @@ namespace pwiz.Osprey.Tasks
             if (unreadable.Count > 0)
             {
                 ctx.LogWarning(string.Format(
-                    "1st-pass Score/Pep/RunProteinQvalue could not be restored for {0} file(s) " +
-                    "(no readable 1st-pass sidecar): [{1}]. Peaks Stage 6 changed in those files " +
-                    "keep reset defaults, so their 2nd-pass sidecars are wrong AND a Score of 0 " +
-                    "enters the second-pass protein FDR null unfiltered. Treat this run's " +
-                    "protein-level numbers as unreliable.",
+                    "1st-pass Score/Pep/RunProteinQvalue/ExperimentAggregateScore could not be " +
+                    "restored for {0} file(s) (no readable 1st-pass sidecar): [{1}]. Peaks Stage 6 " +
+                    "changed in those files keep reset defaults, so their 2nd-pass sidecars are " +
+                    "wrong AND a Score of 0 enters the second-pass protein FDR null unfiltered. " +
+                    "Treat this run's protein-level numbers as unreliable.",
                     unreadable.Count, string.Join(", ", unreadable)));
             }
             ctx.LogVerbose(string.Format(
-                "Restored 1st-pass Score/Pep/RunProteinQvalue onto {0} survivor(s) across {1} file(s).",
+                "Restored 1st-pass Score/Pep/RunProteinQvalue/ExperimentAggregateScore onto {0} survivor(s) across {1} file(s).",
                 nRestored, filesRead));
         }
 
