@@ -237,8 +237,16 @@ namespace pwiz.Osprey.Tasks
             // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
             // under transfer carries no stratum, so a protein-compact re-run that adopted it
             // would be reading an artifact that cannot answer its question.
+            // The sidecar FORMAT VERSION belongs here because this task's output is the
+            // .1st-pass.fdr_scores.bin every later stage reads back. Resuming a directory written
+            // before a format bump would find this task still valid, skip it, and then have every
+            // v4 reader refuse the v3 file by version - leaving RestorePass1Scalars to seed
+            // nothing and write ResetScores defaults into the 2nd-pass sidecars under only a
+            // warning. Including the version turns that silent-wrong-output path into a clean
+            // recompute.
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);

@@ -166,7 +166,7 @@ function Get-DiagnosticsMetrics {
     # Pinned at BOTH passes and BOTH q scopes. Without these the panel ships with no golden
     # coverage at all: this projection is an explicit metric list, not an enumeration of the
     # payload, so a new card is invisible to the comparison until it is named here. The counts
-    # are the load-bearing ones (nBetter is the "would go away under best-match-wins" number);
+    # are the critical ones (nBetter is the "would go away under best-match-wins" number);
     # the fractions follow from them and n, so pinning both would only double the failure noise.
     foreach ($p in 1, 2) {
         $ca = if ($p -eq 2) { $d.pass2.coAssignment } else { $d.coAssignment }

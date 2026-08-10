@@ -366,8 +366,17 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// Library precursor m/z by FULL entry id (decoy bit included) for the co-assignment
-        /// panel, or null when there is no library to read. A decoy resolves to its own entry,
-        /// which carries the same m/z as its target by construction.
+        /// panel, or null when there is no library to read.
+        ///
+        /// <para>A decoy is NOT always present in this task's library index, while its target twin
+        /// always is, and a decoy carries its target's precursor m/z by construction (same
+        /// composition), so an unresolved decoy falls back to its base id. Without that fallback
+        /// the caller's <c>double.IsNaN(mz)</c> guard drops the row, and the streaming path
+        /// measured what that costs: ~97% of detected decoys silently gone (19 counted against
+        /// 598) and a decoy rate 30x too low. This lookup feeds the PASS 2 panel - the numbers the
+        /// user actually receives - which has no admitted-vs-tallied log check to expose it, so
+        /// the two paths must resolve identically. See
+        /// <c>PeakCoAssignmentSource.ScanCurrentFile</c>, which does the same thing.</para>
         ///
         /// <para>A lookup rather than a materialized map on purpose: the panel needs m/z only for
         /// DETECTED rows, a small fraction of a library that reaches 6.3M entries on the Astral
@@ -379,9 +388,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             if (libraryById == null)
                 return null;
-            return entryId => libraryById.TryGetValue(entryId, out var lib) && lib != null
-                ? lib.PrecursorMz
-                : double.NaN;
+            return entryId =>
+            {
+                if ((!libraryById.TryGetValue(entryId, out var lib) || lib == null) &&
+                    (entryId & LibraryEntry.DECOY_ID_BIT) != 0)
+                    libraryById.TryGetValue(entryId & ~LibraryEntry.DECOY_ID_BIT, out lib);
+                return lib != null ? lib.PrecursorMz : double.NaN;
+            };
         }
 
         /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base-id.</summary>

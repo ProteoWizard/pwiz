@@ -1696,7 +1696,12 @@ function renderCoAssignment(ca){
     cell.appendChild(document.createTextNode(r[0]));
     [fmt(c.n,0),fmt(c.nShared,0),fmt(c.nBetter,0),pct(c.betterFraction,2)].forEach(v=>H(tr,"td",{class:"num"},v));
     const ratio=s.target.betterFraction>0?c.betterFraction/s.target.betterFraction:NaN;
-    const suppressed=c.n<ca.minNForEnrichment;
+    // Suppress on the TARGET denominator too, not just this row's n. CoAssignmentAccumulator.Build
+    // gates on both, so gating on one here prints a ratio the KPI beside it withholds - computed
+    // off a denominator too small to mean anything, which is the arithmetic-noise-as-finding that
+    // MIN_N_FOR_ENRICHMENT was serialized to the payload to prevent (one definition, not one per
+    // renderer).
+    const suppressed=c.n<ca.minNForEnrichment||s.target.n<ca.minNForEnrichment;
     H(tr,"td",{class:"num"},suppressed?"n<"+ca.minNForEnrichment:(isFinite(ratio)?fmt(ratio,1)+"×":"–"));
     H(tr,"td",{class:"num"},fmt(c.nBetterSameBaseSequence,0));});
 

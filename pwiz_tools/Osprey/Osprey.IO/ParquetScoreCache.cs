@@ -866,10 +866,19 @@ namespace pwiz.Osprey.IO
                         var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
                         if (entryIdCol == null)
                             continue;
+                        // FAIL rather than substitute. The ContainsKey guard above only proves the
+                        // column is DECLARED; ReadColumnByName ends in an `as` cast, so a column
+                        // written as float or nullable double yields null here. Substituting 0.0
+                        // would give every row the same apex RT, so every same-m/z pair would
+                        // report |dRT| = 0 and the panel would claim ~100% co-assignment at the
+                        // tightest tolerance - a plausible page built from no data at all. Returning
+                        // false drops the panel with a log line, which is the documented contract.
+                        if (apexCol == null)
+                            return false;
                         for (int row = 0; row < entryIdCol.Length && n < total; row++)
                         {
                             ids[n] = entryIdCol[row];
-                            rts[n] = apexCol != null ? apexCol[row] : 0.0;
+                            rts[n] = apexCol[row];
                             n++;
                         }
                     }

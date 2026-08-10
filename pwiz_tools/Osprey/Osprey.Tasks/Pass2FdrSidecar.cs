@@ -1549,6 +1549,14 @@ namespace pwiz.Osprey.Tasks
             // retrain -- hard-fail over warn-and-proceed on silently-invalid output.
             var globalExpPrecQ = new Dictionary<uint, double>();
             var globalExpPepQ = new Dictionary<uint, double>();
+            // The experiment aggregate score belongs with the experiment q above: it is the score
+            // that q's competition ranked on, and a gap-fill that takes one without the other
+            // persists a q paired with a score it was never computed from - the exact pairing this
+            // field exists to guarantee. Reduced by MAX rather than the q-values' MIN because
+            // higher is better here, and because 0.0 is FdrEntry.ResetScores' default and sits mid
+            // distribution for a signed discriminant, so max also keeps a reset stub from
+            // displacing a real negative score.
+            var globalExpAgg = new Dictionary<uint, double>();
             // Per-file progress: reading every file's 1st-pass sidecar ran silently for minutes on
             // an 82-file join. Console-only; disposed on every exit (including the fallback return).
             using (var scanProgress = new ProgressReporter(
@@ -1571,6 +1579,9 @@ namespace pwiz.Osprey.Tasks
                         if (!globalExpPepQ.TryGetValue(rec.EntryId, out double curPep) ||
                             rec.ExperimentPeptideQvalue < curPep)
                             globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
+                        if (!globalExpAgg.TryGetValue(rec.EntryId, out double curAgg) ||
+                            rec.ExperimentAggregateScore > curAgg)
+                            globalExpAgg[rec.EntryId] = rec.ExperimentAggregateScore;
                     });
                     if (!readOk)
                     {
@@ -1648,8 +1659,12 @@ namespace pwiz.Osprey.Tasks
                     // them at the precursor's best-run q; a precursor with no record anywhere -> 1.
                     double gapExpPrecQ = globalExpPrecQ.TryGetValue(entry.EntryId, out double gPrec) ? gPrec : 1.0;
                     double gapExpPepQ = globalExpPepQ.TryGetValue(entry.EntryId, out double gPep) ? gPep : 1.0;
+                    // 0.0 when the precursor has no record anywhere, which pairs with the q = 1.0
+                    // above: never competed, never accepted, so nothing reads it.
+                    double gapExpAgg = globalExpAgg.TryGetValue(entry.EntryId, out double gAgg) ? gAgg : 0.0;
                     switch (AssignPerRunQ(entry, newScore, rec1,
-                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, gapExpPrecQ, gapExpPepQ))
+                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc,
+                        gapExpPrecQ, gapExpPepQ, gapExpAgg))
                     {
                         case PerRunClass.Unchanged: nUnchanged++; break;
                         case PerRunClass.Moved: nMoved++; break;
@@ -1698,7 +1713,9 @@ namespace pwiz.Osprey.Tasks
         /// full 1st-pass record verbatim.</item>
         /// <item>MOVED: run q re-mapped from the tables; experiment q + PEP carried from the record.</item>
         /// <item>GAP-FILL (no record): run q from the tables; experiment q =
-        /// <paramref name="gapFillExpPrecQ"/> / <paramref name="gapFillExpPepQ"/>.</item>
+        /// <paramref name="gapFillExpPrecQ"/> / <paramref name="gapFillExpPepQ"/>, and the
+        /// experiment aggregate score = <paramref name="gapFillExpAgg"/> from the same cross-file
+        /// source, so the persisted score and the q it ranked for stay paired.</item>
         /// </list>
         /// </summary>
         internal static PerRunClass AssignPerRunQ(
@@ -1710,7 +1727,8 @@ namespace pwiz.Osprey.Tasks
             double[] pepScoresDesc,
             double[] pepQDesc,
             double gapFillExpPrecQ,
-            double gapFillExpPepQ)
+            double gapFillExpPepQ,
+            double gapFillExpAgg)
         {
             if (firstPass.HasValue)
             {
@@ -1750,6 +1768,13 @@ namespace pwiz.Osprey.Tasks
             entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
             entry.ExperimentPrecursorQvalue = gapFillExpPrecQ;
             entry.ExperimentPeptideQvalue = gapFillExpPepQ;
+            // Carried for the same reason as the experiment q beside it, and from the same
+            // cross-file source: the aggregate is a per-entry roll-up, identical in every file's
+            // record for that entry, so a gap-fill is entitled to it even with no record of its
+            // own. Leaving it at ResetScores' 0.0 would persist a real experiment q next to a
+            // score that q was not computed from, and a score-space acceptance boundary built
+            // from the 2nd-pass sidecar would then be drawn from the wrong ranking.
+            entry.ExperimentAggregateScore = gapFillExpAgg;
             return PerRunClass.GapFill;
         }
 

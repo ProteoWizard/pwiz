@@ -1001,9 +1001,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // Histogram over the full scanned window, not the headline tolerance: truncating
                 // it at the tolerance would hide the very shape (jitter spike vs flat chance
                 // background) that justifies the tolerance.
+                // Clamp BOTH ends. apex_rt is persisted unguarded, so a NaN reaches here as a NaN
+                // deltaRt, and every NaN comparison above is false - including the
+                // absDeltaRt > SCAN_RT_WINDOW skip - so the cast still runs. (int)NaN is
+                // int.MinValue on net472/x64 (this project targets net472 and net8.0), which
+                // indexes out of bounds and would abort a whole search from a diagnostics-only
+                // panel. StreamingDecoyFloor.Add clamps both ends for this same reason.
                 int bin = (int)(absDeltaRt / SCAN_RT_WINDOW * DELTA_RT_BINS);
                 if (bin >= DELTA_RT_BINS)
                     bin = DELTA_RT_BINS - 1;
+                else if (bin < 0)
+                    bin = 0;
                 if (row.Class == EntrapmentClass.Target)
                     _deltaRtTarget[bin]++;
                 else if (row.Class == EntrapmentClass.PTarget)

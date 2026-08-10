@@ -76,6 +76,33 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             Action<string> logInfo)
         {
+            // The "never throws" promise above needs an actual guard, and it was only ever
+            // enforced around the parquet read inside AddFile. Everything else - the builder's
+            // own misuse guards, the per-file sort and histogram writes in FlushFile, Build's
+            // reduction, and the caller's library resolution - ran unprotected, and the callers
+            // in FirstPassFdrTask invoke this OUTSIDE the report writer's try/catch. A panel
+            // that aborts a ten-hour search is a worse outcome than a panel that is missing.
+            try
+            {
+                return BuildCore(fileNames, perFileParquetPaths, config, classByBaseId, libraryById, logInfo);
+            }
+            catch (Exception ex)
+            {
+                logInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] peak co-assignment abandoned after an unexpected error: {0}",
+                    ex.Message));
+                return null;
+            }
+        }
+
+        private static ModelDiagnosticsData.CoAssignmentData BuildCore(
+            IReadOnlyList<string> fileNames,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            OspreyConfig config,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            Action<string> logInfo)
+        {
             if (fileNames == null || perFileParquetPaths == null || libraryById == null)
             {
                 logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment skipped: no per-file parquet or library available.");

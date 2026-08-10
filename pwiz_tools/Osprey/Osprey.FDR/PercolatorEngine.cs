@@ -472,6 +472,13 @@ namespace pwiz.Osprey.FDR
 
                 foreach (var entry in kvp.Value)
                 {
+                    // The score this mode's competition ranks on, recorded for EVERY entry -
+                    // decoys and non-passing targets included. A consumer drawing a score-space
+                    // acceptance boundary (the co-assignment panel) needs it on both sides of the
+                    // comparison, and a decoy has no q to fall back on. Left at ResetScores' 0.0
+                    // it would not merely be missing: 0.0 sits mid distribution for a signed
+                    // score, so it would read as a real value and collapse the boundary.
+                    entry.ExperimentAggregateScore = entry.CoelutionSum;
                     if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
                     {
                         entry.RunPrecursorQvalue = result.FdrAtThreshold;
