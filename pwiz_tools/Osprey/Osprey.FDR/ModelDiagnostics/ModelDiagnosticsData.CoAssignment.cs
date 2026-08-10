@@ -102,6 +102,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <summary>Index into <see cref="ToleranceLadder"/> that <see cref="RtTolerance"/> sits at.</summary>
             public int HeadlineToleranceIndex { get; set; }
             /// <summary>
+            /// Detected-precursor floor below which a class's enrichment ratio is withheld
+            /// (<see cref="CoAssignmentAccumulator.MIN_N_FOR_ENRICHMENT"/>). Serialized so the
+            /// report can say "n &lt; 30" in place of the ratio rather than an unexplained dash,
+            /// and so the threshold has one definition instead of one per renderer.
+            /// </summary>
+            public int MinNForEnrichment { get; set; }
+            /// <summary>
             /// Bin edges (minutes) of the |dRT| histograms, from 0 to the widest scanned window.
             /// The histogram separates same-feature apex jitter (a spike at 0) from chance
             /// co-elution (a flat background), which is what justifies a tolerance rather than
@@ -244,6 +251,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         {
             /// <summary>Precursor identity, <c>modified sequence + "|" + charge</c>.</summary>
             public readonly string Key;
+            /// <summary>Full library entry id (decoy bit included) - the score-aggregation key.</summary>
+            public readonly uint EntryId;
             public readonly string ModifiedSequence;
             public readonly byte Charge;
             /// <summary>Library precursor m/z - exact, so no residue-mass table is involved.</summary>
@@ -252,10 +261,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public readonly double Score;
             public readonly EntrapmentClass Class;
 
-            public CoAssignmentRow(string key, string modifiedSequence, byte charge,
+            public CoAssignmentRow(string key, uint entryId, string modifiedSequence, byte charge,
                 double precursorMz, double apexRt, double score, EntrapmentClass entrapmentClass)
             {
                 Key = key;
+                EntryId = entryId;
                 ModifiedSequence = modifiedSequence;
                 Charge = charge;
                 PrecursorMz = precursorMz;
@@ -318,28 +328,45 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 runNames[f] = perFileEntries[f].Key;
 
             var builder = new CoAssignmentPassBuilder(runNames, pass, postReconciliation);
+
+            // Phase 1: the decoy score cutoffs, over every row at every file. Cheap - no identity
+            // string, no library lookup - so it can walk the whole pool.
+            for (int f = 0; f < perFileEntries.Count; f++)
+            {
+                foreach (var e in perFileEntries[f].Value)
+                {
+                    int wc0 = 0, woc0 = 0;
+                    builder.ObserveCutoff(f,
+                        Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId, haveManifest, ref wc0, ref woc0),
+                        e.EntryId, e.Score, e.EffectiveRunQvalue(fdrLevel),
+                        e.EffectiveExperimentQvalue(fdrLevel), runFdr);
+                }
+            }
+            builder.SealCutoffs();
+
+            // Phase 2: the detected rows.
             bool anyMz = false;
             for (int f = 0; f < perFileEntries.Count; f++)
             {
                 foreach (var e in perFileEntries[f].Value)
                 {
-                    // Gate on detection BEFORE building the row: the key is a fresh string per
-                    // row, and pass 1 hands this method the whole pre-compaction pool.
                     double runQ = e.EffectiveRunQvalue(fdrLevel);
                     double expQ = e.EffectiveExperimentQvalue(fdrLevel);
-                    if (runQ > runFdr && expQ > runFdr)
+                    int wc = 0, woc = 0;
+                    var cls = Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId,
+                        haveManifest, ref wc, ref woc);
+                    // Gate BEFORE building the row: the key is a fresh string per row, and pass 1
+                    // hands this method the whole pre-compaction pool.
+                    if (!builder.Includes(f, cls, e.EntryId, e.Score, runQ, expQ, runFdr))
                         continue;
                     double mz = precursorMzByEntryId(e.EntryId);
                     if (double.IsNaN(mz) || mz <= 0)
                         continue;
                     anyMz = true;
-                    int wc = 0, woc = 0;
-                    var cls = Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId,
-                        haveManifest, ref wc, ref woc);
                     builder.AddRow(f,
-                        new CoAssignmentRow(e.ModifiedSequence + "|" + e.Charge, e.ModifiedSequence,
-                            e.Charge, mz, e.ApexRt, e.Score, cls),
-                        e.EffectiveRunQvalue(fdrLevel), e.EffectiveExperimentQvalue(fdrLevel), runFdr);
+                        new CoAssignmentRow(e.ModifiedSequence + "|" + e.Charge, e.EntryId,
+                            e.ModifiedSequence, e.Charge, mz, e.ApexRt, e.Score, cls),
+                        runQ, expQ, runFdr);
                 }
                 builder.FlushFile();
             }
@@ -369,24 +396,161 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _postReconciliation = postReconciliation;
             }
 
+            // Score at or above which a DECOY counts as detected: the worst score among the
+            // accepted target/entrapment set. Per FILE for the run scope (run-level q is computed
+            // within a run) and GLOBAL for the experiment scope (experiment q is pooled), which
+            // follows from how each q is defined rather than being a choice.
+            private readonly Dictionary<int, double> _runCutoff = new Dictionary<int, double>();
+            private double _experimentCutoff = double.NaN;
+            private bool _sealed;
+
+            // The score each scope's competition actually ranks on, per precursor (entry id).
+            // RUN scope: the precursor's best score WITHIN a file. EXPERIMENT scope: its best
+            // across all files - the experiment aggregate, which is what the experiment-wide
+            // competition ranks on. Comparing a decoy's per-run row score against an
+            // experiment-scope cutoff mixes two different rankings and is simply wrong.
+            //
+            // Recorded for EVERY class, not just accepted rows: a decoy needs its own aggregate to
+            // compare against the cutoff and has no q to pre-filter on. Bounded by the number of
+            // distinct precursors observed - the quantity to watch at SEA-AD scale.
+            private readonly Dictionary<int, Dictionary<uint, double>> _runBest =
+                new Dictionary<int, Dictionary<uint, double>>();
+            private readonly Dictionary<uint, double> _experimentBest = new Dictionary<uint, double>();
+            private readonly Dictionary<int, HashSet<uint>> _runAccepted = new Dictionary<int, HashSet<uint>>();
+            private readonly HashSet<uint> _experimentAccepted = new HashSet<uint>();
+
             /// <summary>
-            /// Offer one observation to both scopes; each keeps it only if its own q clears
-            /// <paramref name="runFdr"/>. Rows must arrive file-major, each run closed with
-            /// <see cref="FlushFile"/>.
+            /// Phase 1 of two: fold one row into the decoy score cutoffs. Every row must be
+            /// offered here - across ALL files - before the first <see cref="AddRow"/>.
+            ///
+            /// <para><b>Decoys have no meaningful q-value.</b> They are the basis on which q is
+            /// computed, so gating them on "their own q &lt;= 1%" asks the competition to grade
+            /// its own ruler. The population that belongs beside the accepted targets is the
+            /// decoys scoring at least as well as the WORST accepted target or entrapment
+            /// precursor - that score is the acceptance boundary, and the decoys above it are
+            /// exactly the ones the FDR estimate is counting.</para>
+            /// </summary>
+            public void ObserveCutoff(int fileIdx, EntrapmentClass cls, uint entryId, double score,
+                double runQvalue, double experimentQvalue, double runFdr)
+            {
+                if (!_runBest.TryGetValue(fileIdx, out var byEntry))
+                {
+                    byEntry = new Dictionary<uint, double>();
+                    _runBest.Add(fileIdx, byEntry);
+                }
+                if (!byEntry.TryGetValue(entryId, out double cur) || score > cur)
+                    byEntry[entryId] = score;
+                if (!_experimentBest.TryGetValue(entryId, out double e) || score > e)
+                    _experimentBest[entryId] = score;
+                if (IsDecoyClass(cls))
+                    return;   // decoys define the boundary; they do not set it
+                if (runQvalue <= runFdr)
+                {
+                    if (!_runAccepted.TryGetValue(fileIdx, out var acc))
+                    {
+                        acc = new HashSet<uint>();
+                        _runAccepted.Add(fileIdx, acc);
+                    }
+                    acc.Add(entryId);
+                }
+                if (experimentQvalue <= runFdr)
+                    _experimentAccepted.Add(entryId);
+            }
+
+            /// <summary>
+            /// Close phase 1: reduce the per-precursor bests to one cutoff score per scope.
+            ///
+            /// <para>Reducing PER PRECURSOR first is the whole point. Taking the minimum over
+            /// accepted ROWS instead put the boundary far below the real one - pass 1 is
+            /// pre-compaction, so an accepted precursor carries many rows including its poor
+            /// candidate peaks, and those drag the minimum down. Measured, that mistake admitted
+            /// 43,528 decoys against 23,135 targets: more decoys than targets, from a rule meant
+            /// to admit about 1% of them.</para>
+            /// </summary>
+            public void SealCutoffs()
+            {
+                foreach (var kv in _runAccepted)
+                {
+                    if (!_runBest.TryGetValue(kv.Key, out var byEntry))
+                        continue;
+                    double min = double.NaN;
+                    foreach (uint id in kv.Value)
+                    {
+                        if (byEntry.TryGetValue(id, out double v) && (double.IsNaN(min) || v < min))
+                            min = v;
+                    }
+                    if (!double.IsNaN(min))
+                        _runCutoff[kv.Key] = min;
+                }
+                foreach (uint id in _experimentAccepted)
+                {
+                    if (_experimentBest.TryGetValue(id, out double v) &&
+                        (double.IsNaN(_experimentCutoff) || v < _experimentCutoff))
+                        _experimentCutoff = v;
+                }
+                _runAccepted.Clear();
+                _experimentAccepted.Clear();
+                _sealed = true;
+            }
+
+            /// <summary>
+            /// Whether a row would be kept at either scope, so a caller can skip the per-row work
+            /// (identity string, library m/z) for rows neither scope wants. Same rule
+            /// <see cref="AddRow"/> applies.
+            /// </summary>
+            public bool Includes(int fileIdx, EntrapmentClass cls, uint entryId, double score,
+                double runQvalue, double experimentQvalue, double runFdr)
+            {
+                if (!IsDecoyClass(cls))
+                    return runQvalue <= runFdr || experimentQvalue <= runFdr;
+                return (_runCutoff.TryGetValue(fileIdx, out double rc) && RunBest(fileIdx, entryId) >= rc) ||
+                       (!double.IsNaN(_experimentCutoff) && ExperimentBest(entryId) >= _experimentCutoff);
+            }
+
+            private double RunBest(int fileIdx, uint entryId)
+            {
+                return _runBest.TryGetValue(fileIdx, out var byEntry) &&
+                       byEntry.TryGetValue(entryId, out double v) ? v : double.NegativeInfinity;
+            }
+
+            private double ExperimentBest(uint entryId)
+            {
+                return _experimentBest.TryGetValue(entryId, out double v) ? v : double.NegativeInfinity;
+            }
+
+            /// <summary>
+            /// Phase 2: offer one observation to both scopes. Targets and entrapment are kept on
+            /// their own q; decoys are kept on the score cutoff (see <see cref="ObserveCutoff"/>).
+            /// Rows must arrive file-major, each run closed with <see cref="FlushFile"/>.
             /// </summary>
             public void AddRow(int fileIdx, in CoAssignmentRow row, double runQvalue,
                 double experimentQvalue, double runFdr)
             {
-                if (runQvalue <= runFdr)
+                if (!_sealed)
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder: SealCutoffs must be called before AddRow");
+                bool isDecoy = IsDecoyClass(row.Class);
+                bool inRun = isDecoy
+                    ? _runCutoff.TryGetValue(fileIdx, out double rc) && RunBest(fileIdx, row.EntryId) >= rc
+                    : runQvalue <= runFdr;
+                bool inExperiment = isDecoy
+                    ? !double.IsNaN(_experimentCutoff) && ExperimentBest(row.EntryId) >= _experimentCutoff
+                    : experimentQvalue <= runFdr;
+                if (inRun)
                 {
                     _run.AddDetectedRow(fileIdx, row);
                     _any = true;
                 }
-                if (experimentQvalue <= runFdr)
+                if (inExperiment)
                 {
                     _experiment.AddDetectedRow(fileIdx, row);
                     _any = true;
                 }
+            }
+
+            private static bool IsDecoyClass(EntrapmentClass cls)
+            {
+                return cls == EntrapmentClass.Decoy || cls == EntrapmentClass.PDecoy;
             }
 
             /// <summary>Close the current run in both scopes.</summary>
@@ -409,6 +573,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     PostReconciliation = _postReconciliation,
                     ToleranceLadder = CoAssignmentAccumulator.TOLERANCE_LADDER,
                     HeadlineToleranceIndex = CoAssignmentAccumulator.HeadlineToleranceIndex(),
+                    MinNForEnrichment = CoAssignmentAccumulator.MIN_N_FOR_ENRICHMENT,
                     DeltaRtEdges = CoAssignmentAccumulator.BuildDeltaRtEdges(),
                     Run = _run.Build(),
                     Experiment = _experiment.Build(),
@@ -868,9 +1033,28 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 return ranked;
             }
 
+            // Known-false classes first, then score gap. Ranking on the gap alone buries the only
+            // rows where co-assignment is DEMONSTRATED wrong: targets outnumber entrapment ~75:1
+            // on the entrapment gate (30,835 vs 412), so a straight top-50 by gap came back
+            // entirely target rows with all 28 co-assigned entrapment precursors below the cut.
+            // The cap is applied to this order, so the class priority decides what reaches the
+            // report at all, not just what sorts first.
+            private static int ClassRank(string entrapmentClass)
+            {
+                if (string.Equals(entrapmentClass, nameof(EntrapmentClass.PTarget), StringComparison.Ordinal))
+                    return 0;   // absent by construction: the strongest evidence there is
+                if (string.Equals(entrapmentClass, nameof(EntrapmentClass.Decoy), StringComparison.Ordinal) ||
+                    string.Equals(entrapmentClass, nameof(EntrapmentClass.PDecoy), StringComparison.Ordinal))
+                    return 1;   // also false by construction
+                return 2;       // targets: co-assigned, but which one is wrong is unknown
+            }
+
             private static int CompareOffenders(CoAssignedPair a, CoAssignedPair b)
             {
-                int c = b.ScoreGap.CompareTo(a.ScoreGap);
+                int c = ClassRank(a.Class).CompareTo(ClassRank(b.Class));
+                if (c != 0)
+                    return c;
+                c = b.ScoreGap.CompareTo(a.ScoreGap);
                 if (c != 0)
                     return c;
                 c = string.CompareOrdinal(a.ModifiedSequence, b.ModifiedSequence);

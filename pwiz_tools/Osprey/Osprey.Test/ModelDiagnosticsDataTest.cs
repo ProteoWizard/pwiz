@@ -75,7 +75,7 @@ namespace pwiz.Osprey.Test
         //   A   z3  target          333.670    10.000    5.0    ok    SAME sequence, other charge
         //   B   z2  target          500.004    10.018    3.0    ok    co-assigned, A outscores it
         //   E   z2  entrapment      500.005    10.032    4.0    ok    co-assigned, A outscores it
-        //   X   z2  decoy           500.006    10.008    1.0    ok    co-assigned, A and B outscore
+        //   X   z2  decoy           500.006    10.008    6.0    ok    above the acceptance score; A outscores it
         //   F   z2  target          500.002    10.010   20.0    FAIL  q-failing; must not partner
         // file2
         //   A   z2  target          500.000    30.000    6.0    ok    same precursor, no partner
@@ -102,7 +102,7 @@ namespace pwiz.Osprey.Test
                 CoEntry(6, false, 5.0, 0.001, "A", 3, 10.000),
                 CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018),
                 CoEntry(201, false, 4.0, 0.003, "E", 2, 10.032),
-                CoEntry(1 | DECOY_BIT, true, 1.0, 0.004, "X", 2, 10.008),
+                CoEntry(1 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008),
                 CoEntry(7, false, 20.0, 0.500, "F", 2, 10.010),
             };
             var f2 = new List<FdrEntry>
@@ -180,11 +180,33 @@ namespace pwiz.Osprey.Test
 
             // Runs are scanned independently: A is in both files, and its file2 peak at 30.0 min
             // has no partner. Nothing pairs across runs, which would not be a shared peak at all.
-            Assert.AreEqual(4, scope.WorstOffenders.Count);
-            Assert.AreEqual(@"X", scope.WorstOffenders[0].ModifiedSequence);
-            Assert.AreEqual(8.0, scope.WorstOffenders[0].ScoreGap, 1e-12);
+            Assert.AreEqual(3, scope.WorstOffenders.Count);
+
+            // KNOWN-FALSE CLASSES LEAD, then score gap. Entrapment E (gap 5.0) outranks decoy X
+            // (gap 3.0) and target B (gap 6.0) despite the smaller gap, because entrapment is
+            // absent by construction and is therefore the only DEMONSTRATED error. Ranking on gap
+            // alone put zero entrapment rows in a real 50-row listing - targets outnumber
+            // entrapment ~75:1 - so the class priority decides what reaches the report at all.
+            Assert.AreEqual(@"E", scope.WorstOffenders[0].ModifiedSequence);
             Assert.AreEqual(@"A", scope.WorstOffenders[0].PartnerModifiedSequence);
             Assert.AreEqual(@"file1", scope.WorstOffenders[0].File);
+            CollectionAssert.AreEqual(new[] { @"PTarget", @"Decoy", @"Target" },
+                scope.WorstOffenders.ConvertAll(o => o.Class));
+            // Target B has the LARGEST gap (6.0) and still sorts last, behind decoy X (3.0):
+            // class priority outranks the gap, which is the whole point.
+            Assert.AreEqual(6.0, scope.WorstOffenders[2].ScoreGap, 1e-12);
+
+            // DECOYS ARE INCLUDED BY SCORE, NOT BY THEIR OWN q. A decoy's q is a byproduct of the
+            // competition decoys themselves define, so gating on it asks the ruler to grade
+            // itself. The boundary is the worst-scoring accepted target/entrapment precursor in
+            // the run (B at 3.0 in file1); X at 6.0 clears it. Drop X below that and the class
+            // must empty out entirely.
+            var lowDecoy = new List<FdrEntry>(f1);
+            lowDecoy[5] = CoEntry(1 | DECOY_BIT, true, 1.0, 0.004, @"X", 2, 10.008);
+            var below = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(lowDecoy, f2), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNull(below.Run.Decoy);
 
             // No resolvable library m/z means the panel cannot be computed at all, and must say so
             // by returning null rather than reporting a zero co-assignment rate.

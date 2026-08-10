@@ -88,12 +88,35 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 runNames[f] = fileNames[f];
             var builder = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 1, false);
 
-            int totalDetected = 0;
+            // Phase 1: the decoy score cutoffs, from the sidecars alone (score + q + entry id -
+            // no parquet, no library, no allocation per row). Decoys have no meaningful q of
+            // their own, so the population that belongs beside the accepted targets is the one
+            // scoring at least as well as the worst accepted target/entrapment precursor.
+            for (int f = 0; f < fileNames.Count; f++)
+            {
+                string sidecar = ResolveSidecarPath(fileNames[f], perFileParquetPaths, config);
+                if (sidecar == null)
+                    continue;   // phase 2 reports the missing input and abandons the panel
+                int fileIdx = f;   // a for-loop variable is captured by reference, not per iteration
+                FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
+                {
+                    bool dec = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
+                    builder.ObserveCutoff(fileIdx,
+                        ModelDiagnosticsData.ClassifyEntry(dec, rec.EntryId, classByBaseId), rec.EntryId, rec.Score,
+                        EffectiveQvalue(rec, config.FdrLevel, true),
+                        EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
+                });
+            }
+            builder.SealCutoffs();
+
+            int totalDetected = 0, totalUnresolved = 0;
             for (int f = 0; f < fileNames.Count; f++)
             {
                 string reason;
+                int fileUnresolved;
                 int detected = AddFile(builder, f, fileNames[f], perFileParquetPaths, config,
-                    classByBaseId, libraryById, out reason);
+                    classByBaseId, libraryById, out reason, out fileUnresolved);
+                totalUnresolved += fileUnresolved;
                 if (reason != null)
                 {
                     logInfo(string.Format(
@@ -116,6 +139,15 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             logInfo(string.Format(
                 @"[MODEL-DIAGNOSTICS] peak co-assignment (pass 1): {0} detected rows over {1} file(s) in {2:F1}s",
                 totalDetected, fileNames.Count, sw.Elapsed.TotalSeconds));
+            if (totalUnresolved > 0)
+            {
+                // Never silent: an unresolvable detected row is exactly how the decoy class went
+                // 30x under-reported (19 counted against 598 in the sidecars) with nothing in the
+                // log to say a whole class had been thinned.
+                logInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] peak co-assignment: {0} detected row(s) had no library entry and were excluded",
+                    totalUnresolved));
+            }
             return data;
         }
 
@@ -133,9 +165,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             OspreyConfig config,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            out string reason)
+            out string reason,
+            out int unresolved)
         {
             reason = null;
+            unresolved = 0;
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
                 string.IsNullOrEmpty(parquetPath) || !File.Exists(parquetPath))
             {
@@ -177,6 +211,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
             int row = 0;
             int added = 0;
+            int nUnresolved = 0;
             bool misaligned = false;
             bool ok = FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
             {
@@ -192,21 +227,35 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     return;
                 }
                 int current = row++;
-                // Both definitions of "detected" the report uses. Gate on them BEFORE any
-                // allocation: this callback fires for every pre-compaction row in the file.
+                // Gate BEFORE any allocation: this callback fires for every pre-compaction row.
                 double runQ = EffectiveQvalue(rec, config.FdrLevel, true);
                 double experimentQ = EffectiveQvalue(rec, config.FdrLevel, false);
-                if (runQ > config.RunFdr && experimentQ > config.RunFdr)
-                    return;
-                if (!libraryById.TryGetValue(rec.EntryId, out var lib) || lib == null ||
-                    double.IsNaN(lib.PrecursorMz) || lib.PrecursorMz <= 0)
-                    return;
                 bool isDecoy = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                 var cls = ModelDiagnosticsData.ClassifyEntry(isDecoy, rec.EntryId, classByBaseId);
+                if (!builder.Includes(fileIdx, cls, rec.EntryId, rec.Score, runQ, experimentQ, config.RunFdr))
+                    return;
+                // Decoy entries are not always present in THIS task's library index, while their
+                // target twin always is - and a decoy carries its target's precursor m/z by
+                // construction (same composition). Falling back to the base id keeps the decoy
+                // class populated; without it the panel silently dropped ~97% of detected decoys
+                // (19 counted against 598 in the sidecars) and reported a decoy rate 30x too low.
+                if (!libraryById.TryGetValue(rec.EntryId, out var lib) || lib == null)
+                    libraryById.TryGetValue(rec.EntryId & BASE_ID_MASK, out lib);
+                if (lib == null || double.IsNaN(lib.PrecursorMz) || lib.PrecursorMz <= 0)
+                {
+                    nUnresolved++;
+                    return;
+                }
+                // Identity from the library entry that actually resolved. On the base-id
+                // fallback that is the TARGET's sequence, so tag the key to keep the decoy a
+                // distinct precursor rather than merging it into its twin.
+                bool viaTwin = (lib.Id & LibraryEntry.DECOY_ID_BIT) != (rec.EntryId & LibraryEntry.DECOY_ID_BIT);
                 string modSeq = lib.ModifiedSequence ?? lib.Sequence;
+                string key = viaTwin
+                    ? modSeq + "|" + lib.Charge + "|decoy"
+                    : modSeq + "|" + lib.Charge;
                 builder.AddRow(fileIdx, new ModelDiagnosticsData.CoAssignmentRow(
-                        modSeq + "|" + lib.Charge, modSeq, lib.Charge,
-                        lib.PrecursorMz, apexRts[current], rec.Score, cls),
+                        key, rec.EntryId, modSeq, lib.Charge, lib.PrecursorMz, apexRts[current], rec.Score, cls),
                     runQ, experimentQ, config.RunFdr);
                 added++;
             });
@@ -221,7 +270,25 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 reason = string.Format(@"{0}: sidecar/parquet row misalignment", fileName);
                 return 0;
             }
+            unresolved = nUnresolved;
             return added;
+        }
+
+        /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base id.</summary>
+        private const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        /// <summary>
+        /// The pass-1 FDR sidecar for one input file, or null when it cannot be resolved. Same
+        /// resolution the score-pass sink used to WRITE it, so the panel reads what this run made.
+        /// </summary>
+        private static string ResolveSidecarPath(string fileName,
+            IReadOnlyDictionary<string, string> perFileParquetPaths, OspreyConfig config)
+        {
+            string b = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+            if (string.IsNullOrEmpty(b))
+                return null;
+            string p = FdrScoresSidecar.Pass1Path(b);
+            return File.Exists(p) ? p : null;
         }
 
         /// <summary>
