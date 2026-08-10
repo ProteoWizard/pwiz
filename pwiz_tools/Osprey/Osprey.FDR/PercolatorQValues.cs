@@ -787,6 +787,44 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Bounded (O(distinct entry_ids)) map of the score the EXPERIMENT-scope competitions
+        /// rank each entry on: <c>entry_id -&gt; aggregate score</c> (sidecar v4, issue #4522).
+        /// Persisted beside the experiment q-values it produced, so a consumer can build a
+        /// score-space acceptance boundary at experiment scope without rebuilding the roll-up
+        /// itself - the reconstruction that has to branch on <c>OSPREY_EXPERIMENT_AGG</c> and is
+        /// therefore silently wrong on exactly the arms where the aggregation is under study.
+        ///
+        /// <para>Uses the SAME <c>effScores</c> selection as
+        /// <see cref="ComputeExperimentPrecursorQMap"/> / <see cref="ComputeExperimentPeptideQMap"/>,
+        /// so it cannot report a score those competitions did not rank on. Under the default
+        /// aggregation <c>effScores == scores</c> and the max-per-entry reduction below is the
+        /// same reduction <see cref="TargetDecoyCompetition.CompeteAll"/> performs per base_id;
+        /// under mean-best-N every row of an entry already carries the group value, so the max
+        /// is the identity. Either way every row of an entry gets the same number and the
+        /// consumer just compares.</para>
+        ///
+        /// <para>Keyed by FULL entry_id, not base_id: a target and its decoy are distinct
+        /// entries with distinct aggregates (and
+        /// <see cref="TargetDecoyCompetition.ComputeBaseIdMeanBestN"/> likewise accumulates
+        /// them separately), even though the competition that consumes them pairs the two.</para>
+        /// </summary>
+        internal static Dictionary<uint, double> ComputeExperimentAggregateScoreMap(
+            double[] scores, bool[] labels, uint[] entryIds, bool applyExperimentAgg = true)
+        {
+            double[] effScores = applyExperimentAgg && OspreyEnvironment.ExperimentAggMeanBest
+                ? TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, OspreyEnvironment.MeanBestN)
+                : scores;
+
+            var aggByEntryId = new Dictionary<uint, double>();
+            for (int i = 0; i < effScores.Length; i++)
+            {
+                if (!aggByEntryId.TryGetValue(entryIds[i], out double cur) || effScores[i] > cur)
+                    aggByEntryId[entryIds[i]] = effScores[i];
+            }
+            return aggByEntryId;
+        }
+
+        /// <summary>
         /// Bounded (O(peptides)) experiment-peptide q map: <c>peptide -&gt; q</c>. The
         /// intrinsic working set of the experiment-peptide competition -- one q per distinct
         /// peptide string -- which the projection score pass

@@ -214,6 +214,11 @@ namespace pwiz.Osprey.FDR
                 out peps, out runPrecursorQvalues, out runPeptideQvalues,
                 out expPrecursorQvalues, out expPeptideQvalues, applyExperimentAgg);
 
+            // The score the experiment competitions above ranked each entry on (sidecar v4,
+            // issue #4522), from the same effScores selection they used.
+            var expAggByEntryId = PercolatorQValues.ComputeExperimentAggregateScoreMap(
+                finalScores, labels, entryIds, applyExperimentAgg);
+
             var results = new List<PercolatorResult>(n);
             for (int i = 0; i < n; i++)
             {
@@ -224,7 +229,9 @@ namespace pwiz.Osprey.FDR
                     RunPeptideQvalue = runPeptideQvalues[i],
                     ExperimentPrecursorQvalue = expPrecursorQvalues[i],
                     ExperimentPeptideQvalue = expPeptideQvalues[i],
-                    Pep = peps[i]
+                    Pep = peps[i],
+                    ExperimentAggregateScore = expAggByEntryId.TryGetValue(entryIds[i], out double eav)
+                        ? eav : finalScores[i]
                 });
             }
 
@@ -430,6 +437,14 @@ namespace pwiz.Osprey.FDR
                 ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
                     finalScores, labels, entryIds, peptides, applyExperimentAgg);
 
+            // The score those experiment competitions ranked each entry on (sidecar v4, issue
+            // #4522), persisted beside the q-values they produced. Built even on the
+            // single-file shortcut: there the experiment scope IS the run scope, so the
+            // aggregate is the entry's max over its own rows -- which is still not the per-row
+            // Score, because a precursor carries several pre-compaction rows per file.
+            var expAggByEntryId = PercolatorQValues.ComputeExperimentAggregateScoreMap(
+                finalScores, labels, entryIds, applyExperimentAgg);
+
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
             // by (peptide, isDecoy). The global minimum must be known before any row is emitted,
@@ -504,9 +519,12 @@ namespace pwiz.Osprey.FDR
 
                     double pep = pepByWinnerIdx.TryGetValue(g, out double pv) ? pv : 1.0;
 
+                    double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
+                        ? eav : finalScores[g];
+
                     projRows[r] = projRows[r].WithScore(finalScores[g]);
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
-                        projRows[r].Charge, pept, finalScores[g],
+                        projRows[r].Charge, pept, finalScores[g], ea,
                         new FdrQValues(rp, rpe, ep, epe, pep));
                 }
                 wgi += count;
@@ -864,6 +882,11 @@ namespace pwiz.Osprey.FDR
             Dictionary<string, double> expPeptByPeptide = isSingleFile
                 ? null : streamingQ.BuildExperimentPeptideQMap();
 
+            // The score those competitions ranked each entry on (sidecar v4, issue #4522).
+            // Built unconditionally -- see ScoreProjectionAndComputeFdrInPlace for why the
+            // single-file shortcut does NOT apply to the aggregate.
+            var expAggByEntryId = streamingQ.BuildExperimentAggregateScoreMap();
+
             // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
             // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
             // is not silent; byte-identical q-values and sink output.
@@ -913,7 +936,10 @@ namespace pwiz.Osprey.FDR
 
                     double pep = pepByWinnerIdx.TryGetValue(gEmit + r, out double pv) ? pv : 1.0;
 
-                    sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r],
+                    double ea = expAggByEntryId.TryGetValue(fEntryIds[r], out double eav)
+                        ? eav : fScores[r];
+
+                    sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r], ea,
                         new FdrQValues(rp, rpe, ep, epe, pep));
                     emitProgress.Report(gEmit + r + 1);
                 }

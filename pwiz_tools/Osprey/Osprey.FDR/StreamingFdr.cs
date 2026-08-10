@@ -557,14 +557,59 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public Dictionary<uint, double> BuildExperimentPrecursorQMap()
             {
-                Dictionary<uint, KeyValuePair<int, double>> targets, decoys;
+                ResolveExperimentBests(out var targets, out var decoys);
+                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
+                    out _, out double[] ws, out bool[] wd, out uint[] wb);
+                var q = new double[ws.Length];
+                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+                var map = new Dictionary<uint, double>(wb.Length);
+                for (int rank = 0; rank < wb.Length; rank++)
+                    map[wb[rank]] = q[rank];
+                return map;
+            }
+
+            /// <summary>
+            /// Streaming counterpart of
+            /// <see cref="PercolatorQValues.ComputeExperimentAggregateScoreMap"/> (sidecar v4,
+            /// issue #4522): <c>entry_id -&gt; the score the experiment competitions ranked that
+            /// entry on</c>. Reads the SAME per-(base_id, side) bests
+            /// <see cref="BuildExperimentPrecursorQMap"/> competes, via the shared
+            /// <see cref="ResolveExperimentBests"/>, so the score reported beside an experiment
+            /// q is by construction the one that q was computed from - on the default max path
+            /// and the mean-best-N path alike.
+            ///
+            /// <para>Keyed by FULL entry_id: the two dictionaries are split by side, and a
+            /// base_id plus its side is exactly the entry_id
+            /// (<c>base_id | <see cref="LibraryEntry.DECOY_ID_BIT"/></c> for a decoy), so
+            /// re-attaching the bit here recovers the per-entry key the sidecar record uses
+            /// without the caller having to mask anything.</para>
+            /// </summary>
+            public Dictionary<uint, double> BuildExperimentAggregateScoreMap()
+            {
+                ResolveExperimentBests(out var targets, out var decoys);
+                var map = new Dictionary<uint, double>(targets.Count + decoys.Count);
+                foreach (var kvp in targets)
+                    map[kvp.Key] = kvp.Value.Value;
+                foreach (var kvp in decoys)
+                    map[kvp.Key | LibraryEntry.DECOY_ID_BIT] = kvp.Value.Value;
+                return map;
+            }
+
+            /// <summary>
+            /// The per-(base_id, side) best scores the experiment-scope competitions run on:
+            /// the raw streamed maxima on the default path, or each top-N accumulator reduced
+            /// to its mean(best-N) score (missing runs at the decoy floor) under
+            /// OSPREY_EXPERIMENT_AGG. The reduced maps are what the resident
+            /// <c>ComputeBaseIdMeanBestN</c> -&gt; <c>CompeteAll</c> path builds; every row of a
+            /// base_id shares that score there, so the resident max-per-base_id reduction is a
+            /// no-op and the two paths agree (modulo the streaming floor).
+            /// </summary>
+            private void ResolveExperimentBests(
+                out Dictionary<uint, KeyValuePair<int, double>> targets,
+                out Dictionary<uint, KeyValuePair<int, double>> decoys)
+            {
                 if (_meanBestN >= 2)
                 {
-                    // Reduce each (base_id, side) top-N accumulator to its mean(best-N) score
-                    // (missing runs use the decoy floor) so the same per-base_id best maps the
-                    // resident ComputeBaseIdMeanBestN -> CompeteAll path builds are competed here.
-                    // Every row of a base_id shares that score, so the resident max-per-base_id
-                    // reduction is a no-op and the two paths agree (modulo the streaming floor).
                     double floor = _floor.ComputeFloor();
                     targets = ReduceMeanBestN(_mb2Targets, floor, _meanBestN);
                     decoys = ReduceMeanBestN(_mb2Decoys, floor, _meanBestN);
@@ -574,14 +619,6 @@ namespace pwiz.Osprey.FDR
                     targets = _precTargets;
                     decoys = _precDecoys;
                 }
-                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
-                    out _, out double[] ws, out bool[] wd, out uint[] wb);
-                var q = new double[ws.Length];
-                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-                var map = new Dictionary<uint, double>(wb.Length);
-                for (int rank = 0; rank < wb.Length; rank++)
-                    map[wb[rank]] = q[rank];
-                return map;
             }
 
             /// <summary>

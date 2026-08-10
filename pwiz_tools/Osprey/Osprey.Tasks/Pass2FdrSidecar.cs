@@ -1721,6 +1721,7 @@ namespace pwiz.Osprey.Tasks
                     entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
                     entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
                     entry.Pep = rec1.Pep;
+                    entry.ExperimentAggregateScore = rec1.ExperimentAggregateScore;
                     return PerRunClass.Unchanged;
                 }
                 entry.Score = newScore;
@@ -1730,6 +1731,11 @@ namespace pwiz.Osprey.Tasks
                 entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
                 entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
                 entry.Pep = rec1.Pep;
+                // Carried with the experiment q for the same reason, and NOT re-derived from
+                // newScore: it is the score that pass-1 experiment q was computed from, so
+                // re-mapping it to the rescored value would break the pairing that is the
+                // whole point of persisting it.
+                entry.ExperimentAggregateScore = rec1.ExperimentAggregateScore;
                 return PerRunClass.Moved;
             }
             entry.Score = newScore;
