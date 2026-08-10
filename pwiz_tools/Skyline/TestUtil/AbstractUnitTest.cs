@@ -163,16 +163,14 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public bool IsRunningInTestRunner
         {
-            get
-            {
-#if NET472
-                return TestContext is TestRunnerContext;
-#else
-                // net8: TestRunnerContext is TestRunner.exe-only (see TestRunnerLib.csproj);
-                // when running via `dotnet test` we're not in TestRunner.
-                return false;
-#endif
-            }
+            // Same check on both frameworks. This was once #if'd to a hardcoded false on net8,
+            // on the belief that TestRunnerContext was TestRunner.exe-only - it is not:
+            // TestRunnerLib targets net472 AND net8.0-windows, defines a net8 TestRunnerContext
+            // for MSTest 3.x, and TestUtil references it. The stub silently made every
+            // IsRunningInTestRunner caller take its "not TestRunner" path on net8, which meant
+            // SkipWiff2TestInTestExplorer skipped FileTypeTest and Wiff2ResultsTest everywhere,
+            // including under TestRunner - so the wiff2 path had no coverage at all.
+            get { return TestContext is TestRunnerContext; }
         }
 
         /// <summary>
