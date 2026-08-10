@@ -1135,12 +1135,10 @@ namespace pwiz.Osprey.Tasks
                     // RT, which the streamed fold never sees. On THIS path the pre-compaction
                     // pool is resident and carries ApexRt, so read it straight off the entries -
                     // no sidecar/parquet rejoin needed (that is the streaming path's problem).
-                    var coAssignment = config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT)
-                        ? ModelDiagnosticsData.BuildCoAssignment(
-                            perFileEntries, mdiagAccumulator.ClassByBaseId,
-                            ModelDiagnosticsReport.BuildPrecursorMzLookup(libraryById, config),
-                            config.RunFdr, config.FdrLevel, 1, false)
-                        : null;
+                    var coAssignment = ModelDiagnosticsData.BuildCoAssignment(
+                        perFileEntries, mdiagAccumulator.ClassByBaseId,
+                        ModelDiagnosticsReport.BuildPrecursorMzLookup(libraryById),
+                        config.RunFdr, config.FdrLevel, 1, false);
                     ModelDiagnosticsReport.WriteFromAccumulator(
                         mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment);
                 }
@@ -2411,11 +2409,9 @@ namespace pwiz.Osprey.Tasks
                 // from the per-file sidecars just flushed by the score pass, joined to their
                 // parquet apex_rt. Reusing the accumulator's classification avoids re-running the
                 // multi-minute library classification for the same answer.
-                var coAssignment = config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT)
-                    ? PeakCoAssignmentSource.Build(
-                        projections.PerFile.ConvertAll(kv => kv.Key), perFileParquetPaths, config,
-                        mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value, ctx.LogInfo)
-                    : null;
+                var coAssignment = PeakCoAssignmentSource.Build(
+                    projections.PerFile.ConvertAll(kv => kv.Key), perFileParquetPaths, config,
+                    mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value, ctx.LogInfo);
                 ModelDiagnosticsReport.WriteFromAccumulator(
                     mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment);
             }

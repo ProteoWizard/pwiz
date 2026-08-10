@@ -287,17 +287,15 @@ namespace pwiz.Osprey
         // format/section value (ascii | unicode | sections | html | <Section>).
         public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
             (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
-        // --model-diagnostics takes an OPTIONAL value (handled specially in TokenizeAndDispatch,
-        // like --parallel-files): bare = the standard report, <token>[,<token>...] adds the named
-        // expensive panels, "all" adds every one this build has. Bare stays the default so no
-        // existing command line silently gets slower; see ModelDiagnosticsFeatures for why the
-        // opt-in is per-panel tokens rather than a level.
+        // One flag, everything we know how to show. An opt-in token per expensive panel was built
+        // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
+        // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
+        // choose. Someone who asks for --model-diagnostics wants the diagnostics, not a decision
+        // about which ones they can afford - and a panel behind a token nobody remembers is a
+        // panel nobody sees, which defeats a diagnostic whose whole purpose is surfacing an effect
+        // users do not know to look for.
         public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(@"model-diagnostics",
-            () => @"[<panel>[,<panel>]]", (c, p) =>
-            {
-                c._config.ModelDiagnostics = true;
-                c._config.ModelDiagnosticsPanels = ModelDiagnosticsFeatures.Parse(p.Value);
-            });
+            (c, p) => c._config.ModelDiagnostics = true);
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
             (c, p) => true) { ShortName = @"h" };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
@@ -429,24 +427,6 @@ namespace pwiz.Osprey
                     matched.ProcessValue(this, new NameValuePair(matched.Name, parallelValue));
                     continue;
                 }
-                if (ReferenceEquals(matched, ARG_MODEL_DIAGNOSTICS))
-                {
-                    // Optional value: consume the next token as the panel list ONLY when it is a
-                    // non-flag token, so a bare --model-diagnostics followed by a positional mzML
-                    // still means "standard report". Same lookahead as --parallel-files, but the
-                    // value is not numeric, so an unrecognized word is a typo'd panel name rather
-                    // than a file - ModelDiagnosticsFeatures.Parse rejects it by name.
-                    i++;
-                    string panelValue = null;
-                    if (i < args.Length && !args[i].StartsWith(@"-") && IsModelDiagnosticsPanelList(args[i]))
-                    {
-                        panelValue = args[i];
-                        i++;
-                    }
-                    matched.ProcessValue(this, new NameValuePair(matched.Name, panelValue));
-                    continue;
-                }
-
                 if (matched.Variadic)
                 {
                     i++;
@@ -628,31 +608,6 @@ namespace pwiz.Osprey
                     return false;
             }
             return int.TryParse(token, out int n) && n >= 0;
-        }
-
-        /// <summary>
-        /// True when the token after <c>--model-diagnostics</c> should be consumed as its panel
-        /// list rather than left as a positional input file.
-        ///
-        /// <para>Shape, not membership: letters, digits, hyphens and commas only. A misspelled
-        /// panel therefore still gets consumed, so
-        /// <see cref="ModelDiagnosticsFeatures.Parse"/> can reject it BY NAME - the alternative
-        /// (only consuming legal tokens) would silently hand a typo to the positional file list
-        /// and report a missing input file instead. Real inputs are excluded because an mzML path
-        /// always carries a '.' or a directory separator.</para>
-        /// </summary>
-        private static bool IsModelDiagnosticsPanelList(string token)
-        {
-            if (string.IsNullOrEmpty(token))
-                return false;
-            foreach (char c in token)
-            {
-                bool allowed = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                               (c >= '0' && c <= '9') || c == '-' || c == ',';
-                if (!allowed)
-                    return false;
-            }
-            return true;
         }
 
         private static double ParseDouble(string value, string flagName)
@@ -860,7 +815,7 @@ namespace pwiz.Osprey
                 { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
-                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. Add [peak-coassignment|all] for expensive opt-in panels" },
+                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },
             };

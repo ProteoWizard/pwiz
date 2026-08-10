@@ -203,10 +203,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public List<FileSummaryRow> PerFile { get; set; }
             /// <summary>
             /// Single-peak multiple-ID co-assignment on the REPORTED pool - what the user actually
-            /// receives. Read it against the pass-1 panel rather than alone: Stage 6 manufactures
-            /// co-assignment on purpose (multi-charge consensus moves disagreeing charge states
-            /// onto the leader's peak, forced integration gap-fills at a consensus RT), so the
-            /// pass2 - pass1 difference is reconciliation's own contribution.
+            /// receives. Read it against the pass-1 panel rather than alone: the difference is
+            /// reconciliation's net effect, which measures as fewer co-assigned precursors but a
+            /// HIGHER entrapment enrichment (see <see cref="CoAssignmentData.PostReconciliation"/>
+            /// for the numbers and the direction, which is not the intuitive one).
             /// </summary>
             public CoAssignmentData CoAssignment { get; set; }
         }

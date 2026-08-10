@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 var data = ModelDiagnosticsData.Build(
                     perFileEntries, contributions, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById, config));
+                    BuildPrecursorMzLookup(libraryById));
                 // The CAL view: per-file calibration diagnostics captured at Stage 3
                 // (null when none were captured -- a resumed run, or no files calibrated).
                 // Serialized into the pass-1 data sidecar below, so it round-trips into
@@ -226,7 +226,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById, config));
+                    BuildPrecursorMzLookup(libraryById));
 
                 string outPath = RenderAndWrite(data, config);
                 // Consume the FirstPassFDR -> SecondPassFDR hand-off sidecar unconditionally
@@ -373,16 +373,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// DETECTED rows, a small fraction of a library that reaches 6.3M entries on the Astral
         /// runs, and the library is already resident wherever this is called.</para>
         ///
-        /// <para>Returns null - which skips the panel entirely - unless the run opted into
-        /// <see cref="ModelDiagnosticsFeatures.PEAK_COASSIGNMENT"/>. Gating here rather than at
-        /// each call site means a new caller cannot accidentally turn the expensive panel back
-        /// on.</para>
         /// </summary>
         internal static Func<uint, double> BuildPrecursorMzLookup(
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById, OspreyConfig config)
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById)
         {
-            if (libraryById == null ||
-                !config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT))
+            if (libraryById == null)
                 return null;
             return entryId => libraryById.TryGetValue(entryId, out var lib) && lib != null
                 ? lib.PrecursorMz

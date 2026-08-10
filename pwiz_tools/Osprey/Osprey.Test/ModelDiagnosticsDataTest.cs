@@ -62,49 +62,6 @@ namespace pwiz.Osprey.Test
             TestCalibrationBuildCalFile();
             TestStreamingAccumulatorMatchesBatch();
             TestPeakCoAssignment();
-            TestModelDiagnosticsPanelTokens();
-        }
-
-        // The opt-in panel tokens on --model-diagnostics. The property under test is that the
-        // BARE flag stays cheap: every command line written before the expensive panels existed
-        // must keep its old cost, which is what makes adding a panel a safe change.
-        private static void TestModelDiagnosticsPanelTokens()
-        {
-            Assert.AreEqual(0, ModelDiagnosticsFeatures.Parse(null).Count);
-            Assert.AreEqual(0, ModelDiagnosticsFeatures.Parse(string.Empty).Count);
-
-            var one = ModelDiagnosticsFeatures.Parse(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT);
-            Assert.IsTrue(one.Contains(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
-
-            // Case and surrounding whitespace are forgiving; the token itself is not.
-            Assert.IsTrue(ModelDiagnosticsFeatures.Parse(@" Peak-CoAssignment ")
-                .Contains(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
-            Assert.AreEqual(ModelDiagnosticsFeatures.ALL_TOKENS.Count,
-                ModelDiagnosticsFeatures.Parse(ModelDiagnosticsFeatures.ALL).Count);
-
-            // A misspelled panel is a hard error naming the legal values, NOT a silent skip: a
-            // silently-ignored typo looks exactly like a panel that had nothing to report, and the
-            // user waits for output that never arrives.
-            try
-            {
-                ModelDiagnosticsFeatures.Parse(@"peak-coassign");
-                Assert.Fail(@"an unknown panel token must throw");
-            }
-            catch (System.ArgumentException ex)
-            {
-                Assert.IsTrue(ex.Message.Contains(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
-            }
-
-            // The config gate is AND-ed with --model-diagnostics itself, so naming a panel without
-            // the report cannot switch the work on.
-            var config = new OspreyConfig
-            {
-                ModelDiagnostics = false,
-                ModelDiagnosticsPanels = ModelDiagnosticsFeatures.Parse(ModelDiagnosticsFeatures.ALL),
-            };
-            Assert.IsFalse(config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
-            config.ModelDiagnostics = true;
-            Assert.IsTrue(config.HasModelDiagnosticsPanel(ModelDiagnosticsFeatures.PEAK_COASSIGNMENT));
         }
 
         // Single-peak multiple-ID co-assignment (issue #4522) on a fixture where every reported
@@ -177,12 +134,17 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(scope.Entrapment);
             Assert.AreEqual(1, scope.Entrapment.N);
             Assert.AreEqual(1, scope.Entrapment.NBetter);
-            Assert.AreEqual(5.0, scope.Enrichment, 1e-12);
 
             Assert.IsNotNull(scope.Decoy);
             Assert.AreEqual(1, scope.Decoy.N);
             Assert.AreEqual(1, scope.Decoy.NBetter);
-            Assert.AreEqual(5.0, scope.DecoyEnrichment, 1e-12);
+
+            // Every class here is far under MIN_N_FOR_ENRICHMENT, so the ratios are suppressed.
+            // A measured Stellar run accepted 7 decoys at experiment q and 1 of 7 rendered as
+            // "6.4x", indistinguishable at a glance from the 5.7x that took a 40-file cohort to
+            // establish. 1-of-1 here would read as an even more alarming 5x.
+            Assert.IsTrue(double.IsNaN(scope.Enrichment));
+            Assert.IsTrue(double.IsNaN(scope.DecoyEnrichment));
 
             // None of these pairs is a PTM positional isomer - the sequences differ outright - so
             // the whole "would go away" count survives the caveat subtraction.
@@ -228,6 +190,55 @@ namespace pwiz.Osprey.Test
             // by returning null rather than reporting a zero co-assignment rate.
             Assert.IsNull(ModelDiagnosticsData.BuildCoAssignment(
                 WrapFiles(f1, f2), cls, id => double.NaN, 0.01, FdrLevel.Precursor, 1, false));
+
+            TestCoAssignmentEnrichmentAndOffenderDedup();
+        }
+
+        // Enrichment arithmetic above MIN_N_FOR_ENRICHMENT, and one offender ROW per precursor
+        // pair rather than one per observation. Both need a bigger pool than the fixture above:
+        // 31 targets and 31 entrapment, padded with isolated precursors at m/z nobody shares.
+        // 1 of 31 targets and 2 of 31 entrapment are co-assigned, so enrichment is exactly 2.0.
+        private static void TestCoAssignmentEnrichmentAndOffenderDedup()
+        {
+            var mz = new Dictionary<uint, double> { { 1, 500.000 }, { 2, 500.004 }, { 201, 500.005 }, { 202, 500.006 } };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
+                { 201, EntrapmentClass.PTarget }, { 202, EntrapmentClass.PTarget },
+            };
+            var rows = new List<FdrEntry>
+            {
+                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000),      // the strong explanation
+                CoEntry(2, false, 3.0, 0.001, "B", 2, 10.018),      // co-assigned target
+                CoEntry(201, false, 4.0, 0.001, "E1", 2, 10.020),   // co-assigned entrapment
+                CoEntry(202, false, 4.0, 0.001, "E2", 2, 10.022),   // co-assigned entrapment
+            };
+            for (uint i = 0; i < 29; i++)                            // isolated padding, no partners
+            {
+                uint t = 1000 + i, p = 2000 + i;
+                mz[t] = 600.0 + i; mz[p] = 800.0 + i;
+                cls[t] = EntrapmentClass.Target; cls[p] = EntrapmentClass.PTarget;
+                rows.Add(CoEntry(t, false, 5.0, 0.001, "T" + i, 2, 20.0 + i));
+                rows.Add(CoEntry(p, false, 5.0, 0.001, "P" + i, 2, 40.0 + i));
+            }
+            // The same two runs, so every co-assigned pair is seen TWICE. Row count per pair must
+            // still be one, with Runs == 2.
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(rows, new List<FdrEntry>(rows)), cls,
+                id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+            var scope = data.Run;
+            Assert.AreEqual(31, scope.Target.N);
+            Assert.AreEqual(1, scope.Target.NBetter);               // B, outscored by A
+            Assert.AreEqual(31, scope.Entrapment.N);
+            Assert.AreEqual(2, scope.Entrapment.NBetter);           // E1 and E2, both outscored by A
+            Assert.AreEqual(2.0, scope.Enrichment, 1e-12);
+
+            // Three distinct pairs, each observed in both runs: 3 rows, not 6.
+            Assert.AreEqual(3, scope.WorstOffenders.Count);
+            foreach (var o in scope.WorstOffenders)
+                Assert.AreEqual(2, o.Runs);
         }
 
         // The streaming pass-1 accumulator (fed per-row off the projection score-pass sink so an

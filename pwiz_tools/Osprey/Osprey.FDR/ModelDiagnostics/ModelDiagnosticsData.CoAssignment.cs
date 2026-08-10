@@ -73,12 +73,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <summary>1 = pre-compaction first-pass detection, 2 = final reported pool.</summary>
             public int Pass { get; set; }
             /// <summary>
-            /// True when the pool this was built from is post-reconciliation (pass 2). Stage 6
-            /// MANUFACTURES co-assignment on purpose - multi-charge consensus moves disagreeing
-            /// charge states onto the leader's peak, and forced integration gap-fills at a
-            /// consensus RT - so a pass-2 rate above the pass-1 rate is reconciliation's
-            /// contribution, not a scoring property. The report shows both passes for that
-            /// contrast.
+            /// True when the pool this was built from is post-reconciliation (pass 2).
+            ///
+            /// <para>Read the two passes together; do NOT assume a direction. Stage 6 both adds
+            /// co-assignment (multi-charge consensus moves disagreeing charge states onto the
+            /// leader's peak, forced integration gap-fills at a consensus RT) and removes it
+            /// (compaction drops the weaker of two competitors). Measured on the Stellar
+            /// entrapment gate the net is REMOVAL - target 2.17% -&gt; 1.18%, entrapment 6.80%
+            /// -&gt; 5.17% - while the ENRICHMENT rises, 3.14x -&gt; 4.37x, because the reported
+            /// pool sheds co-assigned targets faster than co-assigned entrapment. So pass 2 is
+            /// cleaner in absolute terms and worse in the ratio that matters. An earlier version
+            /// of this comment asserted the rate would rise; it does not, and the enrichment
+            /// delta is the quantity to watch.</para>
             /// </summary>
             public bool PostReconciliation { get; set; }
 
@@ -211,6 +217,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public double PartnerScore { get; set; }
             /// <summary>Partner score minus this precursor's score; always positive here.</summary>
             public double ScoreGap { get; set; }
+            /// <summary>
+            /// How many runs this same precursor pair is co-assigned in. One row per PAIR, not per
+            /// observation: without this the listing spends its slots re-printing one pair once per
+            /// file, and a pair that co-assigns in most runs (the most damning kind) looks the same
+            /// as one that did it once. The other per-observation fields describe the single run
+            /// with the largest score gap.
+            /// </summary>
+            public int Runs { get; set; }
             /// <summary>
             /// True when the two differ only in modification - same sequence once mods are
             /// stripped. Flags the isobaric PTM positional-isomer case, where BOTH IDs may be real
@@ -446,12 +460,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             private const int DELTA_RT_BINS = 50;
             private const int MAX_OFFENDERS = 50;
-            // Trim the offender candidates back to MAX_OFFENDERS whenever they reach this many, so
-            // the list is bounded by a constant rather than by the number of co-assigned pairs in
-            // the run. At Astral scale that difference is ~50 retained pairs against ~50,000
-            // candidates, and the trim is exact: ranking is by score gap alone, so a pair outside
-            // the top MAX_OFFENDERS of the pairs seen so far can never re-enter.
-            private const int OFFENDER_TRIM_AT = 4 * MAX_OFFENDERS;
+
+            /// <summary>
+            /// Fewest detected precursors a class needs before its enrichment ratio is reported.
+            /// Below this the ratio is arithmetic noise dressed as a finding: a measured Stellar
+            /// run accepted 7 decoys at experiment-wide q, and 1 of 7 rendered as a 6.4x
+            /// enrichment, which reads exactly like the 5.7x that took a 40-file cohort to
+            /// establish. Set below the ~95-144 entrapment precursors the real entrapment arms
+            /// carry, so it never suppresses a number that means something.
+            /// </summary>
+            public const int MIN_N_FOR_ENRICHMENT = 30;
 
             private readonly string[] _runNames;
 
@@ -472,7 +490,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private bool _anyEntrapment;
             private bool _anyDecoy;
 
-            private readonly List<CoAssignedPair> _offenders = new List<CoAssignedPair>();
+            // Offender candidates keyed by precursor pair, so a pair co-assigned in many runs is
+            // one row carrying a run count. Bounded by the number of DISTINCT co-assigned pairs
+            // (thousands at Astral scale, not the tens of thousands of observations), so it needs
+            // no mid-accumulation trimming - which also keeps the run counts exact.
+            private readonly Dictionary<string, CoAssignedPair> _offendersByPair =
+                new Dictionary<string, CoAssignedPair>(StringComparer.Ordinal);
 
             /// <param name="runNames">Input-file names in input order; indexes <see cref="AddDetectedRow"/>.</param>
             public CoAssignmentAccumulator(string[] runNames)
@@ -573,11 +596,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     DeltaRtEntrapment = _anyEntrapment ? _deltaRtEntrapment : null,
                     WorstOffenders = RankOffenders(),
                 };
-                if (target.BetterFraction > 0)
+                // Both denominators have to carry enough precursors for a ratio to mean anything,
+                // the numerator class especially - see MIN_N_FOR_ENRICHMENT.
+                if (target.BetterFraction > 0 && target.N >= MIN_N_FOR_ENRICHMENT)
                 {
-                    if (_anyEntrapment)
+                    if (_anyEntrapment && entrapment.N >= MIN_N_FOR_ENRICHMENT)
                         scope.Enrichment = entrapment.BetterFraction / target.BetterFraction;
-                    if (_anyDecoy)
+                    if (_anyDecoy && decoy.N >= MIN_N_FOR_ENRICHMENT)
                         scope.DecoyEnrichment = decoy.BetterFraction / target.BetterFraction;
                 }
                 return scope;
@@ -739,35 +764,44 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // co-elutions from the wide scan window.
                 if (better && absDeltaRt <= RT_TOLERANCE)
                 {
-                    _offenders.Add(new CoAssignedPair
+                    // One entry per PRECURSOR PAIR across all runs, not one per observation. The
+                    // same pair co-assigning in 31 of 40 runs is one finding, and printing it 31
+                    // times would crowd every other pair out of the listing.
+                    string pairKey = row.Key + "" + partner.Key;
+                    if (_offendersByPair.TryGetValue(pairKey, out var seen))
                     {
-                        File = _fileIdx >= 0 && _fileIdx < _runNames.Length ? _runNames[_fileIdx] : null,
+                        seen.Runs++;
+                        // Keep the worst single observation's detail beside the run count.
+                        if (partner.Score - row.Score > seen.ScoreGap)
+                            FillObservation(seen, row, partner, deltaRt);
+                        return;
+                    }
+                    var pair = new CoAssignedPair
+                    {
                         ModifiedSequence = row.ModifiedSequence,
                         Charge = row.Charge,
                         Class = row.Class.ToString(),
                         PartnerModifiedSequence = partner.ModifiedSequence,
                         PartnerCharge = partner.Charge,
                         PrecursorMz = row.PrecursorMz,
-                        ApexRt = row.ApexRt,
-                        DeltaRt = deltaRt,
-                        Score = row.Score,
-                        PartnerScore = partner.Score,
-                        ScoreGap = partner.Score - row.Score,
                         SameBaseSequence = sameBase,
-                    });
-                    if (_offenders.Count >= OFFENDER_TRIM_AT)
-                        TrimOffenders();
+                        Runs = 1,
+                    };
+                    FillObservation(pair, row, partner, deltaRt);
+                    _offendersByPair.Add(pairKey, pair);
                 }
             }
 
-            // Keep the candidate list bounded by a constant instead of by the run's co-assigned
-            // pair count. Safe to do mid-accumulation: the ranking key is the score gap, which is
-            // a property of the pair alone, so a candidate that is not in the top MAX_OFFENDERS
-            // now can never be pushed back in by a later one.
-            private void TrimOffenders()
+            // Copy the per-observation half of a pair row (which run, which peak, what gap).
+            private void FillObservation(CoAssignedPair pair, in CoAssignmentRow row,
+                in CoAssignmentRow partner, double deltaRt)
             {
-                _offenders.Sort(CompareOffenders); // Array.Sort OK: CompareOffenders is a total order over distinct pairs, so there are no ties to reorder
-                _offenders.RemoveRange(MAX_OFFENDERS, _offenders.Count - MAX_OFFENDERS);
+                pair.File = _fileIdx >= 0 && _fileIdx < _runNames.Length ? _runNames[_fileIdx] : null;
+                pair.ApexRt = row.ApexRt;
+                pair.DeltaRt = deltaRt;
+                pair.Score = row.Score;
+                pair.PartnerScore = partner.Score;
+                pair.ScoreGap = partner.Score - row.Score;
             }
 
             // Count one precursor into its class row, retaining its better-partner minimum for the
@@ -827,10 +861,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // the embedded JSON does not churn between otherwise identical runs.
             private List<CoAssignedPair> RankOffenders()
             {
-                _offenders.Sort(CompareOffenders); // Array.Sort OK: CompareOffenders is a total order over distinct pairs (the same precursor pair cannot repeat within one file), so there are no ties to reorder
-                if (_offenders.Count > MAX_OFFENDERS)
-                    _offenders.RemoveRange(MAX_OFFENDERS, _offenders.Count - MAX_OFFENDERS);
-                return _offenders;
+                var ranked = new List<CoAssignedPair>(_offendersByPair.Values);
+                ranked.Sort(CompareOffenders); // Array.Sort OK: CompareOffenders is a total order over distinct pairs, and the dictionary holds one entry per pair, so there are no ties to reorder
+                if (ranked.Count > MAX_OFFENDERS)
+                    ranked.RemoveRange(MAX_OFFENDERS, ranked.Count - MAX_OFFENDERS);
+                return ranked;
             }
 
             private static int CompareOffenders(CoAssignedPair a, CoAssignedPair b)

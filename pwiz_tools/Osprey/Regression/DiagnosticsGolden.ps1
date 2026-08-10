@@ -162,6 +162,28 @@ function Get-DiagnosticsMetrics {
     Add-Metric 'winFraction.nullBandReal' $d.winFraction.nullBandReal
     Add-Metric 'winFraction.nullBandEnt'  $(if ($d.winFraction.hasEntrapment) { $d.winFraction.nullBandEnt } else { $null })
 
+    # --- Peak co-assignment (issue #4522) ----------------------------------
+    # Pinned at BOTH passes and BOTH q scopes. Without these the panel ships with no golden
+    # coverage at all: this projection is an explicit metric list, not an enumeration of the
+    # payload, so a new card is invisible to the comparison until it is named here. The counts
+    # are the load-bearing ones (nBetter is the "would go away under best-match-wins" number);
+    # the fractions follow from them and n, so pinning both would only double the failure noise.
+    foreach ($p in 1, 2) {
+        $ca = if ($p -eq 2) { $d.pass2.coAssignment } else { $d.coAssignment }
+        foreach ($scope in 'run', 'experiment') {
+            $s = if ($ca) { $ca.$scope } else { $null }
+            foreach ($cls in 'target', 'entrapment', 'decoy') {
+                $r = if ($s) { $s.$cls } else { $null }
+                Add-Metric "pass$p.coAssign.$scope.$cls.n"       $(if ($r) { $r.n } else { $null })
+                Add-Metric "pass$p.coAssign.$scope.$cls.nBetter" $(if ($r) { $r.nBetter } else { $null })
+            }
+            # NaN when a class is under MIN_N_FOR_ENRICHMENT, which is itself worth pinning: it
+            # says the run had too few of that class to make a ratio, and a change in that is a
+            # change in the pool.
+            Add-Metric "pass$p.coAssign.$scope.enrichment" $(if ($s) { $s.enrichment } else { $null })
+        }
+    }
+
     # --- FDP at the reported-q threshold (entrapment only) -----------------
     foreach ($pass in 1, 2) {
         $fdp = Get-FdpAtThreshold -Payload $d -Pass $pass -Scope 'experiment'
