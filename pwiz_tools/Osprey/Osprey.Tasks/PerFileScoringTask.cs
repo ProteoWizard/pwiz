@@ -652,24 +652,24 @@ namespace pwiz.Osprey.Tasks
                 // only per-file row counts; the 1st-pass streaming score path re-reads identity +
                 // features from parquet, so no resident FdrProjection[] buffer is allocated.
                 // Same predicate as the --input-scores loader, not a re-derivation of it (#4486).
-            // This site gated on bare NeedsResidentPool, which no longer excludes
-            // ExpectReconciledInput, so an ExpectReconciledInput config arriving here would
-            // take the lean branch and add an EMPTY entry list per file. Not reachable today
-            // (Run routes InputScores runs away from Rehydrate), but re-deriving the rule at
-            // one call site and importing it at the other is precisely the drift this change
-            // exists to remove. hasReconSidecars is false here: this path has no bundle.
-            // ARM THE GUARD ON THE SAME DECISION, for the reason the branch below states: the
-            // fat path IS the resident pool here, so guarding on a separate NeedsResidentPool
-            // let a config with needsResidentPool false but builder null (ExpectReconciledInput)
-            // take the O(files) fat load with the guard disarmed and no warning. Two predicates
-            // that can disagree about one choice is the drift this change removes; the guard is
-            // the third reader of that choice and has to key off it too. Placed inside the
-            // InputFiles block because with no input files nothing loads and a guard here would
-            // only produce a false positive.
-            var builder = CanUseLeanProjection(config, hasReconSidecars: false,
-                                               OspreyEnvironment.UseFdrProjection)
-                ? new FdrProjectionSet.Builder(countsOnly: true)
-                : null;
+                // This site gated on bare NeedsResidentPool, which no longer excludes
+                // ExpectReconciledInput, so an ExpectReconciledInput config arriving here would
+                // take the lean branch and add an EMPTY entry list per file. Not reachable today
+                // (Run routes InputScores runs away from Rehydrate), but re-deriving the rule at
+                // one call site and importing it at the other is precisely the drift this change
+                // exists to remove. hasReconSidecars is false here: this path has no bundle.
+                // ARM THE GUARD ON THE SAME DECISION, for the reason the branch below states: the
+                // fat path IS the resident pool here, so guarding on a separate NeedsResidentPool
+                // let a config with needsResidentPool false but builder null (ExpectReconciledInput)
+                // take the O(files) fat load with the guard disarmed and no warning. Two predicates
+                // that can disagree about one choice is the drift this change removes; the guard is
+                // the third reader of that choice and has to key off it too. Placed inside the
+                // InputFiles block because with no input files nothing loads and a guard here would
+                // only produce a false positive.
+                var builder = CanUseLeanProjection(config, hasReconSidecars: false,
+                                                   OspreyEnvironment.UseFdrProjection)
+                    ? new FdrProjectionSet.Builder(countsOnly: true)
+                    : null;
                 GuardResidentPool(config, needsResidentPool: builder == null);
 
                 // Per-file progress so this all-files load is not a silent multi-minute

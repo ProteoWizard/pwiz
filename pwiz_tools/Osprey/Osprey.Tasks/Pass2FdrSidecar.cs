@@ -569,16 +569,24 @@ namespace pwiz.Osprey.Tasks
             //
             //    Two --input-scores paths in different directories CAN share a stem
             //    (RescoreHydration.PreCompactionTallies is index-keyed for exactly that reason),
-            //    so a same-stem pair is MERGED here rather than last-wins. The whole-run map
-            //    this replaced merged them implicitly - it was keyed (file, entry_id) and the
-            //    map-back walked perFileEntries - so keeping only one list would have left the
-            //    other's entries with a mixture of refreshed and stale q-values, which is worse
-            //    than the pre-existing hazard. Merging reproduces the old disposition. A hard
-            //    throw was tried here and removed: it fired at Stage 7, after hours of Stages
-            //    1-6, for a condition knowable at argument-parse time, while the sibling
-            //    sidecarByKey below and the projection path's own per-file map stayed
-            //    last-wins - so it converted one silent inconsistency into a late abort
-            //    without making the class of input any safer.
+            //    so a same-stem pair is MERGED here rather than last-wins.
+            //
+            //    Merging REPRODUCES the old disposition; it does NOT make duplicate stems
+            //    correct, and must not be read as fixing them (#4555). The lookups this method
+            //    performs are still stem-keyed and last-wins - sidecarByKey and
+            //    perFileParquetPaths below, and the projection second pass's own
+            //    survivorsByFile - so a duplicate stem still reads ONE file's scalars and
+            //    applies the result to both files' entries. That is exactly what the whole-run
+            //    map this replaced did (keyed (file, entry_id), map-back over perFileEntries),
+            //    so this is the pre-existing hazard carried forward, not a new one; keeping
+            //    only the last list would have been WORSE, leaving the other's entries with a
+            //    mixture of refreshed and stale q-values. The real fix is path-hashed identity
+            //    across artifact naming and every per-file map at once, tracked in #4555.
+            //
+            //    A hard throw was tried here and removed: it fired at Stage 7, after hours of
+            //    Stages 1-6, for a condition knowable at argument-parse time, while the sibling
+            //    maps stayed last-wins - so it converted one silent inconsistency into a late
+            //    abort without making the class of input any safer.
             var entriesByFile = new Dictionary<string, List<FdrEntry>>(
                 perFileEntries.Count, StringComparer.Ordinal);
             var survivorEntryIds = new HashSet<uint>();
