@@ -215,15 +215,17 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
             var column = SpectrumClassColumn.FindColumn(spec.ColumnId);
 
-            // "Is Declared"/"Is Not Declared" test only for the term's presence: a value-less flag term
-            // captures with an empty (non-null) value, so presence is exactly GetValue() != null, while a
-            // spectrum lacking the term yields null. This bypasses the value-coercion path below, which a
-            // present flag's empty value could not survive as "present".
+            // For these terms blank means absent: a term is blank when the spectrum does not carry it
+            // (GetValue() is null) and is never blank when it does, even for a value-less flag term such as
+            // "zoom scan", which captures with an empty (non-null) value. So "Is Not Blank" is how a flag
+            // term is matched at all, and "Equals" with an empty value is how an empty value is matched
+            // specifically. This bypasses the value-coercion path below, where an empty value would read as
+            // blank the way it does for an ordinary text column.
             var op = spec.Operation;
-            if (Equals(op, FilterOperations.OP_IS_DECLARED) || Equals(op, FilterOperations.OP_IS_NOT_DECLARED))
+            if (Equals(op, FilterOperations.OP_IS_BLANK) || Equals(op, FilterOperations.OP_IS_NOT_BLANK))
             {
-                bool declaredWanted = Equals(op, FilterOperations.OP_IS_DECLARED);
-                return metadata => (column.GetValue(metadata) != null) == declaredWanted;
+                bool blankWanted = Equals(op, FilterOperations.OP_IS_BLANK);
+                return metadata => (column.GetValue(metadata) == null) == blankWanted;
             }
 
             // Equals/Not Equals with a numeric operand compares per value: numerically where the term's
@@ -650,17 +652,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 { @"contains", @"contains" }, { @"notcontains", @"notcontains" }, { @"doesnotcontain", @"notcontains" },
                 { @"startswith", @"startswith" }, { @"notstartswith", @"notstartswith" },
                 { @"isblank", @"isnullorblank" }, { @"isnotblank", @"isnotnullorblank" },
-                { @"isnullorblank", @"isnullorblank" }, { @"isnotnullorblank", @"isnotnullorblank" },
-                { @"isdeclared", @"isdeclared" }, { @"isnotdeclared", @"isnotdeclared" }
+                { @"isnullorblank", @"isnullorblank" }, { @"isnotnullorblank", @"isnotnullorblank" }
             };
 
         // The operator tokens listed in the parse-error message so the vocabulary is discoverable. The
-        // readable blank/declared forms are shown rather than the "isnullorblank" symbols.
+        // readable blank forms are shown rather than the "isnullorblank" symbols.
         private static readonly string OPERATOR_VOCABULARY = string.Join(@" ", new[]
         {
             @"=", @"<>", @">", @">=", @"<", @"<=",
             @"contains", @"notcontains", @"startswith", @"notstartswith",
-            @"isblank", @"isnotblank", @"isdeclared", @"isnotdeclared"
+            @"isblank", @"isnotblank"
         });
 
         /// <summary>

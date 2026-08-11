@@ -62,21 +62,21 @@ namespace pwiz.SkylineTestFunctional
             var filterCv70 = StringCvFilter(@"cv=-70");
             var filterBpiAll = NumericBpiFilter(FilterOperations.OP_IS_GREATER_THAN, @"0");
 
-            // "Is Declared"/"Is Not Declared" test only for a term's presence. The filter string term
-            // (MS:1000512) is present on every MS1 spectrum, so Is Declared on it matches them all; the
-            // zoom scan term (MS:1000497) is present on none of this data, so Is Not Declared on it also
-            // matches them all. Both therefore reproduce the unfiltered chromatogram, exercising the
-            // presence predicate through the real extraction pipeline (including term capture).
-            var filterDeclared = DeclaredCvFilter(@"MS:1000512", @"filter string", FilterOperations.OP_IS_DECLARED);
-            var filterNotDeclared = DeclaredCvFilter(@"MS:1000497", @"zoom scan", FilterOperations.OP_IS_NOT_DECLARED);
+            // For a CV term, blank means absent. The filter string term (MS:1000512) is present on every MS1
+            // spectrum, so Is Not Blank on it matches them all; the zoom scan term (MS:1000497) is present
+            // on none of this data, so Is Blank on it also matches them all. Both therefore reproduce the
+            // unfiltered chromatogram, exercising the presence predicate through the real extraction
+            // pipeline (including term capture).
+            var filterPresent = BlanknessCvFilter(@"MS:1000512", @"filter string", FilterOperations.OP_IS_NOT_BLANK);
+            var filterAbsent = BlanknessCvFilter(@"MS:1000497", @"zoom scan", FilterOperations.OP_IS_BLANK);
 
             RunUI(() =>
             {
                 SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterCv50, true);
                 SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterCv70, true);
                 SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterBpiAll, true);
-                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterDeclared, true);
-                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterNotDeclared, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterPresent, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterAbsent, true);
             });
             Assert.AreEqual(6, SkylineWindow.Document.MoleculeTransitionGroupCount);
 
@@ -106,11 +106,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(unfilteredPoints, cv50Points + cv70Points);
             // A numeric CV filter admitting every base peak intensity matches all spectra.
             Assert.AreEqual(unfilteredPoints, Points(filterBpiAll));
-            // Presence filters resolved through extraction: Is Declared on the always-present filter string
-            // term, and Is Not Declared on the never-present zoom scan term, each match every MS1 spectrum,
-            // so both reproduce the unfiltered chromatogram.
-            Assert.AreEqual(unfilteredPoints, Points(filterDeclared));
-            Assert.AreEqual(unfilteredPoints, Points(filterNotDeclared));
+            // Presence filters resolved through extraction: Is Not Blank on the always-present filter string
+            // term, and Is Blank on the never-present zoom scan term, each match every MS1 spectrum, so
+            // both reproduce the unfiltered chromatogram.
+            Assert.AreEqual(unfilteredPoints, Points(filterPresent));
+            Assert.AreEqual(unfilteredPoints, Points(filterAbsent));
 
             VerifyEditorOffersCvColumns();
             VerifyEditorPreservesUnofferedCvClause();
@@ -179,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
                 @"the userParam should not be a discoverable column");
             var userParamCaption = userParamColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture);
             var userParamFilter = new SpectrumClassFilter(new FilterClause(new[]
-                { new FilterSpec(userParamColumn.PropertyPath, FilterOperations.OP_IS_DECLARED, (string)null) }));
+                { new FilterSpec(userParamColumn.PropertyPath, FilterOperations.OP_IS_NOT_BLANK, (string)null) }));
 
             var precursorPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0);
             RunUI(() => SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, userParamFilter, true));
@@ -262,7 +262,7 @@ namespace pwiz.SkylineTestFunctional
                 { new FilterSpec(column.PropertyPath, op, operand) }));
         }
 
-        private static SpectrumClassFilter DeclaredCvFilter(string accession, string name, IFilterOperation op)
+        private static SpectrumClassFilter BlanknessCvFilter(string accession, string name, IFilterOperation op)
         {
             var column = SpectrumClassColumn.CvParam(accession, name, false);
             return new SpectrumClassFilter(new FilterClause(new[]

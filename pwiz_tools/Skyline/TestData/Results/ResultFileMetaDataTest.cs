@@ -70,8 +70,8 @@ namespace pwiz.SkylineTestData.Results
                 @"12345.6", @"number of detector counts", @"MS:1000131",
                 @"The intensity of the greatest peak in the mass spectrum.");
             // A value-less flag term: its value is captured as empty (non-null), and that emptiness must
-            // survive the round trip so "Is Declared" still sees the term as present (an empty value that
-            // came back as null would read as absent).
+            // survive the round trip so the term still reads as present (an empty value that came back as
+            // null would read as absent, and so as blank, when the filter is evaluated).
             var flag = new SpectrumMetadataTerm(@"MS:1000128", @"profile spectrum", string.Empty, null);
             // A user param with no unit and no definition (null fields must round-trip as null).
             var userParam = new SpectrumMetadataTerm(@"my custom flag", @"my custom flag", @"true", null);

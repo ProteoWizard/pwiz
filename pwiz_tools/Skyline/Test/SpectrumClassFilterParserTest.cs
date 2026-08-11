@@ -87,21 +87,21 @@ namespace pwiz.SkylineTest
             var canonicalGt = SpectrumClassFilter.ParseFilterString("cvidMS1000505 > 500");
             AssertEx.AreEqual(canonicalGt, SpectrumClassFilter.ParseFilterString("MS:1000505 > 500"));
 
-            var canonicalDeclared = SpectrumClassFilter.ParseFilterString("cvidMS1000505 isdeclared");
-            AssertEx.AreEqual(canonicalDeclared,
-                SpectrumClassFilter.ParseFilterString("\"base peak intensity (MS:1000505)\" isdeclared"));
+            var canonicalNotBlank = SpectrumClassFilter.ParseFilterString("cvidMS1000505 isnotblank");
+            AssertEx.AreEqual(canonicalNotBlank,
+                SpectrumClassFilter.ParseFilterString("\"base peak intensity (MS:1000505)\" isnotblank"));
             // Only the MS:xxx reference matters - any other text in the caption is ignored.
-            AssertEx.AreEqual(canonicalDeclared,
-                SpectrumClassFilter.ParseFilterString("\"whatever text MS:1000505 more text\" isdeclared"));
+            AssertEx.AreEqual(canonicalNotBlank,
+                SpectrumClassFilter.ParseFilterString("\"whatever text MS:1000505 more text\" isnotblank"));
 
             // The reference is normalized to the canonical encoded column, so a friendly-authored filter is
             // identical to a UI-authored one everywhere downstream (editor display, equality, round-trip).
-            var parsed = SpectrumClassFilter.ParseFilterString("MS:1000505 isdeclared");
+            var parsed = SpectrumClassFilter.ParseFilterString("MS:1000505 isnotblank");
             Assert.AreEqual("cvidMS1000505", parsed.Clauses.Single().FilterSpecs.Single().ColumnId.Name);
 
             // Validation accepts the friendly forms.
-            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("MS:1000505 isdeclared"));
-            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("\"base peak intensity (MS:1000505)\" isdeclared"));
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("MS:1000505 isnotblank"));
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("\"base peak intensity (MS:1000505)\" isnotblank"));
 
             // An accession inside a single-quoted OPERAND is left untouched (a string CV filter may match
             // literal text that happens to look like an accession); only the column reference is rewritten.
@@ -112,14 +112,14 @@ namespace pwiz.SkylineTest
             // A userParam has no accession, so it is named with the explicit "userParam:" marker (bare for a
             // simple name; the marker is case-insensitive), resolving to the same "cvup..." column.
             var canonicalUp = SpectrumClassFilter.ParseFilterString(
-                SpectrumClassColumn.CvParam("vendorSetting", null, false).ColumnName + " isdeclared");
-            AssertEx.AreEqual(canonicalUp, SpectrumClassFilter.ParseFilterString("userParam:vendorSetting isdeclared"));
-            AssertEx.AreEqual(canonicalUp, SpectrumClassFilter.ParseFilterString("USERPARAM:vendorSetting isdeclared"));
+                SpectrumClassColumn.CvParam("vendorSetting", null, false).ColumnName + " isnotblank");
+            AssertEx.AreEqual(canonicalUp, SpectrumClassFilter.ParseFilterString("userParam:vendorSetting isnotblank"));
+            AssertEx.AreEqual(canonicalUp, SpectrumClassFilter.ParseFilterString("USERPARAM:vendorSetting isnotblank"));
             // A userParam name with spaces uses the marker inside a double-quoted caption.
             var canonicalUpSpaces = SpectrumClassFilter.ParseFilterString(
-                SpectrumClassColumn.CvParam("vendor setting", null, false).ColumnName + " isdeclared");
+                SpectrumClassColumn.CvParam("vendor setting", null, false).ColumnName + " isnotblank");
             AssertEx.AreEqual(canonicalUpSpaces,
-                SpectrumClassFilter.ParseFilterString("\"userParam:vendor setting\" isdeclared"));
+                SpectrumClassFilter.ParseFilterString("\"userParam:vendor setting\" isnotblank"));
         }
 
         [TestMethod]
@@ -135,8 +135,8 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000512 isnullorblank"),
                 SpectrumClassFilter.ParseFilterString("MS:1000512 isblank"));
             // Case-insensitive, including the operators that are already words.
-            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000505 isdeclared"),
-                SpectrumClassFilter.ParseFilterString("MS:1000505 ISDECLARED"));
+            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000505 isnotblank"),
+                SpectrumClassFilter.ParseFilterString("MS:1000505 ISNOTBLANK"));
             AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000512 contains 'x'"),
                 SpectrumClassFilter.ParseFilterString("cvidMS1000512 CONTAINS 'x'"));
             // An alias-looking word inside a single-quoted operand is not rewritten.
@@ -152,7 +152,7 @@ namespace pwiz.SkylineTest
             // not localized text.)
             var error = SpectrumClassFilter.ValidateFilterString("MsLevel foobar 1");
             Assert.IsFalse(string.IsNullOrEmpty(error));
-            StringAssert.Contains(error, "isdeclared");
+            StringAssert.Contains(error, "isnotblank");
             StringAssert.Contains(error, "isblank");
         }
 
@@ -161,22 +161,22 @@ namespace pwiz.SkylineTest
         {
             // A well-formed but non-existent CV accession is accepted (a term's identity is its accession;
             // it need not be in the compiled ontology) and simply matches nothing - it is not an error.
-            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("MS:9999999 isdeclared"));
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("MS:9999999 isnotblank"));
 
             // A malformed accession (letters but no digits after the colon) is not a CV reference and, like
             // any bad column token, fails to parse.
-            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("MS: isdeclared")));
-            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("MS:abc isdeclared")));
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("MS: isnotblank")));
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("MS:abc isnotblank")));
 
             // A malformed encoded token (a "cvid"/"cvup" prefix that does not decode) is an unknown column.
-            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("cvidMSabc isdeclared")));
-            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("cvupZZ isdeclared")));
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("cvidMSabc isnotblank")));
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("cvupZZ isnotblank")));
 
             // A userParam requires the explicit marker: a bare unknown name stays an unknown property (so a
             // typo of an interpreted column does not silently resolve to a no-match userParam)...
-            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("vendorSetting isdeclared")));
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("vendorSetting isnotblank")));
             // ...whereas the marker makes any name a valid userParam reference.
-            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("userParam:vendorSetting isdeclared"));
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("userParam:vendorSetting isnotblank"));
         }
 
         [TestMethod]

@@ -53,8 +53,7 @@ namespace pwiz.SkylineTest
             TestRoundTripSpectrumFilters();
             TestCvParamColumnRoundTrip();
             TestCvParamFilterPredicate();
-            TestCvParamDeclaredFilter();
-            TestDeclaredOperatorScoping();
+            TestCvParamBlankFilter();
             TestDiscoverCvColumns();
         }
 
@@ -302,85 +301,73 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(typeof(string), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_EQUALS));
         }
 
-        private void TestCvParamDeclaredFilter()
+        private void TestCvParamBlankFilter()
         {
-            // "Is Declared"/"Is Not Declared" test only whether a CV/user term is present in the spectrum,
-            // independent of any value it carries. This is the only way to match a value-less flag term
-            // (e.g. "zoom scan"), which captures with an empty value and so reads as blank under the value
-            // operators. Identity is the accession alone, as for the value operators.
+            // For a CV/user term, blank means absent: the term is blank when the spectrum does not carry it
+            // and is never blank when it does, whatever value it carries. That is what makes a value-less
+            // flag term (e.g. "zoom scan") matchable at all - it captures with an empty value, which for an
+            // ordinary text column would read as blank. Identity is the accession alone, as for the value
+            // operators.
             const string accession = @"MS:1000497";
             const string name = @"zoom scan";
             var flagColumn = SpectrumClassColumn.CvParam(accession, name, false);
 
-            Predicate<SpectrumMetadata> Declared(IFilterOperation op) =>
+            Predicate<SpectrumMetadata> Blankness(IFilterOperation op) =>
                 new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(flagColumn.PropertyPath, op, (string)null) }))
                     .MakePredicate();
 
-            // A value-less flag term captures with an empty (non-null) value: it is Declared.
+            // A value-less flag term captures with an empty (non-null) value: it is present, so not blank.
             var flagPresent = CvSpectrum(@"flag", accession, name, string.Empty, null);
-            // A value-bearing term of the same accession is likewise Declared.
+            // A value-bearing term of the same accession is likewise not blank.
             var valued = CvSpectrum(@"valued", accession, name, @"1", null);
-            // A spectrum lacking the term entirely is not Declared.
+            // A spectrum lacking the term entirely is blank.
             var absent = new SpectrumMetadata(@"absent", 1.0);
 
-            Assert.IsTrue(Declared(FilterOperations.OP_IS_DECLARED)(flagPresent));
-            Assert.IsTrue(Declared(FilterOperations.OP_IS_DECLARED)(valued));
-            Assert.IsFalse(Declared(FilterOperations.OP_IS_DECLARED)(absent));
+            Assert.IsFalse(Blankness(FilterOperations.OP_IS_BLANK)(flagPresent));
+            Assert.IsFalse(Blankness(FilterOperations.OP_IS_BLANK)(valued));
+            Assert.IsTrue(Blankness(FilterOperations.OP_IS_BLANK)(absent));
 
-            Assert.IsFalse(Declared(FilterOperations.OP_IS_NOT_DECLARED)(flagPresent));
-            Assert.IsFalse(Declared(FilterOperations.OP_IS_NOT_DECLARED)(valued));
-            Assert.IsTrue(Declared(FilterOperations.OP_IS_NOT_DECLARED)(absent));
+            Assert.IsTrue(Blankness(FilterOperations.OP_IS_NOT_BLANK)(flagPresent));
+            Assert.IsTrue(Blankness(FilterOperations.OP_IS_NOT_BLANK)(valued));
+            Assert.IsFalse(Blankness(FilterOperations.OP_IS_NOT_BLANK)(absent));
 
-            // The distinction from Is Not Blank, which is exactly why Declared exists: a present flag has
-            // an empty value, so Is Not Blank reports it as absent, whereas Is Declared matches it.
-            Predicate<SpectrumMetadata> NotBlank() =>
+            // This is a deliberate divergence from an ordinary text column, where an empty string IS blank.
+            Assert.IsTrue(new DataSchema().GetFilterHandler(typeof(string)).IsBlank(string.Empty),
+                @"an empty string is blank for an ordinary text column, which is what CV terms diverge from");
+
+            // An empty value is asked about specifically with Equals and an empty operand, which matches the
+            // present flag and not the spectrum that lacks the term.
+            Predicate<SpectrumMetadata> EqualsEmpty() =>
                 new SpectrumClassFilter(new FilterClause(new[]
-                    { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_IS_NOT_BLANK, (string)null) })).MakePredicate();
-            Assert.IsFalse(NotBlank()(flagPresent),
-                @"a present flag has an empty value, so Is Not Blank does not match it (Is Declared does)");
+                    { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_EQUALS, string.Empty) })).MakePredicate();
+            Assert.IsTrue(EqualsEmpty()(flagPresent));
+            Assert.IsFalse(EqualsEmpty()(valued));
+            Assert.IsFalse(EqualsEmpty()(absent));
 
-            // A Declared filter references a CV column, so it triggers term capture during extraction, and
-            // its persisted filter string validates and re-parses to a predicate that behaves identically.
+            // That test survives in the document and the cache, which persist the operator itself, but NOT
+            // in a filter string: the readable syntax renders Is Blank as "= ''" and reads "= ''" back as Is
+            // Blank, so an equals-empty filter taken through a filter string comes back as Is Blank. For a
+            // term the ontology gives no value type - a pure flag like this one, which can only ever be
+            // present with an empty value - equals-empty says exactly what Is Not Blank says, so the
+            // asymmetry costs nothing here; it would only bite a term declared to carry a value that some
+            // file wrote out empty anyway.
+            var equalsEmptyString = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_EQUALS, string.Empty) })).ToFilterString();
+            Assert.AreEqual(FilterOperations.OP_IS_BLANK,
+                SpectrumClassFilter.ParseFilterString(equalsEmptyString).Clauses.Single().FilterSpecs.Single().Operation,
+                @"equals-empty is not separately expressible in a filter string: " + equalsEmptyString);
+
+            // A blank filter references a CV column, so it triggers term capture during extraction, and its
+            // persisted filter string validates and re-parses to a predicate that behaves identically.
             var filter = new SpectrumClassFilter(new FilterClause(new[]
-                { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_IS_DECLARED, (string)null) }));
+                { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_IS_NOT_BLANK, (string)null) }));
             Assert.IsTrue(filter.ReferencesCvColumns());
             var filterString = filter.ToFilterString();
             Assert.IsNull(SpectrumClassFilter.ValidateFilterString(filterString),
-                @"Declared filter string should validate: " + filterString);
+                @"blank filter string should validate: " + filterString);
             var roundTripped = SpectrumClassFilter.ParseFilterString(filterString).MakePredicate();
             Assert.IsTrue(roundTripped(flagPresent));
             Assert.IsFalse(roundTripped(absent));
-        }
-
-        private void TestDeclaredOperatorScoping()
-        {
-            // The Declared operators are registered - so they serialize by symbol and the spectrum-filter
-            // editor, which lists every operation, offers them for the CV columns.
-            var ops = FilterOperations.ListOperations();
-            Assert.IsTrue(ops.Contains(FilterOperations.OP_IS_DECLARED));
-            Assert.IsTrue(ops.Contains(FilterOperations.OP_IS_NOT_DECLARED));
-            Assert.AreSame(FilterOperations.OP_IS_DECLARED,
-                FilterOperations.GetOperationBySymbol(FilterOperations.OP_IS_DECLARED.OpSymbol));
-            Assert.AreSame(FilterOperations.OP_IS_NOT_DECLARED,
-                FilterOperations.GetOperationBySymbol(FilterOperations.OP_IS_NOT_DECLARED.OpSymbol));
-
-            // ...but they are gated OUT of the general report/quick filters, which honor IsValidFor. For an
-            // ordinary column a presence test is redundant with Is Blank/Has Any Value, so IsValidFor is
-            // false for every filter handler. This scoping (false everywhere, plus the spectrum editor's
-            // ungated list) is what confines them to spectrum filtering; if it regresses they leak into
-            // every filter UI in the application.
-            var dataSchema = new DataSchema();
-            foreach (var type in new[] { typeof(string), typeof(double) })
-            {
-                var handler = dataSchema.GetFilterHandler(type);
-                Assert.IsFalse(FilterOperations.OP_IS_DECLARED.IsValidFor(handler),
-                    @"Is Declared must not be offered in report/quick filters for " + type);
-                Assert.IsFalse(FilterOperations.OP_IS_NOT_DECLARED.IsValidFor(handler),
-                    @"Is Not Declared must not be offered in report/quick filters for " + type);
-            }
-            // Sanity: an ordinary unary operator IS valid for such a column, so the assertions above
-            // reflect the Declared ops' own gating rather than a handler that rejects everything.
-            Assert.IsTrue(FilterOperations.OP_IS_NOT_BLANK.IsValidFor(dataSchema.GetFilterHandler(typeof(string))));
         }
 
         private void TestDiscoverCvColumns()

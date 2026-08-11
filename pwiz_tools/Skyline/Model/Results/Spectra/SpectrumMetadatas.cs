@@ -109,7 +109,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     valueCache.CacheValue(protoOtherParam.Accession),
                     valueCache.CacheValue(protoOtherParam.Name),
                     // A value-less flag term is captured with an empty (non-null) value; preserve that
-                    // emptiness rather than folding it to null, so "Is Declared" still sees the term.
+                    // emptiness rather than folding it to null, since null is what marks a term absent
+                    // (and so blank) when the filter is evaluated.
                     valueCache.CacheValue(protoOtherParam.Value),
                     valueCache.CacheValue(NullForEmpty(protoOtherParam.Unit)),
                     valueCache.CacheValue(NullForEmpty(protoOtherParam.UnitAccession)),
