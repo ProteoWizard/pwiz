@@ -235,10 +235,12 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.RoundTrip(doc);
         }
 
-        private static void CheckTimes(IdentityPath groupPath, int file, int replicate, out double? startTime, out double? endTime)
+        private static void CheckTimes(IdentityPath groupPath, int replicate, int file, out double? startTime, out double? endTime)
         {
-            var groupNode = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(groupPath);
-            var groupChromInfo = groupNode.EmptyResults[file][replicate];
+            var document = SkylineWindow.Document;
+            var groupNode = (TransitionGroupDocNode)document.FindNode(groupPath);
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var groupChromInfo = ResultsUtil.GetTransitionGroupChromInfos(document, groupNode, replicate)[file];
             startTime = groupChromInfo.StartRetentionTime;
             endTime = groupChromInfo.EndRetentionTime;
         }

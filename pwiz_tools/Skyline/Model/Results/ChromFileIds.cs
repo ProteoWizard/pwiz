@@ -73,6 +73,25 @@ namespace pwiz.Skyline.Model.Results
             return -1;
         }
 
+        /// <summary>
+        /// The same layout with every <see cref="ChromFileInfoId"/> replaced by null, so that two
+        /// of these compare equal when they cover the same replicates and files.
+        /// <para>
+        /// Two documents read from the same file hold different id objects for the same file, and
+        /// <see cref="Equals(object)"/> tells them apart - deliberately, since a results object
+        /// which kept the ids of files it is no longer about would be wrong. Comparing two
+        /// documents is the one thing that has to look past it, and it says so by clearing them
+        /// first. The result answers nothing about any file: <see cref="IndexOfFile"/> can only
+        /// return -1.
+        /// </para>
+        /// </summary>
+        public ChromFileIds ClearFileIds()
+        {
+            return FileIds.All(fileId => fileId.Value == null)
+                ? this
+                : new ChromFileIds(ReplicatePositions, FileIds.Select(fileId => (ChromFileInfoId) null));
+        }
+
         protected bool Equals(ChromFileIds other)
         {
             return ReplicatePositions.Equals(other.ReplicatePositions) && FileIds.Equals(other.FileIds);

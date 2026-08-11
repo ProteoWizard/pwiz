@@ -94,12 +94,17 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(triggeredTransitionGroup.EmptyResults);
                 Assert.AreEqual(untriggeredTransitionGroup.EmptyResults.Count, triggeredTransitionGroup.EmptyResults.Count);
                 Assert.AreNotEqual(0, untriggeredTransitionGroup.EmptyResults.Count);
+                // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+                var untriggeredChromInfos =
+                    ResultsUtil.GetTransitionGroupChromInfos(untriggeredDocument, untriggeredTransitionGroup);
+                var triggeredChromInfos =
+                    ResultsUtil.GetTransitionGroupChromInfos(triggeredDocument, triggeredTransitionGroup);
                 for (int iReplicate = 0; iReplicate < untriggeredTransitionGroup.EmptyResults.Count; iReplicate++)
                 {
-                    Assert.AreEqual(1, untriggeredTransitionGroup.EmptyResults[iReplicate].Count);
-                    Assert.AreEqual(1, triggeredTransitionGroup.EmptyResults[iReplicate].Count);
-                    var untriggeredChromInfo = untriggeredTransitionGroup.EmptyResults[iReplicate].First();
-                    var triggeredChromInfo = triggeredTransitionGroup.EmptyResults[iReplicate].First();
+                    Assert.AreEqual(1, untriggeredChromInfos[iReplicate].Count);
+                    Assert.AreEqual(1, triggeredChromInfos[iReplicate].Count);
+                    var untriggeredChromInfo = untriggeredChromInfos[iReplicate].First();
+                    var triggeredChromInfo = triggeredChromInfos[iReplicate].First();
                     Assert.AreNotEqual(0, untriggeredChromInfo.BackgroundArea);
                     Assert.AreEqual(0, triggeredChromInfo.BackgroundArea);
 

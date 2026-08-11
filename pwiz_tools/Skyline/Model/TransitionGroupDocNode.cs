@@ -601,21 +601,33 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// What fraction of the precursor's transitions have a good peak in one replicate, from the
-        /// transitions' columnar results, so this reads no chromatogram. Null when the precursor has
-        /// no transitions with results at all.
+        /// transitions' columnar results, so this reads no chromatogram. Null when the precursor was
+        /// not measured in that replicate at all, which is not the same as a ratio of zero: a peak
+        /// which is there and empty is measured and bad, and refinement removes the two for
+        /// different reasons. This is what a missing TransitionGroupChromInfo used to say.
         /// </summary>
         public double? GetPeakCountRatio(int replicateIndex, bool integrateAll)
         {
+            if (replicateIndex == -1)
+                return GetAveragePeakCountRatio(integrateAll);
+
+            var results = AbbreviatedResults;
+            if (results == null)
+                return null;
+
             int goodPeaks = 0;
             int transitionCount = 0;
+            bool measuredHere = false;
             for (int iTran = 0; iTran < Children.Count; iTran++)
             {
-                if (!HasTransitionResults(((TransitionDocNode) Children[iTran]).Transition))
+                var transition = ((TransitionDocNode) Children[iTran]).Transition;
+                if (!results.HasTransitionResults(transition))
                     continue;
                 transitionCount++;
-                foreach (var entry in AbbreviatedResults.GetTransitionPeaks(
-                             ((TransitionDocNode) Children[iTran]).Transition, replicateIndex))
+                foreach (var entry in results.GetTransitionPeaks(transition, replicateIndex))
                 {
+                    // A peak here at all, good or not, is what makes this replicate measured.
+                    measuredHere = true;
                     if (entry.Value.IsGoodPeak(integrateAll))
                     {
                         goodPeaks++;
@@ -624,7 +636,124 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            return transitionCount == 0 ? (double?) null : (double) goodPeaks / transitionCount;
+            return transitionCount == 0 || !measuredHere ? (double?) null : (double) goodPeaks / transitionCount;
+        }
+
+        /// <summary>
+        /// The peak count ratio averaged over the replicates which have one, which is what -1 asks
+        /// <see cref="GetPeakCountRatio(int,bool)"/> for - the meaning the chrom info accessor it
+        /// replaced gave it. Null when the precursor was measured in no replicate at all.
+        /// </summary>
+        public double? GetAveragePeakCountRatio(bool integrateAll)
+        {
+            var results = AbbreviatedResults;
+            if (results == null)
+                return null;
+
+            double total = 0;
+            int count = 0;
+            for (int replicateIndex = 0;
+                 replicateIndex < results.ChromFileIds.ReplicatePositions.ReplicateCount;
+                 replicateIndex++)
+            {
+                var peakCountRatio = GetPeakCountRatio(replicateIndex, integrateAll);
+                if (!peakCountRatio.HasValue)
+                    continue;
+                total += peakCountRatio.Value;
+                count++;
+            }
+
+            return count == 0 ? (double?) null : total / count;
+        }
+
+        /// <summary>
+        /// The library dot product of one replicate, worked out from the transitions' areas in the
+        /// columnar results and the library intensities the transitions carry, so this reads no
+        /// chromatogram. The same arithmetic the results pass does - see
+        /// <see cref="TransitionGroupChromInfoCalculator.SetLibInfo"/> - over the same transitions.
+        /// <para>
+        /// Null when the precursor has no library information, too few transitions to correlate, or
+        /// no peak in that replicate. -1 asks for the mean over every replicate which has one.
+        /// </para>
+        /// </summary>
+        public float? GetLibraryDotProduct(int replicateIndex, SrmSettings settings)
+        {
+            if (!HasLibInfo)
+                return null;
+
+            var nodeTrans = GetMsMsTransitions(settings.TransitionSettings.FullScan.IsEnabledMs)
+                .Where(nodeTran => nodeTran.ParticipatesInScoring).ToArray();
+            return GetDotProduct(nodeTrans, replicateIndex, MIN_DOT_PRODUCT_TRANSITIONS,
+                nodeTran => nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0);
+        }
+
+        /// <summary>
+        /// The isotope dot product of one replicate, the isotope distribution counterpart of
+        /// <see cref="GetLibraryDotProduct(int,SrmSettings)"/> and worked out the same way.
+        /// </summary>
+        public float? GetIsotopeDotProduct(int replicateIndex, SrmSettings settings)
+        {
+            if (!HasIsotopeDist)
+                return null;
+
+            var nodeTrans = GetMsTransitions(settings.TransitionSettings.FullScan.IsEnabledMs).ToArray();
+            return GetDotProduct(nodeTrans, replicateIndex, MIN_DOT_PRODUCT_MS1_TRANSITIONS,
+                nodeTran => nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0);
+        }
+
+        /// <summary>
+        /// One dot product of the transitions' areas against what they are expected to be. Shared
+        /// by both, which differ only in which transitions take part and where the expected value
+        /// comes from. -1 asks for the mean over the replicates which have one, the meaning the
+        /// chrom info accessors this replaced gave it.
+        /// </summary>
+        private float? GetDotProduct(IList<TransitionDocNode> nodeTrans, int replicateIndex, int minTransitions,
+            Func<TransitionDocNode, float> getExpected)
+        {
+            var results = AbbreviatedResults;
+            if (results == null || nodeTrans.Count < minTransitions)
+                return null;
+
+            if (replicateIndex >= 0)
+                return GetReplicateDotProduct(nodeTrans, replicateIndex, getExpected);
+
+            double total = 0;
+            int count = 0;
+            for (int i = 0; i < results.ChromFileIds.ReplicatePositions.ReplicateCount; i++)
+            {
+                var dotProduct = GetReplicateDotProduct(nodeTrans, i, getExpected);
+                if (!dotProduct.HasValue)
+                    continue;
+                total += dotProduct.Value;
+                count++;
+            }
+
+            return count == 0 ? (float?) null : (float) (total / count);
+        }
+
+        private float? GetReplicateDotProduct(IList<TransitionDocNode> nodeTrans, int replicateIndex,
+            Func<TransitionDocNode, float> getExpected)
+        {
+            var peakAreas = new double[nodeTrans.Count];
+            var expected = new double[nodeTrans.Count];
+            bool anyPeak = false;
+            for (int i = 0; i < nodeTrans.Count; i++)
+            {
+                // A peak which is there and empty counts as an area of zero, the way the calculator
+                // counted a chrom info with no peak - but a precursor whose peaks are all empty has
+                // no dot product at all, which is what a null group area used to say.
+                if (FindTransitionPeak(nodeTrans[i].Transition, replicateIndex, out var peak))
+                {
+                    peakAreas[i] = peak.Area;
+                    anyPeak = anyPeak || !peak.IsEmpty;
+                }
+
+                expected[i] = getExpected(nodeTrans[i]);
+            }
+
+            return anyPeak
+                ? (float) new Statistics(peakAreas).NormalizedContrastAngleSqrt(new Statistics(expected))
+                : (float?) null;
         }
 
         /// <summary>
@@ -988,54 +1117,6 @@ namespace pwiz.Skyline.Model
                 return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
                                                               ? null
                                                               : chromInfo.Area);
-            }
-        }
-
-        public float? GetIsotopeDotProduct(int i)
-        {
-            if (i == -1)
-                return AverageIsotopeDotProduct;
-
-            // CONSIDER: Also specify the file index?
-            var result = GetSafeChromInfo(i);
-            if (result.IsEmpty)
-                return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
-                                                              ? chromInfo.IsotopeDotProduct
-                                                              : null);
-        }
-
-        public float? AverageIsotopeDotProduct
-        {
-            get
-            {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
-                                                              ? chromInfo.IsotopeDotProduct
-                                                              : null);
-            }
-        }
-
-        public float? GetLibraryDotProduct(int i)
-        {
-            if (i == -1)
-                return AverageLibraryDotProduct;
-
-            // CONSIDER: Also specify the file index?
-            var result = GetSafeChromInfo(i);
-            if (result.IsEmpty)
-                return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
-                                                              ? chromInfo.LibraryDotProduct
-                                                              : null);
-        }
-
-        public float? AverageLibraryDotProduct
-        {
-            get
-            {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
-                                                              ? chromInfo.LibraryDotProduct
-                                                              : null);
             }
         }
 
@@ -2519,8 +2600,9 @@ namespace pwiz.Skyline.Model
 
         public static string GetResultsText(DisplaySettings displaySettings, TransitionGroupDocNode nodeGroup)
         {
-            float? libraryProduct = nodeGroup.GetLibraryDotProduct(displaySettings.ResultsIndex);
-            float? isotopeProduct = nodeGroup.GetIsotopeDotProduct(displaySettings.ResultsIndex);
+            var settings = displaySettings.NormalizedValueCalculator.Document.Settings;
+            float? libraryProduct = nodeGroup.GetLibraryDotProduct(displaySettings.ResultsIndex, settings);
+            float? isotopeProduct = nodeGroup.GetIsotopeDotProduct(displaySettings.ResultsIndex, settings);
             RatioValue ratio = null;
             if (displaySettings.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {

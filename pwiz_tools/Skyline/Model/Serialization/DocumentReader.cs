@@ -89,12 +89,11 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Whether the precursor whose transitions are being read was written before the chosen
-        /// peak indexes were part of the format, which is the only thing that says which of the
-        /// two things a transition's element holds. Set from the precursor's own element, which is
-        /// always read first.
+        /// Whether the precursor whose transitions are being read kept chrom infos, which is what
+        /// says which of the two things a transition's element holds. Set from the precursor's own
+        /// element, which is always read first - see <see cref="ReadPrecursorResults"/>.
         /// </summary>
-        private bool _precursorNeedsPeakIndexes;
+        private bool _precursorIsLegacyShape;
 
         private static eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
         {
@@ -257,7 +256,7 @@ namespace pwiz.Skyline.Model.Serialization
                             Results = ReadTransitionResults(reader);
                         else if (reader.IsStartElement(EL.transition_results))
                             ColumnarResults = _documentReader.ReadColumnarTransitionResults(reader,
-                                _documentReader._precursorNeedsPeakIndexes);
+                                _documentReader._precursorIsLegacyShape);
                         // Discard informational elements.  These values are always
                         // calculated from the settings to ensure consistency.
                         // Note that we do use product_mz for sanity checks and to disambiguate some older mass-only small molecule documents.
@@ -1299,9 +1298,8 @@ namespace pwiz.Skyline.Model.Serialization
                     nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
                 }
 
-                // Which of the two things a transition's element can hold, which only its
-                // precursor's element says. See ReadColumnarTransitionResults.
-                _precursorNeedsPeakIndexes = columnarResults?.NeedsPeakIndexes ?? false;
+                // Which of the two things a transition's element can hold is already known: it is
+                // set while the precursor's own element is read, which happens above.
                 children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues,
                     out var transitionResults);
                 transitionResults = ApplySharedTransitionAreas(transitionResults, sharedTransitionAreas);
@@ -1359,6 +1357,7 @@ namespace pwiz.Skyline.Model.Serialization
             out SharedTransitionAreas sharedTransitionAreas)
         {
             sharedTransitionAreas = null;
+            _precursorIsLegacyShape = false;
             if (!reader.IsStartElement(EL.precursor_results))
             {
                 return null;
@@ -1375,6 +1374,14 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 int? chosenPeakIndex = r.GetNullableIntAttribute(ATTR.chosen_peak_index);
                 needsPeakIndexes = needsPeakIndexes || !chosenPeakIndex.HasValue;
+                // Which of the two shapes the transitions below are in. The peak count ratio is an
+                // aggregate of them, so only a precursor which kept chrom infos ever wrote one -
+                // see DocumentWriter.WriteTransitionGroupChromInfo, which always does, against
+                // WriteTransitionGroupResults, which never does. This used to be told from
+                // chosen_peak_index, which now says something else: a precursor can be in the
+                // columnar shape and still not know which candidate peaks its peaks are.
+                _precursorIsLegacyShape = _precursorIsLegacyShape ||
+                                          r.GetNullableFloatAttribute(ATTR.peak_count_ratio).HasValue;
                 peaks.Add(new PrecursorPeak(r.GetFloatAttribute(ATTR.retention_time),
                     r.GetNullableFloatAttribute(ATTR.start_time) ?? 0,
                     r.GetNullableFloatAttribute(ATTR.end_time) ?? 0,
@@ -1556,7 +1563,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <see cref="TransitionGroupResults.ChangeTransitionResults"/> drops the ones which agree.
         /// </para>
         /// </summary>
-        private TransitionResultsData ReadColumnarTransitionResults(XmlReader reader, bool needsPeakIndexes)
+        private TransitionResultsData ReadColumnarTransitionResults(XmlReader reader, bool isLegacyShape)
         {
             var peaks = new List<TransitionPeak>();
             var annotations = new List<Annotations>();
@@ -1574,19 +1581,14 @@ namespace pwiz.Skyline.Model.Serialization
                 float? endTime = r.GetNullableFloatAttribute(ATTR.end_time);
                 float? massError = r.GetNullableFloatAttribute(ATTR.mass_error_ppm);
 
-                if (needsPeakIndexes)
-                {
-                    // The flags are here to be read. Once the peak has been matched to a candidate
-                    // peak in the .skyd they are read back from it instead, and a document which
-                    // knew the indexes did not write them at all.
-                    peaks.Add(new TransitionPeak(area, userSet, r.GetNullableBoolAttribute(ATTR.truncated),
-                        endTime.GetValueOrDefault() == 0, identified,
-                        r.GetBoolAttribute(ATTR.forced_integration, false)));
-                }
-                else
-                {
-                    peaks.Add(new TransitionPeak(area, userSet, null, false, PeakIdentification.FALSE, false));
-                }
+                // The flags are written by both shapes - see DocumentWriter.WriteTransitionResults -
+                // so they are read the same way from either. What only the older one says is
+                // whether the peak is empty, which it says by having no end time. The columnar
+                // shape writes an end time only for a peak whose boundaries were set by hand, so a
+                // peak of its own must never be taken for empty on that ground.
+                peaks.Add(new TransitionPeak(area, userSet, r.GetNullableBoolAttribute(ATTR.truncated),
+                    isLegacyShape && endTime.GetValueOrDefault() == 0, identified,
+                    r.GetBoolAttribute(ATTR.forced_integration, false)));
 
                 peakBounds.Add(startTime.HasValue && endTime.HasValue
                     ? new CustomPeakBounds(startTime.Value, endTime.Value)
@@ -1647,12 +1649,10 @@ namespace pwiz.Skyline.Model.Serialization
                     return null;
                 }
 
-                // A transition is only left out when nothing was set on it, so its user sets are
-                // all FALSE, which is what a written out one would have said.
+                // A transition is only left out when every one of its peaks said nothing beyond its
+                // area, and MakePlainPeak is what each of them said.
                 return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
-                    areas.Select(area =>
-                        new TransitionPeak(area, UserSet.FALSE, null, false, PeakIdentification.FALSE, false))
-                        .ToArray(), null, null, null);
+                    areas.Select(TransitionGroupResults.MakePlainPeak).ToArray(), null, null, null);
             }
         }
 

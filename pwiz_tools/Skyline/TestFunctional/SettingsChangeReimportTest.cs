@@ -55,7 +55,9 @@ namespace pwiz.SkylineTestFunctional
             transitionGroup = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(idPath);
             Assert.IsNotNull(transitionGroup.EmptyResults);
             Assert.AreEqual(1, transitionGroup.EmptyResults.Count);
-            var transitionGroupChromInfo = transitionGroup.EmptyResults[0].First();
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var transitionGroupChromInfo = ResultsUtil
+                .GetTransitionGroupChromInfos(SkylineWindow.Document, transitionGroup, 0).First();
             // Verify the peak area is what we expect
             Assert.AreEqual(1.460189E+08f, transitionGroupChromInfo.Area.Value);
 
@@ -85,7 +87,8 @@ namespace pwiz.SkylineTestFunctional
             transitionGroup = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(idPath);
             Assert.IsNotNull(transitionGroup.EmptyResults);
             Assert.AreEqual(1, transitionGroup.EmptyResults.Count);
-            transitionGroupChromInfo = transitionGroup.EmptyResults[0].First();
+            transitionGroupChromInfo = ResultsUtil
+                .GetTransitionGroupChromInfos(SkylineWindow.Document, transitionGroup, 0).First();
             // Verify that the peak area is a smaller number because the chromatogram extraction was more selective
             Assert.AreEqual(119880880f, transitionGroupChromInfo.Area.Value);
         }

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -226,6 +227,36 @@ namespace pwiz.SkylineTestUtil
         }
     }
 
+    /// <summary>
+    /// One precursor, the molecule it belongs to, and its chrom infos as
+    /// <see cref="MoleculeResults"/> rebuilt them. See
+    /// <see cref="ResultsUtil.EnumerateTransitionGroupChromInfos"/>.
+    /// </summary>
+    public struct TransitionGroupChromInfosRef
+    {
+        public TransitionGroupChromInfosRef(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
+            Results<TransitionGroupChromInfo> chromInfos)
+        {
+            NodePep = nodePep;
+            NodeGroup = nodeGroup;
+            ChromInfos = chromInfos;
+        }
+
+        public PeptideDocNode NodePep { get; }
+        public TransitionGroupDocNode NodeGroup { get; }
+
+        /// <summary>
+        /// Null when the precursor has no results at all, the same as the property a precursor
+        /// used to hold.
+        /// </summary>
+        public Results<TransitionGroupChromInfo> ChromInfos { get; }
+
+        public ChromInfoList<TransitionGroupChromInfo> this[int replicateIndex]
+        {
+            get { return ChromInfos[replicateIndex]; }
+        }
+    }
+
     public static class ResultsUtil
     {
         /// <summary>
@@ -269,6 +300,73 @@ namespace pwiz.SkylineTestUtil
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Every precursor of a document with its chrom infos rebuilt from the .skyd, in document
+        /// order. The precursor level counterpart of <see cref="EnumerateTransitionChromInfos"/>,
+        /// and what a test which used to index a precursor node's Results walks instead.
+        /// <para>
+        /// One <see cref="MoleculeResults"/> per molecule, so a molecule's chromatograms are read
+        /// once however many precursors it has.
+        /// </para>
+        /// </summary>
+        public static IEnumerable<TransitionGroupChromInfosRef> EnumerateTransitionGroupChromInfos(SrmDocument document)
+        {
+            foreach (var nodePep in document.Molecules)
+            {
+                var moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                foreach (var nodeGroup in nodePep.TransitionGroups)
+                {
+                    yield return new TransitionGroupChromInfosRef(nodePep, nodeGroup,
+                        moleculeResults.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup));
+                }
+            }
+        }
+
+        /// <summary>
+        /// One precursor's chrom infos, rebuilt from the .skyd. The molecule which owns it is
+        /// searched for, because a test which holds only the precursor cannot say - so a test
+        /// asking about more than one should walk
+        /// <see cref="EnumerateTransitionGroupChromInfos"/> instead, which reads each molecule once.
+        /// </summary>
+        public static Results<TransitionGroupChromInfo> GetTransitionGroupChromInfos(SrmDocument document,
+            TransitionGroupDocNode nodeGroup)
+        {
+            var nodePep = FindMolecule(document, nodeGroup);
+            return new MoleculeResults(document.Settings, nodePep)
+                .GetTransitionGroupChromInfos(nodeGroup.TransitionGroup);
+        }
+
+        /// <summary>
+        /// One precursor's chrom infos in one replicate. See
+        /// <see cref="GetTransitionGroupChromInfos(SrmDocument,TransitionGroupDocNode)"/>.
+        /// </summary>
+        public static ChromInfoList<TransitionGroupChromInfo> GetTransitionGroupChromInfos(SrmDocument document,
+            TransitionGroupDocNode nodeGroup, int replicateIndex)
+        {
+            var nodePep = FindMolecule(document, nodeGroup);
+            return new MoleculeResults(document.Settings, nodePep)
+                .GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex);
+        }
+
+        /// <summary>
+        /// The molecule of a document which has the given precursor among its children, matched on
+        /// the <see cref="TransitionGroup"/> rather than the node, so that a node a test picked up
+        /// from an earlier revision of the document still finds it - an identity outlives the nodes
+        /// which carry it.
+        /// </summary>
+        public static PeptideDocNode FindMolecule(SrmDocument document, TransitionGroupDocNode nodeGroup)
+        {
+            foreach (var nodePep in document.Molecules)
+            {
+                if (nodePep.TransitionGroups.Any(nodeGroupChild =>
+                        ReferenceEquals(nodeGroupChild.TransitionGroup, nodeGroup.TransitionGroup)))
+                    return nodePep;
+            }
+
+            throw new ArgumentException(string.Format(@"Precursor {0} is not in this document",
+                nodeGroup.TransitionGroup));
         }
 
         public static SrmDocument DeserializeDocument(string path)
@@ -610,48 +708,47 @@ namespace pwiz.SkylineTestUtil
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
 
-            // The chrom infos are not stored any more, so they are rebuilt from the .skyd. That is
-            // what keeps the counts these are asserted against: MoleculeResults gives one per file
-            // and per optimization step, the same as the doc nodes used to hold, while the columnar
-            // results keep only step zero and would count an optimized peak once instead of once
-            // per step.
+            // Every count here is per file, not per replicate: a replicate imported with
+            // --import-append has two files and every count doubles. That is what the chrom infos
+            // these are asserted against used to give - one per file, and one per optimization step
+            // as well, which is why the counts come from the .skyd wherever it can be read.
             bool integrateAll = document.Settings.TransitionSettings.Integration.IsIntegrateAll;
             foreach (var nodePep in document.Molecules)
             {
-                if (nodePep.GetPeakCountRatio(index, integrateAll) >= 0.5)
-                    peptidesActual++;
-
                 // One read for the whole molecule, which is what makes asking about every
-                // precursor and transition of it affordable.
+                // precursor and transition of it affordable. A document which has not been
+                // connected to its .skyd - one a test deserialized to look at, say - can say
+                // nothing this way, and is counted from its columnar results instead.
                 var moleculeResults = new MoleculeResults(document.Settings, nodePep);
+                bool fromChromatograms = moleculeResults.HasChromatograms;
+                if (fromChromatograms)
+                {
+                    peptidesActual += moleculeResults.GetPeptideChromInfos(index)
+                        .Count(chromInfo => chromInfo.PeakCountRatio >= 0.5);
+                }
+                else
+                {
+                    peptidesActual += CountGoodMoleculePeaks(nodePep, index, integrateAll);
+                }
+
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
                     bool isLight = nodeGroup.TransitionGroup.LabelType.IsLight;
-                    foreach (var chromInfo in moleculeResults.GetTransitionGroupChromInfos(
-                                 nodeGroup.TransitionGroup, index))
-                    {
-                        if (chromInfo.PeakCountRatio < 0.5)
-                            continue;
+                    int groupCount, transitionCount;
+                    if (fromChromatograms)
+                        CountGoodPeaks(moleculeResults, nodeGroup, index, integrateAll, out groupCount, out transitionCount);
+                    else
+                        CountGoodPeaks(nodeGroup, index, integrateAll, out groupCount, out transitionCount);
 
-                        if (isLight)
-                            tranGroupsActual++;
-                        else
-                            tranGroupsHeavyActual++;
+                    if (isLight)
+                    {
+                        tranGroupsActual += groupCount;
+                        transitionsActual += transitionCount;
                     }
-
-                    foreach (var nodeTran in nodeGroup.Transitions)
+                    else
                     {
-                        foreach (var chromInfo in moleculeResults.GetTransitionChromInfos(
-                                     nodeGroup.TransitionGroup, nodeTran.Transition, index))
-                        {
-                            if (!chromInfo.IsGoodPeak(integrateAll))
-                                continue;
-
-                            if (isLight)
-                                transitionsActual++;
-                            else
-                                transitionsHeavyActual++;
-                        }
+                        tranGroupsHeavyActual += groupCount;
+                        transitionsHeavyActual += transitionCount;
                     }
                 }
             }
@@ -662,6 +759,103 @@ namespace pwiz.SkylineTestUtil
             failMessage += CompareValues(transitionsHeavy, transitionsHeavyActual, "heavy transition");
             if (failMessage.Length > 0)
                 Assert.Fail("IsDocumentResultsState failed for replicate " + replicateName + ": "+failMessage);
+        }
+
+        /// <summary>
+        /// How many of one precursor's peaks in a replicate are good ones, rebuilt from the .skyd.
+        /// This is what the counts were originally written against: one chrom info per file and per
+        /// optimization step, which is what the doc nodes used to hold.
+        /// </summary>
+        private static void CountGoodPeaks(MoleculeResults moleculeResults, TransitionGroupDocNode nodeGroup,
+            int replicateIndex, bool integrateAll, out int groupCount, out int transitionCount)
+        {
+            groupCount = moleculeResults
+                .GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex)
+                .Count(chromInfo => chromInfo.PeakCountRatio >= 0.5);
+            transitionCount = nodeGroup.Transitions.Sum(nodeTran => moleculeResults
+                .GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition, replicateIndex)
+                .Count(chromInfo => chromInfo.IsGoodPeak(integrateAll)));
+        }
+
+        /// <summary>
+        /// The same counts taken from the columnar results, for a document whose chromatograms
+        /// cannot be read. Those hold optimization step zero only, so a document with an
+        /// optimization function counts a peak once here and once per step above. No caller
+        /// combines the two - a test either has its .skyd or it does not.
+        /// </summary>
+        private static void CountGoodPeaks(TransitionGroupDocNode nodeGroup, int replicateIndex,
+            bool integrateAll, out int groupCount, out int transitionCount)
+        {
+            var ratios = GetPeakCountRatiosByFile(nodeGroup, replicateIndex, integrateAll, out transitionCount);
+            groupCount = ratios.Values.Count(ratio => ratio >= 0.5);
+        }
+
+        /// <summary>
+        /// How many of one molecule's peaks in a replicate are good ones, taken from the columnar
+        /// results. A molecule's peak count ratio in a file is the mean of its precursors' there,
+        /// over every precursor it has - which is what <see cref="PeptideChromInfo.PeakCountRatio"/>
+        /// held.
+        /// </summary>
+        private static int CountGoodMoleculePeaks(PeptideDocNode nodePep, int replicateIndex, bool integrateAll)
+        {
+            int transitionGroupCount = nodePep.TransitionGroupCount;
+            if (transitionGroupCount == 0)
+                return 0;
+
+            var totalByFile = new Dictionary<ReferenceValue<ChromFileInfoId>, double>();
+            foreach (var nodeGroup in nodePep.TransitionGroups)
+            {
+                foreach (var entry in GetPeakCountRatiosByFile(nodeGroup, replicateIndex, integrateAll, out _))
+                {
+                    totalByFile.TryGetValue(entry.Key, out double total);
+                    totalByFile[entry.Key] = total + entry.Value;
+                }
+            }
+
+            return totalByFile.Values.Count(total => total / transitionGroupCount >= 0.5);
+        }
+
+        /// <summary>
+        /// One precursor's peak count ratio in each file of a replicate - the fraction of its
+        /// transitions with a good peak there - plus how many good transition peaks there were
+        /// altogether. A replicate almost always has one file; a multi injection replicate has
+        /// several, and every count these helpers produce is per file.
+        /// </summary>
+        private static Dictionary<ReferenceValue<ChromFileInfoId>, double> GetPeakCountRatiosByFile(
+            TransitionGroupDocNode nodeGroup, int replicateIndex, bool integrateAll, out int transitionCount)
+        {
+            transitionCount = 0;
+            var ratios = new Dictionary<ReferenceValue<ChromFileInfoId>, double>();
+            var results = nodeGroup.AbbreviatedResults;
+            if (results == null)
+                return ratios;
+
+            var goodByFile = new Dictionary<ReferenceValue<ChromFileInfoId>, int>();
+            var totalByFile = new Dictionary<ReferenceValue<ChromFileInfoId>, int>();
+            foreach (var nodeTran in nodeGroup.Transitions)
+            {
+                if (!results.HasTransitionResults(nodeTran.Transition))
+                    continue;
+                foreach (var entry in results.GetTransitionPeaks(nodeTran.Transition, replicateIndex))
+                {
+                    var key = ReferenceValue.Of(entry.Key);
+                    totalByFile.TryGetValue(key, out int total);
+                    totalByFile[key] = total + 1;
+                    if (!entry.Value.IsGoodPeak(integrateAll))
+                        continue;
+                    transitionCount++;
+                    goodByFile.TryGetValue(key, out int good);
+                    goodByFile[key] = good + 1;
+                }
+            }
+
+            foreach (var entry in totalByFile)
+            {
+                goodByFile.TryGetValue(entry.Key, out int good);
+                ratios.Add(entry.Key, (double) good / entry.Value);
+            }
+
+            return ratios;
         }
 
         public static void MatchChromatograms(ResultsTestDocumentContainer docContainer,

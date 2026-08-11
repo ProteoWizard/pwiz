@@ -249,10 +249,13 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyMatchingPeakBoundaries(TransitionGroupDocNode nodeGroupLight, TransitionGroupDocNode nodeGroupHeavy, bool exactMatch)
         {
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var chromInfosLight = ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.Document, nodeGroupLight);
+            var chromInfosHeavy = ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.Document, nodeGroupHeavy);
             for (int i = 0; i < EXPECTED_REPLICATES.Length; i++)
             {
-                var peakLight = nodeGroupLight.EmptyResults[i][0];
-                var peakHeavy = nodeGroupHeavy.EmptyResults[i][0];
+                var peakLight = chromInfosLight[i][0];
+                var peakHeavy = chromInfosHeavy[i][0];
                 if (exactMatch)
                     Assert.AreEqual(peakLight.StartRetentionTime.Value, peakHeavy.StartRetentionTime.Value);
                 else
@@ -296,10 +299,13 @@ namespace pwiz.SkylineTestFunctional
         private int CountChangedPeaks(TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupNew)
         {
             int changeCount = 0;
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var chromInfos = ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.Document, nodeGroup);
+            var chromInfosNew = ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.Document, nodeGroupNew);
             for (int i = 0; i < EXPECTED_REPLICATES.Length; i++)
             {
-                var peak = nodeGroup.EmptyResults[i][0];
-                var peakNew = nodeGroupNew.EmptyResults[i][0];
+                var peak = chromInfos[i][0];
+                var peakNew = chromInfosNew[i][0];
                 if (peak.StartRetentionTime != peakNew.StartRetentionTime ||
                     peak.EndRetentionTime != peakNew.EndRetentionTime)
                 {

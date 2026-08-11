@@ -1470,7 +1470,17 @@ namespace pwiz.SkylineTestUtil
 
         public static void DocsEqual(SrmDocument expected, SrmDocument actual, string message = null)
         {
-            if (!Equals(expected, actual))
+            // Two documents read from the same file hold a different ChromFileInfoId for each of
+            // its files, and the columnar results tell those apart - which is right everywhere
+            // except here. Clearing them is how a comparison says it means "the same results",
+            // rather than the results objects being made to stop noticing.
+            //
+            // Only the comparison sees the cleared documents. They are for reading, not for
+            // writing: their results cannot find a file, so serializing one - which works the chrom
+            // infos out again from the .skyd - has nothing to work from.
+            var expectedCleared = expected.ClearChromFileIds();
+            var actualCleared = actual.ClearChromFileIds();
+            if (!Equals(expectedCleared, actualCleared))
             {
                 // If the documents don't agree, try to show where in XML
                 string expectedXML = null;
@@ -1480,8 +1490,9 @@ namespace pwiz.SkylineTestUtil
                 NoDiff(expectedXML, actualXML, "AssertEx.DocsEqual failed.  Expressing as XML to aid in debugging:");  // This should throw
                 // The XML agrees, so the difference is in something the document holds but does
                 // not write. Saying which is the only way to see it: the documents print the same.
-                AreEqual(expected, actual,
-                    TextUtil.SpaceSeparate(message ?? string.Empty, DescribeModelDifference(expected, actual)));
+                AreEqual(expectedCleared, actualCleared,
+                    TextUtil.SpaceSeparate(message ?? string.Empty,
+                        DescribeModelDifference(expectedCleared, actualCleared)));
             }
         }
 

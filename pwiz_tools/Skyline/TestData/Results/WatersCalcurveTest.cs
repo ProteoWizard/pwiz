@@ -244,9 +244,11 @@ namespace pwiz.SkylineTestData.Results
                             TransitionGroupDocNode nodeGroup2 = (TransitionGroupDocNode)nodePep2.Children[k];
                             Assert.AreNotSame(nodeGroup1, nodeGroup2);
                             Assert.AreEqual(nodeGroup1.EmptyResults.Count, nodeGroup2.EmptyResults.Count);
-                            for (int l = 0; l < nodeGroup1.EmptyResults.Count; l++)
-                                Assert.AreEqual(nodeGroup1.EmptyResults[l][0].PeakCountRatio,
-                                                nodeGroup2.EmptyResults[l][0].PeakCountRatio);
+                            // From the columnar results, the same way the molecules were compared
+                            // above, since a precursor keeps no chrom infos to read one from
+                            for (int l = 0; l < replicateCount; l++)
+                                Assert.AreEqual(nodeGroup1.GetPeakCountRatio(l, false),
+                                                nodeGroup2.GetPeakCountRatio(l, false));
                             for (int l = 0; l < nodeGroup1.Children.Count; l++)
                             {
                                 TransitionDocNode nodeTran1 = (TransitionDocNode)nodeGroup1.Children[l];

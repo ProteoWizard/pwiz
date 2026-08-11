@@ -65,6 +65,15 @@ namespace pwiz.SkylineTestFunctional
         private const string ANNOTATION_TRANSITION_RESULT = "transition_True|False_";
 
         /// <summary>
+        /// One precursor's chrom infos in the first replicate, which is the only one this test
+        /// looks at. Rebuilt from the .skyd, since a precursor keeps none of its own.
+        /// </summary>
+        private static ChromInfoList<TransitionGroupChromInfo> GetPrecursorChromInfos(TransitionGroupDocNode nodeGroup)
+        {
+            return ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.Document, nodeGroup, 0);
+        }
+
+        /// <summary>
         /// Test annotations.  Defines some annotations, then opens up a Skyline document that has 
         /// results and optimization steps in it.  Enables the annotations in the document, and sets
         /// some values.
@@ -136,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
             // Select the first Precursor in the SequenceTree
             var precursorTreeNode = (SrmTreeNode)SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0];
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = precursorTreeNode);
-            var chromInfo = ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][0];
+            var chromInfo = GetPrecursorChromInfos((TransitionGroupDocNode)precursorTreeNode.Model)[0];
             Assert.IsNull(chromInfo.Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
             WaitForGraphPanesToUpdate();
             // Show the "precursorResultItems" annotation column
@@ -161,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
                 resultsGrid.BeginEdit(true);
                 ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 2;
                 Assert.IsTrue(resultsGrid.EndEdit());
-                Assert.AreEqual("b", ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][0]
+                Assert.AreEqual("b", GetPrecursorChromInfos((TransitionGroupDocNode)precursorTreeNode.Model)[0]
                     .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
             });
             cell = null;
@@ -174,17 +183,17 @@ namespace pwiz.SkylineTestFunctional
                 resultsGrid.BeginEdit(true);
                 ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 1;
                 Assert.IsTrue(resultsGrid.EndEdit());
-                Assert.AreEqual("b", ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][0]
+                Assert.AreEqual("b", GetPrecursorChromInfos((TransitionGroupDocNode)precursorTreeNode.Model)[0]
                     .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
-                Assert.AreEqual("a", ((TransitionGroupDocNode)precursorTreeNode.Model).EmptyResults[0][1]
+                Assert.AreEqual("a", GetPrecursorChromInfos((TransitionGroupDocNode)precursorTreeNode.Model)[1]
                     .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
             });
 
             // Assert that the annotations have their new values.
             var precursorDocNode = ((TransitionGroupDocNode)precursorTreeNode.Model);
-            Assert.AreEqual("b", precursorDocNode.EmptyResults[0][0]
+            Assert.AreEqual("b", GetPrecursorChromInfos(precursorDocNode)[0]
                 .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
-            Assert.AreEqual("a", precursorDocNode.EmptyResults[0][1]
+            Assert.AreEqual("a", GetPrecursorChromInfos(precursorDocNode)[1]
                 .Annotations.GetAnnotation(ANNOTATION_PRECURSOR_RESULTS_ITEMS));
 
             // Test multiselect here.
@@ -234,7 +243,7 @@ namespace pwiz.SkylineTestFunctional
                 precursorDocNode = (TransitionGroupDocNode)
                     ((TransitionGroupTreeNode)SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0]).Model;
                 // Check all annotations have the new value. 
-                foreach (TransitionGroupChromInfo info in precursorDocNode.EmptyResults[0])
+                foreach (TransitionGroupChromInfo info in GetPrecursorChromInfos(precursorDocNode))
                 {
                     Assert.IsTrue(info.Annotations.ListAnnotations().Contains(pair =>
                         Equals(pair.Value, annotationTestText)));

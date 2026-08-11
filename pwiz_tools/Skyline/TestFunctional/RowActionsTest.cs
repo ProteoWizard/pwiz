@@ -107,11 +107,12 @@ namespace pwiz.SkylineTestFunctional
             foreach (var precursor in peptideDocNode.TransitionGroups)
             {
                 Assert.AreEqual(3, precursor.EmptyResults.Count);
+                // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+                var chromInfos = ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.Document, precursor);
                 for (int iReplicate = 0; iReplicate < 3; iReplicate++)
                 {
-                    Assert.AreEqual(1, precursor.EmptyResults[iReplicate].Count);
-                    var precursorChromInfo = precursor.EmptyResults[iReplicate].First();
-                    Assert.IsNotNull(precursorChromInfo.Area);
+                    Assert.AreEqual(1, chromInfos[iReplicate].Count);
+                    Assert.IsNotNull(chromInfos[iReplicate].First().Area);
                 }
             }
             RunUI(() =>
@@ -150,12 +151,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 var precursor = (TransitionGroupDocNode) peptideDocNode.Children[iPrecursor];
                 Assert.AreEqual(3, precursor.EmptyResults.Count);
+                // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+                var chromInfos = ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.Document, precursor);
                 for (int iReplicate = 0; iReplicate < 3; iReplicate++)
                 {
-                    Assert.AreEqual(1, precursor.EmptyResults[iReplicate].Count);
-                    var precursorChromInfo = precursor.EmptyResults[iReplicate].First();
+                    Assert.AreEqual(1, chromInfos[iReplicate].Count);
                     bool shouldHaveValue = iPrecursor == 0 || iReplicate == 1;
-                    Assert.AreEqual(shouldHaveValue, precursorChromInfo.Area.HasValue);
+                    Assert.AreEqual(shouldHaveValue, chromInfos[iReplicate].First().Area.HasValue);
                 }
             }
             var alertDlg = ShowDialog<AlertDlg>(SkylineWindow.NewDocument);

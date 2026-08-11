@@ -83,7 +83,9 @@ namespace pwiz.SkylineTestFunctional
         {
             for (int i = 0; i < expectedValues.Length; i++)
             {
-                var chromInfo = transitionGroupDocNode.EmptyResults[i][0];
+                // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+                var chromInfo = ResultsUtil
+                    .GetTransitionGroupChromInfos(SkylineWindow.Document, transitionGroupDocNode, i)[0];
                 Assert.AreEqual(expectedValues[i], IsOriginalPeakBounds(chromInfo));
             }
         }

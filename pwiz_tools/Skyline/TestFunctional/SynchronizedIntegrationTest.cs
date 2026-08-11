@@ -163,11 +163,14 @@ namespace pwiz.SkylineTestFunctional
         {
             var originalTimes = new Dictionary<string, Tuple<float, float>>();
             var chromatograms = doc.MeasuredResults.Chromatograms;
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var chromInfos = ResultsUtil.GetTransitionGroupChromInfos(doc,
+                doc.PeptideTransitionGroups.First(t => ReferenceEquals(t.TransitionGroup, tranGroup)));
             for (var i = 0; i < chromatograms.Count; i++)
             {
                 var chromSet = chromatograms[i];
                 Assert.AreEqual(1, chromSet.FileCount);
-                var results = doc.PeptideTransitionGroups.First(t => ReferenceEquals(t.TransitionGroup, tranGroup)).EmptyResults[i];
+                var results = chromInfos[i];
                 Assert.AreEqual(1, results.Count);
                 var chromInfo = results[0];
                 originalTimes[chromSet.Name] = Tuple.Create(chromInfo.StartRetentionTime.Value, chromInfo.EndRetentionTime.Value);
@@ -183,6 +186,8 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChange(doc);
 
             var nodeTranGroup = doc.PeptideTransitionGroups.First(n => ReferenceEquals(n.TransitionGroup, tranGroup));
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var nodeChromInfos = ResultsUtil.GetTransitionGroupChromInfos(doc, nodeTranGroup);
 
             var syncTargets = (syncChromSets ?? Array.Empty<string>()).ToHashSet();
             if (!syncTargets.Contains(targetChromName))
@@ -191,7 +196,7 @@ namespace pwiz.SkylineTestFunctional
             for (var i = 0; i < doc.MeasuredResults.Chromatograms.Count; i++)
             {
                 var name = doc.MeasuredResults.Chromatograms[i].Name;
-                var chromInfo = nodeTranGroup.EmptyResults[i][0];
+                var chromInfo = nodeChromInfos[i][0];
                 var (originalStart, originalEnd) = originalTimes[name];
                 var newStart = chromInfo.StartRetentionTime;
                 var newEnd = chromInfo.EndRetentionTime;
@@ -231,12 +236,14 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChange(doc);
 
             var nodeTranGroup = doc.PeptideTransitionGroups.First(n => ReferenceEquals(n.TransitionGroup, tranGroup));
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var nodeChromInfos = ResultsUtil.GetTransitionGroupChromInfos(doc, nodeTranGroup);
             var syncTargets = (syncChromSets ?? Array.Empty<string>()).ToHashSet();
 
             for (var i = 0; i<doc.MeasuredResults.Chromatograms.Count; i++)
             {
                 var name = doc.MeasuredResults.Chromatograms[i].Name;
-                var chromInfo = nodeTranGroup.EmptyResults[i][0];
+                var chromInfo = nodeChromInfos[i][0];
                 var (originalStart, originalEnd) = originalTimes[name];
                 var newStart = chromInfo.StartRetentionTime;
                 var newEnd = chromInfo.EndRetentionTime;

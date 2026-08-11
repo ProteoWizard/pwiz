@@ -809,15 +809,55 @@ namespace pwiz.Skyline.Model
                 docClone.SetDocumentType();
             }
             
-            // The results are no longer recalculated here. Everything this pass worked out is
-            // either in the columnar results already or read back from the .skyd on demand through
-            // a MoleculeResults, so recalculating every molecule whenever the children change was
-            // work whose answers nothing kept.
-            //
-            // It was also a second pass: ChangeSettingsInternalOrThrow already calls ChangeSettings
-            // on every molecule, and then calls ChangeChildren, which brought it straight back
-            // through here to do the same thing again.
-            return docClone.Children;
+            // A molecule whose children changed has to have its results worked out again. A
+            // transition which has just been added has no peaks in the columnar results, and only a
+            // results pass reads them from the .skyd - nothing else fills them in, so without this
+            // the peaks of everything added by picking, refining or importing stay missing.
+            if (!Settings.HasResults || DeferSettingsChanges)
+                return docClone.Children;
+
+            // Store indexes to previous results in a dictionary for lookup
+            var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
+            // Unless the normalization standards have changed, which require recalculating of all ratios
+            if (ReferenceEquals(Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD),
+                docClone.Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD)))
+            {
+                foreach (var nodePeptide in Molecules)
+                {
+                    if (nodePeptide != null)    // Or previous peptides were freed during command-line peak picking
+                        dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
+                }
+            }
+
+            return docClone.UpdateResultsSummaries(docClone.Children, dictPeptideIdPeptide);
+        }
+
+        /// <summary>
+        /// Update results for the changed peptides.  This needs to start
+        /// at the peptide level, because peptides have useful peak picking information
+        /// like predicted retention time, and multiple measured precursors.
+        /// </summary>
+        private IList<DocNode> UpdateResultsSummaries(IList<DocNode> children, IDictionary<int, PeptideDocNode> dictPeptideIdPeptide)
+        {
+            // Perform main processing for peptides in parallel
+            var diffResults = new SrmSettingsDiff(Settings, true);
+            var moleculeGroupPairs = GetMoleculeGroupPairs(children);
+            var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
+            ParallelEx.For(0, moleculeGroupPairs.Length, i =>
+            {
+                var pair = moleculeGroupPairs[i];
+                var nodePep = pair.NodeMolecule;
+                int index = nodePep.Peptide.GlobalIndex;
+
+                PeptideDocNode nodeExisting;
+                if (dictPeptideIdPeptide.TryGetValue(index, out nodeExisting) &&
+                        ReferenceEquals(nodeExisting, nodePep))
+                    moleculeNodes[i] = nodePep;
+                else
+                    moleculeNodes[i] = nodePep.ChangeSettings(Settings, diffResults);
+            });
+
+            return RegroupMolecules(children, moleculeNodes);
         }
 
         /// <summary>
@@ -2089,6 +2129,41 @@ namespace pwiz.Skyline.Model
         public IEnumerable<PeptideDocNode> GetSurrogateStandards()
         {
             return Molecules.Where(mol => Equals(mol.GlobalStandardType, StandardType.SURROGATE_STANDARD));
+        }
+
+        /// <summary>
+        /// This document with every <see cref="ChromFileInfoId"/> in its results replaced by null.
+        /// Two documents read from the same file hold different id objects for the same file, and
+        /// the results compare them by reference, so this is what lets a document be compared with
+        /// itself across being written and read again - see
+        /// <see cref="ChromFileIds.ClearFileIds"/>.
+        /// <para>
+        /// Only a comparison may use what this returns. Its results cannot find a file, and it is
+        /// left deferring settings changes so that walking it does not start a results pass which
+        /// would put the ids back.
+        /// </para>
+        /// </summary>
+        public SrmDocument ClearChromFileIds()
+        {
+            var moleculeGroups = new List<DocNode>();
+            foreach (PeptideGroupDocNode nodePepGroup in Children)
+            {
+                var molecules = new List<DocNode>();
+                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+                {
+                    var precursors = nodePep.TransitionGroups
+                        .Select(nodeGroup => (DocNode) nodeGroup.ChangeAbbreviatedResults(
+                            nodeGroup.AbbreviatedResults?.ClearChromFileIds()))
+                        .ToList();
+                    molecules.Add(nodePep
+                        .ChangeAbbreviatedResults(nodePep.AbbreviatedResults?.ClearChromFileIds())
+                        .ChangeChildren(precursors));
+                }
+
+                moleculeGroups.Add(nodePepGroup.ChangeChildren(molecules));
+            }
+
+            return (SrmDocument) BeginDeferSettingsChanges().ChangeChildren(moleculeGroups);
         }
 
         public SrmDocument BeginDeferSettingsChanges()

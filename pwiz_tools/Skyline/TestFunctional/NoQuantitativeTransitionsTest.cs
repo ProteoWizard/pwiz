@@ -66,13 +66,16 @@ namespace pwiz.SkylineTestFunctional
             // Make sure that the TransitionGroupChromInfo's have their values set based on the quantitative peaks, unless there
             // are no quantitative peaks
             foreach (var peptideDocNode in document.Molecules)
-            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
             {
-                // Rebuilt from the .skyd, since a transition keeps no chrom infos
+                // Rebuilt from the .skyd, since neither a precursor nor a transition keeps chrom
+                // infos. One read for the whole molecule, which is what makes asking about every
+                // precursor and transition of it affordable.
                 var moleculeResults = new MoleculeResults(document.Settings, peptideDocNode);
-                for (int iReplicate = 0; iReplicate < transitionGroupDocNode.EmptyResults.Count; iReplicate++)
+                foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
+                for (int iReplicate = 0; iReplicate < document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
                 {
-                    var transitionGroupChromInfo = transitionGroupDocNode.EmptyResults[iReplicate][0];
+                    var transitionGroupChromInfo = moleculeResults.GetTransitionGroupChromInfos(
+                        transitionGroupDocNode.TransitionGroup, iReplicate)[0];
                     var quanChromInfos = new List<TransitionChromInfo>();
                     var nonQuanChromInfos = new List<TransitionChromInfo>();
                     foreach (var t in transitionGroupDocNode.Transitions)

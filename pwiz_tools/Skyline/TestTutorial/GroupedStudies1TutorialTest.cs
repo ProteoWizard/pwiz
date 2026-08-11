@@ -1435,6 +1435,7 @@ namespace pwiz.SkylineTestTutorial
                 int resultsIndex = GetChromIndex(chromName);
                 SkylineWindow.ActivateReplicate(chromName);
                 Assert.AreEqual(resultsIndex, SkylineWindow.SelectedResultsIndex);
+                var docBefore = SkylineWindow.DocumentUI;
                 SkylineWindow.RemovePeak(pathGroupRemove, nodeGroupRemove, null);
 
                 // Confirm that peak has been removed from the right replicate
@@ -1442,10 +1443,12 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(nodeGroupAfter);
                 Assert.AreSame(nodeGroupRemove.Id, nodeGroupAfter.Id);
 
-                Assert.IsNotNull(nodeGroupRemove.EmptyResults[resultsIndex]);
-                Assert.IsTrue(nodeGroupRemove.EmptyResults[resultsIndex][0].Area.HasValue);
-                Assert.IsNotNull(nodeGroupAfter.EmptyResults[resultsIndex]);
-                Assert.IsFalse(nodeGroupAfter.EmptyResults[resultsIndex][0].Area.HasValue);
+                // Rebuilt from the .skyd, since a precursor keeps no chrom infos. The removed peak
+                // is read from the document it was removed from, which is the one before this edit.
+                var chromInfosRemove = ResultsUtil.GetTransitionGroupChromInfos(docBefore, nodeGroupRemove, resultsIndex);
+                var chromInfosAfter = ResultsUtil.GetTransitionGroupChromInfos(SkylineWindow.DocumentUI, nodeGroupAfter, resultsIndex);
+                Assert.IsTrue(chromInfosRemove[0].Area.HasValue);
+                Assert.IsFalse(chromInfosAfter[0].Area.HasValue);
             });
         }
 

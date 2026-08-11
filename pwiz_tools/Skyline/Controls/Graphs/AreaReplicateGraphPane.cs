@@ -1301,10 +1301,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // if this is a library dot product we see if it can be calculated for the first replicate (or if it has average)
                     if (_expectedVisible == AreaExpectedValue.library &&
-                        nodeGroup.GetLibraryDotProduct(-1).HasValue)
+                        nodeGroup.GetLibraryDotProduct(-1, _document.Settings).HasValue)
                         return true;
                     if (_expectedVisible == AreaExpectedValue.isotope_dist &&
-                        nodeGroup.GetIsotopeDotProduct(-1).HasValue)
+                        nodeGroup.GetIsotopeDotProduct(-1, _document.Settings).HasValue)
                         return true;
                 }
                 return false;
@@ -1352,9 +1352,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     IList<float?> values = new float?[] { };
 
                     if(_expectedVisible == AreaExpectedValue.library)
-                        values = replicateIndices.Select(nodeGroup.GetLibraryDotProduct).ToList();
+                        values = replicateIndices
+                            .Select(i => nodeGroup.GetLibraryDotProduct(i, _document.Settings)).ToList();
                     if (_expectedVisible == AreaExpectedValue.isotope_dist)
-                        values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct).ToList();
+                        values = replicateIndices
+                            .Select(i => nodeGroup.GetIsotopeDotProduct(i, _document.Settings)).ToList();
                     if (!values.Any(val => val.HasValue && !float.IsNaN(val.Value)))
                         return float.NaN;
                     var statistics = new Statistics(values

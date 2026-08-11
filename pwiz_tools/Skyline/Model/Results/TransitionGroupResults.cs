@@ -843,6 +843,47 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// These results with every <see cref="ChromFileInfoId"/> replaced by null, at both levels.
+        /// See <see cref="ChromFileIds.ClearFileIds"/>, which says why comparing two documents is
+        /// the one thing allowed to look past which file id objects they hold.
+        /// <para>
+        /// <see cref="LegacyChromInfos"/> is left alone: a <see cref="ChromInfo"/> compares its
+        /// file id with <see cref="Identity"/> equality, which never told two of them apart.
+        /// </para>
+        /// </summary>
+        public TransitionGroupResults ClearChromFileIds()
+        {
+            var peaks = Peaks.ClearFileIds();
+            if (ReferenceEquals(peaks, Peaks))
+                return this;
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Peaks = peaks;
+                im.UserSets = UserSets?.ClearFileIds();
+                im.QValues = QValues?.ClearFileIds();
+                im.ZScores = ZScores?.ClearFileIds();
+                im.Annotations = Annotations?.ClearFileIds();
+                im.OriginalPeakIndexes = OriginalPeakIndexes?.ClearFileIds();
+                im.ReintegratedPeakIndexes = ReintegratedPeakIndexes?.ClearFileIds();
+                im.Transitions = Transitions == null
+                    ? null
+                    : ImmutableList.ValueOf(Transitions.Select(results => results?.ClearChromFileIds()));
+            });
+        }
+
+        /// <summary>
+        /// The peak a transition which was left out of the document has, given the area its
+        /// precursor carried for it in <see cref="ATTR.transition_areas"/>. A transition is only
+        /// left out when every one of its peaks says nothing beyond its area, so this is what each
+        /// of them said - see <see cref="GetSharedTransitionAreas"/>, which is what decides that.
+        /// </summary>
+        public static TransitionPeak MakePlainPeak(float area)
+        {
+            return new TransitionPeak(area, UserSet.FALSE, false, false, PeakIdentification.FALSE, false);
+        }
+
+        /// <summary>
         /// These results with one transition's built from chrom infos, which are let go: what a
         /// peak needs until the .skyd says which candidate peak it is goes onto the columnar
         /// results instead. This is what reading the compact encoding does.
@@ -1676,6 +1717,26 @@ namespace pwiz.Skyline.Model.Results
             public ChromFileIdMap<CustomPeakMetrics> CustomPeakMetrics { get; private set; }
 
             /// <summary>
+            /// The transition level counterpart of
+            /// <see cref="TransitionGroupResults.ClearChromFileIds"/>. Each of the four is a map in
+            /// its own right, over a layout of its own, so each has to be cleared separately.
+            /// </summary>
+            public TransitionResults ClearChromFileIds()
+            {
+                var peaks = Peaks.ClearFileIds();
+                if (ReferenceEquals(peaks, Peaks))
+                    return this;
+
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.Peaks = peaks;
+                    im.Annotations = Annotations?.ClearFileIds();
+                    im.CustomPeakBounds = CustomPeakBounds?.ClearFileIds();
+                    im.CustomPeakMetrics = CustomPeakMetrics?.ClearFileIds();
+                });
+            }
+
+            /// <summary>
             /// The transition level counterpart of <see cref="TransitionGroupResults.KeepReplicates"/>,
             /// combined through their own positions rather than the precursor's, because a
             /// transition need not have a peak everywhere the precursor does.
@@ -1882,7 +1943,7 @@ namespace pwiz.Skyline.Model.Results
             public bool TryGetPlainArea(int replicateIndex, ChromFileInfoId fileId, out float area)
             {
                 area = 0;
-                if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) || peak.UserSet != UserSet.FALSE ||
+                if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) || !IsPlainPeak(peak) ||
                     HasCustomPeak(replicateIndex, fileId))
                 {
                     return false;
@@ -1890,6 +1951,18 @@ namespace pwiz.Skyline.Model.Results
 
                 area = peak.Area;
                 return true;
+            }
+
+            /// <summary>
+            /// Whether a peak says nothing beyond its area, so that it can ride its precursor's
+            /// shared transition areas and not be written at all. Asked by comparing against the
+            /// peak the reader puts back for a transition which was left out, so that the two
+            /// cannot drift apart. A peak whose truncation was never worked out is not ordinary:
+            /// saying it was not truncated would be claiming something the document does not know.
+            /// </summary>
+            private static bool IsPlainPeak(TransitionPeak peak)
+            {
+                return Equals(peak, MakePlainPeak(peak.Area));
             }
 
             /// <summary>

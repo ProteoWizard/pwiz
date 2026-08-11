@@ -1124,6 +1124,13 @@ namespace pwiz.Skyline.Model.Serialization
                     results.TryGetTransitionPeak(transition, replicateIndex, fileId, out var peak);
                     w.WriteAttribute(ATTR.area, peak.Area);
                     w.WriteAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
+                    // Nothing else carries these, so a transition written out has to say them. They
+                    // are the reason a peak which is anything but ordinary cannot ride its
+                    // precursor's transition_areas - see TransitionResults.TryGetPlainArea, which
+                    // decides that, and SharedTransitionAreas.MakeTransitionResults, which puts
+                    // back exactly the values it treats as ordinary.
+                    w.WriteAttributeNullable(ATTR.truncated, peak.IsTruncated);
+                    w.WriteAttribute(ATTR.forced_integration, peak.IsForcedIntegration, false);
 
                     var peakBounds = results.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId);
                     if (peakBounds.HasValue)
@@ -1160,18 +1167,18 @@ namespace pwiz.Skyline.Model.Serialization
                 // ToString() and so loses digits a float needs to come back the same.
                 w.WriteAttributeNullable(ATTR.start_time, results.GetStartTime(position));
                 w.WriteAttributeNullable(ATTR.end_time, results.GetEndTime(position));
-                // Always, even as -1: its presence is what says this document knows which candidate
-                // peaks its peaks are, and so needs no upgrading when it is read again.
-                //
-                // It is doing two jobs, and they have come apart. DocumentReader also takes it as
-                // the marker for "this file holds the columnar form", so leaving it out of a
-                // precursor whose indexes are not worked out - which is the honest thing to write -
-                // makes the reader take the transition elements for the old form and drop every
-                // transition peak. Telling the two apart wants a DocumentFormat version for the
-                // columnar form, which is what would say which shape the elements are in without
-                // any peak having to claim something it does not know.
-                w.WriteAttribute(ATTR.chosen_peak_index,
-                    results.GetChosenPeakIndex(position) ?? PrecursorPeak.NO_PEAK_INDEX);
+                // Written, even as -1, by a precursor which knows which candidate peaks its peaks
+                // are; left out altogether by one which does not. Its presence is what
+                // DocumentReader reads back as TransitionGroupResults.NeedsPeakIndexes, so writing
+                // it either way would tell a document being read again that the matching had been
+                // done when it had not, and -1 would be taken for "not a candidate peak" rather
+                // than "not worked out". A precursor which does not know keeps everything its
+                // peaks need instead - see WriteTransitionResults.
+                if (!results.NeedsPeakIndexes)
+                {
+                    w.WriteAttribute(ATTR.chosen_peak_index,
+                        results.GetChosenPeakIndex(position) ?? PrecursorPeak.NO_PEAK_INDEX);
+                }
                 w.WriteAttributeNullable(ATTR.qvalue, results.GetQValue(position));
                 w.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
                 w.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);

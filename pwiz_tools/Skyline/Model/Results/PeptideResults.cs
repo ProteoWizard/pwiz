@@ -70,6 +70,20 @@ namespace pwiz.Skyline.Model.Results
             return Equals(EMPTY) ? null : this;
         }
 
+        /// <summary>
+        /// The molecule level counterpart of
+        /// <see cref="TransitionGroupResults.ClearChromFileIds"/>. See
+        /// <see cref="ChromFileIds.ClearFileIds"/>, which says why.
+        /// </summary>
+        public PeptideResults ClearChromFileIds()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ExcludeFromCalibration = ExcludeFromCalibration.ClearFileIds();
+                im.AnalyteConcentrations = AnalyteConcentrations.ClearFileIds();
+            });
+        }
+
         public PeptideResults ChangeExcludeFromCalibration(ChromFileIdMap<bool> value)
         {
             return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = value.WithoutDefaultOrEmpty());

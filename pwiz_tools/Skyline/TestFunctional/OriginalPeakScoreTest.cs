@@ -73,7 +73,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     RunUI(() => SkylineWindow.SelectedResultsIndex = replicateIndex);
                     WaitForConditionUI(() => candidatePeakForm.IsComplete);
-                    var transitionGroupChromInfo = transitionGroupDocNode.EmptyResults[replicateIndex].First();
+                    // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+                    var transitionGroupChromInfo = ResultsUtil
+                        .GetTransitionGroupChromInfos(SkylineWindow.Document, transitionGroupDocNode, replicateIndex)
+                        .First();
                     RunUI(() =>
                     {
                         var colChosen =

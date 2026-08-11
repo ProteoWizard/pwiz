@@ -26,6 +26,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
@@ -200,10 +201,15 @@ namespace pwiz.SkylineTestFunctional
 
         private double GetTotalArea(PeptideDocNode peptideDocNode, int replicateIndex)
         {
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos. One read for the
+            // whole molecule, which is what makes asking about every precursor of it affordable.
+            var moleculeResults = new MoleculeResults(SkylineWindow.Document.Settings, peptideDocNode);
             double total = 0;
             foreach (var precursor in peptideDocNode.TransitionGroups)
             {
-                total += precursor.EmptyResults[replicateIndex][0].Area.GetValueOrDefault();
+                total += moleculeResults
+                    .GetTransitionGroupChromInfos(precursor.TransitionGroup, replicateIndex)[0]
+                    .Area.GetValueOrDefault();
             }
 
             return total;

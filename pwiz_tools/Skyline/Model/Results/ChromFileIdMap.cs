@@ -180,6 +180,18 @@ namespace pwiz.Skyline.Model.Results
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// The same values over a layout whose file ids have been cleared. See
+        /// <see cref="Results.ChromFileIds.ClearFileIds"/>, which says why.
+        /// </summary>
+        public ChromFileIdMap<T> ClearFileIds()
+        {
+            var chromFileIds = ChromFileIds.ClearFileIds();
+            return ReferenceEquals(chromFileIds, ChromFileIds)
+                ? this
+                : new ChromFileIdMap<T>(chromFileIds, FlatValues);
+        }
+
         protected bool Equals(ChromFileIdMap<T> other)
         {
             return Equals(ChromFileIds, other.ChromFileIds) && Equals(FlatValues, other.FlatValues);

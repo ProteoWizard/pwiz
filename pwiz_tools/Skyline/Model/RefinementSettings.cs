@@ -603,7 +603,11 @@ namespace pwiz.Skyline.Model
                 if (!AddLabelType && RefineLabelType != null && Equals(RefineLabelType, nodeGroup.TransitionGroup.LabelType))
                     continue;
 
-                double? peakFoundRatio = nodeGroup.GetPeakCountRatio(bestResultIndex);
+                // The columnar overload, not the one backed by the chrom infos a precursor no
+                // longer keeps - that answers null for every precursor of a normally loaded
+                // document, and with RemoveMissingResults that empties the whole document.
+                double? peakFoundRatio = nodeGroup.GetPeakCountRatio(bestResultIndex,
+                    document.Settings.TransitionSettings.Integration.IsIntegrateAll);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)
@@ -640,15 +644,19 @@ namespace pwiz.Skyline.Model
 
                 if (peakFoundRatio.HasValue)
                 {
+                    // Asked of the precursor as it came, not as refining has left it. The dot
+                    // products used to be read off chrom infos worked out before any of this ran,
+                    // so they were always about the whole transition set; working them out from the
+                    // areas of whichever transitions happen to survive would be a different number.
                     if (DotProductThreshold.HasValue)
                     {
-                        float? dotProduct = nodeGroupRefined.GetLibraryDotProduct(bestResultIndex);
+                        float? dotProduct = nodeGroup.GetLibraryDotProduct(bestResultIndex, document.Settings);
                         if (dotProduct.HasValue && dotProduct.Value < DotProductThreshold.Value)
                             continue;
                     }
                     if (IdotProductThreshold.HasValue)
                     {
-                        float? idotProduct = nodeGroupRefined.GetIsotopeDotProduct(bestResultIndex);
+                        float? idotProduct = nodeGroup.GetIsotopeDotProduct(bestResultIndex, document.Settings);
                         if (idotProduct.HasValue && idotProduct.Value < IdotProductThreshold.Value)
                             continue;
                     }

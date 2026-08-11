@@ -295,9 +295,12 @@ namespace pwiz.SkylineTestTutorial
         private void VerifyPrecursorRatio(TransitionGroupTreeNode precursorTreeNode, double ratioExpected)
         {
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var chromInfo = ResultsUtil
+                .GetTransitionGroupChromInfos(SkylineWindow.Document, precursorTreeNode.DocNode, 0)[0];
             var ratioActual = normalizedValueCalculator.GetTransitionGroupValue(
                 normalizedValueCalculator.GetFirstRatioNormalizationMethod(), precursorTreeNode.PepNode,
-                precursorTreeNode.DocNode, 0, precursorTreeNode.DocNode.EmptyResults[0][0]);
+                precursorTreeNode.DocNode, 0, chromInfo);
             Assert.AreEqual(ratioExpected, ratioActual.Value, 0.005);
         }
 

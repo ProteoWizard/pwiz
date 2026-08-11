@@ -73,11 +73,14 @@ namespace pwiz.SkylineTestFunctional
                 document.Peptides.First(
                     peptideDocNode => seqWithTwoIds.Equals(peptideDocNode.Peptide.Target));
             var precursorWithTwoIds = peptideWithTwoIds.TransitionGroups.First();
-            Assert.IsTrue(precursorWithOneId.EmptyResults[0][0].IsIdentified);
-            Assert.IsFalse(precursorWithOneId.EmptyResults[1][0].Identified == PeakIdentification.TRUE);
-            Assert.IsTrue(precursorWithOneId.EmptyResults[1][0].Identified == PeakIdentification.ALIGNED);
-            Assert.IsTrue(precursorWithTwoIds.EmptyResults[0][0].IsIdentified);
-            Assert.IsTrue(precursorWithTwoIds.EmptyResults[1][0].IsIdentified);
+            // Rebuilt from the .skyd, since a precursor keeps no chrom infos
+            var chromInfosWithOneId = ResultsUtil.GetTransitionGroupChromInfos(document, precursorWithOneId);
+            var chromInfosWithTwoIds = ResultsUtil.GetTransitionGroupChromInfos(document, precursorWithTwoIds);
+            Assert.IsTrue(chromInfosWithOneId[0][0].IsIdentified);
+            Assert.IsFalse(chromInfosWithOneId[1][0].Identified == PeakIdentification.TRUE);
+            Assert.IsTrue(chromInfosWithOneId[1][0].Identified == PeakIdentification.ALIGNED);
+            Assert.IsTrue(chromInfosWithTwoIds[0][0].IsIdentified);
+            Assert.IsTrue(chromInfosWithTwoIds[1][0].IsIdentified);
 
             // Verify that the generated chromatogram is of the expected length around the actual or aligned ID's
             var targets = document.Settings.GetTargets(peptideWithOneId).ToList();
