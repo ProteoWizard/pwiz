@@ -142,7 +142,13 @@ public sealed class SpectrumList_Mobilion : SpectrumListBase, IIonMobilitySpectr
         if (polarityCv != CVID.CVID_Unknown) spec.Params.Set(polarityCv);
         spec.Params.Set(CVID.MS_profile_spectrum);
 
-        spec.Params.Set(CVID.MS_total_ion_current, (double)frame.TotalIntensity);
+        // Deliberately NOT cast to double. cpp passes GetFrameTotalIntensity()'s int64_t
+        // straight to ParamContainer::set (SpectrumList_Mobilion.cpp:125), which formats
+        // integral types with lexical_cast - "58892357". Routing it through the double
+        // overload instead formats it with karma's double12 policy, which emits
+        // "5.8892357e07" for anything >= 1e5 and appends ".0" below that, so every
+        // Mobilion spectrum's TIC differed from the reference.
+        spec.Params.Set(CVID.MS_total_ion_current, frame.TotalIntensity);
 
         // cpp SpectrumList_Mobilion.cpp:128-129: scan window from
         // [0, GlobalKey.ADC_MASS_SPEC_RANGE]. We hoist that double once at reader-open
