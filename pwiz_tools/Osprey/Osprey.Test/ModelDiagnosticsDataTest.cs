@@ -97,19 +97,27 @@ namespace pwiz.Osprey.Test
             };
             var f1 = new List<FdrEntry>
             {
-                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000),
-                CoEntry(1, false, 2.0, 0.001, "A", 2, 10.150),
-                CoEntry(6, false, 5.0, 0.001, "A", 3, 10.000),
-                CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018),
-                CoEntry(201, false, 4.0, 0.003, "E", 2, 10.032),
-                CoEntry(1 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008),
-                CoEntry(7, false, 20.0, 0.500, "F", 2, 10.010),
+                // expAgg is a per-ENTRY cross-run roll-up, so every row of entry 1 carries 9.0
+                // (its best observation anywhere), not that row's own score.
+                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000, 9.0),
+                CoEntry(1, false, 2.0, 0.001, "A", 2, 10.150, 9.0),
+                CoEntry(6, false, 5.0, 0.001, "A", 3, 10.000, 5.0),
+                CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018, 3.0),
+                CoEntry(201, false, 4.0, 0.003, "E", 2, 10.032, 4.0),
+                // The discriminating row. Its per-run SCORE (6.0) clears file1's run boundary
+                // (3.0, the worst accepted target there), so it is admitted at RUN scope. Its
+                // EXPERIMENT AGGREGATE (1.0) is below the experiment boundary (2.0, entry D's
+                // aggregate), so it must NOT be admitted at experiment scope. The two scopes
+                // therefore disagree about this one row, and they can only disagree if the
+                // experiment boundary reads ExperimentAggregateScore rather than Score.
+                CoEntry(1 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, 1.0),
+                CoEntry(7, false, 20.0, 0.500, "F", 2, 10.010, 20.0),
             };
             var f2 = new List<FdrEntry>
             {
-                CoEntry(1, false, 6.0, 0.001, "A", 2, 30.000),
-                CoEntry(3, false, 8.0, 0.001, "C", 2, 20.000),
-                CoEntry(4, false, 2.0, 0.002, "D", 2, 20.202),
+                CoEntry(1, false, 6.0, 0.001, "A", 2, 30.000, 9.0),
+                CoEntry(3, false, 8.0, 0.001, "C", 2, 20.000, 8.0),
+                CoEntry(4, false, 2.0, 0.002, "D", 2, 20.202, 2.0),
             };
 
             var data = ModelDiagnosticsData.BuildCoAssignment(
@@ -138,6 +146,27 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(scope.Decoy);
             Assert.AreEqual(1, scope.Decoy.N);
             Assert.AreEqual(1, scope.Decoy.NBetter);
+
+            // THE DECOY BOUNDARY IS SCORE-SPACE, AND THE TWO SCOPES USE DIFFERENT SCORES.
+            // Decoys have no meaningful q of their own, so they are the one class admitted by
+            // comparing a score against the worst accepted target/entrapment. At RUN scope that
+            // comparison is the row's own Score; at EXPERIMENT scope it MUST be
+            // ExperimentAggregateScore, the score the experiment-wide competition actually
+            // ranked on. Decoy X is built to separate the two: score 6.0 clears file1's run
+            // boundary of 3.0, aggregate 1.0 does not clear the experiment boundary of 2.0.
+            //
+            // So a build that reads Score at experiment scope admits X and this assertion fails.
+            // Without it the entire v4 field is untested: every fixture row used to carry the
+            // 0.0 default, which made the experiment boundary 0.0 and admitted every decoy no
+            // matter what the code did. That is how the pass-2 panel shipped reporting 542,368
+            // decoys against 117,783 targets on astral.
+            Assert.IsNull(data.Experiment.Decoy,
+                @"a decoy whose experiment aggregate is below the experiment boundary must not be admitted");
+            // The classes gated on their own q are unaffected, which localizes any failure above
+            // to the decoy rule rather than to the acceptance set.
+            Assert.IsNotNull(data.Experiment.Target);
+            Assert.IsNotNull(data.Experiment.Entrapment);
+            Assert.AreEqual(1, data.Experiment.Entrapment.N);
 
             // Every class here is far under MIN_N_FOR_ENRICHMENT, so the ratios are suppressed.
             // A measured Stellar run accepted 7 decoys at experiment q and 1 of 7 rendered as
@@ -1340,11 +1369,26 @@ namespace pwiz.Osprey.Test
 
         // An entry carrying a detection apex RT, for the peak co-assignment panel (the only card
         // that reads FdrEntry.ApexRt).
+        /// <summary>
+        /// A co-assignment fixture row. <paramref name="expAgg"/> is the EXPERIMENT AGGREGATE
+        /// SCORE (sidecar v4), which defaults to the row's own score - right for an entry with a
+        /// single observation, and the reason it can be omitted on rows where the distinction
+        /// does not matter.
+        ///
+        /// <para>It must be settable, and it must default to something other than 0.0. The
+        /// experiment-scope decoy boundary is the ONLY quantity on this panel gated by score
+        /// rather than by a q, and it reads this field, not <c>Score</c>. Leaving every fixture
+        /// row at the <c>ResetScores</c> 0.0 default made the boundary 0.0, admitted every decoy
+        /// unconditionally, and let a real defect ship green - the pass-2 panel reported 542,368
+        /// decoys against 117,783 targets on astral before it was caught by inspecting the
+        /// rebaselined golden rather than by this test.</para>
+        /// </summary>
         private static FdrEntry CoEntry(uint id, bool decoy, double score, double q,
-            string seq, byte charge, double apexRt)
+            string seq, byte charge, double apexRt, double expAgg = double.NaN)
         {
             var entry = Entry(id, decoy, score, q, seq, charge);
             entry.ApexRt = apexRt;
+            entry.ExperimentAggregateScore = double.IsNaN(expAgg) ? score : expAgg;
             return entry;
         }
 

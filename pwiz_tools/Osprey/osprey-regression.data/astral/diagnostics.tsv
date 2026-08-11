@@ -37,8 +37,8 @@ pass2.coAssign.experiment.target.n	117783
 pass2.coAssign.experiment.target.nBetter	13305
 pass2.coAssign.experiment.entrapment.n	n/a
 pass2.coAssign.experiment.entrapment.nBetter	n/a
-pass2.coAssign.experiment.decoy.n	542368
-pass2.coAssign.experiment.decoy.nBetter	132641
+pass2.coAssign.experiment.decoy.n	3458
+pass2.coAssign.experiment.decoy.nBetter	1219
 pass2.coAssign.experiment.enrichment	NaN
 pass1.experiment.reportedQ	n/a
 pass1.experiment.combinedFdp	n/a

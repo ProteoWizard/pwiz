@@ -337,11 +337,29 @@ namespace pwiz.Osprey.FDR
             var expIsDecoy = new bool[w];
             var expBaseId = new uint[w];
             var winnerLoc = new Dictionary<uint, (int fileIdx, uint entryId, double score)>(w);
+            // The experiment aggregate score PER FULL ENTRY_ID (sidecar v4, issue #4522) - the
+            // score this competition ranked each entry on. Keyed by entry_id and not by base_id,
+            // exactly as PercolatorQValues.ComputeExperimentAggregateScoreMap is on the 1st pass:
+            // a target and its decoy are distinct entries with distinct aggregates even though
+            // the competition below pairs them. winnerLoc cannot serve this purpose - it holds
+            // only the WINNER of each pair, so reading it for a decoy would hand back the
+            // target's score whenever the target won.
+            //
+            // bestTarget / bestDecoy already carry exactly what is needed: each is the max over
+            // that entry's observations across every file, which is the same max-over-rows
+            // reduction the 1st-pass producer performs. The mean-best-N branch is deliberately
+            // absent because the experiment aggregation is 1st-pass only (see
+            // ComputeExperimentPrecursorQMap), so effScores == scores here.
+            var aggByEntryId = new Dictionary<uint, double>(w * 2);
             int wi2 = 0;
             foreach (uint bid in baseIds)
             {
                 bool hasT = bestTarget.TryGetValue(bid, out var t);
                 bool hasD = bestDecoy.TryGetValue(bid, out var d);
+                if (hasT)
+                    aggByEntryId[t.entryId] = t.score;
+                if (hasD)
+                    aggByEntryId[d.entryId] = d.score;
                 // CompeteFromIndices: target wins strictly (tScore > dScore); ties go to the decoy.
                 bool decoyWins = hasT && hasD ? !(t.score > d.score) : !hasT;
                 var win = decoyWins ? d : t;
@@ -379,7 +397,7 @@ namespace pwiz.Osprey.FDR
             // value it produced is a function of the bounded state below plus the survivor's own
             // run q, so handing that state back costs O(distinct) instead of O(files x entries).
             return new StreamedCompetitionState(
-                baseIdExpQ, minRunQ, winnerLoc, pepEstimator, fileKeys, fileKeys.Count > 1);
+                baseIdExpQ, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
         }
 
         /// <summary>
@@ -394,6 +412,7 @@ namespace pwiz.Osprey.FDR
             private readonly Dictionary<uint, double> _baseIdExpQ;
             private readonly Dictionary<uint, double> _minRunQ;
             private readonly Dictionary<uint, (int fileIdx, uint entryId, double score)> _winnerLoc;
+            private readonly Dictionary<uint, double> _aggByEntryId;
             private readonly PepEstimator _pepEstimator;
             private readonly IReadOnlyList<string> _fileKeys;
             private readonly bool _multiFile;
@@ -402,6 +421,7 @@ namespace pwiz.Osprey.FDR
                 Dictionary<uint, double> baseIdExpQ,
                 Dictionary<uint, double> minRunQ,
                 Dictionary<uint, (int fileIdx, uint entryId, double score)> winnerLoc,
+                Dictionary<uint, double> aggByEntryId,
                 PepEstimator pepEstimator,
                 IReadOnlyList<string> fileKeys,
                 bool multiFile)
@@ -409,6 +429,7 @@ namespace pwiz.Osprey.FDR
                 _baseIdExpQ = baseIdExpQ;
                 _minRunQ = minRunQ;
                 _winnerLoc = winnerLoc;
+                _aggByEntryId = aggByEntryId;
                 _pepEstimator = pepEstimator;
                 _fileKeys = fileKeys;
                 _multiFile = multiFile;
@@ -429,6 +450,34 @@ namespace pwiz.Osprey.FDR
                 double eq = _baseIdExpQ.TryGetValue(baseId, out double bq) ? bq : 1.0;
                 double floorQ = _minRunQ.TryGetValue(entryId, out double mrq) ? mrq : 1.0;
                 return eq < floorQ ? floorQ : eq;
+            }
+
+            /// <summary>
+            /// The experiment aggregate score this competition ranked <paramref name="entryId"/>
+            /// on (sidecar v4, issue #4522), or <c>null</c> when the entry took no part in the
+            /// experiment fold - which under protein-compact means an OFF-STRATUM entry, whose
+            /// pass-1 aggregate the caller carries through untouched beside the pass-1
+            /// experiment q it also carries.
+            ///
+            /// <para><b>Nullable, not an in-band sentinel.</b> The score is a signed
+            /// discriminant, so 0.0 is an ordinary mid-distribution value: returning it for "not
+            /// competed" is indistinguishable from a real score, and a consumer building a
+            /// score-space acceptance boundary then takes a minimum over fabricated zeros. That
+            /// is not hypothetical - it is exactly how this panel came to report 542,368 decoys
+            /// against 117,783 targets on astral.</para>
+            ///
+            /// <para>NaN would fix that much, but <c>double?</c> is chosen over it deliberately.
+            /// NaN propagates silently through arithmetic and comparisons, so a caller that
+            /// forgets the check persists NaN into the v4 record - and the sidecar comparators
+            /// test <c>Math.Abs(a - b) &lt;= tolerance</c>, which is FALSE for NaN against NaN,
+            /// turning byte-identical files into a red gate. <c>double?</c> makes that caller
+            /// fail to compile instead. The dictionary behind this stays
+            /// <c>Dictionary&lt;uint,double&gt;</c>, so nothing is boxed and no per-entry
+            /// Nullable overhead is paid; only the return is lifted.</para>
+            /// </summary>
+            public double? ExperimentAggregateScore(uint entryId)
+            {
+                return _aggByEntryId.TryGetValue(entryId, out double v) ? v : null;
             }
 
             /// <summary>

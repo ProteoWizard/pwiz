@@ -1016,6 +1016,21 @@ namespace pwiz.Osprey.Tasks
                     // reported set (peptide-level FDR is not the target here).
                     e.ExperimentPeptideQvalue = eq;
                     e.Pep = competition.Pep(kvp.Key, e.EntryId);
+                    // The aggregate MUST move with the q above. This mode recomputes experiment q
+                    // from a fresh full-population competition, so the pass-1 aggregate
+                    // RestorePass1Scalars seeded is no longer the score that q was ranked on -
+                    // and this is the DEFAULT mode, so leaving it stale is not an edge case.
+                    // Measured cost of the omission: the co-assignment panel's experiment
+                    // boundary is a minimum over accepted precursors' aggregates, so entries
+                    // still holding the ResetScores 0.0 default dragged it to 0.0 and admitted
+                    // the entire decoy pool - 542,368 decoys against 117,783 targets on astral,
+                    // 183x the pass-1 count, from a rule meant to admit about 1%.
+                    // null means the entry never entered the experiment fold (off-stratum under
+                    // protein-compact); those keep the pass-1 value, which is correct because
+                    // they keep the pass-1 experiment q too - the branch above.
+                    double? agg = competition.ExperimentAggregateScore(e.EntryId);
+                    if (agg.HasValue)
+                        e.ExperimentAggregateScore = agg.Value;
                     nMapped++;
                 }
             ctx.LogInfo(string.Format(
