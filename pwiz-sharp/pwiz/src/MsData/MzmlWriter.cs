@@ -395,7 +395,11 @@ public sealed class MzmlWriter
         {
             w.WriteStartElement("sample");
             w.WriteAttributeString("id",XmlIdEncoding.Encode(s.Id));
-            if (!string.IsNullOrEmpty(s.Name)) w.WriteAttributeString("name", s.Name);
+            // Unconditional, including when empty: cpp IO.cpp:564 does
+            // attributes.add("name", sample.name) with no guard, so a nameless sample still
+            // carries name="". Omitting the attribute instead differed on every Thermo,
+            // Agilent and Mobilion file that emits a sample.
+            w.WriteAttributeString("name", s.Name ?? string.Empty);
             MzmlXml.WriteParams(w, s);
             w.WriteEndElement();
         }
