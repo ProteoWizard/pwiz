@@ -56,7 +56,7 @@ namespace pwiz.Osprey.Test
         public void TestIsIncludedMembershipTable()
         {
             // Expected membership per mode, in CanonicalPipeline order
-            // [PerFileScoring, FirstJoin, PerFileRescore, MergeNode].
+            // [PerFileScoring, FirstPassFDR, PerFileRescore, SecondPassFDR].
             var cases = new (string Name, OspreyConfig Config, bool[] Expected)[]
             {
                 (@"straight-through",  new OspreyConfig(),
@@ -71,7 +71,7 @@ namespace pwiz.Osprey.Test
                     new[] { false, false, false, true  }),
                 // --input-scores with no --task: the single-node full pipeline.
                 // PerFileScoring lazy-rehydrates the supplied scores rather than
-                // computing them, so it is excluded; FirstJoin..MergeNode compute
+                // computing them, so it is excluded; FirstPassFDR..SecondPassFDR compute
                 // Stages 5-8.
                 (@"input-scores-full", WithInputScores(_ => { }),
                     new[] { false, true,  true,  true  }),

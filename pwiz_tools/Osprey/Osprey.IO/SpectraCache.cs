@@ -86,6 +86,13 @@ namespace pwiz.Osprey.IO
         // first use.
         private const uint VERSION = 4;
 
+        // Stored in the source-size field when the source exists but could not be
+        // measured. No real source is this large, so it is unambiguous in-band and
+        // needs no format version bump: a reader that does not know the sentinel
+        // simply compares it against the real size, mismatches, and re-parses -
+        // which is the intended outcome anyway.
+        private const ulong FINGERPRINT_UNMEASURABLE = ulong.MaxValue;
+
         // Fixed EOF footer: [ms1_section_offset: int64][index_offset: int64].
         private const int FOOTER_BYTES = 16;
 
@@ -115,7 +122,14 @@ namespace pwiz.Osprey.IO
             if (ms1Spectra == null)
                 ms1Spectra = new List<MS1Spectrum>();
 
-            ComputeSourceFingerprint(sourcePath, out long sourceSize, out long sourceMtimeMs);
+            // Record a distinct sentinel when the source is there but unmeasurable, so
+            // the reader can tell that apart from "no source was given" (0) and refuse
+            // the cache instead of trusting it forever after one I/O error.
+            if (!TryComputeSourceFingerprint(sourcePath, out long sourceSize, out long sourceMtimeMs))
+            {
+                sourceSize = unchecked((long)FINGERPRINT_UNMEASURABLE);
+                sourceMtimeMs = 0;
+            }
 
             int nMs2 = ms2Spectra.Count;
 
@@ -302,9 +316,17 @@ namespace pwiz.Osprey.IO
             // (e.g. a resume run whose mzML is not beside the cache).
             ulong storedSize = r.ReadUInt64();
             long storedMtimeMs = r.ReadInt64();
+            // Written when the source existed but could not be measured. Distinct from
+            // 0, which means "no source was given" and is legitimately trusted; folding
+            // the two together would make one I/O error trust the cache forever.
+            if (storedSize == FINGERPRINT_UNMEASURABLE)
+                return false;
             if (storedSize != 0 && !string.IsNullOrEmpty(sourcePath))
             {
-                ComputeSourceFingerprint(sourcePath, out long actualSize, out long actualMtimeMs);
+                // Likewise on the read side: a source that exists but cannot be measured
+                // is stale, not "skip the check".
+                if (!TryComputeSourceFingerprint(sourcePath, out long actualSize, out long actualMtimeMs))
+                    return false;
                 if (actualSize != 0 && ((ulong)actualSize != storedSize || actualMtimeMs != storedMtimeMs))
                     return false;
             }
@@ -426,24 +448,77 @@ namespace pwiz.Osprey.IO
         // same value for the same file. Returns (0, 0) when the source is null,
         // missing, or cannot be stat'd, which the load path treats as "no
         // fingerprint -- trust the cache".
-        private static void ComputeSourceFingerprint(string sourcePath, out long size, out long mtimeMs)
+        /// <summary>
+        /// Measure the source for the staleness check. Returns FALSE when the source
+        /// exists but could not be measured - an unreadable subdirectory part-way
+        /// through a bundle walk, say. That case must not be reported as (0, 0),
+        /// because a zero size is the "no fingerprint" signal and would make a stale
+        /// cache un-invalidatable forever. A source that simply is not present still
+        /// returns true with (0, 0): there is nothing to compare, which is the
+        /// documented resume case.
+        /// </summary>
+        private static bool TryComputeSourceFingerprint(string sourcePath, out long size, out long mtimeMs)
         {
             size = 0;
             mtimeMs = 0;
             if (string.IsNullOrEmpty(sourcePath))
-                return;
+                return true;
             try
             {
                 var fi = new FileInfo(sourcePath);
-                if (!fi.Exists)
-                    return;
-                size = fi.Length;
-                mtimeMs = new DateTimeOffset(fi.LastWriteTimeUtc).ToUnixTimeMilliseconds();
+                if (fi.Exists)
+                {
+                    size = fi.Length;
+                    mtimeMs = new DateTimeOffset(fi.LastWriteTimeUtc).ToUnixTimeMilliseconds();
+                    return true;
+                }
+
+                // Several vendor formats are DIRECTORIES (Agilent .d, Bruker .d,
+                // Waters .raw), and FileInfo.Exists is false for a directory. Leaving
+                // the fingerprint at 0 would not be a conservative default: the reader
+                // SKIPS the staleness comparison when the stored size is 0, so such a
+                // cache would be accepted no matter how the source had changed. Sum the
+                // contents instead and take the newest write time, which moves whenever
+                // any file in the bundle is rewritten. The walk costs far less than the
+                // parse it protects.
+                //
+                // Trade-off: a vendor SDK that writes a sidecar into the bundle when it
+                // reads it would move this fingerprint and cost a re-parse on the next
+                // run. That is a performance cost, not a correctness one, and it says so
+                // in the log ("Spectra cache stale or invalid"), whereas trusting a stale
+                // cache would be silent and wrong. Verified not to happen for Agilent .d:
+                // msconvert read one of the tracked test bundles and left no file in it
+                // modified.
+                var di = new DirectoryInfo(sourcePath);
+                if (!di.Exists)
+                    return true;
+                long totalSize = 0;
+                long newestMtimeMs = 0;
+                int fileCount = 0;
+                foreach (var f in di.EnumerateFiles(@"*", SearchOption.AllDirectories))
+                {
+                    totalSize += f.Length;
+                    fileCount++;
+                    long fileMtimeMs = new DateTimeOffset(f.LastWriteTimeUtc).ToUnixTimeMilliseconds();
+                    if (fileMtimeMs > newestMtimeMs)
+                        newestMtimeMs = fileMtimeMs;
+                }
+                // An existing bundle with nothing in it, or one whose files are all
+                // empty, would land on the (0, 0) "no fingerprint" signal. No real
+                // vendor bundle looks like that, so treat it as unmeasurable rather
+                // than as permission to trust the cache.
+                if (fileCount == 0 || totalSize == 0)
+                    return false;
+                size = totalSize;
+                mtimeMs = newestMtimeMs;
+                return true;
             }
             catch (Exception)
             {
+                // Exists (we got past the Exists checks) but could not be measured.
                 size = 0;
                 mtimeMs = 0;
+                return false;
             }
         }
 

@@ -153,7 +153,7 @@ namespace pwiz.Osprey.Tasks
         /// The reconciliation hash must be the JOIN-wide hash (over every file in
         /// the planner step), not the worker's single-file InputFiles hash;
         /// without that, a worker rescoring a single parquet stamps a single-file
-        /// hash that the downstream --task SecondPassFDR merge node rejects on
+        /// hash that the downstream --task SecondPassFDR node rejects on
         /// mismatch. The join file stems come from the planner's
         /// reconciliation.json (v2+) via <see cref="RescoreInputs.JoinFileStems"/>;
         /// fall back to the config-derived hash when the caller passed none

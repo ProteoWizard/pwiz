@@ -453,8 +453,12 @@ namespace pwiz.Skyline.ToolsUI
                 openForms = topLevelWindows.Concat(GetDockedForms(cancellationToken))
                     .Select(form => form.GetFormInfo()).ToArray();
             }));
-            asyncResult?.AsyncWaitHandle.WaitOne(MAIN_THREAD_TIMEOUT_MILLIS);
-            return openForms ?? topLevelWindows.Select(form => form.GetFormInfo()).ToArray();
+            if (true == asyncResult?.AsyncWaitHandle.WaitOne(MAIN_THREAD_TIMEOUT_MILLIS))
+            {
+                Assume.IsNotNull(openForms);
+                return openForms;
+            }
+            return topLevelWindows.Select(form => form.GetFormInfo()).ToArray();
         }
 
         // How long to give the main thread to describe the forms before describing them here instead. A thread that is
@@ -780,7 +784,9 @@ namespace pwiz.Skyline.ToolsUI
                 var dockState = form.DockState;
                 if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                     continue;
-                result.Add(StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken));
+                var window = StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken);
+                if (window != null)
+                    result.Add(window);
             }
             return result;
         }

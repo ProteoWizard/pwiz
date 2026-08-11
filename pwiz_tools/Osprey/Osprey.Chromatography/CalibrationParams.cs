@@ -158,7 +158,7 @@ namespace pwiz.Osprey.Chromatography
         /// (<c>Vec&lt;(f64, f64)&gt;</c>) in
         /// osprey-chromatography/src/calibration/mod.rs, which serializes as JSON
         /// <c>[[center,width],...]</c>. Carries the gap-fill m/z filter's
-        /// per-window coverage to an HPC merge node that has no mzML. Nullable for
+        /// per-window coverage to an HPC SecondPassFDR node that has no mzML. Nullable for
         /// legacy JSON written before this field existed.
         /// </summary>
         [JsonProperty("windows", NullValueHandling = NullValueHandling.Ignore)]
