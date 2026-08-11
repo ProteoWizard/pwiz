@@ -103,6 +103,12 @@ public sealed class Reader_Waters : IReader
         List<Pwiz.Data.Common.Chemistry.MzMobilityWindow> mobilityFilter, bool reportSonarBins,
         bool ignoreZeroIntensityPoints)
     {
+        // Every reader seeds the CV list; Waters was the only one that did not, so its mzML
+        // came out with <cvList count="0"/>. That is invalid against mzML 1.1.0 - CVListType
+        // requires at least one cv - and it leaves every cvRef="MS" in the document pointing at
+        // an undeclared id. cpp does this for all formats in Reader::read.
+        result.CVs.AddRange(MSData.DefaultCVList);
+
         // Identifier is the directory name minus the .raw extension (matches pwiz C++:
         // bfs::basename(p) drops the trailing extension component).
         string folderName = Path.GetFileName(Path.TrimEndingDirectorySeparator(analysisDir));
