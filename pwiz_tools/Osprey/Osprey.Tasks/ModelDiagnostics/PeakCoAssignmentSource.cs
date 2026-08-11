@@ -134,6 +134,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                         EffectiveQvalue(rec, config.FdrLevel, true),
                         EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
                 });
+                // Reduce this file's per-precursor bests to its run cutoff and the decoys
+                // clearing it, then let them go. Holding every file's bests to the end was
+                // O(files x distinct entry ids) - 4.18M per file on the full entrapment
+                // library, i.e. ~79 GB at the 500-file target.
+                builder.SealRunCutoff(fileIdx);
             }
             builder.SealCutoffs();
 

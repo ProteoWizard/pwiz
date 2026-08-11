@@ -353,6 +353,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         e.EntryId, e.Score, e.ExperimentAggregateScore, e.EffectiveRunQvalue(fdrLevel),
                         e.EffectiveExperimentQvalue(fdrLevel), runFdr);
                 }
+                // Reduce this file's bests to its cutoff before reading the next, so the
+                // builder never holds more than one file's worth.
+                builder.SealRunCutoff(f);
             }
             builder.SealCutoffs();
 
@@ -438,10 +441,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // Recorded for EVERY class, not just accepted rows: a decoy needs its own aggregate to
             // compare against the cutoff and has no q to pre-filter on. Bounded by the number of
             // distinct precursors observed - the quantity to watch at SEA-AD scale.
-            private readonly Dictionary<int, Dictionary<uint, double>> _runBest =
-                new Dictionary<int, Dictionary<uint, double>>();
+            // RUN scope is a PER-FILE question, so its working set is ONE file wide and is
+            // reduced away by SealRunCutoff before the next file is read. These two are the
+            // current file's only; they are cleared at each seal.
+            //
+            // They were previously Dictionary<int, ...> keyed by file index, i.e.
+            // O(files x distinct entry ids) held live from phase 1 through the whole panel
+            // build. Measured on the full target+decoy+entrapment library that is 4.18M
+            // entries per file: 12 GB at 82 files and ~79 GB at 500 - against a stated goal of
+            // 500 files on a 64 GB machine, so the panel alone exceeded the entire budget.
+            // Nothing about the answer needed it: the per-file bests are read exactly twice,
+            // both times for this file, and never again once the cutoff is known.
+            private Dictionary<uint, double> _fileBest = new Dictionary<uint, double>();
+            private HashSet<uint> _fileAccepted = new HashSet<uint>();
+            private int _fileIdx = -1;
+
+            // What survives a seal, per file: the boundary itself, and the DECOY entry ids that
+            // clear it. The second is O(decoys admitted), not O(entries) - the admitted decoy
+            // population is what the ~1% FDR rule lets through, thousands per file rather than
+            // millions, so this does not reintroduce the scaling it replaces.
+            private readonly Dictionary<int, HashSet<uint>> _admittedRunDecoys =
+                new Dictionary<int, HashSet<uint>>();
+
+            // EXPERIMENT scope is pooled across runs, so its maps are keyed by entry id alone.
+            // O(distinct precursors observed), bounded by the LIBRARY - never multiplied by the
+            // file count, which is the property that matters here.
             private readonly Dictionary<uint, double> _experimentBest = new Dictionary<uint, double>();
-            private readonly Dictionary<int, HashSet<uint>> _runAccepted = new Dictionary<int, HashSet<uint>>();
             private readonly HashSet<uint> _experimentAccepted = new HashSet<uint>();
 
             /// <summary>
@@ -459,13 +484,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 double experimentAggregateScore,
                 double runQvalue, double experimentQvalue, double runFdr)
             {
-                if (!_runBest.TryGetValue(fileIdx, out var byEntry))
+                if (fileIdx != _fileIdx)
                 {
-                    byEntry = new Dictionary<uint, double>();
-                    _runBest.Add(fileIdx, byEntry);
+                    if (_fileIdx >= 0)
+                    {
+                        throw new InvalidOperationException(
+                            @"CoAssignmentPassBuilder: SealRunCutoff must be called before moving to the next file");
+                    }
+                    _fileIdx = fileIdx;
                 }
-                if (!byEntry.TryGetValue(entryId, out double cur) || score > cur)
-                    byEntry[entryId] = score;
+                if (!_fileBest.TryGetValue(entryId, out double cur) || score > cur)
+                    _fileBest[entryId] = score;
                 // Every row of an entry carries the same persisted aggregate, so this is a read,
                 // not a reduction. Taking the max anyway is defensive against rows that never went
                 // through an experiment competition and still hold the 0.0 default (a gap-fill stub
@@ -476,20 +505,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 if (IsDecoyClass(cls))
                     return;   // decoys define the boundary; they do not set it
                 if (runQvalue <= runFdr)
-                {
-                    if (!_runAccepted.TryGetValue(fileIdx, out var acc))
-                    {
-                        acc = new HashSet<uint>();
-                        _runAccepted.Add(fileIdx, acc);
-                    }
-                    acc.Add(entryId);
-                }
+                    _fileAccepted.Add(entryId);
                 if (experimentQvalue <= runFdr)
                     _experimentAccepted.Add(entryId);
             }
 
             /// <summary>
-            /// Close phase 1: reduce the per-precursor bests to one cutoff score per scope.
+            /// Close phase 1 FOR ONE FILE: reduce that file's per-precursor bests to its run
+            /// cutoff and the set of decoys clearing it, then drop the bests. Must be called
+            /// after the last <see cref="ObserveCutoff"/> for a file and before the first for
+            /// the next; <see cref="ObserveCutoff"/> throws if a caller forgets.
             ///
             /// <para>Reducing PER PRECURSOR first is the whole point. Taking the minimum over
             /// accepted ROWS instead put the boundary far below the real one - pass 1 is
@@ -497,22 +522,45 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// candidate peaks, and those drag the minimum down. Measured, that mistake admitted
             /// 43,528 decoys against 23,135 targets: more decoys than targets, from a rule meant
             /// to admit about 1% of them.</para>
+            ///
+            /// <para>Reducing PER FILE is what keeps the panel usable at scale. The bests are a
+            /// run-scope quantity and nothing reads them once the cutoff is known, so holding
+            /// every file's map to the end cost O(files x distinct entry ids) for no answer:
+            /// 4.18M entries per file on the full entrapment library, 12 GB at 82 files and
+            /// ~79 GB at 500 - past the whole budget of the 64 GB machine that target assumes.
+            /// What survives is the cutoff and the admitted DECOY ids, which the ~1% FDR rule
+            /// keeps in the thousands.</para>
+            /// </summary>
+            public void SealRunCutoff(int fileIdx)
+            {
+                double min = double.NaN;
+                foreach (uint id in _fileAccepted)
+                {
+                    if (_fileBest.TryGetValue(id, out double v) && (double.IsNaN(min) || v < min))
+                        min = v;
+                }
+                if (!double.IsNaN(min))
+                {
+                    _runCutoff[fileIdx] = min;
+                    var admitted = new HashSet<uint>();
+                    foreach (var kv in _fileBest)
+                    {
+                        if ((kv.Key & ~BASE_ID_MASK) != 0 && kv.Value >= min)
+                            admitted.Add(kv.Key);
+                    }
+                    _admittedRunDecoys[fileIdx] = admitted;
+                }
+                _fileBest = new Dictionary<uint, double>();
+                _fileAccepted = new HashSet<uint>();
+                _fileIdx = -1;
+            }
+
+            /// <summary>
+            /// Close phase 1 for the EXPERIMENT scope, once every file has been sealed. Run
+            /// scope is already reduced by <see cref="SealRunCutoff"/>.
             /// </summary>
             public void SealCutoffs()
             {
-                foreach (var kv in _runAccepted)
-                {
-                    if (!_runBest.TryGetValue(kv.Key, out var byEntry))
-                        continue;
-                    double min = double.NaN;
-                    foreach (uint id in kv.Value)
-                    {
-                        if (byEntry.TryGetValue(id, out double v) && (double.IsNaN(min) || v < min))
-                            min = v;
-                    }
-                    if (!double.IsNaN(min))
-                        _runCutoff[kv.Key] = min;
-                }
                 foreach (uint id in _experimentAccepted)
                 {
                     if (_experimentBest.TryGetValue(id, out double v) &&
@@ -520,7 +568,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         _experimentCutoff = v;
                 }
                 _acceptedForCutoff = _experimentAccepted.Count;
-                _runAccepted.Clear();
                 _experimentAccepted.Clear();
                 _sealed = true;
             }
@@ -582,14 +629,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 if (!IsDecoyClass(cls))
                     return runQvalue <= runFdr || experimentQvalue <= runFdr;
-                return (_runCutoff.TryGetValue(fileIdx, out double rc) && RunBest(fileIdx, entryId) >= rc) ||
+                return AdmittedAtRunScope(fileIdx, entryId) ||
                        (!double.IsNaN(_experimentCutoff) && ExperimentBest(entryId) >= _experimentCutoff);
             }
 
-            private double RunBest(int fileIdx, uint entryId)
+            /// <summary>
+            /// Whether this decoy's best score in this file cleared the file's run boundary.
+            /// Answered from the set <see cref="SealRunCutoff"/> reduced the file's bests into,
+            /// so no per-file score map outlives its file.
+            /// </summary>
+            private bool AdmittedAtRunScope(int fileIdx, uint entryId)
             {
-                return _runBest.TryGetValue(fileIdx, out var byEntry) &&
-                       byEntry.TryGetValue(entryId, out double v) ? v : double.NegativeInfinity;
+                return _admittedRunDecoys.TryGetValue(fileIdx, out var admitted) &&
+                       admitted.Contains(entryId);
             }
 
             private double ExperimentBest(uint entryId)
@@ -610,7 +662,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         @"CoAssignmentPassBuilder: SealCutoffs must be called before AddRow");
                 bool isDecoy = IsDecoyClass(row.Class);
                 bool inRun = isDecoy
-                    ? _runCutoff.TryGetValue(fileIdx, out double rc) && RunBest(fileIdx, row.EntryId) >= rc
+                    ? AdmittedAtRunScope(fileIdx, row.EntryId)
                     : runQvalue <= runFdr;
                 bool inExperiment = isDecoy
                     ? !double.IsNaN(_experimentCutoff) && ExperimentBest(row.EntryId) >= _experimentCutoff
