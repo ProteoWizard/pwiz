@@ -49,7 +49,7 @@ namespace pwiz.CommonMsData
 
         public const string TYPE_WIFF = "Sciex WIFF";
         public const string TYPE_WIFF2 = "Sciex WIFF2";
-        public const string TYPE_AGILENT = "Agilent MassHunter Data";
+        public const string TYPE_AGILENT = "Agilent MassHunter";
         public const string TYPE_BRUKER = "Bruker BAF/TDF/TSF";
         public const string TYPE_SHIMADZU = "Shimadzu LCD";
         public const string TYPE_THERMO_RAW = "Thermo RAW";
@@ -69,12 +69,12 @@ namespace pwiz.CommonMsData
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
 
         /// <summary>
-        /// The reader names each vendor format separately where the types above lump them
-        /// together, so its answers have to be translated before they reach a caller. The
+        /// The reader names each Bruker format separately where <see cref="TYPE_BRUKER"/> lumps
+        /// them together, so its answers have to be translated before they reach a caller. The
         /// types are matched by equality - to filter what the open dialogs list, and to
         /// decide vendor specific behavior - so an untranslated name reads as neither a
         /// known type nor a folder, and the source disappears from the dialog. Names that
-        /// already agree, "Waters RAW" for one, are left out.
+        /// already agree, "Agilent MassHunter" and "Waters RAW" among them, are left out.
         /// </summary>
         private static readonly IDictionary<string, string> READER_TYPES_TO_TYPES = new Dictionary<string, string>
         {
@@ -83,8 +83,7 @@ namespace pwiz.CommonMsData
             { "Bruker BAF", TYPE_BRUKER },
             { "Bruker U2", TYPE_BRUKER },
             { "Bruker TDF", TYPE_BRUKER },
-            { "Bruker TSF", TYPE_BRUKER },
-            { "Agilent MassHunter", TYPE_AGILENT }
+            { "Bruker TSF", TYPE_BRUKER }
         };
         // ReSharper restore LocalizableElement
 
