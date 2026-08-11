@@ -183,4 +183,16 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected abstract TValue2 CalculateValue2(TOwner owner);
     }
+
+    public abstract class CachedValues<TOwner, TValue, TValue1, TValue2, TValue3> : CachedValues<TOwner, TValue, TValue1, TValue2>
+    {
+        private TValue3 _value3;
+
+        public TValue3 GetValue3(TOwner owner)
+        {
+            return GetOrCalculate(owner, 3, CalculateValue3, ref _value3);
+        }
+
+        protected abstract TValue3 CalculateValue3(TOwner owner);
+    }
 }
