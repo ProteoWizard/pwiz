@@ -1,3 +1,5 @@
+using Pwiz.Data.MsData.Readers;
+
 namespace Pwiz.Vendor.Bruker;
 
 /// <summary>
@@ -49,7 +51,13 @@ public static class BrukerData
 #if NO_COMPASSXTRACT
         _ = analysisDirectory;
         _ = format;
-        throw new NotSupportedException(
+        // VendorSupportNotEnabledException, not a plain NotSupportedException: this is the
+        // "vendor SDK is not in this build" case, which VendorReaderTestHarness handles by
+        // falling back to identify-only (ReadAndDiff catches exactly this subclass and
+        // deliberately lets a plain NotSupportedException - "format not yet ported" - fail the
+        // test). Throwing the plain type made the YEP and FID fixtures hard-fail the Linux CI
+        // build, which cannot have CompassXtract by construction.
+        throw new VendorSupportNotEnabledException(
             "Bruker YEP / FID data is read through CompassXtract, which is Windows-only COM. " +
             "This build of pwiz-sharp was produced without it (build on Windows with " +
             "-p:IAgreeToVendorLicenses=true to enable).");
