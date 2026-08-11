@@ -26,10 +26,15 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => Dp;
 
-    /// <summary>True when this list contains at least one SIM chromatogram (callers can set the fileContent CV).</summary>
+    /// <summary>True when this list contains at least one SIM chromatogram.</summary>
+    /// <remarks>Not what drives the fileContent CV any more: cpp keys
+    /// <c>MS:1000472 selected ion monitoring chromatogram</c> off the SPECTRUM list's SIM scan
+    /// census (Reader_Thermo.cpp:232-235), which is non-zero even when no chromatogram could be
+    /// built from those scans. See <c>Reader_Thermo.FillFileContent</c>.</remarks>
     public bool HasSimChromatograms { get; }
 
-    /// <summary>True when this list contains at least one SRM chromatogram (callers can set the fileContent CV).</summary>
+    /// <summary>True when this list contains at least one SRM chromatogram.
+    /// See the remarks on <see cref="HasSimChromatograms"/> for why fileContent no longer uses it.</summary>
     public bool HasSrmChromatograms { get; }
 
     private sealed class IndexEntry : ChromatogramIdentity
@@ -40,6 +45,9 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         public double Q3;          // SRM only — product m/z
         public double HalfWidth;   // SIM: ½ Q1 isolation width; SRM: ½ Q3 product window
         public PolarityType Polarity;
+        /// <summary>The scan-filter string this entry came from. cpp reconstructs a ScanInfo
+        /// from it per SRM chromatogram (<c>getScanInfoFromFilterString</c>).</summary>
+        public string Filter = string.Empty;
         // Non-MS-device sources (Pump Pressure / UV / CAD):
         public Device Device = Device.MS;
         public int DeviceChannel;  // 1-based
@@ -216,6 +224,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
                         Q3 = filterQ3,
                         HalfWidth = scanRange / 2.0,
                         Polarity = pol,
+                        Filter = filterString,
                     });
                     hasSrm = true;
                 }
@@ -452,6 +461,32 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
         return chrom;
     }
 
+    /// <summary>
+    /// Activation type + energy for an SRM transition, read back out of its scan-filter string.
+    /// Port of cpp <c>ChromatogramList_Thermo.cpp:175-178</c>
+    /// (<c>getScanInfoFromFilterString(ci.filter)-&gt;precursorActivationType(0)</c>, with
+    /// <c>ActivationType_Unknown</c> assumed to be CID). cpp's ScanInfo-from-filter-string path
+    /// goes through the same CommonCore parser we call here (RawFile.cpp:1279-1293).
+    /// </summary>
+    private (ActivationType Activation, double Energy) ReadSrmActivation(string filterString)
+    {
+        if (!string.IsNullOrEmpty(filterString))
+        {
+            try
+            {
+                var parsed = _raw.Raw.GetFilterFromString(filterString);
+                if (parsed is not null && parsed.MassCount > 0)
+                {
+                    var act = parsed.GetActivation(0);
+                    double energy = parsed.GetEnergy(0);
+                    return (act == ActivationType.Any ? ActivationType.CollisionInducedDissociation : act, energy);
+                }
+            }
+            catch { /* unparseable filter — fall through to cpp's CID assumption */ }
+        }
+        return (ActivationType.CollisionInducedDissociation, 0.0);
+    }
+
     private Chromatogram FillSimChromatogram(Chromatogram chrom, IndexEntry entry)
     {
         // Precursor isolation window (matches pwiz C++ ChromatogramList_Thermo.cpp:211-213).
@@ -488,18 +523,41 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
 
     /// <summary>
     /// Pulls the (time, intensity) trace for one SRM transition. Sets the precursor isolation
-    /// (Q1, no offsets), CID activation (cpp adds collision energy 0 — we omit since we'd
-    /// need to query the filter for an energy that isn't reliable for SRM), and the product
+    /// (Q1, no offsets), the activation carried by the transition's scan filter, and the product
     /// isolation window (Q3 ± halfWidth). Mirrors pwiz C++
-    /// <c>ChromatogramList_Thermo.cpp:194-207</c>.
+    /// <c>ChromatogramList_Thermo.cpp:172-206</c>.
     /// </summary>
     private Chromatogram FillSrmChromatogram(Chromatogram chrom, IndexEntry entry)
     {
-        // Precursor side: just the target m/z + activation. cpp also writes a "collision
-        // energy 0.0" cvParam (placeholder) — we emit the same so msdiff stays clean.
+        // Precursor side: the target m/z + activation. cpp rebuilds a ScanInfo from the
+        // transition's filter string (getScanInfoFromFilterString) and reads the activation type
+        // and energy off it; an unknown activation is assumed to be CID.
         chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, entry.Q1, CVID.MS_m_z);
-        chrom.Precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
-        chrom.Precursor.Activation.Set(CVID.MS_collision_energy, 0.0, CVID.UO_electronvolt);
+
+        var (srmActivation, srmEnergy) = ReadSrmActivation(entry.Filter);
+        switch (srmActivation)
+        {
+            case ActivationType.HigherEnergyCollisionalDissociation:
+                chrom.Precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation); break;
+            case ActivationType.ElectronTransferDissociation:
+                chrom.Precursor.Activation.Set(CVID.MS_electron_transfer_dissociation); break;
+            case ActivationType.ElectronCaptureDissociation:
+                chrom.Precursor.Activation.Set(CVID.MS_electron_capture_dissociation); break;
+            case ActivationType.PQD:
+                chrom.Precursor.Activation.Set(CVID.MS_pulsed_q_dissociation); break;
+            case ActivationType.MultiPhotonDissociation:
+            case ActivationType.UltraVioletPhotoDissociation:
+                chrom.Precursor.Activation.Set(CVID.MS_photodissociation); break;
+            default:
+                chrom.Precursor.Activation.Set(CVID.MS_collision_induced_dissociation); break;
+        }
+
+        // cpp ChromatogramList_Thermo.cpp:184-185 writes this with NO unit argument, so the
+        // cvParam carries no unitAccession — unlike the spectrum-level collision energy, which
+        // cpp does tag with UO_electronvolt. Emitting eV here made every SRM transition in
+        // every TSQ file differ from the cpp reference.
+        if (srmActivation == ActivationType.CollisionInducedDissociation)
+            chrom.Precursor.Activation.Set(CVID.MS_collision_energy, srmEnergy);
 
         // Product side: the Q3 transition target plus the SDK-reported half-width on each
         // side. cpp stores the original filter half-width as the offset (called q3Offset).

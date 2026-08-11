@@ -7,6 +7,9 @@ using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Samples;
 using Pwiz.Data.MsData.Sources;
+#if !NO_VENDOR_SUPPORT
+using ThermoFisher.CommonCore.Data.FilterEnums;
+#endif
 
 #pragma warning disable CA1707
 
@@ -72,10 +75,6 @@ public sealed class Reader_Thermo : IReader
         result.CVs.AddRange(MSData.DefaultCVList);
         result.Id = Path.GetFileNameWithoutExtension(filename);
 
-        // Document metadata: emit only MS levels actually present. pwiz C++ walks scans up
-        // front for the same reason — RAW files often contain only one MS level.
-        bool hasMs1 = false, hasMsn = false;
-
         // C++ uses the id "RAW<n>" (1-based) and the location is the *parent directory* of the
         // .raw file with a "file:///" prefix. SHA-1 is computed post-read by MsDataFileChecksums.
         string location = "file:///" + (Path.GetDirectoryName(Path.GetFullPath(filename)) ?? string.Empty);
@@ -105,21 +104,6 @@ public sealed class Reader_Thermo : IReader
         // the next test's cleanup fails with "file locked by another process".
         try
         {
-        for (int scan = raw.FirstScan; scan <= raw.LastScan; scan++)
-        {
-            int ms = (int)raw.Raw.GetFilterForScanNumber(scan).MSOrder;
-            if (ms == 1) hasMs1 = true;
-            else if (ms > 1) hasMsn = true;
-            if (hasMs1 && hasMsn) break;
-        }
-        if (hasMs1) result.FileDescription.FileContent.Set(CVID.MS_MS1_spectrum);
-        if (hasMsn) result.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
-
-        // Cpp emits MS_EMR_spectrum (electromagnetic radiation spectrum) when the file has any
-        // PDA-as-spectra entries — Reader_Thermo.cpp:228-229.
-        if (raw.PdaControllerCount > 0)
-            result.FileDescription.FileContent.Set(CVID.MS_EMR_spectrum);
-
         var icByAnalyzer = FillInstrumentConfiguration(result, raw, out var pdaIc);
 
         // Sample list: Thermo exposes a single SampleId; emit a Sample entry matching pwiz C++.
@@ -153,19 +137,16 @@ public sealed class Reader_Thermo : IReader
             result.Run.DefaultInstrumentConfiguration = result.InstrumentConfigurations[0];
         bool simAsSpectra = config?.SimAsSpectra ?? false;
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;
-        result.Run.SpectrumList = new SpectrumList_Thermo(raw, ownsRaw: true,
+        var spectrumList = new SpectrumList_Thermo(raw, ownsRaw: true,
             result.Run.DefaultInstrumentConfiguration, icByAnalyzer, simAsSpectra, srmAsSpectra, pdaIc)
         {
             Dp = dpThermo,
         };
+        result.Run.SpectrumList = spectrumList;
         var chromList = new ChromatogramList_Thermo(raw, simAsSpectra, srmAsSpectra) { Dp = dpThermo };
         result.Run.ChromatogramList = chromList;
-        // Advertise SIM/SRM chromatograms in fileContent when emitted (matches cpp's reference
-        // mzML metadata for files that produce these chromatogram types).
-        if (chromList.HasSimChromatograms)
-            result.FileDescription.FileContent.Set(CVID.MS_selected_ion_monitoring_chromatogram);
-        if (chromList.HasSrmChromatograms)
-            result.FileDescription.FileContent.Set(CVID.MS_selected_reaction_monitoring_chromatogram);
+
+        FillFileContent(result, spectrumList);
         // Ownership transferred to the SpectrumList/ChromatogramList - outer catch not needed.
         }
         catch
@@ -179,6 +160,64 @@ public sealed class Reader_Thermo : IReader
     }
 
 #if !NO_VENDOR_SUPPORT
+    /// <summary>
+    /// Populates <c>fileDescription/fileContent</c> from the spectrum list's scan census, a
+    /// direct port of pwiz C++ <c>Reader_Thermo.cpp:194-235</c>.
+    /// </summary>
+    /// <remarks>
+    /// The naive "any scan with MSOrder &gt; 1 means MSn spectrum" sniff this replaces was wrong
+    /// for SRM/SIM runs: those scans leave the spectrum list entirely (they become chromatograms),
+    /// so cpp advertises "selected reaction monitoring chromatogram" for them and only claims
+    /// MS1/MSn <em>spectra</em> when there are Full scans left over beyond the SIM/SRM counts.
+    /// A pure-SRM TSQ file therefore got a spurious <c>MS:1000580 MSn spectrum</c>, and a
+    /// constant-neutral-loss file was missing <c>MS:1000326</c>.
+    /// </remarks>
+    private static void FillFileContent(MSData result, SpectrumList_Thermo sl)
+    {
+        var fileContent = result.FileDescription.FileContent;
+
+        if (sl.NumSpectraOfMsOrder(MSOrderType.Nl) > 0)
+            fileContent.Set(CVID.MS_constant_neutral_loss_spectrum);
+        if (sl.NumSpectraOfMsOrder(MSOrderType.Ng) > 0)
+            fileContent.Set(CVID.MS_constant_neutral_gain_spectrum);
+        if (sl.NumSpectraOfMsOrder(MSOrderType.Par) > 0)
+            fileContent.Set(CVID.MS_precursor_ion_spectrum);
+
+        int simScanCount = sl.NumSpectraOfScanType(ScanModeType.Sim); // MS1
+        int srmScanCount = sl.NumSpectraOfScanType(ScanModeType.Srm); // MS2
+
+        if (sl.NumSpectraOfScanType(ScanModeType.Full) > 0)
+        {
+            // MS1 can be either Full scans or SIM scans, so compare against the SIM scan count.
+            if (sl.NumSpectraOfMsOrder(MSOrderType.Ms) > simScanCount)
+                fileContent.Set(CVID.MS_MS1_spectrum);
+
+            // MS2 can be either Full or SRM scans, so compare against the SRM scan count.
+            if (sl.NumSpectraOfMsOrder(MSOrderType.Ms2) > srmScanCount)
+                fileContent.Set(CVID.MS_MSn_spectrum);
+
+            // MS3+ scans are definitely MSn.
+            for (var msOrder = MSOrderType.Ms3; msOrder <= MSOrderType.Ms10; msOrder++)
+                if (sl.NumSpectraOfMsOrder(msOrder) > 0)
+                {
+                    fileContent.Set(CVID.MS_MSn_spectrum);
+                    break;
+                }
+        }
+
+        // Cpp emits MS_EMR_spectrum (electromagnetic radiation spectrum) when the file has any
+        // PDA-as-spectra entries — Reader_Thermo.cpp:228-229.
+        if (sl.NumPdaSpectra > 0)
+            fileContent.Set(CVID.MS_EMR_spectrum);
+
+        // These scan types are represented as chromatograms; cpp advertises them off the scan
+        // census, not off whether the chromatogram list actually managed to build any.
+        if (simScanCount > 0)
+            fileContent.Set(CVID.MS_selected_ion_monitoring_chromatogram);
+        if (srmScanCount > 0)
+            fileContent.Set(CVID.MS_selected_reaction_monitoring_chromatogram);
+    }
+
     private static Software GetOrAddPwizSoftware(MSData msd)
     {
         foreach (var s in msd.Software)
