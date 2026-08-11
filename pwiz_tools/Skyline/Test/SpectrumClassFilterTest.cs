@@ -391,30 +391,62 @@ namespace pwiz.SkylineTest
             const string counts = @"number of detector counts";
             var specA = Spectrum(@"a",
                 new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"500", counts),
-                new SpectrumMetadataTerm(@"MS:1000512", @"filter string", @"FTMS + p NSI", null));
+                new SpectrumMetadataTerm(@"MS:1000512", @"filter string", @"FTMS + p NSI", null),
+                new SpectrumMetadataTerm(@"vendorCount", @"vendorCount", @"3", @"ea"));
+            // A CV term is typed by the ontology, so an unparseable value in one spectrum does not
+            // make base peak intensity (declared xsd:float) a string column.
             var specB = Spectrum(@"b",
-                new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"600", counts),
-                new SpectrumMetadataTerm(@"MS:1000900", @"custom", @"5", @"ea"));
-            // The same accession with a non-numeric value makes that column string-typed.
-            var specC = Spectrum(@"c", new SpectrumMetadataTerm(@"MS:1000900", @"custom", @"abc", @"ea"));
+                new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"n/a", counts),
+                new SpectrumMetadataTerm(@"vendorCount", @"vendorCount", @"5", @"ea"),
+                new SpectrumMetadataTerm(@"vendorSetting", @"vendorSetting", @"5", @"ea"));
+            // A userParam is not in the ontology, so the values seen type it: mixed values make it a string.
+            var specC = Spectrum(@"c", new SpectrumMetadataTerm(@"vendorSetting", @"vendorSetting", @"abc", @"ea"));
 
             var columns = SpectrumClassColumn.DiscoverCvColumns(new[] { specA, specB, specC });
-            Assert.AreEqual(3, columns.Count);
+            Assert.AreEqual(4, columns.Count);
             Assert.IsTrue(columns.All(SpectrumClassColumn.IsCvParamColumn));
 
             SpectrumClassColumn Find(string accession) =>
                 columns.Single(c => Equals(c.PropertyPath, SpectrumClassColumn.CvParam(accession, null, false).PropertyPath));
 
-            // Every value seen for base peak intensity parses as a number, so it is numeric, and it
-            // displays its friendly name with the accession as the cue.
+            // Base peak intensity is numeric by ontology, and it displays its friendly name with the
+            // accession as the cue.
             var bpi = Find(@"MS:1000505");
             Assert.AreEqual(typeof(double), bpi.ValueType);
             var bpiName = bpi.GetLocalizedColumnName(CultureInfo.CurrentCulture);
             Assert.IsTrue(bpiName.Contains(@"base peak intensity") && bpiName.Contains(@"MS:1000505"), bpiName);
 
-            // The filter string (no numeric value) and the mixed-value custom term are string-typed.
+            // Filter string is declared xsd:string, and the mixed-value userParam falls back to a string.
             Assert.AreEqual(typeof(string), Find(@"MS:1000512").ValueType);
-            Assert.AreEqual(typeof(string), Find(@"MS:1000900").ValueType);
+            Assert.AreEqual(typeof(string), Find(@"vendorSetting").ValueType);
+            // A userParam whose every value parses as a number is still typed from those values.
+            Assert.AreEqual(typeof(double), Find(@"vendorCount").ValueType);
+
+            TestCvColumnCatalogTypes();
+        }
+
+        /// <summary>
+        /// The ontology types a CV column before any data is imported, so the filter editor offers numeric
+        /// comparisons on a numeric term without waiting to see a value, and a column reconstructed from a
+        /// saved filter path is typed the same way.
+        /// </summary>
+        private void TestCvColumnCatalogTypes()
+        {
+            var catalog = SpectrumClassColumn.GetCvColumnCatalog();
+
+            SpectrumClassColumn CatalogEntry(string accession) =>
+                catalog.Single(c => Equals(c.PropertyPath, SpectrumClassColumn.CvParam(accession, null, false).PropertyPath));
+
+            // Base peak intensity is declared xsd:float, filter string xsd:string, and zoom scan is a pure
+            // flag that carries no value at all, so only the first offers numeric comparisons.
+            Assert.AreEqual(typeof(double), CatalogEntry(@"MS:1000505").ValueType);
+            Assert.AreEqual(typeof(string), CatalogEntry(@"MS:1000512").ValueType);
+            Assert.AreEqual(typeof(string), CatalogEntry(@"MS:1000497").ValueType);
+
+            var savedPath = SpectrumClassColumn.CvParam(@"MS:1000505", null, false).PropertyPath;
+            var reconstructed = SpectrumClassColumn.FindColumn(savedPath);
+            Assert.IsNotNull(reconstructed);
+            Assert.AreEqual(typeof(double), reconstructed.ValueType);
         }
 
         private void TestSpectrumClassFilterSerialization()

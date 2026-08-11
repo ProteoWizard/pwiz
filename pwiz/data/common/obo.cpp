@@ -164,6 +164,13 @@ void parse_relationship(const string& line, Term& term)
         throw runtime_error("Error matching term relationship on line: \"" + line + "\"");
 
     string relation = unescape_copy(what[2]);
+
+    // The type of the value a term carries, e.g. "relationship: has_value_type xsd:float".
+    // Most of these name an xsd primitive, which is not a term and so has nowhere to go in
+    // the relation map; a few name a CV term (the MS list_of_* types) and are kept in both.
+    if (what[1] == "has_value_type")
+        term.valueType = relation;
+
     if (bal::istarts_with(relation, "xsd:"))
         return;
 

@@ -1601,10 +1601,10 @@ namespace pwiz.ProteowizardWrapper
         /// controlled vocabulary compiled into ProteoWizard, so the spectrum-filter editor can offer them
         /// without first reading data. Excludes obsolete terms and the terms Skyline interprets into its
         /// own typed fields. Vendor userParams are not in the vocabulary and so are not included here
-        /// (they are discovered from imported data instead). Values are the term's accession, name, and
-        /// definition; the per-term value and unit are left null (they only exist in data).
+        /// (they are discovered from imported data instead). Each entry carries the term's accession,
+        /// name, definition, and the type of value the ontology says it takes.
         /// </summary>
-        public static IList<SpectrumMetadataTerm> GetSpectrumCvTermCatalog()
+        public static IList<SpectrumCvTerm> GetSpectrumCvTermCatalog()
         {
             return CatalogHolder.Catalog;
         }
@@ -1616,10 +1616,10 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         private static class CatalogHolder
         {
-            public static readonly IList<SpectrumMetadataTerm> Catalog = BuildSpectrumCvTermCatalog();
+            public static readonly IList<SpectrumCvTerm> Catalog = BuildSpectrumCvTermCatalog();
         }
 
-        private static IList<SpectrumMetadataTerm> BuildSpectrumCvTermCatalog()
+        private static IList<SpectrumCvTerm> BuildSpectrumCvTermCatalog()
         {
             // A term that is a parent of some other term is a grouping/category node in the ontology
             // ("spectrum property", "scan attribute", "spectrum aggregation type", ...), not a measurable
@@ -1634,7 +1634,7 @@ namespace pwiz.ProteowizardWrapper
             }
 
             var isSpectrumLevel = new Dictionary<CVID, bool>();
-            var catalog = new List<SpectrumMetadataTerm>();
+            var catalog = new List<SpectrumCvTerm>();
             foreach (var cvid in CV.cvids())
             {
                 if (INTERPRETED_CVIDS.Contains(cvid) || parentTerms.Contains(cvid))
@@ -1648,8 +1648,7 @@ namespace pwiz.ProteowizardWrapper
                 }
                 if (IsSpectrumLevelCvTerm(cvid, isSpectrumLevel))
                 {
-                    catalog.Add(new SpectrumMetadataTerm(info.id, info.name, null, null,
-                        definition: CleanDefinition(info.def)));
+                    catalog.Add(new SpectrumCvTerm(info.id, info.name, CleanDefinition(info.def), info.valueType));
                 }
             }
             return catalog.AsReadOnly();

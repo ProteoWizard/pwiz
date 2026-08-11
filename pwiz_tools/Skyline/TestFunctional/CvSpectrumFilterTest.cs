@@ -197,7 +197,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// A CV term discovered as numeric is offered with an inferred numeric ValueType, but a string
+        /// A CV term the ontology declares numeric is offered with a numeric ValueType, but a string
         /// operator (Contains) with a non-numeric operand must still be accepted, because chromatogram
         /// extraction types the operand by the operator rather than the column - so the editor must not
         /// reject a filter that extraction would run.

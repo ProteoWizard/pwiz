@@ -158,12 +158,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
             if (propertyPath.IsProperty && propertyPath.Parent.IsRoot &&
                 TryDecodeCvParamColumnName(propertyPath.Name, out var accession))
             {
-                // Recover the friendly name from the compiled-in ontology catalog so a saved CV filter reads
-                // the same in the document tree/summaries as in the editor (e.g. "base peak intensity
-                // (MS:1000505)"). A term not in the catalog (a userParam, or a non-spectrum-level term) has
-                // no catalog name, so it keeps the accession as its display name.
-                CatalogNameHolder.NamesByAccession.TryGetValue(accession, out var name);
-                return new CvParamColumn(accession, name, false);
+                // Recover the friendly name and value type from the compiled-in ontology catalog so a saved
+                // CV filter reads the same in the document tree/summaries as in the editor (e.g. "base peak
+                // intensity (MS:1000505)"). A term not in the catalog (a userParam, or a non-spectrum-level
+                // term) has no catalog entry, so it keeps the accession as its display name and is typed as
+                // a string, which accepts every operator.
+                CatalogHolder.TermsByAccession.TryGetValue(accession, out var catalogTerm);
+                return new CvParamColumn(accession, catalogTerm?.Name, catalogTerm?.IsNumeric ?? false);
             }
 
             return null;
@@ -200,11 +201,10 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         /// <summary>
         /// Builds the dynamic CV/user-parameter columns present across the given spectra: one per
-        /// distinct accession (the term's CV accession or userParam name). A column is typed numeric when
-        /// every value seen for it parses as an invariant number and at least one value was seen, else
-        /// string (the runtime type inference the design calls for, since these terms carry no declared
-        /// type and no unit is available). The friendly name comes from the term. The caller orders the
-        /// result for display (see <see cref="GetEditorCvColumns"/>).
+        /// distinct accession (the term's CV accession or userParam name). A CV term is typed from the
+        /// ontology; a userParam, which the ontology does not know, is typed from the values seen for it
+        /// (see <see cref="IsNumericCvColumn"/>). The friendly name comes from the term. The caller orders
+        /// the result for display (see <see cref="GetEditorCvColumns"/>).
         /// </summary>
         public static IList<SpectrumClassColumn> DiscoverCvColumns(IEnumerable<SpectrumMetadata> spectra)
         {
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             return discovered.Values
-                .Select(info => (SpectrumClassColumn)new CvParamColumn(info.Accession, info.Name, info.IsNumeric))
+                .Select(info => (SpectrumClassColumn)new CvParamColumn(info.Accession, info.Name, IsNumericCvColumn(info)))
                 .ToList();
         }
 
@@ -245,22 +245,41 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
+        /// Whether a discovered column takes numeric comparisons. For a CV term the ontology is the
+        /// authority: it declares the type of value the term carries, and it declares it the same way
+        /// regardless of what any one file happened to contain, so a term is typed consistently whether it
+        /// reaches the editor from the catalog or from imported data. A vendor userParam has no ontology
+        /// entry, so its type can only be inferred from the values seen.
+        /// </summary>
+        private static bool IsNumericCvColumn(CvColumnDiscovery discovery)
+        {
+            if (CatalogHolder.TermsByAccession.TryGetValue(discovery.Accession, out var catalogTerm))
+            {
+                return catalogTerm.IsNumeric;
+            }
+            return discovery.IsNumeric;
+        }
+
+        /// <summary>
         /// The catalog of uninterpreted mzML CV terms that can appear on a spectrum, as dynamic columns,
-        /// so the filter editor can offer them before any data is imported. Typeless: the editor offers
-        /// every operator and the predicate infers numeric vs. string from the operator and operand.
+        /// so the filter editor can offer them before any data is imported. Each column is typed from the
+        /// value type the ontology declares for the term (numeric or string); the predicate still infers
+        /// numeric vs. string from the operator and operand, so a string operator remains usable on a
+        /// numeric column.
         /// </summary>
         public static IList<SpectrumClassColumn> GetCvColumnCatalog()
         {
             return MsDataFileImpl.GetSpectrumCvTermCatalog()
-                .Select(term => (SpectrumClassColumn)new CvParamColumn(term.Accession, term.Name, false))
+                .Select(term => (SpectrumClassColumn)new CvParamColumn(term.Accession, term.Name, term.IsNumeric))
                 .ToList();
         }
 
         /// <summary>
         /// The CV/user-parameter columns to offer in the filter editor for <paramref name="document"/>:
-        /// the ontology catalog (always available) plus any discovered from imported data (vendor
-        /// userParams, and CV terms typed from their observed values, which take precedence over the
-        /// typeless catalog entry with the same accession).
+        /// the ontology catalog (always available) plus the vendor userParams discovered in imported data,
+        /// which the ontology has no way to know about. A discovered column replaces the catalog entry with
+        /// the same accession; both are typed from the ontology, so replacing one with the other changes
+        /// only which of two equivalent columns is offered.
         /// </summary>
         public static IList<SpectrumClassColumn> GetEditorCvColumns(SrmDocument document)
         {
@@ -279,28 +298,30 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// The friendly name of each catalog CV term, keyed by accession, built once from the compiled-in
-        /// ontology. Used by <see cref="FindColumn"/> to give a CV column reconstructed from a saved filter
-        /// path the same display name it has in the editor.
+        /// The catalog CV terms keyed by accession, built once from the compiled-in ontology. Used to give
+        /// a CV column its friendly name and value type wherever the column comes from something other than
+        /// the catalog itself: reconstructed from a saved filter path (see <see cref="FindColumn"/>), or
+        /// discovered in imported data (see <see cref="DiscoverCvColumns(IEnumerable{SpectrumMetadata})"/>).
         /// </summary>
-        private static class CatalogNameHolder
+        private static class CatalogHolder
         {
-            public static readonly IDictionary<string, string> NamesByAccession = BuildNamesByAccession();
+            public static readonly IDictionary<string, SpectrumCvTerm> TermsByAccession = BuildTermsByAccession();
 
-            private static IDictionary<string, string> BuildNamesByAccession()
+            private static IDictionary<string, SpectrumCvTerm> BuildTermsByAccession()
             {
-                var namesByAccession = new Dictionary<string, string>();
+                var termsByAccession = new Dictionary<string, SpectrumCvTerm>();
                 foreach (var term in MsDataFileImpl.GetSpectrumCvTermCatalog())
                 {
-                    namesByAccession[term.Accession] = term.Name;
+                    termsByAccession[term.Accession] = term;
                 }
-                return namesByAccession;
+                return termsByAccession;
             }
         }
 
         /// <summary>
         /// Accumulates, across the spectra that carry one term (keyed by accession), its friendly name
-        /// and whether every value seen parses as a number (so the discovered column can be typed).
+        /// and whether every value seen parses as a number. The latter types a vendor userParam column,
+        /// which has no ontology entry to be typed from (see <see cref="IsNumericCvColumn"/>).
         /// </summary>
         private class CvColumnDiscovery
         {
