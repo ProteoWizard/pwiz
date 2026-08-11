@@ -82,7 +82,7 @@ PWIZ_API_DECL size_t ProteinList_DecoyGenerator::find(const string& id) const
 
 PWIZ_API_DECL ProteinPtr ProteinList_DecoyGenerator::protein(size_t index, bool getSequence) const
 {
-    if (index > size())
+    if (index >= size())
         throw out_of_range("[ProteinList_DecoyGenerator::protein] Index out of range");
 
     size_t originalIndex = index % impl_->original->size();

@@ -45,6 +45,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Tools;
@@ -1087,15 +1088,10 @@ namespace pwiz.Skyline
         // Exporting reports does require a document
         public static readonly Argument ARG_REPORT_FILE = new DocArgument(@"report-file", PATH_TO_CSV,
             (c, p) => c.ReportFile = p.ValueFullPath);
-        public static readonly Argument ARG_REPORT_FORMAT = new DocArgument(@"report-format",
-            new []{ARG_VALUE_CSV, ARG_VALUE_TSV},
-            (c, p) => c.ReportColumnSeparator = p.IsValue(ARG_VALUE_TSV)
-                    ? TextUtil.SEPARATOR_TSV
-                    : TextUtil.CsvSeparator);
-        public const string ARG_VALUE_CSV = "csv";
-        public const string ARG_VALUE_TSV = "tsv";
-        public static readonly Argument ARG_REPORT_INVARIANT = new DocArgument(@"report-invariant",
-            (c, p) => c.IsReportInvariant = true);
+        public static readonly Argument ARG_REPORT_FORMAT = DocArgument.FromEnumType<ReportFormat>(@"report-format",
+            (c, p) => c.ReportFormat = p);
+        public static readonly Argument ARG_REPORT_INVARIANT = new DocArgument(@"report-invariant", BOOL_VALUE,
+            (c, p) => c.IsReportInvariant = p.ValueBool) { OptionalValue = true };
 
         private static readonly ArgumentGroup GROUP_REPORT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REPORT_Exporting_reports, false,
@@ -1103,9 +1099,12 @@ namespace pwiz.Skyline
             ARG_REPORT_INVARIANT);
 
         public string ReportName { get; private set; }
-        public char? ReportColumnSeparator { get; private set; }
+        public ReportFormat? ReportFormat { get; private set; }
         public string ReportFile { get; private set; }
-        public bool IsReportInvariant { get; private set; }
+        // Null when --report-invariant was not given, which lets the default depend on the
+        // report format: parquet is written for other programs to read, so it defaults to
+        // invariant, while the text formats stay localized.
+        public bool? IsReportInvariant { get; private set; }
         public bool ExportingReport
         {
             get { return !string.IsNullOrEmpty(ReportName); }

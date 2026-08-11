@@ -57,14 +57,14 @@ namespace pwiz.Osprey.IO
         /// v1: initial format.
         /// v2: added <c>file_stems</c> so per-file Stage 6 rescore workers
         ///     can compute the reconciliation parameter hash that the
-        ///     downstream <c>--task SecondPassFDR</c> merge node expects (the
+        ///     downstream <c>--task SecondPassFDR</c> node expects (the
         ///     hash is computed over all files in the join, not the
         ///     worker's single parquet). Old v1 files deserialize with an
         ///     empty <see cref="FileStems"/> list; the worker falls back
         ///     to its <c>OspreyConfig.InputFiles</c> stems in that case,
         ///     preserving v1 behavior.
         /// v3: added <c>first_pass_base_ids</c>, the JOIN-WIDE set of base_ids
-        ///     that survived first-pass compaction. FirstJoin computes it with
+        ///     that survived first-pass compaction. FirstPassFDR computes it with
         ///     every file in memory; a per-file HPC rescore worker uses it to
         ///     compact to exactly the set the in-memory straight-through pipeline
         ///     used, instead of recomputing a PER-FILE subset that drops cross-file
