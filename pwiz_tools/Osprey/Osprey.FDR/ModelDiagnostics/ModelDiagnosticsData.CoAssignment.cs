@@ -78,13 +78,25 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <para>Read the two passes together; do NOT assume a direction. Stage 6 both adds
             /// co-assignment (multi-charge consensus moves disagreeing charge states onto the
             /// leader's peak, forced integration gap-fills at a consensus RT) and removes it
-            /// (compaction drops the weaker of two competitors). Measured on the Stellar
-            /// entrapment gate the net is REMOVAL - target 2.17% -&gt; 1.18%, entrapment 6.80%
-            /// -&gt; 5.17% - while the ENRICHMENT rises, 3.14x -&gt; 4.37x, because the reported
-            /// pool sheds co-assigned targets faster than co-assigned entrapment. So pass 2 is
-            /// cleaner in absolute terms and worse in the ratio that matters. An earlier version
-            /// of this comment asserted the rate would rise; it does not, and the enrichment
-            /// delta is the quantity to watch.</para>
+            /// (compaction drops the weaker of two competitors), and which term wins is a
+            /// property of the DATASET, not of reconciliation. Two measurements, opposite on
+            /// both counts:</para>
+            ///
+            /// <list type="bullet">
+            /// <item>Stellar entrapment gate (3 files, generated decoys): rate FALLS, target
+            /// 2.17% -&gt; 1.18% and entrapment 6.80% -&gt; 5.17%, while entrapment ENRICHMENT
+            /// RISES 3.14x -&gt; 4.37x - the reported pool sheds co-assigned targets faster than
+            /// co-assigned entrapment.</item>
+            /// <item>Astral (3 files, full target+decoy+entrapment library): rate RISES, target
+            /// 7.34% -&gt; 9.17% at run scope, while entrapment enrichment FALLS 2.13x -&gt;
+            /// 1.79x and decoy enrichment falls 4.02x -&gt; 2.26x.</item>
+            /// </list>
+            ///
+            /// <para>So neither "reconciliation cleans up" nor "reconciliation manufactures
+            /// co-assignment" is a safe general statement, and an earlier version of this
+            /// comment asserted each in turn from a single dataset. Report the delta; do not
+            /// predict its sign. The gate's own Astral leg cannot see the second row above,
+            /// because it carries no entrapment - that measurement needs the full library.</para>
             /// </summary>
             public bool PostReconciliation { get; set; }
 
