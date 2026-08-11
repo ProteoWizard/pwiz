@@ -261,6 +261,37 @@ public static class VendorSdkLoader
         }
     }
 
+    /// <summary>
+    /// Ensures the archive pinned under <paramref name="vendorName"/> is downloaded + extracted,
+    /// and returns the extraction directory.
+    /// </summary>
+    /// <remarks>
+    /// <para>Both resolvers above are reactive: they fire when the CLR asks for an assembly or a
+    /// <c>DllImport</c> library whose name matches a pin's prefixes. An archive whose payload is
+    /// reached through neither mechanism is invisible to them and has to be requested by name —
+    /// which is the case for <c>BrukerCompassXtract</c>, whose CompassXtract COM server is
+    /// activated from a side-by-side manifest rather than loaded by the CLR. Its
+    /// <c>AssemblyPrefixes</c> exist only for the installer's MSI staging filter.</para>
+    /// <para>Per-OS narrowing matches <see cref="FindPin"/>: an OS-specific entry wins over a
+    /// generic one of the same name.</para>
+    /// </remarks>
+    /// <param name="vendorName">A <c>Name</c> from <c>build/vendor-sdk-pins.json</c>.</param>
+    public static string EnsureExtracted(string vendorName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(vendorName);
+        string os = OperatingSystem.IsWindows() ? "windows" : "linux";
+        var matches = VendorSdkPins.All
+            .Where(v => v.Name.Equals(vendorName, StringComparison.OrdinalIgnoreCase))
+            .Where(v => v.Os is null || v.Os.Equals(os, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        var entry = matches.FirstOrDefault(v => v.Os is not null) ?? matches.FirstOrDefault();
+        if (entry is null)
+            throw new InvalidOperationException(
+                $"[VendorSdkLoader] no vendor SDK pin named '{vendorName}' is available for {os}. " +
+                "Regenerate VendorSdkPins.generated.cs from build/vendor-sdk-pins.json.");
+        return EnsureExtracted(entry);
+    }
+
     /// <summary>Ensures <paramref name="entry"/>'s archive is downloaded + extracted into
     /// the cache. Returns the extraction directory.</summary>
     public static string EnsureExtracted(VendorSdkPin entry)

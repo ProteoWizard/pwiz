@@ -229,6 +229,17 @@ internal sealed class Baf2SqlData : IBrukerData
     public (double Low, double High) MzAcquisitionRange => _mzAcqRange;
 
     /// <inheritdoc/>
+    public BrukerInstrumentFamily InstrumentFamily =>
+        BrukerInstrumentFamilyCodes.FromGlobalMetadata(GlobalMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>Baf2Sql.cpp:243 returns "".</remarks>
+    public string InstrumentDescription => string.Empty;
+
+    /// <inheritdoc/>
+    public bool HasGlobalChromatograms => true;
+
+    /// <inheritdoc/>
     public bool IsMaldiSource => false;
 
     /// <inheritdoc/>

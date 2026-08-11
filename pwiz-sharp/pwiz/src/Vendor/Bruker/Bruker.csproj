@@ -47,6 +47,13 @@
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\MsData\MsData.csproj" />
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+    <!-- The only vendor reader that references Vendor.Common directly. Every other vendor SDK
+         arrives through VendorSdkLoader's assembly/native-library resolvers, which the hosting
+         application installs, so the reader never names the loader. CompassXtract fits neither
+         resolver - it is a registration-free COM server, so nothing the CLR or the native
+         loader resolves by name - and has to ask for its archive explicitly via
+         EnsureExtracted. Vendor.Common references only Util, so this adds no cycle. -->
+    <ProjectReference Include="..\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
   <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
@@ -57,6 +64,101 @@
   <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
     <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
   </PropertyGroup>
+
+  <!--
+    CompassXtract (YEP / FID) is the one Bruker sub-format family that is NOT cross-platform: it
+    is Bruker's 2008-era in-process COM server, so it gates on $(NativeVendorsAvailable)
+    (IAgreeToVendorLicenses AND Windows) rather than on $(IAgreeToVendorLicenses) alone. Without
+    it the three CompassXtract*.cs files are compiled out and BrukerData.Create throws a clear
+    NotSupportedException for those two formats, while TDF / TSF / BAF keep working everywhere.
+    -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_COMPASSXTRACT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <Compile Remove="CompassXtractActivationContext.cs" />
+    <Compile Remove="CompassXtractParameters.cs" />
+    <Compile Remove="CompassXtractData.cs" />
+  </ItemGroup>
+
+  <!--
+    Interop.EDAL is the tlbimp wrapper around CompassXtractMS.dll's EDAL type library. It is a
+    BUILD-TIME input only: EmbedInteropTypes bakes the interfaces we use straight into
+    Pwiz.Vendor.Bruker.dll, so nothing named Interop.EDAL is ever loaded at runtime, which is why
+    it is deliberately absent from the runtime-downloaded vendor_api_BrukerCompassXtract.7z (see
+    build/vendor-sdk-pins.json). The only in-repo copy lives inside the upstream
+    vendor_api_Bruker.7z that this project already extracts on Windows, so pull it from there
+    rather than hardcoding a path into a cpp build output directory.
+
+    <Private>false</Private> keeps it out of the output; NoWarn silences the "reference targets
+    .NET Framework" pair, which is expected for a metadata-only interop assembly.
+    -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <NoWarn>$(NoWarn);MSB3277;CS1701</NoWarn>
+  </PropertyGroup>
+
+  <Target Name="ExtractBrukerCompassXtractInterop"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(BrukerArchive)"
+          Outputs="$(BrukerAssembliesDir)\Interop.EDAL.dll">
+    <MakeDir Directories="$(BrukerAssembliesDir)" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/x64/Interop.EDAL.dll&quot;" StandardOutputImportance="low" />
+    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\Interop.EDAL.dll"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Reference Include="Interop.EDAL">
+      <HintPath>$(BrukerAssembliesDir)\Interop.EDAL.dll</HintPath>
+      <Private>false</Private>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    Visual C++ 2008 runtime, app-local.
+
+    CompassXtractMS.dll's embedded manifest depends on the Microsoft.VC90.CRT, Microsoft.VC90.MFC
+    and Microsoft.VC90.OpenMP side-by-side assemblies (the BDal.* DLLs it loads add CRT and
+    OpenMP); pwiz's C++ msconvert relies on the VC++ 2008 redistributable being installed on the
+    machine. We ship them instead, from the copies already vendored for the C++/Skyline trees.
+
+    These are SxS assemblies, NOT plain imports, so this is deliberately unlike the flat
+    msvcr120.dll / msvcp120.dll Content in Agilent.csproj: BaseTof.dll imports those by plain
+    name and ordinary DLL search finds them beside the executable, whereas a VC90 dependency is
+    resolved through an activation context and a private copy is only found as a folder named
+    after the assembly identity, holding that identity's manifest. Hence the per-assembly <Link>
+    subfolders below, and hence Microsoft.VC90.OpenMP gets its own folder even though its two
+    files are vendored inside the Microsoft.VC90.CRT one.
+
+    The staged copy is also the source CompassXtractActivationContext mirrors into the vendor
+    cache directory at runtime - see StageVc90Runtime there for which of the two placements is
+    expected to do the resolving.
+    -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Vc90CrtDir>$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC90.CRT\x64</Vc90CrtDir>
+    <Vc90MfcDir>$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC90.MFC\x64</Vc90MfcDir>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Content Include="$(Vc90CrtDir)\Microsoft.VC90.CRT.manifest;$(Vc90CrtDir)\msvcr90.dll;$(Vc90CrtDir)\msvcp90.dll;$(Vc90CrtDir)\msvcm90.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Microsoft.VC90.CRT\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(Vc90MfcDir)\Microsoft.VC90.MFC.manifest;$(Vc90MfcDir)\mfc90.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Microsoft.VC90.MFC\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(Vc90CrtDir)\Microsoft.VC90.OpenMP.manifest;$(Vc90CrtDir)\vcomp90.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Microsoft.VC90.OpenMP\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
 
   <Target Name="ExtractBrukerAssemblies"
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"

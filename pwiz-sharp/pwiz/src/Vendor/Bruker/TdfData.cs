@@ -40,6 +40,9 @@ internal sealed class TdfData : IBrukerData
     public bool HasMs1Frames => _meta.HasMs1Frames;
     public bool HasMsNFrames => _meta.HasMsNFrames;
     public (double Low, double High) MzAcquisitionRange => _meta.MzAcquisitionRange;
+    public BrukerInstrumentFamily InstrumentFamily => BrukerInstrumentFamilyCodes.FromGlobalMetadata(GlobalMetadata);
+    public string InstrumentDescription => string.Empty;   // TimsData.cpp:885
+    public bool HasGlobalChromatograms => true;
     public bool IsMaldiSource => false; // no MALDI on TDF
 
     /// <summary>Exposed so <c>Reader_Bruker</c> can attach per-scan 1/K0 to DIA window groups.</summary>

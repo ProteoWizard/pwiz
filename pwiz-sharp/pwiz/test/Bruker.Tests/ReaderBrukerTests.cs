@@ -147,6 +147,37 @@ public class ReaderBrukerTests
         ctx.Check();
     }
 
+    [TestMethod]
+    public void Reader_Bruker_Sample_1_A_1_01_985()
+    {
+        // YEP fixture (analysis.yep, HCTultra ion trap) - the only coverage of the CompassXtract
+        // path for a single-analysis source. 62 spectra, profile data, no chromatogramList
+        // (CompassXtract answers getTIC()/getBPC() with null pointers).
+        // Coverage: base. (No centroid reference mzMLs ship for this fixture.)
+        var ctx = SetUp("Sample_1-A,1_01_985.d");
+        if (ctx is null) return;
+
+        ctx.Run(new ReaderTestConfig());
+
+        ctx.Check();
+    }
+
+    [TestMethod]
+    public void Reader_Bruker_100_fmol_BSA()
+    {
+        // FID fixture (flex-series MALDI): a TREE of single-spectrum acquisitions rather than a
+        // .d, so the fixture folder has no extension, there is one sourceFile per fid, spectrum
+        // ids are "file=<xml-id-encoded relative path>", and the run carries no
+        // defaultSourceFileRef.
+        // Coverage: base.
+        var ctx = SetUp("100 fmol BSA");
+        if (ctx is null) return;
+
+        ctx.Run(new ReaderTestConfig());
+
+        ctx.Check();
+    }
+
     /// <summary>
     /// Locates the fixture and returns a per-test <see cref="FixtureRunContext"/>; records an
     /// Inconclusive on the test (and returns null) when the fixture isn't on disk.

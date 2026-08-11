@@ -63,8 +63,15 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
         _preferOnlyMsLevel = preferOnlyMsLevel;
         _passEntireDiaPasefFrame = passEntireDiaPasefFrame;
 
-        _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
-        _index.Add(new IndexEntry { Index = 1, Id = "BPC", Kind = CVID.MS_basepeak_chromatogram });
+        // cpp only adds these two when the vendor handle actually answers getTIC() / getBPC()
+        // with something (ChromatogramList_Bruker.cpp:165-185). The CompassXtract backend that
+        // serves YEP / FID returns null pointers for both, so those runs carry no TIC and no BPC
+        // - and, with no LC traces either, no chromatogramList element at all.
+        if (data.HasGlobalChromatograms)
+        {
+            _index.Add(new IndexEntry { Index = _index.Count, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
+            _index.Add(new IndexEntry { Index = _index.Count, Id = "BPC", Kind = CVID.MS_basepeak_chromatogram });
+        }
 
         _lcTraces = data.ReadLcTraces();
         for (int i = 0; i < _lcTraces.Count; i++)

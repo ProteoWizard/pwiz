@@ -32,6 +32,9 @@ internal sealed class TsfData : IBrukerData
     public bool HasMs1Frames => _meta.HasMs1Frames;
     public bool HasMsNFrames => _meta.HasMsNFrames;
     public (double Low, double High) MzAcquisitionRange => _meta.MzAcquisitionRange;
+    public BrukerInstrumentFamily InstrumentFamily => BrukerInstrumentFamilyCodes.FromGlobalMetadata(GlobalMetadata);
+    public string InstrumentDescription => string.Empty;   // TsfData.cpp:315
+    public bool HasGlobalChromatograms => true;
 
     /// <summary>
     /// TSF MALDI is detected via the first frame's <see cref="TsfScanMode.Maldi"/> marker

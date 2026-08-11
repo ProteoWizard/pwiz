@@ -40,6 +40,35 @@ public interface IBrukerData : IDisposable
     (double Low, double High) MzAcquisitionRange { get; }
 
     /// <summary>
+    /// Instrument family reported by the backend. Mirrors cpp
+    /// <c>CompassData::getInstrumentFamily()</c>.
+    /// </summary>
+    /// <remarks>
+    /// A property rather than something <c>Reader_Bruker</c> derives from
+    /// <see cref="GlobalMetadata"/>, because the two backend families disagree on the numbering:
+    /// TDF / TSF / BAF store the codes <c>translateInstrumentFamily</c> decodes, while
+    /// CompassXtract reports the SDK enum directly and has no equivalent metadata code for
+    /// several of its values (an ion trap, for one).
+    /// </remarks>
+    BrukerInstrumentFamily InstrumentFamily { get; }
+
+    /// <summary>
+    /// Free-text instrument model, emitted as the <c>instrument model</c> userParam on the
+    /// <c>CommonInstrumentParams</c> group. Port of <c>CompassData::getInstrumentDescription()</c>;
+    /// only the CompassXtract backend has one — the TDF / TSF / BAF implementations all return
+    /// <c>""</c> (<c>TimsData.cpp:885</c>, <c>TsfData.cpp:315</c>, <c>Baf2Sql.cpp:243</c>).
+    /// </summary>
+    string InstrumentDescription { get; }
+
+    /// <summary>
+    /// True when the backend can produce whole-run TIC and BPC chromatograms. Mirrors cpp's
+    /// <c>getTIC()</c> / <c>getBPC()</c> returning a null pointer, which is what makes
+    /// <c>ChromatogramList_Bruker::createIndex</c> skip those two entries entirely
+    /// (<c>ChromatogramList_Bruker.cpp:165-185</c>). Only the CompassXtract backend declines.
+    /// </summary>
+    bool HasGlobalChromatograms { get; }
+
+    /// <summary>
     /// True when the first frame's scan mode or instrument source indicates MALDI (used for
     /// the source CV term in <c>Reader_Bruker</c>).
     /// </summary>

@@ -104,7 +104,16 @@ function Should-Skip([string] $relName) {
     if ($relName -match '\.(pdb|xml)$') { return $true }
     if ($relName -match '^runtimes[\\/](?!win-x64[\\/]|win[\\/])') { return $true }
     if ($relName -match '^(cs|de|es|fr|it|ja|ko|pl|pt-BR|ru|tr|zh-Hans|zh-Hant)[\\/]') { return $true }
-    if ($relName -match '\.(dll|exe)$') {
+    # Bruker's CompassXtract runtime (YEP / FID) is fetched to the vendor cache and then copied
+    # next to the executable on first use, so a developer bin that has converted a YEP holds ~25 MB
+    # of it. The DLLs are caught by the vendor prefixes below; these two are not, and the marker in
+    # particular MUST NOT ship: it is what tells the installed app the payload is already in place,
+    # so shipping it without the payload would disable the install-on-first-use it stands for.
+    if ($relName -match '\.(installed|cxttmp)$') { return $true }
+    # .manifest joins dll/exe in the prefix check because the CompassXtract SxS manifests are
+    # vendor payload too. It is a prefix match, not a blanket rule, so the Microsoft.VC90.*
+    # manifests we deliberately ship (see Bruker.csproj) are untouched.
+    if ($relName -match '\.(dll|exe|manifest)$') {
         $leaf = Split-Path -Leaf $relName
         foreach ($p in $vendorSdkPrefixes) {
             if ($leaf -like "$p*") { return $true }
