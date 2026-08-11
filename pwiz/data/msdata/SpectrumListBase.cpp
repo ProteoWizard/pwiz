@@ -130,25 +130,14 @@ PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const Spect
         return;
     }
 
-    // One spectrum out of order condemns the file, and the condemnation is permanent: a writer
-    // cannot be talked back into good standing by a later spectrum that happens to ascend, because
-    // the compare_exchange above only fires from unsettled.
-    // It does not hold the other way round. A file settled as sorted stops being examined at all,
-    // at the top of this function, so a writer that sorts some spectra and not others is only
-    // corrected up to the first long ascending one. That is the price of settling the question
-    // instead of re-asking it for every spectrum of every file; the converter this was written for
-    // got every spectrum wrong, so the settled answer is the right one to pay for.
+    // One spectrum out of order means any others may also be out of order.
     // The exchange also tells us whether this is the first such spectrum, which the warning below
     // is keyed on.
-    bool firstSpectrumOutOfOrder =
+    bool isFirstFoundSpectrumOutOfOrder =
         mzOrderVerdict_.exchange(MzOrderVerdict::writerDoesNotSortByMz) != MzOrderVerdict::writerDoesNotSortByMz;
 
-    // Every array holding one value per peak travels with the m/z it belongs to, identified by
-    // length the way ThresholdFilter::getExtraArrays does it. A spectrum may carry a
-    // signal-to-noise, baseline, resolution or charge array alongside the two, and leaving any of
-    // them behind would put every value against the wrong peak - each one plausible and all of them
-    // wrong, which is worse than the disorder being repaired. Integer arrays are a separate member
-    // of Spectrum and are just as per-peak, so they are carried too.
+    // A spectrum may carry other values like signal-to-noise, baseline, resolution or charge array 
+	// alongside m/z and intensity. Make sure those other arrays are permuted in the same way as m/z and intensity.
     // Stable, so peaks sharing an m/z keep the order the writer gave them.
     std::vector<size_t> order(mzs.size());
     std::iota(order.begin(), order.end(), size_t(0));
@@ -180,7 +169,7 @@ PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const Spect
     for (size_t i = 0; i < integerArrays.size(); ++i)
         integerArrays[i].first->swap(integerArrays[i].second);
 
-    if (firstSpectrumOutOfOrder)
+    if (isFirstFoundSpectrumOutOfOrder)
         warn_once(("[SpectrumListBase] peaks were not written in ascending m/z order (first seen at \"" +
                    spectrum->id + "\"). Reordering them in memory before use.").c_str());
 }

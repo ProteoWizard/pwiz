@@ -27,6 +27,8 @@
 #include "TextWriter.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
+#include <algorithm>
+#include <numeric>
 
 
 using namespace pwiz::msdata;
@@ -35,6 +37,40 @@ using namespace pwiz::msdata;
 namespace pwiz {
 namespace data {
 namespace diff_impl {
+
+
+namespace {
+
+/// Copies of the two primary arrays with their peaks put in ascending m/z order, so that two sides
+/// can be compared as sets of peaks rather than as ordered lists - see DiffConfig::ignorePeakOrder.
+/// Stable, matching SpectrumListBase::ensureMzAscending, which matters because a combined ion
+/// mobility spectrum repeats m/z values across bins: an unstable sort could order those ties
+/// differently on each side and report a difference that is not there.
+vector<BinaryDataArrayPtr> peaksInMzOrder(const vector<BinaryDataArrayPtr>& arrays)
+{
+    if (arrays.size() < 2 || !arrays[0].get() || !arrays[1].get() ||
+        arrays[0]->data.size() != arrays[1]->data.size())
+        return arrays;
+
+    const pwiz::util::BinaryData<double>& mzs = arrays[0]->data;
+    vector<size_t> order(mzs.size());
+    std::iota(order.begin(), order.end(), size_t(0));
+    std::stable_sort(order.begin(), order.end(), [&mzs](size_t x, size_t y) {return mzs[x] < mzs[y];});
+
+    vector<BinaryDataArrayPtr> result;
+    for (size_t i = 0; i < 2; ++i)
+    {
+        BinaryDataArrayPtr sorted(new BinaryDataArray(*arrays[i]));
+        vector<double> reordered(order.size());
+        for (size_t j = 0; j < order.size(); ++j)
+            reordered[j] = arrays[i]->data[order[j]];
+        sorted->data.assign(reordered.begin(), reordered.end());
+        result.push_back(sorted);
+    }
+    return result;
+}
+
+} // namespace
 
 
 PWIZ_API_DECL
@@ -506,6 +542,11 @@ void diff(const Spectrum& a,
             // only check 2 primary arrays
             vector<BinaryDataArrayPtr> aBDA(a.binaryDataArrayPtrs.begin(), a.binaryDataArrayPtrs.begin() + 2);
             vector<BinaryDataArrayPtr> bBDA(b.binaryDataArrayPtrs.begin(), b.binaryDataArrayPtrs.begin() + 2);
+            if (config.ignorePeakOrder)
+            {
+                aBDA = peaksInMzOrder(aBDA);
+                bBDA = peaksInMzOrder(bBDA);
+            }
             diff(aBDA, bBDA,
                  a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
                  config, maxPrecisionDiff);

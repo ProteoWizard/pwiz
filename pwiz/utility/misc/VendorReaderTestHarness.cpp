@@ -463,10 +463,33 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
                 DiffConfig diffConfig_mz5(diffConfig);
                 diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+
+                // mz5 keeps only the m/z and intensity arrays, so a combined ion mobility spectrum
+                // comes back without the mobility axis that gave its peak order meaning. pwiz then
+                // presents what survives in ascending m/z order, which is what every consumer
+                // assumes, so the round trip cannot be expected to reproduce the order it went in
+                // with. Compare the peaks as a set here, and assert the ordering separately below -
+                // on its own this would accept any permutation at all.
+                diffConfig_mz5.ignorePeakOrder = config.combineIonMobilitySpectra;
+
                 TestTimer diffTimer_mz5(rawpath, "Diff_mz5", config.reportTimings);
                 Diff<MSData, DiffConfig> diff_mz5(vendorMsd, msd_mz5, diffConfig_mz5);
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                 unit_assert(!diff_mz5);
+
+                // the other half of that bargain: every spectrum really is in ascending m/z order
+                if (msd_mz5.run.spectrumListPtr.get())
+                    for (size_t i = 0, end = msd_mz5.run.spectrumListPtr->size(); i < end; ++i)
+                    {
+                        SpectrumPtr s = msd_mz5.run.spectrumListPtr->spectrum(i, true);
+                        if (!s.get() || !s->getMZArray().get())
+                            continue;
+                        const BinaryData<double>& mzs = s->getMZArray()->data;
+                        if (!std::is_sorted(mzs.begin(), mzs.end()))
+                            throw runtime_error(unit_assert_message(__FILE__, __LINE__,
+                                ("mz5 spectrum " + lexical_cast<string>(i) + " (\"" + s->id +
+                                 "\") is not in ascending m/z order").c_str()));
+                    }
             }
         }
 #endif
