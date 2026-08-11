@@ -182,12 +182,14 @@ namespace pwiz.Osprey.IO
         /// from the persisted scalars without re-reading features -- only the entry_id [0..4]
         /// and score [4..12] fields are read; the trailing q-values are skipped.
         ///
-        /// Validates magic + version like every other reader here. That was cosmetic while the
-        /// record width was fixed, but <see cref="RecordLength"/> changed at v4, so a stale v3
-        /// sidecar left in an output directory would otherwise be re-cut at the new width and
-        /// yield plausible-looking garbage instead of a rejection.
+        /// Validates magic, version, the <paramref name="expectedPass"/> byte, and that the
+        /// payload is a whole number of records - the same checks every other reader here makes.
+        /// The version check was cosmetic while the record width was fixed, but
+        /// <see cref="RecordLength"/> changed at v4, so a stale v3 sidecar left in an output
+        /// directory would otherwise be re-cut at the new width and yield plausible-looking
+        /// garbage instead of a rejection.
         /// </summary>
-        public static void ReadScalars(string path, out uint[] entryIds, out double[] scores)
+        public static void ReadScalars(string path, Pass expectedPass, out uint[] entryIds, out double[] scores)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -196,7 +198,16 @@ namespace pwiz.Osprey.IO
                 if (len < HeaderLength)
                     throw new IOException(string.Format(
                         "FdrScoresSidecar too short ({0} bytes): {1}", len, path));
-                int n = (int)((len - HeaderLength) / RecordLength);
+                // Reject a payload that is not a whole number of records instead of flooring.
+                // Flooring silently drops a trailing partial record, so a truncated sidecar
+                // returns fewer scalars than it has entries and reads as a short file rather
+                // than a corrupt one.
+                long payload = len - HeaderLength;
+                if (payload % RecordLength != 0)
+                    throw new IOException(string.Format(
+                        "FdrScoresSidecar payload {0} bytes is not a multiple of the {1}-byte record: {2}",
+                        payload, RecordLength, path));
+                int n = (int)(payload / RecordLength);
                 entryIds = new uint[n];
                 scores = new double[n];
                 var header = new byte[HeaderLength];
@@ -211,6 +222,14 @@ namespace pwiz.Osprey.IO
                     throw new IOException(string.Format(
                         "FdrScoresSidecar version {0}, expected {1}: {2}",
                         header[8], FormatVersion, path));
+                // Every other reader here checks the pass byte; this one did not, so a 2nd-pass
+                // sidecar handed to the 1st-pass caller decoded cleanly and fed post-Stage-6
+                // scalars into transfer-compete, which is exactly the mix-up that silently
+                // changes q values rather than failing.
+                if (header[9] != (byte)expectedPass)
+                    throw new IOException(string.Format(
+                        "FdrScoresSidecar pass {0}, expected {1}: {2}",
+                        header[9], (byte)expectedPass, path));
                 var rec = new byte[RecordLength];
                 for (int i = 0; i < n; i++)
                 {

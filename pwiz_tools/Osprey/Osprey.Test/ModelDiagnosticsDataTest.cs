@@ -243,6 +243,62 @@ namespace pwiz.Osprey.Test
                 WrapFiles(f1, f2), cls, id => double.NaN, 0.01, FdrLevel.Precursor, 1, false));
 
             TestCoAssignmentEnrichmentAndOffenderDedup();
+            TestCoAssignmentAggregateStubDoesNotOutrankRealScore();
+        }
+
+        // A row still carrying the ResetScores 0.0 default must NOT outrank the entry's real
+        // experiment aggregate. The reduction in ObserveCutoff used to be a plain max(), defended
+        // on the grounds that a stub must not pull a real aggregate DOWN to zero - which only
+        // holds if aggregates are mostly positive. Measured on the 34-file SEA-AD 2nd-pass
+        // sidecars they are overwhelmingly negative (93.2%, boundary at -2.33), so 0.0 is an
+        // extreme upper outlier and max() hands the stub the win every time it appears.
+        //
+        // The fixture is built so the two rules give opposite answers:
+        //
+        //   target A   accepted, aggregate -1.0
+        //   target B   accepted, aggregate -5.0   <- the worst accepted, so it sets the boundary
+        //   target B   a SECOND row for the same entry, aggregate 0.0 (the stub)
+        //   decoy  X   aggregate -4.0
+        //
+        // prefer-real: B stays -5.0, boundary -5.0, decoy -4.0 clears it and IS admitted.
+        // max():      B becomes 0.0, boundary -1.0, decoy -4.0 misses it and vanishes.
+        //
+        // So reverting to max() turns the decoy row null and fails the assertion below. Note the
+        // direction: here the stub SUPPRESSES a real decoy, where the astral defect inflated the
+        // count. Both are the same collapse toward 0.0, and which way it lands depends only on
+        // whether the stub sits on an accepted target or on a decoy.
+        private static void TestCoAssignmentAggregateStubDoesNotOutrankRealScore()
+        {
+            var mz = new Dictionary<uint, double>
+            {
+                { 1, 500.000 }, { 2, 500.004 }, { 1 | DECOY_BIT, 500.006 },
+            };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
+            };
+            var file = new List<FdrEntry>
+            {
+                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000, -1.0),
+                CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018, -5.0),
+                // The stub: same entry as the row above, left at the ResetScores default.
+                CoEntry(2, false, 0.0, 0.002, "B", 2, 10.150, 0.0),
+                CoEntry(1 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, -4.0),
+            };
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(file), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+
+            Assert.IsNotNull(data.Experiment.Decoy,
+                @"the 0.0 stub outranked entry B's real -5.0 aggregate, lifting the experiment boundary and dropping a decoy that clears it");
+            Assert.AreEqual(1, data.Experiment.Decoy.N);
+
+            // The q-gated classes are untouched either way, which localizes a failure above to
+            // the aggregate reduction rather than to the acceptance set.
+            Assert.IsNotNull(data.Experiment.Target);
+            Assert.AreEqual(2, data.Experiment.Target.N);
         }
 
         // Enrichment arithmetic above MIN_N_FOR_ENRICHMENT, and one offender ROW per precursor

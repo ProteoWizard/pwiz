@@ -926,7 +926,8 @@ namespace pwiz.Osprey.Tasks
                     }
                     nScored += fileScores.Count;
 
-                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], FdrScoresSidecar.Pass.FirstPass,
+                        out uint[] eids, out double[] scs);
                     if (stratumBaseIds != null)
                         StashOffStratumPass1ExperimentQ(fileKey, sidecarByKey[fileKey], eids, scs, fileScores);
                     progress.Report(++nRead);
@@ -1594,8 +1595,16 @@ namespace pwiz.Osprey.Tasks
                         if (!globalExpPepQ.TryGetValue(rec.EntryId, out double curPep) ||
                             rec.ExperimentPeptideQvalue < curPep)
                             globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
-                        if (!globalExpAgg.TryGetValue(rec.EntryId, out double curAgg) ||
-                            rec.ExperimentAggregateScore > curAgg)
+                        // Prefer a REAL aggregate over the 0.0 ResetScores default, rather than
+                        // taking the max - 0.0 sits above 93-99% of measured aggregates, so a max
+                        // would let a single default row outrank every real (negative) one for
+                        // this entry. Same rule, and the same reasoning, as
+                        // CoAssignmentAccumulator.ObserveCutoff; see the comment there for the
+                        // measurement. No 1st-pass sidecar record carries a 0.0 today (0 of 24.7M
+                        // over six SEA-AD files), so this is prophylactic here and essential
+                        // there, where the pass-2 pool does carry stubs.
+                        if (!globalExpAgg.TryGetValue(rec.EntryId, out double curAgg) || curAgg == 0.0 ||
+                            (rec.ExperimentAggregateScore != 0.0 && rec.ExperimentAggregateScore > curAgg))
                             globalExpAgg[rec.EntryId] = rec.ExperimentAggregateScore;
                     });
                     if (!readOk)

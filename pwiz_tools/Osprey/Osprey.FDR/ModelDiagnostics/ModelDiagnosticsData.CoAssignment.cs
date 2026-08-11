@@ -496,11 +496,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 if (!_fileBest.TryGetValue(entryId, out double cur) || score > cur)
                     _fileBest[entryId] = score;
                 // Every row of an entry carries the same persisted aggregate, so this is a read,
-                // not a reduction. Taking the max anyway is defensive against rows that never went
-                // through an experiment competition and still hold the 0.0 default (a gap-fill stub
-                // left by FdrEntry.ResetScores): one such row must not pull a real entry's
-                // aggregate down to zero and drag the acceptance boundary with it.
-                if (!_experimentBest.TryGetValue(entryId, out double e) || experimentAggregateScore > e)
+                // not a reduction. The only real decision is which row wins when one of them never
+                // went through an experiment competition and still holds the 0.0 default left by
+                // FdrEntry.ResetScores. Prefer the REAL value over that default; among real values
+                // take the max, which is belt and braces since they are equal by construction.
+                //
+                // Do NOT go back to a plain max(). An earlier version of this comment defended one
+                // on the grounds that a stub must not pull a real aggregate DOWN to zero - which
+                // only holds if aggregates are mostly positive. Measured on the 34-file SEA-AD
+                // 2nd-pass sidecars they are not: 93.2% are negative, the experiment boundary sits
+                // at -2.33, and 0.0 is an extreme upper outlier. Under max() a stub would therefore
+                // WIN every time it appeared, and handing a decoy 0.0 against a negative boundary
+                // admits it - the same collapse-toward-zero that produced a 542,368-decoy golden.
+                if (!_experimentBest.TryGetValue(entryId, out double e) || e == 0.0 ||
+                    (experimentAggregateScore != 0.0 && experimentAggregateScore > e))
                     _experimentBest[entryId] = experimentAggregateScore;
                 if (IsDecoyClass(cls))
                     return;   // decoys define the boundary; they do not set it
@@ -774,6 +783,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             private const int DELTA_RT_BINS = 50;
             private const int MAX_OFFENDERS = 50;
+
+            /// <summary>
+            /// Joins the two precursor keys of an offender pair. Must be a character that cannot
+            /// occur in a key: a key is <c>modseq|charge|decoy</c>, so '|' would make
+            /// <c>a|2</c> + <c>b|3</c> and <c>a</c> + <c>2|b|3</c> collide. Written as an escape
+            /// rather than the raw U+0001 byte it replaced - that byte was invisible in the
+            /// source, in diffs and in review, and any editor or formatter that normalized it
+            /// would have silently merged unrelated pairs.
+            /// </summary>
+            private const string PAIR_KEY_SEPARATOR = "\u0001";
 
             /// <summary>
             /// Fewest detected precursors a class needs before its enrichment ratio is reported.
@@ -1089,7 +1108,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // One entry per PRECURSOR PAIR across all runs, not one per observation. The
                     // same pair co-assigning in 31 of 40 runs is one finding, and printing it 31
                     // times would crowd every other pair out of the listing.
-                    string pairKey = row.Key + "" + partner.Key;
+                    string pairKey = row.Key + PAIR_KEY_SEPARATOR + partner.Key;
                     if (_offendersByPair.TryGetValue(pairKey, out var seen))
                     {
                         seen.Runs++;
