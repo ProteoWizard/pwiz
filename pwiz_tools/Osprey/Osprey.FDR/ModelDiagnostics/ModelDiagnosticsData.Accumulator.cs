@@ -31,8 +31,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// Streaming builder for the pass-1 <see cref="ModelDiagnosticsData"/> that folds each
         /// first-pass FDR row into the SAME reduced structures the batch <see cref="Build"/>
         /// derives from the resident pool, WITHOUT ever holding the full pre-compaction
-        /// <see cref="FdrEntry"/> pool resident. Fed one row at a time from the projection
-        /// score-pass sink (<c>FdrProjectionSinkBase.Accept</c>) in nested (file, row) order;
+        /// <see cref="FdrEntry"/> pool resident. Fed one row at a time in nested (file, row)
+        /// order by either of the two pre-compaction row sources - the projection score-pass
+        /// sink (<c>FdrProjectionSinkBase.Accept</c>) as first-pass Percolator scores each row,
+        /// or the streaming reconciled-bundle rehydrate
+        /// (<c>RescoreHydration.HydrateCompactedStreaming</c>, per file after the 1st-pass
+        /// sidecar overlay and before compaction discards the non-survivors);
         /// <see cref="Build"/> then runs the identical downstream builders over the accumulated
         /// reductions.
         ///
@@ -54,7 +58,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// nested order the batch ReduceToPrecs walks perFileEntries, so _best.Values enumerates
         /// identically. So the streamed reduction reproduces the resident reduction
         /// element-for-element, while the 340M-row pre-compaction pool that OOM'd an 82-file
-        /// --model-diagnostics run at the join is never materialized -- the accumulator holds only
+        /// --model-diagnostics run at FirstPassFDR is never materialized -- the accumulator holds only
         /// ~unique-precursor / ~base_id-sized maps. (A future change that reorders projection rows
         /// within a file would threaten this last invariant -- keep the row order stable.)
         /// </summary>

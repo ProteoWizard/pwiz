@@ -24,8 +24,8 @@ Primary C# code:
 | `Osprey.ML/PepEstimator.cs` | Posterior error probability (KDE + isotonic/PAVA), Sage-derived |
 | `Osprey.ML/QValueCalculator.cs`, `MlMath.cs` | Conservative q-value helpers and math primitives |
 | `Osprey.Core/FdrEntry.cs` | The FDR result stub with the six q-value fields + `EffectiveRunQvalue`/`EffectiveExperimentQvalue` |
-| `Osprey.Tasks/FirstJoinTask.cs` | Stage 5 first-pass FDR driver (HPC `--task FirstPassFDR`) |
-| `Osprey.Tasks/Pass2FdrSidecar.cs`, `MergeNodeTask.cs` | Stage 7 second-pass FDR driver (HPC `--task SecondPassFDR`) |
+| `Osprey.Tasks/FirstPassFdrTask.cs` | Stage 5 first-pass FDR driver (HPC `--task FirstPassFDR`) |
+| `Osprey.Tasks/Pass2FdrSidecar.cs`, `SecondPassFdrTask.cs` | Stage 7 second-pass FDR driver (HPC `--task SecondPassFDR`) |
 
 ---
 
@@ -69,7 +69,7 @@ After per-file coelution scoring, each observation is represented by an
 `IsDecoy`, `Charge`, `ScanNumber`, RT bounds, `CoelutionSum`, `Score`, the six
 q-value fields, `Pep`, and the interned `ModifiedSequence`. The heavy 21-feature
 vector is *not* held resident on the streaming path — it is reloaded on demand from
-`.scores.parquet` by `ParquetIndex` (`FirstJoinTask.cs` `loadFileFeatures`
+`.scores.parquet` by `ParquetIndex` (`FirstPassFdrTask.cs` `loadFileFeatures`
 delegate).
 
 Target/decoy pairing uses the high bit of `EntryId`: `base_id = EntryId & 0x7FFFFFFF`
@@ -88,7 +88,7 @@ ParquetIndex)` so the SVM working-set order is canonical across Rust and C#
 
 ## Step 2 — Dispatch by FDR method
 
-`FirstJoinTask.cs` switches on `config.FdrMethod`:
+`FirstPassFdrTask.cs` switches on `config.FdrMethod`:
 
 - `FdrMethod.Percolator` (default) → `PercolatorEngine.RunPercolatorFdr` (linear SVM)
 - `FdrMethod.Gbdt` → the **same** Percolator framework with a gradient-boosted-tree
@@ -245,8 +245,13 @@ monotonicity sweep (`ComputeQvaluesCore`, `PercolatorFdr.cs:1881`,
 |-------|-------|--------|
 | Run precursor | within each file, per precursor | `ComputePerRunPrecursorQvalues` |
 | Run peptide | within each file, best precursor per peptide | `ComputePerRunPeptideQvalues` |
-| Experiment precursor | across files, best obs per precursor | `ComputeExperimentPrecursorQvalues` |
-| Experiment peptide | across files, best obs per peptide | `ComputeExperimentPeptideQvalues` |
+| Experiment precursor | across files, **by default** the best (max) obs per precursor | `ComputeExperimentPrecursorQvalues` |
+| Experiment peptide | across files, **by default** the best (max) obs per peptide | `ComputeExperimentPeptideQvalues` |
+
+The two experiment rows describe the **default** reduction. How a unit's per-run
+observations collapse to the one score that competes is selectable - see
+[Experiment-wide aggregation](#experiment-wide-aggregation-osprey_experiment_agg)
+for the opt-in mean(best-N) alternative.
 
 **Single-file shortcut**: when only one file is present, experiment q-values are a clone
 of the run q-values (`PercolatorFdr.cs:682`, `PercolatorFdr.cs:1008`) — no separate
@@ -270,7 +275,7 @@ sequence), so a decoy's good run cannot lower its paired target's floor. Two ide
 implementations exist: the memory-bounded flat form `ClampExperimentQToBestRunFlat`
 runs in-pass over the score arrays (`PercolatorFdr.cs:1040`); the resident overload
 `PercolatorEngine.ClampExperimentQToBestRun` (`PercolatorEngine.cs:864`) is re-applied
-after Stage 6 reconciliation in `MergeNodeTask`, because reconciliation resets the run
+after Stage 6 reconciliation in `SecondPassFdrTask`, because reconciliation resets the run
 q-values of moved and gap-filled peaks (issue #4390).
 
 ---
@@ -300,7 +305,8 @@ even under precursor-level control (`PercolatorEngine.cs:850` comment).
 - **Run-level FDR**: each file scored independently; controls the per-file FDR.
 - **Experiment-level FDR**: the single best-scoring observation per precursor
   (`ModifiedSequence` + `Charge`) across all files competes; controls the experiment-wide
-  FDR.
+  FDR. (Default reduction; `OSPREY_EXPERIMENT_AGG` can replace it - see
+  [Experiment-wide aggregation](#experiment-wide-aggregation-osprey_experiment_agg).)
 
 After experiment-level FDR determines passing precursors, all per-file target
 observations for those precursors are carried into the blib output with the best
@@ -310,13 +316,248 @@ entries (each with its own RT boundaries). See `13-blib-output-schema.md` for th
 
 ---
 
+## Experiment-wide aggregation (`OSPREY_EXPERIMENT_AGG`)
+
+> **EXPERIMENTAL, opt-in, off by default.** `max` is the shipped behavior and is
+> byte-identical to the committed regression golden. `mean-best-<N>` and the two
+> floor toggles below are measurement levers for reproducibility-weighted scoring
+> (issue #4484), not supported production settings.
+
+Steps 3i and 5 above reduce a unit's per-run observations to one score before the
+experiment-wide target/decoy competition. `OSPREY_EXPERIMENT_AGG` selects that
+reduction. `OspreyEnvironment` parses the flag once at process start; an
+out-of-range or malformed value normalizes to `max` **with a warning**
+(`ExperimentAggUnrecognized`), because the whole point of the flag is A/B
+measurement and a typo that silently ran the default would be recorded as a
+mean(best-N) result rather than failing.
+
+| Value | Experiment-wide precursor score | Output |
+|---|---|---|
+| `max` (default) | the unit's single best (max) per-run score | byte-identical to the golden |
+| `mean-best-<N>` | the mean of the unit's best N per-run scores, missing runs filled with a decoy-derived floor | q-values change |
+
+### `max` (default)
+
+Each precursor, and each peptide, keeps its single best-scoring observation across
+runs and that score competes against the decoy null. The mean(best-N) code is never
+entered: the effective score array **is** the raw score array
+(`PercolatorQValues.cs`, `effScores == scores`), so a default run costs nothing and
+stays byte-identical to the committed golden.
+
+### `mean-best-<N>`
+
+The experiment-wide **precursor** score becomes the mean of that precursor's best N
+per-run scores (`TargetDecoyCompetition.ComputeBaseIdMeanBestN`, per-group
+accumulator `MeanBestNAcc`). Stage-4 dedup guarantees at most one entry per
+`base_id` per file, so a group's members are its per-run scores and the top N are
+the N best runs. A unit detected in only k < N runs has its remaining N - k slots
+filled with a **missing-run floor** estimated from the decoy score distribution:
+
+```text
+score = (sum of the k best per-run scores + (N - k) * floor) / N
+```
+
+Larger N rewards detection in more runs, driving the ranking toward the ">= N runs"
+reproducibility frontier. Every row of a `(base_id, side)` group receives the same
+aggregate, so the existing max-per-`base_id` experiment competition becomes a no-op
+reduction over that value (precursor = mean(best-N)), and
+`PercolatorSampling.BestPrecursorPerPeptide` rolls it up to **peptide by MAX** over
+the peptide's precursors.
+
+**Decoys are aggregated identically**, so the null stays honest. That is what makes
+this the symmetric sensitivity lever, as opposed to the target-conditioned
+second-pass modes in [12-second-pass-fdr.md](12-second-pass-fdr.md).
+
+Protein-level FDR is **not** re-ranked on the aggregate: `ProteinFdr`
+(`CollectBestPeptideScores`) still scores each group by the maximum **raw**
+per-peptide SVM discriminant, which never sees the aggregated array. mean(best-N)
+reaches protein FDR only indirectly, through which peptides pass the experiment
+q-value gate.
+
+A single-file run is unaffected: with one observation per group the aggregate is the
+uniform monotonic transform `x -> (x + (N - 1) * floor) / N`, so the ranking and every
+q-value are identical to `max` (and the single-file shortcut in Step 3i clones the run
+q-values anyway).
+
+#### N is bounded to [2, 64]
+
+N is read from the flag value and must be an unsigned decimal integer in
+`[2, OspreyEnvironment.MEAN_BEST_N_MAX]`, where `MEAN_BEST_N_MAX = 64`. Parsing is
+strict (`NumberStyles.None`): no leading sign and no surrounding whitespace, so
+`mean-best-+3` and `mean-best- 3` are rejected rather than becoming a second
+spelling of the same arm in an A/B log. Anything else - a bad prefix, N < 2, N > 64 -
+normalizes to `max` and warns.
+
+The cap exists because two unbounded failures were reachable. An N-wide accumulator
+is allocated per `(base_id, side)`, so `mean-best-1000000` allocates gigabytes and
+aborts seconds into Stage 5. And for any N at or above the largest observation count
+every unit is floor-filled, which saturates the statistic - the aggregate is
+`(S - L * floor) / N + floor`, whose **ranking no longer depends on N at all** - so
+the arm would be recorded as distinct while measuring the same thing. 64 is far above
+any plausible reproducibility frontier for a DIA experiment.
+
+#### N must not exceed the number of runs
+
+For that same saturation reason, an analysis with fewer runs than N is **refused**,
+not run (`OspreyEnvironment.ValidateExperimentAggSettings(fileCount)`). The check runs
+from one helper at two sites: at startup in `Program.ValidateArgs` before any I/O (a bad
+value costs a second instead of the hours a large run spends reaching Stage 5), and again
+at the Stage-5 consuming site in `FirstPassFdrTask.Run`.
+
+The two sites are fed **different counts on purpose**, and neither subsumes the other.
+Startup counts the files named on the command line; Stage 5 counts the files that actually
+produced scored entries, which is smaller when a file fails to score or yields nothing. So
+a run can pass at startup and still be refused at Stage 5 - that is the second check doing
+its job, not a drift to be eliminated. Conversely `FirstPassFdrTask.Run` is skipped on
+`--task SecondPassFDR`, on a Rehydrate and on any warm resume, which is exactly why the
+startup check exists. The bound itself is also approximate: the statistic saturates at the
+largest per-unit observation count, which is at most the file count and usually less, so
+some N below the file count are already saturated and are not refused.
+
+Because the Stage-5 check can throw, it runs **before** that task deletes the validity
+sidecars of the outputs it is about to write. Otherwise an argument error would destroy the
+cached Stage-5 state of a run that computed no FDR at all, and the operator would pay for a
+full recompute after fixing a typo - concentrated precisely on the sweep workflow, since the
+arm is part of the validity key and a flipped arm therefore always takes the compute path.
+
+Every check in that helper is gated on the aggregation being **engaged**. With
+`OSPREY_EXPERIMENT_AGG` unset none of these variables is read, so an ordinary run
+that merely inherited an exported sweep variable is untouched.
+
+### The missing-run floor
+
+The floor is the expected score of a **non-detection**, estimated from the decoy
+(null) score distribution and applied as one global scalar to the `N - k` missing
+slots of under-detected units:
+
+| Setting | Missing-run floor |
+|---|---|
+| neither variable set (default) | decoy **MEDIAN** |
+| `OSPREY_MEANBEST2_FLOOR_MEAN=1` | decoy **MEAN** |
+| `OSPREY_MEANBEST2_FLOOR_PCT=<0..100>` | that **percentile** of the decoy scores (linear interpolation, 50 = median); a low value is a harder reproducibility cut |
+
+The median default is deliberate: the typical null score is negative, whereas 0 is the
+SVM decision boundary and would drag a missing unit **up** toward detection. With no
+decoys at all the floor is 0. Non-finite decoy scores are excluded from the sample on
+both code paths.
+
+**The `MEANBEST2` name is historical** - it predates the best-2 to best-N
+generalization. Both toggles apply at every N.
+
+Two refusals (both from `ValidateExperimentAggSettings`, both gated on the
+aggregation being engaged):
+
+- **Setting BOTH is refused.** They are not composable: `FLOOR_MEAN` wins and the
+  percentile is never consulted, so an operator sweeping `OSPREY_MEANBEST2_FLOOR_PCT`
+  with a stale `OSPREY_MEANBEST2_FLOOR_MEAN=1` still exported would log a percentile
+  arm while measuring the decoy mean.
+- **`OSPREY_MEANBEST2_FLOOR_PCT` outside [0, 100]** (or NaN) is refused **at
+  startup**, not where the floor is computed: the streaming estimator reaches its
+  percentile only at the very end of Stage 5, hours into a large run, and the resident
+  twin would silently clamp the same value.
+
+**Known approximation (documented and bounded, not a defect).** The two floor
+estimators are the same statistic computed two ways. The resident path
+(`TargetDecoyCompetition.ComputeFloorFromDecoyScores`) sorts the exact decoy score
+list and interpolates between two observed values. The memory-bounded streaming path
+(`StreamingFdr.StreamingDecoyFloor`) accumulates a fixed-width histogram (200000 bins
+over [-100, 100], **bin width 1e-3**) and interpolates uniformly inside the straddling
+bin.
+
+The two floors agree to within **bin width + the local spacing of the decoy scores
+around the quantile**, which is the bound
+`FdrTest.TestStreamingMeanBestNFloorPathMatchesResident` asserts. The spacing term is
+not slack: where the decoys are sparser than the bins the streaming estimator cannot
+reach across the gap to the next observation, so the disagreement is set by the DATA
+SPACING rather than by the bin width, and on a deliberately sparse fixture it exceeds
+the bin width by roughly 18x. In production the decoy count is in the millions over a
+narrow score range - several per bin - so the spacing term vanishes and the bound does
+collapse to about the bin width.
+
+Neither estimator can return a value outside the observed decoy range: the streaming
+path answers every out-of-histogram case with the smallest or largest score it
+actually saw, mirroring what the resident path's sorted-list lookup would return. That
+matters because a floor ABOVE every real score would invert the feature, PROMOTING
+under-detected units instead of demoting them.
+
+The `FLOOR_MEAN` branch is an exact running sum on both paths and does not drift, and
+the floor only affects units detected in fewer than N runs.
+
+### First pass only, and the second-pass interaction
+
+`OSPREY_EXPERIMENT_AGG` is a **first-pass score by definition**. Both score passes
+gate the aggregation on the pass label (`applyExperimentAgg: passLabel ==
+FIRST_PASS_LABEL` in `PercolatorEngine`), so **the second pass never re-aggregates**.
+Two premises break on the post-reconciliation survivor pool: gap-fill rows are
+appended there, so a group's observation count is inflated by fabricated detections
+and "runs detected" starts counting non-independent evidence, inverting the
+reproducibility metric the feature rests on; and the decoy floor would come from the
+small, compaction-enriched survivor decoy set instead of the full null.
+
+That makes the second-pass q-value mode
+([`OSPREY_PASS2_QVALUE`](12-second-pass-fdr.md)) part of the arm:
+
+| `OSPREY_PASS2_QVALUE` | Behavior after a mean(best-N) first pass |
+|---|---|
+| `transfer` | **The compatible mode.** Carries the first-pass q through unchanged, so the reported experiment q stays mean(best-N). |
+| `transfer-compete` | **Refused** (`Pass2FdrSidecar` throws). It rewrites every survivor's experiment q from a MAX-aggregated competition, making a reproducibility-weighted run indistinguishable from a default run in its own output. |
+| `protein-compact` (default) | **Refused** (but see the caveat below). Worse than uniform: on-stratum survivors would get the MAX-aggregated value while off-stratum survivors keep their first-pass mean(best-N) q, giving one reported column with two statistics and no way for a consumer to tell which row used which. |
+
+**Because `protein-compact` is the DEFAULT, a mean(best-N) arm must set
+`OSPREY_PASS2_QVALUE=transfer` explicitly or the run aborts at SecondPassFDR.** This is
+deliberate: the alternative - silently using `transfer` whenever the first pass was mean(best-N) -
+would make the effective default depend on another variable, which is harder to reason about than
+a loud failure whose message names the fix.
+
+> **Caveat: `protein-compact` + `OSPREY_PROTEIN_COMPACT_RETRAIN=1` is NOT refused.** The refusal
+> lives in the frozen-model recompute, and that A/B lever deliberately bypasses it to retrain
+> instead - so the combination retrains and silently reports a MAX-aggregated experiment q. This is
+> left as-is rather than guarded because the combination is a three-way diagnostic opt-in, and
+> these environment variables are development instrumentation rather than a supported interface
+> (see `ai/docs/osprey-development-guide.md`). Do not read the "Refused" row above as covering it.
+
+The refusal gates on the arm the **first pass recorded** - persisted as
+`ExperimentAgg` in the per-file `<stem>.1st-pass.model.json` sidecar
+(`FirstPassModelIO`) - not on the live process environment, because a
+`--task SecondPassFDR` node reloads the frozen model from disk and never
+trained pass 1. A sidecar written before arm recording reports null, which means
+UNKNOWN rather than "max": the refusal then infers the arm from this process's
+environment and says so in the message. Making the streamed second-pass competition
+aggregate-aware is the real fix and is deliberately deferred (it depends on the
+gap-fill run-count exclusion, issue #4511).
+
+### Operator checks
+
+- **The run states its own arm.** The startup settings block always prints one line
+  beginning `Experiment aggregation:`:
+
+  ```text
+  Experiment aggregation: max (default - best observation per unit)
+  Experiment aggregation: mean-best-3 ACTIVE - experiment-wide precursor score is the mean of its best 3 per-run scores; missing-run floor = decoy MEDIAN (default)
+  ```
+
+  It is printed unconditionally, active or not, because the dominant real failure of
+  an environment-variable flag is that the variable never reached the process (a
+  `Start-Process` without the parent environment, an HPC job spec, a scheduled launch,
+  a service account) - and in the output itself, unset is indistinguishable from a
+  typo that normalized to the default.
+- **Flipping the arm invalidates cached results.** `ExperimentAggValidityKeySuffix()`
+  is appended to the validity keys of `FirstPassFdrTask` (Stage 5), `PerFileRescoreTask`
+  (Stage 6) and `SecondPassFdrTask`, and covers both floor toggles as well as
+  the arm, so a warm rerun in the same output directory **re-runs** those stages
+  instead of reusing the other arm's cached q-values, sidecars and `.blib`. The suffix
+  is empty when the aggregation is off, so directories produced by default runs
+  (including any predating the feature) stay valid.
+
+---
+
 ## Step 6 — Second pass (Stage 7)
 
-`Pass2FdrSidecar` / `MergeNodeTask` (`--task SecondPassFDR`) reload the reconciled
+`Pass2FdrSidecar` / `SecondPassFdrTask` (`--task SecondPassFDR`) reload the reconciled
 `.scores.parquet` entries and re-run the identical Percolator core with `passLabel =
 "Second-pass"` (`Pass2FdrSidecar.cs:521`), writing per-file `.2nd-pass.fdr_scores.bin`
 sidecars so reruns can skip SVM training. Only `FdrMethod.Percolator` is supported in the
-merge-node second pass — any other method throws
+SecondPassFDR second pass — any other method throws
 (`Pass2FdrSidecar.cs:530`). The second-pass q-values are authoritative for blib output;
 the best-of-runs clamp is re-applied afterward.
 
@@ -352,8 +593,11 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--fdrbench <tsv>` | off (`OspreyCommandArgs.cs:179`) | Emit an FDRBench-compatible input TSV (entrapment true-FDR). Level taken from `--fdr-level`. |
 | `--fdrbench-per-run` | off (`OspreyCommandArgs.cs:181`) | One row per (precursor, run) with run-level q-values; default is one row per precursor with experiment q-values. |
 | `--fdrbench-pass {1\|2\|both}` | `2` (`OspreyCommandArgs.cs:183`) | Which pass to emit: 2 = post-compaction second-pass survivors; 1 = full pre-compaction first-pass pool; both = both with `.pass1`/`.pass2` suffixes. |
+| `OSPREY_EXPERIMENT_AGG` | `max` | **Experimental.** Experiment-wide aggregation: `max` (default, byte-identical golden) or `mean-best-<N>` with N in [2, 64]. Out-of-range / malformed values fall back to `max` with a warning; N above the run count is refused. First pass only. See [Experiment-wide aggregation](#experiment-wide-aggregation-osprey_experiment_agg). |
+| `OSPREY_MEANBEST2_FLOOR_MEAN` | off (median) | **Experimental.** Missing-run floor = decoy MEAN instead of the default decoy MEDIAN. Read only under `mean-best-<N>`; the `MEANBEST2` name is historical and it applies at every N. |
+| `OSPREY_MEANBEST2_FLOOR_PCT` | unset (median) | **Experimental.** Missing-run floor = this percentile (0-100) of the decoy scores; a low value is a harder reproducibility cut. Refused outside [0, 100], and refused together with `OSPREY_MEANBEST2_FLOOR_MEAN`. |
 | `--model-diagnostics` | off | Also collects per-feature target/decoy histograms + feature-contribution report (`CollectFeatureHistograms`, `PercolatorEngine.cs:310`); forces the resident first-pass pool. Byte-neutral when off. |
-| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. `FirstPassFDR`/`SecondPassFDR` are the CLI names; the internal `HpcTask` enum values are `PerFileScoring, FirstJoin, PerFileRescore, MergeNode` (`OspreyConfig.cs:388`). See `15-hpc-scoring-split.md`. |
+| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. The internal `HpcTask` enum values are `PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr` (`OspreyConfig.cs`); note the enum spells `PerFileRescore` where the CLI takes `PerFileRescoring`. See `15-hpc-scoring-split.md`. |
 
 Internal Percolator constants (not CLI-exposed; `PercolatorConfig` ctor
 `PercolatorFdr.cs:115`): `MaxIterations = 10`, `NFolds = 3`, `Seed = 42`,
@@ -390,7 +634,7 @@ calibration LDA, not Percolator.
   would throw `ArgumentOutOfRangeException` on one (`FdrEntry.cs:136`). Protein q-values
   are still computed and written to the protein report, but there is **no CLI path to
   gate the blib output by protein-level FDR**. Two stale in-code comments still reference
-  "`--fdr-level protein` output filtering" (`OspreyConfig.cs:258`, `MergeNodeTask.cs:157`)
+  "`--fdr-level protein` output filtering" (`OspreyConfig.cs:258`, `SecondPassFdrTask.cs:157`)
   even though the mode is unreachable. Evidence: `Osprey.Core/OspreyConfig.cs:411`,
   `Osprey/OspreyCommandArgs.cs:138`, `Osprey.Core/FdrEntry.cs:136`. Severity: major.
 

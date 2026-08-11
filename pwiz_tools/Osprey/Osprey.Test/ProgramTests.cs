@@ -43,6 +43,29 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class ProgramTests
     {
+        private int _savedMeanBestN;
+
+        /// <summary>
+        /// Pin the experiment-wide aggregation off for every test here. ValidateArgs now runs
+        /// OspreyEnvironment.ValidateExperimentAggSettings FIRST, before the --task switch, so on a
+        /// machine with OSPREY_EXPERIMENT_AGG=mean-best-N exported - the sweep this feature exists
+        /// to run - the happy-path cases would fail their Assert.IsNull (their 1-2 input scores are
+        /// fewer runs than N), and the negative cases would match the aggregation error instead of
+        /// the --task message they assert on. Same ambient-environment hole that FdrTest had.
+        /// </summary>
+        [TestInitialize]
+        public void PinExperimentAggToDefault()
+        {
+            _savedMeanBestN = OspreyEnvironment.MeanBestN;
+            OspreyEnvironment.MeanBestN = 0;
+        }
+
+        [TestCleanup]
+        public void RestoreExperimentAgg()
+        {
+            OspreyEnvironment.MeanBestN = _savedMeanBestN;
+        }
+
         // --- ValidateArgs: --task is authoritative over input type --------
 
         private static OspreyConfig TaskConfig(HpcTask task)
@@ -52,12 +75,45 @@ namespace pwiz.Osprey.Test
             {
                 SelectedTask = task,
                 NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                StopAfterStage5 = task == HpcTask.FirstJoin,
-                ExpectReconciledInput = task == HpcTask.MergeNode,
+                StopAfterStage5 = task == HpcTask.FirstPassFdr,
+                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
             };
         }
 
-        // -- PerFileScoring (mzML in) --
+        // - SpectraCache (Stage 1 alone: inputs in, .spectra.bin out) --
+
+        [TestMethod]
+        public void TestValidateSpectraCache()
+        {
+            // Consolidated: the whole SpectraCache contract in one place.
+            // The defining difference from every other task is that it needs
+            // NO library - caching depends only on the input file - so the
+            // happy path below deliberately leaves LibrarySource null.
+            var config = TaskConfig(HpcTask.SpectraCache);
+            config.InputFiles = new List<string> { "a.raw" };
+            Assert.IsNull(Program.ValidateArgs(config), "no library should be required");
+
+            // A library is merely unnecessary, not rejected: staging a dataset
+            // with the eventual run's full command line must still work.
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            Assert.IsNull(Program.ValidateArgs(config), "a library should be tolerated");
+
+            AssertSpectraCacheError(c => { }, "--input <file");
+            AssertSpectraCacheError(c => c.InputScores = new List<string> { "a.scores.parquet" },
+                "not --input-scores");
+        }
+
+        private static void AssertSpectraCacheError(Action<OspreyConfig> mutate, string expected)
+        {
+            var config = TaskConfig(HpcTask.SpectraCache);
+            mutate(config);
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task SpectraCache");
+            StringAssert.Contains(err, expected);
+        }
+
+        // - PerFileScoring (mzML in) --
 
         [TestMethod]
         public void TestValidatePerFileScoringHappyPath()
@@ -105,7 +161,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "not --input-scores");
         }
 
-        // -- PerFileRescore (--input-scores in) --
+        // - PerFileRescore (--input-scores in) --
 
         [TestMethod]
         public void TestValidatePerFileRescoreHappyPath()
@@ -155,12 +211,12 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "not -i <mzML>");
         }
 
-        // -- FirstJoin (--input-scores in, 2+ files, reconciliation on) --
+        // - FirstPassFDR (--input-scores in, 2+ files, reconciliation on) --
 
         [TestMethod]
-        public void TestValidateFirstJoinHappyPath()
+        public void TestValidateFirstPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -168,9 +224,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRequiresInputScores()
+        public void TestValidateFirstPassFdrRequiresInputScores()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
@@ -180,9 +236,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRejectsInputMzml()
+        public void TestValidateFirstPassFdrRejectsInputMzml()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputFiles = new List<string> { "a.mzML" };
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
@@ -194,9 +250,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRequiresLibraryAndOutput()
+        public void TestValidateFirstPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -205,11 +261,11 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRejectsSingleFile()
+        public void TestValidateFirstPassFdrRejectsSingleFile()
         {
-            // FirstJoin writes the Stage 5 -> Stage 6 boundary pair, only
+            // FirstPassFDR writes the Stage 5 -> Stage 6 boundary pair, only
             // meaningful with siblings; a single-file run errors fast.
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "only.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -220,9 +276,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstJoinRequiresReconciliationEnabled()
+        public void TestValidateFirstPassFdrRequiresReconciliationEnabled()
         {
-            var config = TaskConfig(HpcTask.FirstJoin);
+            var config = TaskConfig(HpcTask.FirstPassFdr);
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -232,12 +288,12 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "Reconciliation.Enabled");
         }
 
-        // -- MergeNode (reconciled --input-scores in) --
+        // - SecondPassFDR (reconciled --input-scores in) --
 
         [TestMethod]
-        public void TestValidateMergeNodeHappyPath()
+        public void TestValidateSecondPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -245,12 +301,12 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRequiresInputScores()
+        public void TestValidateSecondPassFdrRequiresInputScores()
         {
             // Uncontested gap from ultrareview: --task SecondPassFDR without
             // --input-scores (even with -i mzML) used to pass validation and
             // silently run the full pipeline. It must now fail fast.
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -261,9 +317,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRequiresInputScoresNoMzml()
+        public void TestValidateSecondPassFdrRequiresInputScoresNoMzml()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
@@ -273,9 +329,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRequiresLibraryAndOutput()
+        public void TestValidateSecondPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -284,9 +340,9 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRejectsInputMzml()
+        public void TestValidateSecondPassFdrRejectsInputMzml()
         {
-            var config = TaskConfig(HpcTask.MergeNode);
+            var config = TaskConfig(HpcTask.SecondPassFdr);
             config.InputFiles = new List<string> { "a.mzML" };
             config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
@@ -297,7 +353,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "cannot be combined with --input");
         }
 
-        // -- Default (no --task): full pipeline from -i mzML or --input-scores --
+        // - Default (no --task): full pipeline from -i mzML or --input-scores --
 
         [TestMethod]
         public void TestValidateDefaultFullHappyPath()
@@ -382,10 +438,10 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestResolveTaskFirstJoin()
+        public void TestResolveTaskFirstPassFdr()
         {
             Assert.IsNull(Program.ResolveTask("FirstPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.FirstJoin, task);
+            Assert.AreEqual(HpcTask.FirstPassFdr, task);
         }
 
         [TestMethod]
@@ -396,10 +452,17 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestResolveTaskMergeNode()
+        public void TestResolveTaskSecondPassFdr()
         {
             Assert.IsNull(Program.ResolveTask("SecondPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.MergeNode, task);
+            Assert.AreEqual(HpcTask.SecondPassFdr, task);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskSpectraCache()
+        {
+            Assert.IsNull(Program.ResolveTask("SpectraCache", out HpcTask task));
+            Assert.AreEqual(HpcTask.SpectraCache, task);
         }
 
         [TestMethod]
@@ -426,15 +489,20 @@ namespace pwiz.Osprey.Test
             // tasks' IsIncluded methods read. Mirrors PipelineMembershipTest.
             //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
             //   PerFileScoring   | true   | false           | false
-            //   FirstJoin        | false  | true            | false
+            //   FirstPassFDR        | false  | true            | false
             //   PerFileRescore   | true   | false           | false
-            //   MergeNode        | false  | false           | true
+            //   SecondPassFDR        | false  | false           | true
+            //   SpectraCache     | false  | false           | false
+            // SpectraCache is all-false because it drives no membership at all:
+            // it runs its own one-task pipeline (AnalysisPipeline.SpectraCachePipeline)
+            // rather than gating tasks inside the canonical one.
             var cases = new (HpcTask Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
             {
                 (HpcTask.PerFileScoring, true,  false, false),
-                (HpcTask.FirstJoin,      false, true,  false),
+                (HpcTask.FirstPassFdr,      false, true,  false),
                 (HpcTask.PerFileRescore, true,  false, false),
-                (HpcTask.MergeNode,      false, false, true),
+                (HpcTask.SecondPassFdr,      false, false, true),
+                (HpcTask.SpectraCache,   false, false, false),
             };
             foreach (var c in cases)
             {
@@ -619,7 +687,7 @@ namespace pwiz.Osprey.Test
                 File.WriteAllText(Path.Combine(dir, "b.scores.parquet"), string.Empty); // no reconciled sibling
                 File.WriteAllText(Path.Combine(dir, "c.scores-reconciled.parquet"), string.Empty); // no original
                 // An input stem ending in ".reconciled" stays an original (Copilot
-                // ambiguity regression guard) -- its Stage 4 file must be returned
+                // ambiguity regression guard) - its Stage 4 file must be returned
                 // as an original, not misread as a reconciled output.
                 File.WriteAllText(Path.Combine(dir, "d.reconciled.scores.parquet"), string.Empty);
                 var resolved = Program.ResolveInputScores(new List<string> { dir });

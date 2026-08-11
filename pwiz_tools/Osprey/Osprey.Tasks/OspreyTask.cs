@@ -36,10 +36,10 @@ namespace pwiz.Osprey.Tasks
     /// transitions documented in
     /// <c>pwiz_tools/Osprey/Osprey-workflow.html</c>:
     /// <list type="bullet">
-    ///   <item>per-file scoring (Stages 1-4) → first join</item>
+    ///   <item>per-file scoring (Stages 1-4) → FirstPassFDR</item>
     ///   <item>first-pass FDR + reconciliation planning (Stage 5)</item>
-    ///   <item>per-file rescore + gap-fill (Stage 6) → second join</item>
-    ///   <item>merge-node second-pass FDR + protein FDR + blib (Stage 7)</item>
+    ///   <item>per-file rescore + gap-fill (Stage 6) → SecondPassFDR</item>
+    ///   <item>SecondPassFDR second-pass FDR + protein FDR + blib (Stage 7)</item>
     /// </list>
     ///
     /// Phase B adds <see cref="Inputs"/> / <see cref="Outputs"/> /
@@ -169,10 +169,17 @@ namespace pwiz.Osprey.Tasks
         /// integrity check downstream. Tasks with extra per-task state
         /// that affects their output (e.g. <see cref="SearchIdentity.ReconciliationParameterHash"/>
         /// for the rescore task) override and append.
+        ///
+        /// The peak-pick arm is in the DEFAULT rather than in the overrides
+        /// because it is the one lever that reaches every task: the pick
+        /// selects which peak a precursor's row describes, in Stage 4, and
+        /// everything downstream inherits that choice. Putting it here also
+        /// means a task added later carries it without having to know.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}",
+            @"search={0};library={1}{2}",
             ctx.Config.Identity.SearchParameterHash(),
-            ctx.Config.Identity.LibraryIdentityHash());
+            ctx.Config.Identity.LibraryIdentityHash(),
+            OspreyEnvironment.PickValidityKeySuffix());
     }
 }

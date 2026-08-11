@@ -336,5 +336,208 @@ namespace pwiz.Osprey.FDR
             Array.Copy(tmpDecoy, winDecoy, n);
             return n;
         }
+
+        /// <summary>
+        /// Per-row reproducibility score for the experiment-wide competitions when
+        /// OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: every row receives its (base_id, target/decoy)
+        /// group's MEAN of best-N per-run scores - the mean of the group's N highest member
+        /// scores, with each of the (N - k) undetected runs of a k-run group (k &lt; N)
+        /// contributing the decoy floor. Stage-4 dedup guarantees at most one entry per base_id
+        /// per file, so a group's members ARE its per-run scores and the top-N are the top-N
+        /// distinct runs (the invariant behind nRunsDetected == observation count).
+        ///
+        /// Because every row of a group gets the SAME value, feeding this array to the existing
+        /// max-based experiment competition (<see cref="CompeteAll"/> - the max-per-base_id
+        /// reduction becomes a no-op) and the
+        /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> roll-up yields precursor =
+        /// mean(best-N) and peptide = max over its precursors, with decoys treated identically so
+        /// the null stays honest. The roll-up stops at PEPTIDE: protein FDR ranks groups by the
+        /// max RAW per-peptide SVM score (<c>ProteinFdr.CollectBestPeptideScores</c>), which never
+        /// reads this aggregate, so mean(best-N) reaches protein-level results only indirectly,
+        /// through which peptides clear the experiment-q gate.
+        ///
+        /// A single-file run - every group at one member - is the uniform monotonic transform
+        /// x -&gt; (x + (N - 1) * floor) / N, so ranking and every q are unchanged from the max
+        /// path. The same holds for any N at or above the largest observation count, which is why
+        /// N above the run count is refused rather than silently accepted
+        /// (<see cref="OspreyEnvironment.ValidateExperimentAggSettings"/>).
+        /// </summary>
+        internal static double[] ComputeBaseIdMeanBestN(double[] scores, bool[] labels, uint[] entryIds, int bestN)
+        {
+            int len = scores.Length;
+            var targets = new Dictionary<uint, MeanBestNAcc>();
+            var decoys = new Dictionary<uint, MeanBestNAcc>();
+            var decoyScores = new List<double>();
+            for (int idx = 0; idx < len; idx++)
+            {
+                uint baseId = entryIds[idx] & PercolatorEntry.BASE_ID_MASK;
+                var dict = labels[idx] ? decoys : targets;
+                // Non-finite scores are dropped from the floor SAMPLE, matching both
+                // StreamingDecoyFloor.Add and MeanBestNAcc's own admission rule. NaN would give
+                // List.Sort an inconsistent comparer and an undefined order, so the median read
+                // out of it would be arbitrary. Infinity is worse than that: it only has to reach
+                // the MEAN branch below to make the floor infinite, and AggregateScore's
+                // (n - _len) * floor term is then 0 * Infinity == NaN for a FULLY detected group -
+                // so one infinite decoy score would poison every base_id in the experiment through
+                // the shared floor, not just its own group.
+                if (labels[idx] && MeanBestNAcc.IsUsable(scores[idx]))
+                    decoyScores.Add(scores[idx]);
+                if (dict.TryGetValue(baseId, out MeanBestNAcc acc))
+                {
+                    acc.Add(scores[idx], bestN);
+                    dict[baseId] = acc;
+                }
+                else
+                {
+                    dict[baseId] = MeanBestNAcc.First(scores[idx], bestN);
+                }
+            }
+
+            double floor = ComputeFloorFromDecoyScores(decoyScores);
+
+            var aggScore = new double[len];
+            for (int idx = 0; idx < len; idx++)
+            {
+                uint baseId = entryIds[idx] & PercolatorEntry.BASE_ID_MASK;
+                var dict = labels[idx] ? decoys : targets;
+                aggScore[idx] = dict[baseId].AggregateScore(floor, bestN);
+            }
+            return aggScore;
+        }
+
+        /// <summary>Per-base_id accumulator for <see cref="ComputeBaseIdMeanBestN"/>: keeps the top-N
+        /// member scores (the N best runs) in a fixed-capacity buffer, ascending. Value type with a
+        /// small backing array -- the array is mutated in place, the length/count fields are copied
+        /// back, so callers MUST write the struct back after <see cref="Add"/> (both existing call
+        /// sites do). Internal (not private) so the streaming
+        /// <see cref="StreamingFdr.StreamingFirstPassQ"/> can hold it as a field without tripping
+        /// inconsistent-accessibility (CS0052). Allocates one length-N array per accumulator --
+        /// acceptable for the opt-in mean(best-N) experiment path (never the flag-off golden). For
+        /// N=2 the aggregate is bit-identical to the former best-2 form (IEEE addition is
+        /// commutative).</summary>
+        internal struct MeanBestNAcc
+        {
+            private double[] _top; // capacity N; _top[0.._len-1] holds the kept scores ascending
+            private int _len;      // slots used == min(Count, N)
+            public int Count;      // total observations seen
+
+            /// <summary>True for a score this accumulator will admit. NaN and +/-Infinity are both
+            /// excluded: a NaN can never be evicted (every comparison against it is false) and an
+            /// infinite floor makes AggregateScore's <c>(n - _len) * floor</c> term 0*Inf = NaN
+            /// even for a FULLY detected group, so a single bad value would poison the entire
+            /// experiment rather than one base_id. Spelled out rather than double.IsFinite because
+            /// net472 does not have it.</summary>
+            internal static bool IsUsable(double score)
+            {
+                return !double.IsNaN(score) && !double.IsInfinity(score);
+            }
+
+            public static MeanBestNAcc First(double score, int n)
+            {
+                // An unusable FIRST observation must not seed the buffer - it would occupy _top[0]
+                // permanently for exactly the reasons Add guards against. Seeding empty is correct
+                // and not a special case: AggregateScore over _len == 0 is (n * floor) / n, the
+                // floor, which is what "this unit has no valid observations" should score.
+                var top = new double[n];
+                if (!IsUsable(score))
+                    return new MeanBestNAcc { _top = top, _len = 0, Count = 0 };
+                top[0] = score;
+                return new MeanBestNAcc { _top = top, _len = 1, Count = 1 };
+            }
+
+            public void Add(double score, int n)
+            {
+                // A NaN would be permanent: `_top[i] > score` is false for NaN so it lands in the
+                // highest slot and breaks the ascending invariant, `score > _top[0]` is false
+                // against NaN so it can never be evicted, and AggregateScore then returns NaN for
+                // EVERY row of this base_id - which loses the competition silently (a NaN fails
+                // `tScore > decoyEntry.Value`) and can strand a whole peptide in
+                // AccumulatePeptideReps. The MAX aggregation this replaces was structurally immune,
+                // so the guard is new surface, not an inherited gap. Dropping the observation
+                // matches what max did with it: nothing.
+                if (!IsUsable(score))
+                    return;
+                Count++;
+                if (_len < n)
+                {
+                    // Still filling toward N: insert keeping the buffer ascending.
+                    int i = _len - 1;
+                    while (i >= 0 && _top[i] > score)
+                    {
+                        _top[i + 1] = _top[i];
+                        i--;
+                    }
+                    _top[i + 1] = score;
+                    _len++;
+                }
+                else if (score > _top[0])
+                {
+                    // Full: drop the smallest kept score, slot this one in ascending.
+                    int i = 0;
+                    while (i + 1 < _len && _top[i + 1] < score)
+                    {
+                        _top[i] = _top[i + 1];
+                        i++;
+                    }
+                    _top[i] = score;
+                }
+            }
+
+            public double AggregateScore(double floor, int n)
+            {
+                double sum = 0.0;
+                for (int i = 0; i < _len; i++)
+                    sum += _top[i];
+                // The (n - _len) runs not detected each contribute the missing-run floor.
+                sum += (n - _len) * floor;
+                return sum / n;
+            }
+        }
+
+        /// <summary>The missing-run floor for <see cref="ComputeBaseIdMeanBestN"/>: the expected
+        /// score of a NON-detection, estimated from the decoy (null) score distribution. Default =
+        /// the decoy MEDIAN (the typical null score, negative on average -- NOT 0, which is the SVM
+        /// decision boundary and would drag a missing unit UP toward detection).
+        /// OSPREY_MEANBEST2_FLOOR_MEAN switches to the decoy mean; OSPREY_MEANBEST2_FLOOR_PCT to a
+        /// low decoy percentile (a harder reproducibility cut). Returns 0 only when there are no
+        /// decoys. Sorts <paramref name="decoyScores"/> in place.
+        ///
+        /// Internal (not private) so the parity test can compare it DIRECTLY against its bounded
+        /// streaming twin (<c>StreamingFdr.StreamingFirstPassQ.ComputeDecoyFloor</c>). The two are
+        /// different estimators of the same statistic - an exact sorted quantile versus a
+        /// fixed-width histogram - so they can never be asserted equal through the q-values alone,
+        /// and the difference was previously untestable at any level.</summary>
+        internal static double ComputeFloorFromDecoyScores(List<double> decoyScores)
+        {
+            if (decoyScores.Count == 0)
+                return 0.0;
+            if (OspreyEnvironment.MeanBest2FloorMean)
+            {
+                double sum = 0.0;
+                foreach (double s in decoyScores)
+                    sum += s;
+                return sum / decoyScores.Count;
+            }
+            decoyScores.Sort(); // Array.Sort OK: median/percentile of decoy scores -- tie order cannot change the floor value
+            double pct = OspreyEnvironment.MeanBest2FloorPercentile ?? 50.0;
+            return PercentileOfSorted(decoyScores, pct);
+        }
+
+        /// <summary>Linear-interpolated percentile of an ascending-sorted list (pct in [0,100];
+        /// 50 = median). Deterministic.</summary>
+        private static double PercentileOfSorted(List<double> sorted, double pct)
+        {
+            if (sorted.Count == 1 || pct <= 0.0)
+                return sorted[0];
+            if (pct >= 100.0)
+                return sorted[sorted.Count - 1];
+            double rank = pct / 100.0 * (sorted.Count - 1);
+            int lo = (int)Math.Floor(rank);
+            int hi = (int)Math.Ceiling(rank);
+            if (lo == hi)
+                return sorted[lo];
+            double frac = rank - lo;
+            return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
+        }
     }
 }

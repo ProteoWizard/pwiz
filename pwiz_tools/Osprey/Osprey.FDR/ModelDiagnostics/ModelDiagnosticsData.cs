@@ -91,7 +91,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// is present only when the second pass RETRAINED Percolator; under
         /// <c>OSPREY_PASS2_QVALUE=transfer</c> it is null and the report's structural
         /// cards degrade to a "pass-2 model n/a" note, while the q-driven half still
-        /// renders. Built by the end-of-run writer (MergeNodeTask) via
+        /// renders. Built by the end-of-run writer (SecondPassFdrTask) via
         /// <see cref="BuildPass2"/>. Shares <see cref="FeatureHistEdges"/> with pass 1
         /// (same standardized bins).
         /// </summary>
@@ -588,7 +588,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // ---- entrapment FDP calibration (all q-scope views) ----
             // Pass 1 (pre-compaction, this Stage-5 pool). Pass 2 (the final
             // reported pool) is appended later by the end-of-run writer
-            // (MergeNodeTask) via BuildPass2FdpViews over the same shared code.
+            // (SecondPassFdrTask) via BuildPass2FdpViews over the same shared code.
             if (data.HasEntrapment)
             {
                 double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
@@ -626,7 +626,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <summary>
         /// Build the complete pass-2 (final reported pool) bundle behind the report's
         /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
-        /// (MergeNodeTask) with the post-compaction, second-pass-q-valued pool
+        /// (SecondPassFdrTask) with the post-compaction, second-pass-q-valued pool
         /// (<c>RescoredEntries</c>) -- the same pool the pass-2 FDRBench TSV is written
         /// from -- so the HTML pass-2 cards and stock FDRBench see the identical
         /// peptides and q-values. The classification / pairing / ratio inputs come
@@ -759,7 +759,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <summary>
         /// Build the pass-2 model view (feature table + composite score histogram)
         /// from the second-pass Percolator model and the post-reconciliation pool.
-        /// Called by the end-of-run writer (MergeNodeTask) whenever the second pass
+        /// Called by the end-of-run writer (SecondPassFdrTask) whenever the second pass
         /// retrained Percolator on the reported pool -- i.e. any reconciled run --
         /// so both models can be shown side by side. Returns null when no second-pass
         /// contributions are available (single-pass run or a rehydrated resume).
@@ -787,7 +787,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <summary>
         /// Build the pass-2 FDP calibration views from the final reported
         /// (post-compaction, second-pass q-valued) pool. Called by the end-of-run
-        /// writer (MergeNodeTask) with <c>RescoredEntries</c> -- the same pool the
+        /// writer (SecondPassFdrTask) with <c>RescoredEntries</c> -- the same pool the
         /// pass-2 FDRBench TSV is written from -- so the HTML pass-2 curve and
         /// stock FDRBench see the identical peptides and q-values. Returns an empty
         /// list when the pool carries no entrapment (nothing to calibrate against).

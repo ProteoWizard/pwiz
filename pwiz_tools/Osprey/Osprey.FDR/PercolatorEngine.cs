@@ -33,7 +33,7 @@ namespace pwiz.Osprey.FDR
     /// <see cref="PercolatorEntry"/> input from <see cref="FdrEntry"/> stubs,
     /// dispatch to the direct or streaming SVM path, and write the resulting
     /// scores / q-values back onto the stubs. Moved out of the Tasks layer
-    /// (the former <c>FirstJoinTask.RunPercolatorFdr</c>) so FDR orchestration
+    /// (the former <c>FirstPassFdrTask.RunPercolatorFdr</c>) so FDR orchestration
     /// physically lives in the FDR project; the Tasks layer calls this through
     /// a thin facade, passing <c>ctx.LogInfo</c> as the log sink and the PIN
     /// feature names. Pure: takes data + a log delegate, never the pipeline
@@ -42,6 +42,12 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public static class PercolatorEngine
     {
+        /// <summary>The <c>passLabel</c> value that marks the FIRST pass. Named rather than
+        /// repeated as a literal because OSPREY_EXPERIMENT_AGG now gates on it: a drift between
+        /// the default and the comparison would silently re-enable the aggregation on the 2nd
+        /// pass, which is the defect this constant exists to stop recurring.</summary>
+        public const string FIRST_PASS_LABEL = @"First-pass";
+
         /// <summary>
         /// Run Percolator-based FDR control. Builds PercolatorEntry objects from
         /// FdrEntry stubs and runs Percolator, then maps results back onto the
@@ -64,7 +70,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             out FeatureContributions contributions,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass",
+            string passLabel = FIRST_PASS_LABEL,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
             Action<PercolatorResults> captureModel = null,
             PercolatorResults frozenModel = null)
@@ -126,18 +132,25 @@ namespace pwiz.Osprey.FDR
             // is a pure hand-off, no behavior change on any production path.
             contributions = results.FeatureContributions;
 
+            // A diagnostic-only (*Only) dump fired inside the engine; it left the
+            // run as a pure no-op and signalled here. Stop without scoring the
+            // stubs and let the Tasks-layer caller perform the process exit.
+            //
+            // CHECKED BEFORE captureModel, not after. On an abort DispatchSvm returns
+            // `new PercolatorResults { DiagnosticAbort = true }` with FoldWeights,
+            // FoldBiases and Standardizer all NULL - nothing was trained. Handing that
+            // to the frozen-model hook passes an untrained model off as a trained one,
+            // and the 2nd pass would then re-score against nulls. The sibling path in
+            // this same file (RunStreamingFirstPass) already orders it this way.
+            if (results.DiagnosticAbort)
+                return true;
+
             // Frozen-model capture hook (OSPREY_PASS2_QVALUE=transfer): the caller
             // can grab the trained model (FoldWeights / FoldBiases / Standardizer)
             // here so a later 2nd-pass step re-scores reconciled features with this
             // FROZEN 1st-pass model instead of retraining. No-op (null) on every
             // default percolator run, so scoring stays byte-identical.
             captureModel?.Invoke(results);
-
-            // A diagnostic-only (*Only) dump fired inside the engine; it left the
-            // run as a pure no-op and signalled here. Stop without scoring the
-            // stubs and let the Tasks-layer caller perform the process exit.
-            if (results.DiagnosticAbort)
-                return true;
 
             // Zip the SVM results back onto the FdrEntry stubs by position
             // (replaces the former psm_id-keyed resultMap re-join).
@@ -217,7 +230,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass",
+            string passLabel = FIRST_PASS_LABEL,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
@@ -253,7 +266,7 @@ namespace pwiz.Osprey.FDR
 
             // The projection path always STREAMS its features per file (for both the
             // 1st and 2nd pass), so a per-file feature loader is mandatory -- the
-            // 1st-pass caller (FirstJoinTask) and the 2nd-pass caller (Pass2FdrSidecar)
+            // 1st-pass caller (FirstPassFdrTask) and the 2nd-pass caller (Pass2FdrSidecar)
             // both supply one. A null loader reaching here is a bug, not a cue to fall
             // back to a resident build (that is the flag-off FdrEntry oracle's job).
             if (loadFileFeatures == null)
@@ -317,7 +330,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass",
+            string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
         {
@@ -577,7 +590,8 @@ namespace pwiz.Osprey.FDR
                     "{0}: applying FROZEN 1st-pass model to all {1} entries (no retrain) + " +
                     "target-decoy competition for q/PEP.", passLabel, n));
                 return PercolatorScorer.ScorePopulationAndComputeFdr(
-                    percEntries, frozenModel, percConfig, loadFileFeatures);
+                    percEntries, frozenModel, percConfig, loadFileFeatures,
+                    applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
             }
 
             // Pull labels / entry IDs / peptides into flat arrays for the
@@ -669,8 +683,12 @@ namespace pwiz.Osprey.FDR
             // 4. Apply averaged model to ALL entries and compute q-values. The
             //    score pass reloads features one file at a time via loadFileFeatures
             //    (issue #4355 Phase 4), keeping only the scalar scores resident.
+            //    applyExperimentAgg mirrors RunStreamingIntoProjection's gate exactly -
+            //    the resident and projection passes are each other's byte-identity
+            //    oracle, so OSPREY_EXPERIMENT_AGG must engage on the same pass in both.
             return PercolatorScorer.ScorePopulationAndComputeFdr(
-                percEntries, trainResults, percConfig, loadFileFeatures);
+                percEntries, trainResults, percConfig, loadFileFeatures,
+                applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
         }
 
         /// <summary>
@@ -915,9 +933,16 @@ namespace pwiz.Osprey.FDR
             //    straight onto the projection rows and streaming the q-value outputs
             //    to the sink (no PercolatorResult list). Reuses the flat identity
             //    arrays already built above.
+            // OSPREY_EXPERIMENT_AGG applies to the FIRST pass only. The 2nd pass re-runs this same
+            // projection scorer over the post-reconciliation survivor pool, where the aggregation's
+            // premises no longer hold (appended gap-fill rows inflate a group's run count with
+            // fabricated detections; the decoy floor would come from the compaction-depleted
+            // survivor decoys rather than the full null). Before this gate the shared QMap
+            // primitives re-aggregated there silently.
             PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
-                loadFileFeatures, sink, captureContributions);
+                loadFileFeatures, sink, captureContributions,
+                applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
             return false;
         }
 
@@ -954,7 +979,7 @@ namespace pwiz.Osprey.FDR
         /// memory-bounded FLAT form -- <see cref="PercolatorQValues.ClampExperimentQToBestRunFlat"/>
         /// over the score-pass scalar arrays -- so the full FdrEntry buffer need not be resident
         /// on the streaming path. This resident overload remains for the post-Stage-6 pre-blib
-        /// re-clamp (<c>MergeNodeTask</c>), which runs on the already-compacted survivor buffer.
+        /// re-clamp (<c>SecondPassFdrTask</c>), which runs on the already-compacted survivor buffer.
         /// Both produce identical floors (same min/max over the same values).
         /// </summary>
         public static void ClampExperimentQToBestRun(

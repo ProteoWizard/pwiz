@@ -79,7 +79,7 @@ SpectrumList_BTDXImpl::SpectrumList_BTDXImpl(shared_ptr<istream> is, const MSDat
 
 const SpectrumIdentity& SpectrumList_BTDXImpl::spectrumIdentity(size_t index) const
 {
-    if (index > index_.size())
+    if (index >= index_.size())
         throw runtime_error("[SpectrumList_BTDX::spectrumIdentity()] Index out of bounds.");
 
     return index_[index];
@@ -286,7 +286,7 @@ class HandlerCompound : public SAXParser::Handler
 SpectrumPtr SpectrumList_BTDXImpl::spectrum(size_t index, bool getBinaryData) const
 {
     boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
-    if (index > index_.size())
+    if (index >= index_.size())
         throw runtime_error("[SpectrumList_BTDX::spectrum()] Index out of bounds.");
 
     // returned cached Spectrum if possible

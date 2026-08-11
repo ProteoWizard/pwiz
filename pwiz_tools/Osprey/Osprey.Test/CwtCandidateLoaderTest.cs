@@ -30,7 +30,7 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Unit tests for <see cref="CwtCandidateLoader"/>, the Stage 6 CWT-candidate
-    /// load + bounds-validation seam extracted from FirstJoinTask.PlanStage6.
+    /// load + bounds-validation seam extracted from FirstPassFdrTask.PlanStage6.
     /// Covers the pure <see cref="CwtCandidateLoader.MaxParquetIndex"/> helper that
     /// drives the in-range gate; the parquet load itself stays parity-locked and
     /// is characterized by regression.ps1.

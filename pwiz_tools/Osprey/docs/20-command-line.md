@@ -171,7 +171,7 @@ four single-task workers — **one node = one `--task`**:
 
 ```
 PerFileScoring (split, per file) → FirstPassFDR (join, all files)
-    → PerFileRescoring (split, per file) → SecondPassFDR (merge node)
+    → PerFileRescoring (split, per file) → SecondPassFDR (join, all files)
 ```
 
 Pass the **same** `--library` and search options to every task; the parquet integrity
@@ -194,8 +194,8 @@ osprey --task SecondPassFDR     --input-scores ./reconciled_dir -l hela.tsv -o o
 ```
 
 - `--input-scores` takes a **directory** (globbed and sorted internally) or an explicit
-  file list (consumed in the order given). First-join reconciliation is order-sensitive,
-  so for the join tasks pass a directory or a deterministically sorted list.
+  file list (consumed in the order given). FirstPassFDR reconciliation is order-sensitive,
+  so for `FirstPassFDR` and `SecondPassFDR` pass a directory or a deterministically sorted list.
 - Rehydration sidecars must travel with their parquet into each worker's working
   directory. Let the scheduler fan out (one file per split process) rather than
   `--parallel-files`, which is the single-node multi-file mode.
@@ -211,10 +211,12 @@ CLI; they are read once at process start. The ones most likely to matter:
 
 | Variable | What it does | Doc |
 |----------|--------------|-----|
-| `OSPREY_PICK_LDA` / `OSPREY_PICK_LDA_MODEL` | Turn on the learned linear pick model (built-in or a JSON file) | [06](06-peak-detection.md) |
+| `OSPREY_PICK_LDA` / `OSPREY_PICK_LDA_MODEL` | Learned linear pick model, **on by default**; `OSPREY_PICK_LDA=0` restores the legacy product pick, and `OSPREY_PICK_LDA_MODEL` overrides the built-in with a JSON file | [06](06-peak-detection.md) |
 | `OSPREY_PICK_DUMP_CANDIDATES` | Dump per-candidate pick terms for offline model training | [peak-model-training.md](peak-model-training.md) |
-| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode (`percolator` / `transfer` / `transfer-compete` / `protein-compact`) | [12](12-second-pass-fdr.md) |
+| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer-compete` / `transfer`. An unrecognized value is a startup ERROR - `percolator` was removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters (with `--fdr-method gbdt`) | [07](07-fdr-control.md) |
+| `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
+| `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps (also via `-d`) | [18](18-peptide-trace.md) |
 
 The full set is enumerated in the relevant algorithm docs; there is no single flat

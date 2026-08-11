@@ -228,12 +228,13 @@ namespace pwiz.Osprey.Scoring
             logInfo = logInfo ?? (_ => { });
             logInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
 
-            // Build set of all target (stripped) sequences for collision detection.
+            // Build set of all target (stripped) sequences for collision detection, I->L
+            // normalized so isobaric collisions are visible (see NormalizeIsoleucine).
             var targetSequences = new HashSet<string>(StringComparer.Ordinal);
             foreach (var t in targets)
             {
                 if (!t.IsDecoy)
-                    targetSequences.Add(t.Sequence);
+                    targetSequences.Add(NormalizeIsoleucine(t.Sequence));
             }
 
             // Generate decoys in parallel (matches Rust's par_iter approach).
@@ -261,7 +262,8 @@ namespace pwiz.Osprey.Scoring
                 int[] mapping;
                 string reversedSeq = gen.ReverseSequence(target.Sequence, out mapping);
 
-                if (reversedSeq != target.Sequence && !targetSequences.Contains(reversedSeq) &&
+                if (reversedSeq != target.Sequence &&
+                    !targetSequences.Contains(NormalizeIsoleucine(reversedSeq)) &&
                     IsCandidateAcceptable(target.Sequence, reversedSeq))
                 {
                     var decoy = BuildDecoyFromSequence(target, reversedSeq, mapping, omitFragments);
@@ -277,7 +279,8 @@ namespace pwiz.Osprey.Scoring
                 for (int cycleLength = 1; cycleLength <= maxRetries; cycleLength++)
                 {
                     string cycledSeq = gen.CycleSequence(target.Sequence, cycleLength, out mapping);
-                    if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq) &&
+                    if (cycledSeq != target.Sequence &&
+                        !targetSequences.Contains(NormalizeIsoleucine(cycledSeq)) &&
                         IsCandidateAcceptable(target.Sequence, cycledSeq))
                     {
                         var decoy = BuildDecoyFromSequence(target, cycledSeq, mapping, omitFragments);
@@ -384,6 +387,31 @@ namespace pwiz.Osprey.Scoring
                     matches++;
             }
             return (double)matches / decoyLadder.Length <= MAX_FRAGMENT_OVERLAP;
+        }
+
+        /// <summary>
+        /// Normalize isoleucine to leucine for collision detection.
+        ///
+        /// I and L have identical residue masses (113.08406), so a decoy differing from a real
+        /// target only by I&lt;-&gt;L substitutions is precursor-mass-identical AND produces an
+        /// identical b/y ladder - indistinguishable from that target by mass spectrometry. It
+        /// is therefore not a valid null: it is detected wherever its target twin is, and every
+        /// such detection is counted as a decoy hit when it is really a target hit, which
+        /// deflates the estimated FDR.
+        ///
+        /// This SUBSUMES the exact-string collision check rather than adding to it, because a
+        /// sequence containing no isoleucine normalizes to itself.
+        ///
+        /// It is independent of <see cref="IsCandidateAcceptable"/>, which cannot catch this:
+        /// that gate compares a candidate to its OWN source target, while a collision here is
+        /// an isobaric match to a DIFFERENT target. That is why an exact-string audit of a
+        /// delivered library reports 0 and misses the population entirely. Measured over the
+        /// 1,390,979-target Astral set with the overlap gate on, simulating this path: 0 exact
+        /// collisions and 742 I/L-isobaric ones (0.0534%), e.g. AAEESLR -&gt; LSEEAAR.
+        /// </summary>
+        internal static string NormalizeIsoleucine(string sequence)
+        {
+            return sequence.Replace('I', 'L');
         }
 
         /// <summary>
