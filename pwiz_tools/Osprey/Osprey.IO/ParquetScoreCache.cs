@@ -89,7 +89,7 @@ namespace pwiz.Osprey.IO
 
         // Schema column types and names are aligned with the Rust impl's
         // parquet schema (UInt32 for entry_id/scan_number, UInt8 for charge)
-        // so a C#-written parquet can be loaded by Rust's `--task FirstJoin`
+        // so a C#-written parquet can be loaded by Rust's `--join-at-pass=1`
         // (which does strict downcasts) and vice versa. Reading is also
         // strict: pre-2026-04-19 C#-written parquets used Int32 for these
         // fields and need to be regenerated via a fresh `--task PerFileScoring` run.
@@ -991,7 +991,18 @@ namespace pwiz.Osprey.IO
         /// fields so the Stage 6 reconciled parquet write-back round-
         /// trips them for every row, not just freshly rescored rows.
         /// </summary>
-        public static List<FdrEntry> LoadFullFdrEntries(string path)
+        /// <param name="path">The <c>.scores.parquet</c> / <c>.scores-reconciled.parquet</c> to read.</param>
+        /// <param name="scalarsOnly">Skip the 21 PIN feature columns and the four binary blob
+        /// columns (<c>cwt_candidates</c>, <c>fragment_mzs</c>, <c>fragment_intensities</c>,
+        /// <c>reference_xic_*</c>), leaving <see cref="FdrEntry.Features"/>,
+        /// <see cref="FdrEntry.CwtCandidates"/> and the four array fields null. Every SCALAR
+        /// field is set exactly as the full read sets it.
+        ///
+        /// <para>For callers that overlay reconciled values onto an existing buffer and then
+        /// immediately drop the heavy payload again: decoding ~25 columns per row to null them
+        /// a few lines later is the dominant cost of the Stage 6 rebuild, and it buys
+        /// nothing.</para></param>
+        public static List<FdrEntry> LoadFullFdrEntries(string path, bool scalarsOnly = false)
         {
             var entries = new List<FdrEntry>();
 
@@ -1000,7 +1011,7 @@ namespace pwiz.Osprey.IO
             {
                 var fieldsByName = BuildFieldLookup(reader);
                 for (int g = 0; g < reader.RowGroupCount; g++)
-                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count));
+                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, scalarsOnly));
             }
 
             return entries;
@@ -1201,7 +1212,8 @@ namespace pwiz.Osprey.IO
         /// (the same "skip this group" rule the whole-file loader applies).
         /// </summary>
         private static List<FdrEntry> ReadFdrEntryGroup(ParquetReader reader, int g,
-            IReadOnlyDictionary<string, DataField> fieldsByName, int startParquetIndex)
+            IReadOnlyDictionary<string, DataField> fieldsByName, int startParquetIndex,
+            bool scalarsOnly = false)
         {
             var entries = new List<FdrEntry>();
             using (var groupReader = reader.OpenRowGroupReader(g))
@@ -1215,29 +1227,47 @@ namespace pwiz.Osprey.IO
                 var startCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name);
                 var endCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name);
                 var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
-                var cwtCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_CWT_CANDIDATES.Name);
                 var boundsAreaCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name);
                 var boundsSnrCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_SNR.Name);
-                var fragMzCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_MZS.Name);
-                var fragIntCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_INTENSITIES.Name);
-                var refXicRtsCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_RTS.Name);
-                var refXicIntsCol = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_INTENSITIES.Name);
+                // The heavy columns: read only when the caller wants the payload.
+                var cwtCol = scalarsOnly
+                    ? null
+                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_CWT_CANDIDATES.Name);
+                var fragMzCol = scalarsOnly
+                    ? null
+                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_MZS.Name);
+                var fragIntCol = scalarsOnly
+                    ? null
+                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_INTENSITIES.Name);
+                var refXicRtsCol = scalarsOnly
+                    ? null
+                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_RTS.Name);
+                var refXicIntsCol = scalarsOnly
+                    ? null
+                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_INTENSITIES.Name);
 
                 if (entryIdCol == null || isDecoyCol == null)
                     return entries;
 
                 var featureCols = new double[NUM_PIN_FEATURES][];
-                for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                    featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                if (!scalarsOnly)
+                {
+                    for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                        featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                }
 
                 int rowCount = entryIdCol.Length;
                 for (int row = 0; row < rowCount; row++)
                 {
-                    var features = new double[NUM_PIN_FEATURES];
-                    for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                    double[] features = null;
+                    if (!scalarsOnly)
                     {
-                        double v = featureCols[f] != null ? featureCols[f][row] : 0.0;
-                        features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                        features = new double[NUM_PIN_FEATURES];
+                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                        {
+                            double v = featureCols[f] != null ? featureCols[f][row] : 0.0;
+                            features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                        }
                     }
 
                     List<CwtCandidate> cwt = null;

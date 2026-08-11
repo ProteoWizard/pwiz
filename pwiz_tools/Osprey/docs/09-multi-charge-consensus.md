@@ -16,10 +16,10 @@ Execution order (C# task graph):
 
 ```text
 Stage 4  Per-file scoring (PerFileScoringTask)          -> per-file .scores.parquet
-Stage 5  First-pass FDR (FirstJoinTask / FirstPassFDR)  -> run-level q-values on FdrEntry stubs
+Stage 5  First-pass FDR (FirstPassFdrTask / FirstPassFDR)  -> run-level q-values on FdrEntry stubs
    |         (compaction drops non-passing entries here)
    v
-Stage 6  Planning (Stage6Planner, invoked from FirstJoinTask):
+Stage 6  Planning (Stage6Planner, invoked from FirstPassFdrTask):
            Phase 1  MultiChargeConsensus.SelectRescoreTargets  <-- THIS DOC
            Phase 2  ConsensusRts.Compute        (cross-run, multi-file only)
            Phase 3  RefitCalibrations
@@ -31,12 +31,12 @@ Stage 6  Re-scoring (PerFileRescoreTask / PerFileRescoring):
            re-score via RunCoelutionScoring with BoundaryOverrides
    |
    v
-Stage 7  Second-pass FDR (MergeNode / SecondPassFDR)   -> final q-values
+Stage 7  Second-pass FDR (SecondPassFdrTask / SecondPassFDR)   -> final q-values
 ```
 
 The consensus selection itself is a pure, side-effect-free function; the re-scoring that acts on its output is shared with cross-run reconciliation (see 10-cross-run-reconciliation.md) and the forced-integration mechanism (see 11-boundary-overrides.md).
 
-Note on grouping vs. the Rust doc's four-line sketch: the Rust doc labels consensus "Step 4 / post first-pass FDR." In the C# port the same relationship holds — `SelectRescoreTargets` reads `RunPrecursorQvalue`, which is only populated after first-pass FDR — and consensus is invoked from `FirstJoinTask` (the first-pass FDR task) after compaction. `FirstJoinTask.cs:146` and `Stage6Planner.cs:115` are the two call sites (compute path and bundle-rehydrate path); both pass `config.RunFdr` as the threshold.
+Note on grouping vs. the Rust doc's four-line sketch: the Rust doc labels consensus "Step 4 / post first-pass FDR." In the C# port the same relationship holds — `SelectRescoreTargets` reads `RunPrecursorQvalue`, which is only populated after first-pass FDR — and consensus is invoked from `FirstPassFdrTask` (the first-pass FDR task) after compaction. `FirstPassFdrTask.cs:146` and `Stage6Planner.cs:115` are the two call sites (compute path and bundle-rehydrate path); both pass `config.RunFdr` as the threshold.
 
 ## Algorithm
 
@@ -103,7 +103,7 @@ The C# ranking uses the trained SVM discriminant (`FdrEntry.Score`) among FDR-pa
 ## Shared peak boundaries at blib output (Stage 7)
 
 The consensus leader above re-scores *divergent* charge states during Stage 6. A
-separate, final step at blib-write time (`MergeNodeTask.BuildSharedBoundaries`)
+separate, final step at blib-write time (`SecondPassFdrTask.BuildSharedBoundaries`)
 makes **all** charge states of one peptide in one file report the **same** RT
 window in the `.blib` `RetentionTimes` rows: per `(modified_sequence, fileName)`
 the window is taken from the entry with the **minimum run q-value**.
@@ -145,7 +145,7 @@ This stage has no dedicated on/off CLI flag — multi-charge consensus always ru
 
 | Flag / env var | Default | Effect on this stage |
 |---|---|---|
-| `--run-fdr <q>` | `0.01` (`OspreyConfig.RunFdr`) | The `fdrThreshold` passed to `SelectRescoreTargets` (`Stage6Planner.cs:115`, `FirstJoinTask.cs:146`). Gates which charge states are eligible to lead (`RunPrecursorQvalue <= threshold`) and, implicitly, whether a group produces any rescore target at all. |
+| `--run-fdr <q>` | `0.01` (`OspreyConfig.RunFdr`) | The `fdrThreshold` passed to `SelectRescoreTargets` (`Stage6Planner.cs:115`, `FirstPassFdrTask.cs:146`). Gates which charge states are eligible to lead (`RunPrecursorQvalue <= threshold`) and, implicitly, whether a group produces any rescore target at all. |
 | `--no-prefilter` | prefilter ON (`PrefilterEnabled = true`) | Only relevant to the re-scoring pass: with the prefilter on it is still skipped for boundary-override candidates (`PeakDataExtractor.cs:117`), so this flag does not change consensus re-scoring behavior; it affects only free (non-override) scoring. |
 | `--reconciliation-compaction-fdr`, `--experiment-fdr`, reconciliation flags | see 08/10 docs | Do not gate consensus selection itself, but reconciliation targets computed later are merged with (and override) consensus targets in the shared re-scoring pass. |
 | `OSPREY_DUMP_MULTICHARGE=1` | off | Diagnostic. Writes `cs_stage6_multicharge.tsv` (per-file entries + selected rescore targets) for cross-impl bisection (`Stage6Planner.cs:124-134`, `OspreyFileDiagnostics.cs:261-264`). |

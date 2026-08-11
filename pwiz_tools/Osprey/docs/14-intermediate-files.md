@@ -86,7 +86,7 @@ The schema mirrors Rust's `CalibrationMetadata` / `MzCalibration` / `RTCalibrati
 `ms2_calibration` / `rt_calibration` / `second_pass_rt` JSON keys). The metadata block written
 by `ResolveCalibration` (`PerFileScoringTask.cs:1702`) populates
 `calibration_successful`, `num_confident_peptides`, `num_sampled_precursors`, `timestamp`, and
-the DIA `isolation_scheme` (so an HPC merge node with no mzML can rehydrate the gap-fill m/z
+the DIA `isolation_scheme` (so an HPC SecondPassFDR node with no mzML can rehydrate the gap-fill m/z
 filter, `PerFileScoringTask.cs:1758`).
 
 **How calibration is reused in C#.** The Rust doc says the calibration file is reused when its
@@ -382,7 +382,7 @@ The C# `CurrentFormatVersion = 3` (`ReconciliationFile.cs:75`) and the envelope 
 fields **absent from the Rust doc's v1 example**:
 
 - `file_stems` (v2, `ReconciliationFile.cs:77`): the join-wide file set, so a per-file Stage 6
-  worker can compute the reconciliation parameter hash the `--task SecondPassFDR` merge node
+  worker can compute the reconciliation parameter hash the `--task SecondPassFDR` node
   expects (hash is over all joined files, not the worker's single parquet).
 - `first_pass_base_ids` (v3, `ReconciliationFile.cs:84`): the join-wide set of base_ids that
   survived first-pass compaction, sorted ascending. A per-file worker uses it to compact to

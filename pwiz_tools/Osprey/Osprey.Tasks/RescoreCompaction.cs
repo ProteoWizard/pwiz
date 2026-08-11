@@ -107,7 +107,7 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RescoreInputs.ReconciliationActions"/> with
         /// post-compaction <c>vec_idx</c> values.
         ///
-        /// Retained set: the join-wide first-pass base_id set that FirstJoin
+        /// Retained set: the join-wide first-pass base_id set that FirstPassFDR
         /// computed with every file in memory and persisted in the
         /// <c>reconciliation.json</c> envelope (v3 <c>first_pass_base_ids</c>,
         /// <see cref="RescoreInputs.GlobalFirstPassBaseIds"/>). Consuming it here
@@ -118,15 +118,15 @@ namespace pwiz.Osprey.Tasks
         /// silently diverge from the in-memory run (regression mode3).
         ///
         /// The survival predicate itself -- the peptide/precursor FDR gate plus
-        /// the protein-FDR rescue -- is applied UPSTREAM by FirstJoin when it
-        /// builds that set (<see cref="FirstJoinTask"/>'s compaction), matching
+        /// the protein-FDR rescue -- is applied UPSTREAM by FirstPassFDR when it
+        /// builds that set (<see cref="FirstPassFdrTask"/>'s compaction), matching
         /// Rust's <c>rescore::run_rescore</c>. This method only consumes the set.
         /// </summary>
         public static Stats Apply(RescoreInputs inputs)
         {
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
 
-            // 1. The join-wide passing base_id set is authoritative: FirstJoin
+            // 1. The join-wide passing base_id set is authoritative: FirstPassFDR
             //    computed it with every file in memory and persisted it in the
             //    reconciliation.json envelope. A worker missing it would have to
             //    recompute a PER-FILE subset and silently diverge from the
@@ -254,6 +254,14 @@ namespace pwiz.Osprey.Tasks
             }
             dropped = actionsById.Count;
             inputs.ReconciliationActions = newActions;
+            // Hand the retained set back on the bundle. FirstPassFdrTask's rehydrate needs it to
+            // rebuild any one file's survivors from disk (FirstPassSurvivorLoader), and
+            // re-deriving it there would mean re-reading the envelopes for the action term - the
+            // half that is NOT in GlobalFirstPassBaseIds. This method already holds both terms,
+            // and is the authority the streaming pre-filter is checked against above, so
+            // publishing it here is what keeps the rebuilt list equal to the buffer by
+            // construction.
+            inputs.RetainedBaseIds = firstPassBaseIds;
 
             return new Stats
             {

@@ -181,8 +181,8 @@ collapse the decoy null.
 
 `ProteinFdr.RunFirstPassProteinFdr` (`ProteinFdr.cs:804`), wrapped by
 `ProteinFdrEngine.RunFirstPass` (`ProteinFdrEngine.cs:61`), is invoked from
-`FirstJoinTask` **unconditionally** after first-pass peptide FDR and before
-compaction (`Osprey.Tasks/FirstJoinTask.cs:305-313`; the comment confirms it is
+`FirstPassFdrTask` **unconditionally** after first-pass peptide FDR and before
+compaction (`Osprey.Tasks/FirstPassFdrTask.cs:305-313`; the comment confirms it is
 "not gated on --protein-fdr").
 
 - Detected set = targets with `RunPeptideQvalue <= config.RunFdr`
@@ -202,7 +202,7 @@ consensus rescue gate (`10-cross-run-reconciliation.md`).
 ### Second pass — post-reconciliation, authoritative (`experiment_protein_qvalue`)
 
 `ProteinFdrEngine.RunSecondPass` (`ProteinFdrEngine.cs:145`) is invoked from
-`MergeNodeTask` (`Osprey.Tasks/MergeNodeTask.cs:255`) after second-pass peptide
+`SecondPassFdrTask` (`Osprey.Tasks/SecondPassFdrTask.cs:255`) after second-pass peptide
 FDR, on the compacted + reconciled + rescored pool.
 
 - Detected set = targets with
@@ -271,7 +271,7 @@ The stage-7 dump sorts rows by group q-value then sorted accessions
 
 | Flag / field | Default | Effect on this stage |
 |---|---|---|
-| `--protein-fdr <threshold>` | unset → `EffectiveProteinFdr = 0.01` (`OspreyConfig.cs:265,271`) | **Threshold only.** Parsimony + both protein-FDR passes always run regardless (`FirstJoinTask.cs:305`, `MergeNodeTask.cs:255`). The flag sets the q-value cutoff used when counting passing groups and the additive compaction rescue rule. |
+| `--protein-fdr <threshold>` | unset → `EffectiveProteinFdr = 0.01` (`OspreyConfig.cs:265,271`) | **Threshold only.** Parsimony + both protein-FDR passes always run regardless (`FirstPassFdrTask.cs:305`, `SecondPassFdrTask.cs:255`). The flag sets the q-value cutoff used when counting passing groups and the additive compaction rescue rule. |
 | `--shared-peptides {all\|razor\|unique}` | `all` (`OspreyConfig.cs:274`) | Selects the Step-5 shared-peptide policy (`ProteinFdr.cs:426-486`). `all` = contribute to every group; `razor` = single-group assignment; `unique` = drop shared peptides. Parsed at `OspreyCommandArgs.cs:158-177`. |
 | `--fdr-level {precursor\|peptide\|both}` | `precursor` (`OspreyConfig.cs:284`) | Sets `config.FdrLevel`, which is the **second-pass** detected-peptide gate level (`ProteinFdrEngine.cs:171`). The CLI does **not** accept `protein` (`OspreyCommandArgs.cs:138-157`) and the enum has no `Protein` variant (`OspreyConfig.cs:411-416`). |
 | `--run-fdr <v>` | 0.01 | Used as the 1× Savitski picked-protein gate in both passes (`ProteinFdr.cs:824`, `ProteinFdrEngine.cs:203`) and as the first-pass detected-peptide gate (`ProteinFdr.cs:816`). |
@@ -339,7 +339,7 @@ pairing uses the fixed `DECOY_` prefix constant (`ProteinFdr.cs:203`).
   `Osprey.FDR/ProteinFdrEngine.cs:171`. Severity: info.
 
 Verified as matching the Rust documentation and Rust code: parsimony always runs
-regardless of `--protein-fdr` (threshold-only, `FirstJoinTask.cs:305`,
+regardless of `--protein-fdr` (threshold-only, `FirstPassFdrTask.cs:305`,
 `OspreyConfig.cs:271`); decoy and empty-protein exclusion from the target graph
 (`ProteinFdr.cs:226,230`); identical-set merging and strict-subset elimination
 (`ProteinFdr.cs:250-377`, byte-identical drop order); `All` and `Unique`

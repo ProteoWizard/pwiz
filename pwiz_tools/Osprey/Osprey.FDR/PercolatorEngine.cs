@@ -33,7 +33,7 @@ namespace pwiz.Osprey.FDR
     /// <see cref="PercolatorEntry"/> input from <see cref="FdrEntry"/> stubs,
     /// dispatch to the direct or streaming SVM path, and write the resulting
     /// scores / q-values back onto the stubs. Moved out of the Tasks layer
-    /// (the former <c>FirstJoinTask.RunPercolatorFdr</c>) so FDR orchestration
+    /// (the former <c>FirstPassFdrTask.RunPercolatorFdr</c>) so FDR orchestration
     /// physically lives in the FDR project; the Tasks layer calls this through
     /// a thin facade, passing <c>ctx.LogInfo</c> as the log sink and the PIN
     /// feature names. Pure: takes data + a log delegate, never the pipeline
@@ -132,18 +132,25 @@ namespace pwiz.Osprey.FDR
             // is a pure hand-off, no behavior change on any production path.
             contributions = results.FeatureContributions;
 
+            // A diagnostic-only (*Only) dump fired inside the engine; it left the
+            // run as a pure no-op and signalled here. Stop without scoring the
+            // stubs and let the Tasks-layer caller perform the process exit.
+            //
+            // CHECKED BEFORE captureModel, not after. On an abort DispatchSvm returns
+            // `new PercolatorResults { DiagnosticAbort = true }` with FoldWeights,
+            // FoldBiases and Standardizer all NULL - nothing was trained. Handing that
+            // to the frozen-model hook passes an untrained model off as a trained one,
+            // and the 2nd pass would then re-score against nulls. The sibling path in
+            // this same file (RunStreamingFirstPass) already orders it this way.
+            if (results.DiagnosticAbort)
+                return true;
+
             // Frozen-model capture hook (OSPREY_PASS2_QVALUE=transfer): the caller
             // can grab the trained model (FoldWeights / FoldBiases / Standardizer)
             // here so a later 2nd-pass step re-scores reconciled features with this
             // FROZEN 1st-pass model instead of retraining. No-op (null) on every
             // default percolator run, so scoring stays byte-identical.
             captureModel?.Invoke(results);
-
-            // A diagnostic-only (*Only) dump fired inside the engine; it left the
-            // run as a pure no-op and signalled here. Stop without scoring the
-            // stubs and let the Tasks-layer caller perform the process exit.
-            if (results.DiagnosticAbort)
-                return true;
 
             // Zip the SVM results back onto the FdrEntry stubs by position
             // (replaces the former psm_id-keyed resultMap re-join).
@@ -259,7 +266,7 @@ namespace pwiz.Osprey.FDR
 
             // The projection path always STREAMS its features per file (for both the
             // 1st and 2nd pass), so a per-file feature loader is mandatory -- the
-            // 1st-pass caller (FirstJoinTask) and the 2nd-pass caller (Pass2FdrSidecar)
+            // 1st-pass caller (FirstPassFdrTask) and the 2nd-pass caller (Pass2FdrSidecar)
             // both supply one. A null loader reaching here is a bug, not a cue to fall
             // back to a resident build (that is the flag-off FdrEntry oracle's job).
             if (loadFileFeatures == null)
@@ -972,7 +979,7 @@ namespace pwiz.Osprey.FDR
         /// memory-bounded FLAT form -- <see cref="PercolatorQValues.ClampExperimentQToBestRunFlat"/>
         /// over the score-pass scalar arrays -- so the full FdrEntry buffer need not be resident
         /// on the streaming path. This resident overload remains for the post-Stage-6 pre-blib
-        /// re-clamp (<c>MergeNodeTask</c>), which runs on the already-compacted survivor buffer.
+        /// re-clamp (<c>SecondPassFdrTask</c>), which runs on the already-compacted survivor buffer.
         /// Both produce identical floors (same min/max over the same values).
         /// </summary>
         public static void ClampExperimentQToBestRun(

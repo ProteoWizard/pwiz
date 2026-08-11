@@ -115,7 +115,7 @@ namespace pwiz.Osprey.Test
                     new KeyValuePair<string, List<FdrEntry>>("file1", list)
                 };
 
-                var shared = MergeNodeTask.BuildSharedBoundaries(perFile, passing);
+                var shared = SecondPassFdrTask.BuildSharedBoundaries(perFile, passing);
 
                 Assert.IsTrue(shared.TryGetValue((seq, "file1"), out var b),
                     "shared boundary must exist for the peptide/file");

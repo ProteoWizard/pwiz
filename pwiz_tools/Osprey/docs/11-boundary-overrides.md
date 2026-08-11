@@ -255,7 +255,7 @@ sibling (the original stays intact for crash-resume safety). The footer metadata
 stamps `osprey.reconciled = "true"` and `osprey.reconciliation_hash` alongside
 `osprey.version`, `osprey.search_hash`, and `osprey.library_hash`
 (`ReconciledParquetWriter.cs:200-204`), which the downstream `--task
-SecondPassFDR` merge node validates.
+SecondPassFDR` node validates.
 
 Note: six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
 `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are
@@ -290,9 +290,9 @@ computed by Stage 6 planning. The flags that affect this stage:
 
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
-| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` runs this stage as a standalone worker (internal `HpcTask.PerFileRescore`). `SecondPassFDR` (`HpcTask.MergeNode`) rehydrates reconciled parquets instead of re-scoring. |
+| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` runs this stage as a standalone worker (internal `HpcTask.PerFileRescore`). `SecondPassFDR` (`HpcTask.SecondPassFdr`) rehydrates reconciled parquets instead of re-scoring. |
 | `--input-scores <paths\|dir>` | — | Supplies the boundary `.scores.parquet` files the worker rescores; drives `IsIncluded` (`PerFileRescoreTask.cs:123`). |
-| `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstJoin; determines which entries survive into the rescore set. |
+| `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstPassFDR; determines which entries survive into the rescore set. |
 | `ReconciliationConfig.Enabled` | true | Gates reconciliation planning + `reconciliation.json` inputs (`PerFileRescoreTask.cs:158`). Disabling leaves only multi-charge consensus rescore. |
 | `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection, calibration refit, and reconciliation planning (`Stage6Planner.cs`). Not a CLI flag; config field. |
 | `ReconciliationConfig.TopNPeaks` | 5 (`ReconciliationConfig.cs:36`) | CWT candidates stored per precursor at first-pass; the pool `UseCwtPeak` overrides are drawn from. |

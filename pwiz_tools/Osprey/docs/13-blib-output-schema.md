@@ -7,7 +7,7 @@ Osprey emits its final results as a **BiblioSpec (`.blib`)** SQLite database —
 Two layers are involved:
 
 - **`Osprey.IO/BlibWriter.cs`** — the low-level SQLite layer: schema creation, prepared-statement inserts, zlib compression, sequence cleanup, finalize. One instance == one `.blib` file.
-- **`Osprey.Tasks/BlibOutputWriter.cs`** — the Stage 7 sequencer that composes rows from the passing-precursor lookup tables and drives `BlibWriter`. It is invoked once from `Osprey.Tasks/MergeNodeTask.cs:365` (the `MergeNode` / `SecondPassFDR` HPC worker — see 15-hpc-scoring-split.md).
+- **`Osprey.Tasks/BlibOutputWriter.cs`** — the Stage 7 sequencer that composes rows from the passing-precursor lookup tables and drives `BlibWriter`. It is invoked once from `Osprey.Tasks/SecondPassFdrTask.cs:365` (the `SecondPassFDR` HPC worker — see 15-hpc-scoring-split.md).
 
 Reading back (for library input, and for round-trip tests) is `Osprey.IO/BlibLoader.cs`.
 
@@ -99,7 +99,7 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ### OspreyCoefficients (reserved, zero rows)
 
-`AddCoefficient` exists (BlibWriter.cs:547) but is never called from the pipeline (only `MergeNodeTask`/`BlibOutputWriter` drive the writer, and neither calls it). The `OspreyCoefficients` table is created and indexed but written with zero rows — the per-scan XIC time series is not plumbed through Stage 7. This matches the Rust doc's "(optional)" label.
+`AddCoefficient` exists (BlibWriter.cs:547) but is never called from the pipeline (only `SecondPassFdrTask`/`BlibOutputWriter` drive the writer, and neither calls it). The `OspreyCoefficients` table is created and indexed but written with zero rows — the per-scan XIC time series is not plumbed through Stage 7. This matches the Rust doc's "(optional)" label.
 
 ---
 
@@ -145,4 +145,4 @@ There is no CLI switch to enable `OspreyCoefficients` output, to choose the scor
 
 Everything else matches the Rust doc: the standard + extension table set, `RefSpectraPeaks` storing library theoretical fragments (f64 m/z / f32 intensity, zlib-with-raw-fallback), the nullable-`retentionTime` ID-line semantics, one `RetentionTimes` row per detected run, `copies = nRunsDetected`, `OspreyCoefficients` emitted with zero rows, and the write→finalize→atomic-rename flow. No `PORT-ERROR` was found: the C# implementation is internally consistent and (per the standing `Compare-Blib-Crossimpl.ps1` gate referenced in BlibWriter.cs) byte-identical to the Rust output, so the schema-value differences above reflect a stale Rust doc rather than a behavioral defect.
 
-See also 07-fdr-control.md (source of the run/experiment q-values written here), 11-boundary-overrides.md (the reconciled peak boundaries in `RefSpectra`/`RetentionTimes`/`OspreyPeakBoundaries`), 10-cross-run-reconciliation.md (per-file boundary imputation), and 15-hpc-scoring-split.md (the `MergeNode`/`SecondPassFDR` worker that invokes this stage).
+See also 07-fdr-control.md (source of the run/experiment q-values written here), 11-boundary-overrides.md (the reconciled peak boundaries in `RefSpectra`/`RetentionTimes`/`OspreyPeakBoundaries`), 10-cross-run-reconciliation.md (per-file boundary imputation), and 15-hpc-scoring-split.md (the `SecondPassFDR` worker that invokes this stage).
