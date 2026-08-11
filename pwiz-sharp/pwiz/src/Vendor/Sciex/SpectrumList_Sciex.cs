@@ -267,7 +267,12 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 {
                     precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation);
                 }
-                if (ms.CollisionEnergy != 0)
+                // cpp SpectrumList_ABI.cpp:223-224 — `if (collisionEnergy > 0)`, where
+                // collisionEnergy was filled in only by getIsolationInfo (:172-176). Both halves
+                // matter: the value comes from the isolation info (see
+                // AbstractWiffSpectrum.CollisionEnergy), and a non-positive value is dropped
+                // rather than emitted as 0.
+                if (ms.CollisionEnergy > 0)
                     precursor.Activation.Set(CVID.MS_collision_energy, ms.CollisionEnergy, CVID.UO_electronvolt);
                 spec.Precursors.Add(precursor);
             }

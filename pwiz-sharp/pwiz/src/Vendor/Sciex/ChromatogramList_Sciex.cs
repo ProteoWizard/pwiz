@@ -329,8 +329,11 @@ public sealed class ChromatogramList_Sciex : ChromatogramListBase
     {
         c.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ie.Q1, CVID.MS_m_z);
         c.Precursor.Activation.Set(CVID.MS_CID);
-        if (ie.CollisionEnergy > 0)
-            c.Precursor.Activation.Set(CVID.MS_collision_energy, ie.CollisionEnergy, CVID.UO_electronvolt);
+        // cpp ChromatogramList_ABI.cpp:237 (SRM) / :281 (SIM) set collision energy
+        // UNCONDITIONALLY — a transition with no "CE" compound parameter still gets
+        // `collision energy=0.0`. (Only the `ce=` token in the chromatogram id is gated on
+        // `> 0`, at :410 / :442 — that gate is in BuildSrmId/BuildSimId above.)
+        c.Precursor.Activation.Set(CVID.MS_collision_energy, ie.CollisionEnergy, CVID.UO_electronvolt);
         if (isSrm)
             c.Product.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ie.Q3, CVID.MS_m_z);
 

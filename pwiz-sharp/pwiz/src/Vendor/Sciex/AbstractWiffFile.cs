@@ -216,8 +216,16 @@ public abstract class AbstractWiffSpectrum
     /// <summary>Intensity values, parallel to <see cref="XValues"/>.</summary>
     public abstract double[] YValues { get; }
 
-    /// <summary>Whether the SDK exposes precursor / isolation info for this spectrum.</summary>
+    /// <summary>Whether the SDK exposes precursor info for this spectrum (cpp
+    /// <c>Spectrum::getHasPrecursorInfo</c>).</summary>
     public abstract bool HasPrecursorInfo { get; }
+
+    /// <summary>cpp <c>Spectrum::getHasIsolationInfo</c> (WiffFile.cpp:759 /
+    /// WiffFile2.ipp:732). Gates the whole <c>getIsolationInfo</c> payload — isolation
+    /// window, collision energy, fragmentation mode, electron kinetic energy — so a
+    /// spectrum whose experiment isn't a Product/Precursor scan emits none of them.
+    /// Legacy WIFF additionally requires the experiment to carry MassRangeInfo.</summary>
+    public abstract bool HasIsolationInfo { get; }
 
     /// <summary>Selected ion m/z (precursor target).</summary>
     public abstract double PrecursorMz { get; }
@@ -225,7 +233,8 @@ public abstract class AbstractWiffSpectrum
     /// <summary>Charge state (0 if unknown).</summary>
     public abstract int PrecursorCharge { get; }
 
-    /// <summary>Collision energy (eV; 0 if not set).</summary>
+    /// <summary>Collision energy (eV; 0 if not set or if <see cref="HasIsolationInfo"/>
+    /// is false — cpp only fills this in from <c>getIsolationInfo</c>).</summary>
     public abstract double CollisionEnergy { get; }
 
     /// <summary>Activation method (CID by default, EAD when wiff2's FragmentationMode is EAD).</summary>

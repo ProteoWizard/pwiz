@@ -384,19 +384,30 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     public override double PrecursorMz => _iso?.IsolationWindowTarget ?? 0;
     public override int PrecursorCharge => _precursor?.PrecursorChargeState ?? 0;
 
+    // cpp WiffFile2.ipp:732 — `Spectrum2Impl::getHasIsolationInfo()` is
+    // `experiment->experimentType == Product`, i.e. only a "TOFMSMS" scan carries isolation
+    // info. cpp's SpectrumList_ABI.cpp:172 gates the whole getIsolationInfo call on it, so a
+    // non-TOFMSMS experiment emits no collision energy even when the SDK's ISpectrum happens to
+    // carry a Precursor with a CE ramp (which is exactly what a CE-optimization acquisition
+    // looks like — see CEOptPGMOG_redo.wiff2, where C# used to emit CE and cpp emitted none).
+    public override bool HasIsolationInfo => _exp.ScanType == "TOFMSMS";
+
+    // cpp WiffFile2.ipp:734-757 (Spectrum2Impl::getIsolationInfo). Note cpp's early returns:
+    // a null Precursor, a null IsolationWindow, or a null CollisionEnergy all leave
+    // collisionEnergy at its 0 initializer. cpp does NOT take fabs here (unlike the legacy
+    // path), and SpectrumList_ABI.cpp:223 then drops any non-positive value.
     public override double CollisionEnergy
     {
         get
         {
-            var ce = _precursor?.CollisionEnergy;
+            if (!HasIsolationInfo || _precursor is null || _iso is null) return 0;
+            var ce = _precursor.CollisionEnergy;
             if (ce is null) return 0;
             double rampStart = ce.CollisionEnergyRampStart;
             double rampEnd = ce.CollisionEnergyRampEnd;
-            double collisionEnergy;
-            if (rampStart == 0) collisionEnergy = rampEnd;
-            else if (rampEnd == 0) collisionEnergy = rampStart;
-            else collisionEnergy = (rampEnd + rampStart) / 2;
-            return Math.Abs(collisionEnergy);
+            if (rampStart == 0) return rampEnd;
+            if (rampEnd == 0) return rampStart;
+            return (rampEnd + rampStart) / 2;
         }
     }
 

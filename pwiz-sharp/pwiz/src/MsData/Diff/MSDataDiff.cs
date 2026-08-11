@@ -481,6 +481,12 @@ public static class MSDataDiff
         if (a.DefaultArrayLength != b.DefaultArrayLength)
             ctx.Report($"defaultArrayLength: {a.DefaultArrayLength} vs {b.DefaultArrayLength}");
         DiffParamContainer(a.Params, b.Params, ctx);
+        // cpp Diff.cpp:584-585 diffs the chromatogram's precursor and product too. Without
+        // these the SRM/SIM isolation windows and activation (including collision energy) are
+        // invisible to every vendor reference test — which is how the Sciex chromatograms
+        // silently stopped emitting `collision energy` while the harness stayed green.
+        DiffPrecursor(a.Precursor, b.Precursor, ctx);
+        DiffProduct(a.Product, b.Product, ctx);
         DiffBinaryArrays(a.BinaryDataArrays, b.BinaryDataArrays, ctx);
         DiffIntegerArrays(a.IntegerDataArrays, b.IntegerDataArrays, ctx);
     }

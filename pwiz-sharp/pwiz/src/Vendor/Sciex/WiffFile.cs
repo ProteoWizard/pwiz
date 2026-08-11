@@ -500,7 +500,7 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         foreach (var range in ranges)
         {
             if (range is not MRMMassRange mrm) continue;
-            double ce = ReadCompoundParameter(mrm.CompoundDepParameters, "CE");
+            double ce = ReadCollisionEnergy(mrm.CompoundDepParameters);
             // cpp: target.startTime = ExpectedRT - RTWindow/2; target.endTime = ExpectedRT + RTWindow/2.
             double start = mrm.ExpectedRT - mrm.RTWindow / 2.0;
             double end = mrm.ExpectedRT + mrm.RTWindow / 2.0;
@@ -527,7 +527,7 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         foreach (var range in ranges)
         {
             if (range is not SIMMassRange sim) continue;
-            double ce = ReadCompoundParameter(sim.CompoundDepParameters, "CE");
+            double ce = ReadCollisionEnergy(sim.CompoundDepParameters);
             double start = sim.ExpectedRT - sim.RTWindow / 2.0;
             double end = sim.ExpectedRT + sim.RTWindow / 2.0;
             targets.Add(new WiffSimTarget
@@ -548,6 +548,14 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         if (parameters is null) return 0;
         return parameters.TryGetValue(name, out var p) && p is not null ? p.Start : 0;
     }
+
+    /// <summary>cpp <c>ExperimentImpl::getSRM/getSIM</c> (WiffFile.cpp:558-562 / 598-602):
+    /// <c>target.collisionEnergy = fabs((float) parameters["CE"]->Start)</c>. The absolute
+    /// value matters — negative-polarity methods store CE as a negative number, and without
+    /// the <c>fabs</c> every negative-mode SRM/SIM chromatogram loses both its
+    /// <c>collision energy</c> cvParam and the <c>ce=</c> token in its chromatogram id.</summary>
+    private static double ReadCollisionEnergy(Dictionary<string, Parameter>? parameters)
+        => Math.Abs(ReadCompoundParameter(parameters, "CE"));
 
     private static WiffExperimentType MapExperimentType(Clearcore2.Data.DataAccess.SampleData.ExperimentType t) => t switch
     {
@@ -621,7 +629,56 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
     public override bool HasPrecursorInfo => _info.ParentMZ > 0;
     public override double PrecursorMz => _info.ParentMZ;
     public override int PrecursorCharge => _info.ParentChargeState;
-    public override double CollisionEnergy => Math.Abs(_info.CollisionEnergy);
+
+    // cpp WiffFile.cpp:759-764 (SpectrumImpl::getHasIsolationInfo).
+    public override bool HasIsolationInfo
+    {
+        get
+        {
+            if (_experimentType != WiffExperimentType.Product && _experimentType != WiffExperimentType.Precursor)
+                return false;
+            try { return _exp.Details?.MassRangeInfo is { Length: > 0 }; }
+            catch { return false; }
+        }
+    }
+
+    // cpp WiffFile.cpp:778-791 (inside SpectrumImpl::getIsolationInfo): the collision energy
+    // mzML reports for a legacy WIFF spectrum is the EXPERIMENT's "CE" ramp parameter
+    // (Details->Parameters["CE"], a Start/Stop pair), NOT the per-spectrum
+    // MassSpectrumInfo.CollisionEnergy the SDK also exposes. Those are different numbers: the
+    // ramp is the method's programmed CE (typically a round 10 / 35 eV), while the per-spectrum
+    // value is the instrument's rolling-CE readback (e.g. 35.78343963623). Reading the
+    // per-spectrum one was the source of the largest remaining Sciex parity gap.
+    //
+    // The arithmetic is deliberately done in float, like cpp: Parameter.Start/Stop are Single,
+    // and cpp's `(ceRamp->Stop + ceRamp->Start) / 2` is therefore a float expression widened to
+    // double on assignment. Doing it in double would round differently in the last digits.
+    //
+    // cpp reads MSExperimentInfo.Parameters, which Clearcore2 has since marked [Obsolete] with
+    // "This property only returns the parameters for the first mass range. Compound dependent
+    // parameters can be retrieved through the MassRange object from MassRangeInfo." — so
+    // MassRangeInfo[0].CompoundDepParameters is the same dictionary by the SDK's own definition,
+    // and HasIsolationInfo has already guaranteed MassRangeInfo is non-empty.
+    public override double CollisionEnergy
+    {
+        get
+        {
+            if (!HasIsolationInfo) return 0;
+            try
+            {
+                var parameters = _exp.Details?.MassRangeInfo?[0]?.CompoundDepParameters;
+                if (parameters is null || !parameters.TryGetValue("CE", out var ceRamp) || ceRamp is null)
+                    return 0;
+                float ce;
+                if (ceRamp.Start == 0) ce = Math.Abs(ceRamp.Stop);
+                else if (ceRamp.Stop == 0) ce = ceRamp.Start;
+                else ce = (ceRamp.Stop + ceRamp.Start) / 2;
+                return Math.Abs((double)ce);
+            }
+            catch { return 0; }
+        }
+    }
+
     public override WiffActivation Activation => WiffActivation.CID;
     public override double IsolationLowerOffset => IsolationHalfWidth;
     public override double IsolationUpperOffset => IsolationHalfWidth;
