@@ -29,7 +29,7 @@
     #ifdef _WIN32_WINNT
         #undef _WIN32_WINNT
     #endif
-    #define _WIN32_WINNT 0x0601 // Windows 7, matching the project wide setting in Jamroot.jam; the directory enumeration flags used below need it
+    #define _WIN32_WINNT 0x0600
     #define WIN32_LEAN_AND_MEAN
     #define NOMINMAX
     #define NOGDI
