@@ -735,8 +735,20 @@ namespace pwiz.Osprey.Tasks
                 perFileEntries.Count, StringComparer.Ordinal);
             var survivorEntryIds = new HashSet<uint>();
             long survivorObservations = 0;
+            // Reported because this walks EVERY survivor observation - 89,068,375 of them on the
+            // 82-file SEA-AD run - into a HashSet before anything downstream logs a word. It sat
+            // inside a 195 s silence between "Released library fragments" and the
+            // OSPREY_PASS2_QVALUE banner, which reads as a hung run at the very end of a
+            // multi-hour search. The two steps after it (sidecar path validation and the protein
+            // stratum build) are in the same silence and are NOT yet reported - see the TODO.
+            using (var mergeProgress = new ProgressReporter(
+                string.Format(@"Collecting pass-2 survivors from {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            {
+            int mergeIdx = 0;
             foreach (var kvp in perFileEntries)
             {
+                mergeProgress.Report(++mergeIdx);
                 if (entriesByFile.TryGetValue(kvp.Key, out var merged))
                 {
                     // New list, never AddRange onto the caller's: perFileEntries is the live
@@ -753,6 +765,7 @@ namespace pwiz.Osprey.Tasks
                 survivorObservations += kvp.Value.Count;
                 foreach (var e in kvp.Value)
                     survivorEntryIds.Add(e.EntryId);
+            }
             }
 
             // 2. Per-file scalar sidecar paths. Validate every sidecar up front so we fail fast
