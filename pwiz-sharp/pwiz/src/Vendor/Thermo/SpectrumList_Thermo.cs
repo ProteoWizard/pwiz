@@ -435,8 +435,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                     spec.Params.Set(CVID.MS_base_peak_intensity, stats.BasePeakIntensity);
                 }
                 spec.Params.Set(CVID.MS_total_ion_current, stats.TIC);
-                if (stats.HighMass > 0)
-                    scan.ScanWindows.Add(new ScanWindow(stats.LowMass, stats.HighMass, CVID.UO_nanometer));
+                // Unconditional: cpp SpectrumList_Thermo.cpp:294 pushes the window with no
+                // guard. Only the base-peak pair above is gated (on basePeakMass, at cpp:287),
+                // so a PDA scan reporting HighMass 0 still gets a 0-0 scan window there.
+                scan.ScanWindows.Add(new ScanWindow(stats.LowMass, stats.HighMass, CVID.UO_nanometer));
             }
             catch { /* stats unavailable on some PDA scans */ }
 
@@ -525,10 +527,23 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
         spec.Params.Set(CVID.MS_ms_level, msLevel);
 
+        // The scan filter is this method's equivalent of cpp's ScanInfo (SpectrumList_Thermo.cpp:269-275):
+        // fetched ONCE per spectrum and reused by every site below (enhanced-resolution flag,
+        // analyzer scan offset, filter string, profile/centroid, SIM/SRM scan windows, precursor
+        // population). Each GetFilterForScanNumber call is an SDK round-trip that re-parses the
+        // filter, so asking three times per scan cost ~200k redundant round-trips on a 100k-scan file.
+        //
+        // cpp throws ("Error retrieving ScanInfo") when the SDK cannot supply it, and the
+        // resulting runtime_error aborts the conversion with the spectrum id in the message -
+        // so do the same rather than half-degrading (one site used to guard with ?. while the
+        // others dereferenced, i.e. a null filter surfaced as a NullReferenceException).
+        var filter = raw.GetFilterForScanNumber(scanNumber)
+            ?? throw new InvalidOperationException(
+                $"Error retrieving scan filter for spectrum \"{ie.Id}\" (scan {scanNumber}).");
+
         // Zoom scans (narrow m/z window) and instruments flagged as "enhanced resolution" get
         // tagged with MS_enhanced_resolution_scan, matching pwiz C++ SpectrumList_Thermo.cpp:359.
-        var rawFilter = _raw.Raw.GetFilterForScanNumber(scanNumber);
-        if (ie.ScanMode == ScanModeType.Zoom || rawFilter.Enhanced == TriState.On)
+        if (ie.ScanMode == ScanModeType.Zoom || filter.Enhanced == TriState.On)
             spec.Params.Set(CVID.MS_enhanced_resolution_scan);
 
         // ---- scan list ----
@@ -553,7 +568,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         if (ie.MsOrder is MSOrderType.Nl or MSOrderType.Ng)
         {
             double analyzerScanOffset = 0;
-            try { if (rawFilter.MassCount > 0) analyzerScanOffset = rawFilter.GetMass(0); } catch { }
+            try { if (filter.MassCount > 0) analyzerScanOffset = filter.GetMass(0); } catch { }
             scan.Set(CVID.MS_analyzer_scan_offset, analyzerScanOffset, CVID.MS_m_z);
         }
 
@@ -568,7 +583,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         if (resolvingPower > 0)
             scan.Set(CVID.MS_mass_resolving_power, resolvingPower);
 
-        string filterString = raw.GetFilterForScanNumber(scanNumber)?.ToString() ?? string.Empty;
+        string filterString = filter.ToString() ?? string.Empty;
         if (!string.IsNullOrEmpty(filterString))
             scan.Set(CVID.MS_filter_string, filterString);
 
@@ -619,7 +634,6 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         // mode) asks for centroided data, emit MS_centroid_spectrum regardless of analyzer —
         // ThermoRawFile.GetPeaks uses Scan.ToCentroid for non-FTMS profile scans, so the
         // returned arrays are genuinely centroided.
-        var filter = raw.GetFilterForScanNumber(scanNumber);
         bool scanIsProfile = filter.ScanData == ScanDataType.Profile;
         bool emitCentroid = !scanIsProfile || preferCentroid;
         spec.Params.Set(emitCentroid ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
@@ -635,9 +649,31 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             spec.Params.Set(CVID.MS_base_peak_intensity, stats.BasePeakIntensity, CVID.MS_number_of_detector_counts);
             spec.Params.Set(CVID.MS_total_ion_current, stats.TIC);
 
-            double low = filter.GetMassRange(0).Low;
-            double high = filter.GetMassRange(filter.MassRangeCount - 1).High;
-            scan.ScanWindows.Add(new ScanWindow(low, high, CVID.MS_m_z));
+            // cpp SpectrumList_Thermo.cpp:387-397 branches here, and both halves matter:
+            //
+            //   * a SIM or SRM scan with MORE THAN ONE mass range gets one scanWindow per
+            //     range, taken from the filter - a multiplexed SIM legitimately acquires
+            //     several narrow windows, and collapsing them into one span would describe a
+            //     precursor range the instrument never isolated;
+            //   * everything else gets a single window from scanInfo->lowMass()/highMass(),
+            //     which on the x64 path are ScanStatistics LowMass/HighMass
+            //     (RawFile.cpp:1397-1398), NOT the filter's ranges. The stats report what was
+            //     acquired, the filter what was requested, and they differ - e.g. acquired
+            //     2000.00005 against a filter 2000.0, or 499.953697763383 against 500.0.
+            bool multiRange = (ie.ScanMode == ScanModeType.Sim || ie.ScanMode == ScanModeType.Srm)
+                              && filter.MassRangeCount > 1;
+            if (multiRange)
+            {
+                for (int r = 0; r < filter.MassRangeCount; r++)
+                {
+                    var mr = filter.GetMassRange(r);
+                    scan.ScanWindows.Add(new ScanWindow(mr.Low, mr.High, CVID.MS_m_z));
+                }
+            }
+            else
+            {
+                scan.ScanWindows.Add(new ScanWindow(stats.LowMass, stats.HighMass, CVID.MS_m_z));
+            }
         }
         catch { /* ignore — a subset of scans might not expose stats */ }
 
