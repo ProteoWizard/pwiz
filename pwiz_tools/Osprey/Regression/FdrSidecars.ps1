@@ -453,6 +453,7 @@ function Test-Pass2ProteinQvalue {
 
     $totalMatched = 0
     $totalDiffering = 0
+    $totalGapFill = 0
     foreach ($f in ($files | Sort-Object Name)) {
         $stem = $f.Name.Substring(0, $f.Name.Length - $suffix.Length)
         $pass1 = Join-Path $RunDir "$stem.1st-pass.fdr_scores.bin"
@@ -476,6 +477,7 @@ function Test-Pass2ProteinQvalue {
         }
         $totalMatched += $r.Matched
         $totalDiffering += $r.Differing
+        $totalGapFill += $r.AbsentFromPass1
     }
 
     return @{
@@ -483,5 +485,6 @@ function Test-Pass2ProteinQvalue {
         Issues = $issues
         Matched = $totalMatched
         Differing = $totalDiffering
+        GapFill = $totalGapFill
     }
 }

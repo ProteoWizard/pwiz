@@ -1298,8 +1298,13 @@ foreach ($name in $selected) {
     Write-Progress-Tc "${name}: 2nd-pass protein q liveness (mode 1c)"
     $m1c = Test-Pass2ProteinQvalue -RunDir $straightDir
     if ($m1c.Pass) {
+        # The gap-fill count is reported, not asserted on: those records have no 1st-pass
+        # value to compare against, so they cannot contribute to the liveness check - and a
+        # count that is computed but never printed is a claim the gate does not actually make.
+        # It is also the population #4559 was originally filed about, so it is worth seeing.
         $summaryLines.Add(("$name mode1c (2nd-pass protein q is pass-2): PASS " +
-            "($('{0:N0}' -f $m1c.Differing) of $('{0:N0}' -f $m1c.Matched) shared records moved)"))
+            "($('{0:N0}' -f $m1c.Differing) of $('{0:N0}' -f $m1c.Matched) shared records moved; " +
+            "$('{0:N0}' -f $m1c.GapFill) gap-fill record(s) absent from pass 1)"))
     } else {
         $overallFail = $true
         Write-Problem-Tc "$name mode1c (2nd-pass protein q is pass-2): FAIL -- $($m1c.Issues.Count) issue(s)"
