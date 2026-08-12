@@ -269,7 +269,7 @@ namespace pwiz.CommonMsData
         {
             try
             {
-                var readerType = MsDataFileImpl.IdentifySourceType(directoryPath);
+                var readerType = MsDataFileImpl.IdentifyReaderType(directoryPath);
                 if (string.IsNullOrEmpty(readerType))
                     return FOLDER_TYPE;
                 return READER_TYPES_TO_TYPES.TryGetValue(readerType, out var sourceType) ? sourceType : readerType;

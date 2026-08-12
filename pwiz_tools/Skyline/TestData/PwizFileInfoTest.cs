@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestData
                 return;
 
             var agilentPath = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "ImsSynthAllIons.d");
-            Assert.AreEqual(DataSourceUtil.TYPE_AGILENT, MsDataFileImpl.IdentifySourceType(agilentPath));
+            Assert.AreEqual(DataSourceUtil.TYPE_AGILENT, MsDataFileImpl.IdentifyReaderType(agilentPath));
             Assert.AreEqual(DataSourceUtil.TYPE_AGILENT, DataSourceUtil.GetSourceType(agilentPath));
             Assert.IsTrue(DataSourceUtil.IsDataSource(agilentPath));
         }
