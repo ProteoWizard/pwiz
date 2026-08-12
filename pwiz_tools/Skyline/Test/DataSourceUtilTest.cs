@@ -83,6 +83,31 @@ namespace pwiz.SkylineTest
             var leafFolder = Path.Combine(root, @"LeafFolder");
             CreateDataFile(Path.Combine(leafFolder, @"notes.txt"));
             AssertNotDataSource(leafFolder);
+
+            TestSourceTypeFromNames();
+        }
+
+        /// <summary>
+        /// The overload deciding a directory from names alone, which is how sharing a document
+        /// reads a zip archive, where there is no directory to look in and no reader to ask.
+        /// Vendors are not consistent about the case of these names, and neither the filesystem
+        /// they usually come from nor the reader distinguishes it, so this must not either.
+        /// </summary>
+        private void TestSourceTypeFromNames()
+        {
+            var noNames = new string[0];
+            AssertEx.AreEqual(DataSourceUtil.TYPE_BRUKER,
+                DataSourceUtil.GetSourceType(@"Acquisition.d", new[] { @"Analysis.baf" }, noNames));
+            AssertEx.AreEqual(DataSourceUtil.TYPE_BRUKER,
+                DataSourceUtil.GetSourceType(@"Acquisition.d", new[] { @"analysis.tdf" }, noNames));
+            AssertEx.AreEqual(DataSourceUtil.TYPE_AGILENT,
+                DataSourceUtil.GetSourceType(@"Acquisition.d", noNames, new[] { @"ACQDATA" }));
+            AssertEx.AreEqual(DataSourceUtil.TYPE_WATERS_RAW,
+                DataSourceUtil.GetSourceType(@"Acquisition.raw", new[] { @"_func001.dat" }, noNames));
+
+            // A directory holding none of them is a folder, whatever its extension
+            AssertEx.AreEqual(DataSourceUtil.FOLDER_TYPE,
+                DataSourceUtil.GetSourceType(@"Acquisition.d", new[] { @"notes.txt" }, new[] { @"Subfolder" }));
         }
 
         private void AssertFolderHoldingVendorDirectory(string root, string folderName, string vendorDirectoryName)
