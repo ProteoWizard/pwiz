@@ -204,9 +204,11 @@ namespace pwiz.Osprey.IO
                 // than a corrupt one.
                 long payload = len - HeaderLength;
                 if (payload % RecordLength != 0)
+                {
                     throw new IOException(string.Format(
                         "FdrScoresSidecar payload {0} bytes is not a multiple of the {1}-byte record: {2}",
                         payload, RecordLength, path));
+                }
                 int n = (int)(payload / RecordLength);
                 entryIds = new uint[n];
                 scores = new double[n];
@@ -219,17 +221,21 @@ namespace pwiz.Osprey.IO
                         throw new IOException("FdrScoresSidecar bad magic: " + path);
                 }
                 if (header[8] != FormatVersion)
+                {
                     throw new IOException(string.Format(
                         "FdrScoresSidecar version {0}, expected {1}: {2}",
                         header[8], FormatVersion, path));
+                }
                 // Every other reader here checks the pass byte; this one did not, so a 2nd-pass
                 // sidecar handed to the 1st-pass caller decoded cleanly and fed post-Stage-6
                 // scalars into transfer-compete, which is exactly the mix-up that silently
                 // changes q values rather than failing.
                 if (header[9] != (byte)expectedPass)
+                {
                     throw new IOException(string.Format(
                         "FdrScoresSidecar pass {0}, expected {1}: {2}",
                         header[9], (byte)expectedPass, path));
+                }
                 var rec = new byte[RecordLength];
                 for (int i = 0; i < n; i++)
                 {

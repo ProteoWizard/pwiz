@@ -283,9 +283,22 @@ function Compare-DiagnosticsGolden {
         $bothNumeric = [double]::TryParse($g, $style, $inv, [ref]$gd) -and
                        [double]::TryParse($f, $style, $inv, [ref]$fd)
         if ($bothNumeric) {
-            $diff = [math]::Abs($gd - $fd)
-            if ($diff -gt $Tolerance) {
-                $issues.Add(("diagnostics: {0} golden={1} run={2} diff={3:e3} (tol {4:e0})" -f $name, $g, $f, $diff, $Tolerance))
+            # NaN and +/-Infinity BOTH parse successfully here, and every comparison against
+            # NaN is $false - so a bare Abs(diff) -gt Tolerance passes golden='NaN' against
+            # run='4.37' silently, and the string fallback below is unreachable once TryParse
+            # has succeeded. NaN is a meaningful VALUE for these metrics (a class under
+            # MIN_N_FOR_ENRICHMENT reports it), so a class crossing that threshold in either
+            # direction is exactly the change worth catching. Compare non-finite values for
+            # equality; only finite pairs get the tolerance.
+            if (-not ([double]::IsFinite($gd) -and [double]::IsFinite($fd))) {
+                if ($g -ne $f) {
+                    $issues.Add(("diagnostics: {0} golden='{1}' run='{2}'" -f $name, $g, $f))
+                }
+            } else {
+                $diff = [math]::Abs($gd - $fd)
+                if ($diff -gt $Tolerance) {
+                    $issues.Add(("diagnostics: {0} golden={1} run={2} diff={3:e3} (tol {4:e0})" -f $name, $g, $f, $diff, $Tolerance))
+                }
             }
         } elseif ($g -ne $f) {
             $issues.Add(("diagnostics: {0} golden='{1}' run='{2}'" -f $name, $g, $f))

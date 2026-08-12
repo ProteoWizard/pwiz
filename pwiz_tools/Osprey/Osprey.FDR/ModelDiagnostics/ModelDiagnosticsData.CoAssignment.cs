@@ -677,8 +677,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 double experimentQvalue, double runFdr)
             {
                 if (!_sealed)
+                {
                     throw new InvalidOperationException(
                         @"CoAssignmentPassBuilder: SealCutoffs must be called before AddRow");
+                }
                 bool isDecoy = IsDecoyClass(row.Class);
                 bool inRun = isDecoy
                     ? AdmittedAtRunScope(fileIdx, row.EntryId)

@@ -231,7 +231,7 @@ namespace pwiz.Osprey.Test
             // the run (B at 3.0 in file1); X at 6.0 clears it. Drop X below that and the class
             // must empty out entirely.
             var lowDecoy = new List<FdrEntry>(f1);
-            lowDecoy[5] = CoEntry(1 | DECOY_BIT, true, 1.0, 0.004, @"X", 2, 10.008);
+            lowDecoy[5] = CoEntry(5 | DECOY_BIT, true, 1.0, 0.004, @"X", 2, 10.008);
             var below = ModelDiagnosticsData.BuildCoAssignment(
                 WrapFiles(lowDecoy, f2), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
                 0.01, FdrLevel.Precursor, 1, false);

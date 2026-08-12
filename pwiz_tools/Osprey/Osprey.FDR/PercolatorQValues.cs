@@ -772,8 +772,10 @@ namespace pwiz.Osprey.FDR
             // paired decoy's good run". The loser of a competition is not in the ranking, so it
             // keeps the 1.0 default, which is what TDC means.
             //
-            // Rust's base_id_exp_prec_q (osprey-fdr/src/percolator.rs) carries the identical
-            // defect and must be fixed with it or the cross-impl sidecar gate will diverge.
+            // Rust's base_id_exp_prec_q (osprey-fdr/src/percolator.rs) carried the identical
+            // defect and was fixed with it in maccoss/osprey#63 (02d3df0), across all three of
+            // its sites. Cross-impl is green again on this pair - precursors 29300 on both
+            // sides, FDR sidecars per-field at 1e-9 - so the two are matched, not C#-ahead.
             var expQByWinnerId = new Dictionary<uint, double>();
             for (int rank = 0; rank < wi.Length; rank++)
             {

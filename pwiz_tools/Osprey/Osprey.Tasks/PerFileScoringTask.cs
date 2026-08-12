@@ -1751,8 +1751,10 @@ namespace pwiz.Osprey.Tasks
                 if (!streamed)
                 {
                     foreach (var kvp in perFileEntries)
+                    {
                         foreach (var entry in kvp.Value)
                             entry.Features = null;
+                    }
                 }
                 ctx.LogInfo(string.Format(
                     @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
