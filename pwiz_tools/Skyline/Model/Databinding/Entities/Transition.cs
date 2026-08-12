@@ -84,8 +84,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             // Except where there are optimization steps. The columnar results hold step zero only,
-            // so they cannot say which other steps have a peak - only the .skyd can.
-            if (results.HasOptimizationSteps)
+            // so they cannot say which other steps have a peak - only the .skyd can. Which
+            // replicates have steps is not something the results have to remember: a replicate
+            // imported with an optimization function is where they come from, which
+            // MeasuredResults works out once when its chromatograms are set.
+            if (SrmDocument.MeasuredResults?.HasOptimizationFunctions ?? false)
             {
                 return MakeChromInfoResultsMap(
                     Precursor.Peptide.GetMoleculeResults().GetTransitionChromInfos(

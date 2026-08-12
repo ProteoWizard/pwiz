@@ -108,6 +108,7 @@ namespace pwiz.Skyline.Model.Results
                 _countUnloaded = _chromatograms.Count(c => !c.IsLoaded);
                 HasGlobalStandardArea = MSDataFileInfos.Any(chromFileInfo =>
                     chromFileInfo.ExplicitGlobalStandardArea.HasValue);
+                HasOptimizationFunctions = _chromatograms.Any(c => c.OptimizationFunction != null);
 
                 // Pre-allocate empty arrays in case they are needed
                 EmptyPeptideResults = new Results<PeptideChromInfo>(new ChromInfoList<PeptideChromInfo>[count]);
@@ -165,6 +166,15 @@ namespace pwiz.Skyline.Model.Results
         public bool IsResultsUpdateRequired { get; private set; }
         public bool IsDeserialized { get; private set; }
         public bool HasGlobalStandardArea { get; private set; }
+
+        /// <summary>
+        /// Whether any replicate was imported with an optimization function, which is where peaks
+        /// belonging to a non-zero optimization step come from. Worth remembering rather than
+        /// working out again: the columnar results hold optimization step zero only, so anything
+        /// which builds one thing per peak has to ask this before it can trust them, and that is a
+        /// question asked once per transition.
+        /// </summary>
+        public bool HasOptimizationFunctions { get; private set; }
 
         public bool IsChromatogramSetLoaded(int index)
         {
