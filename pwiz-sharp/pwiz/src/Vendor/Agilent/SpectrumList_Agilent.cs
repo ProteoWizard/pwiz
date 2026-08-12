@@ -359,6 +359,29 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             spec.Precursors.Add(precursor);
         }
 
+        // All-ions promotion, cpp SpectrumList_Agilent.cpp:263-284. An MS1 acquired with a
+        // non-zero collision energy is an all-ions (All Ions MS/MS) scan: everything was
+        // fragmented without isolating a precursor, so cpp reports it as MSn with a single
+        // precursor spanning the whole scan range. cpp's guard is
+        // `1 == msLevel || (2 == msLevel && isIonMobilityScan)`; this is the non-IM path, so
+        // only the msLevel == 1 half can apply here - BuildImsDriftSpectrum carries the other.
+        //
+        // Without this the entire file is mislabelled: AE_30Apr19_negESI_0001.d came out as 723
+        // ms-level-1 spectra with no precursorList, where cpp emits 723 ms-level-2 spectra with
+        // one precursor each.
+        bool reportMs2ForAllIons = false;
+        if (msLevel == 1 && rec.CollisionEnergy > 0)
+        {
+            msLevel = 2;
+            spectrumType = CVID.MS_MSn_spectrum;
+            reportMs2ForAllIons = true;
+            precursor = new Precursor();
+            CVID allIonsActivation = TranslateAsActivation(_raw.DeviceType);
+            precursor.Activation.Set(allIonsActivation == CVID.CVID_Unknown ? CVID.MS_CID : allIonsActivation);
+            precursor.Activation.Set(CVID.MS_collision_energy, rec.CollisionEnergy, CVID.UO_electronvolt);
+            spec.Precursors.Add(precursor);
+        }
+
         spec.Params.Set(CVID.MS_ms_level, msLevel);
         spec.Params.Set(spectrumType);
 
@@ -397,7 +420,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
             // it produces an invalid file. The "real" precursor info lives in MS_analyzer_scan_offset
             // (set earlier on the scan) for NL/NG, and there's no specific precursor m/z, so cpp
             // synthesizes a placeholder mid-window ion to satisfy the schema.
-            if (precursor is not null && isNeutralLossOrGain && range is not null)
+            if (precursor is not null && (reportMs2ForAllIons || isNeutralLossOrGain) && range is not null)
             {
                 double width = (range.End - range.Start) * 0.5;
                 double targetMz = range.Start + width;
