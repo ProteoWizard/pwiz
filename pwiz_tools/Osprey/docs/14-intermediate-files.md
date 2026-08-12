@@ -319,9 +319,18 @@ Record (68 bytes):
   [28..36] experiment_precursor_qvalue  f64 LE
   [36..44] experiment_peptide_qvalue    f64 LE
   [44..52] pep                          f64 LE
-  [52..60] experiment_protein_qvalue           f64 LE
+  [52..60] experiment_protein_qvalue    f64 LE
   [60..68] experiment_aggregate_score   f64 LE
 ```
+
+`experiment_protein_qvalue` is the one column whose value depends on WHICH sidecar it is in:
+the `.1st-pass` file carries the first-pass picked-protein result, the `.2nd-pass` file the
+second-pass one. That is the same rule the precursor and peptide q-values follow - the pass is
+recorded by the file, not by a second field - and `FdrEntry` carries a single
+`ExperimentProteinQvalue` accordingly. It is experiment-scope in both passes: the first-pass
+protein FDR pools its detected peptides over every file and propagates one value per peptide,
+so there is no per-run protein q despite the `run_protein_qvalue` name this column carried
+until issue #4559.
 
 Field order and offsets are single-sourced in `WriteRecord` (`FdrScoresSidecar.cs:390`).
 The v2→v3 bump (dated 2026-05-02 in the C# comment, `FdrScoresSidecar.cs:82`) added
