@@ -407,6 +407,19 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             return @"osprey";
         }
 
+        /// <summary>
+        /// The report path this run would write, for callers that must reason about the file
+        /// before it exists. <see cref="SecondPassFdrTask"/> declares it as an OUTPUT when
+        /// <c>--model-diagnostics</c> is on, which is what lets a completed run regenerate a
+        /// deleted report: task validity requires every declared output to exist, so a missing
+        /// HTML invalidates that one task and nothing else. Without this the flag was inert on
+        /// a cached directory - every task reported "outputs valid", and no report appeared.
+        /// </summary>
+        public static string ReportPath(OspreyConfig config)
+        {
+            return ResolveReportPath(config);
+        }
+
         private static string ResolveReportPath(OspreyConfig config)
         {
             return Path.Combine(ResolveOutputDir(config), OutputStem(config) + HtmlSuffix);

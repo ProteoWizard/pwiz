@@ -84,6 +84,22 @@ namespace pwiz.Osprey.Tasks
         {
             if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
                 yield return ctx.Config.OutputBlib;
+            // The --model-diagnostics report is an output of THIS task (it is finalized in
+            // WritePass2AndFinalize), so declare it and let ordinary task validity regenerate
+            // it. Task validity requires every declared output to exist, so a deleted or
+            // renamed report invalidates this task alone - Stages 1-5 stay cached and the
+            // pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars, the same path
+            // regression mode 5 already covers.
+            //
+            // CONDITIONAL ON THE FLAG, deliberately. Declaring it unconditionally would make
+            // every run that never asked for diagnostics permanently invalid, re-running
+            // SecondPassFDR forever.
+            //
+            // Without this the flag was inert on a completed directory: --model-diagnostics is
+            // in no validity key and the HTML was in no Outputs list, so adding it to a re-run
+            // changed nothing, every task reported "outputs valid", and no report was produced.
+            if (ctx.Config.ModelDiagnostics)
+                yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
             // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
             // (independent of protein FDR -- the second Percolator pass runs on the
             // reconciled features), so declare them on that same condition.
