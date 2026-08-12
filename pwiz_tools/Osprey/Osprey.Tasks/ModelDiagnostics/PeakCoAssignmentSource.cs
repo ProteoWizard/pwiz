@@ -159,21 +159,33 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
 
             int totalDetected = 0, totalUnresolved = 0;
-            for (int f = 0; f < fileNames.Count; f++)
+            // Reported because this loop is the panel's whole cost and it used to run SILENT:
+            // it re-reads two columns of every .scores.parquet and joins them per file. On the
+            // 82-file SEA-AD run it went 101 s between the last per-run boundary line and the
+            // completion summary with nothing in between, which reads as a hung run - the same
+            // shape as the unreported spectra-cache write. The per-run boundary lines above are
+            // one-per-file and cheap; this pass is where the time actually goes.
+            using (var progress = new ProgressReporter(
+                string.Format(@"Peak co-assignment: joining apex RT over {0} file(s)", fileNames.Count),
+                fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                string reason;
-                int fileUnresolved;
-                int detected = AddFile(builder, f, fileNames[f], perFileParquetPaths, config,
-                    classByBaseId, libraryById, out reason, out fileUnresolved);
-                totalUnresolved += fileUnresolved;
-                if (reason != null)
+                for (int f = 0; f < fileNames.Count; f++)
                 {
-                    logInfo(string.Format(
-                        @"[MODEL-DIAGNOSTICS] peak co-assignment unavailable ({0}); panel omitted.", reason));
-                    return null;
+                    progress.Report(f + 1);
+                    string reason;
+                    int fileUnresolved;
+                    int detected = AddFile(builder, f, fileNames[f], perFileParquetPaths, config,
+                        classByBaseId, libraryById, out reason, out fileUnresolved);
+                    totalUnresolved += fileUnresolved;
+                    if (reason != null)
+                    {
+                        logInfo(string.Format(
+                            @"[MODEL-DIAGNOSTICS] peak co-assignment unavailable ({0}); panel omitted.", reason));
+                        return null;
+                    }
+                    totalDetected += detected;
+                    builder.FlushFile();
                 }
-                totalDetected += detected;
-                builder.FlushFile();
             }
 
             var data = builder.Build();
