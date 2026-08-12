@@ -85,6 +85,20 @@ namespace pwiz.CommonMsData
             { "Bruker TDF", TYPE_BRUKER },
             { "Bruker TSF", TYPE_BRUKER }
         };
+
+        private const string EXT_BRUKER_U2 = ".u2"; // A file inside the directory, named for it
+
+        /// <summary>
+        /// The file names that can make a directory a data source without the directory name
+        /// saying so. A directory holding none of them, and no subdirectories either, is an
+        /// ordinary folder whatever the reader would say, so it can be answered without asking.
+        /// That matters because the question is asked of every directory a file open dialog
+        /// lists, and answering it costs the reader a scan of the directory.
+        /// </summary>
+        private static readonly ICollection<string> READER_DIRECTORY_FILES = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "fid", "analysis.baf", "analysis.yep", "analysis.tdf", "analysis.tsf"
+        };
         // ReSharper restore LocalizableElement
 
         public static bool IsDataSource(string path)
@@ -114,12 +128,12 @@ namespace pwiz.CommonMsData
         {
             try
             {
-                var sourceType = GetSourceType(dirInfo.FullName,
-                    dirInfo.GetFiles().Select(f => f.Name).ToArray(),
-                    dirInfo.GetDirectories().Select(d => d.Name).ToArray());
+                var fileNames = dirInfo.GetFiles().Select(f => f.Name).ToArray();
+                var subdirectoryNames = dirInfo.GetDirectories().Select(d => d.Name).ToArray();
+                var sourceType = GetSourceType(dirInfo.FullName, fileNames, subdirectoryNames);
                 // Directory formats with no distinguishing extension, Bruker FID among them,
                 // can only be told apart by looking inside, which is what the reader does.
-                if (Equals(sourceType, FOLDER_TYPE))
+                if (Equals(sourceType, FOLDER_TYPE) && CouldBeReaderDirectorySource(fileNames, subdirectoryNames))
                     return GetSourceTypeFromReader(dirInfo.FullName);
                 return sourceType;
             }
@@ -232,6 +246,18 @@ namespace pwiz.CommonMsData
         public static bool IsUnknownType(string type)
         {
             return Equals(type, UNKNOWN_TYPE);
+        }
+
+        /// <summary>
+        /// Whether a directory holds anything the reader could make a data source of. The
+        /// files it looks for are named in <see cref="READER_DIRECTORY_FILES"/>, and it also
+        /// looks a level or two down: a MALDI FID acquisition keeps its fid files under one
+        /// subdirectory per spot, so a directory with subdirectories has to be asked about.
+        /// </summary>
+        private static bool CouldBeReaderDirectorySource(string[] fileNames, string[] subdirectoryNames)
+        {
+            return subdirectoryNames.Length > 0 ||
+                   fileNames.Any(f => READER_DIRECTORY_FILES.Contains(f) || PathEx.HasExtension(f, EXT_BRUKER_U2));
         }
 
         /// <summary>

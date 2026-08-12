@@ -46,7 +46,11 @@ namespace {
 // cloud storage placeholder is.
 bool exists_as_file(const bfs::path& filePath)
 {
-    return bfs::exists(filePath) && !bfs::is_directory(filePath);
+    // One status() answers both questions, where exists() followed by is_directory() would
+    // ask the filesystem twice. Every probe below goes through here, and format() is called
+    // for every directory a file open dialog lists.
+    bfs::file_status status = bfs::status(filePath);
+    return bfs::exists(status) && !bfs::is_directory(status);
 }
 
 } // namespace

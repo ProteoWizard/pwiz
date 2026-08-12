@@ -67,6 +67,22 @@ namespace pwiz.SkylineTest
             var plainFolder = Path.Combine(root, @"PlainFolder");
             CreateDataFile(Path.Combine(plainFolder, @"Subfolder", @"1", @"notes.txt"));
             AssertNotDataSource(plainFolder);
+
+            // A directory holding neither subdirectories nor any file that could make it a data
+            // source is answered as a folder without asking the reader. The formats that are a
+            // flat directory of files, and so are decided by a file name, have to survive that.
+            var bafSource = Path.Combine(root, @"BafWithoutTellingExtension");
+            CreateDataFile(Path.Combine(bafSource, @"analysis.baf"));
+            AssertDataSource(DataSourceUtil.TYPE_BRUKER, bafSource);
+
+            var u2Source = Path.Combine(root, @"U2Source.d");
+            CreateDataFile(Path.Combine(u2Source, @"U2Source.u2"));
+            AssertDataSource(DataSourceUtil.TYPE_BRUKER, u2Source);
+
+            // A folder of ordinary files, with nothing below it, is not a data source
+            var leafFolder = Path.Combine(root, @"LeafFolder");
+            CreateDataFile(Path.Combine(leafFolder, @"notes.txt"));
+            AssertNotDataSource(leafFolder);
         }
 
         private void AssertFolderHoldingVendorDirectory(string root, string folderName, string vendorDirectoryName)
