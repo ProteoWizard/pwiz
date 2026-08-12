@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Test
             var mz = new Dictionary<uint, double>
             {
                 { 1, 500.000 }, { 6, 333.670 }, { 2, 500.004 }, { 3, 700.000 },
-                { 4, 700.005 }, { 7, 500.002 }, { 201, 500.005 }, { 1 | DECOY_BIT, 500.006 },
+                { 4, 700.005 }, { 7, 500.002 }, { 201, 500.005 }, { 5 | DECOY_BIT, 500.006 },
             };
             var cls = new Dictionary<uint, EntrapmentClass>
             {
@@ -110,7 +110,7 @@ namespace pwiz.Osprey.Test
                 // aggregate), so it must NOT be admitted at experiment scope. The two scopes
                 // therefore disagree about this one row, and they can only disagree if the
                 // experiment boundary reads ExperimentAggregateScore rather than Score.
-                CoEntry(1 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, 1.0),
+                CoEntry(5 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, 1.0),
                 CoEntry(7, false, 20.0, 0.500, "F", 2, 10.010, 20.0),
             };
             var f2 = new List<FdrEntry>
@@ -271,7 +271,7 @@ namespace pwiz.Osprey.Test
         {
             var mz = new Dictionary<uint, double>
             {
-                { 1, 500.000 }, { 2, 500.004 }, { 1 | DECOY_BIT, 500.006 },
+                { 1, 500.000 }, { 2, 500.004 }, { 5 | DECOY_BIT, 500.006 },
             };
             var cls = new Dictionary<uint, EntrapmentClass>
             {
@@ -283,7 +283,7 @@ namespace pwiz.Osprey.Test
                 CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018, -5.0),
                 // The stub: same entry as the row above, left at the ResetScores default.
                 CoEntry(2, false, 0.0, 0.002, "B", 2, 10.150, 0.0),
-                CoEntry(1 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, -4.0),
+                CoEntry(5 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, -4.0),
             };
 
             var data = ModelDiagnosticsData.BuildCoAssignment(

@@ -554,8 +554,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     var admitted = new HashSet<uint>();
                     foreach (var kv in _fileBest)
                     {
-                        if ((kv.Key & ~BASE_ID_MASK) != 0 && kv.Value >= min)
-                            admitted.Add(kv.Key);
+                        if ((kv.Key & ~BASE_ID_MASK) == 0 || kv.Value < min)
+                            continue;
+                        // Only decoys that WON their own target/decoy competition. TDC ranks
+                        // the winner of each pair and discards the loser, so q counts decoy
+                        // WINNERS; admitting every decoy above the bar counts losers the
+                        // ranking never saw and inflates the row. Measured on Stellar after
+                        // the q-inheritance fix: 415 decoys above the bar, 334 winners against
+                        // an expected 312 - the 81 losers were the entire residual.
+                        if (_fileBest.TryGetValue(kv.Key & BASE_ID_MASK, out double tgt) &&
+                            tgt >= kv.Value)
+                            continue;
+                        admitted.Add(kv.Key);
                     }
                     _admittedRunDecoys[fileIdx] = admitted;
                 }
@@ -674,7 +684,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     ? AdmittedAtRunScope(fileIdx, row.EntryId)
                     : runQvalue <= runFdr;
                 bool inExperiment = isDecoy
-                    ? !double.IsNaN(_experimentCutoff) && ExperimentBest(row.EntryId) >= _experimentCutoff
+                    ? !double.IsNaN(_experimentCutoff) && ExperimentBest(row.EntryId) >= _experimentCutoff &&
+                      WonItsPair(row.EntryId)
                     : experimentQvalue <= runFdr;
                 if (inRun)
                 {
@@ -702,6 +713,29 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             /// <summary>Distinct decoy entry ids admitted at experiment scope.</summary>
             public int ExperimentDecoyIdCount => _experimentDecoyIds.Count;
+
+            /// <summary>
+            /// Whether this DECOY beat the target it is paired with, i.e. whether it won its own
+            /// target/decoy competition.
+            ///
+            /// <para>Target-decoy competition ranks one winner per base_id and discards the
+            /// loser, so the q the acceptance boundary comes from counts decoy WINNERS. Admitting
+            /// every decoy whose aggregate clears the bar also counts losers - entries the
+            /// ranking never saw - and inflates the decoy row against its own definition.
+            /// Measured on Stellar after the q-inheritance fix: 415 decoys cleared the bar, 334
+            /// of them winners, against an expected 312. The 81 losers were the entire residual.</para>
+            ///
+            /// <para>A decoy whose target is absent from the pool wins by default: there was no
+            /// competitor to lose to.</para>
+            /// </summary>
+            private bool WonItsPair(uint decoyEntryId)
+            {
+                double decoyBest = ExperimentBest(decoyEntryId);
+                if (double.IsNaN(decoyBest))
+                    return false;
+                double targetBest = ExperimentBest(decoyEntryId & BASE_ID_MASK);
+                return double.IsNaN(targetBest) || decoyBest > targetBest;
+            }
 
             /// <summary>Distinct decoy precursor KEYS admitted at experiment scope.</summary>
             public int ExperimentDecoyKeyCount => _experimentDecoyKeys.Count;
