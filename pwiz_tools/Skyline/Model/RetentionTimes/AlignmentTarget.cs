@@ -35,6 +35,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
 {
     public abstract class AlignmentTarget : Immutable
     {
+        /// <summary>
+        /// Default bin count to use when downsampling LOWESS input via
+        /// <see cref="DownsamplePoints"/>. Used by callers that fit LOWESS over
+        /// large point clouds (RT calibration, peptide-level normalization, etc.)
+        /// to keep the smoothing step linear in fit count rather than point count.
+        /// </summary>
+        public const int DEFAULT_LOESS_BIN_COUNT = 500;
+
         public AlignmentTarget(RegressionMethodRT regressionMethod)
         {
             RegressionMethod = regressionMethod;
