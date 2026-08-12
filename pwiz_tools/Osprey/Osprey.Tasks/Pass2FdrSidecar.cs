@@ -745,27 +745,27 @@ namespace pwiz.Osprey.Tasks
                 string.Format(@"Collecting pass-2 survivors from {0} file(s)", perFileEntries.Count),
                 perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-            int mergeIdx = 0;
-            foreach (var kvp in perFileEntries)
-            {
-                mergeProgress.Report(++mergeIdx);
-                if (entriesByFile.TryGetValue(kvp.Key, out var merged))
+                int mergeIdx = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    // New list, never AddRange onto the caller's: perFileEntries is the live
-                    // Stage 7 survivor buffer and must not gain entries as a side effect.
-                    var combined = new List<FdrEntry>(merged.Count + kvp.Value.Count);
-                    combined.AddRange(merged);
-                    combined.AddRange(kvp.Value);
-                    entriesByFile[kvp.Key] = combined;
+                    mergeProgress.Report(++mergeIdx);
+                    if (entriesByFile.TryGetValue(kvp.Key, out var merged))
+                    {
+                        // New list, never AddRange onto the caller's: perFileEntries is the live
+                        // Stage 7 survivor buffer and must not gain entries as a side effect.
+                        var combined = new List<FdrEntry>(merged.Count + kvp.Value.Count);
+                        combined.AddRange(merged);
+                        combined.AddRange(kvp.Value);
+                        entriesByFile[kvp.Key] = combined;
+                    }
+                    else
+                    {
+                        entriesByFile[kvp.Key] = kvp.Value;
+                    }
+                    survivorObservations += kvp.Value.Count;
+                    foreach (var e in kvp.Value)
+                        survivorEntryIds.Add(e.EntryId);
                 }
-                else
-                {
-                    entriesByFile[kvp.Key] = kvp.Value;
-                }
-                survivorObservations += kvp.Value.Count;
-                foreach (var e in kvp.Value)
-                    survivorEntryIds.Add(e.EntryId);
-            }
             }
 
             // 2. Per-file scalar sidecar paths. Validate every sidecar up front so we fail fast
