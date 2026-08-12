@@ -6,23 +6,26 @@ Two consumers, one decoder:
   * ai/scripts/Osprey/Compare/Compare-FdrSidecars-Crossimpl.ps1 - C# vs Rust.
 
 The four-task chain leg asserted only Compare-BlibFull, and the blib carries no protein
-q-value, so a route that writes a different RunProteinQvalue into every
+q-value, so a route that writes a different ExperimentProteinQvalue into every
 <stem>.2nd-pass.fdr_scores.bin passed green (issue #4553: 32,450 of 260,419 records differ
 on StellarGenDecoyEntrap, 1.57% at 82 files). Peptide counts, protein-group counts and the
 blib are all identical while it happens, so nothing the gate already reads can see it.
 
 The cross-impl gate had the same blind spot from the other direction: it compares the
 Stage 7 protein FDR dump (per-protein-GROUP columns) and the blib, neither of which carries
-a per-entry SVM score or run protein q. Both implementations dropped the same fields, so
+a per-entry SVM score or protein q. Both implementations dropped the same fields, so
 they agreed on the wrong value and nothing was red.
 
 This compares the sidecars themselves, which is where the distributed tasks' per-file
 output actually lands.
 
+Test-Pass2ProteinQvalue (below) covers the case a two-route comparison structurally CANNOT:
+a value both routes copy identically from pass 1. See issue #4559.
+
 Record layout (Osprey.IO\FdrScoresSidecar.cs), v4: 32-byte header, 68-byte records,
   entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20,
-  experiment_precursor_q @28, experiment_peptide_q @36, pep @44, run_protein_q @52,
-  experiment_aggregate_score @60 (issue #4522).
+  experiment_precursor_q @28, experiment_peptide_q @36, pep @44,
+  experiment_protein_q @52, experiment_aggregate_score @60 (issue #4522).
 Header: magic @0..8, version @8, pass @9, record count u64 @16.
 
 The decode + compare runs as compiled C#, not PowerShell. A per-record PowerShell loop
@@ -65,6 +68,15 @@ public class FdrSidecarDiff
     public string[] FirstExample;
 }
 
+public class Pass2ProteinQLiveness
+{
+    public bool Readable;
+    public string Problem;
+    public long Matched;
+    public long Differing;
+    public long AbsentFromPass1;
+}
+
 public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
@@ -85,9 +97,70 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_precursor_qvalue", Offset = 28 },
         new FdrSidecarField { Name = "experiment_peptide_qvalue",   Offset = 36 },
         new FdrSidecarField { Name = "pep",                         Offset = 44 },
-        new FdrSidecarField { Name = "experiment_protein_qvalue",          Offset = 52 },
+        new FdrSidecarField { Name = "experiment_protein_qvalue",   Offset = 52 },
         new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 60 },
     };
+
+    /// Byte offset of a field, by name, so a caller cannot hardcode an offset that the next
+    /// layout change silently moves out from under it.
+    public static int OffsetOf(string name)
+    {
+        foreach (var f in Fields)
+        {
+            if (f.Name == name)
+                return f.Offset;
+        }
+        throw new ArgumentException("no such sidecar field: " + name);
+    }
+
+    /// Is the 2nd-pass sidecar's experiment_protein_qvalue a SECOND-PASS value, or a verbatim
+    /// copy of the first pass? Issue #4559: no pass-2 mode wrote the column, so it reached the
+    /// 2nd-pass file carrying whatever pass 1 put there - the one column in that file that was
+    /// unconditionally a pass-1 value. Nothing could see it: the two-route comparison above is
+    /// blind because BOTH routes copied it, and the golden reads the per-GROUP protein dump,
+    /// never this per-entry column.
+    ///
+    /// This is a LIVENESS check, not an equivalence one. It cannot say the pass-2 value is
+    /// correct; it says the pass-2 protein FDR result reached the file at all. That is exactly
+    /// the failure class that hid here, and it is checkable from one run's own output with no
+    /// baseline. Records absent from pass 1 (gap-fill) cannot be compared and are counted
+    /// separately rather than silently skipped.
+    public static Pass2ProteinQLiveness CheckPass2ProteinQ(string pass1Path, string pass2Path)
+    {
+        var result = new Pass2ProteinQLiveness();
+        byte[] a = ReadIfValid(pass1Path, 1, out long na, out string problemA);
+        byte[] b = ReadIfValid(pass2Path, 2, out long nb, out string problemB);
+        if (a == null || b == null)
+        {
+            result.Problem = a == null ? problemA : problemB;
+            return result;
+        }
+        result.Readable = true;
+
+        int off = OffsetOf("experiment_protein_qvalue");
+        var pass1ById = new Dictionary<uint, double>();
+        for (long i = 0; i < na; i++)
+        {
+            int o = HeaderLen + (int)(i * RecordLen);
+            pass1ById[BitConverter.ToUInt32(a, o)] = BitConverter.ToDouble(a, o + off);
+        }
+        for (long i = 0; i < nb; i++)
+        {
+            int o = HeaderLen + (int)(i * RecordLen);
+            uint id = BitConverter.ToUInt32(b, o);
+            double q2 = BitConverter.ToDouble(b, o + off);
+            double q1;
+            if (!pass1ById.TryGetValue(id, out q1))
+            {
+                result.AbsentFromPass1++;
+                continue;
+            }
+            result.Matched++;
+            if (BitConverter.DoubleToInt64Bits(q1) != BitConverter.DoubleToInt64Bits(q2))
+                result.Differing++;
+        }
+        return result;
+    }
 
     public static FdrSidecarDiff Compare(
         string pathExpected, string pathActual, double tolerance, int expectedPass)
@@ -349,4 +422,66 @@ function Compare-FdrSidecars {
     }
 
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Compared = $nCompared }
+}
+
+function Test-Pass2ProteinQvalue {
+    <#
+    Assert that each <stem>.2nd-pass.fdr_scores.bin carries a SECOND-PASS
+    experiment_protein_qvalue rather than a verbatim copy of the 1st-pass column.
+
+    Single-run property, so it needs no baseline and no second route - which is the point.
+    Issue #4559: no pass-2 mode wrote that column, so it reached the 2nd-pass file holding
+    whatever pass 1 put there, and nothing could see it. Compare-FdrSidecars is blind because
+    both routes copied the same wrong value (the shared-defect blind spot), and the golden
+    reads the per-GROUP Stage 7 dump, never this per-entry column.
+
+    LIVENESS, not equivalence: this cannot say the pass-2 value is right, only that the
+    second-pass protein FDR reached the file. Records absent from pass 1 (gap-fill) cannot be
+    compared and are reported separately rather than silently skipped.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$RunDir
+    )
+
+    $issues = [System.Collections.Generic.List[string]]::new()
+    $suffix = '.2nd-pass.fdr_scores.bin'
+    $files = @(Get-ChildItem -File -Path $RunDir -Filter "*$suffix" -ErrorAction SilentlyContinue)
+    if ($files.Count -eq 0) {
+        $issues.Add("no $suffix files in $RunDir")
+        return @{ Pass = $false; Issues = $issues; Matched = 0 }
+    }
+
+    $totalMatched = 0
+    $totalDiffering = 0
+    foreach ($f in ($files | Sort-Object Name)) {
+        $stem = $f.Name.Substring(0, $f.Name.Length - $suffix.Length)
+        $pass1 = Join-Path $RunDir "$stem.1st-pass.fdr_scores.bin"
+        if (-not (Test-Path $pass1)) {
+            $issues.Add("$stem : no 1st-pass sidecar to compare against at $pass1")
+            continue
+        }
+        $r = [OspreyFdrSidecarComparer]::CheckPass2ProteinQ($pass1, $f.FullName)
+        if (-not $r.Readable) {
+            $issues.Add("$stem : $($r.Problem)")
+            continue
+        }
+        if ($r.Matched -eq 0) {
+            $issues.Add("$stem : no entry_id present in both passes - verified nothing")
+            continue
+        }
+        if ($r.Differing -eq 0) {
+            $issues.Add((("{0}: experiment_protein_qvalue is identical to the 1st-pass column " +
+                "on all {1} shared record(s) - the second-pass protein FDR result never " +
+                "reached the 2nd-pass sidecar (issue #4559)") -f $stem, $r.Matched))
+        }
+        $totalMatched += $r.Matched
+        $totalDiffering += $r.Differing
+    }
+
+    return @{
+        Pass = ($issues.Count -eq 0)
+        Issues = $issues
+        Matched = $totalMatched
+        Differing = $totalDiffering
+    }
 }

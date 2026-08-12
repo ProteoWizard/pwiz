@@ -1290,6 +1290,23 @@ foreach ($name in $selected) {
         $summaryLines.Add("$name mode1 (vs golden): FAIL ($($m1.Issues.Count) issues)")
     }
 
+    # ---- mode 1c: the 2nd-pass sidecar carries a SECOND-pass protein q -------
+    # Single-run property of the straight-through output, so it runs on the DEFAULT arm that
+    # TeamCity exercises - no baseline, no second route. It covers the one failure a two-route
+    # comparison structurally cannot see: a column both routes copy identically out of pass 1.
+    # That is what issue #4559 was, and mode 3 was green on the default arm throughout.
+    Write-Progress-Tc "${name}: 2nd-pass protein q liveness (mode 1c)"
+    $m1c = Test-Pass2ProteinQvalue -RunDir $straightDir
+    if ($m1c.Pass) {
+        $summaryLines.Add(("$name mode1c (2nd-pass protein q is pass-2): PASS " +
+            "($('{0:N0}' -f $m1c.Differing) of $('{0:N0}' -f $m1c.Matched) shared records moved)"))
+    } else {
+        $overallFail = $true
+        Write-Problem-Tc "$name mode1c (2nd-pass protein q is pass-2): FAIL -- $($m1c.Issues.Count) issue(s)"
+        $m1c.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+        $summaryLines.Add("$name mode1c (2nd-pass protein q is pass-2): FAIL ($($m1c.Issues.Count) issues)")
+    }
+
     # ---- mode 1b: FDR-calibration spot checks -------------------------------
     # Two independent tiers. The golden compare catches drift; the sanity bounds
     # catch a regression that a -CreateGolden rebaseline would otherwise bless
