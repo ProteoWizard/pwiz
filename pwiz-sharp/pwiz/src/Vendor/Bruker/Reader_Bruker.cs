@@ -118,9 +118,13 @@ public sealed class Reader_Bruker : IReader
         var acqSoftware = AddAcquisitionSoftware(result, data);
         var pwizSoftware = GetOrAddPwizSoftware(result, "pwiz_Reader_Bruker");
 
+        // ONE entry, which both the spectrum list and the chromatogram list point at - cpp
+        // Reader_Bruker.cpp:164-174 builds a single dpPwiz and hands it to each list. The extra
+        // "pwiz_Reader_conversion" this used to add produced two near-identical dataProcessing
+        // elements in every Bruker mzML, which was the last difference on otherwise-clean Bruker
+        // output. Reader_Thermo had the same defect and already dropped its second entry.
         var dpReader = MakeDataProcessing("pwiz_Reader_Bruker_conversion", pwizSoftware);
         result.DataProcessings.Add(dpReader);
-        result.DataProcessings.Add(MakeDataProcessing("pwiz_Reader_conversion", pwizSoftware));
 
         FillInstrumentMetadata(result, data, acqSoftware);
 
