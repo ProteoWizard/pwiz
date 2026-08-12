@@ -3188,7 +3188,7 @@ namespace pwiz.Osprey.Test
 
                 // Map entry_id -> finalized experiment_protein_qvalue, inserted out of record
                 // order to prove entry_id-keyed (order-independent) patching.
-                var runProteinByEntryId = new Dictionary<uint, double>
+                var proteinQByEntryId = new Dictionary<uint, double>
                 {
                     { 42, 0.95 },
                     { 3, 1.0 },
@@ -3205,7 +3205,9 @@ namespace pwiz.Osprey.Test
                 // Two-phase: phase-1 partial + phase-2 [52..60] patch.
                 FdrScoresSidecar.Write(twoPhasePath, partial, FdrScoresSidecar.Pass.FirstPass);
                 Assert.IsTrue(FdrScoresSidecar.PatchProteinQvalues(
-                    twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass));
+                    twoPhasePath, proteinQByEntryId, FdrScoresSidecar.Pass.FirstPass,
+                    out int nPatchedTwoPhase));
+                Assert.AreEqual(proteinQByEntryId.Count, nPatchedTwoPhase);
 
                 // The finalized two-phase file must be byte-for-byte identical to the
                 // single-phase reference (risk R2 -- what mode3 compares cross-process).
@@ -3234,7 +3236,9 @@ namespace pwiz.Osprey.Test
 
                 // A patch with the wrong pass byte must be rejected and leave bytes intact.
                 Assert.IsFalse(FdrScoresSidecar.PatchProteinQvalues(
-                    twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.SecondPass));
+                    twoPhasePath, proteinQByEntryId, FdrScoresSidecar.Pass.SecondPass,
+                    out int nPatchedRejected));
+                Assert.AreEqual(0, nPatchedRejected);
                 CollectionAssert.AreEqual(refBytes, File.ReadAllBytes(twoPhasePath),
                     "A rejected patch must not modify the sidecar");
             }
@@ -3276,7 +3280,8 @@ namespace pwiz.Osprey.Test
                 // What the second-pass protein FDR then produces for those same entries.
                 var pass2 = new Dictionary<uint, double> { { 10, 0.0031 }, { 7, 0.77 } };
                 Assert.IsTrue(FdrScoresSidecar.PatchProteinQvalues(
-                    path, pass2, FdrScoresSidecar.Pass.SecondPass));
+                    path, pass2, FdrScoresSidecar.Pass.SecondPass, out int nPatchedPass2));
+                Assert.AreEqual(pass2.Count, nPatchedPass2);
 
                 var loaded = new List<FdrEntry> { MakeFdrEntry(10, 0.0, 0.0, 0.0), MakeFdrEntry(7, 0.0, 0.0, 0.0) };
                 Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.SecondPass));
@@ -4235,11 +4240,11 @@ namespace pwiz.Osprey.Test
             {
                 new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
                 {
-                    MakeFdrEntryWithProteinQ(1u,           runPeptideQ: 0.005, runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(0x80000001u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(2u,           runPeptideQ: 0.5,   runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(0x80000002u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(3u,           runPeptideQ: 0.5,   runProteinQ: 0.005),
+                    MakeFdrEntryWithProteinQ(1u,           runPeptideQ: 0.005, experimentProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(0x80000001u,  runPeptideQ: 0.5,   experimentProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(2u,           runPeptideQ: 0.5,   experimentProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(0x80000002u,  runPeptideQ: 0.5,   experimentProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(3u,           runPeptideQ: 0.5,   experimentProteinQ: 0.005),
                 }),
             };
 
@@ -4319,8 +4324,8 @@ namespace pwiz.Osprey.Test
             {
                 new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
                 {
-                    MakeFdrEntryWithProteinQ(1u, runPeptideQ: 0.005, runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(2u, runPeptideQ: 0.5,   runProteinQ: 0.005),
+                    MakeFdrEntryWithProteinQ(1u, runPeptideQ: 0.005, experimentProteinQ: 1.0),
+                    MakeFdrEntryWithProteinQ(2u, runPeptideQ: 0.5,   experimentProteinQ: 0.005),
                 }),
             };
 
@@ -4369,7 +4374,7 @@ namespace pwiz.Osprey.Test
                 new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
                 {
                     // Lone decoy with a passing protein_q. No paired target.
-                    MakeFdrEntryWithProteinQ(0x80000007u, runPeptideQ: 0.5, runProteinQ: 0.005),
+                    MakeFdrEntryWithProteinQ(0x80000007u, runPeptideQ: 0.5, experimentProteinQ: 0.005),
                 }),
             };
 
@@ -4399,7 +4404,7 @@ namespace pwiz.Osprey.Test
         /// rest at their defaults.
         /// </summary>
         private static FdrEntry MakeFdrEntryWithProteinQ(uint id, double runPeptideQ,
-            double runProteinQ)
+            double experimentProteinQ)
         {
             return new FdrEntry
             {
@@ -4408,7 +4413,7 @@ namespace pwiz.Osprey.Test
                 IsDecoy = (id & 0x80000000u) != 0,
                 Charge = 2,
                 RunPeptideQvalue = runPeptideQ,
-                ExperimentProteinQvalue = runProteinQ,
+                ExperimentProteinQvalue = experimentProteinQ,
                 ModifiedSequence = "PEPTIDE",
             };
         }

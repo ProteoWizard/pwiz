@@ -75,7 +75,7 @@ namespace pwiz.Osprey.IO
             uint entryId, double score,
             double runPrecursorQvalue, double runPeptideQvalue,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
-            double pep, double runProteinQvalue, double experimentAggregateScore)
+            double pep, double experimentProteinQvalue, double experimentAggregateScore)
         {
             EntryId = entryId;
             Score = score;
@@ -84,7 +84,7 @@ namespace pwiz.Osprey.IO
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
             ExperimentPeptideQvalue = experimentPeptideQvalue;
             Pep = pep;
-            ExperimentProteinQvalue = runProteinQvalue;
+            ExperimentProteinQvalue = experimentProteinQvalue;
             ExperimentAggregateScore = experimentAggregateScore;
         }
     }

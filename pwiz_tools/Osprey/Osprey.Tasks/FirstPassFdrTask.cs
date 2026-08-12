@@ -2614,7 +2614,7 @@ namespace pwiz.Osprey.Tasks
                 string parquetPath = perFileParquetPaths[fileName];  // present: pass 1 read it
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
 
-                var runProteinByEntryId = new Dictionary<uint, double>();
+                var proteinQByEntryId = new Dictionary<uint, double>();
                 try
                 {
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
@@ -2626,10 +2626,10 @@ namespace pwiz.Osprey.Tasks
                             // a null Dictionary key would otherwise throw. See StreamFirstPassFileScores.
                             if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                 q = 1.0;
-                            runProteinByEntryId[entryId] = q;
+                            proteinQByEntryId[entryId] = q;
                         });
                     if (!FdrScoresSidecar.PatchProteinQvalues(
-                            fdrPath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass))
+                            fdrPath, proteinQByEntryId, FdrScoresSidecar.Pass.FirstPass, out _))
                     {
                         ctx.LogWarning(string.Format(
                             "Failed to patch experiment_protein_qvalue in 1st-pass fdr_scores.bin for {0} " +

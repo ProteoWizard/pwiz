@@ -196,20 +196,22 @@ namespace pwiz.Osprey.Tasks
                         "them here from the reconciled features (reused distributed-run code path).",
                         missingPass2, totalFiles));
                     // Stage 6's post-rescore overlay calls FdrEntry.ResetScores(), which clears
-                    // eight fields. Of the seven the sidecar carries, three can reach it at
-                    // their reset defaults (issue #4553):
-                    //   Score              - neither COMPETITION mode wrote one back
-                    //                        (transfer-compete, protein-compact). The transfer
-                    //                        mode's AssignPerRunQ does set it, on all three of
-                    //                        its branches.
-                    //   Pep                - written only on the on-stratum path
-                    //   ExperimentProteinQvalue   - written by NO mode; first-pass protein FDR is its
-                    //                        only producer, and the second-pass one writes
-                    //                        ExperimentProteinQvalue instead
-                    // (ResetScores' eighth field, ExperimentProteinQvalue, has no slot in the
-                    // v3 record and is written after this by RunProteinFdr, so it is out of
-                    // scope here rather than recomputed.)
-                    // Seeding all three from the 1st-pass sidecar reproduces exactly what the
+                    // eight fields - one for every scalar the v4 record carries. Three of them
+                    // can reach the sidecar at their reset defaults (issue #4553):
+                    //   Score                    - neither COMPETITION mode wrote one back
+                    //                              (transfer-compete, protein-compact). The
+                    //                              transfer mode's AssignPerRunQ does set it,
+                    //                              on all three of its branches.
+                    //   Pep                      - written only on the on-stratum path
+                    //   ExperimentAggregateScore - the third field of the same gap (sidecar v4,
+                    //                              issue #4522); no frozen 2nd-pass mode writes
+                    //                              it back, so it lands at 0.0 for every peak
+                    //                              Stage 6 touched.
+                    // ExperimentProteinQvalue is the fourth field ResetScores clears that no
+                    // 2nd-pass mode writes back, and it is deliberately NOT seeded here: its
+                    // pass-2 producer is PatchPass2ProteinQvalues, which writes the second-pass
+                    // value into the 2nd-pass sidecar after the second-pass protein FDR (#4559).
+                    // Seeding those three from the 1st-pass sidecar reproduces exactly what the
                     // distributed route has in hand at this point, which is why that route never
                     // showed the loss: it must rehydrate from that same sidecar, and the sidecar
                     // carries all seven scalars. Whatever pass 2 genuinely recomputes then
@@ -345,11 +347,12 @@ namespace pwiz.Osprey.Tasks
             // Persist post-Stage-6 per-file 2nd-pass FDR scores
             // BEFORE RunProteinFdr. The sidecar holds Score +
             // run/experiment precursor/peptide q-values + Pep +
-            // ExperimentProteinQvalue (the latter set by
-            // RunFirstPassProteinFdr earlier); none of those
-            // fields are mutated by RunProteinFdr, which only
-            // sets ExperimentProteinQvalue via
-            // PropagateProteinQvalues. Writing here lets the
+            // ExperimentAggregateScore + ExperimentProteinQvalue
+            // (the last set by RunFirstPassProteinFdr earlier).
+            // RunProteinFdr mutates exactly one of them --
+            // ExperimentProteinQvalue, via PropagateProteinQvalues --
+            // which is why that column is patched back into this file
+            // there rather than written here (#4559). Writing here lets the
             // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
             // by stage6 isolation in Test-Regression) leave the
             // sidecar on disk for downstream rehydration.
@@ -705,10 +708,10 @@ namespace pwiz.Osprey.Tasks
                     byEntryId[e.EntryId] = e.ExperimentProteinQvalue;
 
                 if (FdrScoresSidecar.PatchProteinQvalues(
-                        pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
+                        pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, out int patchedHere))
                 {
                     filesPatched++;
-                    nPatched += byEntryId.Count;
+                    nPatched += patchedHere;
                 }
                 else
                 {
@@ -718,16 +721,18 @@ namespace pwiz.Osprey.Tasks
 
             // Reported, not thrown on: nothing in this process reads the 2nd-pass sidecar's
             // protein column, so a failed patch cannot corrupt this run's output. It DOES leave
-            // a file whose protein column is a pass-1 value while its header says pass 2, which
-            // is precisely the state #4559 existed to remove - so the warning names that rather
-            // than implying the file is merely missing an optional extra.
+            // a file whose protein column is not a pass-2 value while its header says pass 2,
+            // which is precisely the state #4559 existed to remove - so the warning names that
+            // rather than implying the file is merely missing an optional extra.
             if (failed.Count > 0)
             {
                 ctx.LogWarning(string.Format(
                     "Could not patch the second-pass protein q-value into the 2nd-pass FDR " +
-                    "sidecar for {0} file(s): [{1}]. Those files keep a FIRST-pass protein " +
-                    "q-value in a pass-2 file; any consumer joining on it is reading the wrong " +
-                    "pass.",
+                    "sidecar for {0} file(s): [{1}]. Those files carry no pass-2 protein " +
+                    "q-value: each record keeps what it held when the sidecar was written, " +
+                    "which is the reset default for every entry Stage 6 rescored or gap-filled " +
+                    "and a pass-1 value only for entries Stage 6 left alone. Any consumer " +
+                    "joining on that column is reading the wrong pass.",
                     failed.Count, string.Join(", ", failed)));
             }
             ctx.LogVerbose(string.Format(

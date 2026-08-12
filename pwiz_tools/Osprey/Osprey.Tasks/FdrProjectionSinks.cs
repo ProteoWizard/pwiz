@@ -301,15 +301,15 @@ namespace pwiz.Osprey.Tasks
                 _curFileIdx = fileIdx;
                 _curProteinQ = _resolveProteinQ(Projections.PerFile[fileIdx].Key);
             }
-            double runProteinQvalue;
-            if (_curProteinQ == null || !_curProteinQ.TryGetValue(entryId, out runProteinQvalue))
-                runProteinQvalue = 1.0;
+            double experimentProteinQvalue;
+            if (_curProteinQ == null || !_curProteinQ.TryGetValue(entryId, out experimentProteinQvalue))
+                experimentProteinQvalue = 1.0;
 
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
                 q.RunPrecursorQvalue, q.RunPeptideQvalue,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                q.Pep, runProteinQvalue, experimentAggregateScore));
+                q.Pep, experimentProteinQvalue, experimentAggregateScore));
 
             // Last row of this file: flush its sidecar and release the buffer. RowCount
             // (not the row list) so the 2nd-pass resident projection and the 1st-pass

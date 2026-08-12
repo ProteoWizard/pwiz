@@ -223,13 +223,6 @@ namespace pwiz.Osprey.Tasks
             var swProtein = Stopwatch.StartNew();
             RunProteinFdr(perFileEntries, fullLibrary, config, ctx);
             swProtein.Stop();
-            // The 2nd-pass sidecar was written above, BEFORE this protein FDR ran - it is one of
-            // its inputs - so the protein column it carries is still the pass-1 value at this
-            // point. Patch it now that the pass-2 value exists, so every column in that file is
-            // a pass-2 value (issue #4559). Cheap: 8 bytes per record, one file at a time, and
-            // only where a 2nd-pass sidecar was written.
-            if (AnyReconciledParquet(config))
-                Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
             ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
                 swProtein.Elapsed.TotalSeconds));
             // Parsimony + picked-protein TDC are genuinely whole-run, so this probe is what
@@ -375,6 +368,18 @@ namespace pwiz.Osprey.Tasks
         {
             var result = ProteinFdrEngine.RunSecondPass(
                 perFileEntries, fullLibrary, config, ctx.LogInfo);
+
+            // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
+            // inputs - so the protein column it carries is still the pass-1 value at this point.
+            // Patch it now that the pass-2 value exists, so every column in that file is a
+            // pass-2 value (issue #4559). Cheap: 8 bytes per record, one file at a time, and
+            // only where a 2nd-pass sidecar was written.
+            // This MUST precede the dumps below: Stage7ProteinFdrOnly ends the process there,
+            // and an unpatched record keeps whatever it held when the sidecar was written -
+            // the ResetScores default for every entry Stage 6 rescored or gap-filled, since
+            // RestorePass1Scalars no longer seeds this field.
+            if (AnyReconciledParquet(config))
+                Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
             if (ctx.Diagnostics?.DumpDetectedPeptides ?? false)

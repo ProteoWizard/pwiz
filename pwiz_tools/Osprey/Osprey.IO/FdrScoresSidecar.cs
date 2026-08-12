@@ -376,7 +376,7 @@ namespace pwiz.Osprey.IO
         /// S1): patch each record's <c>experiment_protein_qvalue</c> field <c>[52..60]</c> in
         /// place on an already-written (phase-1 partial) sidecar, locating each record
         /// by its <c>entry_id</c> at <c>[0..4]</c> in
-        /// <paramref name="runProteinByEntryId"/>. The phase-1 write (via the second
+        /// <paramref name="proteinQByEntryId"/>. The phase-1 write (via the second
         /// <see cref="Write(string, IReadOnlyList{FdrScoreRecord}, Pass)"/> overload)
         /// emits a byte-identical file EXCEPT for the <c>experiment_protein_qvalue</c> column,
         /// which carries the 1.0 placeholder until first-pass protein FDR is known; this
@@ -391,17 +391,27 @@ namespace pwiz.Osprey.IO
         /// in <see cref="TryRead"/> already assume). Same header validation as
         /// <see cref="TryRead"/> (magic / version / pass / size); returns <c>false</c> on
         /// any mismatch or IO failure, leaving the file unchanged. Streams the source one
-        /// 60-byte record at a time straight into the <see cref="FileSaver"/> temp stream
-        /// (bounded memory -- one record resident, not an O(file-size) whole-file buffer;
-        /// issue #4355) and promotes it atomically on Commit, matching the <c>Write</c> path.
+        /// <see cref="RecordLength"/>-byte record at a time straight into the
+        /// <see cref="FileSaver"/> temp stream (bounded memory -- one record resident, not an
+        /// O(file-size) whole-file buffer; issue #4355) and promotes it atomically on Commit,
+        /// matching the <c>Write</c> path.
+        /// <para><paramref name="recordsPatched"/> counts records actually rewritten, NOT the
+        /// size of <paramref name="proteinQByEntryId"/>: the two differ exactly when the map
+        /// carries entry_ids the file does not, which is the coverage hole worth seeing. The
+        /// Rust twin counts the same way.</para>
         /// </summary>
         public static bool PatchProteinQvalues(
             string path,
-            IReadOnlyDictionary<uint, double> runProteinByEntryId,
-            Pass expectedPass)
+            IReadOnlyDictionary<uint, double> proteinQByEntryId,
+            Pass expectedPass,
+            out int recordsPatched)
         {
+            recordsPatched = 0;
+            // Accumulated locally and published only after Commit, so a failed patch reports
+            // zero rather than a count for records the caller's file never actually kept.
+            int nPatchedHere = 0;
             if (path == null) throw new ArgumentNullException(nameof(path));
-            if (runProteinByEntryId == null) throw new ArgumentNullException(nameof(runProteinByEntryId));
+            if (proteinQByEntryId == null) throw new ArgumentNullException(nameof(proteinQByEntryId));
 
             try
             {
@@ -459,10 +469,11 @@ namespace pwiz.Osprey.IO
                             if (!ReadFully(src, record, RecordLength))
                                 return false;
                             uint recordEntryId = BitConverter.ToUInt32(record, 0);
-                            if (runProteinByEntryId.TryGetValue(recordEntryId, out double runProteinQvalue))
+                            if (proteinQByEntryId.TryGetValue(recordEntryId, out double experimentProteinQvalue))
                             {
-                                byte[] bytes = BitConverter.GetBytes(runProteinQvalue);
+                                byte[] bytes = BitConverter.GetBytes(experimentProteinQvalue);
                                 Buffer.BlockCopy(bytes, 0, record, 52, 8);
+                                nPatchedHere++;
                             }
                             dst.Write(record, 0, RecordLength);
                         }
@@ -474,6 +485,7 @@ namespace pwiz.Osprey.IO
             {
                 return false;
             }
+            recordsPatched = nPatchedHere;
             return true;
         }
 
@@ -542,7 +554,7 @@ namespace pwiz.Osprey.IO
             BinaryWriter bw, uint entryId, double score,
             double runPrecursorQvalue, double runPeptideQvalue,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
-            double pep, double runProteinQvalue, double experimentAggregateScore)
+            double pep, double experimentProteinQvalue, double experimentAggregateScore)
         {
             bw.Write(entryId);                          // [0..4]
             bw.Write(score);                            // [4..12]
@@ -551,7 +563,7 @@ namespace pwiz.Osprey.IO
             bw.Write(experimentPrecursorQvalue);        // [28..36]
             bw.Write(experimentPeptideQvalue);          // [36..44]
             bw.Write(pep);                              // [44..52]
-            bw.Write(runProteinQvalue);                 // [52..60]
+            bw.Write(experimentProteinQvalue);                 // [52..60]
             bw.Write(experimentAggregateScore);         // [60..68]
         }
 
@@ -662,7 +674,7 @@ namespace pwiz.Osprey.IO
                 e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
                 e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
                 e.Pep                         = BitConverter.ToDouble(data, off + 44);
-                e.ExperimentProteinQvalue            = BitConverter.ToDouble(data, off + 52);
+                e.ExperimentProteinQvalue     = BitConverter.ToDouble(data, off + 52);
                 e.ExperimentAggregateScore    = BitConverter.ToDouble(data, off + 60);
             }
             return true;
@@ -730,7 +742,7 @@ namespace pwiz.Osprey.IO
                 e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
                 e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
                 e.Pep                         = BitConverter.ToDouble(data, off + 44);
-                e.ExperimentProteinQvalue            = BitConverter.ToDouble(data, off + 52);
+                e.ExperimentProteinQvalue     = BitConverter.ToDouble(data, off + 52);
                 e.ExperimentAggregateScore    = BitConverter.ToDouble(data, off + 60);
             }
             return true;
