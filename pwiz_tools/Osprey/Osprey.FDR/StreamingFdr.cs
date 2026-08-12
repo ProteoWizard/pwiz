@@ -387,8 +387,19 @@ namespace pwiz.Osprey.FDR
             }
             var qExp = new double[w];
             PercolatorQValues.ComputeConservativeQvalues(sortedScore, sortedDecoy, qExp);
-            var baseIdExpQ = new Dictionary<uint, double>(w);
-            for (int i = 0; i < w; i++) baseIdExpQ[sortedBaseId[i]] = qExp[i];
+            // Keyed by the WINNER's full entry_id, decoy bit intact - never the shared base_id.
+            // sortedDecoy carries which side won, so the winner's entry_id is reconstructible
+            // here without a second array, leaving the competition's sort and tie-break
+            // untouched. See PercolatorQValues.ComputeExperimentPrecursorQMap for the defect
+            // this closes: on base_id, a target whose DECOY won inherited the winner's q.
+            var expQByWinnerId = new Dictionary<uint, double>(w);
+            for (int i = 0; i < w; i++)
+            {
+                uint winnerId = sortedDecoy[i]
+                    ? sortedBaseId[i] | ~PercolatorEntry.BASE_ID_MASK
+                    : sortedBaseId[i];
+                expQByWinnerId[winnerId] = qExp[i];
+            }
 
             var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
 
@@ -397,7 +408,7 @@ namespace pwiz.Osprey.FDR
             // value it produced is a function of the bounded state below plus the survivor's own
             // run q, so handing that state back costs O(distinct) instead of O(files x entries).
             return new StreamedCompetitionState(
-                baseIdExpQ, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
+                expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
         }
 
         /// <summary>
@@ -409,7 +420,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public sealed class StreamedCompetitionState
         {
-            private readonly Dictionary<uint, double> _baseIdExpQ;
+            private readonly Dictionary<uint, double> _expQByWinnerId;
             private readonly Dictionary<uint, double> _minRunQ;
             private readonly Dictionary<uint, (int fileIdx, uint entryId, double score)> _winnerLoc;
             private readonly Dictionary<uint, double> _aggByEntryId;
@@ -418,7 +429,7 @@ namespace pwiz.Osprey.FDR
             private readonly bool _multiFile;
 
             internal StreamedCompetitionState(
-                Dictionary<uint, double> baseIdExpQ,
+                Dictionary<uint, double> expQByWinnerId,
                 Dictionary<uint, double> minRunQ,
                 Dictionary<uint, (int fileIdx, uint entryId, double score)> winnerLoc,
                 Dictionary<uint, double> aggByEntryId,
@@ -426,7 +437,7 @@ namespace pwiz.Osprey.FDR
                 IReadOnlyList<string> fileKeys,
                 bool multiFile)
             {
-                _baseIdExpQ = baseIdExpQ;
+                _expQByWinnerId = expQByWinnerId;
                 _minRunQ = minRunQ;
                 _winnerLoc = winnerLoc;
                 _aggByEntryId = aggByEntryId;
@@ -446,8 +457,9 @@ namespace pwiz.Osprey.FDR
             {
                 if (!_multiFile)
                     return runQ;
-                uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
-                double eq = _baseIdExpQ.TryGetValue(baseId, out double bq) ? bq : 1.0;
+                // Full entry_id: an entry takes the experiment q only when it was the side
+                // that WON its own target/decoy competition. The loser keeps 1.0.
+                double eq = _expQByWinnerId.TryGetValue(entryId, out double bq) ? bq : 1.0;
                 double floorQ = _minRunQ.TryGetValue(entryId, out double mrq) ? mrq : 1.0;
                 return eq < floorQ ? floorQ : eq;
             }
@@ -600,9 +612,12 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// Experiment-precursor <c>base_id -&gt; q</c>: compete the global base_id bests,
-            /// conservative-q, keyed by each winner's base_id -- byte-identical to
-            /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/>.
+            /// Experiment-precursor <c>entry_id -&gt; q</c>: compete the global base_id bests,
+            /// conservative-q, keyed by each WINNER's full entry_id -- byte-identical to
+            /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/>, which this is the
+            /// streaming oracle for. Keyed on entry_id and not base_id because a target and its
+            /// decoy share a base_id, so a base_id key hands the loser the winner's q; see that
+            /// method for the measurement.
             /// </summary>
             public Dictionary<uint, double> BuildExperimentPrecursorQMap()
             {
@@ -613,7 +628,10 @@ namespace pwiz.Osprey.FDR
                 PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
                 var map = new Dictionary<uint, double>(wb.Length);
                 for (int rank = 0; rank < wb.Length; rank++)
-                    map[wb[rank]] = q[rank];
+                {
+                    uint winnerId = wd[rank] ? wb[rank] | ~PercolatorEntry.BASE_ID_MASK : wb[rank];
+                    map[winnerId] = q[rank];
+                }
                 return map;
             }
 

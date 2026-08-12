@@ -2748,7 +2748,12 @@ namespace pwiz.Osprey.Test
             PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
             var map = new Dictionary<uint, double>(wi.Length);
             for (int rank = 0; rank < wi.Length; rank++)
-                map[entryIds[wi[rank]] & 0x7FFFFFFFu] = q[rank];
+            {
+                // Keyed by the WINNER's full entry_id, decoy bit intact - mirroring
+                // PercolatorQValues.ComputeExperimentPrecursorQMap. On base_id the losing side of
+                // each competition inherited the winner's q, which is the defect this pins shut.
+                map[entryIds[wi[rank]]] = q[rank];
+            }
             return map;
         }
 
