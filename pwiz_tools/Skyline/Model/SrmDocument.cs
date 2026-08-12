@@ -809,55 +809,21 @@ namespace pwiz.Skyline.Model
                 docClone.SetDocumentType();
             }
             
-            // A molecule whose children changed has to have its results worked out again. A
-            // transition which has just been added has no peaks in the columnar results, and only a
-            // results pass reads them from the .skyd - nothing else fills them in, so without this
-            // the peaks of everything added by picking, refining or importing stay missing.
-            if (!Settings.HasResults || DeferSettingsChanges)
-                return docClone.Children;
-
-            // Store indexes to previous results in a dictionary for lookup
-            var dictPeptideIdPeptide = new Dictionary<int, PeptideDocNode>();
-            // Unless the normalization standards have changed, which require recalculating of all ratios
-            if (ReferenceEquals(Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD),
-                docClone.Settings.GetPeptideStandards(StandardType.GLOBAL_STANDARD)))
-            {
-                foreach (var nodePeptide in Molecules)
-                {
-                    if (nodePeptide != null)    // Or previous peptides were freed during command-line peak picking
-                        dictPeptideIdPeptide.Add(nodePeptide.Peptide.GlobalIndex, nodePeptide);
-                }
-            }
-
-            return docClone.UpdateResultsSummaries(docClone.Children, dictPeptideIdPeptide);
-        }
-
-        /// <summary>
-        /// Update results for the changed peptides.  This needs to start
-        /// at the peptide level, because peptides have useful peak picking information
-        /// like predicted retention time, and multiple measured precursors.
-        /// </summary>
-        private IList<DocNode> UpdateResultsSummaries(IList<DocNode> children, IDictionary<int, PeptideDocNode> dictPeptideIdPeptide)
-        {
-            // Perform main processing for peptides in parallel
-            var diffResults = new SrmSettingsDiff(Settings, true);
-            var moleculeGroupPairs = GetMoleculeGroupPairs(children);
-            var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
-            ParallelEx.For(0, moleculeGroupPairs.Length, i =>
-            {
-                var pair = moleculeGroupPairs[i];
-                var nodePep = pair.NodeMolecule;
-                int index = nodePep.Peptide.GlobalIndex;
-
-                PeptideDocNode nodeExisting;
-                if (dictPeptideIdPeptide.TryGetValue(index, out nodeExisting) &&
-                        ReferenceEquals(nodeExisting, nodePep))
-                    moleculeNodes[i] = nodePep;
-                else
-                    moleculeNodes[i] = nodePep.ChangeSettings(Settings, diffResults);
-            });
-
-            return RegroupMolecules(children, moleculeNodes);
+            // The results are not recalculated here. Everything this pass worked out is either in
+            // the columnar results already or read back from the .skyd on demand through a
+            // MoleculeResults, so recalculating every molecule whenever the children change is work
+            // whose answers nothing keeps.
+            //
+            // It was also a second pass: ChangeSettingsInternalOrThrow already calls ChangeSettings
+            // on every molecule, and then calls ChangeChildren, which brought it straight back
+            // through here to do the same thing again.
+            //
+            // KNOWN, NOT UNDERSTOOD: ConsoleExportTrigger fails without this, at the triggered
+            // transition list export, which needs the transition ranks. Nothing else in the fast
+            // suites does - the peak count ratio failures this used to cover went away once
+            // GetPeakCountRatio learned the difference between "not measured here" and a ratio of
+            // zero, and refinement stopped asking the accessors backed by LegacyChromInfos.
+            return docClone.Children;
         }
 
         /// <summary>
