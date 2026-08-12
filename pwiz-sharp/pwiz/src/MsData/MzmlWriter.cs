@@ -926,6 +926,15 @@ public sealed class MzmlWriter
         }
 
         w.WriteStartElement("binaryDataArray");
+        // arrayLength, and BEFORE encodedLength so the attribute order matches cpp
+        // (IO.cpp:1917-1931). cpp writes it only for arrays that are NOT m/z, time or
+        // intensity: those three are the primary arrays, whose length the spectrum's
+        // defaultArrayLength already states, and cpp's comment is explicit that they "can never
+        // override the default array length". Every other array - ion mobility, wavelength,
+        // scanning-quadrupole bounds, non-standard - carries its own length. We emitted none at
+        // all, which differed on every file with a supplementary array.
+        if (!IsPrimaryArray(arr))
+            w.WriteAttributeString("arrayLength", arr.Data.Count.ToString(CultureInfo.InvariantCulture));
         // mzML's encodedLength = the length of the base64 string, NOT the raw/compressed byte count.
         // Readers (including pwiz's msdiff) use this to slice the base64 blob out of the XML,
         // so a mismatch makes decoding fail at that spectrum.
@@ -1190,6 +1199,24 @@ public sealed class MzmlWriter
         var c = cfg.Clone();
         c.Numpress = actualNumpress;
         EmitEncodingCvParams(w, c);
+    }
+
+    /// <summary>
+    /// True for the three arrays whose length is already given by the parent's
+    /// <c>defaultArrayLength</c> — m/z, time and intensity. cpp <c>IO.cpp:1917-1919</c> tests
+    /// exactly these three by cvParam presence when deciding whether to write
+    /// <c>binaryDataArray/@arrayLength</c>.
+    /// </summary>
+    private static bool IsPrimaryArray(BinaryDataArray arr)
+    {
+        foreach (var cv in arr.CVParams)
+        {
+            if (cv.Cvid == CVID.MS_m_z_array
+                || cv.Cvid == CVID.MS_time_array
+                || cv.Cvid == CVID.MS_intensity_array)
+                return true;
+        }
+        return false;
     }
 
     private static CVID ArrayTypeCvid(BinaryDataArray arr)
