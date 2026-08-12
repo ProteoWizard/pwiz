@@ -325,7 +325,7 @@ namespace pwiz.Osprey
         /// FDR state (gate input + ranking input + propagated output) to
         /// cs_stage6_protein_fdr.tsv after RunFirstPassProteinFdr completes.
         /// Used to bisect the SQC[UniMod:4]LQVPER borderline cross-impl
-        /// divergence in run_protein_qvalue: matching against
+        /// divergence in experiment_protein_qvalue: matching against
         /// rust_stage6_protein_fdr.tsv shows whether the gate input
         /// (best_qvalue), the ranking input (score), or the algorithm output
         /// (protein_qvalue) is responsible.
@@ -1521,7 +1521,7 @@ namespace pwiz.Osprey
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunProteinQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
                 }
@@ -1589,7 +1589,7 @@ namespace pwiz.Osprey
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunProteinQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
                 }
@@ -1904,7 +1904,7 @@ namespace pwiz.Osprey
         /// run q-value, min across files). score is the input ranking
         /// (max SVM discriminant across files). protein_qvalue is the
         /// propagated output -- the value PropagateProteinQvalues will
-        /// write to FdrEntry.RunProteinQvalue (1.0 if the peptide is
+        /// write to FdrEntry.ExperimentProteinQvalue (1.0 if the peptide is
         /// not in proteinFdr.PeptideQvalues, matching the
         /// PropagateProteinQvalues default). Rows sorted by
         /// (is_decoy, modified_sequence) for stable diff.

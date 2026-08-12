@@ -177,7 +177,7 @@ Ranking is by raw SVM discriminant (`FdrEntry.Score`), never by q-value or PEP �
 the class doc (`ProteinFdr.cs:496-534`) reproduces the Rust rationale that q/PEP
 collapse the decoy null.
 
-### First pass — pre-compaction, gating (`run_protein_qvalue`)
+### First pass — pre-compaction, gating (`experiment_protein_qvalue`)
 
 `ProteinFdr.RunFirstPassProteinFdr` (`ProteinFdr.cs:804`), wrapped by
 `ProteinFdrEngine.RunFirstPass` (`ProteinFdrEngine.cs:61`), is invoked from

@@ -18,7 +18,7 @@ resume mechanisms the port adds (a per-task `.osprey.task` validity sidecar and 
 | `<stem>.spectra.bin` | Custom binary v3 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload |
 | `<stem>.scores.parquet` | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + run_protein_qvalue + experiment_aggregate_score after first-pass Percolator |
+| `<stem>.1st-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + experiment_protein_qvalue + experiment_aggregate_score after first-pass Percolator |
 | `<stem>.2nd-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.reconciliation.json` | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
 | `<output>.<TaskName>.osprey.task` | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
@@ -64,7 +64,7 @@ local-temp → NAS cross-volume copy, which sidesteps the truncation risk `copy_
 guards against. Callers that use it: `ParquetScoreCache.WriteScoresParquet`
 (`ParquetScoreCache.cs:265`, `:457`), `SpectraCache.SaveSpectraCache` (`SpectraCache.cs:85`),
 `CalibrationIO.SaveCalibration` (`CalibrationIO.cs:50`), `FdrScoresSidecar.WriteInternal`
-(`FdrScoresSidecar.cs:366`) and `PatchRunProteinQvalues` (`FdrScoresSidecar.cs:257`),
+(`FdrScoresSidecar.cs:366`) and `PatchProteinQvalues` (`FdrScoresSidecar.cs:257`),
 `ReconciliationFile.Save` (`ReconciliationFile.cs:203`), `LibraryCache.SaveCache`
 (`LibraryCache.cs:77`), and `TaskValiditySidecar.Write` (`TaskValiditySidecar.cs:130`).
 
@@ -319,14 +319,14 @@ Record (68 bytes):
   [28..36] experiment_precursor_qvalue  f64 LE
   [36..44] experiment_peptide_qvalue    f64 LE
   [44..52] pep                          f64 LE
-  [52..60] run_protein_qvalue           f64 LE
+  [52..60] experiment_protein_qvalue           f64 LE
   [60..68] experiment_aggregate_score   f64 LE
 ```
 
 Field order and offsets are single-sourced in `WriteRecord` (`FdrScoresSidecar.cs:390`).
 The v2→v3 bump (dated 2026-05-02 in the C# comment, `FdrScoresSidecar.cs:82`) added
-`run_protein_qvalue` so a Stage 6 worker can reproduce the in-process compaction predicate
-`run_peptide_qvalue ≤ 0.01 OR run_protein_qvalue ≤ 0.01`; records are written pre-compaction but
+`experiment_protein_qvalue` so a Stage 6 worker can reproduce the in-process compaction predicate
+`run_peptide_qvalue ≤ 0.01 OR experiment_protein_qvalue ≤ 0.01`; records are written pre-compaction but
 post first-pass protein FDR so the value is real, not the default 1.0. Cross-impl byte parity is
 checked by a harness via the `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` hook (`FdrScoresSidecar.cs:43`).
 
@@ -346,10 +346,10 @@ Two caveats worth keeping straight. It is **not** a general q→score inverse: t
 clamp (`ClampExperimentQToBestRunFlat`, issue #4390) floors an experiment q up to a run q, so
 after clamping the experiment q is not a monotone function of this score. And the field was
 appended at the END specifically so every v3 offset is unchanged, which is what keeps
-`PatchRunProteinQvalues`'s `[52..60]` patch valid without modification.
+`PatchProteinQvalues`'s `[52..60]` patch valid without modification.
 
 A two-phase write exists for the lean projection path (issue #4355): phase 1 writes records with
-a 1.0 placeholder `run_protein_qvalue`; `PatchRunProteinQvalues` (`FdrScoresSidecar.cs:247`)
+a 1.0 placeholder `experiment_protein_qvalue`; `PatchProteinQvalues` (`FdrScoresSidecar.cs:247`)
 then streams the file one record at a time and overwrites only bytes `[52..60]` per entry_id,
 producing a file byte-identical to a single-phase write.
 

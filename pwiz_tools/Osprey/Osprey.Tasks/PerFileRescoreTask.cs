@@ -478,7 +478,7 @@ namespace pwiz.Osprey.Tasks
             if (bundle != null)
             {
                 // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
-                // sidecar v3 already carries RunProteinQvalue from the original
+                // sidecar v3 already carries ExperimentProteinQvalue from the original
                 // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
                 // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
                 // it inline in the --task SecondPassFDR path. The recompute uses the
@@ -487,8 +487,8 @@ namespace pwiz.Osprey.Tasks
                 // upstream rebuild has nudged peptide q-values or score values
                 // even at the ULP level). RescoreCompaction below now retains the
                 // persisted global first-pass base_id set and does NOT consult
-                // RunProteinQvalue, so this recompute no longer affects the
-                // compacted set; it is kept to hold RunProteinQvalue byte-consistent
+                // ExperimentProteinQvalue, so this recompute no longer affects the
+                // compacted set; it is kept to hold ExperimentProteinQvalue byte-consistent
                 // with the straight-through pipeline for the downstream 2nd-pass
                 // protein FDR and cross-impl parity (before recon-v3 read the
                 // persisted set, omitting it diverged the post-compaction set from
@@ -522,7 +522,7 @@ namespace pwiz.Osprey.Tasks
                 //     decoy side comes from q-gated detected peptides either way), so the skip
                 //     is a conservative choice, not a bug fix. It moves 740 records (0.28%)
                 //     upward and changes no output.
-                //   * That the 1st-pass sidecar's RunProteinQvalue is "what the straight-through
+                //   * That the 1st-pass sidecar's ExperimentProteinQvalue is "what the straight-through
                 //     pipeline computed". It is not: the join node's value differs from
                 //     straight-through for 12.46% of records (1.57% at 82 files), always lower.
                 //     That divergence is PRE-EXISTING - master's routing differs by 12.74% - and

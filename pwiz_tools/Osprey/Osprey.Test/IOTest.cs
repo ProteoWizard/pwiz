@@ -3049,7 +3049,7 @@ namespace pwiz.Osprey.Test
         }
 
         private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep,
-            double runProteinQvalue = 1.0)
+            double proteinQvalue = 1.0)
         {
             return new FdrEntry
             {
@@ -3061,10 +3061,9 @@ namespace pwiz.Osprey.Test
                 Score = score,
                 RunPrecursorQvalue = q,
                 RunPeptideQvalue = q + 1.0e-9,
-                RunProteinQvalue = runProteinQvalue,
                 ExperimentPrecursorQvalue = q + 2.0e-9,
                 ExperimentPeptideQvalue = q + 3.0e-9,
-                ExperimentProteinQvalue = 1.0,
+                ExperimentProteinQvalue = proteinQvalue,
                 Pep = pep,
                 ModifiedSequence = "PEPTIDE",
             };
@@ -3082,16 +3081,16 @@ namespace pwiz.Osprey.Test
             try
             {
                 string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
-                // Distinct run_protein_qvalue per entry catches a writer that
+                // Distinct experiment_protein_qvalue per entry catches a writer that
                 // drops the v3 field. Values match Rust's
                 // fdr_scores_sidecar_v3_round_trip exactly so the
                 // OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT byte-parity gate compares
                 // identical inputs on both sides.
                 var entries = new List<FdrEntry>
                 {
-                    MakeFdrEntry(0, -3.5, 0.001, 0.02, runProteinQvalue: 0.0042),
-                    MakeFdrEntry(1, -3.4, 0.002, 0.05, runProteinQvalue: 0.0123),
-                    MakeFdrEntry(2, -3.3, 0.003, 0.08, runProteinQvalue: 0.95),
+                    MakeFdrEntry(0, -3.5, 0.001, 0.02, proteinQvalue: 0.0042),
+                    MakeFdrEntry(1, -3.4, 0.002, 0.05, proteinQvalue: 0.0123),
+                    MakeFdrEntry(2, -3.3, 0.003, 0.08, proteinQvalue: 0.95),
                 };
 
                 FdrScoresSidecar.Write(path, entries, FdrScoresSidecar.Pass.FirstPass);
@@ -3134,8 +3133,8 @@ namespace pwiz.Osprey.Test
                                     BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPeptideQvalue));
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Pep),
                                     BitConverter.DoubleToInt64Bits(loaded[i].Pep));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunProteinQvalue),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].RunProteinQvalue));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentProteinQvalue),
+                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentProteinQvalue));
                 }
             }
             finally
@@ -3146,10 +3145,10 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Two-phase 1st-pass sidecar write (issue #4355 struct-shrink S1, risk R2):
-        /// a phase-1 partial write (every record's run_protein_qvalue held at the 1.0
-        /// placeholder) followed by <see cref="FdrScoresSidecar.PatchRunProteinQvalues"/>
+        /// a phase-1 partial write (every record's experiment_protein_qvalue held at the 1.0
+        /// placeholder) followed by <see cref="FdrScoresSidecar.PatchProteinQvalues"/>
         /// must produce a file that is BYTE-IDENTICAL to a single-phase reference write
-        /// whose records already carried the finalized run_protein_qvalue. The map is
+        /// whose records already carried the finalized experiment_protein_qvalue. The map is
         /// entry_id-keyed and deliberately built out of record order (and the records
         /// carry non-sequential entry_ids) to prove the patch locates each record's
         /// [52..60] by entry_id, not by position.
@@ -3161,7 +3160,7 @@ namespace pwiz.Osprey.Test
             Directory.CreateDirectory(dir);
             try
             {
-                // Finalized records with a distinct real run_protein_qvalue each (the
+                // Finalized records with a distinct real experiment_protein_qvalue each (the
                 // second-to-last arg). entry_ids are non-sequential so a positional patch
                 // would land the wrong value. Each record also carries a DISTINCT
                 // experiment_aggregate_score in the trailing [60..68] field, which the patch
@@ -3175,7 +3174,7 @@ namespace pwiz.Osprey.Test
                     new FdrScoreRecord(3,  -3.2, 0.004, 0.0041, 0.0042, 0.0043, 0.11, 1.0,     2.125),
                 };
 
-                // Phase-1 partial records: identical EXCEPT run_protein_qvalue = 1.0. The
+                // Phase-1 partial records: identical EXCEPT experiment_protein_qvalue = 1.0. The
                 // aggregate score is already final at phase 1 (it comes from the score pass,
                 // not from protein FDR), so it is carried through unchanged.
                 var partial = new List<FdrScoreRecord>(real.Count);
@@ -3187,7 +3186,7 @@ namespace pwiz.Osprey.Test
                         r.ExperimentAggregateScore));
                 }
 
-                // Map entry_id -> finalized run_protein_qvalue, inserted out of record
+                // Map entry_id -> finalized experiment_protein_qvalue, inserted out of record
                 // order to prove entry_id-keyed (order-independent) patching.
                 var runProteinByEntryId = new Dictionary<uint, double>
                 {
@@ -3205,7 +3204,7 @@ namespace pwiz.Osprey.Test
 
                 // Two-phase: phase-1 partial + phase-2 [52..60] patch.
                 FdrScoresSidecar.Write(twoPhasePath, partial, FdrScoresSidecar.Pass.FirstPass);
-                Assert.IsTrue(FdrScoresSidecar.PatchRunProteinQvalues(
+                Assert.IsTrue(FdrScoresSidecar.PatchProteinQvalues(
                     twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass));
 
                 // The finalized two-phase file must be byte-for-byte identical to the
@@ -3215,7 +3214,7 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(refBytes, twoPhaseBytes,
                     "Two-phase (partial + [52..60] patch) sidecar diverged from the single-phase write");
 
-                // Sanity: the patch actually finalized run_protein_qvalue (a pre-patch
+                // Sanity: the patch actually finalized experiment_protein_qvalue (a pre-patch
                 // read would have seen the 1.0 placeholder for entries 10/7/42).
                 var loaded = new List<FdrEntry>
                 {
@@ -3229,12 +3228,12 @@ namespace pwiz.Osprey.Test
                 foreach (var e in loaded)
                     byId[e.EntryId] = e;
                 Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.0042),
-                                BitConverter.DoubleToInt64Bits(byId[10].RunProteinQvalue));
+                                BitConverter.DoubleToInt64Bits(byId[10].ExperimentProteinQvalue));
                 Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.95),
-                                BitConverter.DoubleToInt64Bits(byId[42].RunProteinQvalue));
+                                BitConverter.DoubleToInt64Bits(byId[42].ExperimentProteinQvalue));
 
                 // A patch with the wrong pass byte must be rejected and leave bytes intact.
-                Assert.IsFalse(FdrScoresSidecar.PatchRunProteinQvalues(
+                Assert.IsFalse(FdrScoresSidecar.PatchProteinQvalues(
                     twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.SecondPass));
                 CollectionAssert.AreEqual(refBytes, File.ReadAllBytes(twoPhasePath),
                     "A rejected patch must not modify the sidecar");
@@ -3717,9 +3716,9 @@ namespace pwiz.Osprey.Test
                 //    sidecar.
                 var sidecarEntries = new List<FdrEntry>
                 {
-                    MakeFdrEntry(100, -3.5, 0.001, 0.02, runProteinQvalue: 0.42),
-                    MakeFdrEntry(101, -3.4, 0.002, 0.05, runProteinQvalue: 0.43),
-                    MakeFdrEntry(102, -3.3, 0.003, 0.08, runProteinQvalue: 0.44),
+                    MakeFdrEntry(100, -3.5, 0.001, 0.02, proteinQvalue: 0.42),
+                    MakeFdrEntry(101, -3.4, 0.002, 0.05, proteinQvalue: 0.43),
+                    MakeFdrEntry(102, -3.3, 0.003, 0.08, proteinQvalue: 0.44),
                 };
                 FdrScoresSidecar.Write(sidecarPath, sidecarEntries,
                     FdrScoresSidecar.Pass.FirstPass);
@@ -3774,7 +3773,7 @@ namespace pwiz.Osprey.Test
                 var inputs = RescoreHydration.HydrateForRescore(new[] { parquetPath });
 
                 // 5. Assert per-file entries: same fileName, same count,
-                //    Score / RunProteinQvalue overlaid bit-exactly.
+                //    Score / ExperimentProteinQvalue overlaid bit-exactly.
                 Assert.AreEqual(1, inputs.PerFileEntries.Count);
                 Assert.AreEqual(stem, inputs.PerFileEntries[0].Key);
                 var got = inputs.PerFileEntries[0].Value;
@@ -3785,8 +3784,8 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(sidecarEntries[i].Score),
                                     BitConverter.DoubleToInt64Bits(got[i].Score));
                     Assert.AreEqual(
-                        BitConverter.DoubleToInt64Bits(sidecarEntries[i].RunProteinQvalue),
-                        BitConverter.DoubleToInt64Bits(got[i].RunProteinQvalue));
+                        BitConverter.DoubleToInt64Bits(sidecarEntries[i].ExperimentProteinQvalue),
+                        BitConverter.DoubleToInt64Bits(got[i].ExperimentProteinQvalue));
                 }
 
                 // 6. Assert reconciliation actions: keyed by
@@ -4350,7 +4349,7 @@ namespace pwiz.Osprey.Test
                 IsDecoy = (id & 0x80000000u) != 0,
                 Charge = 2,
                 RunPeptideQvalue = runPeptideQ,
-                RunProteinQvalue = runProteinQ,
+                ExperimentProteinQvalue = runProteinQ,
                 ModifiedSequence = "PEPTIDE",
             };
         }

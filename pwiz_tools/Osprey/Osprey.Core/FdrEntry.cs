@@ -70,12 +70,27 @@ namespace pwiz.Osprey.Core
         public double Score { get; set; }
         public double RunPrecursorQvalue { get; set; }
         public double RunPeptideQvalue { get; set; }
-        public double RunProteinQvalue { get; set; }
         public double ExperimentPrecursorQvalue { get; set; }
         public double ExperimentPeptideQvalue { get; set; }
-        public double ExperimentProteinQvalue { get; set; }
         public double Pep { get; set; }
         public string ModifiedSequence { get; set; }
+
+        /// <summary>
+        /// Picked-protein q-value for the protein group this entry's peptide maps to.
+        /// EXPERIMENT-scope in both passes: the first-pass protein FDR pools the detected
+        /// peptides over every file, computes one picked-protein FDR, and propagates one value
+        /// per <see cref="ModifiedSequence"/> to every entry in every file. There is no per-run
+        /// protein q anywhere in the pipeline.
+        ///
+        /// <para>Which PASS produced the value is encoded by the sidecar it is written to, not
+        /// by a second field - exactly as it is for the precursor and peptide q-values. The
+        /// 1st-pass sidecar carries the pass-1 value (the compaction protein-rescue gate reads
+        /// it back from there); the 2nd-pass sidecar carries the pass-2 value, patched in after
+        /// the second-pass protein FDR. Splitting the two passes across a
+        /// <c>RunProteinQvalue</c> / <c>ExperimentProteinQvalue</c> pair is what made a pass-1
+        /// value land in a pass-2 file and produced issue #4559.</para>
+        /// </summary>
+        public double ExperimentProteinQvalue { get; set; }
 
         /// <summary>
         /// The per-entry score the EXPERIMENT-scope competitions ranked this entry on (sidecar
@@ -160,7 +175,6 @@ namespace pwiz.Osprey.Core
         {
             RunPrecursorQvalue = 1.0;
             RunPeptideQvalue = 1.0;
-            RunProteinQvalue = 1.0;
             ExperimentPrecursorQvalue = 1.0;
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;
@@ -173,10 +187,10 @@ namespace pwiz.Osprey.Core
         /// state a Stage 6 rescore target is left in for the 2nd pass to fill, and the state a
         /// fresh gap-fill stub is appended in.
         ///
-        /// <para>One method because the same eight assignments had been written out five
-        /// times - the rescore overlay, both gap-fill passes, and the rebuild-from-disk - and
-        /// the paths are compared against each other for byte identity. A field added to the
-        /// set in four places out of five is a divergence nothing would catch.</para>
+        /// <para>One method because the same assignments had been written out five times -
+        /// the rescore overlay, both gap-fill passes, and the rebuild-from-disk - and the
+        /// paths are compared against each other for byte identity. A field added to the set
+        /// in four places out of five is a divergence nothing would catch.</para>
         /// </summary>
         public void ResetScores()
         {
@@ -184,7 +198,6 @@ namespace pwiz.Osprey.Core
             ExperimentAggregateScore = 0.0;
             RunPrecursorQvalue = 1.0;
             RunPeptideQvalue = 1.0;
-            RunProteinQvalue = 1.0;
             ExperimentPrecursorQvalue = 1.0;
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;

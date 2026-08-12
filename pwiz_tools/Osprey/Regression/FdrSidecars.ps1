@@ -85,7 +85,7 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_precursor_qvalue", Offset = 28 },
         new FdrSidecarField { Name = "experiment_peptide_qvalue",   Offset = 36 },
         new FdrSidecarField { Name = "pep",                         Offset = 44 },
-        new FdrSidecarField { Name = "run_protein_qvalue",          Offset = 52 },
+        new FdrSidecarField { Name = "experiment_protein_qvalue",          Offset = 52 },
         new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 60 },
     };
 
