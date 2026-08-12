@@ -3245,6 +3245,65 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The SECOND-pass sidecar's experiment_protein_qvalue is patched the same two-phase
+        /// way the first-pass one is (issue #4559): the sidecar is written before the
+        /// second-pass protein FDR runs - it is one of that FDR's inputs - so the pass-2
+        /// protein q can only be filled in afterwards.
+        ///
+        /// <para>The test above proves the patch mechanism on a 1st-pass file and proves a
+        /// MISMATCHED pass byte is rejected. This proves the other half: a Pass.SecondPass
+        /// patch of a genuine 2nd-pass file is accepted and lands the pass-2 value. Without
+        /// it, "the pass byte is validated" is only ever exercised in the rejecting
+        /// direction, and a validator that rejected everything would look correct.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarPass2ProteinQvaluePatched()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_p2q_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // What SecondPassFdrTask writes before the second-pass protein FDR runs: the
+                // protein column still holds pass-1 values (0.40 / 0.50 here).
+                var written = new List<FdrScoreRecord>
+                {
+                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.0012, 0.0013, 0.02, 0.40, -1.25),
+                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.0022, 0.0023, 0.05, 0.50, -0.75),
+                };
+                string path = Path.Combine(dir, "s.2nd-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(path, written, FdrScoresSidecar.Pass.SecondPass);
+
+                // What the second-pass protein FDR then produces for those same entries.
+                var pass2 = new Dictionary<uint, double> { { 10, 0.0031 }, { 7, 0.77 } };
+                Assert.IsTrue(FdrScoresSidecar.PatchProteinQvalues(
+                    path, pass2, FdrScoresSidecar.Pass.SecondPass));
+
+                var loaded = new List<FdrEntry> { MakeFdrEntry(10, 0.0, 0.0, 0.0), MakeFdrEntry(7, 0.0, 0.0, 0.0) };
+                Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.SecondPass));
+                var byId = new Dictionary<uint, FdrEntry>();
+                foreach (var e in loaded)
+                    byId[e.EntryId] = e;
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.0031),
+                                BitConverter.DoubleToInt64Bits(byId[10].ExperimentProteinQvalue));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.77),
+                                BitConverter.DoubleToInt64Bits(byId[7].ExperimentProteinQvalue));
+
+                // Every other column must survive the patch untouched - a miscomputed stride
+                // would corrupt the neighbouring pep [44..52] or aggregate score [60..68].
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.02),
+                                BitConverter.DoubleToInt64Bits(byId[10].Pep));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(-1.25),
+                                BitConverter.DoubleToInt64Bits(byId[10].ExperimentAggregateScore));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(-3.4),
+                                BitConverter.DoubleToInt64Bits(byId[7].Score));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
         /// Pre-v2 sidecar files (no magic header, just raw f64 scores)
         /// must be rejected by the v2 reader.
         /// </summary>

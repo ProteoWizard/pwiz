@@ -223,6 +223,13 @@ namespace pwiz.Osprey.Tasks
             var swProtein = Stopwatch.StartNew();
             RunProteinFdr(perFileEntries, fullLibrary, config, ctx);
             swProtein.Stop();
+            // The 2nd-pass sidecar was written above, BEFORE this protein FDR ran - it is one of
+            // its inputs - so the protein column it carries is still the pass-1 value at this
+            // point. Patch it now that the pass-2 value exists, so every column in that file is
+            // a pass-2 value (issue #4559). Cheap: 8 bytes per record, one file at a time, and
+            // only where a 2nd-pass sidecar was written.
+            if (AnyReconciledParquet(config))
+                Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
             ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
                 swProtein.Elapsed.TotalSeconds));
             // Parsimony + picked-protein TDC are genuinely whole-run, so this probe is what
