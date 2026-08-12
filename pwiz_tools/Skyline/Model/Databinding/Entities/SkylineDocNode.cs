@@ -83,6 +83,43 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new ResultMap<TResult>(resultObjects);
         }
 
+        /// <summary>
+        /// One result per replicate and file of a columnar layout, which is what a row source uses
+        /// when it can say where the peaks are without reading a chromatogram. The chrom info
+        /// counterpart is <see cref="MakeChromInfoResultsMap{TChromInfo,TResult}"/>, still needed
+        /// wherever optimization steps are involved - a layout holds step zero only, so it cannot
+        /// say which other steps have a peak.
+        /// </summary>
+        protected IDictionary<ResultKey, TResult> MakeResultsMap<TResult>(
+            ChromFileIds chromFileIds, Func<ResultFile, TResult> newResultFunc) where TResult : Result
+        {
+            if (chromFileIds == null)
+            {
+                return ResultMap<TResult>.EMPTY;
+            }
+
+            var resultObjects = new List<TResult>();
+            var replicates = DataSchema.ReplicateList.Values;
+            var resultFiles = DataSchema.ResultFileList;
+            int replicateCount = Math.Min(chromFileIds.ReplicatePositions.ReplicateCount, replicates.Count);
+            for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
+            {
+                foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
+                {
+                    if (!resultFiles.TryGetValue(new ResultFileKey(replicateIndex, fileId, 0), out var resultFile))
+                        resultFile = new ResultFile(replicates[replicateIndex], fileId, 0);
+                    resultObjects.Add(newResultFunc(resultFile));
+                }
+            }
+
+            if (resultObjects.Count == 0)
+            {
+                return ResultMap<TResult>.EMPTY;
+            }
+
+            return new ResultMap<TResult>(resultObjects);
+        }
+
         protected bool Equals(SkylineDocNode other)
         {
             return Equals(DataSchema, other.DataSchema)

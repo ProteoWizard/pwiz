@@ -39,8 +39,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
         }
 
+        /// <summary>
+        /// Rebuilt from the .skyd, which is what reading one costs. Everything below which can be
+        /// answered from <see cref="ColumnarPeak"/> instead does that, so a report of areas never
+        /// gets here.
+        /// </summary>
         [Browsable(false)]
         public TransitionChromInfo ChromInfo { get { return _cachedValues.GetValue(this); } }
+
+        /// <summary>
+        /// What the precursor's columnar results keep about this peak - the area, whether it is
+        /// empty or truncated, the user set and whether it was only integrated because integration
+        /// was forced. Reads no chromatogram.
+        /// <para>
+        /// Null for an optimization step, since those results hold step zero only, and null when
+        /// the transition has no peak in this file at all. Either way the caller falls back to
+        /// <see cref="ChromInfo"/>.
+        /// </para>
+        /// </summary>
+        private TransitionPeak? ColumnarPeak
+        {
+            get
+            {
+                var resultFile = GetResultFile();
+                if (resultFile.OptimizationStep != 0)
+                    return null;
+
+                var results = Transition.Precursor.DocNode.AbbreviatedResults;
+                if (results != null && results.TryGetTransitionPeak(Transition.DocNode.Transition,
+                        resultFile.Replicate.ReplicateIndex, resultFile.ChromFileInfoId, out var peak))
+                {
+                    return peak;
+                }
+
+                return null;
+            }
+        }
 
         /// <summary>
         /// Only the annotations of a peak can be edited from here, and they live on the precursor's
@@ -69,7 +103,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? EndTime { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.EndRetentionTime; } }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? Area { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Area; } }
+        public double? Area
+        {
+            get
+            {
+                var peak = ColumnarPeak;
+                if (peak.HasValue)
+                    return peak.Value.IsEmpty ? (double?) null : peak.Value.Area;
+                return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Area;
+            }
+        }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? Background { get { return ChromInfo.IsEmpty ? (double?)null : ChromInfo.BackgroundArea; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
@@ -94,14 +137,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? Height { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Height; } }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? MassErrorPPM { get { return ChromInfo.MassError; } }
-        public bool? Truncated { get { return ChromInfo.IsTruncated; } }
+        public bool? Truncated { get { return ColumnarPeak?.IsTruncated ?? ChromInfo.IsTruncated; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PeakRank { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.Rank; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PeakRankByLevel { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.RankByLevel; } }
-        public UserSet UserSetPeak { get { return ChromInfo.UserSet; } }
+        public UserSet UserSetPeak { get { return ColumnarPeak?.UserSet ?? ChromInfo.UserSet; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int OptStep { get { return ChromInfo.OptimizationStep; } }
+        public int OptStep { get { return GetResultFile().OptimizationStep; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PointsAcrossPeak { get { return ChromInfo.PointsAcrossPeak; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
@@ -131,7 +174,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
 
-        public bool Coeluting { get { return !ChromInfo.IsForcedIntegration; } }
+        public bool Coeluting { get { return !(ColumnarPeak?.IsForcedIntegration ?? ChromInfo.IsForcedIntegration); } }
 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? IonMobilityFragment 

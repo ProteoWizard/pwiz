@@ -73,11 +73,27 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IDictionary<ResultKey, TransitionResult> MakeResults()
         {
-            // Through the molecule's MoleculeResults, the same one the precursor and the molecule
-            // use, rather than off the doc node, which no longer keeps its results.
-            return MakeChromInfoResultsMap(
-                Precursor.Peptide.GetMoleculeResults().GetTransitionChromInfos(
-                    Precursor.DocNode.TransitionGroup, DocNode.Transition),
+            // Where the peaks are is in the precursor's columnar results, so the rows are made
+            // without reading a chromatogram. A TransitionResult asks a MoleculeResults for a whole
+            // chrom info only when something is read off it which those results do not keep - see
+            // TransitionResult.ChromInfo - so a report of areas needs no .skyd at all.
+            var results = Precursor.DocNode.AbbreviatedResults;
+            if (results == null || !results.HasTransitionResults(DocNode.Transition))
+            {
+                return ResultMap<TransitionResult>.EMPTY;
+            }
+
+            // Except where there are optimization steps. The columnar results hold step zero only,
+            // so they cannot say which other steps have a peak - only the .skyd can.
+            if (results.HasOptimizationSteps)
+            {
+                return MakeChromInfoResultsMap(
+                    Precursor.Peptide.GetMoleculeResults().GetTransitionChromInfos(
+                        Precursor.DocNode.TransitionGroup, DocNode.Transition),
+                    file => new TransitionResult(this, file));
+            }
+
+            return MakeResultsMap(results.GetTransitionChromFileIds(DocNode.Transition),
                 file => new TransitionResult(this, file));
         }
 

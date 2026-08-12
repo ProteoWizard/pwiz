@@ -224,6 +224,7 @@ namespace pwiz.Skyline.Model.Results
             var qValues = new List<float>();
             var zScores = new List<float>();
             var annotations = new List<Annotations>();
+            bool hasOptimizationSteps = false;
             for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
             {
                 int count = 0;
@@ -231,6 +232,9 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (chromInfo.OptimizationStep != 0)
                     {
+                        // Recorded, because this is the only place the steps can be seen and what
+                        // is kept below has no room for them. See HasOptimizationSteps.
+                        hasOptimizationSteps = true;
                         continue;
                     }
 
@@ -254,6 +258,7 @@ namespace pwiz.Skyline.Model.Results
                     .ChangeQValues(qValues)
                     .ChangeZScores(zScores)
                     .ChangeAnnotations(annotations)
+                    .ChangeHasOptimizationSteps(hasOptimizationSteps)
                     // Nothing here read the chromatograms, so which candidate peak any of these is
                     // is still to be worked out.
                     .ChangeNeedsPeakIndexes(true);
@@ -1209,6 +1214,23 @@ namespace pwiz.Skyline.Model.Results
         /// keeps <see cref="PrecursorPeak.NO_PEAK_INDEX"/> for good.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Whether any of this precursor's peaks belongs to a non-zero optimization step. These
+        /// results hold step zero only, so when this is true they cannot say what peaks the
+        /// precursor has - which other steps have one is in the .skyd, and only a
+        /// <see cref="MoleculeResults"/> can say. A caller which builds something per peak has to
+        /// ask this first.
+        /// <para>
+        /// Set while reading the chrom infos, which is the only place the steps are visible.
+        /// </para>
+        /// </summary>
+        public bool HasOptimizationSteps { get; private set; }
+
+        public TransitionGroupResults ChangeHasOptimizationSteps(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.HasOptimizationSteps = value);
+        }
+
         public bool NeedsPeakIndexes { get; private set; }
 
         public TransitionGroupResults ChangeNeedsPeakIndexes(bool value)
@@ -1543,6 +1565,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(UserSets, other.UserSets) && Equals(QValues, other.QValues) &&
                    Equals(ZScores, other.ZScores) && Equals(Annotations, other.Annotations) &&
                    NeedsPeakIndexes == other.NeedsPeakIndexes &&
+                   HasOptimizationSteps == other.HasOptimizationSteps &&
                    Results<TransitionGroupChromInfo>.EqualsDeep(LegacyChromInfos, other.LegacyChromInfos);
         }
 
@@ -1574,6 +1597,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result * 397) ^ (ZScores?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (Annotations?.GetHashCode() ?? 0);
                 result = (result * 397) ^ NeedsPeakIndexes.GetHashCode();
+                result = (result * 397) ^ HasOptimizationSteps.GetHashCode();
                 result = (result * 397) ^ (LegacyChromInfos?.GetHashCode() ?? 0);
                 return result;
             }
