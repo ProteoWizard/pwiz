@@ -430,7 +430,7 @@ namespace pwiz.Osprey.FDR
                 if (kvp.Value.Count > 0)
                     nonEmptyFiles++;
             bool isSingleFile = nonEmptyFiles <= 1;
-            Dictionary<uint, double> expPrecByBaseId = isSingleFile
+            Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
                     finalScores, labels, entryIds, applyExperimentAgg);
             Dictionary<string, double> expPeptByPeptide = isSingleFile
@@ -499,7 +499,7 @@ namespace pwiz.Osprey.FDR
                     // shortcut), floored up to the entry's min-over-runs combined run q.
                     double ep = isSingleFile
                         ? rp
-                        : (expPrecByBaseId.TryGetValue(entryIds[g] & PercolatorEntry.BASE_ID_MASK, out double epv)
+                        : (expPrecByWinnerId.TryGetValue(entryIds[g], out double epv)
                             ? epv : 1.0);
                     if (minRunBothByEntryId.TryGetValue(entryIds[g], out double floorPrec) &&
                         floorPrec > ep)
@@ -877,7 +877,7 @@ namespace pwiz.Osprey.FDR
             // matching ScoreProjectionAndComputeFdrInPlace exactly.
             var pepByWinnerIdx = streamingQ.BuildPepWinnerMap();
             bool isSingleFile = nonEmptyFiles <= 1;
-            Dictionary<uint, double> expPrecByBaseId = isSingleFile
+            Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : streamingQ.BuildExperimentPrecursorQMap();
             Dictionary<string, double> expPeptByPeptide = isSingleFile
                 ? null : streamingQ.BuildExperimentPeptideQMap();
@@ -922,7 +922,7 @@ namespace pwiz.Osprey.FDR
 
                     double ep = isSingleFile
                         ? rp
-                        : (expPrecByBaseId.TryGetValue(fEntryIds[r] & PercolatorEntry.BASE_ID_MASK, out double epv) ? epv : 1.0);
+                        : (expPrecByWinnerId.TryGetValue(fEntryIds[r], out double epv) ? epv : 1.0);
                     if (minRunBothByEntryId.TryGetValue(fEntryIds[r], out double floorPrec) && floorPrec > ep)
                         ep = floorPrec;
 
