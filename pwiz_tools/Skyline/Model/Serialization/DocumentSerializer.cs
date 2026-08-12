@@ -209,6 +209,13 @@ namespace pwiz.Skyline.Model.Serialization
             public const string analyte_concentration = "analyte_concentration";
             public const string points_across = "points_across";
             public const string forced_integration = "forced_integration";
+            /// <summary>
+            /// Whether a transition has no peak at all here, which is not the same as a peak whose
+            /// area is zero - see <see cref="TransitionPeak.IsEmpty"/>. The older shape says it by
+            /// having no end time; the columnar shape uses the end time for peak boundaries the
+            /// user set, so it has to say this outright.
+            /// </summary>
+            public const string empty = "empty";
 
             // Which of the candidate peaks in the .skyd the peak is. Always written, even as -1,
             // because its presence is what says a document was written knowing them: one without

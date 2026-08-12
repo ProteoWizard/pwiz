@@ -1131,6 +1131,7 @@ namespace pwiz.Skyline.Model.Serialization
                     // back exactly the values it treats as ordinary.
                     w.WriteAttributeNullable(ATTR.truncated, peak.IsTruncated);
                     w.WriteAttribute(ATTR.forced_integration, peak.IsForcedIntegration, false);
+                    w.WriteAttribute(ATTR.empty, peak.IsEmpty, false);
 
                     var peakBounds = results.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId);
                     if (peakBounds.HasValue)

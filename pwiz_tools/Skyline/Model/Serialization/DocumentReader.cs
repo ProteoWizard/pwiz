@@ -1582,13 +1582,15 @@ namespace pwiz.Skyline.Model.Serialization
                 float? massError = r.GetNullableFloatAttribute(ATTR.mass_error_ppm);
 
                 // The flags are written by both shapes - see DocumentWriter.WriteTransitionResults -
-                // so they are read the same way from either. What only the older one says is
-                // whether the peak is empty, which it says by having no end time. The columnar
-                // shape writes an end time only for a peak whose boundaries were set by hand, so a
-                // peak of its own must never be taken for empty on that ground.
+                // so they are read the same way from either. Whether the peak is empty is the one
+                // they say differently: the older shape says it by having no end time, while the
+                // columnar shape uses the end time for boundaries the user set and so says this
+                // outright.
+                bool isEmpty = isLegacyShape
+                    ? endTime.GetValueOrDefault() == 0
+                    : r.GetBoolAttribute(ATTR.empty, false);
                 peaks.Add(new TransitionPeak(area, userSet, r.GetNullableBoolAttribute(ATTR.truncated),
-                    isLegacyShape && endTime.GetValueOrDefault() == 0, identified,
-                    r.GetBoolAttribute(ATTR.forced_integration, false)));
+                    isEmpty, identified, r.GetBoolAttribute(ATTR.forced_integration, false)));
 
                 peakBounds.Add(startTime.HasValue && endTime.HasValue
                     ? new CustomPeakBounds(startTime.Value, endTime.Value)
