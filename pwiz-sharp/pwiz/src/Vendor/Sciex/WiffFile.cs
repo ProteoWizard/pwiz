@@ -262,18 +262,7 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     public override double StartMass => _info.StartMass;
     public override double EndMass => _info.EndMass;
 
-    public override int CycleCount
-    {
-        get
-        {
-            try
-            {
-                var tic = _exp.GetTotalIonChromatogram();
-                return tic.GetActualXValues()?.Length ?? 0;
-            }
-            catch { return 0; }
-        }
-    }
+    public override int CycleCount => CycleTimes.Length;
 
     public override double GetRetentionTime(int cycle1Based)
     {
@@ -351,44 +340,97 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     // cpp WiffFile.cpp:60: const int PEAK_AREA_SCALE_FACTOR = 100;
     private const int PEAK_AREA_SCALE_FACTOR = 100;
 
-    public override (double[] Times, double[] Intensities) GetBpc()
+    // ---- per-experiment TIC / BPC caches ----
+    //
+    // Port of cpp ExperimentImpl's lazily-initialized, flag-guarded caches
+    // (WiffFile.cpp:158-171 / 470-531): cycleTimes_ + cycleIntensities_ from initializeTIC(),
+    // basePeakIntensities_ + basePeakMZs_ from initializeBPC(). Every consumer -- getTIC, getBPC,
+    // the per-cycle sumY and the per-cycle base peak -- reads the caches, so each SDK
+    // chromatogram is computed at most once per experiment.
+    //
+    // Without them the SDK chromatogram was re-fetched per CALL: SpectrumList_Sciex asks for the
+    // cycle TIC once per spectrum (via AbstractWiffExperiment.GetCycleTic -> GetTic), which made
+    // conversion O(N^2) in the cycle count, and the base-peak chromatogram was computed 2-4x per
+    // experiment (once in CreateIndex, twice in FillTicOrBpc, plus the separate GetBasePeak
+    // fetch). Neither TotalIonChromatogram nor BasePeakChromatogram is IDisposable, so there is
+    // nothing to release per fetch; what the fetches keep alive lives on the MSExperiment, which
+    // Dispose already releases. Fewer fetches simply means less of it to hold.
+    //
+    // Unsynchronized on purpose: cpp's caches are plain `mutable` fields with no lock, and
+    // nothing else in this reader (or in Wiff2File's _ticCache) synchronizes either. The MsData
+    // layer reads a given spectrum list from one thread at a time; a race here would at worst
+    // duplicate a fetch, never corrupt an array, since each field is published as a whole array.
+    private double[]? _cycleTimes;
+    private double[]? _cycleIntensities;
+
+    /// <summary>cpp <c>ExperimentImpl::initializeTIC</c> (WiffFile.cpp:470-484).</summary>
+    private void InitializeTic()
     {
-        // cpp WiffFile.cpp:488-530 has a two-tier fetch: first GetBasePeakChromatogram with no
-        // time range; if that throws, retry with a constrained time range up to the
-        // second-to-last cycle. Mirror that here so MRM-only experiments still emit a BPC.
-        try
-        {
-            var bpc = _exp.GetBasePeakChromatogram(new BasePeakChromatogramSettings(0, null, null));
-            return (bpc.GetActualXValues() ?? Array.Empty<double>(),
-                    bpc.GetActualYValues() ?? Array.Empty<double>());
-        }
-        catch { /* fall through to constrained retry */ }
+        if (_cycleTimes is not null) return;
         try
         {
             var tic = _exp.GetTotalIonChromatogram();
-            var ticTimes = tic.GetActualXValues() ?? Array.Empty<double>();
-            if (ticTimes.Length > 0)
-            {
-                int lastUsable = ticTimes.Length > 10 ? ticTimes.Length - 1 : ticTimes.Length;
-                var settings = new BasePeakChromatogramSettings(0, null, null, 0, ticTimes[lastUsable - 1]);
-                var bpc = _exp.GetBasePeakChromatogram(settings);
-                return (bpc.GetActualXValues() ?? Array.Empty<double>(),
-                        bpc.GetActualYValues() ?? Array.Empty<double>());
-            }
+            _cycleIntensities = tic.GetActualYValues() ?? Array.Empty<double>();
+            _cycleTimes = tic.GetActualXValues() ?? Array.Empty<double>();
         }
-        catch { }
-        return (Array.Empty<double>(), Array.Empty<double>());
+        catch
+        {
+            _cycleIntensities = Array.Empty<double>();
+            _cycleTimes = Array.Empty<double>();
+        }
     }
 
-    public override (double[] Times, double[] Intensities) GetTic()
+    /// <summary>cpp <c>ExperimentImpl::cycleTimes()</c>.</summary>
+    private double[] CycleTimes
     {
-        try
-        {
-            var tic = _exp.GetTotalIonChromatogram();
-            return (tic.GetActualXValues() ?? Array.Empty<double>(),
-                    tic.GetActualYValues() ?? Array.Empty<double>());
-        }
-        catch { return (Array.Empty<double>(), Array.Empty<double>()); }
+        get { InitializeTic(); return _cycleTimes!; }
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::cycleIntensities()</c>.</summary>
+    private double[] CycleIntensities
+    {
+        get { InitializeTic(); return _cycleIntensities!; }
+    }
+
+    public override (double[] Times, double[] Intensities) GetBpc()
+    {
+        // The X axis comes from the TIC, NOT from the base-peak chromatogram. cpp's
+        // ExperimentImpl::getBPC (WiffFile.cpp:719-727) returns cycleTimes() paired with
+        // basePeakIntensities(), and cycleTimes_ is filled from tic->GetActualXValues()
+        // (WiffFile.cpp:478) - it never reads the BPC's own X values.
+        //
+        // That distinction is load-bearing on DMS / SelexION acquisitions, where the SDK's
+        // base-peak chromatogram is indexed by COMPENSATION VOLTAGE rather than time: taking
+        // its X gave nESI_Sigma_DMS_1mca a BPC running -5.0, -4.75, -4.5 ... where cpp has
+        // retention times 0.004, 0.014, 0.023. Every value in the array was wrong.
+        double[] times = CycleTimes;
+        double[] intensities = BasePeakIntensities;
+
+        // cpp's caller (ChromatogramList_ABI.cpp:192) bounds its loop by intensities.size()
+        // while indexing times[], and the primary fetch leaves the intensity array at whatever
+        // length the SDK returned (WiffFile.cpp:495-496 does NOT resize it). Match that by
+        // trimming the time axis to the intensity count - never the other way round, which
+        // would index past the end of the intensities. Trimming to zero also matters: an
+        // experiment whose BPC could not be fetched at all must report an EMPTY time axis so
+        // SpectrumList_Sciex.CreateIndex falls back to the TIC.
+        if (intensities.Length < times.Length) times = times[..intensities.Length];
+        else if (intensities.Length > times.Length) intensities = intensities[..times.Length];
+
+        return (times, intensities);
+    }
+
+    public override (double[] Times, double[] Intensities) GetTic() => (CycleTimes, CycleIntensities);
+
+    /// <summary>
+    /// cpp <c>Spectrum::getSumY</c> (WiffFile.cpp:740) reads
+    /// <c>experiment->cycleIntensities()[cycle-1]</c>. Overridden so the per-spectrum lookup is
+    /// an array index rather than the base class's tuple-returning <see cref="GetTic"/> call.
+    /// </summary>
+    public override double GetCycleTic(int cycle1Based)
+    {
+        var intensities = CycleIntensities;
+        int idx = cycle1Based - 1;
+        return idx >= 0 && idx < intensities.Length ? intensities[idx] : 0;
     }
 
     public override IReadOnlyList<WiffMrmTarget> SrmTransitions => _srm.Value;
@@ -405,9 +447,9 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         int last = 0;
         try
         {
-            var tic = _exp.GetTotalIonChromatogram();
-            var ticTimes = tic.GetActualXValues();
-            if (ticTimes != null && ticTimes.Length > 0)
+            // cpp WiffFile.cpp:626: option->EndCycle = convertRetentionTimeToCycle(cycleTimes().back()).
+            var ticTimes = CycleTimes;
+            if (ticTimes.Length > 0)
                 last = (int)_exp.RetentionTimeToExperimentScan(ticTimes[ticTimes.Length - 1]);
         }
         catch { last = 0; }
@@ -443,6 +485,73 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     private double[]? _basePeakMzs;
     private bool _basePeakInitFailed;
 
+    /// <summary>
+    /// cpp <c>ExperimentImpl::initializeBPC</c> (WiffFile.cpp:486-531): one two-tier BPC fetch
+    /// per experiment, feeding both <see cref="GetBpc"/> and <see cref="GetBasePeak"/>.
+    /// </summary>
+    private void InitializeBpc()
+    {
+        if (_basePeakIntensities is not null || _basePeakInitFailed) return;
+
+        // cpp reads cycleTimes_ directly here; every caller reaches initializeBPC() through a
+        // path that has already run initializeTIC() (getBPC does cycleTimes() first), so make
+        // the dependency explicit rather than relying on call order.
+        double[] times = CycleTimes;
+
+        try
+        {
+            var bpc = _exp.GetBasePeakChromatogram(new BasePeakChromatogramSettings(0, null, null));
+            var bpci = bpc.Info;
+            // Primary path: cpp keeps the SDK's own intensity length (WiffFile.cpp:496, no
+            // resize) but sizes the m/z array to the CYCLE count (WiffFile.cpp:498-500), so a
+            // trailing cycle still has an m/z to report. Reading GetBasePeakMass past the SDK's
+            // range is exactly what makes cpp fall through to the bounded retry below, so the
+            // loop stays inside this try.
+            _basePeakIntensities = bpc.GetActualYValues() ?? Array.Empty<double>();
+            var mzs = new double[times.Length];
+            for (int i = 0; i < mzs.Length; i++) mzs[i] = bpci.GetBasePeakMass(i);
+            _basePeakMzs = mzs;
+        }
+        catch
+        {
+            _basePeakIntensities = null;
+            try
+            {
+                if (times.Length == 0) { _basePeakInitFailed = true; return; }
+                int numCycles = times.Length > 10 ? times.Length - 1 : times.Length;
+                var settings = new BasePeakChromatogramSettings(0, null, null, 0, times[numCycles - 1]);
+                var bpc = _exp.GetBasePeakChromatogram(settings);
+                var bpci = bpc.Info;
+                var fetched = bpc.GetActualYValues() ?? Array.Empty<double>();
+
+                // Retry path: cpp resizes BOTH arrays to the FULL cycle count and zero-fills the
+                // last element when the bounded fetch covered one cycle fewer
+                // (WiffFile.cpp:514-519). So the BPC still has one point per cycle, ending in
+                // (lastCycleTime, 0). Truncating to the fetched length instead would emit a
+                // chromatogram one point shorter than cpp's.
+                var intensities = new double[times.Length];
+                Array.Copy(fetched, intensities, Math.Min(fetched.Length, intensities.Length));
+                var mzs = new double[times.Length];
+                for (int i = 0; i < numCycles && i < mzs.Length; i++) mzs[i] = bpci.GetBasePeakMass(i);
+                _basePeakIntensities = intensities;
+                _basePeakMzs = mzs;
+            }
+            catch { _basePeakInitFailed = true; }
+        }
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::basePeakIntensities()</c>; empty when both fetches failed.</summary>
+    private double[] BasePeakIntensities
+    {
+        get { InitializeBpc(); return _basePeakIntensities ?? Array.Empty<double>(); }
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::basePeakMZs()</c>; empty when both fetches failed.</summary>
+    private double[] BasePeakMzs
+    {
+        get { InitializeBpc(); return _basePeakMzs ?? Array.Empty<double>(); }
+    }
+
     public override void Dispose()
     {
         // Clearcore2's MSExperiment owns native readers (the BPC fetch on MRM
@@ -452,42 +561,18 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
 
     public override (double Mz, double Intensity)? GetBasePeak(int cycle1Based)
     {
-        // cpp WiffFile.cpp:485-520: fetch BPC once, cache the parallel intensity / mz
-        // arrays on the experiment, look up by 1-based cycle. cpp falls back to a
-        // time-bounded BPC settings if the unbounded fetch throws — mirror that.
-        if (_basePeakInitFailed) return null;
-        if (_basePeakIntensities is null || _basePeakMzs is null)
-        {
-            try
-            {
-                BasePeakChromatogram bpc;
-                try
-                {
-                    bpc = _exp.GetBasePeakChromatogram(new BasePeakChromatogramSettings(0, null, null));
-                }
-                catch
-                {
-                    var tic = _exp.GetTotalIonChromatogram();
-                    var ts = tic.GetActualXValues() ?? Array.Empty<double>();
-                    if (ts.Length == 0) { _basePeakInitFailed = true; return null; }
-                    int last = ts.Length > 10 ? ts.Length - 1 : ts.Length;
-                    var settings = new BasePeakChromatogramSettings(0, null, null, 0, ts[last - 1]);
-                    bpc = _exp.GetBasePeakChromatogram(settings);
-                }
-                var intensities = bpc.GetActualYValues() ?? Array.Empty<double>();
-                var bpci = bpc.Info;
-                var mzs = new double[intensities.Length];
-                for (int i = 0; i < mzs.Length; i++) mzs[i] = bpci.GetBasePeakMass(i);
-                _basePeakIntensities = intensities;
-                _basePeakMzs = mzs;
-            }
-            catch { _basePeakInitFailed = true; return null; }
-        }
+        // cpp SpectrumImpl::initializeBasePeak (WiffFile.cpp:229-236):
+        //   bpY = experiment->basePeakIntensities()[cycle-1];
+        //   bpX = bpY > 0 ? experiment->basePeakMZs()[cycle-1] : 0;
+        // and SpectrumList_ABI only emits the params when bpY > 0. The bounds checks are ours -
+        // cpp indexes the vectors unchecked.
+        var intensities = BasePeakIntensities;
         int idx = cycle1Based - 1;
-        if (idx < 0 || idx >= _basePeakIntensities!.Length) return null;
-        double y = _basePeakIntensities[idx];
-        double x = y > 0 ? _basePeakMzs![idx] : 0;
+        if (idx < 0 || idx >= intensities.Length) return null;
+        double y = intensities[idx];
         if (y <= 0) return null;
+        var mzs = BasePeakMzs;
+        double x = idx < mzs.Length ? mzs[idx] : 0;
         return (x, y);
     }
 
