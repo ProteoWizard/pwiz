@@ -171,13 +171,26 @@ namespace pwiz.Osprey.IO
                     w.Write((uint)nMs2);
                     w.Write((uint)ms1Spectra.Count);
 
-                    // MS2 records, grouped by window (contiguous per window)
-                    foreach (int key in windowKeyOrder)
+                    // MS2 records, grouped by window (contiguous per window).
+                    //
+                    // Reported for the same reason LibraryCache reports its own write: this is
+                    // multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
+                    // SEA-AD Astral cohort the cache is ~4.1 GB per file and took ~28 s, which
+                    // showed up only as an unexplained gap between the reader's "100%" and the
+                    // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked
+                    // hung, with nothing in the log naming the file being written.
+                    using (var progress = new ProgressReporter(@"Writing spectra cache", nMs2,
+                        string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
-                        foreach (int i in windowKeyToIndices[key])
+                        long nWritten = 0;
+                        foreach (int key in windowKeyOrder)
                         {
-                            recordOffsets[i] = fs.Position;
-                            WriteMs2Record(w, ms2Spectra[i]);
+                            foreach (int i in windowKeyToIndices[key])
+                            {
+                                progress.Report(++nWritten);
+                                recordOffsets[i] = fs.Position;
+                                WriteMs2Record(w, ms2Spectra[i]);
+                            }
                         }
                     }
 
