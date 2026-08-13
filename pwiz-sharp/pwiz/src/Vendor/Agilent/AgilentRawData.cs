@@ -433,6 +433,107 @@ public sealed class AgilentRawData : IDisposable
         }
     }
 
+    private List<AgilentSignal>? _signalsCache;
+    private Dictionary<string, ISignalInfo>? _signalInfoMap;
+
+    /// <summary>
+    /// Non-MS signals (UV/DAD absorption traces, pump pressure and flow curves, ...) declared by
+    /// the file. Mirrors cpp <c>MassHunterDataImpl::getSignals</c>: for each non-MS device, every
+    /// row of the device's <c>Chromatograms</c> signal table followed by every row of its
+    /// <c>InstrumentCurves</c> signal table. Empty when the file reports no non-MS data.
+    /// </summary>
+    public IReadOnlyList<AgilentSignal> Signals
+    {
+        get
+        {
+            if (_signalsCache is not null) return _signalsCache;
+            EnsureSignalsLoaded();
+            return _signalsCache!;
+        }
+    }
+
+    /// <summary>Chromatogram data for one signal returned by <see cref="Signals"/>, or null when
+    /// the SDK has no <c>ISignalInfo</c> for it. cpp <c>MassHunterDataImpl::getSignal</c> throws
+    /// in that case; callers here treat a null as an empty chromatogram.</summary>
+    public IBDAChromData? GetSignal(AgilentSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(signal);
+        if (_signalsCache is null) EnsureSignalsLoaded();
+        if (_signalInfoMap is null) return null;
+        if (!_signalInfoMap.TryGetValue(signal.DeviceName + signal.SignalName, out var signalInfo))
+            return null;
+        try { return NonMsDataReader?.GetSignal(signalInfo); }
+        catch { return null; }
+    }
+
+    private void EnsureSignalsLoaded()
+    {
+        _signalsCache = new List<AgilentSignal>();
+        _signalInfoMap = new Dictionary<string, ISignalInfo>(StringComparer.Ordinal);
+
+        // Ion-mobility files go through MIDAC in cpp, and MidacDataImpl::getSignals
+        // (MidacData.hpp:81) returns a vector that is never populated - so no non-MS signal
+        // chromatogram is emitted for an IMS file even when the .d holds pump curves. The
+        // BinPump traces in Dorrestein_GnPS_*.d are exactly that case.
+        if (HasIonMobilityData) return;
+
+        var nonMsDataReader = NonMsDataReader;
+        if (nonMsDataReader is null) return;
+        try
+        {
+            if (!FileInformation.IsNonMSDataPresent()) return;
+        }
+        catch { return; }
+
+        IDeviceInfo[]? devices;
+        try { devices = nonMsDataReader.GetNonmsDevices(); }
+        catch { return; }
+        if (devices is null) return;
+
+        foreach (var device in devices)
+        {
+            string deviceNameAndOrdinal = device.DeviceName + device.OrdinalNumber.ToString(CultureInfo.InvariantCulture);
+
+            // Both stored-data types feed the same signal list; the isInstrumentCurve flag is
+            // what lets translateAsChromatogramType suppress detector instrument curves while
+            // keeping pump ones. cpp catches per table so a device with only one of the two
+            // still contributes.
+            AddSignalTable(nonMsDataReader, device, deviceNameAndOrdinal, StoredDataType.Chromatograms, false);
+            AddSignalTable(nonMsDataReader, device, deviceNameAndOrdinal, StoredDataType.InstrumentCurves, true);
+        }
+    }
+
+    private void AddSignalTable(INonmsDataReader nonMsDataReader, IDeviceInfo device, string deviceNameAndOrdinal,
+                                StoredDataType storedDataType, bool isInstrumentCurve)
+    {
+        try
+        {
+            var signalTable = FileInformation.GetSignalTable(deviceNameAndOrdinal, storedDataType);
+            if (signalTable is not null)
+            {
+                foreach (System.Data.DataRow row in signalTable.Rows)
+                {
+                    // Descriptions are used verbatim: the leading space in Agilent's " Pressure"
+                    // is part of the chromatogram id cpp emits ("LowflowPump1 A:  Pressure").
+                    _signalsCache!.Add(new AgilentSignal(
+                        DeviceName: deviceNameAndOrdinal,
+                        SignalName: row["SignalName"]?.ToString() ?? string.Empty,
+                        SignalDescription: row["SignalDescription"]?.ToString() ?? string.Empty,
+                        IsInstrumentCurve: isInstrumentCurve,
+                        DeviceType: device.DeviceType));
+                }
+            }
+
+            var signalInfos = nonMsDataReader.GetSignalInfo(device, storedDataType);
+            if (signalInfos is not null)
+            {
+                foreach (var signalInfo in signalInfos)
+                    _signalInfoMap![deviceNameAndOrdinal + signalInfo.SignalName] = signalInfo;
+            }
+        }
+        catch { /* cpp logs to cerr and moves on to the next table */ }
+    }
+
     private List<AgilentTransition>? _transitionsCache;
     private List<IBDAChromData?>? _transitionChromCache;
 
@@ -638,6 +739,17 @@ public sealed class AgilentRawData : IDisposable
 /// <summary>One row from <c>AcqData/Devices.xml</c>. <see cref="TypeRaw"/> is the integer
 /// device type as a string (matching the underlying SDK <c>DeviceType</c> enum value).</summary>
 public sealed record AgilentDeviceInfo(string Name, string ModelNumber, string SerialNumber, string TypeRaw);
+
+/// <summary>One non-MS signal, i.e. one row of a device's signal table. <see cref="DeviceName"/>
+/// is the device name with its ordinal appended ("LowflowPump1"), matching what cpp stores in
+/// <c>Signal::deviceName</c> and uses to build chromatogram ids. <see cref="IsInstrumentCurve"/>
+/// distinguishes the <c>InstrumentCurves</c> table from the <c>Chromatograms</c> one.</summary>
+public sealed record AgilentSignal(
+    string DeviceName,
+    string SignalName,
+    string SignalDescription,
+    bool IsInstrumentCurve,
+    DeviceType DeviceType);
 
 /// <summary>SRM (multi-reaction) vs SIM (selected-ion-monitoring) transition kind.</summary>
 public enum AgTransitionType

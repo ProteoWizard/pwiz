@@ -24,6 +24,12 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Let Agilent.Tests reach TranslateAsChromatogramType: no shipped fixture has a pump or
+         sampler signal, so the reference mzMLs cannot cover that half of the table. -->
+    <InternalsVisibleTo Include="Agilent.Tests" />
+  </ItemGroup>
+
   <!-- The Agilent SDK's GetChromatogram / GetSpectrum non-MS code path goes through
        Agilent.MassSpectrometry.SignalAccess (or similar) which loads
        System.Configuration.ConfigurationManager. .NET 8 doesn't bundle that assembly in the

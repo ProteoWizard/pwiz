@@ -12,15 +12,10 @@ namespace Pwiz.Vendor.Agilent;
 
 /// <summary>
 /// <see cref="IChromatogramList"/> for Agilent <c>.d</c> directories. C# port of pwiz cpp
-/// <c>ChromatogramList_Agilent</c>: emits a run-level TIC plus one absorption / pressure /
-/// flow-rate / etc. chromatogram per non-MS signal exposed by the file's
-/// <c>INonmsDataReader</c>.
+/// <c>ChromatogramList_Agilent</c>: emits a run-level TIC, one SRM / SIM chromatogram per
+/// transition, then one absorption / pressure / flow-rate chromatogram per non-MS signal
+/// exposed by the file's <c>INonmsDataReader</c>, in that order.
 /// </summary>
-/// <remarks>
-/// Initial port covers TIC + the simplest signal-chromatogram path (UV/DAD absorption).
-/// SRM / SIM transition chromatograms are a follow-up; cpp emits one chromatogram per
-/// transition driven by <c>MassHunterData::getTransitions()</c>.
-/// </remarks>
 public sealed class ChromatogramList_Agilent : ChromatogramListBase
 {
     private readonly AgilentRawData _raw;
@@ -45,15 +40,13 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
         CreateIndex();
     }
 
-    private enum ChromKind { Tic, AbsorptionSignal, Srm, Sim }
+    private enum ChromKind { Tic, Signal, Srm, Sim }
 
     private sealed class IndexEntry : ChromatogramIdentity
     {
         public ChromKind Kind;
         public CVID ChromatogramType;
-        public string? DeviceNameAndOrdinal; // null for TIC / SRM / SIM
-        public string? SignalName;           // null for TIC / SRM / SIM
-        public IDeviceInfo? Device;          // null for TIC / SRM / SIM
+        public AgilentSignal? Signal;        // null for TIC / SRM / SIM
         public int TransitionIndex = -1;     // index into AgilentRawData.Transitions for SRM/SIM
     }
 
@@ -109,94 +102,96 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
             });
         }
 
-        // Non-MS signals: UV/DAD/pressure/flow chromatograms. cpp pairs each signal's
-        // ISignalInfo (used to fetch the data) with the corresponding SignalDescription pulled
-        // from FileInformation.GetSignalTable (which has the human-readable description that
-        // ends up in the chromatogram id, e.g. "DAD1 A: Sig=272,16 Ref=360,100"). We currently
-        // honor only the absorption-chromatogram bucket (UV/DAD); other device kinds (pumps,
-        // columns) return CVID_Unknown and are skipped until a fixture exercises them.
-        try
+        // Non-MS signals: UV/DAD absorption, pump pressure and flow curves. AgilentRawData.Signals
+        // is the port of cpp MassHunterDataImpl::getSignals - every row of each device's
+        // Chromatograms table, then every row of its InstrumentCurves table. cpp
+        // ChromatogramList_Agilent.cpp:296-314 walks that list in order and skips whatever
+        // translateAsChromatogramType doesn't recognize.
+        foreach (var signal in _raw.Signals)
         {
-            var nonMs = _raw.NonMsDataReader;
-            var fileInfo = _raw.FileInformation;
-            if (nonMs is null || fileInfo is null) return;
-            var devices = nonMs.GetNonmsDevices();
-            if (devices is null) return;
+            CVID chromatogramType = TranslateAsChromatogramType(signal);
+            if (chromatogramType == CVID.CVID_Unknown || chromatogramType == CVID.MS_chromatogram)
+                continue;
 
-            foreach (var device in devices)
+            // cpp's id is `signal.deviceName + " " + signal.signalName`, where `signal.deviceName`
+            // is the deviceNameAndOrdinal (e.g. "DAD1"), not the bare device name.
+            string id = signal.DeviceName + " " + signal.SignalName;
+            if (signal.SignalDescription.Length > 0)
+                id += ": " + signal.SignalDescription;
+
+            _index.Add(new IndexEntry
             {
-                CVID chromType = TranslateAsChromatogramType(device.DeviceType);
-                if (chromType != CVID.MS_absorption_chromatogram) continue;
-
-                string deviceNameAndOrdinal = device.DeviceName + device.OrdinalNumber.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                ISignalInfo[]? signalInfos;
-                try { signalInfos = nonMs.GetSignalInfo(device, StoredDataType.Chromatograms); }
-                catch { continue; }
-                if (signalInfos is null) continue;
-
-                // Pull descriptions keyed by SignalName from the signal table — cpp does the
-                // same. Best-effort: if the table read fails, descriptions stay empty.
-                var descriptionsBySignalName = new Dictionary<string, string>(StringComparer.Ordinal);
-                try
-                {
-                    var table = fileInfo.GetSignalTable(deviceNameAndOrdinal, StoredDataType.Chromatograms);
-                    if (table is not null)
-                    {
-                        foreach (System.Data.DataRow row in table.Rows)
-                        {
-                            string signalName = row["SignalName"]?.ToString() ?? string.Empty;
-                            string description = row["SignalDescription"]?.ToString() ?? string.Empty;
-                            if (signalName.Length > 0)
-                                descriptionsBySignalName[signalName] = description;
-                        }
-                    }
-                }
-                catch { /* signal table missing — fall back to empty descriptions */ }
-
-                foreach (var sig in signalInfos)
-                {
-                    // cpp's id is `signal.deviceName + " " + signal.signalName`, where
-                    // `signal.deviceName` is the deviceNameAndOrdinal (e.g. "DAD1"), not the
-                    // bare device name. Match that exactly for chromatogram-id parity.
-                    string id = deviceNameAndOrdinal + " " + sig.SignalName;
-                    if (descriptionsBySignalName.TryGetValue(sig.SignalName, out var desc) && desc.Length > 0)
-                        id += ": " + desc;
-
-                    _index.Add(new IndexEntry
-                    {
-                        Index = _index.Count,
-                        Id = id,
-                        Kind = ChromKind.AbsorptionSignal,
-                        ChromatogramType = chromType,
-                        DeviceNameAndOrdinal = deviceNameAndOrdinal,
-                        SignalName = sig.SignalName,
-                        Device = device,
-                    });
-                }
-            }
+                Index = _index.Count,
+                Id = id,
+                Kind = ChromKind.Signal,
+                ChromatogramType = chromatogramType,
+                Signal = signal,
+            });
         }
-        catch { /* SDK quirks shouldn't take down the whole index */ }
     }
 
-    /// <summary>Mirrors a subset of cpp <c>translateAsChromatogramType</c>. Currently only
-    /// returns <see cref="CVID.MS_absorption_chromatogram"/> for UV/DAD-style devices; other
-    /// device kinds (pumps, columns) return <see cref="CVID.CVID_Unknown"/> and are skipped
-    /// by the indexer until a fixture exercises them.</summary>
-    private static CVID TranslateAsChromatogramType(DeviceType d) => d switch
+    /// <summary>Port of cpp <c>translateAsChromatogramType</c>
+    /// (<c>Reader_Agilent_Detail.cpp:231</c>). Pumps and samplers are classified by what their
+    /// signal description mentions; detectors give absorption chromatograms unless the signal is
+    /// an instrument curve. Anything else is skipped by the indexer.</summary>
+    internal static CVID TranslateAsChromatogramType(AgilentSignal signal)
     {
-        DeviceType.DiodeArrayDetector
-            or DeviceType.MultiWavelengthDetector
-            or DeviceType.VariableWavelengthDetector
-            or DeviceType.FluorescenceDetector
-            or DeviceType.ElectronCaptureDetector
-            or DeviceType.RefractiveIndexDetector
-            or DeviceType.EvaporativeLightScatteringDetector
-            or DeviceType.AnalogDigitalConverter
-            or DeviceType.FlameIonizationDetector
-            or DeviceType.ThermalConductivityDetector
-            => CVID.MS_absorption_chromatogram,
-        _ => CVID.CVID_Unknown,
-    };
+        switch (signal.DeviceType)
+        {
+            // samplers - cpp falls these through into the pump cases, so they share the
+            // description-driven classification below
+            case DeviceType.ALS: // automatic liquid sampler
+            case DeviceType.WellPlateSampler:
+            case DeviceType.MicroWellPlateSampler:
+            case DeviceType.CompactLCSampler:
+            case DeviceType.CompactLC1220Sampler:
+            case DeviceType.CTC: // CTC Analytics
+
+            // pumps
+            case DeviceType.IsocraticPump:
+            case DeviceType.BinaryPump:
+            case DeviceType.QuaternaryPump:
+            case DeviceType.CapillaryPump:
+            case DeviceType.NanoPump:
+            case DeviceType.LowFlowPump:
+            case DeviceType.CompactLCIsoPump:
+            case DeviceType.CompactLCGradPump:
+            case DeviceType.CompactLC1220IsoPump:
+            case DeviceType.CompactLC1220GradPump:
+            case DeviceType.PumpValveCluster:
+            case DeviceType.CANValves:
+                // cpp has a third branch here testing "pressure" a second time and returning
+                // MS_chromatogram; it is unreachable, and MS_chromatogram would be skipped by
+                // the indexer anyway.
+                if (signal.SignalDescription.Contains("flow", StringComparison.OrdinalIgnoreCase))
+                    return CVID.MS_flow_rate_chromatogram;
+                if (signal.SignalDescription.Contains("pressure", StringComparison.OrdinalIgnoreCase))
+                    return CVID.MS_pressure_chromatogram;
+                return CVID.CVID_Unknown;
+
+            case DeviceType.FlameIonizationDetector:
+            case DeviceType.ThermalConductivityDetector:
+            case DeviceType.RefractiveIndexDetector:
+            case DeviceType.MultiWavelengthDetector:
+            case DeviceType.DiodeArrayDetector:
+            case DeviceType.VariableWavelengthDetector:
+            case DeviceType.AnalogDigitalConverter:
+            case DeviceType.ElectronCaptureDetector:
+            case DeviceType.FluorescenceDetector:
+            case DeviceType.EvaporativeLightScatteringDetector:
+            case DeviceType.CompactLCVWD:
+            case DeviceType.CompactLC1220VWD:
+            case DeviceType.CompactLC1220DAD:
+            case DeviceType.NitrogenPhosphorousDetector:
+            case DeviceType.FlamePhotometricDetector:
+            case DeviceType.GCDetector:
+            case DeviceType.UIB2:
+                return signal.IsInstrumentCurve ? CVID.CVID_Unknown : CVID.MS_absorption_chromatogram;
+
+            default:
+                return CVID.CVID_Unknown;
+        }
+    }
 
     /// <inheritdoc/>
     public override Chromatogram GetChromatogram(int index, bool getBinaryData = false)
@@ -218,7 +213,7 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
                 FillTic(c, getBinaryData);
                 break;
 
-            case ChromKind.AbsorptionSignal:
+            case ChromKind.Signal:
                 FillSignal(c, ie, getBinaryData);
                 break;
 
@@ -380,72 +375,51 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
 
     private void FillSignal(Chromatogram c, IndexEntry ie, bool getBinaryData)
     {
-        if (ie.Device is null || ie.SignalName is null)
+        if (ie.Signal is null)
         {
             c.DefaultArrayLength = 0;
             return;
         }
-        var nonMs = _raw.NonMsDataReader;
-        if (nonMs is null) { c.DefaultArrayLength = 0; return; }
-
-        // KNOWN GAP: nonMs.GetSignal(ISignalInfo) returns null on the .NET 8 / Cecil-patched
-        // SDK path even after re-fetching the IDeviceInfo + ISignalInfo on each call. cpp
-        // (running on .NET Framework 4.8 from C++/CLI) gets the actual chromatogram data
-        // through the same call, so the difference is somewhere in the CLR-host integration —
-        // not in the BeginInvoke surface we already patched (we re-inventoried the SDK and
-        // confirmed there are no other Begin/End sites). Until that's diagnosed, the absorption
-        // chromatogram is emitted with the correct id but zero-length arrays. Leaves a 1-diff
-        // remainder vs cpp's reference mzML for fixtures that include UV/DAD chromatograms.
-        IBDAChromData? signalData = null;
-        try
-        {
-            var devices = nonMs.GetNonmsDevices();
-            IDeviceInfo? device = null;
-            if (devices is not null)
-            {
-                foreach (var d in devices)
-                {
-                    string nameAndOrdinal = d.DeviceName + d.OrdinalNumber.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    if (string.Equals(nameAndOrdinal, ie.DeviceNameAndOrdinal, StringComparison.Ordinal)) { device = d; break; }
-                }
-            }
-            if (device is null) { c.DefaultArrayLength = 0; return; }
-
-            var infos = nonMs.GetSignalInfo(device, StoredDataType.Chromatograms);
-            ISignalInfo? match = null;
-            if (infos is not null)
-            {
-                foreach (var s in infos)
-                {
-                    if (string.Equals(s.SignalName, ie.SignalName, StringComparison.Ordinal)) { match = s; break; }
-                }
-            }
-            if (match is not null) signalData = nonMs.GetSignal(match);
-        }
-        catch { c.DefaultArrayLength = 0; return; }
+        var signalData = _raw.GetSignal(ie.Signal);
         if (signalData is null) { c.DefaultArrayLength = 0; return; }
 
         double[] times = signalData.XArray ?? Array.Empty<double>();
         float[] yArray = signalData.YArray ?? Array.Empty<float>();
         int n = Math.Min(times.Length, yArray.Length);
         c.DefaultArrayLength = n;
-        if (getBinaryData && n > 0)
+        if (getBinaryData)
         {
-            // Absorption chromatograms use absorbance unit (mAU). Pressure / flow conversions
-            // (which need bar -> Pa and mL/min -> uL/min scaling per cpp) are added when those
-            // device kinds land.
-            EmitTimeIntensityArrays(c, times, yArray, n, CVID.UO_absorbance_unit);
+            // cpp ChromatogramList_Agilent.cpp:209-232: the intensity unit and the scale factor
+            // are both chosen from the chromatogram type. Neither conversion is dimensionally
+            // what its cpp comment claims, but the emitted values are what the reference mzML
+            // holds, so reproduce them exactly.
+            CVID intensityUnit = CVID.UO_absorbance_unit;
+            double unitMultiplier = 1.0;
+            if (ie.ChromatogramType == CVID.MS_pressure_chromatogram)
+            {
+                intensityUnit = CVID.UO_pascal;
+                unitMultiplier = 1e5; // cpp: convert bar to pascal (1 bar = 100000 Pa), no bar term in UO
+            }
+            else if (ie.ChromatogramType == CVID.MS_flow_rate_chromatogram)
+            {
+                intensityUnit = CVID.UO_microliters_per_minute;
+                unitMultiplier = 1e-6; // cpp: convert mL/min to uL/min, no mL/min term in UO
+            }
+            EmitTimeIntensityArrays(c, times, yArray, n, intensityUnit, unitMultiplier);
         }
     }
 
-    private static void EmitTimeIntensityArrays(Chromatogram c, double[] times, float[] yArray, int n, CVID intensityUnit)
+    private static void EmitTimeIntensityArrays(Chromatogram c, double[] times, float[] yArray, int n,
+                                                CVID intensityUnit, double intensityMultiplier = 1.0)
     {
         var t = new BinaryDataArray();
         t.Set(CVID.MS_time_array, "", CVID.UO_minute);
         var y = new BinaryDataArray();
         y.Set(CVID.MS_intensity_array, "", intensityUnit);
         for (int i = 0; i < n; i++) t.Data.Add(times[i]);
-        for (int i = 0; i < n; i++) y.Data.Add(yArray[i]);
+        // cpp widens each float to double first and scales in double, so scale after the widening
+        // conversion rather than in single precision.
+        for (int i = 0; i < n; i++) y.Data.Add(yArray[i] * intensityMultiplier);
         c.BinaryDataArrays.Add(t);
         c.BinaryDataArrays.Add(y);
     }

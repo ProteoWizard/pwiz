@@ -17,6 +17,24 @@
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
   </ItemGroup>
 
+  <!-- ChromatogramList_Agilent and AgilentSignal are compiled out in NO_VENDOR_SUPPORT mode
+       (the SDK's DeviceType enum is unavailable), so the table test cannot build there. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <Compile Remove="AgilentChromatogramTypeTests.cs" />
+  </ItemGroup>
+
+  <!-- AgilentSignal carries the SDK's DeviceType enum. Agilent.csproj's <Reference> items are
+       not transitive, so the table test needs its own compile-time reference. Keep
+       <Private>true</Private> to match Agilent.csproj: declaring the reference here overrides
+       how the DLL reaches this project's output, and Private=false drops it, which breaks every
+       fixture test with "Could not load file or assembly 'BaseCommon'". -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Reference Include="BaseCommon">
+      <HintPath>$(PwizVendorAssembliesPath)/Agilent/BaseCommon.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
   <!-- Agilent test fixtures ship as Reader_Agilent_Test.data.tar.bz2; unpack on build so
        the harness can find the .d directories. Without this, every test goes Inconclusive
        ("Agilent test data tree not found") on a fresh agent (TC, clean CI checkout, etc.). -->
