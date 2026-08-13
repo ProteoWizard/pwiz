@@ -33,7 +33,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 namespace pwiz.Skyline.Controls.Databinding
