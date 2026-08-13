@@ -194,7 +194,7 @@ namespace pwiz.Osprey.IO
                 if (header[8] != FormatVersion || header[9] != (byte)expectedPass)
                     return false;
                 // And the length must match the header's own entry_count, exactly as TryRead,
-                // TryReadOverlay, ReadRecords and PatchRunProteinQvalues all require. Without it
+                // TryReadOverlay, ReadRecords and PatchProteinQvalues all require. Without it
                 // this pre-flight passed a file truncated mid-record - which is precisely what
                 // ReadScalars throws on, so the caller that added this gate to refuse BEFORE
                 // mutating any survivor would still have thrown mid-stream with the pool half

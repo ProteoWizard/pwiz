@@ -37,7 +37,22 @@ returns a NAMED problem rather than a silent skip, and the comparison refuses to
 file pair equal on the strength of records it never read.
 #>
 
-if (-not ([System.Management.Automation.PSTypeName]'OspreyFdrSidecarComparer').Type) {
+# A .NET type cannot be replaced once loaded into a PowerShell session, and the guard below
+# keys on the type NAME - so a session that already dot-sourced an older copy of this file keeps
+# that older type. This branch added CheckPass2ProteinQ to it, so such a session would throw
+# "does not contain a method named CheckPass2ProteinQ" from inside Test-Pass2ProteinQvalue,
+# aborting a multi-hour gate mid-dataset with an error that names neither the cause nor the cure.
+# Reloading is impossible, so say so immediately instead. Reachable via a second regression.ps1
+# invocation in one session, or Compare-FdrSidecars-Crossimpl.ps1 dot-sourcing a sibling
+# checkout's copy first.
+$ospreyComparerType = ([System.Management.Automation.PSTypeName]'OspreyFdrSidecarComparer').Type
+if ($ospreyComparerType -and -not $ospreyComparerType.GetMethod('CheckPass2ProteinQ')) {
+    throw ("An older OspreyFdrSidecarComparer is already loaded in this PowerShell session and " +
+           "has no CheckPass2ProteinQ method. A loaded .NET type cannot be replaced, so this " +
+           "session cannot run the 2nd-pass protein q gate (mode 1c). Start a fresh pwsh " +
+           "session and re-run.")
+}
+if (-not $ospreyComparerType) {
     Add-Type -TypeDefinition @'
 using System;
 using System.Collections.Generic;
@@ -74,6 +89,7 @@ public class Pass2ProteinQLiveness
     public string Problem;
     public long Matched;
     public long Differing;
+    public long DifferingAtDefault;
     public long AbsentFromPass1;
 }
 
@@ -157,7 +173,17 @@ public static class OspreyFdrSidecarComparer
             }
             result.Matched++;
             if (BitConverter.DoubleToInt64Bits(q1) != BitConverter.DoubleToInt64Bits(q2))
+            {
                 result.Differing++;
+                // "Differs from pass 1" alone stopped being sufficient when #4559 also removed
+                // the pass-1 seed from RestorePass1Scalars: an UNPATCHED record now reads 1.0,
+                // the ResetScores default, which also differs from the pass-1 value. So a run
+                // with the patch reverted would still show Differing > 0 and pass. Counting the
+                // defaults separately lets the caller tell a real pass-2 value from the patch
+                // never having run.
+                if (q2 == 1.0)
+                    result.DifferingAtDefault++;
+            }
         }
         return result;
     }
@@ -453,6 +479,7 @@ function Test-Pass2ProteinQvalue {
 
     $totalMatched = 0
     $totalDiffering = 0
+    $totalDefault = 0
     $totalGapFill = 0
     foreach ($f in ($files | Sort-Object Name)) {
         $stem = $f.Name.Substring(0, $f.Name.Length - $suffix.Length)
@@ -470,14 +497,31 @@ function Test-Pass2ProteinQvalue {
             $issues.Add("$stem : no entry_id present in both passes - verified nothing")
             continue
         }
-        if ($r.Differing -eq 0) {
-            $issues.Add((("{0}: experiment_protein_qvalue is identical to the 1st-pass column " +
-                "on all {1} shared record(s) - the second-pass protein FDR result never " +
-                "reached the 2nd-pass sidecar (issue #4559)") -f $stem, $r.Matched))
-        }
         $totalMatched += $r.Matched
         $totalDiffering += $r.Differing
+        $totalDefault += $r.DifferingAtDefault
         $totalGapFill += $r.AbsentFromPass1
+    }
+
+    # Asserted at RUN level, not per file. The property - "the second-pass protein FDR reached
+    # the sidecar" - is a property of the run, and PropagateProteinQvalues legitimately assigns
+    # 1.0 to every entry whose ModifiedSequence is absent from PeptideQvalues in BOTH passes
+    # (ProteinFdr.cs), so a file dominated by those produces bit-identical columns without
+    # anything being wrong. Asserting per file reddened the whole dataset for that.
+    if ($files.Count -gt 0 -and $totalMatched -gt 0) {
+        if ($totalDiffering -eq 0) {
+            $issues.Add((("experiment_protein_qvalue is identical to the 1st-pass column on all " +
+                "{0} shared record(s) across {1} file(s) - the second-pass protein FDR result " +
+                "never reached the 2nd-pass sidecar (issue #4559)") -f $totalMatched, $files.Count))
+        }
+        elseif ($totalDiffering -eq $totalDefault) {
+            # Every record that moved, moved to the ResetScores default. That is what a run with
+            # PatchPass2ProteinQvalues reverted or failing looks like, and it is NOT what a
+            # populated pass-2 column looks like - so it must not read as liveness.
+            $issues.Add((("all {0} differing record(s) hold the 1.0 reset default rather than a " +
+                "computed second-pass value - the patch did not run, or wrote nothing (#4559)") `
+                -f $totalDiffering))
+        }
     }
 
     return @{

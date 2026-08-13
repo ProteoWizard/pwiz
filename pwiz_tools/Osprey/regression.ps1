@@ -1295,6 +1295,17 @@ foreach ($name in $selected) {
     # TeamCity exercises - no baseline, no second route. It covers the one failure a two-route
     # comparison structurally cannot see: a column both routes copy identically out of pass 1.
     # That is what issue #4559 was, and mode 3 was green on the default arm throughout.
+    # Guarded like its siblings (mode 1b on ModelDiagnostics, mode 3 on SkipHpcChain). The
+    # 2nd-pass sidecars only exist when Stage 6 rescored something -- SecondPassFdrTask writes
+    # them on AnyReconciledParquet -- so an arm that legitimately does no reconciliation work has
+    # nothing for this gate to assert on. Without the guard, "no .2nd-pass.fdr_scores.bin files"
+    # is reported as a hard failure and reds a run that is entirely correct.
+    $pass2Sidecars = @(Get-ChildItem -File -Path $straightDir -Filter '*.2nd-pass.fdr_scores.bin' `
+        -ErrorAction SilentlyContinue)
+    if ($pass2Sidecars.Count -eq 0) {
+        $summaryLines.Add("$name mode1c (2nd-pass protein q is pass-2): SKIPPED (no 2nd-pass sidecars - Stage 6 rescored nothing)")
+    }
+    else {
     Write-Progress-Tc "${name}: 2nd-pass protein q liveness (mode 1c)"
     $m1c = Test-Pass2ProteinQvalue -RunDir $straightDir
     if ($m1c.Pass) {
@@ -1310,6 +1321,7 @@ foreach ($name in $selected) {
         Write-Problem-Tc "$name mode1c (2nd-pass protein q is pass-2): FAIL -- $($m1c.Issues.Count) issue(s)"
         $m1c.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
         $summaryLines.Add("$name mode1c (2nd-pass protein q is pass-2): FAIL ($($m1c.Issues.Count) issues)")
+    }
     }
 
     # ---- mode 1b: FDR-calibration spot checks -------------------------------

@@ -2108,9 +2108,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// First-pass protein FDR run BEFORE Stage 6 reconciliation, on the
-        /// full pre-compaction peptide pool. Sets only ExperimentProteinQvalue
-        /// (leaves ExperimentProteinQvalue at its 1.0 default for the
-        /// second-pass to overwrite). Detected-peptide filter uses
+        /// full pre-compaction peptide pool. Sets the one experiment-wide
+        /// ExperimentProteinQvalue; the second-pass protein FDR overwrites it
+        /// later, and PatchPass2ProteinQvalues writes that pass-2 value into
+        /// the 2nd-pass sidecar (#4559). Detected-peptide filter uses
         /// run_peptide_qvalue, the strict peptide-level gate, matching Rust
         /// pipeline.rs:3045-3049 exactly. Protein-FDR gate is config.RunFdr
         /// (1x), the Savitski-2015 convention applied at first pass, NOT the

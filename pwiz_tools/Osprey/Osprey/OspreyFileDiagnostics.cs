@@ -1508,7 +1508,7 @@ namespace pwiz.Osprey
             using (var sw = new StreamWriter(path))
             {
                 sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	run_protein_q	experiment_precursor_q	experiment_peptide_q");
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_protein_q	experiment_precursor_q	experiment_peptide_q");
                 foreach (var row in rows)
                 {
                     var e = row.Value;
@@ -1576,7 +1576,7 @@ namespace pwiz.Osprey
             using (var sw = new StreamWriter(path))
             {
                 sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	run_protein_q	experiment_precursor_q	experiment_peptide_q");
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_protein_q	experiment_precursor_q	experiment_peptide_q");
                 foreach (var row in rows)
                 {
                     var e = row.Value;

@@ -248,8 +248,8 @@ namespace pwiz.Osprey.FDR
     /// by <see cref="ProteinFdrEngine.RunSecondPass"/> so the Tasks-layer caller can
     /// emit the Stage-7 detected-peptides and protein-FDR diagnostic dumps (and the
     /// <c>Stage7ProteinFdrOnly</c> early-exit decision) WITHOUT recomputing parsimony
-    /// / FDR. The run has already propagated <c>ExperimentProteinQvalue</c> and
-    /// <c>ExperimentProteinQvalue</c> onto the stubs; these are the same intermediate
+    /// / FDR. The run has already propagated <c>ExperimentProteinQvalue</c>
+    /// onto the stubs; these are the same intermediate
     /// objects it used.
     /// </summary>
     public class SecondPassProteinFdrResult

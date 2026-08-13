@@ -130,8 +130,18 @@ namespace pwiz.Osprey.Tasks
             // makes above - one arm's .blib must never be reused as another's.
             // And the sidecar format version, for the same reason FirstPassFdrTask carries it:
             // this task writes the 2nd-pass sidecars, so a record-layout change invalidates them.
+            // And the MEANING of the 2nd-pass sidecar's protein column, which issue #4559
+            // changed from a pass-1 to a pass-2 value without moving a byte. The format version
+            // cannot carry that: no offset, width or type changed, so a v4 record written before
+            // #4559 is structurally valid and silently holds the wrong pass. Without this token
+            // a post-#4559 build resuming into a pre-#4559 output directory finds every declared
+            // output present and the validity key unchanged, skips this task entirely, and keeps
+            // the stale column - which then reds regression mode 1c against a build that is in
+            // fact correct. A key token forces the regeneration a version bump would have forced,
+            // without breaking any reader or moving a golden.
             return base.ValidityKey(ctx)
                 + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
+                + @";pass2proteinq=2"
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
