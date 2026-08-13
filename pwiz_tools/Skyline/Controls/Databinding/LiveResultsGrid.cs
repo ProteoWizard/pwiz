@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 namespace pwiz.Skyline.Controls.Databinding
@@ -283,6 +284,18 @@ namespace pwiz.Skyline.Controls.Databinding
                 BindingListSource.SetViewContext(viewContext, activeView);
             }
             BindingListSource.RowSource = rowSource;
+        }
+
+        /// <summary>Remembers the report showing, so a restored layout comes back on it rather than on
+        /// whatever <see cref="Settings.ResultsGridActiveViews"/> holds for the row source in play.</summary>
+        protected override string GetPersistentString()
+        {
+            return AppendViewName(PersistentString.FromParts(base.GetPersistentString())).ToString();
+        }
+
+        public static ViewName? GetViewName(string persistentString)
+        {
+            return ParsePersistedViewName(persistentString, 1);
         }
 
         private void RememberActiveView()

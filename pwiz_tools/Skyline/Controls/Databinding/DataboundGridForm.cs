@@ -58,6 +58,45 @@ namespace pwiz.Skyline.Controls.Databinding
             return DataboundGridControl?.GetViewName();
         }
 
+        /// <summary>
+        /// The report to show when this form is recreated from a saved window layout, applied once in
+        /// <see cref="OnShown"/>. Without it a restored grid comes back on whatever report the global
+        /// setting last held, which is usually not the one the layout was captured with.
+        /// </summary>
+        public ViewName? ViewToRestore { get; set; }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (ViewToRestore.HasValue)
+            {
+                // One shot: the user is free to choose another report afterwards
+                var viewToRestore = ViewToRestore.Value;
+                ViewToRestore = null;
+                DataboundGridControl?.ChooseView(viewToRestore);
+            }
+        }
+
+        /// <summary>
+        /// Appends the report currently showing, for a subclass's <see cref="GetPersistentString"/>.
+        /// Always appended LAST, so parts a subclass adds of its own keep their positions.
+        /// </summary>
+        protected PersistentString AppendViewName(PersistentString persistentString)
+        {
+            var viewName = GetViewName();
+            return viewName.HasValue ? persistentString.Append(viewName.Value.ToString()) : persistentString;
+        }
+
+        /// <summary>
+        /// The report name <see cref="AppendViewName"/> wrote, or null for a layout saved before this
+        /// was persisted (older ".sky.view" files simply end after the parts they did have).
+        /// </summary>
+        protected static ViewName? ParsePersistedViewName(string persistentString, int partIndex)
+        {
+            var parts = PersistentString.Parse(persistentString).Parts;
+            return parts.Count > partIndex ? ViewName.Parse(parts[partIndex]) : null;
+        }
+
         DataboundGridControl IDataboundGridForm.GetDataboundGridControl()
         {
             return DataboundGridControl;

@@ -21,10 +21,12 @@
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -67,7 +69,34 @@ namespace pwiz.SkylineTestFunctional
             ImportLayout(layoutPath);
             WaitForOpenForm<DocumentGridForm>();
 
+            TestGridReportRestored();
+
             TestImportNotALayoutFile(documentPath);
+        }
+
+        /// <summary>
+        /// A restored layout brings the Document Grid back on the report it was showing, not on
+        /// whatever report the global setting happens to hold.
+        /// </summary>
+        private void TestGridReportRestored()
+        {
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            ViewName? exportedView = null;
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunUI(() => exportedView = documentGrid.GetViewName());
+
+            var layoutPath = ExportLayout(@"GridReport");
+
+            // Move it off that report, so restoring it is something that has to actually happen
+            RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunUI(() => Assert.AreNotEqual(exportedView, documentGrid.GetViewName()));
+
+            ImportLayout(layoutPath);
+            var restoredGrid = WaitForOpenForm<DocumentGridForm>();
+            WaitForConditionUI(() => restoredGrid.IsComplete);
+            RunUI(() => Assert.AreEqual(exportedView, restoredGrid.GetViewName()));
         }
 
         /// <summary>

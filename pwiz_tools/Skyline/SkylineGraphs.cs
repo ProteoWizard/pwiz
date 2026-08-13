@@ -677,6 +677,17 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// Stages the report a grid form was showing when the layout was saved. The form applies it
+        /// when it is shown, which is after it has bound and chosen a report of its own.
+        /// </summary>
+        private static T RestoreView<T>(T gridForm, ViewName? viewName) where T : DataboundGridForm
+        {
+            if (gridForm != null && viewName.HasValue)
+                gridForm.ViewToRestore = viewName;
+            return gridForm;
+        }
+
         private IDockableForm DeserializeForm(string persistentString)
         {
             if (persistentString.StartsWith(typeof(SequenceTreeForm).ToString()))
@@ -748,29 +759,36 @@ namespace pwiz.Skyline
                 return graphSummary;
             }
 
-            if (Equals(persistentString, typeof(ResultsGridForm).ToString()) || Equals(persistentString, typeof (LiveResultsGrid).ToString()))
+            // StartsWith, not Equals: these three now carry the name of the report they were showing.
+            // A layout saved before that is just the bare type name, and still matches.
+            if (persistentString.StartsWith(typeof(ResultsGridForm).ToString()) ||
+                persistentString.StartsWith(typeof(LiveResultsGrid).ToString()))
             {
-                return _resultsGridForm ?? CreateResultsGrid();
+                return RestoreView(_resultsGridForm ?? CreateResultsGrid(),
+                    LiveResultsGrid.GetViewName(persistentString));
             }
             if (Equals(persistentString, typeof(CandidatePeakForm).ToString()))
             {
                 return _candidatePeakForm ?? CreateCandidatePeakForm();
             }
-            if (Equals(persistentString, typeof (DocumentGridForm).ToString()))
+            if (persistentString.StartsWith(typeof (DocumentGridForm).ToString()))
             {
-                return _documentGridForm ?? CreateDocumentGrid();
+                return RestoreView(_documentGridForm ?? CreateDocumentGrid(),
+                    DocumentGridForm.GetViewName(persistentString));
             }
             if (Equals(persistentString, typeof (CalibrationForm).ToString()))
             {
                 return _calibrationForm ?? CreateCalibrationForm();
             }
-            if (Equals(persistentString, typeof(AuditLogForm).ToString()))
+            if (persistentString.StartsWith(typeof(AuditLogForm).ToString()))
             {
-                return _auditLogForm ?? CreateAuditLogForm();
+                return RestoreView(_auditLogForm ?? CreateAuditLogForm(),
+                    DocumentGridForm.GetViewName(persistentString));
             }
             if (persistentString.StartsWith(typeof(ListGridForm).ToString()))
             {
-                return CreateListForm(ListGridForm.GetListName(persistentString));
+                return RestoreView(CreateListForm(ListGridForm.GetListName(persistentString)),
+                    ListGridForm.GetViewName(persistentString));
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {

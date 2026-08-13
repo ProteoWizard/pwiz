@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Databinding
@@ -93,9 +94,21 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public DocumentGridForm(SkylineWindow skylineWindow) 
+        public DocumentGridForm(SkylineWindow skylineWindow)
             : this(new DocumentGridViewContext(new SkylineWindowDataSchema(skylineWindow)))
         {
+        }
+
+        /// <summary>Remembers the report showing, so a restored layout comes back on it. Inherited by
+        /// <see cref="AuditLog.AuditLogForm"/>, whose own type name is what the first part holds.</summary>
+        protected override string GetPersistentString()
+        {
+            return AppendViewName(PersistentString.FromParts(base.GetPersistentString())).ToString();
+        }
+
+        public static ViewName? GetViewName(string persistentString)
+        {
+            return ParsePersistedViewName(persistentString, 1);
         }
 
         protected override void OnHandleCreated(EventArgs e)
