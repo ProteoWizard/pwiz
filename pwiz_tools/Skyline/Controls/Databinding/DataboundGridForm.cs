@@ -78,21 +78,47 @@ namespace pwiz.Skyline.Controls.Databinding
         }
 
         /// <summary>
-        /// Appends the report currently showing, for a subclass's <see cref="GetPersistentString"/>.
-        /// Always appended LAST, so parts a subclass adds of its own keep their positions.
+        /// The window type, whatever parts the subclass needs, and then the report currently showing.
+        /// Sealed, so the report is always LAST and always at the index
+        /// <see cref="RestoreViewFromPersistentString"/> reads it from; a subclass with parts of its
+        /// own overrides <see cref="GetPersistentStringParts"/> rather than this.
         ///
-        /// <para>The DEFAULT report is left off. That is what keeps the persistent string of a grid on
-        /// its default report the bare window type, which is what Skyline versions before this change
+        /// <para>The DEFAULT report is left off. That keeps the persistent string of a grid on its
+        /// default report the bare window type, which is what Skyline versions before this change
         /// require: they match the window type with an exact comparison rather than a prefix, so a
         /// layout with anything appended does not restore that window at all. Leaving the default off
         /// makes the common case of a ".sky.view" still work in those versions.</para>
         /// </summary>
-        protected PersistentString AppendViewName(PersistentString persistentString)
+        protected sealed override string GetPersistentString()
         {
+            var persistentString = PersistentString.FromParts(base.GetPersistentString())
+                .Concat(GetPersistentStringParts());
             var viewName = GetViewName();
-            if (!viewName.HasValue || Equals(viewName, GetDefaultViewName()))
-                return persistentString;
-            return persistentString.Append(viewName.Value.ToString());
+            if (viewName.HasValue && !Equals(viewName, GetDefaultViewName()))
+                persistentString = persistentString.Append(viewName.Value.ToString());
+            return persistentString.ToString();
+        }
+
+        /// <summary>
+        /// Parts a subclass needs to identify itself, written after the window type and before the
+        /// report. Empty for a grid that is identified by its type alone.
+        /// </summary>
+        protected virtual PersistentString GetPersistentStringParts()
+        {
+            return PersistentString.FromParts();
+        }
+
+        /// <summary>
+        /// Stages the report this form was showing when the layout was saved, to be applied in
+        /// <see cref="OnShown"/>. Does nothing when the layout carries no report - either it was saved
+        /// on the default, or by a Skyline that did not write one.
+        /// </summary>
+        public void RestoreViewFromPersistentString(string persistentString)
+        {
+            var parts = PersistentString.Parse(persistentString).Parts;
+            var viewNameIndex = 1 + GetPersistentStringParts().Parts.Count;
+            if (parts.Count > viewNameIndex)
+                ViewToRestore = ViewName.Parse(parts[viewNameIndex]);
         }
 
         /// <summary>The report a grid shows when nothing else has been chosen: the first built-in view.</summary>
@@ -101,16 +127,6 @@ namespace pwiz.Skyline.Controls.Databinding
             var defaultViewSpec = BindingListSource?.ViewContext
                 ?.GetViewSpecList(ViewGroup.BUILT_IN.Id).ViewSpecs.FirstOrDefault();
             return defaultViewSpec == null ? (ViewName?) null : ViewGroup.BUILT_IN.Id.ViewName(defaultViewSpec.Name);
-        }
-
-        /// <summary>
-        /// The report name <see cref="AppendViewName"/> wrote, or null for a layout saved before this
-        /// was persisted (older ".sky.view" files simply end after the parts they did have).
-        /// </summary>
-        protected static ViewName? ParsePersistedViewName(string persistentString, int partIndex)
-        {
-            var parts = PersistentString.Parse(persistentString).Parts;
-            return parts.Count > partIndex ? ViewName.Parse(parts[partIndex]) : null;
         }
 
         DataboundGridControl IDataboundGridForm.GetDataboundGridControl()

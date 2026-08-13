@@ -71,10 +71,10 @@ namespace pwiz.Skyline.Controls.Lists
             }
         }
 
-        protected override string GetPersistentString()
+        /// <summary>Which list this window shows. The base class writes the report after it.</summary>
+        protected override PersistentString GetPersistentStringParts()
         {
-            // The report goes after the list name, so GetListName keeps reading part 1
-            return AppendViewName(PersistentString.FromParts(base.GetPersistentString()).Append(ListName)).ToString();
+            return PersistentString.FromParts(ListName);
         }
 
         public static string GetListName(string persistentString)
@@ -83,11 +83,6 @@ namespace pwiz.Skyline.Controls.Lists
             if (persisted.Parts.Count > 1)
                 return persisted.Parts[1];
             return null;
-        }
-
-        public static ViewName? GetViewName(string persistentString)
-        {
-            return ParsePersistedViewName(persistentString, 2);
         }
 
         /// <summary>

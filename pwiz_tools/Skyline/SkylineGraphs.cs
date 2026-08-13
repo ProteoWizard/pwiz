@@ -681,10 +681,9 @@ namespace pwiz.Skyline
         /// Stages the report a grid form was showing when the layout was saved. The form applies it
         /// when it is shown, which is after it has bound and chosen a report of its own.
         /// </summary>
-        private static T RestoreView<T>(T gridForm, ViewName? viewName) where T : DataboundGridForm
+        private static T RestoreView<T>(T gridForm, string persistentString) where T : DataboundGridForm
         {
-            if (gridForm != null && viewName.HasValue)
-                gridForm.ViewToRestore = viewName;
+            gridForm?.RestoreViewFromPersistentString(persistentString);
             return gridForm;
         }
 
@@ -764,18 +763,15 @@ namespace pwiz.Skyline
             if (persistentString.StartsWith(typeof(ResultsGridForm).ToString()) ||
                 persistentString.StartsWith(typeof(LiveResultsGrid).ToString()))
             {
-                return RestoreView(_resultsGridForm ?? CreateResultsGrid(),
-                    LiveResultsGrid.GetViewName(persistentString));
+                return RestoreView(_resultsGridForm ?? CreateResultsGrid(), persistentString);
             }
             if (persistentString.StartsWith(typeof(CandidatePeakForm).ToString()))
             {
-                return RestoreView(_candidatePeakForm ?? CreateCandidatePeakForm(),
-                    CandidatePeakForm.GetViewName(persistentString));
+                return RestoreView(_candidatePeakForm ?? CreateCandidatePeakForm(), persistentString);
             }
             if (persistentString.StartsWith(typeof (DocumentGridForm).ToString()))
             {
-                return RestoreView(_documentGridForm ?? CreateDocumentGrid(),
-                    DocumentGridForm.GetViewName(persistentString));
+                return RestoreView(_documentGridForm ?? CreateDocumentGrid(), persistentString);
             }
             if (Equals(persistentString, typeof (CalibrationForm).ToString()))
             {
@@ -783,13 +779,11 @@ namespace pwiz.Skyline
             }
             if (persistentString.StartsWith(typeof(AuditLogForm).ToString()))
             {
-                return RestoreView(_auditLogForm ?? CreateAuditLogForm(),
-                    DocumentGridForm.GetViewName(persistentString));
+                return RestoreView(_auditLogForm ?? CreateAuditLogForm(), persistentString);
             }
             if (persistentString.StartsWith(typeof(ListGridForm).ToString()))
             {
-                return RestoreView(CreateListForm(ListGridForm.GetListName(persistentString)),
-                    ListGridForm.GetViewName(persistentString));
+                return RestoreView(CreateListForm(ListGridForm.GetListName(persistentString)), persistentString);
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {

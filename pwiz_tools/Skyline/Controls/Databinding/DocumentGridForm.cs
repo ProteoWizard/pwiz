@@ -99,17 +99,6 @@ namespace pwiz.Skyline.Controls.Databinding
         {
         }
 
-        /// <summary>Remembers the report showing, so a restored layout comes back on it. Inherited by
-        /// <see cref="AuditLog.AuditLogForm"/>, whose own type name is what the first part holds.</summary>
-        protected override string GetPersistentString()
-        {
-            return AppendViewName(PersistentString.FromParts(base.GetPersistentString())).ToString();
-        }
-
-        public static ViewName? GetViewName(string persistentString)
-        {
-            return ParsePersistedViewName(persistentString, 1);
-        }
 
         protected override void OnHandleCreated(EventArgs e)
         {

@@ -286,18 +286,6 @@ namespace pwiz.Skyline.Controls.Databinding
             BindingListSource.RowSource = rowSource;
         }
 
-        /// <summary>Remembers the report showing, so a restored layout comes back on it rather than on
-        /// whatever <see cref="Settings.ResultsGridActiveViews"/> holds for the row source in play.</summary>
-        protected override string GetPersistentString()
-        {
-            return AppendViewName(PersistentString.FromParts(base.GetPersistentString())).ToString();
-        }
-
-        public static ViewName? GetViewName(string persistentString)
-        {
-            return ParsePersistedViewName(persistentString, 1);
-        }
-
         private void RememberActiveView()
         {
             var viewInfo = BindingListSource.ViewInfo;
