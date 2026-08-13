@@ -792,6 +792,20 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning("transfer-compete: 1st-pass scalar sidecar not found: " + sidecarPath);
                     return false;
                 }
+                // Existence was never enough. ReadScalars THROWS on bad magic, a stale version, a
+                // wrong pass byte or a partial record, and its only call site is inside the
+                // streaming closure below - which has already written e.Score = frozenScore for
+                // files 1..N by the time file N+1 is rejected. That aborts a multi-hour run on a
+                // raw IOException with the survivor pool half-mutated, contradicting this method's
+                // own contract that "every return false is placed BEFORE any survivor is mutated".
+                // Checking the header here keeps the refusal where the contract says it is.
+                if (!FdrScoresSidecar.IsCurrentFormat(sidecarPath, FdrScoresSidecar.Pass.FirstPass))
+                {
+                    ctx.LogWarning(
+                        "transfer-compete: 1st-pass scalar sidecar is not a readable v" +
+                        FdrScoresSidecar.FormatVersion + " first-pass file: " + sidecarPath);
+                    return false;
+                }
                 fileKeys.Add(kvp.Key);
                 sidecarByKey[kvp.Key] = sidecarPath;
             }

@@ -478,6 +478,19 @@ namespace pwiz.Osprey.FDR
                     // comparison, and a decoy has no q to fall back on. Left at ResetScores' 0.0
                     // it would not merely be missing: 0.0 sits mid distribution for a signed
                     // score, so it would read as a real value and collapse the boundary.
+                    // Score is the per-row discriminant every consumer ranks on, and this mode
+                    // competes on CoelutionSum - so that is what it must carry. Left unassigned
+                    // it stayed at ResetScores' 0.0 for EVERY entry, which is not a missing value
+                    // downstream but a uniform one: the co-assignment panel's per-file cutoff came
+                    // out 0.0 and `partner.Score > row.Score` was never true, so the page rendered
+                    // NBetter = 0 / BetterFraction = 0 / Enrichment = NaN for all three classes -
+                    // a confident "no co-assignment anywhere" rather than an obviously absent one.
+                    entry.Score = entry.CoelutionSum;
+                    // NOTE: CoelutionSum is per-ROW, so unlike the Percolator paths this does not
+                    // satisfy "every row of an entry carries the same aggregate". The panel's
+                    // reduction takes the max over real values, which turns it into the entry's
+                    // best coelution - a sensible entry-level aggregate for this mode - but a
+                    // consumer that assumes the read is a non-reduction must not rely on it here.
                     entry.ExperimentAggregateScore = entry.CoelutionSum;
                     if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
                     {

@@ -381,7 +381,15 @@ namespace pwiz.Osprey.Tasks
             // resident-pool consumer FDRBench pass 1, which walks the full pre-compaction
             // FdrEntry pool -- still needs the fat stubs here. --model-diagnostics is NOT
             // one of them any more (#4505): it streams its report on every path.
-            bool needsResidentPool = NeedsResidentPool(ctx.Config);
+            // The fat/lean decision, and the guard that checks it, key off CanUseLeanProjection -
+            // the same predicate the two sibling sites use. Bare NeedsResidentPool no longer
+            // excludes ExpectReconciledInput (#4486), so a config with it set reached here with
+            // needsResidentPool == false: GuardResidentPool was handed false and refused nothing,
+            // and the lean branch streamed projection rows with no FdrEntry allocated, handing
+            // Stage 7 empty per-file lists. That is precisely what ResidentPoolGuardTest asserts
+            // must never happen, and it was reachable through this third call site alone.
+            bool needsResidentPool = !CanUseLeanProjection(ctx.Config, hasReconSidecars: false,
+                                                           OspreyEnvironment.UseFdrProjection);
             GuardResidentPool(ctx.Config, needsResidentPool);
 
             FdrProjectionSet projections = null;

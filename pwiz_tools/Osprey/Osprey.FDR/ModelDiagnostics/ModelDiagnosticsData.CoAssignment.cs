@@ -361,6 +361,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             // Phase 2: the detected rows.
             bool anyMz = false;
+            // Apex RT is as essential as m/z here and is NOT guaranteed to be present:
+            // ParquetScoreCache substitutes 0.0 when the column is absent, and ReadColumnByName
+            // ends in an `as` cast that yields null for a float or nullable-double column. Every
+            // row then carries ApexRt = 0.0, deltaRt is 0 for every same-m/z pair, and the report
+            // claims ~100% co-assignment at the tightest tolerance for all three classes - a
+            // plausible page built from no data at all. The streaming producer refuses exactly
+            // this case in TryReadEntryIdsAndApexRts; the resident path, which produces the
+            // pass-2 numbers users actually receive, did not.
+            bool anyDistinctApexRt = false;
+            double firstApexRt = double.NaN;
             for (int f = 0; f < perFileEntries.Count; f++)
             {
                 foreach (var e in perFileEntries[f].Value)
@@ -372,12 +382,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         haveManifest, ref wc, ref woc);
                     // Gate BEFORE building the row: the key is a fresh string per row, and pass 1
                     // hands this method the whole pre-compaction pool.
-                    if (!builder.Includes(f, cls, e.EntryId, e.Score, runQ, expQ, runFdr))
+                    if (!builder.Includes(f, cls, e.EntryId, runQ, expQ, runFdr))
                         continue;
                     double mz = precursorMzByEntryId(e.EntryId);
                     if (double.IsNaN(mz) || mz <= 0)
                         continue;
                     anyMz = true;
+                    if (!anyDistinctApexRt)
+                    {
+                        if (double.IsNaN(firstApexRt))
+                            firstApexRt = e.ApexRt;
+                        else if (e.ApexRt != firstApexRt)
+                            anyDistinctApexRt = true;
+                    }
                     // Tag decoy keys. A decoy carries its target's modified sequence, so an
                     // untagged decoy key equals its target's and the precursor registry merges
                     // the two, dropping the decoy. Same rule as the pass-1 source builds.
@@ -391,7 +408,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
                 builder.FlushFile();
             }
-            return anyMz ? builder.Build() : null;
+            // Refuse rather than report. A single apex RT shared by every row means the column
+            // was absent or unreadable, and the panel would otherwise publish ~100% co-assignment
+            // for every class as though it were a finding.
+            return anyMz && anyDistinctApexRt ? builder.Build() : null;
         }
 
         /// <summary>
@@ -493,7 +513,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                     _fileIdx = fileIdx;
                 }
-                if (!_fileBest.TryGetValue(entryId, out double cur) || score > cur)
+                // Same rule as the experiment reduction below, for the same reason. The run-scope
+                // discriminant carries the identical 0.0 reset default, and 2nd-pass discriminants
+                // are 93.2% negative with the boundary near -2.33, so a plain max() would let one
+                // stub row outrank every real score for this entry. Closing the hazard at
+                // experiment scope and leaving it open here is the asymmetry Copilot flagged.
+                if (!_fileBest.TryGetValue(entryId, out double cur) || cur == 0.0 ||
+                    (score != 0.0 && score > cur))
                     _fileBest[entryId] = score;
                 // Every row of an entry carries the same persisted aggregate, so this is a read,
                 // not a reduction. The only real decision is which row wins when one of them never
@@ -562,8 +588,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         // ranking never saw and inflates the row. Measured on Stellar after
                         // the q-inheritance fix: 415 decoys above the bar, 334 winners against
                         // an expected 312 - the 81 losers were the entire residual.
+                        // STRICTLY greater, so an exact tie goes to the DECOY. That is the rule
+                        // StreamingFdr's competition states and implements -
+                        // `decoyWins = hasT && hasD ? !(t.score > d.score) : !hasT` - so a tied
+                        // decoy IS inside the q estimate that set this bar. Excluding it here
+                        // would drop it from the row the bar is meant to admit, which is the
+                        // under-reporting this rule exists to prevent, in the other direction.
                         if (_fileBest.TryGetValue(kv.Key & BASE_ID_MASK, out double tgt) &&
-                            tgt >= kv.Value)
+                            tgt > kv.Value)
                             continue;
                         admitted.Add(kv.Key);
                     }
@@ -631,6 +663,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     if (kv.Value < _experimentCutoff)
                         continue;
+                    // Decoys must clear the SAME WonItsPair term the panel admits them on.
+                    // Without it this diagnostic reported every decoy above the bar, so the log
+                    // printed "415 decoys clear it" two lines above an admitted count of 334 and
+                    // the discrepancy read as a fault downstream of the rule rather than as this
+                    // method using a different rule.
+                    if ((kv.Key & 0x80000000u) != 0 && !WonItsPair(kv.Key))
+                        continue;
                     if ((kv.Key & 0x80000000u) != 0)
                         decoys++;
                     else
@@ -643,13 +682,23 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// (identity string, library m/z) for rows neither scope wants. Same rule
             /// <see cref="AddRow"/> applies.
             /// </summary>
-            public bool Includes(int fileIdx, EntrapmentClass cls, uint entryId, double score,
+            public bool Includes(int fileIdx, EntrapmentClass cls, uint entryId,
                 double runQvalue, double experimentQvalue, double runFdr)
             {
+                if (!_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder: SealCutoffs must be called before Includes");
+                }
                 if (!IsDecoyClass(cls))
                     return runQvalue <= runFdr || experimentQvalue <= runFdr;
+                // The experiment term carries WonItsPair, exactly as AddRow does. Without it this
+                // gate is looser than the rule it claims to mirror, and the row it lets through is
+                // then dropped by AddRow - harmless for counts, but it makes this method's
+                // contract false and hides the disagreement.
                 return AdmittedAtRunScope(fileIdx, entryId) ||
-                       (!double.IsNaN(_experimentCutoff) && ExperimentBest(entryId) >= _experimentCutoff);
+                       (!double.IsNaN(_experimentCutoff) && ExperimentBest(entryId) >= _experimentCutoff &&
+                        WonItsPair(entryId));
             }
 
             /// <summary>
@@ -736,7 +785,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 if (double.IsNaN(decoyBest))
                     return false;
                 double targetBest = ExperimentBest(decoyEntryId & BASE_ID_MASK);
-                return double.IsNaN(targetBest) || decoyBest > targetBest;
+                // NOT `decoyBest > targetBest`: an exact tie goes to the DECOY, matching
+                // StreamingFdr's `decoyWins = !(t.score > d.score)`. A tied decoy is inside the
+                // q estimate that set the bar, so it belongs in the row that bar admits.
+                return double.IsNaN(targetBest) || !(targetBest > decoyBest);
             }
 
             /// <summary>Distinct decoy precursor KEYS admitted at experiment scope.</summary>
@@ -1089,7 +1141,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             continue;
                         double deltaRt = partner.ApexRt - row.ApexRt;
                         double absDeltaRt = Math.Abs(deltaRt);
-                        if (absDeltaRt > SCAN_RT_WINDOW)
+                        // NOT `> SCAN_RT_WINDOW` alone: every comparison against NaN is false, so
+                        // a NaN apex RT sailed through this skip, `(int)NaN` came out
+                        // int.MinValue, and the `bin < 0` clamp downstream rewrote it to bin 0 -
+                        // the one bin the report interprets. The near-zero spike the caption calls
+                        // "same-feature apex jitter", and offers as the justification for
+                        // RT_TOLERANCE, would then be partly built from pairs with no RT at all,
+                        // while Tally's NaN guards kept those same pairs out of NShared/NBetter -
+                        // so the histogram and the table beside it disagreed silently.
+                        if (!(absDeltaRt <= SCAN_RT_WINDOW))
                             continue;
                         FoldPair(row, partner, deltaRt, absDeltaRt);
                     }

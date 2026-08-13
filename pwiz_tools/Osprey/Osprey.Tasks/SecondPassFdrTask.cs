@@ -120,7 +120,10 @@ namespace pwiz.Osprey.Tasks
             // The 2nd-pass mode decides the q this task writes into the .blib and the 2nd-pass
             // sidecars, so it invalidates them by exactly the argument the aggregation suffix
             // makes above - one arm's .blib must never be reused as another's.
+            // And the sidecar format version, for the same reason FirstPassFdrTask carries it:
+            // this task writes the 2nd-pass sidecars, so a record-layout change invalidates them.
             return base.ValidityKey(ctx)
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()

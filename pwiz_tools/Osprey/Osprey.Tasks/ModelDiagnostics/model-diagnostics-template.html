@@ -1799,8 +1799,13 @@ function drawCaLadder(ca,s){
     H(tr,"td",{class:"num"},pct(tv,2));
     const ev=s.entrapment?s.entrapment.betterByTolerance[i]:NaN;
     H(tr,"td",{class:"num"},s.entrapment?pct(ev,2):"–");
-    const r=(s.entrapment&&tv>0)?ev/tv:NaN;
-    H(tr,"td",{class:"num"},isFinite(r)?fmt(r,1)+"×":"–");});
+    // Same MIN_N_FOR_ENRICHMENT gate the KPI and the class table apply. Without it this table
+    // printed a ratio for a population the two renderers above withhold as "n<30" - one
+    // suppressed headline beside five unsuppressed ratios for the same data. minNForEnrichment
+    // is serialized into the payload precisely so there is one definition, not one per renderer.
+    const caSuppressed=!s.entrapment||s.entrapment.n<ca.minNForEnrichment||s.target.n<ca.minNForEnrichment;
+    const r=(!caSuppressed&&tv>0)?ev/tv:NaN;
+    H(tr,"td",{class:"num"},caSuppressed?"n<"+ca.minNForEnrichment:(isFinite(r)?fmt(r,1)+"×":"–"));});
 }
 
 // One row per precursor PAIR (not per observation), ranked by score gap, with the run count.

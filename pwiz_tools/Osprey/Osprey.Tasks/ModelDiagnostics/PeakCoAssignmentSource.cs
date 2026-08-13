@@ -309,7 +309,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 double experimentQ = EffectiveQvalue(rec, config.FdrLevel, false);
                 bool isDecoy = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                 var cls = ModelDiagnosticsData.ClassifyEntry(isDecoy, rec.EntryId, classByBaseId);
-                if (!builder.Includes(fileIdx, cls, rec.EntryId, rec.Score, runQ, experimentQ, config.RunFdr))
+                if (!builder.Includes(fileIdx, cls, rec.EntryId, runQ, experimentQ, config.RunFdr))
                     return;
                 // Decoy entries are not always present in THIS task's library index, while their
                 // target twin always is - and a decoy carries its target's precursor m/z by

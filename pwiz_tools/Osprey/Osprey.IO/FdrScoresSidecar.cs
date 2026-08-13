@@ -162,6 +162,47 @@ namespace pwiz.Osprey.IO
             return ScoresPath(inputPath, "2nd-pass");
         }
 
+        /// <summary>
+        /// Whether <paramref name="path"/> is a sidecar this build can consume: it exists, and
+        /// its header carries the expected magic, the current <see cref="FormatVersion"/> and the
+        /// <paramref name="expectedPass"/> byte. Never throws - a missing, short, or foreign file
+        /// is simply false.
+        ///
+        /// <para>Exists because presence is not readability. Callers that gate work on a sidecar
+        /// being "already done" were using a bare File.Exists, which cannot see a version - so a
+        /// stale sidecar from a build before the v3 -&gt; v4 record change satisfied the gate and
+        /// suppressed the very work that would have rewritten it.</para>
+        /// </summary>
+        public static bool IsCurrentFormat(string path, Pass expectedPass)
+        {
+            try
+            {
+                var info = new FileInfo(path);
+                if (!info.Exists || info.Length < HeaderLength)
+                    return false;
+                var header = new byte[HeaderLength];
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    if (!ReadFully(fs, header, HeaderLength))
+                        return false;
+                }
+                for (int i = 0; i < Magic.Length; i++)
+                {
+                    if (header[i] != Magic[i])
+                        return false;
+                }
+                return header[8] == FormatVersion && header[9] == (byte)expectedPass;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
         private static string ScoresPath(string inputPath, string passLabel)
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
