@@ -392,6 +392,14 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
                     CVID.MS_TIC_chromatogram => CVID.UO_picoampere, // CAD -> pA
                     _ => CVID.MS_number_of_detector_counts,
                 };
+                // cpp ChromatogramList_Thermo.cpp:136-140 scales picoampere intensities by 1e-6:
+                // "Thermo seems to store CAD intensities as attoAmps but shows them as picoAmps
+                // in QualBrowser". Without it a CAD trace is off by exactly 1e6.
+                if (intensityUnit == CVID.UO_picoampere)
+                {
+                    intensities = (double[])intensities.Clone();
+                    for (int i = 0; i < intensities.Length; i++) intensities[i] *= 1e-6;
+                }
                 chrom.DefaultArrayLength = times.Length;
                 chrom.BinaryDataArrays.Add(MakeArray(times, CVID.MS_time_array, CVID.UO_minute));
                 chrom.BinaryDataArrays.Add(MakeArray(intensities, CVID.MS_intensity_array, intensityUnit));
@@ -445,6 +453,10 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
             chrom.BinaryDataArrays.Add(MakeArray(intensities, CVID.MS_intensity_array, CVID.MS_number_of_detector_counts));
 
             // Third array: ms level per time point, matches pwiz C++ ChromatogramList_Thermo.
+            // cpp writes getMSOrder() RAW (ChromatogramList_Thermo.cpp:133), not the 1..10 ms
+            // level - and Thermo's MSOrderType is negative for the scan kinds that are not a
+            // plain MSn: Ng = -3, Nl = -2, Par = -1. A neutral-loss run therefore reads -2 in
+            // cpp where our translated level said 2.
             var msArr = new IntegerDataArray();
             msArr.Set(CVID.MS_non_standard_data_array, "ms level", CVID.UO_dimensionless_unit);
             for (int i = 0; i < times.Length; i++)
@@ -452,7 +464,7 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
                 try
                 {
                     int sn = _raw.Raw.ScanNumberFromRetentionTime(times[i]);
-                    msArr.Data.Add(_raw.MsLevel(sn));
+                    msArr.Data.Add((int)_raw.Raw.GetFilterForScanNumber(sn).MSOrder);
                 }
                 catch { msArr.Data.Add(0); }
             }
