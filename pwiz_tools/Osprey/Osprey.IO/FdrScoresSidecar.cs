@@ -349,7 +349,7 @@ namespace pwiz.Osprey.IO
         /// record from the lean row's EntryId + Score plus the parked / streamed
         /// q-values (1st pass) or the streamed q-values + the survivor's
         /// <c>ExperimentProteinQvalue</c> lookup (2nd pass), then pass them here. Single-phase
-        /// write producing byte-identical 60-byte records in the given
+        /// write producing byte-identical <see cref="RecordLength"/>-byte records in the given
         /// (per-file, projection) order (risk #8). Header + record layout are
         /// single-sourced with the FdrEntry overload via
         /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
@@ -453,7 +453,7 @@ namespace pwiz.Osprey.IO
 
                         dst.Write(header, 0, HeaderLength);
 
-                        // Stream one 60-byte record at a time: overwrite ONLY the
+                        // Stream one RecordLength-byte record at a time: overwrite ONLY the
                         // experiment_protein_qvalue bytes [52..60] with the finalized value
                         // looked up by entry_id [0..4], in the identical little-endian f64
                         // encoding BinaryWriter.Write(double) produced for every other
@@ -512,7 +512,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Shared header + atomic-write scaffold for both <c>Write</c>
         /// overloads. The caller supplies the body writer, which emits exactly
-        /// <paramref name="entryCount"/> 60-byte records via
+        /// <paramref name="entryCount"/> <see cref="RecordLength"/>-byte records via
         /// <see cref="WriteRecord"/>. Atomic write via FileSaver: write to a unique
         /// sibling temp file and promote it to the destination on Commit; on
         /// exception the FileSaver disposes and deletes the temp without touching
@@ -758,8 +758,9 @@ namespace pwiz.Osprey.IO
         /// file), not O(all files)) and key them into a per-file map. Same header validation
         /// as <see cref="TryRead(string,IList{FdrEntry},Pass)"/> (magic / version / pass /
         /// size); returns <c>false</c> (with the partial callback effects the caller must
-        /// discard) on any mismatch or IO failure. Streams one 60-byte record at a time from
-        /// the source (one record resident, not an O(file-size) whole-file buffer), matching
+        /// discard) on any mismatch or IO failure. Streams one <see cref="RecordLength"/>-byte
+        /// record at a time from the source (one record resident, not an O(file-size)
+        /// whole-file buffer), matching
         /// <see cref="PatchProteinQvalues"/>. Records are delivered in stored (file) order.
         /// </summary>
         public static bool ReadRecords(string path, Pass expectedPass, Action<FdrScoreRecord> onRecord)
