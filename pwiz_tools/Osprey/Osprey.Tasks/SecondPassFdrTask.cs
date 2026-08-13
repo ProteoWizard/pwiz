@@ -98,7 +98,15 @@ namespace pwiz.Osprey.Tasks
             // Without this the flag was inert on a completed directory: --model-diagnostics is
             // in no validity key and the HTML was in no Outputs list, so adding it to a re-run
             // changed nothing, every task reported "outputs valid", and no report was produced.
-            if (ctx.Config.ModelDiagnostics)
+            //
+            // AND conditional on FirstPassFDR being in this graph. WritePass2AndFinalize needs
+            // the pass-1 .data.json hand-off sidecar, which only FirstPassFdrTask writes - so
+            // under `--task SecondPassFDR --model-diagnostics` no report can ever be produced.
+            // Declaring it there recreated the very loop the paragraph above set out to avoid,
+            // one step later: CanRehydrate requires every declared output to exist, so the task
+            // was never skippable and every invocation re-ran pass-2 Percolator, protein FDR and
+            // the whole .blib write, still producing no report.
+            if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
                 yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
             // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
             // (independent of protein FDR -- the second Percolator pass runs on the

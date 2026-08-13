@@ -845,7 +845,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     if (isDecoy)
                     {
                         _experimentDecoyIds.Add(row.EntryId);
-                        _experimentDecoyKeys.Add(row.Key);
                     }
                 }
             }
@@ -855,7 +854,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // not, two library entries are producing one key and the panel is merging distinct
             // precursors - which under-reports the decoy class without any other symptom.
             private readonly HashSet<uint> _experimentDecoyIds = new HashSet<uint>();
-            private readonly HashSet<string> _experimentDecoyKeys = new HashSet<string>(StringComparer.Ordinal);
 
             /// <summary>Distinct decoy entry ids admitted at experiment scope.</summary>
             public int ExperimentDecoyIdCount => _experimentDecoyIds.Count;
@@ -885,9 +883,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // q estimate that set the bar, so it belongs in the row that bar admits.
                 return double.IsNaN(targetBest) || !(targetBest > decoyBest);
             }
-
-            /// <summary>Distinct decoy precursor KEYS admitted at experiment scope.</summary>
-            public int ExperimentDecoyKeyCount => _experimentDecoyKeys.Count;
 
             private static bool IsDecoyClass(EntrapmentClass cls)
             {
