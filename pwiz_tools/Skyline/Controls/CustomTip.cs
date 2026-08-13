@@ -18,7 +18,6 @@
  */
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Threading;
 using System.Windows.Forms;
@@ -33,7 +32,7 @@ namespace pwiz.Skyline.Controls
     /// </summary>
     public class CustomTip : NativeWindow, IDisposable
     {
-        private const int SHADOW_LENGTH = 4;
+        private const int SHADOW_LENGTH = 0;
 
         private bool _isMouseIn;
         private bool _onMouseMove;
@@ -72,38 +71,8 @@ namespace pwiz.Skyline.Controls
         /// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
         protected void PaintShadow(NcPaintEventArgs e)
         {
-            if (_hasShadow)
-            {
-                Color color1 = Color.FromArgb(0x30, 0, 0, 0);
-                Color color2 = Color.FromArgb(0, 0, 0, 0);
-                using (GraphicsPath path1 = new GraphicsPath())
-                {
-                    Rectangle rectShadow = GetShadowRectangle(e.Bounds);
-                    GraphicsContainer container1 = e.Graphics.BeginContainer();
-                    path1.StartFigure();
-                    path1.AddRectangle(rectShadow);
-                    path1.CloseFigure();
-                    using (PathGradientBrush brush2 = new PathGradientBrush(path1))
-                    {
-                        brush2.CenterColor = color1;
-                        brush2.CenterPoint = new Point(rectShadow.X + rectShadow.Width / 2,
-                            rectShadow.Y + rectShadow.Height / 2);
-                        ColorBlend cb = new ColorBlend
-                        {
-                            Colors = new[] {color1, color2},
-                            Positions = new[] {0.0f, 1.0f}
-                        };
-                        brush2.InterpolationColors = cb;
-                        using (Region region = e.Graphics.Clip)
-                        {
-                            //region.Exclude(ClientRectangle);
-                            e.Graphics.Clip = region;
-                            e.Graphics.FillRectangle(brush2, rectShadow);
-                        }
-                    }
-                    e.Graphics.EndContainer(container1);
-                }
-            }
+            // Shadow is now handled by CS_DROPSHADOW window class style,
+            // which is DPI-aware and rendered by the OS compositor.
         }
 
         protected void PaintBorder(NcPaintEventArgs e)
@@ -845,6 +814,10 @@ namespace pwiz.Skyline.Controls
                 params1.Parent = _parent != null ? _parent.Handle : IntPtr.Zero;
                 params1.Style = -2147483648;
                 params1.ExStyle = 0x88;      // WS_EX_TOOLWINDOW | WS_EX_TOPMOST
+                if (_hasShadow)
+                {
+                    params1.ClassStyle |= 0x20000; // CS_DROPSHADOW
+                }
                 if (_supportsLayered)
                 {
                     params1.ExStyle += 0x80000; // WS_EX_LAYERED

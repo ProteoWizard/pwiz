@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="IT-HCD-SPS" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
-    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.232" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="releases/2026-01-16" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/uo.obo"/>
   </cvList>
   <fileDescription>
     <fileContent>
       <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
     </fileContent>
     <sourceFileList count="1">
-      <sourceFile id="RAW1" name="IT-HCD-SPS.raw" location="file:///C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data">
+      <sourceFile id="RAW1" name="IT-HCD-SPS.raw" location="file:///C:\dev\pwiz-bruker\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data">
         <cvParam cvRef="MS" accession="MS:1000768" name="Thermo nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000563" name="Thermo RAW format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c078381d3747e5deda18bcd86d0df3c137e419ed"/>
@@ -25,7 +25,7 @@
     <software id="Xcalibur" version="">
       <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
     </software>
-    <software id="pwiz" version="3.0.20071">
+    <software id="pwiz" version="3.0.26048">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -100,7 +100,7 @@
               </selectedIon>
             </selectedIonList>
             <activation>
-              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
               <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
             </activation>
           </precursor>
@@ -117,7 +117,7 @@
               </selectedIon>
             </selectedIonList>
             <activation>
-              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
               <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
             </activation>
           </precursor>
@@ -134,7 +134,7 @@
               </selectedIon>
             </selectedIonList>
             <activation>
-              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
               <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
             </activation>
           </precursor>
@@ -151,7 +151,7 @@
               </selectedIon>
             </selectedIonList>
             <activation>
-              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+              <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
               <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="33.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
             </activation>
           </precursor>

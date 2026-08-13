@@ -830,6 +830,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public const int SIM_ISOLATION_CUTOFF = 500;
+        public const int NARROW_SCAN_WINDOW_CUTOFF = 30;
 
         private static bool IsSimIsolation(IsolationWindowFilter isoWin)
         {
@@ -954,7 +955,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
                 var matchingSpectra = spectra;
-                if (false == filterPair.SpectrumClassFilter.IsEmpty)
+                if (null != filterPair.SpectrumMetadataPredicate)
                 {
                     matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
                         .ToArray();
@@ -1006,7 +1007,7 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     var matchingSpectra = spectra;
-                    if (!filterPair.SpectrumClassFilter.IsEmpty)
+                    if (filterPair.SpectrumMetadataPredicate != null)
                     {
                         matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
                             .ToArray();

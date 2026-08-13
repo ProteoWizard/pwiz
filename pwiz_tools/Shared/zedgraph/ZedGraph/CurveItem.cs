@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright Â© 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -52,6 +52,12 @@ namespace ZedGraph
 		/// property <see cref="Label"/> to access this value.
 		/// </summary>
 		internal Label _label;
+
+		/// <summary>
+		/// Optional description string used to group legend entries. Entries with the same
+		/// consecutive group name are shown on the same row(s); a new row begins when the description changes.
+		/// </summary>
+		internal string _legendGroupName;
 
 		/// <summary>
 		/// protected field that stores the boolean value that determines whether this
@@ -193,6 +199,7 @@ namespace ZedGraph
 			_isX2Axis = false;
 			_isVisible = true;
 			_isOverrideOrdinal = false;
+			_legendGroupName = null;
 			this.Tag = null;
 			_yAxisIndex = 0;
 			_link = new Link();
@@ -233,6 +240,7 @@ namespace ZedGraph
 				this.Tag = rhs.Tag;
 			
 			_points = (IPointList) rhs.Points.Clone();
+			_legendGroupName = rhs._legendGroupName;
 
 			_link = rhs._link.Clone();
 		}
@@ -342,6 +350,17 @@ namespace ZedGraph
 		{
 			get { return _label; }
 			set { _label = value;}
+		}
+
+		/// <summary>
+		/// Gets or sets the description used to group this entry in the legend.
+		/// Entries with the same consecutive group name appear on the same row(s), with the
+		/// group name drawn in bold to the left. A new row begins when the group name changes.
+		/// </summary>
+		public string LegendGroupName
+		{
+			get { return _legendGroupName ?? string.Empty; }
+			set { _legendGroupName = value; }
 		}
 
 		/// <summary>

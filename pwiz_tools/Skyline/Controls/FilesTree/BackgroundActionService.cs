@@ -24,6 +24,7 @@ namespace pwiz.Skyline.Controls.FilesTree
     public class BackgroundActionService : IDisposable
     {
         private QueueWorker<Action> _workQueue;
+        private volatile bool _isShutdown;
         private int _pendingActionCount;
 
         // CONSIDER: Should this take a CancellationToken? Would be nice to centralize cancellation checks before executing actions queued
@@ -49,8 +50,24 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <param name="action">Action to queue for async processing</param>
         internal void AddTask(Action action)
         {
+            if (_isShutdown)
+                return;
+
+            // Capture reference to avoid race with Dispose() setting _workQueue to null
+            var queue = _workQueue;
+            if (queue == null)
+                return; // Service has been disposed
+
             Interlocked.Increment(ref _pendingActionCount);
-            _workQueue.Add(action);
+            try
+            {
+                queue.Add(action);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Race condition: queue was disposed between our null check and Add call
+                _pendingActionCount = 0;
+            }
         }
 
         /// <summary>
@@ -80,21 +97,27 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             Assume.IsNotNull(SynchronizingObject);
 
+            if (_isShutdown)
+                return;
+
             if (!SynchronizingObject.IsDisposed && SynchronizingObject.IsHandleCreated)
             {
                 Interlocked.Increment(ref _pendingActionCount);
-                CommonActionUtil.SafeBeginInvoke(SynchronizingObject, () =>
+                if (!CommonActionUtil.SafeBeginInvoke(SynchronizingObject, () =>
+                    {
+                        try
+                        {
+                            action();
+                        }
+                        finally
+                        {
+                            Interlocked.Decrement(ref _pendingActionCount);
+                            Assume.IsTrue(_pendingActionCount >= 0);
+                        }
+                    }))
                 {
-                    try
-                    {
-                        action();
-                    }
-                    finally
-                    {
-                        Interlocked.Decrement(ref _pendingActionCount);
-                        Assume.IsTrue(_pendingActionCount >= 0);
-                    }
-                });
+                    Interlocked.Decrement(ref _pendingActionCount);
+                }
             }
         }
 
@@ -107,6 +130,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             Assume.IsNotNull(_workQueue);
 
+            _isShutdown = true;
             _workQueue?.Clear();
             _workQueue?.DoneAdding(true);
         }

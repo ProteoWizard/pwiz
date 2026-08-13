@@ -450,7 +450,7 @@ namespace pwiz.SkylineTestTutorial
                 };
                 RunUI(() =>
                 {
-                    openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
+                    openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(GetTestPath()));
                     openDataSourceDialog1.SelectAllFileType(ExtWatersRaw, path => isFirstPass
                         ? firstPassMatches.Any(path.Contains)
                         : !firstPassMatches.Any(path.Contains));

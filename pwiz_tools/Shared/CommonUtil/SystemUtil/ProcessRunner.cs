@@ -183,12 +183,10 @@ namespace pwiz.Common.SystemUtil
                     {
                         if (progress.IsCanceled)
                         {
-                            if (!proc.HasExited)
-                            {
-                                proc.Kill();
-                            }
+                            // Report the cancel before returning through the finally, which kills the
+                            // process and cleans up after it. Killing here as well would mean waiting
+                            // out the kill twice over, and not saying anything until it was done.
                             progress.UpdateProgress(status = status.Cancel());
-                            CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
                             return;
                         }
 
@@ -251,7 +249,7 @@ namespace pwiz.Common.SystemUtil
                     // ReSharper disable LocalizableElement
                     sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}\r\nExit code: {4}", processPath,
                         CommonTextUtil.SpaceSeparate(proc.StartInfo.Arguments), psi.WorkingDirectory,
-                        stdin != null ? "\r\nStandard input:\r\n" + stdin : string.Empty, exit);
+                        stdin != null ? "\r\nStandard input:\r\n" + stdin : string.Empty, PInvoke.Kernel32.FormatExitCode(exit));
                     // ReSharper restore LocalizableElement
                     throw new IOException(sbError.ToString());
                 }
@@ -277,10 +275,61 @@ namespace pwiz.Common.SystemUtil
             }
             finally
             {
-                if (!proc.HasExited)
-                    try { proc.Kill(); } catch (InvalidOperationException) { }
+                KillAndWaitForExit(proc, writer);
 
                 CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+            }
+        }
+
+        /// <summary>
+        /// How long to wait for a killed process to actually finish exiting.
+        /// <para>
+        /// Measured teardown for the case this exists for was 160-283 ms, so this is generous by more
+        /// than an order of magnitude while still bounding the wait. It has to stay bounded because
+        /// callers reach here on their cancel path, and some of them cancel from the UI thread.
+        /// </para>
+        /// </summary>
+        private const int KILL_WAIT_MILLISECONDS = 5 * 1000;
+
+        /// <summary>
+        /// Terminate a process and wait for the process itself to be gone.
+        /// <para>
+        /// Process.Kill() is asynchronous - it only asks Windows to terminate the process. Until the
+        /// process object is actually torn down, Windows keeps its executable and every DLL it loaded
+        /// mapped as images, and a mapped image cannot be deleted (it can be renamed, but deleting it
+        /// fails with UnauthorizedAccessException). So a caller that cancels a process and then cleans
+        /// up or reinstalls the directory it ran from races that teardown: the delete silently leaves
+        /// the locked files behind, and the reinstall then fails overwriting them. Waiting here closes
+        /// that window - the wait is normally a fraction of a second.
+        /// </para>
+        /// </summary>
+        private static void KillAndWaitForExit(Process proc, TextWriter writer)
+        {
+            try
+            {
+                if (proc.HasExited)
+                    return;
+                int processId = proc.Id;    // Not readable once it has gone
+                proc.Kill();
+                // Deliberately the timeout overload: the parameterless WaitForExit() also blocks on
+                // redirected output being fully read, which ProcessStreamReader owns on its own threads.
+                if (proc.WaitForExit(KILL_WAIT_MILLISECONDS))
+                    return;
+
+                // Say so rather than going quiet. Whatever the caller does next with the directory this
+                // ran from is now liable to fail on files that are still mapped, and an
+                // UnauthorizedAccessException out of a delete gives no hint of where it came from.
+                writer?.WriteLine(
+                    MessageResources.ProcessRunner_KillAndWaitForExit_Warning__process__0__had_not_exited__1__seconds_after_being_killed__files_it_has_open_may_still_be_locked_,
+                    processId, KILL_WAIT_MILLISECONDS / 1000);
+            }
+            catch (Exception)
+            {
+                // Killing is best effort. The process may have exited on its own between the HasExited
+                // check and the Kill (InvalidOperationException), or Windows may refuse to terminate one
+                // that is already on its way out (Win32Exception). Letting either escape would be worse
+                // than not killing: this runs first in a finally, so it would skip the temp file cleanup
+                // after it and bury whatever exception was already on its way out of the try.
             }
         }
 

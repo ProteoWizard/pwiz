@@ -63,6 +63,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
         //
         private static readonly Dictionary<string, List<LabeledPoint.PointLayout>> _labelsLayouts = new Dictionary<string, List<LabeledPoint.PointLayout>>();
 
+        private readonly LabelLayoutRunner _labelLayoutRunner = new LabelLayoutRunner();
+        private bool _suppressAxisChangeLayout;
+
         private FoldChangeRow _selectedRow;
 
         private NodeTip _tip;
@@ -145,30 +148,54 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void GraphPane_AxisChangeEvent(GraphPane pane)
         {
             AdjustLocations(pane);
+            if (_suppressAxisChangeLayout)
+                return;
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+                {
+                    StartLabelLayoutAsync(_labeledPoints);
+                }
+                else if (_labelsLayouts.TryGetValue(GroupComparisonName, out var savedLayout))
+                {
+                    StartLabelLayoutAsync(_labeledPoints, savedLayout);
+                }
+            }
+            else
+            {
+                zedGraphControl.GraphPane.EnableLabelLayout = false;
+            }
         }
 
         private void zedGraphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState,
             ZoomState newState, PointF mousePosition)
         {
-            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
-            {
-                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
-                {
-                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
-                }
-                else
-                {
-                    if (_labelsLayouts.TryGetValue(GroupComparisonName, out var savedLayout))
-                    {
-                        zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, savedLayout);
-                        _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
-                    }
-                }
-            }
-            else
-                zedGraphControl.GraphPane.EnableLabelLayout = false;
             AdjustLocations(zedGraphControl.GraphPane);
+        }
+
+        private void zedGraphControl_ZoomAllOutEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            GraphPane_AxisChangeEvent(zedGraphControl.GraphPane);
+        }
+
+        private void zedGraphControl_Resize(object sender, EventArgs e)
+        {
+            GraphPane_AxisChangeEvent(zedGraphControl.GraphPane);
+        }
+
+        private void GraphPane_LayoutRequested(object sender, EventArgs e)
+        {
+            if (sender is GraphPane pane)
+                GraphPane_AxisChangeEvent(pane);
+        }
+
+        private void StartLabelLayoutAsync(List<LabeledPoint> labeledPoints, List<LabeledPoint.PointLayout> savedLayout = null)
+        {
+            _labelLayoutRunner.Start(
+                zedGraphControl,
+                labeledPoints,
+                savedLayout,
+                layout => _labelsLayouts[GroupComparisonName] = layout ?? new List<LabeledPoint.PointLayout>());
         }
 
         private void zedGraphControl_KeyDown(object sender, KeyEventArgs e)
@@ -196,7 +223,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _bindingListSource.ListChanged += BindingListSourceOnListChanged;
                 _bindingListSource.AllRowsChanged += BindingListSourceAllRowsChanged;
                 zedGraphControl.GraphPane.AxisChangeEvent += GraphPane_AxisChangeEvent;
+                zedGraphControl.GraphPane.LayoutRequested += GraphPane_LayoutRequested;
                 zedGraphControl.ZoomEvent += zedGraphControl_ZoomEvent;
+                zedGraphControl.ZoomAllOutEvent += zedGraphControl_ZoomAllOutEvent;
+                zedGraphControl.Resize += zedGraphControl_Resize;
 
                 if (_skylineWindow == null)
                 {
@@ -213,6 +243,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            _labelLayoutRunner.Cancel(Program.MainWindow);
             if (_tip != null)
             {
                 _tip.HideTip();
@@ -227,7 +258,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             zedGraphControl.GraphPane.AxisChangeEvent -= GraphPane_AxisChangeEvent;
+            zedGraphControl.GraphPane.LayoutRequested -= GraphPane_LayoutRequested;
             zedGraphControl.ZoomEvent -= zedGraphControl_ZoomEvent;
+            zedGraphControl.ZoomAllOutEvent -= zedGraphControl_ZoomAllOutEvent;
+            zedGraphControl.Resize -= zedGraphControl_Resize;
             Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
 
             if (_bindingListSource != null)
@@ -318,7 +352,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (!IsHandleCreated || _bindingListSource == null)
                 return;
-            
+
+            _suppressAxisChangeLayout = true;
+            try
+            {
+                UpdateGraphInternal();
+            }
+            finally
+            {
+                _suppressAxisChangeLayout = false;
+            }
+        }
+
+        private void UpdateGraphInternal()
+        {
             zedGraphControl.GraphPane.GraphObjList.Clear();
             zedGraphControl.GraphPane.CurveList.Clear();
             _points.Clear();
@@ -352,26 +399,63 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
-            AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
+            // Resolve formatting traits per-point independently using DotPlotUtil.ResolvePointFormat.
+            // Each trait (color, symbol, size, labeled=true) is set by the last matching rule that
+            // explicitly provides it — separate rules can control different traits independently, and
+            // a rule lower in the list overrides an earlier one (CSS-cascade model).
+            var colorRows = GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null).ToList();
 
-            foreach (var colorRow in GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null))
+            // Selected points keep the selection color but preserve the marker shape from the first
+            // selected point's matching rule. Exactly one selected curve must always be added at
+            // index 0 so that the cutoff-line insertion indices and MatchedPointsStartIndex stay valid.
+            //
+            // This is intentionally different from SummaryRelativeAbundanceGraphPane, which groups its
+            // selected points by resolved symbol (one selected curve per symbol). That pane has no cutoff
+            // lines and derives no fixed indices from the selected curve, so it is free to emit several.
+            // The volcano pane cannot: cutoff lines are inserted at offsets relative to a single selected
+            // curve at index 0, and MatchedPointsStartIndex assumes that one curve, so multiple selected
+            // curves would invalidate both. All selected points therefore share the first one's symbol here.
+            var selectedSymbol = PointSymbol.Circle;
+            if (selectedPoints.Count > 0)
             {
-                var row = colorRow;
-                var matchedPoints = otherPoints.Where(p =>
-                {
-                    var foldChangeRow = (FoldChangeRow) p.Tag;
-                    return row.MatchExpression.Matches(Document, foldChangeRow.Protein, foldChangeRow.Peptide,
-                        foldChangeRow.FoldChangeResult, CutoffSettings);
-                }).ToArray();
-
-                if (matchedPoints.Any())
-                {
-                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
-                    otherPoints = new PointPairList(otherPoints.Except(matchedPoints).ToArray());
-                }
+                var firstRow = (FoldChangeRow)(selectedPoints[0]).Tag;
+                selectedSymbol = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(Document, firstRow.Protein, firstRow.Peptide,
+                        firstRow.FoldChangeResult, CutoffSettings))?.symbol ?? PointSymbol.Circle;
+            }
+            AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, selectedSymbol, true);
+            var unmatchedOtherPoints = new PointPairList();
+            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int lastRuleIndex)>();
+            foreach (var point in otherPoints)
+            {
+                var foldChangeRow = (FoldChangeRow)point.Tag;
+                var resolved = DotPlotUtil.ResolvePointFormat(colorRows,
+                    rule => rule.MatchExpression.Matches(Document, foldChangeRow.Protein,
+                        foldChangeRow.Peptide, foldChangeRow.FoldChangeResult, CutoffSettings));
+                if (resolved == null)
+                    unmatchedOtherPoints.Add(point);
+                else
+                    pointFormats.Add((point,
+                        resolved.Value.color ?? Color.Gray,
+                        resolved.Value.symbol ?? PointSymbol.Circle,
+                        resolved.Value.size ?? PointSize.small,
+                        resolved.Value.labeled,
+                        resolved.Value.lastRuleIndex));
             }
 
-            AddPoints(otherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
+            // Order matched curves by their lowest contributing rule index so they appear in
+            // rule-list order (earlier rules first). Note ZedGraph paints lower curve indices on top,
+            // so when points of different rules overlap the earlier rule's marker is drawn over the later.
+            foreach (var group in pointFormats
+                .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
+                .OrderBy(g => g.Min(pf => pf.lastRuleIndex)))
+            {
+                var fmt = group.Key;
+                AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),
+                    fmt.color, DotPlotUtil.PointSizeToFloat(fmt.size), fmt.labeled, fmt.symbol);
+            }
+
+            AddPoints(unmatchedOtherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
 
             // The coordinates that depend on the axis scale don't matter here, the AxisChangeEvent will fix those
             // Insert after selected items, but before all other items
@@ -395,12 +479,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
                 _dataChanged = false;
             }
+            else
+            {
+                // Only cutoff settings changed; AxisChange() was not called so reposition
+                // the reference lines manually to span the current axis range (issue #4052).
+                AdjustLocations(zedGraphControl.GraphPane);
+            }
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints,
+                StartLabelLayoutAsync(_labeledPoints,
                     _labelsLayouts.TryGetValue(GroupComparisonName, out var layout) ? layout : null);
-                _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
             }
             zedGraphControl.Invalidate();
         }
@@ -435,7 +524,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
             LineItem lineItem;
-            if (DotPlotUtil.HasOutline(pointSymbol))
+            if (DotPlotUtil.IsOutlineVariant(pointSymbol))
+            {
+                lineItem = new LineItem(null, points, Color.Black, symbolType)
+                {
+                    Line = { IsVisible = false },
+                    Symbol = { Border = { IsVisible = true, Color = color }, Fill = new Fill(Color.Transparent), Size = size, IsAntiAlias = true }
+                };
+            }
+            else if (DotPlotUtil.HasOutline(pointSymbol))
             {
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
@@ -540,7 +637,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     using (var g = Graphics.FromHwnd(IntPtr.Zero))
                     {
                         zedGraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
-                        if (nearestObj is TextObj nearestText)
+                        if (nearestObj is TextObj { IsVisible: true } nearestText)
                         {
                             var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
                             if (labels.Any())
@@ -739,9 +836,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout?.PointsLayout;
-                    zedGraphControl.Invalidate();
+                    StartLabelLayoutAsync(_labeledPoints);
                 }
             }
         }
@@ -947,9 +1042,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return null;
             }
 
-            needsUpdate =
-                filter.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)) !=
-                operand.ToString(CultureInfo.CurrentCulture);
+            var operandValue = (filter.Predicate.GetOperandValue(_bindingListSource.ViewInfo.DataSchema, typeof(double)) as PrecisionNumber?)?.ToDouble();
+            needsUpdate = !operand.Equals(operandValue);
 
             return filter;
         }
@@ -964,7 +1058,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private RowFilter.ColumnFilter CreateColumnFilter(ColumnId columnId, IFilterOperation filterOp, double operand)
         {
-            var op = FilterPredicate.CreateFilterPredicate(_bindingListSource.ViewInfo.DataSchema,
+            var op = FilterPredicate.Parse(_bindingListSource.ViewInfo.DataSchema,
                 typeof(double), filterOp,
                 operand.ToString(CultureInfo.CurrentCulture));
 
@@ -1014,18 +1108,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var outCount = 0;
             var inCount = 0;
 
-            var otherPoints = curveList[MatchedPointsStartIndex].Points;
-            for (var i = 0; i < otherPoints.Count; ++i)
+            // Iterate all non-selected, non-cutoff-line curves (formatted groups + unmatched "other").
+            // Formatted rule curves occupy MatchedPointsStartIndex..Count-2; the unmatched curve is last.
+            for (var curveIndex = MatchedPointsStartIndex; curveIndex < curveList.Count; curveIndex++)
             {
-                var pair = otherPoints[i];
-                var row = (FoldChangeRow) pair.Tag;
-                var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
+                var points = curveList[curveIndex].Points;
+                for (var i = 0; i < points.Count; ++i)
+                {
+                    var pair = points[i];
+                    var row = (FoldChangeRow) pair.Tag;
+                    var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
 
-                if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&
-                    (!CutoffSettings.PValueCutoffValid || pvalue > CutoffSettings.PValueCutoff))
-                    ++outCount;
-                else
-                    ++inCount;
+                    if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&
+                        (!CutoffSettings.PValueCutoffValid || pvalue > CutoffSettings.PValueCutoff))
+                        ++outCount;
+                    else
+                        ++inCount;
+                }
             }
 
             return new CurveCounts(curveList.Count, selectedCount,

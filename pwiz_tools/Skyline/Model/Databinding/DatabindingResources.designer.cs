@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class DatabindingResources {
@@ -174,6 +174,33 @@ namespace pwiz.Skyline.Model.Databinding {
         public static string ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_ {
             get {
                 return ResourceManager.GetString("ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Built in reports cannot be exported here.
+        /// </summary>
+        public static string RowFactories_ExportReport_Built_in_reports_cannot_be_exported_here {
+            get {
+                return ResourceManager.GetString("RowFactories_ExportReport_Built_in_reports_cannot_be_exported_here", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The row type &apos;{0}&apos; cannot be exported..
+        /// </summary>
+        public static string RowFactories_ExportReport_The_row_type___0___cannot_be_exported_ {
+            get {
+                return ResourceManager.GetString("RowFactories_ExportReport_The_row_type___0___cannot_be_exported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no report named &apos;{0}&apos; in the group &apos;{1}&apos;.
+        /// </summary>
+        public static string RowFactories_ExportReport_There_is_no_report_named___0___in_the_group___1__ {
+            get {
+                return ResourceManager.GetString("RowFactories_ExportReport_There_is_no_report_named___0___in_the_group___1__", resourceCulture);
             }
         }
         

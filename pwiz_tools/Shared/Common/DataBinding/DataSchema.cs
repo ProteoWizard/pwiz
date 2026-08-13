@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 
 namespace pwiz.Common.DataBinding
 {
@@ -453,6 +454,71 @@ namespace pwiz.Common.DataBinding
         public IEnumerable<T> FilterAttributes<T>(string uiMode, IEnumerable<T> attributes) where T : Attribute
         {
             return attributes.Where(attr=>AttributeApplies(uiMode, attr)).OrderByDescending(GetAttributeClassDepth);
+        }
+
+        public virtual IFilterHandler GetFilterHandler(ColumnDescriptor columnDescriptor)
+        {
+            return GetFilterHandler(GetWrappedValueType(columnDescriptor.PropertyType));
+
+        }
+
+        private static Dictionary<Type, IFilterHandler> _filterHandlers = new Dictionary<Type, IFilterHandler>
+        {
+
+            { typeof(sbyte), IntegerFilterHandler.INSTANCE },
+            { typeof(byte), IntegerFilterHandler.INSTANCE },
+            { typeof(short), IntegerFilterHandler.INSTANCE },
+            { typeof(ushort), IntegerFilterHandler.INSTANCE },
+            { typeof(int), IntegerFilterHandler.INSTANCE },
+            { typeof(uint), IntegerFilterHandler.INSTANCE },
+            { typeof(long), IntegerFilterHandler.INSTANCE },
+            { typeof(ulong), IntegerFilterHandler.INSTANCE },
+            { typeof(float), NumericFilterHandler.INSTANCE },
+            { typeof(double), NumericFilterHandler.INSTANCE },
+            { typeof(Decimal), NumericFilterHandler.INSTANCE },
+            { typeof(bool), new SimpleFilterHandler(typeof(bool)) },
+            { typeof(char), new SimpleFilterHandler.Comparable(typeof(char)) },
+            { typeof(DateTime), new SimpleFilterHandler.Comparable(typeof(DateTime)) }
+        };
+
+        public virtual IFilterHandler GetFilterHandler(Type type)
+        {
+            type = GetWrappedValueType(type);
+            var filterHandlerAttribute = type.GetCustomAttribute<FilterHandlerAttribute>();
+            if (filterHandlerAttribute != null)
+            {
+                return (IFilterHandler)Activator.CreateInstance(filterHandlerAttribute.FilterHandlerType);
+            }
+
+            var listElementType = ListColumnValue.GetElementType(type);
+            if (listElementType != null)
+            {
+                return new ListFilterHandler(GetFilterHandler(listElementType));
+            }
+
+            if (_filterHandlers.TryGetValue(type, out var filterHandler))
+            {
+                return filterHandler;
+            }
+
+            if (type.IsEnum)
+            {
+                return new EnumFilterHandler(type);
+            }
+
+            if (typeof(IFormattable).IsAssignableFrom(type))
+            {
+                return TextFilterHandler.WITHOUT_CONTAINS;
+            }
+            return TextFilterHandler.WITH_CONTAINS;
+        }
+        /// <summary>
+        /// Maximum number of rows to display in a DataGridView. Reports with more than this number of rows can be exported to a CSV file etc.,
+        /// but the dataset displayed in the DataGridView will be truncated to this count.
+        /// </summary>
+        public virtual int MaxGridRowCount
+        {
+            get { return 10_000_000; }
         }
     }
 }

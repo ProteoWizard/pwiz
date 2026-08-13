@@ -178,6 +178,12 @@
   <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
     <value>以下のサーバーから情報を取得しようとした際に失敗しました：</value>
   </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders" xml:space="preserve">
+    <value>リモートサーバーフォルダをリクエスト中</value>
+  </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Retrieving_folder_information" xml:space="preserve">
+    <value>フォルダ情報を取得中</value>
+  </data>
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
     <value>開</value>
   </data>
@@ -202,14 +208,26 @@
   <data name="AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
     <value>サーバーの一時ファイルの削除中</value>
   </data>
+  <data name="AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
+    <value>サーバーの一時ファイルの名前を変更中</value>
+  </data>
   <data name="AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
     <value>データインポートの完了待ち...</value>
   </data>
   <data name="AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__" xml:space="preserve">
     <value>フォルダ「{0}」検証中のエラー</value>
   </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_all_folders" xml:space="preserve">
+    <value>すべてのフォルダ</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for__0__" xml:space="preserve">
+    <value>情報取得中のエラー： {0}</value>
+  </data>
   <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__" xml:space="preserve">
     <value>フォルダ「{0}」情報取得中のエラー</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_folder___0__" xml:space="preserve">
+    <value>フォルダ「{0}」</value>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
     <value>フォルダ「{0}」のWebDAV url取得中にエラーが発生しました。</value>
@@ -228,6 +246,9 @@
   </data>
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>サーバーは有効なJSON応答を返しませんでした。{0}はPanoramaサーバーではありません。</value>
+  </data>
+  <data name="WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is_not_a_LabKey_server_" xml:space="preserve">
+    <value>サーバーは有効なLabKeyサーバー応答を返しませんでした。{0}はLabKeyサーバーではありません。</value>
   </data>
   <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
     <value>ドキュメントのインポートパイプラインジョブのステータス取得中にエラーが発生しました。</value>

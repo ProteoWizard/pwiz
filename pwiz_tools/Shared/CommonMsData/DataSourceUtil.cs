@@ -38,6 +38,7 @@ namespace pwiz.CommonMsData
         public const string EXT_MZDATA = ".mzdata";
         public const string EXT_MZML = ".mzml";
         public const string EXT_MZ5 = ".mz5";
+        public const string EXT_MZMLB = ".mzmlb";
         public const string EXT_XML = ".xml";
         public const string EXT_UIMF = ".uimf";
         public const string EXT_WATERS_RAW = ".raw";    // Folder
@@ -56,6 +57,7 @@ namespace pwiz.CommonMsData
         public const string TYPE_MZML = "mzML";
         public const string TYPE_MZXML = "mzXML";
         public const string TYPE_MZ5 = "mz5";
+        public const string TYPE_MZMLB = "mzMLb";
         public const string TYPE_MZDATA = "mzData";
         public const string TYPE_UIMF = "Unified Ion Mobility Frame";
         public const string TYPE_MBI = "Mobilion MBI";
@@ -150,6 +152,7 @@ namespace pwiz.CommonMsData
                 case EXT_MZDATA: return TYPE_MZDATA;
                 case EXT_MZML: return TYPE_MZML;
                 case EXT_MZ5: return TYPE_MZ5;
+                case EXT_MZMLB: return TYPE_MZMLB;
                 case EXT_XML: return GetSourceTypeFromXML(fileInfo.FullName);
                 case EXT_UIMF: return TYPE_UIMF;
                 case EXT_MOBILION_MBI: return TYPE_MBI;
@@ -165,7 +168,7 @@ namespace pwiz.CommonMsData
 
         public static bool IsWiffFile(string filePath)
         {
-            return PathEx.HasExtension(filePath, EXT_WIFF);
+            return IsWiffOrWiff2File(filePath);
         }
 
         public static bool IsWiffOrWiff2File(string filePath)

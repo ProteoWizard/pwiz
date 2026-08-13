@@ -283,6 +283,12 @@
   <data name="Description_IsCentroided" xml:space="preserve">
     <value>セントロイド化か高分解能スペクトルか。</value>
   </data>
+  <data name="WindowGroup" xml:space="preserve">
+    <value>ウィンドウグループ</value>
+  </data>
+  <data name="Description_WindowGroup" xml:space="preserve">
+    <value>PASEF MS2ウィンドウグループ</value>
+  </data>
   <data name="HighEnergyOffset" xml:space="preserve">
     <value>高エネルギーオフセット</value>
   </data>
@@ -306,5 +312,17 @@
   </data>
   <data name="Description_rdotp" xml:space="preserve">
     <value>標識付きスペクトルと標識なしスペクトルとの間の類似性の尺度。</value>
+  </data>
+  <data name="Description_DissociationMethod" xml:space="preserve">
+    <value>断片化方法（例：CID、HCD、ETD）</value>
+  </data>
+  <data name="DissociationMethod" xml:space="preserve">
+    <value>解離メソッド</value>
+  </data>
+  <data name="ConstantNeutralLoss" xml:space="preserve">
+    <value>コンスタントニュートラルロス</value>
+  </data>
+  <data name="Description_ConstantNeutralLoss" xml:space="preserve">
+    <value>コンスタントニュートラルロススペクトルのアナライザーオフセット（コンスタントニュートラルゲインのマイナス値）</value>
   </data>
 </root>

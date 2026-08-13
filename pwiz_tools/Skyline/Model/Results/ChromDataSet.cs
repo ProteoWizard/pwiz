@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Sort the final peaks by retention time and make a pointer to the best peak
         /// </summary>
-        public void StorePeaks()
+        public void StorePeaks(float bestScore)
         {
             // If there are no peaks to store, do nothing.
             if (_listPeakSets.Count == 0)
@@ -822,7 +822,7 @@ namespace pwiz.Skyline.Model.Results
                     peak.Data.Peaks.Add(peak.DataPeak);
                     // Set the max peak index on the data for each transition
                     if (i == 0)
-                        peak.Data.SetMaxPeak(maxPeakIndex, (float) peakSet.CombinedScore);
+                        peak.Data.SetMaxPeak(maxPeakIndex, bestScore);
                 }
                 ++i;
             }   

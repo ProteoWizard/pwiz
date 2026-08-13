@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 
 namespace pwiz.Common.DataBinding
 {
@@ -168,6 +169,32 @@ namespace pwiz.Common.DataBinding
         public virtual bool IsExpensive
         {
             get { return Parent != null && Parent.IsExpensive; }
+        }
+
+        public IFilterHandler GetFilterHandler()
+        {
+            return DataSchema.GetFilterHandler(this);
+        }
+
+        /// <summary>
+        /// Returns true if values in this column can satisfy "is blank".
+        /// </summary>
+        public bool CanBeBlank()
+        {
+            if (!PropertyType.IsValueType)
+            {
+                return true;
+            }
+            if (!PropertyPath.IsRoot && !PropertyPath.Parent.IsRoot)
+            {
+                return true;
+            }
+            if (PropertyType.IsGenericType && PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                return true;
+            }
+
+            return GetFilterHandler().CanBeBlank;
         }
 
         #region Equality Members

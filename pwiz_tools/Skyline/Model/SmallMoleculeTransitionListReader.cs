@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -43,6 +44,8 @@ namespace pwiz.Skyline.Model
     /// Read a small molecule transition list in CSV form, where header values are restricted to
     /// those found in SmallMoleculeTransitionListColumnHeaders.KnownHeaders() with the possible
     /// addition of columns needed for Assay Library input
+    ///
+    /// Supports multiple fragment descriptions per input line
     /// </summary>
     public abstract class SmallMoleculeTransitionListReader
     {
@@ -55,6 +58,17 @@ namespace pwiz.Skyline.Model
         public abstract void UpdateCellBackingStore(int row, int col, object value);
         public abstract void ShowTransitionError(PasteError error);
         public abstract int ColumnIndex(string columnName);
+        // Supports multiple fragment descriptions per line
+        public virtual List<int> ColumnIndicesMulti(string columnName)
+        {
+            var single = ColumnIndex(columnName);
+            return single >= 0 ? new List<int> { single } : new List<int>();
+        }
+
+        // A label for the column, for use in error messages - the column type assigned in the column
+        // select dialog, or the file's header text. Implemented by the concrete reader, which holds the
+        // column information (like ColumnIndex above).
+        public abstract string GetColumnName(int columnIndex);
 
         private double MzMatchTolerance { get; set; }
 
@@ -102,6 +116,15 @@ namespace pwiz.Skyline.Model
             public bool GetCellAsDouble(int index, out double val)
             {
                 return Double.TryParse(GetCell(index), NumberStyles.Float, _parent._cultureInfo, out val);
+            }
+
+            /// <summary>
+            /// Set the value of a cell without notifying backing store (for temporary overwrites)
+            /// </summary>
+            public void SetCell(int index, string value)
+            {
+                if (index >= 0 && index < _cells.Count)
+                    _cells[index] = value;
             }
 
         }
@@ -399,14 +422,34 @@ namespace pwiz.Skyline.Model
                 {
                     bool tranGroupFound = false;
                     var pepPath = new IdentityPath(pathPepGroup, pep.Id);
+                    SpectrumClassFilter rowSpectrumFilter;
+                    try
+                    {
+                        rowSpectrumFilter = ReadSpectrumClassFilter(row);
+                    }
+                    catch (Exception e) when (IsParserException(e))
+                    {
+                        // This path (adding to an existing molecule group) has no surrounding
+                        // IsParserException guard, so report the bad filter text as a row error here.
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_SPECTRUM_FILTER,
+                            Line = row.Index,
+                            Message = e.Message
+                        });
+                        return true; // Error
+                    }
                     foreach (var tranGroup in pep.TransitionGroups)
                     {
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
                         if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0)
                         {
-                            // Special case for mz-only, charge-only transitions - may need to derive an isotope mass
+                            // Special case for mz-only molecules with no declared label - may need to derive an
+                            // isotope mass so a heavier sibling matches its existing precursor. This applies to any
+                            // unlabeled adduct (e.g. [M-H], [M+H]), not just charge-only ones, mirroring the
+                            // derivation done when the precursor group is first created in GetMoleculeTransitionGroup.
                             var labeledAdduct = adduct;
-                            if (adduct.IsChargeOnly && !tranGroup.CustomMolecule.HasChemicalFormula)
+                            if (!adduct.HasIsotopeLabels && !pep.CustomMolecule.HasChemicalFormula)
                             {
                                 var mzCalc = adduct.ApplyToMass(pep.CustomMolecule.MonoisotopicMass);
                                 if (!Equals(precursorMonoMz, mzCalc.Value))
@@ -427,38 +470,18 @@ namespace pwiz.Skyline.Model
                                 continue;
                             }
 
-                            tranGroupFound = true;
-                            var tranFound = false;
-                            string errmsg = null;
-                            try
+                            if (!Equals(rowSpectrumFilter, tranGroup.SpectrumClassFilter))
                             {
-                                var tranNode = GetMoleculeTransition(document, row, pep.Peptide,
-                                    tranGroup.TransitionGroup, tranGroup.ExplicitValues);
-                                if (tranNode == null)
-                                    return true;
-                                foreach (var tran in tranGroup.Transitions)
-                                {
-                                    if (Equals(tranNode.Transition.CustomIon, tran.Transition.CustomIon))
-                                    {
-                                        tranFound = true;
-                                        break;
-                                    }
-                                }
+                                continue;
+                            }
 
-                                if (!tranFound)
-                                {
-                                    document = (SrmDocument) document.Add(pathGroup, tranNode);
-                                    _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
-                                }
-                            }
-                            catch (Exception exception) when (IsParserException(exception))
-                            {
-                                errmsg = exception.Message;
-                            }
+                            tranGroupFound = true;
+                            string errmsg;
+                            if (AddFragmentTransitions(ref document, row, pep, tranGroup, pathGroup, out errmsg))
+                                return true; // Returns true when a fragment was not added (absent first fragment, or a duplicate reported as a row error)
 
                             if (errmsg != null)
                             {
-                                // Some error we didn't catch in the basic checks
                                 ShowTransitionError(new PasteError
                                 {
                                     Column = 0,
@@ -697,6 +720,37 @@ namespace pwiz.Skyline.Model
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.chargeProduct); }
         }
 
+        /// <summary>
+        /// Number of fragments per line, driven by the maximum repeat count across all
+        /// fragment-oriented column types (Product m/z, Product Formula, Product Name, etc.)
+        /// </summary>
+        protected int FragmentCount => ColumnIndices.GetFragmentCount(
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.mzProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.formulaProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.nameProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.chargeProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.adductProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct).Count);
+
+        /// <summary>
+        /// Get the column index for the nth fragment of a given product column type, with fill-forward
+        /// </summary>
+        private int GetProductColumnForFragment(string columnName, int fragmentIndex)
+        {
+            var indices = ColumnIndicesMulti(columnName);
+            return ColumnIndices.GetProductColumnForFragment(indices, fragmentIndex);
+        }
+
+        /// <summary>
+        /// Returns true if the value is null, whitespace, or "NA" (case-insensitive)
+        /// </summary>
+        private static bool IsEmptyOrNA(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ||
+                   value.Equals(@"NA", StringComparison.OrdinalIgnoreCase) ||
+                   value.Equals(@"N/A", StringComparison.OrdinalIgnoreCase);
+        }
+
         private int INDEX_LABEL_TYPE
         {
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.labelType); }
@@ -790,6 +844,11 @@ namespace pwiz.Skyline.Model
         private int INDEX_DECLUSTERING_POTENTIAL
         {
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
+        }
+
+        private int INDEX_SPECTRUM_FILTER
+        {
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.spectrumFilter); }
         }
 
         public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct, 
@@ -1564,13 +1623,24 @@ namespace pwiz.Skyline.Model
             {
                 if (declaredUnitsIM == eIonMobilityUnits.none)
                 {
-                    ShowTransitionError(new PasteError
+                    // Units column missing or empty - try to deduce from the target document
+                    // before erroring. Settings-level evidence is cached per-reader so the
+                    // expensive library scan only runs once per import.
+                    var candidates = GetCachedDocumentIonMobilityUnits(document);
+                    if (candidates.Count == 1)
                     {
-                        Column = INDEX_PRECURSOR_ION_MOBILITY,
-                        Line = row.Index,
-                        Message = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
-                    });
-                    return null;
+                        declaredUnitsIM = candidates.Single();
+                    }
+                    else
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_PRECURSOR_ION_MOBILITY,
+                            Line = row.Index,
+                            Message = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
+                        });
+                        return null;
+                    }
                 }
                 ionMobility[declaredUnitsIM] = dtmp;
             }
@@ -1879,6 +1949,92 @@ namespace pwiz.Skyline.Model
         {
             return Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations +
                    $@" ({string.Join(@", ", ionMobility.Select(kvp => $@"{IonMobilityFilter.IonMobilityUnitsL10NString(kvp.Key)} = {kvp.Value}"))}";
+        }
+
+        private IReadOnlyCollection<eIonMobilityUnits> _cachedSettingsImUnits;
+
+        // Settings (results, IM library, spectral libraries) don't change during an import, so the
+        // expensive library-scanning settings-level deduction is cached once. The transition group
+        // walk is fast in-memory work and is redone every call so units added by previous rows in
+        // the same paste contribute to ambiguity detection on later rows.
+        private HashSet<eIonMobilityUnits> GetCachedDocumentIonMobilityUnits(SrmDocument document)
+        {
+            var units = new HashSet<eIonMobilityUnits>(_cachedSettingsImUnits ??=
+                TransitionIonMobilityFiltering.GetSettingsIonMobilityUnits(document.Settings));
+            foreach (var nodeGroup in document.MoleculeTransitionGroups)
+            {
+                var u = nodeGroup.ExplicitValues.IonMobilityUnits;
+                if (IonMobilityFilter.IsExplicitIonMobilityMeasurement(u))
+                {
+                    units.Add(u);
+                    if (units.Count > 1)
+                        return units;
+                }
+            }
+            return units;
+        }
+
+        /// <summary>
+        /// Read product columns for a specific fragment index (used for multi-fragment per line support).
+        /// Uses GetProductColumnForFragment for fill-forward behavior.
+        /// Returns null if the fragment's identifying columns (m/z and formula) are all empty/NA.
+        /// </summary>
+        private ParsedIonInfo ReadProductColumnsForFragment(SrmDocument document, Row row,
+            ParsedIonInfo precursorInfo, int fragmentIndex, ref bool hasInconsistentColumns)
+        {
+            int indexMz = GetProductColumnForFragment(SmallMoleculeTransitionListColumnHeaders.mzProduct, fragmentIndex);
+            int indexFormula = GetProductColumnForFragment(SmallMoleculeTransitionListColumnHeaders.formulaProduct, fragmentIndex);
+            int indexAdduct = GetProductColumnForFragment(SmallMoleculeTransitionListColumnHeaders.adductProduct, fragmentIndex);
+            int indexCharge = GetProductColumnForFragment(SmallMoleculeTransitionListColumnHeaders.chargeProduct, fragmentIndex);
+            int indexNeutralLoss = GetProductColumnForFragment(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, fragmentIndex);
+            int indexName = GetProductColumnForFragment(SmallMoleculeTransitionListColumnHeaders.nameProduct, fragmentIndex);
+
+            // Check if this fragment's identifying columns are all empty/NA - if so, skip it.
+            // A fragment needs at least one of m/z or formula to be defined.
+            var mzCell = indexMz >= 0 ? GetCellTrimmed(row, indexMz) : null;
+            var formulaCell = indexFormula >= 0 ? GetCellTrimmed(row, indexFormula) : null;
+            if (IsEmptyOrNA(mzCell) && IsEmptyOrNA(formulaCell))
+                return null;
+
+            // Temporarily override the product column indices for this fragment by
+            // writing the fragment-specific values into the row cells at the primary product column positions.
+            // This lets us reuse ReadPrecursorOrProductColumns without modifying it.
+            // Save original values, overwrite, call, restore.
+            var origMz = row.GetCell(INDEX_PRODUCT_MZ);
+            var origFormula = row.GetCell(INDEX_PRODUCT_FORMULA);
+            var origAdduct = row.GetCell(INDEX_PRODUCT_ADDUCT);
+            var origCharge = row.GetCell(INDEX_PRODUCT_CHARGE);
+            var origNeutralLoss = row.GetCell(INDEX_PRODUCT_NEUTRAL_LOSS);
+            var origName = row.GetCell(INDEX_PRODUCT_NAME);
+
+            try
+            {
+                // Copy fragment-specific cell values into the primary product column positions
+                if (indexMz >= 0 && indexMz != INDEX_PRODUCT_MZ)
+                    row.SetCell(INDEX_PRODUCT_MZ, row.GetCell(indexMz));
+                if (indexFormula >= 0 && indexFormula != INDEX_PRODUCT_FORMULA)
+                    row.SetCell(INDEX_PRODUCT_FORMULA, row.GetCell(indexFormula));
+                if (indexAdduct >= 0 && indexAdduct != INDEX_PRODUCT_ADDUCT)
+                    row.SetCell(INDEX_PRODUCT_ADDUCT, row.GetCell(indexAdduct));
+                if (indexCharge >= 0 && indexCharge != INDEX_PRODUCT_CHARGE)
+                    row.SetCell(INDEX_PRODUCT_CHARGE, row.GetCell(indexCharge));
+                if (indexNeutralLoss >= 0 && indexNeutralLoss != INDEX_PRODUCT_NEUTRAL_LOSS)
+                    row.SetCell(INDEX_PRODUCT_NEUTRAL_LOSS, row.GetCell(indexNeutralLoss));
+                if (indexName >= 0 && indexName != INDEX_PRODUCT_NAME)
+                    row.SetCell(INDEX_PRODUCT_NAME, row.GetCell(indexName));
+
+                return ReadPrecursorOrProductColumns(document, row, precursorInfo, ref hasInconsistentColumns);
+            }
+            finally
+            {
+                // Restore original values
+                row.SetCell(INDEX_PRODUCT_MZ, origMz);
+                row.SetCell(INDEX_PRODUCT_FORMULA, origFormula);
+                row.SetCell(INDEX_PRODUCT_ADDUCT, origAdduct);
+                row.SetCell(INDEX_PRODUCT_CHARGE, origCharge);
+                row.SetCell(INDEX_PRODUCT_NEUTRAL_LOSS, origNeutralLoss);
+                row.SetCell(INDEX_PRODUCT_NAME, origName);
+            }
         }
 
         private bool ProcessNeutralLoss(Row row, int indexNeutralLoss, ref string formula)
@@ -2212,11 +2368,49 @@ namespace pwiz.Skyline.Model
             string errmsg;
             try
             {
-                var tran = GetMoleculeTransition(document, row, pep, group, moleculeInfo.ExplicitTransitionGroupValues);
-                if (tran == null)
-                    return null;
-                return new TransitionGroupDocNode(group, annotations, document.Settings, null,
-                    null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
+                TransitionGroupDocNode tranGroupNode;
+                var fragmentCount = FragmentCount;
+                if (fragmentCount <= 1)
+                {
+                    // Single fragment per line (original behavior)
+                    var tran = GetMoleculeTransition(document, row, pep, group, moleculeInfo.ExplicitTransitionGroupValues);
+                    if (tran == null)
+                        return null;
+                    tranGroupNode = new TransitionGroupDocNode(group, annotations, document.Settings, null,
+                        null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
+                }
+                else
+                {
+                    // Multiple fragments per line: when any fragment-oriented column type (Product m/z,
+                    // Product Formula, Product Name, etc.) is assigned to more than one column, each
+                    // repeat defines a separate fragment (transition). Loop over all fragment indices,
+                    // reading product values from the corresponding columns.
+                    var transitions = new List<TransitionDocNode>();
+                    for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
+                    {
+                        var tran = GetMoleculeTransitionForFragment(document, row, pep, group,
+                            moleculeInfo.ExplicitTransitionGroupValues, fragmentIndex);
+                        if (tran == null && fragmentIndex == 0)
+                            return null; // First fragment must succeed
+                        if (tran != null)
+                        {
+                            if (IsDuplicateFragmentOnLine(transitions, tran, row, fragmentIndex))
+                                return null; // Reported as a row error, surfaced via "Check For Errors"
+                            transitions.Add(tran);
+                        }
+                    }
+                    if (transitions.Count == 0)
+                        return null;
+                    tranGroupNode = new TransitionGroupDocNode(group, annotations, document.Settings, null,
+                        null, moleculeInfo.ExplicitTransitionGroupValues, null, transitions.ToArray(), false);
+                }
+
+                var spectrumFilter = ReadSpectrumClassFilter(row);
+                if (!spectrumFilter.IsEmpty)
+                {
+                    tranGroupNode = tranGroupNode.ChangeSpectrumClassFilter(spectrumFilter);
+                }
+                return tranGroupNode;
             }
             catch (Exception x) when (IsParserException(x))
             {
@@ -2229,6 +2423,21 @@ namespace pwiz.Skyline.Model
                 Message = errmsg
             });
             return null;
+        }
+
+        private SpectrumClassFilter ReadSpectrumClassFilter(Row row)
+        {
+            var filterString = GetCellTrimmed(row, INDEX_SPECTRUM_FILTER);
+            if (string.IsNullOrEmpty(filterString))
+                return default;
+            // Surface unparseable or unknown-property filter text as a row import error rather than
+            // letting ParseFilterString throw a FormatException that escapes the IsParserException
+            // guards and crashes the import. ValidateFilterString also flags unknown spectrum
+            // properties, which the lenient parser would otherwise accept.
+            var error = SpectrumClassFilter.ValidateFilterString(filterString);
+            if (error != null)
+                throw new InvalidDataException(error);
+            return SpectrumClassFilter.ParseFilterString(filterString);
         }
 
         private bool FragmentColumnsIdenticalToPrecursorColumns(ParsedIonInfo precursor, ParsedIonInfo fragment)
@@ -2332,6 +2541,169 @@ namespace pwiz.Skyline.Model
             }
 
             return new TransitionDocNode(transition, annotations, null, mass, transitionQuantInfo, ionExplicitTransitionValues, null);
+        }
+
+        /// <summary>
+        /// Detects the case where a single line of the transition list declares the same fragment more
+        /// than once and reports it as a row import error (surfaced by "Check For Errors" and on import).
+        /// The multiple-fragments-per-line feature deliberately allows a product column type to be
+        /// assigned to several columns, but a line must not resolve two of its fragments to an identical
+        /// transition: one precursor cannot hold two identical transitions (see
+        /// TransitionGroupDocNode.CreateTransitionLossToChildMap). Distinct precursors may of course share
+        /// identical fragments - this only checks within a single line. Returns true (and reports the
+        /// error) when <paramref name="tran"/> duplicates a fragment already produced for this line.
+        /// </summary>
+        private bool IsDuplicateFragmentOnLine(IEnumerable<TransitionDocNode> lineTransitions, TransitionDocNode tran, Row row, int fragmentIndex)
+        {
+            // For a small-molecule custom-ion fragment the Transition is the complete identity (product
+            // ion, adduct/charge, ion type); losses and complex-fragment-ion names are peptide concepts
+            // that are always null here.
+            if (!lineTransitions.Any(t => Equals(t.Transition, tran.Transition)))
+                return false;
+            var column = GetProductColumnForDuplicateFragment(fragmentIndex);
+            ShowTransitionError(new PasteError
+            {
+                Column = column,
+                Line = row.Index,
+                Message = string.Format(
+                    ModelResources.SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__,
+                    tran.Mz, GetColumnDescription(column))
+            });
+            return true;
+        }
+
+        /// <summary>
+        /// Describes a column for an error message as its 1-based number plus header name when known,
+        /// e.g. 13 "Product Charge"; falls back to just the number when there is no header row.
+        /// </summary>
+        private string GetColumnDescription(int columnIndex)
+        {
+            var columnNumber = (columnIndex + 1).ToString(CultureInfo.CurrentCulture);
+            var name = GetColumnName(columnIndex);
+            return string.IsNullOrEmpty(name)
+                ? columnNumber
+                : string.Format(ModelResources.SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__, columnNumber, name);
+        }
+
+        /// <summary>
+        /// Identifies the product column that actually has a distinct assignment at
+        /// <paramref name="fragmentIndex"/> - i.e. the repeated column that created this fragment, rather
+        /// than a value reused via fill-forward. This is the column that turned a single declared fragment
+        /// into a duplicate (e.g. a second "Product Charge" column when there is only one "Product m/z"),
+        /// so the error points the user at the column to remove. Falls back to the Product m/z column.
+        /// </summary>
+        private int GetProductColumnForDuplicateFragment(int fragmentIndex)
+        {
+            foreach (var columnName in new[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.neutralLossProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.adductProduct
+            })
+            {
+                var indices = ColumnIndicesMulti(columnName);
+                if (indices.Count > fragmentIndex)
+                    return indices[fragmentIndex];
+            }
+            return INDEX_PRODUCT_MZ;
+        }
+
+        /// <summary>
+        /// Add transitions for all fragments in a multi-fragment-per-line row to an existing
+        /// transition group, skipping any that already exist or have empty/NA product columns.
+        /// Returns true (caller should treat as error) if the first fragment fails or the line declares
+        /// the same fragment twice. Sets errmsg on parser exceptions.
+        /// </summary>
+        private bool AddFragmentTransitions(ref SrmDocument document, Row row,
+            PeptideDocNode pep, TransitionGroupDocNode tranGroup, IdentityPath pathGroup, out string errmsg)
+        {
+            errmsg = null;
+            try
+            {
+                var fragmentCount = FragmentCount;
+                var lineTransitions = new List<TransitionDocNode>();
+                for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
+                {
+                    var tranNode = GetMoleculeTransitionForFragment(document, row, pep.Peptide,
+                        tranGroup.TransitionGroup, tranGroup.ExplicitValues, fragmentIndex);
+                    if (tranNode == null)
+                    {
+                        if (fragmentIndex == 0)
+                            return true; // First fragment must succeed
+                        continue; // Skip empty/NA fragments
+                    }
+
+                    // If a later fragment on this line is a duplicate, earlier ones may already have been
+                    // added above. That is intentional: a normal import rejects the whole row on any error,
+                    // and the leftover transitions are individually valid in the import-anyway case.
+                    if (IsDuplicateFragmentOnLine(lineTransitions, tranNode, row, fragmentIndex))
+                        return true; // Reported as a row error, surfaced via "Check For Errors"
+                    lineTransitions.Add(tranNode);
+
+                    if (!tranGroup.Transitions.Any(t => Equals(tranNode.Transition.CustomIon, t.Transition.CustomIon)))
+                    {
+                        document = (SrmDocument) document.Add(pathGroup, tranNode);
+                        _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
+                    }
+                }
+            }
+            catch (Exception exception) when (IsParserException(exception))
+            {
+                errmsg = exception.Message;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Create a transition for the nth fragment in a multi-fragment-per-line row.
+        /// For fragment 0, delegates to GetMoleculeTransition (original behavior).
+        /// For subsequent fragments, reads product columns for the specific fragment index.
+        /// Returns null if the fragment's m/z and formula are both empty/NA (skip this fragment).
+        /// </summary>
+        private TransitionDocNode GetMoleculeTransitionForFragment(SrmDocument document, Row row,
+            Peptide pep, TransitionGroup group, ExplicitTransitionGroupValues explicitTransitionGroupValues,
+            int fragmentIndex)
+        {
+            if (fragmentIndex == 0)
+                return GetMoleculeTransition(document, row, pep, group, explicitTransitionGroupValues);
+
+            bool hasInconsistentPrecursorIonColumns = false;
+            var precursorIon = ReadPrecursorOrProductColumns(document, row, null, ref hasInconsistentPrecursorIonColumns);
+            if (precursorIon == null)
+                return null;
+
+            bool hasInconsistentProductIonColumns = false;
+            var ion = ReadProductColumnsForFragment(document, row, precursorIon, fragmentIndex, ref hasInconsistentProductIonColumns);
+            if (ion == null)
+                return null; // No fragment m/z or formula (both empty/NA) - skip this fragment
+
+            var customMolecule = ion.ToCustomMolecule();
+            var ionType = FragmentColumnsIdenticalToPrecursorColumns(precursorIon, ion)
+                ? IonType.precursor
+                : IonType.custom;
+            var massType = (ionType == IonType.precursor)
+                ? document.Settings.TransitionSettings.Prediction.PrecursorMassType
+                : document.Settings.TransitionSettings.Prediction.FragmentMassType;
+            if (ionType == IonType.precursor)
+                customMolecule = pep.CustomMolecule;
+            var mass = customMolecule.GetMass(massType);
+
+            var adduct = ionType == IonType.precursor ? group.PrecursorAdduct : ion.Adduct;
+            var transition = new Transition(group, adduct, null, customMolecule, ionType);
+
+            var annotations = string.IsNullOrEmpty(ion.TransitionNote)
+                ? Annotations.EMPTY
+                : new Annotations(ion.TransitionNote, null, 0);
+
+            var ionExplicitTransitionValues = ion.ExplicitTransitionValues;
+            if (explicitTransitionGroupValues?.CollisionEnergy == ion.ExplicitTransitionValues?.CollisionEnergy)
+                ionExplicitTransitionValues = ionExplicitTransitionValues.ChangeCollisionEnergy(null);
+
+            return new TransitionDocNode(transition, annotations, null, mass,
+                TransitionDocNode.TransitionQuantInfo.DEFAULT, ionExplicitTransitionValues, null);
         }
     }
 
@@ -2461,6 +2833,19 @@ namespace pwiz.Skyline.Model
         {
             return _csvReader.GetFieldIndex(columnName);
         }
+
+        public override List<int> ColumnIndicesMulti(string columnName)
+        {
+            return _csvReader.GetFieldIndices(columnName);
+        }
+
+        public override string GetColumnName(int columnIndex)
+        {
+            // FieldNames are the column labels: the types assigned in the column select dialog when
+            // provided (these override any header row), otherwise the file's header text - so a name is
+            // available even for a headerless list. ElementAtOrDefault returns null if out of range.
+            return _csvReader.FieldNames.ElementAtOrDefault(columnIndex);
+        }
     }
 
     // Custom molecule transition list internal column names, for saving to settings
@@ -2504,6 +2889,8 @@ namespace pwiz.Skyline.Model
         public const string idSMILES = "SMILES";
         public const string idKEGG = "KEGG";
         public const string ignoreColumn = "IgnoreColumn"; // We want to be able to recognize these columns to avoid throwing an error and then we ignore them
+
+        public const string spectrumFilter = "SpectrumFilter";
 
         public const string iRT = "IRT"; // For assay library use
         public const string libraryIntensity = "LibraryIntensity"; // For assay library use
@@ -2553,6 +2940,7 @@ namespace pwiz.Skyline.Model
                 idSMILES,
                 idKEGG,
                 neutralLossProduct,
+                spectrumFilter,
                 ignoreColumn, // Does not contain useful data, can be more than one in a list
                 imPrecursor_invK0, // Ion mobility with implied units 1/K0
             });
@@ -2685,6 +3073,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idKEGG, idKEGG),
                     Tuple.Create(neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss),
                     Tuple.Create(libraryIntensity, ModelResources.PasteDlg_UpdateMoleculeType_Library_Intensity),
+                    Tuple.Create(spectrumFilter, spectrumFilter),
                     Tuple.Create(ignoreColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column),
                     // ReSharper restore StringLiteralTypo
                 })

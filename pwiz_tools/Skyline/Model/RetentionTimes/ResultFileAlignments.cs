@@ -41,11 +41,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             Dictionary<MsDataFileUri, PiecewiseLinearMap> alignmentFunctions, ICollection<MsDataFileUri> filePaths)
         {
             _documentKey = new DocumentKey(document);
-            AlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-            if (AlignmentTarget == null)
-            {
-                return;
-            }
             var measuredResults = document.MeasuredResults;
             if (measuredResults == null)
             {
@@ -106,7 +101,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return alignmentFunction;
         }
 
-        public AlignmentTarget AlignmentTarget { get; private set; }
         public class AlignmentSource : Immutable
         {
             private int _targetsHashCode;
@@ -248,35 +242,25 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             var result = ChangeProp(ImClone(this), im =>
             {
-                im.AlignmentTarget = target;
                 im._documentKey = new DocumentKey(newDocument);
             });
-            var newSources = target == null ? new Dictionary<MsDataFileUri, AlignmentSource>() : GetAlignmentSources(newDocument, target, dataFiles);
+            var newSources = GetAlignmentSources(newDocument, target, dataFiles);
             if (CollectionUtil.EqualsDeep(_alignmentSources, newSources))
             {
-                if (Equals(target, AlignmentTarget))
-                {
-                    return result;
-                }
+                return result;
             }
+
             var missingSources = new List<AlignmentSource>();
             var newAlignmentFunctions = new Dictionary<AlignmentSource, PiecewiseLinearMap>();
-            if (!Equals(target, AlignmentTarget))
+            foreach (var newSource in newSources.Values.Distinct())
             {
-                missingSources.AddRange(newSources.Values.Distinct());
-            }
-            else
-            {
-                foreach (var newSource in newSources.Values.Distinct())
+                if (_alignmentFunctions.TryGetValue(newSource, out var alignmentFunction))
                 {
-                    if (_alignmentFunctions.TryGetValue(newSource, out var alignmentFunction))
-                    {
-                        newAlignmentFunctions.Add(newSource, alignmentFunction);
-                    }
-                    else
-                    {
-                        missingSources.Add(newSource);
-                    }
+                    newAlignmentFunctions.Add(newSource, alignmentFunction);
+                }
+                else
+                {
+                    missingSources.Add(newSource);
                 }
             }
 
@@ -367,22 +351,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return Equals(EMPTY);
             }
-            var newAlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-            if (!Equals(newAlignmentTarget, AlignmentTarget))
-            {
-                return false;
-            }
-
-            if (newAlignmentTarget == null)
-            {
-                return true;
-            }
             return Equals(new DocumentKey(document), _documentKey);
         }
 
         protected bool Equals(ResultFileAlignments other)
         {
-            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions) && Equals(AlignmentTarget, other.AlignmentTarget);
+            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions);
         }
 
         public override bool Equals(object obj)
@@ -399,7 +373,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 var hashCode = _alignmentSources != null ? CollectionUtil.GetHashCodeDeep(_alignmentSources) : 0;
                 hashCode = (hashCode * 397) ^ (_alignmentFunctions != null ? CollectionUtil.GetHashCodeDeep(_alignmentFunctions) : 0);
-                hashCode = (hashCode * 397) ^ (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
                 return hashCode;
             }
         }

@@ -68,11 +68,16 @@ namespace pwiz.Skyline.FileUI
 
         private readonly ExportDlgProperties _exportProperties;
 
+        // Capture the initial culture-specific value the designer applied at load time
+        // so we can restore it after temporary overrides (URL preview / errors).
+        private readonly string _initialTemplateFileToolTip;
+
         private CancellationTokenSource _cancellationTokenSource;
 
         public ExportMethodDlg(SrmDocument document, ExportFileType fileType)
         {
             InitializeComponent();
+            _initialTemplateFileToolTip = helpTip.GetToolTip(textTemplateFile);
 
             _cancellationTokenSource = new CancellationTokenSource();
             _exportProperties = new ExportDlgProperties(this, _cancellationTokenSource.Token);
@@ -1263,7 +1268,7 @@ namespace pwiz.Skyline.FileUI
                 var templateUrl = textTemplateFile.Tag as WatersConnectAcquisitionMethodUrl;
 
                 if (templateUrl.FindMatchingAccount() is WatersConnectAccount wcacct &&
-                    wcacct.SupportsMethodDevelopment)
+                    wcacct.SupportsMethodDevelopment(out _))
                 {
                     // Point the browser to the same folder as the template
                     saveDlg.InitialDirectory = templateUrl
@@ -1274,6 +1279,8 @@ namespace pwiz.Skyline.FileUI
                     // if the template url points to an account not supporting method development
                     // direct the dialog to the accounts list
                     saveDlg.InitialDirectory = RemoteUrl.EMPTY;
+                    MessageDlg.ShowError(this,
+                        FileUIResources.ExportMethodDlg_OkDialog_There_is_no_valid_account_for_this_template_that_would_support_method_development_);
                 }
 
                 if (_recalcMethodCountStatus != RecalcMethodCountStatus.running && _methodNameSuffixes.Any())
@@ -1293,9 +1300,12 @@ namespace pwiz.Skyline.FileUI
 
                 if (targetFolder.FindMatchingAccount() is WatersConnectAccount wca)
                 {
-                    if (!wca.SupportsMethodDevelopment)
+                    if (!wca.SupportsMethodDevelopment(out var reason))
                     {
-                        MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_, false, MessageIcons.Error);
+                        MessageDlg.Show(this,
+                            TextUtil.LineSeparate(FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_ +
+                                                  (string.IsNullOrEmpty(reason) ? "" : FileUIResources.WatersConnectMethodFileDialog_ListViewPostprocessing_Reason + reason)),
+                            false, MessageIcons.Error);
                         return;
                     }
                 }
@@ -1941,21 +1951,27 @@ namespace pwiz.Skyline.FileUI
             {
                 // User cannot edit remote URL.
                 EnableTextTemplateFileField(false);
+                bool haveTemplateFile = false;
                 if (Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out var templateFileUrl))
                 {
                     try
                     {
                         var templateUrl = new WatersConnectAcquisitionMethodUrl(templateFileUrl.FilePath);
                         SetWatersConnectTemplateText(templateUrl);
+                        haveTemplateFile = true;
                     }
-                    catch
-                    {   // If settings contain invalid URL, clear the text box and set the tag to null. No need to show the error.
-                        textTemplateFile.Text = string.Empty;
-                        textTemplateFile.Tag = null;
-                        // Reset the tooltip to the original text
-                        var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
-                        helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+                    catch(Exception)
+                    {
+                        // Do nothing here. We will just clear the text box below.
                     }
+                }
+                if (!haveTemplateFile)
+                {
+                    // If settings do not contain a valid URL, clear the text box and set the tag to null. No need to show the error.
+                    textTemplateFile.Text = string.Empty;
+                    textTemplateFile.Tag = null;
+                    // Reset the tooltip to the original text
+                    ResetTemplateFileToolTip();
                 }
                 wcDecideBuckets.Visible = true;
                 // Shift radio buttons up if transitioning from 3-button to 4-button layout
@@ -1974,8 +1990,8 @@ namespace pwiz.Skyline.FileUI
                         : string.Empty;
                 textTemplateFile.Tag = null;
                 EnableTextTemplateFileField(true);
-                var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
-                helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+                // Reset the tooltip to the original text
+                ResetTemplateFileToolTip();
                 wcDecideBuckets.Visible = false;
                 // Shift radio buttons down if transitioning from 4-button to 3-button layout
                 if (inFourButtonLayout)
@@ -2009,6 +2025,12 @@ namespace pwiz.Skyline.FileUI
             CalcMethodCount();
 
             UpdateCovControls();
+        }
+
+        private void ResetTemplateFileToolTip()
+        {
+            // Restore the original localized tooltip
+            helpTip.SetToolTip(textTemplateFile, _initialTemplateFileToolTip);
         }
 
         private void EnableTextTemplateFileField(bool enable)
@@ -2383,7 +2405,7 @@ namespace pwiz.Skyline.FileUI
         private void SetWatersConnectTemplateText(WatersConnectAcquisitionMethodUrl url)
         {
             textTemplateFile.Tag = url;
-            if (url.SupportsMethodDevelopment)
+            if (url.SupportsMethodDevelopment(out var reason))
             {
                 textTemplateFile.ForeColor = SystemColors.ControlText;
                 helpTip.SetToolTip(textTemplateFile, url.FormattedString());  // Show full URL string in the tooltip
@@ -2391,7 +2413,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 textTemplateFile.ForeColor = Color.Maroon;
-                helpTip.SetToolTip(textTemplateFile, FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_);
+                helpTip.SetToolTip(textTemplateFile, string.Format(FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_, reason));
             }
             textTemplateFile.Text = url.GetFilePath() + RemoteUrl.PATH_SEPARATOR + url.MethodName;
         }
@@ -2405,7 +2427,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (textTemplateFile.Tag is WatersConnectAcquisitionMethodUrl templateUrl)
                     {
-                        if (templateUrl.SupportsMethodDevelopment)
+                        if (templateUrl.SupportsMethodDevelopment(out var reason))
                         {
                             // Point the browser to the same folder as the selected template if there is one
                             var folderId = templateUrl.FolderOrSampleSetId;
@@ -2415,7 +2437,7 @@ namespace pwiz.Skyline.FileUI
                         else
                         {
                             MessageDlg.Show(this,
-                                FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_,
+                                string.Format(FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_, reason),
                                 false, MessageIcons.Warning);
                             dlgOpen.InitialDirectory = RemoteUrl.EMPTY;
                         }
@@ -2434,8 +2456,7 @@ namespace pwiz.Skyline.FileUI
             //  Clear since not Waters Connect
             textTemplateFile.Tag = null;
             // Reset the tooltip to the original text
-            var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
-            helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+            ResetTemplateFileToolTip();
 
             string templateName = textTemplateFile.Text;
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
@@ -2732,6 +2753,11 @@ namespace pwiz.Skyline.FileUI
         public TextBox TemplatePathField
         {
             get => textTemplateFile;
+        }
+
+        public string TemplateFileToolTip
+        {
+            get => helpTip.GetToolTip(textTemplateFile);
         }
 
         public int CalculationTime

@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestTutorial
                         importResultsDlg1.GetDataSourcePathsFile(null));
                     RunUI(() =>
                     {
-                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
+                        openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(GetTestPath()));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form");

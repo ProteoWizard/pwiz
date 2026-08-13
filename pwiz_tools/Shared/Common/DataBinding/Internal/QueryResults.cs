@@ -79,7 +79,7 @@ namespace pwiz.Common.DataBinding.Internal
             });
         }
 
-        public IList<RowItem> ResultRows
+        public BigList<RowItem> ResultRows
         {
             get
             {

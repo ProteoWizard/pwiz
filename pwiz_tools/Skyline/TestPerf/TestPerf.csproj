@@ -109,6 +109,8 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
@@ -139,9 +141,12 @@
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="BullseyeSharpTest.cs" />
     <Compile Include="DiaNnPeakImputationTest.cs" />
+    <Compile Include="DiannSearchPerfTest.cs" />
+    <Compile Include="DiannSearchLFQbenchTest.cs" />
     <Compile Include="PeakBoundaryImputationDiaTutorial.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
+    <Compile Include="PerfFeatureDetectionSIMscansTest.cs" />
     <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />
     <Compile Include="PerfAssociateProteinsHugeTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />
@@ -190,6 +195,8 @@
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="PerfWatersSonarTest.cs" />
+    <Compile Include="DiaFragPipeTutorialTest.cs" />
+    <Compile Include="DiaToSrmTutorialTest.cs" />
     <Compile Include="OrbiPrmTutorialTest.cs" />
     <Compile Include="PerfSciexPrmCeOptTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
@@ -199,6 +206,10 @@
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
       <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
@@ -211,6 +222,10 @@
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
@@ -231,6 +246,10 @@
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SkylineTool\SkylineTool.csproj">
+      <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
+      <Name>SkylineTool</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
       <Project>{e3f0e34f-f9e6-4360-996f-e2054e4fa1ae}</Project>

@@ -48,6 +48,8 @@ message ResultFileMetaDataProto {
 		bool negativeCharge = 12;
 		int32 msLevel = 13;
 		google.protobuf.DoubleValue constantNeutralLoss = 14;
+		reserved 15; // was google.protobuf.DoubleValue sourceOffsetVoltage 
+		double sourceOffsetVoltage = 16;
 	}
 
 	message Precursor {

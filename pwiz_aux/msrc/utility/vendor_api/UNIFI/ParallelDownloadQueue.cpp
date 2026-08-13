@@ -279,7 +279,7 @@ int ParallelDownloadQueue::runChunkTask(size_t chunkIndex, bool doCentroid)
     _waitForStart->Set();
 
     HttpClient^ httpClient = nullptr;
-    while (!_httpClients->TryDequeue(httpClient)) {}
+    while (!_httpClients->TryDequeue(httpClient)) { System::Threading::Thread::Sleep(1); }
     /*if (!_httpClientByThread->ContainsKey(currentThreadId))
     {
         auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
@@ -364,7 +364,7 @@ int ParallelDownloadQueue::runChunkTask(size_t chunkIndex, bool doCentroid)
             {
                 Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Deactivating HTTP client due to TooManyRequests response"));
                 delete httpClient;
-                while (!_httpClients->TryDequeue(httpClient)) {}
+                while (!_httpClients->TryDequeue(httpClient)) { System::Threading::Thread::Sleep(1); }
             }
 
             if (streamRetryCount < streamMaxRetryCount || response->StatusCode == (HttpStatusCode)429)

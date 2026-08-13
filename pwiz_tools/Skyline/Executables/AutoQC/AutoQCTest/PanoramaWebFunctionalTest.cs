@@ -45,13 +45,19 @@ namespace AutoQCTest
         /// 8. Delete the test folder on PanoramaWeb
         /// </summary>
 
+        private const int PANORAMA_WAIT_TIME = 120*1000;    // milliseconds. Use longer wait time for operations that depend on PanoramaWeb.
+
         private WebPanoramaClient _panoramaClient;
         private string _panoramaWebTestFolder;
         private string _panoramaWebPassword;
 
         [TestMethod]
+        [TestCategory("Connected")]
         public void TestPanoramaWebInteraction()
         {
+            if (!AllowInternetAccess)
+                return;
+
             TestFilesZipPaths = new[] { @"Executables\AutoQC\AutoQCTest\AutoQCTest.zip" };
             Assert.IsNotNull(TestUtils.GetTestSkylineSettings(), "Skyline or Skyline-daily is required to run the test.");
 
@@ -116,7 +122,8 @@ namespace AutoQCTest
             var configIndex = StartConfig(MainForm, configName);
 
             // Skyline document has replicates. It should be uploaded to PanoramaWeb after config starts.
-            WaitForConfigRunnerWaiting(MainForm, configIndex);
+            // Use longer timeout for network-dependent operations
+            WaitForConfigRunnerWaiting(MainForm, configIndex, PANORAMA_WAIT_TIME);
 
             // Wait for the upload to complete successfully
             WaitForPanoramaUploadSuccess(MainForm, configIndex);
@@ -158,10 +165,11 @@ namespace AutoQCTest
             Thread.Sleep(ConfigRunner.WAIT_FOR_NEW_FILE); // Pause for the file to be detected
 
             // Wait for the file to be imported into the document, and document uploaded to PanoramaWeb
-            WaitForConfigRunnerWaiting(MainForm, configIndex);
+            // Use longer timeout for network-dependent operations
+            WaitForConfigRunnerWaiting(MainForm, configIndex, PANORAMA_WAIT_TIME);
 
             // Wait for the upload to complete successfully
-            WaitForPanoramaUploadSuccess(MainForm, configIndex);
+            WaitForPanoramaUploadSuccess(MainForm, configIndex, PANORAMA_WAIT_TIME);
 
             // Verify expected status on PanoramaWeb. Two rows in pipeline.Job. 
             // We expect to see only one row in the targetedms.Runs table since the previous run becomes redundant and is deleted.
@@ -253,7 +261,7 @@ namespace AutoQCTest
         {
             WaitForAnnotationsFileUpdated(mainForm, configIndex);
             Thread.Sleep(ConfigRunner.WAIT_FOR_NEW_FILE); // Pause for the file to be detected
-            WaitForConfigRunnerWaiting(mainForm, configIndex);
+            WaitForConfigRunnerWaiting(mainForm, configIndex, PANORAMA_WAIT_TIME);
         }
 
         // Disable warning about possible null reference exceptions for code that accesses JSON properties.

@@ -95,9 +95,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return false;
         }
 
-        public bool SupportsMethodDevelopment
+        public bool SupportsMethodDevelopment(out string reason)
         {
-            get => FindMatchingAccount() is WatersConnectAccount wca && wca.SupportsMethodDevelopment;
+            reason = null;
+            if (FindMatchingAccount() is WatersConnectAccount wca)
+            {
+                return wca.SupportsMethodDevelopment(out reason);
+            }
+            return false;
         }
 
         public override RemoteAccountType AccountType
@@ -112,6 +117,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             result.SetValue(Attr.id.ToString(), FolderOrSampleSetId);
             result.SetLongValue(Attr.type.ToString(), (long) Type);
             return result;
+        }
+
+        public string GetAuthenticatedUrl()
+        {
+            return GetMsDataUrl();
         }
 
         private string GetMsDataUrl()

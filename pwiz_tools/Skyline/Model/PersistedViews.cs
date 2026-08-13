@@ -25,6 +25,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using SkylineTool;
 
 namespace pwiz.Skyline.Model
 {
@@ -51,6 +52,7 @@ namespace pwiz.Skyline.Model
     /// 
     /// </summary>
     [XmlRoot("persisted_views")]
+    [LlmName("Reports")]
     public class PersistedViews : SerializableViewGroups
     {
         public static readonly ViewGroup MainGroup = new ViewGroup(@"main",

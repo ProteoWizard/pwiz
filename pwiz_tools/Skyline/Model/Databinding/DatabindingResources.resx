@@ -164,4 +164,13 @@
   <data name="SkylineViewContext_WriteDataWithStatus_Property" xml:space="preserve">
     <value>Property</value>
   </data>
+  <data name="RowFactories_ExportReport_Built_in_reports_cannot_be_exported_here" xml:space="preserve">
+	  <value>Built in reports cannot be exported here</value>
+  </data>
+  <data name="RowFactories_ExportReport_There_is_no_report_named___0___in_the_group___1__" xml:space="preserve">
+	  <value>There is no report named '{0}' in the group '{1}'</value>
+  </data>
+  <data name="RowFactories_ExportReport_The_row_type___0___cannot_be_exported_" xml:space="preserve">
+	  <value>The row type '{0}' cannot be exported.</value>
+  </data>
 </root>

@@ -25,7 +25,7 @@ namespace pwiz.Common.DataBinding.Internal
     public class WrappedDataPropertyDescriptor : DataPropertyDescriptor
     {
         public WrappedDataPropertyDescriptor(DataSchema dataSchema, string name, IColumnCaption columnCaption, PropertyDescriptor innerPropertyDescriptor) 
-            : base(name, columnCaption, dataSchema.DataSchemaLocalizer, IndexedPropertyDescriptor.MergeAttributes(dataSchema, columnCaption, IndexedPropertyDescriptor.GetAttributes(innerPropertyDescriptor)))
+            : base(name, columnCaption, dataSchema, IndexedPropertyDescriptor.MergeAttributes(dataSchema, columnCaption, IndexedPropertyDescriptor.GetAttributes(innerPropertyDescriptor)))
         {
             InnerPropertyDescriptor = innerPropertyDescriptor;
         }

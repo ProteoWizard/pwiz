@@ -65,6 +65,8 @@ throw new IOException(Resources.ErrorMessage_CannotOpenFile);
 
 **Exception**: Debug-only strings using `$@""` format are acceptable (e.g., `Debug.WriteLine`, `ToString()`, internal exception messages never shown to users).
 
+**Do NOT flag**: Missing entries in localized resx siblings (`*.ja.resx`, `*.zh-CHS.resx`) when a new entry is added to the master `*.resx`. Translations are handled by a separate translator workflow; the .NET resource fallback (localized missing -> master) means JP/ZH users see English until translators sync, which is the intended steady state.
+
 ### 3. Translation-Proof Testing (CRITICAL)
 
 **NEVER accept English text literals in test assertion comparisons.**
@@ -240,6 +242,7 @@ if (condition)
 6. **Check for code duplication** - DRY principle check
 7. **Validate file format (CRLF, spaces)** - Style check
 8. **Ensure helpers placed after callers** - Ordering check
+9. **Check build dependency graph** - If the PR adds a new directory directly under `pwiz_tools/`, or modifies files in a `pwiz_tools/` subdirectory that has no specific pattern entry in `scripts/misc/vcs_trigger_and_paths_config.py` (only matched by the generic `pwiz_tools/.*` catch-all), leave a review comment. The developer may choose to leave it as-is, but should consciously decide whether a dedicated mapping is needed.
 
 ## Suggested Review Comments
 
@@ -261,6 +264,9 @@ if (condition)
 **Warnings**:
 > "This PR introduces ReSharper warnings. Please fix all warnings before merge (zero-warning policy)."
 
+**Missing build dependency graph entry**:
+> "This PR adds or modifies `pwiz_tools/<DirectoryName>/` which does not have a specific entry in `scripts/misc/vcs_trigger_and_paths_config.py`. Without a dedicated path mapping, any change here will fall through to the `pwiz_tools/.*` catch-all and trigger all build targets unnecessarily. Please consider adding a specific entry—or explicitly acknowledge this is intentional."
+
 ## Out of Scope for Review
 
 **Do not flag**:
@@ -268,6 +274,7 @@ if (condition)
 - Verbose variable names (Skyline prefers clarity)
 - Long methods (common in UI code with many form controls)
 - Patterns from legacy code (don't require refactoring unless touched)
+- Missing entries in localized resx siblings (`*.ja.resx`, `*.zh-CHS.resx`) when a new entry is added to the master `*.resx` — translations are handled separately by dedicated translators.
 
 ## Additional Context
 

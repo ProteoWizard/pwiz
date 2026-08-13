@@ -111,8 +111,12 @@ namespace AutoQCTest
         }
         
         [TestMethod]
+        [TestCategory("Connected")]
         public void TestValidatePanoramaSettings()
         {
+            if (!AllowInternetAccess)
+                return;
+
             ProgramLog.Init("TestLog");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"),
                 TextUtil.LineSeparate("The server https://fake_panoramaweb.org/ does not exist.", 

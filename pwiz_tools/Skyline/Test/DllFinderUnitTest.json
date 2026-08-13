@@ -340,6 +340,32 @@
     "ExpectedVersion": 4.3
   },
   {
+    "TestName": "ThermoDllFinder finds Excedion Pro",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\excedionProSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\excedionProSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapExcedionPro",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\excedionProSoftwarePath"
+          }
+        ]
+      }
+    ],
+    "ExpectedInstrumentType": "OrbitrapExcedionPro",
+    "ExpectedVersion": 4.3
+  },
+  {
     "TestName": "ThermoDllFinder no installation but required DLLs",
     "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
     "Files": [

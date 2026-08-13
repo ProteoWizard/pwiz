@@ -72,6 +72,20 @@ namespace pwiz.Skyline.Controls
     }
 
     /// <summary>
+    /// Optional interface for tip providers that want to expose their tip content as a
+    /// structured <see cref="TableDesc"/> for testing. Prefer this over <see cref="ITipProviderWithText"/>
+    /// when tests need to inspect individual cells without parsing rendered text.
+    /// </summary>
+    public interface ITipProviderWithTable : ITipProvider
+    {
+        /// <summary>
+        /// Returns the tooltip content as a <see cref="TableDesc"/> so tests can inspect
+        /// individual cells directly (e.g. <c>table[0][0].Text</c>).
+        /// </summary>
+        TableDesc GetTooltipTable();
+    }
+
+    /// <summary>
     /// Implement to enable a control to display tool tips.
     /// </summary>
     public interface ITipDisplayer
@@ -104,9 +118,18 @@ namespace pwiz.Skyline.Controls
         private readonly ITipDisplayer _tipDisplayer;
         private Rectangle _rectItem;
         private Timer _timer;
+        private Timer _autoHideTimer;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
         private const int NODE_SPACE_Y = 5;
+
+        /// <summary>
+        /// When set to a positive value, the tip automatically hides after the
+        /// specified number of milliseconds. Null (default) keeps the tip visible
+        /// until the cursor moves away — appropriate for information-rich tips.
+        /// For brief graph-point tips, a value like 10000 (10s) is recommended.
+        /// </summary>
+        public int? AutoHideDelay { get; set; }
 
         public NodeTip(ITipDisplayer tipDisplayer)
         {
@@ -122,6 +145,11 @@ namespace pwiz.Skyline.Controls
                 _timer.Dispose();
                 _timer = null;
             }
+            if (_autoHideTimer != null)
+            {
+                _autoHideTimer.Dispose();
+                _autoHideTimer = null;
+            }
             base.Dispose(disposing);
         }
 
@@ -135,17 +163,24 @@ namespace pwiz.Skyline.Controls
             if (!_moveThreshold.Moved(cursorPos))
                 return;
             _timer.Stop();
-            if (Visible)
-            {
-                AnimateMode animate = (Y < _rectItem.Y ?
-                AnimateMode.SlideTopToBottom : AnimateMode.SlideBottomToTop);
-                HideAnimate(animate);
-            }
+            _autoHideTimer?.Stop();
+            HideIfVisible();
             _tipProvider = tipProvider;
             _rectItem = _tipDisplayer.RectToScreen(rectItem);
             _moveThreshold.Location = cursorPos;
             if (tipProvider != null)
                 _timer.Start();
+        }
+
+        private void HideIfVisible()
+        {
+            if (Visible)
+            {
+                var animate = Y < _rectItem.Y
+                    ? AnimateMode.SlideTopToBottom
+                    : AnimateMode.SlideBottomToTop;
+                HideAnimate(animate);
+            }
         }
 
         public override void OnPaint(PaintEventArgs e)
@@ -168,6 +203,10 @@ namespace pwiz.Skyline.Controls
             try
             {
                 DisplayTip();
+            }
+            catch (ObjectDisposedException)
+            {
+                // In case of a tip trying to display while the window is closing, just ignore
             }
             catch (Exception exception)
             {
@@ -215,6 +254,25 @@ namespace pwiz.Skyline.Controls
             }
 
             ShowAnimate(X, Y, animate); // Not really animated anymore, because of GDI handle leak on Windows 10
+            RestartAutoHideTimer();
+        }
+
+        private void RestartAutoHideTimer()
+        {
+            _autoHideTimer?.Stop();
+            if (AutoHideDelay == null)
+                return;
+            if (_autoHideTimer == null)
+            {
+                _autoHideTimer = new Timer();
+                _autoHideTimer.Tick += (s, e) =>
+                {
+                    _autoHideTimer.Stop();
+                    HideIfVisible();
+                };
+            }
+            _autoHideTimer.Interval = AutoHideDelay.Value;
+            _autoHideTimer.Start();
         }
 
         #region Test Support
@@ -223,13 +281,15 @@ namespace pwiz.Skyline.Controls
 
         public string TipText => (_tipProvider as ITipProviderWithText)?.TipText;
 
+        public TableDesc TipTable => (_tipProvider as ITipProviderWithTable)?.GetTooltipTable();
+
         #endregion
     }
 
     /// <summary>
     /// Implement to enable a control to display tool tips.
     /// </summary>
-    internal class RenderTools : IDisposable
+    public class RenderTools : IDisposable
     {
         bool _disposed;
 
@@ -267,25 +327,35 @@ namespace pwiz.Skyline.Controls
         #endregion
     }
 
-    internal class TableDesc : List<RowDesc>
+    public class TableDesc : List<RowDesc>
     {
         public const int COL_SPACING = 2;
         public const int TABLE_SPACING = 6;
 
-        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, bool allBold = false)
+        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, Font nameFont, Font valueFont)
         {
             var row = new RowDesc
             {
-                new CellDesc(name, rt) { Font = rt.FontBold },
-                new CellDesc(value, rt) { Align = dataAlign, Font = allBold ? rt.FontBold : rt.FontNormal}
+                new CellDesc(name, rt) { Font = nameFont },
+                new CellDesc(value, rt) { Align = dataAlign, Font = valueFont }
             };
             row.ColumnSpacing = COL_SPACING;
             Add(row);
         }
 
+        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, bool allBold = false)
+        {
+            AddDetailRow(name, value, rt, dataAlign, rt.FontBold, allBold ? rt.FontBold : rt.FontNormal);
+        }
+
         public void AddDetailRow(string name, string value, RenderTools rt, bool allBold = false)
         {
             AddDetailRow(name, value, rt, StringAlignment.Near, allBold);
+        }
+
+        public void AddDetailRowNoBold(string name, string value, RenderTools rt)
+        {
+            AddDetailRow(name, value, rt, StringAlignment.Near, rt.FontNormal, rt.FontNormal);
         }
 
         private const string X80 =
@@ -396,7 +466,7 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    internal class RowDesc : List<CellDesc>
+    public class RowDesc : List<CellDesc>
     {
         public int ColumnSpacing { get; set; }
 
@@ -412,7 +482,7 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    internal class CellDesc
+    public class CellDesc
     {
         private SizeF _sizeF;
 

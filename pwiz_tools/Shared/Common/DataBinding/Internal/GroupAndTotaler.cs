@@ -149,7 +149,7 @@ namespace pwiz.Common.DataBinding.Internal
             }
             var groupAndTotaller = new GroupAndTotaler(cancellationToken, dataSchema, pivotSpec, input.ItemProperties);
             var newProperties = new List<DataPropertyDescriptor>();
-            var newRows = ImmutableList.ValueOf(groupAndTotaller.GroupAndTotal(input.RowItems, newProperties));
+            var newRows = groupAndTotaller.GroupAndTotal(input.RowItems, newProperties).ToBigList();
             return new ReportResults(newRows, newProperties);
         }
 

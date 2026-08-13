@@ -1,0 +1,94 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Parquet;
+using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil;
+
+namespace pwiz.SkylineTestFunctional
+{
+    [TestClass]
+    public class ParquetReportExporterTest : AbstractUnitTest
+    {
+        [TestMethod]
+        public void TestConvertToStorageType()
+        {
+            // Boxing a Nullable<T> with HasValue produces a boxed T, so assert
+            // against the underlying value type rather than the nullable wrapper.
+            var nullableDateTime = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTime?));
+            Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime));
+            var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
+            Assert.IsInstanceOfType(nullableFloat, typeof(float?));
+        }
+
+        [TestMethod]
+        public void TestParquetArrays()
+        {
+            var items = new[]{Array.Empty<float>(), new float[1], null }.Select(array=>new MyObject(){FloatArray = new FormattableList<float>(array)}).ToList();
+            var viewSpec = new ViewSpec().SetColumns(new[]
+            {
+                new ColumnSpec(PropertyPath.Root.Property(nameof(MyObject.FloatArray)))
+            });
+            var stream = new MemoryStream();
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
+                DataSchemaLocalizer.INVARIANT);
+            var viewInfo = new ViewInfo(dataSchema, typeof(MyObject), viewSpec);
+            var rowItemExporter = new ParquetReportExporter();
+            IProgressStatus status = new ProgressStatus();
+            RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
+                rowItemExporter, new SilentProgressMonitor(), ref status);
+            stream.Position = 0;
+            // Parquet.Net's reader resumes on the caller's SynchronizationContext, and this
+            // test runs on the thread which every other test in the process shares, so it
+            // reads without one.
+            ActionUtil.CallWithoutSynchronizationContext(() =>
+            {
+                using var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                Assert.AreEqual(1, reader.Schema.Fields.Count);
+                // Exercise the data-read path so an array/list write or decode regression
+                // would surface here instead of only in downstream consumers.
+                using var groupReader = reader.OpenRowGroupReader(0);
+                var dataField = reader.Schema.GetDataFields().Single();
+                var col = groupReader.ReadColumnAsync(dataField).GetAwaiter().GetResult();
+                Assert.IsNotNull(col.Data);
+                return true;
+            });
+        }
+
+        class MyObject
+        {
+            public FormattableList<float> FloatArray
+            {
+                get;
+                set;
+            }
+        }
+    }
+}

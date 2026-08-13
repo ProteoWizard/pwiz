@@ -53,7 +53,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(5.0, map.GetY(1));
             Assert.AreEqual(7.0, map.GetY(2));
             Assert.AreEqual(9.0, map.GetY(3));
-
+            Assert.AreEqual(double.NaN, map.GetY(double.NaN));
             map = PiecewiseLinearMap.FromValues(new[] { 0.0, 2.0, 3.0 }, new[] { 3.0, 7.0, 11.0 });
             Assert.AreEqual(1.0, map.GetY(-1));
             Assert.AreEqual(3.0, map.GetY(0));

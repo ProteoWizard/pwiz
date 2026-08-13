@@ -17,51 +17,63 @@
  * limitations under the License.
  */
 using Microsoft.Diagnostics.Runtime;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 
 namespace pwiz.SkylineTestUtil
 {
-    public static class HangDetection
+    public class HangDetection : IDisposable
     {
+        private readonly object _lock = new object();
+        private bool _disposed;
+        private TimeSpan? _waitDuration;
+        private Thread _callerThread;
+        private readonly Thread _watchdogThread;
+
+        public HangDetection()
+        {
+            _watchdogThread = new Thread(WatchdogLoop)
+            {
+                IsBackground = true,
+                Name = nameof(HangDetection)
+            };
+            _watchdogThread.Start();
+        }
+
         /// <summary>
-        /// If action takes more than 30 minutes to complete, interrupt this thread and write threads to console.
+        /// If action takes more than 30 minutes to complete, interrupt this thread.
         /// </summary>
         public static void InterruptWhenHung(Action action)
         {
-            InterruptAfter(action, TimeSpan.FromMinutes(30));
+            using var hangDetection = new HangDetection();
+            hangDetection.InterruptAfter(action, TimeSpan.FromMinutes(30));
         }
-        
+
         /// <summary>
         /// If action takes longer than <paramref name="duration"/> then
         /// interrupt this thread and dump callstacks to the console.
         /// </summary>
-        public static void InterruptAfter(Action action, TimeSpan duration)
+        public void InterruptAfter(Action action, TimeSpan duration)
         {
-            bool[] completed = new bool[1];
-            var currentThread = Thread.CurrentThread;
+            lock (_lock)
+            {
+                _waitDuration = duration;
+                _callerThread = Thread.CurrentThread;
+                Monitor.Pulse(_lock);
+            }
+
             try
             {
-                ActionUtil.RunAsync(() =>
-                    InterruptThreadAfter(completed, currentThread, duration), nameof(HangDetection));
-                try
-                {
-                    action();
-                }
-                finally
-                {
-                    lock (completed)
-                    {
-                        completed[0] = true;
-                        Monitor.Pulse(completed);
-                    }
-                }
+                action();
             }
-            catch (ThreadInterruptedException interruptedException)
+            catch (ThreadInterruptedException)
             {
                 try
                 {
@@ -74,33 +86,160 @@ namespace pwiz.SkylineTestUtil
                 {
                     Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
                 }
-                throw new AssertFailedException(string.Format("Timeout waiting {0} for action to complete", duration), interruptedException);
+
+                try
+                {
+                    foreach (var form in FormUtil.OpenForms)
+                    {
+                        Console.Out.WriteLine("Open Form: {0}", AbstractFunctionalTest.GetTextForForm(form));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Out.WriteLine("Unable to get open forms string: {0}", ex);
+                }
+                throw;
+            }
+            finally
+            {
+                lock (_lock)
+                {
+                    _waitDuration = null;
+                    Monitor.Pulse(_lock);
+                }
             }
         }
 
-        private static void InterruptThreadAfter(bool[] completed, Thread thread, TimeSpan duration)
+        private void WatchdogLoop()
         {
-            var stopWatch = Stopwatch.StartNew();
-            TimeSpan cycleDuration = TimeSpan.FromTicks(100);
-            long minCycleCount = duration.Ticks / cycleDuration.Ticks;
-            lock (completed)
+            lock (_lock)
             {
-                for (long cycleIndex = 0; ; cycleIndex++)
+                while (!_disposed)
                 {
-                    if (completed[0])
+                    if (!_waitDuration.HasValue)
                     {
-                        return;
+                        Monitor.Wait(_lock);
+                        continue;
                     }
 
-                    if (cycleIndex > minCycleCount && stopWatch.Elapsed > duration)
-                    {
-                        thread.Interrupt();
-                        return;
-                    }
+                    var duration = _waitDuration.Value;
+                    var stopWatch = Stopwatch.StartNew();
+                    TimeSpan cycleDuration = TimeSpan.FromTicks(100);
+                    long minCycleCount = duration.Ticks / cycleDuration.Ticks;
 
-                    Monitor.Wait(completed, cycleDuration);
+                    // While blocked waiting for the action to complete, also watch for a stray
+                    // ThreadExceptionDialog. If WinForms catches an exception inside a reentrant
+                    // WndProc (e.g. EventWaitHandle.Set on a disposed SafeWaitHandle during
+                    // teardown) it can bypass our Application.ThreadException handler and pop the
+                    // default dialog. The UI thread is then wedged in the dialog's nested message
+                    // loop, so the caller's Invoke never returns and this wait would otherwise
+                    // time out only at the full duration. Dismissing the dialog releases the UI
+                    // thread; recording the exception ensures the test fails loudly so the
+                    // underlying bug is investigated rather than masked.
+                    var handledDialogs = new HashSet<ThreadExceptionDialog>();
+
+                    for (long cycleIndex = 0; ; cycleIndex++)
+                    {
+                        if (!_waitDuration.HasValue || _disposed)
+                        {
+                            break;
+                        }
+
+                        if (cycleIndex > minCycleCount && stopWatch.Elapsed > duration)
+                        {
+                            _callerThread.Interrupt();
+                            break;
+                        }
+
+                        try
+                        {
+                            DismissThreadExceptionDialogs(handledDialogs);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Out.WriteLine(
+                                @"HangDetection: error checking for ThreadExceptionDialog: {0}", ex);
+                        }
+
+                        Monitor.Wait(_lock, cycleDuration);
+                    }
                 }
             }
+        }
+
+        private static void DismissThreadExceptionDialogs(HashSet<ThreadExceptionDialog> handled)
+        {
+            var dialogs = FormUtil.OpenForms.OfType<ThreadExceptionDialog>().ToList();
+            foreach (var dialog in dialogs)
+            {
+                if (dialog.IsDisposed || !dialog.IsHandleCreated)
+                {
+                    continue;
+                }
+
+                // Track by reference: prevents redundant log entries and queued BeginInvoke
+                // callbacks if the UI thread is slow to process the dismissal. New dialogs
+                // that appear later are still handled.
+                if (!handled.Add(dialog))
+                {
+                    continue;
+                }
+
+                Console.Out.WriteLine(
+                    @"*** ThreadExceptionDialog detected during InterruptAfter wait - dismissing");
+                Program.AddTestException(new InvalidOperationException(
+                    string.Format(@"ThreadExceptionDialog appeared while waiting for UI action: {0}",
+                        TryGetDialogText(dialog))));
+
+                CommonActionUtil.SafeBeginInvoke(dialog, () =>
+                {
+                    try
+                    {
+                        // Setting DialogResult posts WM_CLOSE asynchronously (PostMessage),
+                        // avoiding the synchronous Form.Close -> WmClose path that triggered
+                        // the original SafeWaitHandle race during teardown.
+                        if (!dialog.IsDisposed)
+                        {
+                            dialog.DialogResult = DialogResult.Cancel;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Out.WriteLine(@"Failed to dismiss ThreadExceptionDialog: {0}", ex);
+                    }
+                });
+            }
+        }
+
+        private static string TryGetDialogText(Form dialog)
+        {
+            // Best-effort diagnostic: this runs on a background thread, so any property access
+            // can throw if the dialog is disposed mid-call. Wrap so a throw never breaks the
+            // watchdog loop.
+            try
+            {
+                var textBox = dialog.Controls.OfType<TextBox>().FirstOrDefault(tb => tb.Multiline);
+                if (textBox != null && !string.IsNullOrEmpty(textBox.Text))
+                {
+                    return textBox.Text;
+                }
+                return dialog.Text ?? @"<no text>";
+            }
+            catch
+            {
+                return @"<unavailable>";
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_lock)
+            {
+                _disposed = true;
+                Monitor.Pulse(_lock);
+            }
+
+            _watchdogThread.Join();
         }
 
         public static IEnumerable<string> GetAllThreadsCallstacks(int processId)

@@ -31,16 +31,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class CandidatePeakGroup : SkylineObject, ILinkValue
     {
         private CandidatePeakGroupData _data;
-        private PrecursorResult _precursorResult;
         public CandidatePeakGroup(PrecursorResult precursorResult, CandidatePeakGroupData data)
         {
             _data = data;
-            _precursorResult = precursorResult;
+            PrecursorResult = precursorResult;
         }
 
         protected override SkylineDataSchema GetDataSchema()
         {
-            return _precursorResult.DataSchema;
+            return PrecursorResult.DataSchema;
         }
 
         [Format(Formats.RETENTION_TIME)]
@@ -82,7 +81,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 if (!value)
                 {
                     ModifyDocument(
-                        EditDescription.Message(_precursorResult.GetElementRef(),
+                        EditDescription.Message(PrecursorResult.GetElementRef(),
                             EntitiesResources.CandidatePeakGroup_Chosen_Remove_Peak),
                         doc =>
                         {
@@ -97,7 +96,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 else
                 {
                     ModifyDocument(
-                        EditDescription.Message(_precursorResult.GetElementRef(),
+                        EditDescription.Message(PrecursorResult.GetElementRef(),
                             EntitiesResources.CandidatePeakGroup_Chosen_Choose_peak),
                         doc =>
                         {
@@ -130,9 +129,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
             float tolerance = (float)SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var peptideDocNode = _precursorResult.Precursor.Peptide.DocNode;
-            var chromatogramSet = _precursorResult.GetResultFile().Replicate.ChromatogramSet;
-            var filePath = _precursorResult.GetResultFile().ChromFileInfo.FilePath;
+            var peptideDocNode = PrecursorResult.Precursor.Peptide.DocNode;
+            var chromatogramSet = PrecursorResult.GetResultFile().Replicate.ChromatogramSet;
+            var filePath = PrecursorResult.GetResultFile().ChromFileInfo.FilePath;
             ChromatogramGroupInfo[] chromatogramGroupInfos = null;
             SrmDocument.Settings.MeasuredResults?.TryLoadChromatogram(chromatogramSet,
                 peptideDocNode, transitionGroupDocNode, tolerance,
@@ -183,7 +182,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return;
             }
 
-            var precursorResult = _precursorResult;
+            var precursorResult = PrecursorResult;
             precursorResult.LinkValueOnClick(sender, args);
             var chromatogramGraph = skylineWindow.GetGraphChrom(precursorResult.GetResultFile().Replicate.Name);
             if (chromatogramGraph != null)
@@ -213,8 +212,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IEnumerable<TransitionGroupDocNode> GetComparableGroup()
         {
-            var peptideDocNode = _precursorResult.Precursor.Peptide.DocNode;
-            var precursorDocNode = _precursorResult.Precursor.DocNode;
+            var peptideDocNode = PrecursorResult.Precursor.Peptide.DocNode;
+            var precursorDocNode = PrecursorResult.Precursor.DocNode;
             if (precursorDocNode.RelativeRT == RelativeRT.Unknown)
             {
                 return peptideDocNode.TransitionGroups.Where(tg => Equals(tg.LabelType, precursorDocNode.LabelType));
@@ -226,8 +225,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private SrmDocument RemovePeak(SrmDocument document, TransitionGroupDocNode precursor)
         {
             var identityPath =
-                new IdentityPath(_precursorResult.Precursor.Peptide.IdentityPath, precursor.TransitionGroup);
-            var resultFile = _precursorResult.GetResultFile();
+                new IdentityPath(PrecursorResult.Precursor.Peptide.IdentityPath, precursor.TransitionGroup);
+            var resultFile = PrecursorResult.GetResultFile();
             return document.ChangePeak(identityPath, resultFile.Replicate.Name,
                 resultFile.ChromFileInfo.FilePath, null, null, null, UserSet.TRUE, null, false);
         }
@@ -235,15 +234,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private SrmDocument ChoosePeak(SrmDocument document, TransitionGroupDocNode precursor, double retentionTime)
         {
             var identityPath =
-                new IdentityPath(_precursorResult.Precursor.Peptide.IdentityPath, precursor.TransitionGroup);
-            var resultFile = _precursorResult.GetResultFile();
+                new IdentityPath(PrecursorResult.Precursor.Peptide.IdentityPath, precursor.TransitionGroup);
+            var resultFile = PrecursorResult.GetResultFile();
             return document.ChangePeak(identityPath, resultFile.Replicate.Name,
                 resultFile.ChromFileInfo.FilePath, null, retentionTime, UserSet.TRUE);
         }
 
         public PrecursorResult GetPrecursorResult()
         {
-            return _precursorResult;
+            return PrecursorResult;
         }
+
+        public PrecursorResult PrecursorResult { get; private set; }
     }
 }

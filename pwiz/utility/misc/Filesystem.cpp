@@ -38,6 +38,7 @@
     #include <wincrypt.h>
     #include <winternl.h>
     #include <Psapi.h>
+    #include <RestartManager.h>
     #include <boost/nowide/convert.hpp>
     #include <boost/noncopyable.hpp>
 #else
@@ -61,6 +62,7 @@
 #include <boost/spirit/include/karma.hpp>
 //#include <boost/xpressive/xpressive.hpp>
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include <filesystem>
 
@@ -519,6 +521,113 @@ PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, 
             //    fprintf(stderr, "[force_close_handles_to_filepath()] Closed section handle.\n");
         }
     }
+#endif
+}
+
+
+PWIZ_API_DECL std::string find_locking_processes(const std::string& path)
+{
+    // Gate on PWIZ_HAS_RESTART_MANAGER (set by the Jamfile under
+    // <toolset>msvc:) rather than _MSC_VER -- clang-cl also defines
+    // _MSC_VER but the Jamfile does not link rstrtmgr.lib for non-msvc
+    // toolsets, so an _MSC_VER-only gate would compile the body but
+    // fail at link.
+#ifdef PWIZ_HAS_RESTART_MANAGER
+    DWORD sessionHandle = 0;
+    WCHAR sessionKey[CCH_RM_SESSION_KEY + 1] = {0};
+    DWORD rcStart = RmStartSession(&sessionHandle, 0, sessionKey);
+    if (rcStart != ERROR_SUCCESS)
+    {
+        std::ostringstream oss;
+        oss << "(RmStartSession failed, rc=" << rcStart << ")";
+        return oss.str();
+    }
+
+    std::string result;
+    try
+    {
+        std::wstring widePath = boost::locale::conv::utf_to_utf<wchar_t>(path);
+        PCWSTR files[1] = { widePath.c_str() };
+        DWORD rcRegister = RmRegisterResources(sessionHandle, 1, files, 0, nullptr, 0, nullptr);
+        if (rcRegister != ERROR_SUCCESS)
+        {
+            std::ostringstream oss;
+            oss << "(RmRegisterResources failed, rc=" << rcRegister << ")";
+            result = oss.str();
+        }
+        else
+        {
+            UINT nProcInfoNeeded = 0;
+            UINT nProcInfo = 0;
+            DWORD lpdwRebootReasons = RmRebootReasonNone;
+            DWORD rc = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, nullptr, &lpdwRebootReasons);
+            if (rc != ERROR_MORE_DATA && rc != ERROR_SUCCESS)
+            {
+                std::ostringstream oss;
+                oss << "(RmGetList failed, rc=" << rc << ")";
+                result = oss.str();
+            }
+            else
+            {
+                // Treat ERROR_MORE_DATA with nProcInfoNeeded==0 as a fuzzy
+                // degenerate case: RM indicated holders exist but didn't
+                // size the buffer. Floor at 16 so the second call has a
+                // chance to return them rather than silently reporting
+                // "no holders".
+                if (rc == ERROR_MORE_DATA && nProcInfoNeeded == 0)
+                    nProcInfoNeeded = 16;
+
+                if (nProcInfoNeeded > 0)
+                {
+                    // Retry the fetch a few times if the holder list grows
+                    // between the sizing call and the fetch (RmGetList returns
+                    // ERROR_MORE_DATA in that race); otherwise we would lose
+                    // the diagnostic on exactly the contested cases this
+                    // helper is meant to surface.
+                    DWORD rc2 = ERROR_MORE_DATA;
+                    std::vector<RM_PROCESS_INFO> procs;
+                    for (int attempt = 0; attempt < 3 && rc2 == ERROR_MORE_DATA; ++attempt)
+                    {
+                        procs.resize(nProcInfoNeeded);
+                        nProcInfo = nProcInfoNeeded;
+                        rc2 = RmGetList(sessionHandle, &nProcInfoNeeded, &nProcInfo, procs.data(), &lpdwRebootReasons);
+                    }
+                    if (rc2 == ERROR_SUCCESS)
+                    {
+                        std::ostringstream oss;
+                        for (UINT i = 0; i < nProcInfo; ++i)
+                        {
+                            if (i > 0)
+                                oss << ", ";
+                            oss << boost::locale::conv::utf_to_utf<char>(procs[i].strAppName)
+                                << " (PID " << procs[i].Process.dwProcessId << ")";
+                        }
+                        result = oss.str();
+                    }
+                    else
+                    {
+                        std::ostringstream oss;
+                        oss << "(RmGetList (second call) failed, rc=" << rc2 << ")";
+                        result = oss.str();
+                    }
+                }
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (result.empty())
+            result = std::string("(internal exception: ") + e.what() + ")";
+    }
+    catch (...)
+    {
+        if (result.empty())
+            result = "(unknown internal exception)";
+    }
+    RmEndSession(sessionHandle);
+    return result.empty() ? "(no holders identified by RestartManager)" : result;
+#else
+    return "(RestartManager not available on this platform)";
 #endif
 }
 

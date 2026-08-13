@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="25.11" software_version="Skyline (64-bit : developer build) 25.1.1.421 (e5c3d7ecab)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" />
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name="Label:13C(6)15N(4) (C-term R)" aminoacid="R" terminus="C" label_13C="true" label_15N="true" />
+          <static_modification name="Label:13C(6)15N(2) (C-term K)" aminoacid="K" terminus="C" label_13C="true" label_15N="true" />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None" />
+      <transition_filter precursor_charges="2" product_charges="1" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="y" small_molecule_fragment_types="f" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="3" pick_from="all" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+      <transition_full_scan acquisition_method="PRM" product_mass_analyzer="tof" product_res="9000" retention_time_filter_type="ms2_ids" retention_time_filter_length="5" />
+    </transition_settings>
+    <data_settings document_guid="36222a8d-588f-4bac-ab21-e48bceb0a0ca" />
+  </settings_summary>
+  <peptide_list label_name="SOD2-P04179" websearch_status="X#Upeptides1" auto_manage_children="false">
+    <peptide sequence="GDVTAQIALQPALK" modified_sequence="GDVTAQIALQPALK" calc_neutral_pep_mass="1423.803479" num_missed_cleavages="0">
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa="13" modification_name="Label:13C(6)15N(2) (C-term K)" mass_diff="+8" />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge="2" calc_neutral_mass="1423.803479" precursor_mz="712.909016" auto_manage_children="false" collision_energy="0" modified_sequence="GDVTAQIALQPALK">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="739.459225" product_charge="1" cleavage_aa="A">
+          <precursor_mz>712.909016</precursor_mz>
+          <product_mz>740.466501</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="427.279469" product_charge="1" cleavage_aa="P">
+          <precursor_mz>712.909016</precursor_mz>
+          <product_mz>428.286745</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="2" isotope_label="heavy" calc_neutral_mass="1431.817678" precursor_mz="716.916115" auto_manage_children="false" collision_energy="0" modified_sequence="GDVTAQIALQPALK[+8.0]">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="747.473424" product_charge="1" cleavage_aa="A">
+          <precursor_mz>716.916115</precursor_mz>
+          <product_mz>748.4807</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="435.293668" product_charge="1" cleavage_aa="P">
+          <precursor_mz>716.916115</precursor_mz>
+          <product_mz>436.300944</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

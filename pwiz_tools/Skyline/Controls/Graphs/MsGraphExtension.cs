@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -67,6 +68,66 @@ namespace pwiz.Skyline.Controls.Graphs
         public void SetPropertiesObject(GlobalizedObject spectrumProperties)
         {
             spectrumInfoSheet.SelectedObject = spectrumProperties;
+        }
+
+        /// <summary>
+        /// Replaces the property sheet's selected object while preserving which expandable nodes
+        /// (categories such as "Other Metadata", and sub-objects such as Instrument) the user had
+        /// expanded, so navigating between spectra does not collapse them.
+        /// </summary>
+        public void SetSelectedObjectPreservingExpansion(object propertiesObject)
+        {
+            var expanded = GetExpandedKeys();
+            spectrumInfoSheet.SelectedObject = propertiesObject;
+            if (expanded.Count > 0)
+                RestoreExpandedKeys(expanded);
+        }
+
+        private HashSet<string> GetExpandedKeys()
+        {
+            var expanded = new HashSet<string>();
+            foreach (var item in EnumerateGridItems())
+            {
+                if (item.Expandable && item.Expanded)
+                    expanded.Add(GridItemKey(item));
+            }
+            return expanded;
+        }
+
+        private void RestoreExpandedKeys(HashSet<string> expanded)
+        {
+            foreach (var item in EnumerateGridItems())
+            {
+                if (item.Expandable && !item.Expanded && expanded.Contains(GridItemKey(item)))
+                    item.Expanded = true;
+            }
+        }
+
+        private static string GridItemKey(GridItem item)
+        {
+            return item.PropertyDescriptor != null ? item.PropertyDescriptor.Name : item.Label;
+        }
+
+        private IEnumerable<GridItem> EnumerateGridItems()
+        {
+            var selected = spectrumInfoSheet.SelectedGridItem;
+            if (selected == null)
+                yield break;
+            var root = selected;
+            while (root.Parent != null)
+                root = root.Parent;
+            foreach (var item in EnumerateGridItems(root))
+                yield return item;
+        }
+
+        private static IEnumerable<GridItem> EnumerateGridItems(GridItem parent)
+        {
+            foreach (GridItem child in parent.GridItems)
+            {
+                yield return child;
+                foreach (var descendant in EnumerateGridItems(child))
+                    yield return descendant;
+            }
         }
         public void ShowPropertiesSheet(bool show)
         {

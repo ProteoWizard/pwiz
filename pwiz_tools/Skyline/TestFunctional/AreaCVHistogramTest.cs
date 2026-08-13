@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.MSGraph;
 using pwiz.Skyline.Controls;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -148,6 +149,9 @@ namespace pwiz.SkylineTestFunctional
             OpenDocument(TestFilesDir.GetTestPath(@"PRM_technical_variability_tocheck.sky"));
             TestNormalizeToHeavyHistogram();
 
+            // Regression test for issue #4209: heat map IndexOutOfRangeException with frequency = 1
+            TestHeatMapCrashRegression();
+
             if (RecordData)
             {
                 foreach (var recordedFindResults in RecordedFindResults)
@@ -205,6 +209,43 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsInstanceOfType(pane, typeof(IAreaCVHistogramInfo));
             Assert.IsTrue(pane.HasToolbar);
             AssertDataCorrect(pane, statsStartIndex++);
+
+            // Verify Copy Data output for 2D histogram produces clean 3-column format
+            if (typeof(T) == typeof(AreaCVHistogram2DGraphPane))
+            {
+                RunUI(() =>
+                {
+                    var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(graph.GraphControl.MasterPane);
+                    AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
+                    AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
+                    var dataFrame = graphData.Panes[0].DataFrames[0];
+                    AssertEx.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns");
+                    var info2D = (IAreaCVHistogramInfo)pane;
+                    AssertEx.AreEqual(info2D.Items, dataFrame.RowCount, "Row count should match heatmap point count");
+
+                    // Verify column headers match expected axis labels
+                    var headers = dataFrame.GetColumnHeaders();
+                    AssertEx.AreEqual(GraphsResources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area, headers[0, 0]?.ToString());
+                    AssertEx.AreEqual(GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + @" (%)", headers[0, 1]?.ToString());
+                    AssertEx.AreEqual(GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency, headers[0, 2]?.ToString());
+
+                    // Spot-check that values are non-negative
+                    foreach (var i in new[] { 0, dataFrame.RowCount / 2, dataFrame.RowCount - 1 })
+                    {
+                        var row = dataFrame.GetRow(i);
+                        AssertEx.AreEqual(3, row.Length);
+                        AssertEx.IsTrue((double)row[0] >= 0, "Log10 Mean Area should be non-negative");
+                        AssertEx.IsTrue((double)row[1] >= 0, "CV should be non-negative");
+                        AssertEx.IsTrue((double)row[2] >= 1, "Frequency should be at least 1");
+                    }
+
+                    var row44 = dataFrame.GetRow(44);
+                    AssertEx.AreEqual(5.44999, (double)row44[0], 0.0001);
+                    AssertEx.AreEqual(42, (double)row44[1]);
+                    AssertEx.AreEqual(2, (double)row44[2]);
+
+                });
+            }
 
             var histogramInfo = (IAreaCVHistogramInfo) pane;
             var itemCount = 0;
@@ -565,6 +606,60 @@ namespace pwiz.SkylineTestFunctional
                 else
                     Console.WriteLine(graphDataStatistics.ToCode());
             });
+        }
+
+        private void TestHeatMapCrashRegression()
+        {
+            // Regression test for issue #4209: IndexOutOfRangeException when max frequency = 1
+            // Tests that GraphHeatMap handles the Math.Log(1) = 0 condition without throwing
+
+            // Create test data that triggers the crash condition:
+            // - Single point with Z=1 ensures MaxPoint.Z = 1
+            // - Math.Log(1) = 0 makes fullScale = +Infinity
+            // - In discrete mode, this led to NaN array indices
+            var points = new List<HeatMapData.TaggedPoint3D>
+            {
+                new HeatMapData.TaggedPoint3D(new Point3D(2.0, 20.0, 1.0), "TestPoint")
+            };
+
+            var heatMapData = new HeatMapData(points, "Frequency");
+            var graphPane = new GraphPane();
+
+            // Initialize axis scales so GetPoints returns data. Setting Min/Max explicitly also
+            // disables auto-scaling (Scale.Min/Max setters clear _minAuto/_maxAuto), so the
+            // AxisChange below will NOT reset this window back to a default empty-pane range.
+            // That is what keeps the test point (x=2, y=20) inside [0,10]/[0,50] and ensures the
+            // crash-prone render path actually executes -- do not reorder these before AxisChange.
+            graphPane.XAxis.Scale.Min = 0;
+            graphPane.XAxis.Scale.Max = 10;
+            graphPane.YAxis.Scale.Min = 0;
+            graphPane.YAxis.Scale.Max = 50;
+
+            // Properly initialize the GraphPane with a mock graphics context for axis calculations
+            using (var bitmap = new Bitmap(800, 600))
+            using (var graphics = Graphics.FromImage(bitmap))
+            {
+                // Set reasonable chart dimensions for scale calculations
+                graphPane.Chart.Rect = new RectangleF(50, 50, 700, 500);
+                graphPane.AxisChange(graphics);
+            }
+
+            // This call should not throw - the fix guards against degenerate scale values
+            // Call with different min/max dot radius to trigger discrete mode where the crash occurred
+            HeatMapGraphPane.GraphHeatMap(graphPane, heatMapData, 17, 2, 0.0f, 50.0f, true, 0);
+
+            // Verify we created the problematic condition (max frequency = 1)
+            AssertEx.AreEqual(1.0f, heatMapData.MaxPoint.Point.Z,
+                "Test should use max frequency = 1 to trigger the original Math.Log(1) = 0 bug");
+
+            // Verify GraphHeatMap actually plotted the data point -- not merely that it
+            // inserted the (always-present) color curves. A point landing in a curve proves
+            // the discrete legend-remap path (where #4209 crashed) actually executed.
+            int pointsPlotted = graphPane.CurveList.Sum(c => c.Points.Count);
+            AssertEx.IsTrue(pointsPlotted > 0,
+                "GraphHeatMap should have plotted the test point, exercising the crash-prone discrete remap path");
+
+            // Test passes if no exception occurs and the point was plotted - the fix prevents the crash
         }
     }
 }

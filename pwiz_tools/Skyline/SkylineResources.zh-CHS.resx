@@ -970,6 +970,15 @@
   <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
     <value>上传到相同位置？</value>
   </data>
+  <data name="SkylineWindow_PublishToSavedUri_Validating_saved_folder" xml:space="preserve">
+    <value>正在验证保存的文件夹</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_" xml:space="preserve">
+    <value>服务器 {0} 不在您的 Panorama 服务器列表中。</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_" xml:space="preserve">
+    <value>请前往“工具” &gt; “选项” &gt; “Panorama”选项卡，将该服务器添加至您的设置中。</value>
+  </data>
   <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
     <value>重新导入色谱图</value>
   </data>

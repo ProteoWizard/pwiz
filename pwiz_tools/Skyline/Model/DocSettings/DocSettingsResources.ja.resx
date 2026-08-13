@@ -178,6 +178,9 @@
   <data name="FullScanAcquisitionMethod_DDA_TOOLTIP" xml:space="preserve">
     <value>データ依存性取得：MS2クロマトグラムは抽出されますが、定量化には使用されません。</value>
   </data>
+  <data name="FullScanAcquisitionMethod_EI_TOOLTIP" xml:space="preserve">
+    <value>電子イオン化：MS1データはEIフラグメントであると想定し、MS2として処理されます。</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DIA_TOOLTIP" xml:space="preserve">
     <value>データ非依存性取得：MS2スペクトルは、m/z値が単離ウィンドウ内にあるすべてのプリカーサーのクロマトグラムに寄与します。</value>
   </data>

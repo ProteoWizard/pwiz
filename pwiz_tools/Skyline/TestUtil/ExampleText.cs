@@ -82,5 +82,34 @@ namespace pwiz.SkylineTestUtil
             "AVNDIPSTLDIPVHKQKLLNDLTYAFSSSLRKIDEERSTIEKFDNKINSSIFTSVWKLST\n" +
             "SLRDKTLKLLWEGKWRGFLISAGTELVFTRGFQESLSDDEKNDNAISISATDTENGNIPV\n" +
             "FPAKFGIQFQYST*";
+
+        public const string TEXT_EMPTY_MZML =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + 
+            "<mzML xmlns=\"http://psi.hupo.org/ms/mzml\" version=\"1.1\">"+
+            "  <cvList count=\"1\">"+
+            "    <cv id=\"MS\" fullName=\"PSI-MS\" URI=\"https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo\"/>" +
+            "  </cvList>"+
+            "  <fileDescription>"+
+            "    <fileContent>"+
+            "      <cvParam cvRef=\"MS\" accession=\"MS:1000579\" name=\"MS1 spectrum\"/>"+
+            "    </fileContent>"+
+            "  </fileDescription>"+
+            "  <softwareList count=\"1\">"+
+            "    <software id=\"pwiz\" version=\"0\">"+
+            "      <cvParam cvRef=\"MS\" accession=\"MS:1000615\" name=\"ProteoWizard software\"/>"+
+            "    </software>"+
+            "  </softwareList>"+
+            "  <instrumentConfigurationList count=\"1\">"+
+            "    <instrumentConfiguration id=\"IC1\"/>"+
+            "  </instrumentConfigurationList>"+
+            "  <dataProcessingList count=\"1\">"+
+            "    <dataProcessing id=\"DP1\">"+
+            "      <processingMethod order=\"1\" softwareRef=\"pwiz\"/>"+
+            "    </dataProcessing>"+
+            "  </dataProcessingList>"+
+            "  <run id=\"run1\" defaultInstrumentConfigurationRef=\"IC1\">"+
+            "    <spectrumList count=\"0\" defaultDataProcessingRef=\"DP1\"/>"+
+            "  </run>"+
+            "</mzML>";
     }
 }

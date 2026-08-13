@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
@@ -1192,7 +1193,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  bool zeroMissingValues = false)
                 : base(document, selectedDocNodePaths, displayType, replicateGroupOp, paneKey)
             {
-                _normalizeOption = normalizeOption;
+                _normalizeOption = normalizeOption ?? NormalizeOption.DEFAULT;
                 _dataScalingOption = dataScalingOption;
                 _expectedVisible = expectedVisible;
                 _zeroMissingValues = zeroMissingValues;
@@ -1309,6 +1310,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
             }
 
+            [MethodImpl(MethodImplOptions.NoOptimization)]
             private float GetDotProductResults(TransitionGroupDocNode nodeGroup, int indexResult)
             {
                 if (_expectedVisible == AreaExpectedValue.none)
@@ -1320,12 +1322,25 @@ namespace pwiz.Skyline.Controls.Graphs
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
                         if (precursorNodePath.Peptide != null && !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType))
                         {
-                            var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
-                                ratioToLabel,
-                                precursorNodePath.Peptide, nodeGroup,
-                                nodeGroup.GetChromInfoEntry(indexResult));
-                            if (ratio?.HasDotProduct ?? false)
-                                return ratio.DotProduct;
+                            // Average the rdotp across the replicate(s) this display position
+                            // represents, so the line follows replicate ordering and grouping
+                            // (skyline.ms support thread 75064) instead of indexing chrom info
+                            // by the display position directly.
+                            var ratioDotProducts = ReplicateGroups[indexResult].ReplicateIndexes
+                                .Select(replicateIndex =>
+                                {
+                                    var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
+                                        ratioToLabel, precursorNodePath.Peptide, nodeGroup,
+                                        nodeGroup.GetChromInfoEntry(replicateIndex));
+                                    return (ratio?.HasDotProduct ?? false) ? (double?) ratio.DotProduct : null;
+                                })
+                                // Ignore missing (null) and NaN dot-products so one bad
+                                // replicate doesn't void the whole group's averaged value.
+                                .Where(value => value.HasValue && !double.IsNaN(value.Value))
+                                .Cast<double>()
+                                .ToList();
+                            if (ratioDotProducts.Any())
+                                return (float) new Statistics(ratioDotProducts).Mean();
                         }
                     }
                 }

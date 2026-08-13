@@ -203,15 +203,16 @@ namespace TestPerf
         }
 
         private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials;
-        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchSettingsControl.SearchEngine.MSFragger);
+        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine.MSFragger);
 
         private Image _searchLogImage;
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            using var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
-            graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
-            return bmp;
+            var result = base.ProcessCoverShot(bmp);
+            using var graph = Graphics.FromImage(result);
+            graph.DrawImageUnscaled(_searchLogImage, result.Width - _searchLogImage.Width - 10, result.Height - _searchLogImage.Height - 30);
+            return result;
         }
 
         /// <summary>
@@ -341,7 +342,7 @@ namespace TestPerf
             });
             RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
             {
-                importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(SearchFiles.First()));
+                importRangesDlg.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(SearchFiles.First())));
                 _analysisValues.DiaFiles.ForEach(importRangesDlg.SelectFile);
                 importRangesDlg.Open();
             });
@@ -500,7 +501,7 @@ namespace TestPerf
             }
 
             bool isNotAmanda = false;
-            RunUI(() => isNotAmanda = importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchSettingsControl.SearchEngine.MSAmanda);
+            RunUI(() => isNotAmanda = importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchEngine.MSAmanda);
 
             // clicking 'Finish' (Next) will run ImportFasta
             AssociateProteinsDlg emptyProteinsDlg;

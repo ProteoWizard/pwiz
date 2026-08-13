@@ -18,12 +18,9 @@
  */
 using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -66,15 +63,15 @@ namespace pwiz.SkylineTestUtil
             }
             if (type == typeof (Peptide))
             {
-                return new Peptides(_dataSchema, new[]{IdentityPath.ROOT});
+                return new Peptides(_dataSchema);
             }
             if (type == typeof (Precursor))
             {
-                return new Precursors(_dataSchema, new[]{IdentityPath.ROOT});
+                return new Precursors(_dataSchema);
             }
             if (type == typeof (Transition))
             {
-                return new Transitions(_dataSchema, new[]{IdentityPath.ROOT});
+                return new Transitions(_dataSchema);
             }
             throw new ArgumentException(string.Format("No row source for {0}", viewInfo.ParentColumn.PropertyType));
         }
@@ -86,12 +83,7 @@ namespace pwiz.SkylineTestUtil
             var skylineDataSchema = new SkylineDataSchema(documentContainer, new DataSchemaLocalizer(cultureInfo, cultureInfo));
             var viewSpec = ReportSharing.ConvertAll(new[] {new ReportOrViewSpec(reportSpec)}, doc).First();
             var viewContext = new DocumentGridViewContext(skylineDataSchema);
-            using (var writer = new StreamWriter(fileName))
-            {
-                IProgressStatus status = new ProgressStatus();
-                viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
-                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec.ViewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
-            }
+            viewContext.ExportViewToFile(viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec.ViewSpec), fileName, TextUtil.GetCsvSeparator(cultureInfo));
         }
     }
 }

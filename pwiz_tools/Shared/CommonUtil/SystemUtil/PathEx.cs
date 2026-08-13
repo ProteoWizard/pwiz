@@ -30,6 +30,24 @@ namespace pwiz.Common.SystemUtil
     public static class PathEx
     {
         /// <summary>
+        /// Name a per-test working directory, short enough that it does not push command lines run
+        /// against it over the length limit: long test names become their capitals and digits plus the
+        /// original length, e.g. "Foo7WithBar" to "F7WB11".
+        /// <para>
+        /// Shared so that anything needing to name or reason about one of these directories agrees on
+        /// the name. In particular the parallel test runner locks them, and a lock keyed any differently
+        /// would let two tests that shorten to the same thing into the same directory at once.
+        /// </para>
+        /// </summary>
+        public static string GetTestDirectoryName(string testName, string cultureName)
+        {
+            var shortened = testName.Length > 10 // Arbitrary cutoff, but too little is likely to lead to ambiguous names
+                ? string.Concat(testName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + testName.Length
+                : testName;
+            return $@"{shortened}_{cultureName}";
+        }
+
+        /// <summary>
         /// Determines whether the file name in the given path has a
         /// specific extension.  Because this is Windows, the comparison
         /// is case insensitive.  Note that ToLowerInvariant() is used to make
@@ -44,6 +62,30 @@ namespace pwiz.Common.SystemUtil
         public static bool HasExtension(string path, string ext)
         {
             return path.ToLowerInvariant().EndsWith(ext.ToLowerInvariant());
+        }
+
+        /// <summary>
+        /// True if <paramref name="a"/> and <paramref name="b"/> refer to the same
+        /// path on disk. Normalizes both sides (GetFullPath + trailing-separator trim)
+        /// and compares case-insensitively, which is the right semantics on Windows.
+        /// Null/empty paths compare equal only to each other.
+        /// </summary>
+        public static bool SamePath(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b))
+                return string.Equals(a, b);
+            try
+            {
+                string Normalize(string p) => Path.GetFullPath(p)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                return string.Equals(Normalize(a), Normalize(b), StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                // GetFullPath throws on paths with invalid characters — fall back to a
+                // raw string comparison rather than masking that as "different".
+                return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         public static string GetCommonRoot(IEnumerable<string> paths)
@@ -394,6 +436,15 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             return fileName;
+        }
+
+        /// <summary>
+        /// Replaces backslashes with forward slashes. Used when paths are sent over
+        /// JSON/MCP protocols where forward slashes are the expected convention.
+        /// </summary>
+        public static string ToForwardSlashPath(this string path)
+        {
+            return path?.Replace('\\', '/');
         }
 
         /// <summary>

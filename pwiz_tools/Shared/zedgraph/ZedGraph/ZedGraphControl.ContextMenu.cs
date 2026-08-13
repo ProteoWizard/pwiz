@@ -787,14 +787,20 @@ namespace ZedGraph
 						ZoomState state = pane.ZoomStack.Pop( pane );
 						if ( pane == primaryPane )
 							newState = state;
+						pane.OnLayoutRequested();
 					}
 				}
 				else
+				{
 					newState = primaryPane.ZoomStack.Pop( primaryPane );
+					primaryPane.OnLayoutRequested();
+				}
 
 				// Provide Callback to notify the user of zoom events
 				if ( this.ZoomEvent != null )
                     this.ZoomEvent(this, oldState, newState, primaryPane.CenterPoint);
+				if ( this.ZoomAllOutEvent != null )
+					this.ZoomAllOutEvent( this, oldState, newState );
 
 				Refresh();
 			}
@@ -846,10 +852,14 @@ namespace ZedGraph
 						ZoomState state = pane.ZoomStack.PopAll( pane );
 						if ( pane == primaryPane )
 							newState = state;
+						pane.OnLayoutRequested();
 					}
 				}
 				else
+				{
 					newState = primaryPane.ZoomStack.PopAll( primaryPane );
+					primaryPane.OnLayoutRequested();
+				}
 
 				// Provide Callback to notify the user of zoom events
 				if ( this.ZoomEvent != null )

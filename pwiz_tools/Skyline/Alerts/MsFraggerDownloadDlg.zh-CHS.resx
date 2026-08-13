@@ -223,8 +223,7 @@
     <value>1</value>
   </data>
   <data name="lblFirstName.Text" xml:space="preserve">
-    <value>&amp;First Name:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>名字(&amp;F)：</value>
   </data>
   <data name="lblFirstName.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>TopRight</value>
@@ -479,8 +478,7 @@
     <value>3</value>
   </data>
   <data name="lblLastName.Text" xml:space="preserve">
-    <value>&amp;Last Name:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>姓氏(&amp;L)：</value>
   </data>
   <data name="lblLastName.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>TopRight</value>
@@ -573,8 +571,7 @@
     <value>10</value>
   </data>
   <data name="lblVerificationCode.Text" xml:space="preserve">
-    <value>&amp;Verification code:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>验证码(&amp;V)：</value>
   </data>
   <data name="lblVerificationCode.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>TopRight</value>
@@ -610,8 +607,7 @@
     <value>12</value>
   </data>
   <data name="btnRequestVerificationCode.Text" xml:space="preserve">
-    <value>&amp;Request Verification Code</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>请求验证码(&amp;R)</value>
   </data>
   <data name="&gt;&gt;btnRequestVerificationCode.Name" xml:space="preserve">
     <value>btnRequestVerificationCode</value>

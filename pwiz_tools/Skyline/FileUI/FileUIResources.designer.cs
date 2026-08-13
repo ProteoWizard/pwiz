@@ -19,7 +19,7 @@ namespace pwiz.Skyline.FileUI {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class FileUIResources {
@@ -85,6 +85,24 @@ namespace pwiz.Skyline.FileUI {
         public static string BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs {
             get {
                 return ResourceManager.GetString("BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot authenticate account {0}. Error type: {1}..
+        /// </summary>
+        public static string BaseFileDialogNE_Authentication_exception_message {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_Authentication_exception_message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server response: {0}..
+        /// </summary>
+        public static string BaseFileDialogNE_Authentication_exception_server_response {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_Authentication_exception_server_response", resourceCulture);
             }
         }
         
@@ -313,7 +331,8 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Account for this template does not support method development..
+        ///   Looks up a localized string similar to Account for this template does not support method development.
+        ///Reason: {0}.
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_ {
             get {
@@ -670,16 +689,6 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Selected waters_connect account does not support method development..
-        /// </summary>
-        public static string ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_ {
-            get {
-                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_" +
-                        "development_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The document does not contain all of the retention time standard peptides..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides {
@@ -757,6 +766,16 @@ namespace pwiz.Skyline.FileUI {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are" +
                         "_set_to_use_optimized_values_by_transition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no valid account for this template that would support method development..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_There_is_no_valid_account_for_this_template_that_would_support_method_development_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_There_is_no_valid_account_for_this_template_that_would_s" +
+                        "upport_method_development_", resourceCulture);
             }
         }
         
@@ -1181,6 +1200,15 @@ namespace pwiz.Skyline.FileUI {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_h" +
                         "eader___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_fo" +
                         "r_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter", resourceCulture);
             }
         }
         
@@ -1655,7 +1683,7 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Retrieving information from servers.
+        ///   Looks up a localized string similar to Loading remote server folders.
         /// </summary>
         public static string PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers {
             get {
@@ -1909,12 +1937,12 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This account does not support method development.
+        ///   Looks up a localized string similar to 
+        ///Reason: .
         /// </summary>
-        public static string WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_support_method_development {
+        public static string WatersConnectMethodFileDialog_ListViewPostprocessing_Reason {
             get {
-                return ResourceManager.GetString("WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_suppor" +
-                        "t_method_development", resourceCulture);
+                return ResourceManager.GetString("WatersConnectMethodFileDialog_ListViewPostprocessing_Reason", resourceCulture);
             }
         }
         

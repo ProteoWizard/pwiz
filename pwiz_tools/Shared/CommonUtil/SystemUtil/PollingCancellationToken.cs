@@ -31,6 +31,7 @@ namespace pwiz.Common.SystemUtil
         private Func<bool> _isCancelledFunc;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isDisposed;
+        private Thread _pollingThread;
         public PollingCancellationToken(Func<bool> isCancelledFunc) : this (CancellationToken.None, isCancelledFunc)
         {
             PollingInterval = 100;
@@ -40,7 +41,7 @@ namespace pwiz.Common.SystemUtil
         {
             _isCancelledFunc = isCancelledFunc;
             _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-            CommonActionUtil.RunAsync(CheckCancelledThreadProc);
+            _pollingThread = CommonActionUtil.RunAsync(CheckCancelledThreadProc);
         }
 
         public CancellationToken Token
@@ -59,7 +60,9 @@ namespace pwiz.Common.SystemUtil
             {
                 _cancellationTokenSource.Dispose();
                 _isDisposed = true;
+                Monitor.Pulse(this);
             }
+            _pollingThread.Join();
         }
 
         private void CheckCancelledThreadProc()
@@ -78,8 +81,9 @@ namespace pwiz.Common.SystemUtil
                         _cancellationTokenSource.Cancel();
                         return;
                     }
+
+                    Monitor.Wait(this, PollingInterval);
                 }
-                Thread.Sleep(PollingInterval);
             }
         }
     }

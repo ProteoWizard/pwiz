@@ -147,7 +147,12 @@ namespace pwiz.SkylineTestFunctional
         
         protected override void DoTest()
         {
-            var docEmpty = NewDocument();
+            NewDocument();
+            TestHeavyPrecursorMultipleTransitionsNoFormulas();
+            TestHeavyPrecursorMultipleTransitionsNoFormulasPositive();
+            TestMultipleFragmentsPerLinePaste();
+            TestMultipleFragmentsPerLine();
+            TestDuplicateFragmentOnLine();
             TestSimilarMzIsotopes();
             TestIsotopeLabelsInInChi();
             TestNotes();
@@ -1474,6 +1479,375 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        /// <summary>
+        /// Helper to set column type assignments in the column select dialog via the testing API
+        /// </summary>
+        private static void SetComboBoxes(ImportTransitionListColumnSelectDlg dlg, params string[] columnTypes)
+        {
+            dlg.SetSelectedColumnTypes(columnTypes);
+        }
+
+        private void TestMultipleFragmentsPerLinePaste()
+        {
+            // Reported problem: when pasting a transition list with duplicate product
+            // columns directly to the Targets window, Skyline threw:
+            // "System.InvalidOperationException: Collection was modified; enumeration operation may not execute."
+            var text =
+                "Molecule List Name,Molecule Name,Molecule Formula,Precursor Adduct,Precursor Mz,Precursor Charge,Product name,Product M/z,Product Charge,Product name,Product M/z,Product Charge\r\nGlyCombo,(Hex)5 (NeuAc)2 (HexNAc)4,C84H140N6O62,[M-2H],1111.392052,-2,NeuAc Loss,965.892052,-2,NeuGc Loss,957.892052,-2";
+
+            // Paste directly into Targets window - should yield 1 precursor with 2 fragment transitions
+            var pastedDoc = PasteNewDocument(text, false);
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, 2);
+
+            var transGroup = pastedDoc.MoleculeTransitionGroups.First();
+            var mzValues = transGroup.Transitions.Select(t => t.Mz).OrderBy(m => m).ToArray();
+            Assert.AreEqual(2, mzValues.Length, "Expected 2 fragment transitions");
+            Assert.AreEqual(957.892052, mzValues[0], 0.001, "NeuGc Loss m/z");
+            Assert.AreEqual(965.892052, mzValues[1], 0.001, "NeuAc Loss m/z");
+            foreach (var t in transGroup.Transitions)
+            {
+                Assert.AreEqual(-2, t.Transition.Charge,
+                    string.Format("Fragment at m/z {0} should have charge -2", t.Mz));
+            }
+
+            NewDocument();
+        }
+
+        private void TestDuplicateFragmentOnLine()
+        {
+            // The multiple-fragments-per-line import permits repeated product columns, but a single line
+            // must not declare the same fragment twice: one precursor cannot hold two identical
+            // transitions. Here one Product m/z column with two (same-value) Product Charge columns makes
+            // fill-forward clone the product into an identical transition. Previously this slipped through
+            // import and crashed the post-import small-molecule automanage refinement (skyline.ms rowId
+            // 74731); it must instead be reported as an ordinary row error via "Check For Errors".
+            const string duplicatedHeader = "Product Charge"; // assigned to two columns; the second is the offender
+            var text =
+                "Molecule Name,Precursor m/z,Precursor Charge,Product m/z," + duplicatedHeader + "," + duplicatedHeader + "\n" +
+                "M1,351.2177,-1,333.2066,-1,-1\n";
+            SetClipboardText(text);
+
+            var columnDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            RunUI(() =>
+            {
+                columnDlg.radioMolecule.PerformClick();
+                SetComboBoxes(columnDlg,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg.buttonCheckForErrors.PerformClick());
+            RunUI(() =>
+            {
+                // Exactly one error: the line declares the same fragment twice. It points at, and names,
+                // the offending (second "Product Charge") column - not the fill-forwarded Product m/z
+                // column. Input columns (1-based): 1=Molecule Name, 2=Precursor m/z, 3=Precursor Charge,
+                // 4=Product m/z, 5=Product Charge, 6=Product Charge.
+                AssertEx.AreEqual(1, errDlg.ErrorList.Count);
+                var dupError = errDlg.ErrorList[0];
+                AssertEx.AreEqual(6, dupError.Column);
+                // The reader normalizes the recognized header to its localized column name, so assert
+                // against that resource (translation-proof) rather than the raw input header text.
+                AssertEx.Contains(dupError.ErrorMessage, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+            OkDialog(errDlg, errDlg.OkDialog);
+            OkDialog(columnDlg, columnDlg.CancelDialog);
+
+            // Same check via the existing-molecule path (AddFragmentTransitions): the first row creates
+            // the molecule with two distinct fragments; a later row for the same precursor declares the
+            // same fragment twice (two Product m/z columns with the same value), which must also be
+            // reported, naming the offending second Product m/z column.
+            const string productMzHeader = "Product m/z";
+            var text2 =
+                "Molecule Name,Precursor m/z,Precursor Charge," + productMzHeader + ",Product Charge," + productMzHeader + ",Product Charge\n" +
+                "M2,351.2177,-1,333.2066,-1,235.1316,-1\n" +
+                "M2,351.2177,-1,175.1119,-1,175.1119,-1\n";
+            SetClipboardText(text2);
+
+            var columnDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            RunUI(() =>
+            {
+                columnDlg2.radioMolecule.PerformClick();
+                SetComboBoxes(columnDlg2,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+
+            var errDlg2 = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg2.buttonCheckForErrors.PerformClick());
+            RunUI(() =>
+            {
+                // The duplicate is on the second row (an existing molecule), reported via
+                // AddFragmentTransitions, naming the offending second Product m/z column (1-based column 6:
+                // 1=Molecule Name, 2=Precursor m/z, 3=Precursor Charge, 4=Product m/z, 5=Product Charge,
+                // 6=Product m/z, 7=Product Charge).
+                AssertEx.AreEqual(1, errDlg2.ErrorList.Count);
+                var dupError2 = errDlg2.ErrorList[0];
+                AssertEx.AreEqual(6, dupError2.Column);
+                AssertEx.Contains(dupError2.ErrorMessage, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            });
+            OkDialog(errDlg2, errDlg2.OkDialog);
+            OkDialog(columnDlg2, columnDlg2.CancelDialog);
+
+            NewDocument();
+        }
+
+        private void TestMultipleFragmentsPerLine()
+        {
+            // Issue 860: Multiple fragments per line in transition list import.
+            //
+            // External tools like Compound Discoverer export transition lists with multiple
+            // product (fragment) columns per row, rather than the one-transition-per-row format
+            // Skyline traditionally expects. To support this, fragment-oriented column types
+            // (Product m/z, Product Formula, Product Charge, Product Adduct, Product Name,
+            // Product Neutral Loss) are treated as a special case in the column picker:
+            // assigning the same product type to multiple columns creates one transition per
+            // assigned column. The nth repeat of each product type maps to the nth fragment.
+            // Types with fewer repeats than Product m/z use "fill-forward" - the last specified
+            // value applies to all remaining fragments. A fragment is skipped for that row only
+            // when both its Product m/z and Product Formula are empty or "NA", allowing
+            // formula-only fragments when Product m/z is not provided.
+
+            // Format A: Compound Discoverer style - generic "Fragment" columns containing m/z values.
+            // The "Fragment" headers aren't auto-detected as Product m/z, so the user manually
+            // maps all three to Product m/z in the column picker. The single Product Charge
+            // column applies to all three fragments via fill-forward.
+            var compoundDiscovererData =
+                "CompoundName\tChemicalFormula\tPrecursor Charge\tProduct Charge\tFragment\tFragment\tFragment\n" +
+                "Glutamate\tC5H9NO4\t-1\t-1\t128.036\t84.045\t74.025\n" +
+                "Creatine\tC4H9N3O2\t-1\t-1\t130.052\t61.989\t87.046\n";
+
+            var docOrig = NewDocument();
+            var importDialog1 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() =>
+                importDialog1.TransitionListText = compoundDiscovererData);
+
+            RunUI(() =>
+            {
+                columnSelectDlg.radioMolecule.PerformClick();
+                // Columns: Name, Formula, Precursor Charge, Product Charge, Fragment, Fragment, Fragment
+                // Map all three Fragment columns to "Product m/z" - this is the special case that
+                // tells the importer to create three transitions per row instead of one.
+                // Product Charge (col 3) has only one assignment, so it fill-forwards to all fragments.
+                SetComboBoxes(columnSelectDlg,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            });
+
+            OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            WaitForClosedForm(importDialog1);
+            var pastedDoc = WaitForDocumentChange(docOrig);
+
+            // 3 fragments per molecule x 2 molecules = 6 transitions
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 2, 2, 6);
+
+            // Verify Glutamate fragments: m/z 128.036, 84.045, 74.025 all at charge -1
+            var glutamate = pastedDoc.MoleculeTransitionGroups.First();
+            var glutamateTransitions = glutamate.Transitions.ToArray();
+            Assert.AreEqual(3, glutamateTransitions.Length);
+            var glutamateMzValues = glutamateTransitions.Select(t => t.Mz).OrderBy(m => m).ToArray();
+            var expectedGlutamateMz = new[] { 74.025, 84.045, 128.036 };
+            for (int i = 0; i < expectedGlutamateMz.Length; i++)
+            {
+                Assert.AreEqual(expectedGlutamateMz[i], glutamateMzValues[i], 0.001,
+                    string.Format("Glutamate fragment {0} m/z mismatch", i));
+            }
+            // All Glutamate fragments should have charge -1
+            foreach (var t in glutamateTransitions)
+            {
+                Assert.AreEqual(-1, t.Transition.Charge,
+                    string.Format("Glutamate fragment at m/z {0} should have charge -1", t.Mz));
+            }
+
+            // Verify Creatine fragments: m/z 130.052, 61.989, 87.046 all at charge -1
+            var creatine = pastedDoc.MoleculeTransitionGroups.ElementAt(1);
+            var creatineTransitions = creatine.Transitions.ToArray();
+            Assert.AreEqual(3, creatineTransitions.Length);
+            var creatineMzValues = creatineTransitions.Select(t => t.Mz).OrderBy(m => m).ToArray();
+            var expectedCreatineMz = new[] { 61.989, 87.046, 130.052 };
+            for (int i = 0; i < expectedCreatineMz.Length; i++)
+            {
+                Assert.AreEqual(expectedCreatineMz[i], creatineMzValues[i], 0.001,
+                    string.Format("Creatine fragment {0} m/z mismatch", i));
+            }
+            foreach (var t in creatineTransitions)
+            {
+                Assert.AreEqual(-1, t.Transition.Charge,
+                    string.Format("Creatine fragment at m/z {0} should have charge -1", t.Mz));
+            }
+
+            // Format B: each fragment has its own formula and m/z columns.
+            // Two product column pairs: (frag1comp=Product Formula, frag1calc=Product m/z) and
+            // (frag2comp=Product Formula, frag2calc=Product m/z). Both Product Formula and
+            // Product m/z are assigned twice, creating two fragments per row.
+            // DIAMINOPROPANE's second pair has "na" values, so that fragment is skipped,
+            // demonstrating per-row variable fragment counts.
+            var richJohnsonData =
+                "moleculename\tmolecularformula\tprecursor m/z\tprecursorcharge\tfrag1comp\tfrag1calc\tfrag2comp\tfrag2calc\n" +
+                "AMINOETHYLPHOSPHONATE\tC2H8NO3P\t126.032\t1\tCH6O3P\t97.005\tH4O4P\t98.985\n" +
+                "DIAMINOPROPANE\tC3H10N2\t75.092\t1\tC3H8N\t58.066\tna\tna\n";
+
+            docOrig = NewDocument();
+            var importDialog2 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() =>
+                importDialog2.TransitionListText = richJohnsonData);
+
+            RunUI(() =>
+            {
+                columnSelectDlg.radioMolecule.PerformClick();
+                // Map both formula/m/z pairs as duplicate Product Formula + Product m/z assignments.
+                // Two Product m/z assignments = two fragments per row.
+                SetComboBoxes(columnSelectDlg,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            });
+
+            OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            WaitForClosedForm(importDialog2);
+            pastedDoc = WaitForDocumentChange(docOrig);
+
+            // AMINOETHYLPHOSPHONATE: 2 fragments, DIAMINOPROPANE: 1 fragment (second pair empty) = 3 transitions
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 2, 2, 3);
+
+            // Verify AMINOETHYLPHOSPHONATE: 2 fragments with formulas CH6O3P and H4O4P
+            var aminoethyl = pastedDoc.MoleculeTransitionGroups.First();
+            var aminoethylTransitions = aminoethyl.Transitions.ToArray();
+            Assert.AreEqual(2, aminoethylTransitions.Length);
+            var aminoethylFormulas = aminoethylTransitions.Select(t => t.Transition.CustomIon.Formula).OrderBy(f => f).ToArray();
+            Assert.IsTrue(aminoethylFormulas.Contains("CH6O3P"),
+                "AMINOETHYLPHOSPHONATE should have fragment with formula CH6O3P");
+            Assert.IsTrue(aminoethylFormulas.Contains("H4O4P"),
+                "AMINOETHYLPHOSPHONATE should have fragment with formula H4O4P");
+            // Verify m/z values match
+            var aminoethylMzByFormula = aminoethylTransitions.ToDictionary(t => t.Transition.CustomIon.Formula, t => t.Mz);
+            Assert.AreEqual(97.005, aminoethylMzByFormula["CH6O3P"], 0.001, "CH6O3P m/z mismatch");
+            Assert.AreEqual(98.985, aminoethylMzByFormula["H4O4P"], 0.001, "H4O4P m/z mismatch");
+
+            // Verify DIAMINOPROPANE: 1 fragment with formula C3H8N (second pair was empty/NA)
+            var diaminopropane = pastedDoc.MoleculeTransitionGroups.ElementAt(1);
+            var diaminopropaneTransitions = diaminopropane.Transitions.ToArray();
+            Assert.AreEqual(1, diaminopropaneTransitions.Length);
+            Assert.AreEqual("C3H8N", diaminopropaneTransitions[0].Transition.CustomIon.Formula);
+            Assert.AreEqual(58.066, diaminopropaneTransitions[0].Mz, 0.001, "C3H8N m/z mismatch");
+
+            // Format C: Formula-only fragments (no Product m/z columns).
+            // Fragment count is driven by Product Formula repeats. The importer computes m/z
+            // from each formula and the fill-forwarded Product Charge.
+            var formulaOnlyData =
+                "moleculename\tmolecularformula\tprecursormz\tprecursorcharge\tproductcharge\tfrag1\tfrag2\n" +
+                "TestMol\tC10H20\t141.164\t1\t1\tC5H10\tC3H6\n";
+
+            docOrig = NewDocument();
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() =>
+                importDialog3.TransitionListText = formulaOnlyData);
+
+            RunUI(() =>
+            {
+                columnSelectDlg.radioMolecule.PerformClick();
+                // Two Product Formula assignments, no Product m/z - fragment count driven by formula repeats.
+                // Product Charge assigned once, fill-forwards to both fragments.
+                SetComboBoxes(columnSelectDlg,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+            });
+
+            OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            var autoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (autoManageDlg != null)
+                OkDialog(autoManageDlg, autoManageDlg.ClickNo);
+            WaitForClosedForm(importDialog3);
+            pastedDoc = WaitForDocumentChange(docOrig);
+
+            // 2 fragments for 1 molecule = 2 transitions
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, 2);
+
+            var formulaOnlyTransitions = pastedDoc.MoleculeTransitionGroups.First().Transitions.ToArray();
+            Assert.AreEqual(2, formulaOnlyTransitions.Length);
+            var formulas = formulaOnlyTransitions.Select(t => t.Transition.CustomIon.Formula).OrderBy(f => f).ToArray();
+            Assert.AreEqual("C3H6", formulas[0], "First formula should be C3H6");
+            Assert.AreEqual("C5H10", formulas[1], "Second formula should be C5H10");
+            // Both fragments should have charge +1 (fill-forwarded from single Product Charge)
+            foreach (var t in formulaOnlyTransitions)
+            {
+                Assert.AreEqual(1, t.Transition.Charge,
+                    string.Format("Fragment {0} should have charge +1", t.Transition.CustomIon.Formula));
+            }
+
+            // Format D: Product Name with m/z - fragment count driven by Product Name repeats.
+            // Two named fragments, each with its own m/z.
+            var namedFragData =
+                "moleculename\tmolecularformula\tprecursormz\tprecursorcharge\tproductcharge\tname1\tmz1\tname2\tmz2\n" +
+                "TestMol2\tC8H16\t113.133\t1\t1\talpha\t57.070\tbeta\t85.101\n";
+
+            docOrig = NewDocument();
+            var importDialog4 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() =>
+                importDialog4.TransitionListText = namedFragData);
+
+            RunUI(() =>
+            {
+                columnSelectDlg.radioMolecule.PerformClick();
+                // Two Product Name + two Product m/z assignments. Fragment count = 2.
+                SetComboBoxes(columnSelectDlg,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            });
+
+            OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            autoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (autoManageDlg != null)
+                OkDialog(autoManageDlg, autoManageDlg.ClickNo);
+            WaitForClosedForm(importDialog4);
+            pastedDoc = WaitForDocumentChange(docOrig);
+
+            // 2 named fragments for 1 molecule = 2 transitions
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, 2);
+
+            var namedTransitions = pastedDoc.MoleculeTransitionGroups.First().Transitions.ToArray();
+            Assert.AreEqual(2, namedTransitions.Length);
+            var names = namedTransitions.Select(t => t.FragmentIonName).OrderBy(n => n).ToArray();
+            Assert.AreEqual("alpha", names[0], "First fragment should be named 'alpha'");
+            Assert.AreEqual("beta", names[1], "Second fragment should be named 'beta'");
+            // Verify m/z values match
+            var namedMzByName = namedTransitions.ToDictionary(t => t.FragmentIonName, t => t.Mz);
+            Assert.AreEqual(57.070, namedMzByName["alpha"], 0.001, "alpha m/z mismatch");
+            Assert.AreEqual(85.101, namedMzByName["beta"], 0.001, "beta m/z mismatch");
+
+            NewDocument();
+        }
+
         private void TestImpliedAdductWithSynonyms()
         {
             // Deal with implied adducts for which we support synonyms (this caused trouble with use of a dictionary in parser code, since synonyms yield identical mz matches) 
@@ -2454,6 +2828,68 @@ namespace pwiz.SkylineTestFunctional
                 }
                 AssertEx.Serializable(pastedDoc); // Original error report was in terms of not being able to reload the inconsistent document, so check that
             }
+        }
+
+        void TestHeavyPrecursorMultipleTransitionsNoFormulas()
+        {
+            // Support request https://skyline.ms/announcements/home/support/announcements-thread.view?rowId=74741
+            // A mass-only molecule (no formula) declared with a [M-H] adduct at two precursor m/z values, and
+            // NO explicit label type. The heavier precursor (87.9) is inferred to be isotopically labeled
+            // ([M1.1-H], "heavy"). Each precursor has two declared transitions (a fragment, plus a precursor-type
+            // transition where product m/z equals precursor m/z). The two heavy transitions must group under a
+            // SINGLE heavy precursor, exactly as the two light transitions group under the single light precursor.
+            // Before the fix, the second heavy transition would land on a duplicate heavy precursor because the
+            // transition-group matching code only derived the implied isotope label for charge-only adducts,
+            // not for adducts like [M-H], so [M-H] failed to match the existing [M1.1-H] precursor.
+            var input =
+                "Molecule List Name,Molecule Name,Molecule Formula,Precursor Adduct,Precursor Mz,Precursor Charge,Explicit Retention Time,Explicit Retention Time Window,Product Mz,Product Charge,Product Adduct,Label Type\n" +
+                "AcideOrganique,Pyruvate,,M-H,86.8,-1,1,1,42.9,-1,M-,\n" +
+                "AcideOrganique,Pyruvate,,M-H,86.8,-1,1,1,86.9,-1,M-,\n" +
+                "AcideOrganique,Pyruvate,,M-H,87.9,-1,1,1,43.9,-1,M-,\n" +
+                "AcideOrganique,Pyruvate,,M-H,87.9,-1,1,1,87.9,-1,M-,\n";
+            var pastedDoc = PasteNewDocument(input); // New document, decline automanage to keep the explicit transitions
+
+            // One molecule list, one molecule, two precursors (light 86.8 and heavy 87.9), two transitions each
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 4);
+            foreach (var tranGroup in pastedDoc.MoleculeTransitionGroups)
+            {
+                AssertEx.AreEqual(2, tranGroup.TransitionCount,
+                    string.Format("precursor {0} should have two transitions", tranGroup.PrecursorAdduct));
+            }
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => !t.PrecursorAdduct.HasIsotopeLabels)); // light
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => t.PrecursorAdduct.HasIsotopeLabels));  // inferred heavy
+            AssertEx.Serializable(pastedDoc);
+            NewDocument();
+        }
+
+        void TestHeavyPrecursorMultipleTransitionsNoFormulasPositive()
+        {
+            // Positive-mode counterpart of TestHeavyPrecursorMultipleTransitionsNoFormulas, confirming the fix
+            // is polarity- and adduct-agnostic: the matching gate keys on !HasIsotopeLabels, not charge-only, so
+            // a protonation adduct [M+H] behaves the same as the deprotonation [M-H] case. A mass-only molecule
+            // declared with [M+H] at two precursor m/z values (light 100.0, heavier 101.1 inferred as [M1.1+H]),
+            // each with two transitions, must group the two heavy transitions under a SINGLE heavy precursor.
+            // Unlike the [M-H] case, this list does not trip SkylineWindow.HandleSmallMoleculeAutomanage's
+            // heuristic (auto-pick refinement leaves the transition count unchanged), so no auto-manage prompt
+            // is offered - hence expectAutoManage:false.
+            var input =
+                "Molecule List Name,Molecule Name,Molecule Formula,Precursor Adduct,Precursor Mz,Precursor Charge,Explicit Retention Time,Explicit Retention Time Window,Product Mz,Product Charge,Product Adduct,Label Type\n" +
+                "AcideOrganique,Glucose,,M+H,100.0,1,1,1,50.0,1,M+,\n" +
+                "AcideOrganique,Glucose,,M+H,100.0,1,1,1,100.1,1,M+,\n" +
+                "AcideOrganique,Glucose,,M+H,101.1,1,1,1,51.0,1,M+,\n" +
+                "AcideOrganique,Glucose,,M+H,101.1,1,1,1,101.1,1,M+,\n";
+            var pastedDoc = PasteNewDocument(input, expectAutoManage:false);
+
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 4);
+            foreach (var tranGroup in pastedDoc.MoleculeTransitionGroups)
+            {
+                AssertEx.AreEqual(2, tranGroup.TransitionCount,
+                    string.Format("precursor {0} should have two transitions", tranGroup.PrecursorAdduct));
+            }
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => !t.PrecursorAdduct.HasIsotopeLabels)); // light
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => t.PrecursorAdduct.HasIsotopeLabels));  // inferred heavy
+            AssertEx.Serializable(pastedDoc);
+            NewDocument();
         }
 
         void TestNotes()

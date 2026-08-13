@@ -32,6 +32,11 @@ using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
+// Alias for the specific generic type used in this test
+using GraphDataCachingReceiver = pwiz.Skyline.Controls.Graphs.ReplicateCachingReceiver<
+    pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphDataParameters,
+    pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphData>;
+
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
@@ -112,8 +117,9 @@ namespace pwiz.SkylineTestFunctional
             var pane = FindGraphPane();
 
             var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(pane.ShowFormattingDialog);
-            // Add a line which says all peptides containing "QE" should be indigo diamonds 
-            // and all peptides containing "GQ" should be turquoise triangles
+            // Add a line which says all peptides containing "QE" should be indigo diamonds
+            // and all peptides containing "GQ" should be turquoise triangles. One peptide contains
+            // both substrings; with last-match-wins precedence it takes the lower (GQ/triangle) rule.
             RunUI(() =>
             {
                 Assert.AreEqual(Skyline.Controls.GroupComparison.GroupComparisonResources
@@ -132,13 +138,15 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
 
-            // Verify that 2 peptides are drawn as diamonds and 2 are drawn as triangles
+            // Verify that 1 peptide is drawn as a diamond and 3 are drawn as triangles. The QE-only
+            // peptide is a diamond; the GQ peptides plus the peptide matching both QE and GQ (which
+            // last-match-wins assigns to the triangle rule) are triangles.
             RunUI(() =>
             {
                 var diamondCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
-                Assert.AreEqual(2, diamondCurve.Points.Count);
+                Assert.AreEqual(1, diamondCurve.Points.Count);
                 var triangleCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Triangle);
-                Assert.AreEqual(2, triangleCurve.Points.Count);
+                Assert.AreEqual(3, triangleCurve.Points.Count);
             });
 
             // The document should still have its original RelativeAbundanceFormatting because the formatting dialog has not been OK'd yet
@@ -153,7 +161,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(PointSymbol.Diamond, relativeAbundanceFormatting.ColorRows.First().PointSymbol);
             Assert.AreEqual(PointSymbol.Triangle, relativeAbundanceFormatting.ColorRows.ElementAt(1).PointSymbol);
             
-            // Include peptide lists and verify that the number of diamonds on the graph has changed to 4
+            // Include peptide lists and verify the symbol counts grow accordingly. The peptide matching
+            // both QE and GQ stays on the triangle (last-match-wins) rule, so diamonds become 3 and
+            // triangles become 4.
             RunUI(() =>
             {
                 SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(false);
@@ -162,9 +172,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var diamondCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
-                Assert.AreEqual(4, diamondCurve.Points.Count);
+                Assert.AreEqual(3, diamondCurve.Points.Count);
                 var triangleCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Triangle);
-                Assert.AreEqual(3, triangleCurve.Points.Count);
+                Assert.AreEqual(4, triangleCurve.Points.Count);
             });
 
             // Save and reopen the document
@@ -355,8 +365,17 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // === Test 4: Undo - verify the restored peptides are recalculated ===
-            RunUI(SkylineWindow.Undo);
-            WaitForConditionUI(() => pane.IsComplete);
+            // Track cached results to investigate whether multiple DocumentChanged events
+            // cause parallel calculations during undo (same pattern as Test 6/PR #3830)
+            List<SummaryRelativeAbundanceGraphPane.GraphData> undoCachedResults = null;
+            using (new ScopedAction(
+                       GraphDataCachingReceiver.StartTrackCaching,
+                       GraphDataCachingReceiver.EndTrackCaching))
+            {
+                RunUI(SkylineWindow.Undo);
+                WaitForConditionUI(() => pane.IsComplete);
+                undoCachedResults = GraphDataCachingReceiver.CachedSinceTracked.ToList();
+            }
 
             RunUI(() =>
             {
@@ -364,11 +383,25 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(originalPeptideCount, afterUndoCount,
                     "Undo should restore peptide count");
 
-                // Verify incremental update: existing peptides cached, restored peptides recalculated
-                Assert.AreEqual(originalPeptideCount - peptidesToDelete, pane.CachedNodeCount,
-                    "After undo, existing peptides should be cached");
-                Assert.AreEqual(peptidesToDelete, pane.RecalculatedNodeCount,
-                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated");
+                Assert.IsTrue(undoCachedResults.Count > 0,
+                    "Should have cached at least one result during undo");
+
+                // Expect a single calculation. If multiple DocumentChanged events fired,
+                // there will be multiple results -- fail with diagnostic info to investigate.
+                var diagnosticInfo = string.Join("\n", undoCachedResults.Select((r, i) =>
+                    $"  [{i}]: {r.GetDiagnosticInfo()}"));
+                Assert.AreEqual(1, undoCachedResults.Count,
+                    $"Expected a single calculation during undo, but got {undoCachedResults.Count}. " +
+                    $"Multiple DocumentChanged events may be causing parallel calculations:\n{diagnosticInfo}");
+
+                // Single calculation -- verify incremental update
+                var result = undoCachedResults.First();
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, result.CachedNodeCount,
+                    $"After undo, existing peptides should be cached. " +
+                    $"Result: {result.GetDiagnosticInfo()}");
+                Assert.AreEqual(peptidesToDelete, result.RecalculatedNodeCount,
+                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated. " +
+                    $"Result: {result.GetDiagnosticInfo()}");
             });
 
             // === Test 5: Change quantification settings - verify full recalculation ===
@@ -449,28 +482,70 @@ namespace pwiz.SkylineTestFunctional
             // === Test 6: Reopen document - verify document ID change triggers full recalculation ===
             // This tests the "document identity changed" branch in CleanCacheForIncrementalUpdates
             // Capture the current document ID before reopening
-            Identity priorDocId = null;
-            RunUI(() => priorDocId = SkylineWindow.Document.Id);
+            var priorDoc = SkylineWindow.Document;
 
-            // Reopen the same file - this creates a new document with a new ID
-            RunUI(() => SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
-            WaitForDocumentLoaded();
+            // Track cached results during document reopen to capture the first (full) calculation
+            // Opening a file causes multiple DocumentChanged events (OpenFile, ChromatogramManager, LibraryManager),
+            // which can result in multiple cached calculations. The first should be full, subsequent incremental.
+            List<SummaryRelativeAbundanceGraphPane.GraphData> reopenCachedResults;
+            using (new ScopedAction(
+                       GraphDataCachingReceiver.StartTrackCaching,
+                       GraphDataCachingReceiver.EndTrackCaching))
+            {
+                // Reopen the same file - this creates a new document with a new ID
+                RunUI(() => SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
+                WaitForDocumentChangeLoaded(priorDoc);
 
-            // Get the new graph pane (old one was disposed when document closed)
-            pane = FindGraphPane();
-            WaitForConditionUI(() => pane.IsComplete);
+                // Get the new graph pane (old one was disposed when document closed)
+                pane = FindGraphPane();
+                WaitForConditionUI(() => pane.IsComplete);
+                reopenCachedResults = GraphDataCachingReceiver.CachedSinceTracked.ToList();
+            }
 
             RunUI(() =>
             {
                 // Verify document ID actually changed
-                Assert.AreNotSame(priorDocId, SkylineWindow.Document.Id,
+                Assert.AreNotSame(priorDoc.Id, SkylineWindow.Document.Id,
                     "Reopening document should create a new document ID");
 
-                // Document ID change should trigger full recalculation (no cached data valid)
-                Assert.AreEqual(0, pane.CachedNodeCount,
-                    "Reopening document should trigger full calculation with no cached nodes");
-                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
-                    "Reopening document should recalculate all nodes");
+                Assert.IsTrue(reopenCachedResults.Count > 0, "Should have cached at least one result during document reopen");
+
+                // The first calculation after document reopen should be full (no cached nodes)
+                var firstResult = reopenCachedResults.First();
+                Assert.IsTrue(firstResult.WasFullCalculation,
+                    $"First calculation after reopen should be full, but was incremental. " +
+                    $"First result: {firstResult.GetDiagnosticInfo()}");
+                Assert.AreEqual(0, firstResult.CachedNodeCount,
+                    $"First calculation after reopen should have no cached nodes. " +
+                    $"First result: {firstResult.GetDiagnosticInfo()}");
+                Assert.AreEqual(originalPeptideCount, firstResult.RecalculatedNodeCount,
+                    $"First calculation should recalculate all {originalPeptideCount} nodes. " +
+                    $"First result: {firstResult.GetDiagnosticInfo()}");
+
+                // Subsequent calculations (if any) may be either:
+                // - Full (125 recalculated): parallel calculation that started before any result was cached
+                // - Incremental (0 recalculated): found a cached result and reused it
+                // Once we see an incremental result, all subsequent must also be incremental
+                bool sawIncremental = false;
+                foreach (var result in reopenCachedResults.Skip(1))
+                {
+                    if (result.RecalculatedNodeCount == 0)
+                        sawIncremental = true;
+
+                    if (sawIncremental)
+                    {
+                        Assert.AreEqual(0, result.RecalculatedNodeCount,
+                            $"After seeing an incremental update, all subsequent must be incremental. " +
+                            $"Result: {result.GetDiagnosticInfo()}");
+                    }
+                    else
+                    {
+                        // Full calculation is also valid - parallel execution before cache was populated
+                        Assert.IsTrue(result.RecalculatedNodeCount == 0 || result.RecalculatedNodeCount == originalPeptideCount,
+                            $"Result should be either full ({originalPeptideCount} recalculated) or incremental (0). " +
+                            $"Result: {result.GetDiagnosticInfo()}");
+                    }
+                }
             });
         }
 

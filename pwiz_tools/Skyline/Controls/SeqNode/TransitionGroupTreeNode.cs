@@ -563,6 +563,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var filterPages = spectrumClassFilter.GetFilterPages();
+            var andSeparator = SpectraResources.SpectrumClassFilter_GetAbbreviatedText__AND_.Trim();
+            var orSeparator = Resources.SpectrumClassFilter_GetAbbreviatedText_OR;
+            // One line per criterion, with the AND/OR connectors at the line ends, so complex
+            // filters break at logical boundaries instead of being one long unreadable row.
+            var lines = new List<string>();
             for (int iPage = 0; iPage < filterPages.Pages.Count; iPage++)
             {
                 var filterPage = filterPages.Pages[iPage];
@@ -571,40 +576,37 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     continue;
                 }
-                List<string> pageHeaderParts = new List<string>();
-                if (string.IsNullOrEmpty(filterPage.Caption))
+                if (lines.Count > 0)
                 {
-                    if (iPage != 0)
+                    // Connect the previous clause to this one with OR on its own line
+                    lines.Add(orSeparator);
+                }
+                var filterSpecs = clause.FilterSpecs.ToList();
+                for (int iSpec = 0; iSpec < filterSpecs.Count; iSpec++)
+                {
+                    if (iSpec > 0)
                     {
-                        pageHeaderParts.Add(Resources.SpectrumClassFilter_GetAbbreviatedText_OR);
+                        // AND between criteria on its own line
+                        lines.Add(andSeparator);
                     }
-                }
-                pageHeaderParts.Add(SeqNodeResources.TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter);
-                if (!string.IsNullOrEmpty(filterPage.Caption))
-                {
-                    pageHeaderParts.Add(filterPage.Caption);
-                }
-
-                if (pageHeaderParts.Any())
-                {
-                    table.Add(new RowDesc
-                        { CreateHead(TextUtil.AppendColon(TextUtil.SpaceSeparate(pageHeaderParts)), rt) });
-                }
-                foreach (var filterSpec in clause.FilterSpecs)
-                {
+                    var filterSpec = filterSpecs[iSpec];
                     string column = ColumnCaptions.ResourceManager.GetString(filterSpec.ColumnId.Name) ??
                                     filterSpec.ColumnId.Name;
-                    var row = new RowDesc
-                    {
-                        CreateRowLabel(TextUtil.SpaceSeparate(column, filterSpec.Operation.DisplayName), rt),
-                    };
                     var operand = SpectrumClassFilter.GetOperandDisplayText(dataSchema, filterSpec);
-                    if (operand != null)
+                    var line = TextUtil.SpaceSeparate(column, filterSpec.Operation.DisplayName, operand ?? string.Empty).Trim();
+                    if (iSpec == 0 && !string.IsNullOrEmpty(filterPage.Caption))
                     {
-                        row.Add(CreateData(operand, rt));
+                        line = TextUtil.ColonSeparate(filterPage.Caption, line);
                     }
-                    table.Add(row);
+                    lines.Add(line);
                 }
+            }
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var name = i == 0
+                    ? SeqNodeResources.TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter
+                    : string.Empty;
+                table.AddDetailRow(name, lines[i], rt);
             }
         }
 

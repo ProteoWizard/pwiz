@@ -60,7 +60,7 @@ PWIZ_API_DECL size_t SpectrumList_UIMF::size() const
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_UIMF::spectrumIdentity(size_t index) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_UIMF::createIndex, this));
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[SpectrumList_UIMF::spectrumIdentity] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];

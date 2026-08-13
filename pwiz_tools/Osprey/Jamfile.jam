@@ -1,0 +1,259 @@
+#
+# Original author: Brendan MacLean <brendanx .at. uw.edu>,
+#                  MacCoss Lab, Department of Genome Sciences, UW
+# AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+#
+# Based on osprey (https://github.com/MacCossLab/osprey)
+#   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+#
+# Copyright 2026 University of Washington - Seattle, WA
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
+import modules ;
+if [ modules.peek : NT ]
+{
+    path-constant OSPREY_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Osprey ;
+    path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
+
+    # Vendor raw reading (issue #4496) is net472-only and OPT-IN, because it
+    # needs pwiz_data_cli behind ProteowizardWrapper and those are bjam build
+    # products, not checked in.  Gate it on the same
+    # --i-agree-to-the-vendor-licenses flag every other vendor-API consumer in
+    # this tree keys off (Skyline/Jamfile.jam:22), so `bjam Osprey` in a plain
+    # checkout still builds the default, ProteoWizard-free Osprey that
+    # Osprey.sln builds anywhere.  The MSBuild side is off unless it is asked
+    # for by name; see Osprey.IO/Osprey.IO.csproj for why opting in by property
+    # beats probing for the DLL on disk.
+    local vendor-reader = false ;
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+    {
+        vendor-reader = true ;
+    }
+    constant OSPREY_VENDOR_READER : $(vendor-reader) ;
+
+    # Osprey uses SDK-style csproj that auto-generates AssemblyInfo from
+    # the MSBuild properties in pwiz_tools/Osprey/Directory.Build.props
+    # (Company, Copyright, Version, etc.).  Unlike SkylineBatch/AutoQC/SeeMS,
+    # we do NOT generate Properties/AssemblyInfo.cs here - doing so would
+    # conflict with the SDK auto-gen and break the standalone build.ps1 flow
+    # with CS0579 duplicate-attribute errors.  Instead we override the
+    # Directory.Build.props placeholder version via /p:Version at build time.
+
+    # Osprey follows the Skyline version scheme YEAR.ORDINAL.BRANCH.DOY.
+    # Compute it here (mirroring pwiz_tools/Skyline/Jamfile.jam) so official
+    # builds stamp a dated version; the standalone build.ps1 computes the same
+    # independently. The DOY is the day-of-year of the git commit date,
+    # offset by 365 per year past OSPREY_YEAR. (For now these constants are
+    # duplicated from Skyline; a future change may lift them to a shared Jamfile.)
+    import generate-version ;
+    constant OSPREY_YEAR : 26 ;
+    constant OSPREY_ORDINAL : 1 ;
+    constant OSPREY_BRANCH : 1 ;
+    local osprey_git_date = [ SHELL "git log -1 --format=%cs HEAD" ] ;
+    local osprey_ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(osprey_git_date) ] ;
+    if ! $(osprey_ymd)
+    {
+        local osprey_utc = [ modules.peek : JAMDATE ] ;
+        osprey_ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(osprey_utc) ] ;
+    }
+    local osprey_year2 = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(osprey_ymd) ] ;
+    local osprey_doy = [ CALC [ CALC [ CALC $(osprey_year2) - $(OSPREY_YEAR) ] * 365 ] + [ day_of_year $(osprey_ymd) ] ] ;
+    constant OSPREY_VERSION : "$(OSPREY_YEAR).$(OSPREY_ORDINAL).$(OSPREY_BRANCH).$(osprey_doy)" ;
+
+    rule do_osprey ( targets + : sources * : properties * )
+    {
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
+        CONFIGURATION on $(targets) = [ MATCH <variant>(.*) : $(properties) ] ;
+        PLATFORM on $(targets) = [ MATCH <address-model>(.*) : $(properties) ] ;
+        OSPREY_VERSION on $(targets) = $(OSPREY_VERSION) ;
+    }
+
+    actions do_osprey
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        REM Osprey.IO references the BUILT x64 wrapper by HintPath rather than by
+        REM ProjectReference (an SDK-style project cannot pass Platform across a
+        REM ProjectReference to an old-style one), and the wrapper is not in
+        REM Osprey.sln, so it has to be built here first.  Its own up-to-date
+        REM check makes this a couple of seconds when current.  Building
+        REM CommonUtil comes along as its ProjectReference.
+        REM Branch with GOTO rather than a parenthesized IF block. cmd.exe parses a
+        REM whole ( ) block before running any of it, so %ERRORLEVEL% inside one is
+        REM substituted with its value at PARSE time - 0 - and a failed wrapper build
+        REM would `exit 0`, killing the action before Osprey.sln builds while bjam
+        REM recorded success. Verified: the block form returns 0 on a command that
+        REM exits 7; this form returns 7. Same top-level idiom as Skyline
+        REM (Skyline/Jamfile.jam:185), which is correct for exactly this reason.
+        IF NOT "$(OSPREY_VENDOR_READER)"=="true" GOTO skip_wrapper_build
+        echo Building ProteowizardWrapper for Osprey vendor raw reading...
+        msbuild $(PWIZ_WRAPPER_PATH)/ProteowizardWrapper.csproj /p:Configuration=$(CONFIGURATION);Platform=x64 /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+        :skip_wrapper_build
+        echo Building Osprey $(OSPREY_VERSION) in $(CONFIGURATION:L) configuration...
+        msbuild $(OSPREY_PATH)/Osprey.sln /p:Configuration=$(CONFIGURATION);Platform=x64;Version=$(OSPREY_VERSION);OspreyVendorReader=$(OSPREY_VENDOR_READER) /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+    }
+
+    rule do_osprey_test ( targets + : sources * : properties * )
+    {
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
+        CONFIGURATION on $(targets) = [ MATCH <variant>(.*) : $(properties) ] ;
+    }
+
+    actions do_osprey_test
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Unit testing Osprey in $(CONFIGURATION:L) configuration...
+        vstest.console.exe $(OSPREY_PATH)\Osprey.Test\bin\x64\$(CONFIGURATION)\Osprey.Test.dll /Platform:x64
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    # Osprey's variant of Skyline's install-vendor-api-dependencies-to-debug-and-release
+    # (Skyline/Jamfile.jam:442). The underlying rule is Jamroot.jam:801 and takes
+    # arbitrary locations, so this is a pointer at Osprey's own output rather
+    # than a copy of the vendor list.
+    #
+    # Note the TFM subdirectory. Osprey multi-targets net472;net8.0
+    # (Directory.Build.props), and pwiz_data_cli is a net472-only mixed-mode
+    # assembly, so only the net472 output can load it - putting the native
+    # vendor DLLs anywhere else would leave the wrapper unable to resolve them
+    # at run time with nothing but "could not load file or assembly" to go on.
+    # Both configurations are covered the way Skyline covers them: the vendor
+    # runtime is variant-independent, so installing to both costs nothing and
+    # means a Debug run is not silently missing raw support.
+    rule install-vendor-api-dependencies-to-osprey-net472 ( properties * )
+    {
+        local locations =
+            $(OSPREY_PATH)/Osprey/bin/x64/Debug/net472
+            $(OSPREY_PATH)/Osprey/bin/x64/Release/net472 ;
+
+        local result = [ install-vendor-api-dependencies-to-locations $(locations) : $(properties) ] ;
+
+        # The vendor rule installs the vendor APIs but NOT the C/C++ runtimes they
+        # link against. The Sciex, Agilent and Waters DLLs need the VC110/VC120
+        # runtimes and the VC140 UCRT apiset shims, none of which are present on a
+        # machine without those redistributables. Leaving them out does not
+        # produce a missing-file error naming them: pwiz_data_cli is mixed-mode,
+        # so the loader reports only "Could not load file or assembly
+        # 'pwiz_data_cli.dll' or one of its dependencies", which is what an Osprey
+        # built without this looked like.
+        if <toolset>msvc in $(properties)
+        {
+            result += <dependency>install-osprey-native-runtime-debug
+                      <dependency>install-osprey-native-runtime-release ;
+        }
+
+        return $(result) ;
+    }
+
+    # pwiz_data_cli imports msparser.dll directly (confirmed with
+    # dumpbin /dependents, alongside timsdata, MassLynxRaw, baf2sql_c and
+    # MBI_SDK). The Mascot parser is not a pwiz_aux vendor API, so
+    # install-vendor-api-dependencies-to-locations does not carry it: Skyline gets
+    # it from the msparser searched-lib's <assembly-dependency>
+    # (Jamroot.jam:1391) by way of install-native-dependencies' install-dependencies.
+    # Osprey's output is populated by MSBuild instead, so it has to be installed
+    # explicitly. Which of the pair is real depends on the runtime, exactly as
+    # Jamroot's msparser-usage-requirements decides it.
+    rule osprey-msparser-requirement ( properties * )
+    {
+        local msparser_path = [ msparser-path $(properties) ] ;
+        if $(msparser_path)
+        {
+            if <runtime-debugging>on in $(properties)
+            {
+                return <source>$(msparser_path)/lib/msparserD.dll ;
+            }
+            else
+            {
+                return <source>$(msparser_path)/lib/msparser.dll ;
+            }
+        }
+    }
+
+    # The native runtime Osprey needs next to Osprey.exe: the C/C++ runtimes from
+    # Jamroot's install-msvc-runtime-dlls source list (Jamroot.jam:1585) plus
+    # msparser. That target cannot be retargeted with a location-qualified
+    # <dependency> the way the vendor API installs can (Skyline/Jamfile.jam:526):
+    # its requirements include <conditional>@install-location, which returns
+    # <location> unconditionally, so an override hands stage.jam two locations and
+    # bjam dies inside path.relative. Declaring the installs here keeps one
+    # location per target; only the source lists are shared, through the same
+    # Jamroot conditionals.
+    install install-osprey-native-runtime-debug
+        : # sources come from the conditionals below
+        : # requirements
+            <location>$(OSPREY_PATH)/Osprey/bin/x64/Debug/net472
+            <conditional>@install-msvc-runtime-dlls-requirements
+            <conditional>@osprey-msparser-requirement
+        ;
+    install install-osprey-native-runtime-release
+        : # sources come from the conditionals below
+        : # requirements
+            <location>$(OSPREY_PATH)/Osprey/bin/x64/Release/net472
+            <conditional>@install-msvc-runtime-dlls-requirements
+            <conditional>@osprey-msparser-requirement
+        ;
+    explicit install-osprey-native-runtime-debug install-osprey-native-runtime-release ;
+
+    # Wiring for vendor raw reading, added only when the capability is on.
+    #
+    # The staging of ProteowizardWrapper/obj/x64 (pwiz_data_cli plus the managed
+    # vendor assemblies the wrapper csproj references by HintPath) is REUSED
+    # from Skyline's install-native-dependencies rather than redeclared here.
+    # Two installs writing the same files to the same location would collide as
+    # duplicate targets in any build that requested both, and this is the exact
+    # staging every parity result for #4496 was produced against. The cost is
+    # that an Osprey vendor build also builds msconvert and TestDiagnostics,
+    # which that target carries. Lifting the shared rules into a common Jamfile
+    # is the follow-up cleanup, deliberately not gating this change.
+    local vendor-requirements ;
+    if $(OSPREY_VENDOR_READER) = true
+    {
+        vendor-requirements =
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <dependency>../Skyline//install-native-dependencies
+            <conditional>@install-vendor-api-dependencies-to-osprey-net472 ;
+    }
+
+    # Full solution build. Explicit so it is opt-in (requested by name from
+    # TeamCity or via `bjam Osprey`), not pulled into the default
+    # Skyline build.
+    make Osprey
+        : # sources
+        : # actions
+            @do_osprey
+        : # requirements
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            $(vendor-requirements)
+        ;
+    explicit Osprey ;
+
+    # Unit-test target. Runs the Osprey.Test.dll MSTest suite via
+    # vstest.console.exe after the full solution is built.
+    make OspreyTest
+        : # sources
+        : # actions
+            @do_osprey_test
+        : # requirements
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <dependency>Osprey
+        ;
+    explicit OspreyTest ;
+}

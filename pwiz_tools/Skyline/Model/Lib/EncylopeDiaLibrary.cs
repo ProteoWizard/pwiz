@@ -903,7 +903,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
         {
-            var allRetentionTimes = GetAllRetentionTimes(null);
+            var allRetentionTimes = GetAllRetentionTimes();
             var medianDict = new Dictionary<Target, Tuple<TimeSource, double[]>>();
             foreach (var target in allRetentionTimes.SelectMany(dict => dict.Keys).Distinct())
             {
@@ -926,69 +926,63 @@ namespace pwiz.Skyline.Model.Lib
             return true;
         }
 
-        public override Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        public override Dictionary<Target, double>[] GetAllRetentionTimes()
         {
-            Dictionary<Target, double>[] dictionaries;
-            List<int> fileIndexes;
-            if (spectrumSourceFiles == null)
-            {
-                dictionaries = Enumerable.Range(0, LibraryFiles.Count).Select(i => new Dictionary<Target, double>())
-                    .ToArray();
-                fileIndexes = null;
-            }
-            else
-            {
-                dictionaries = new Dictionary<Target, double>[LibraryFiles.Count];
-                fileIndexes = spectrumSourceFiles.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList();
-                foreach (var fileIndex in fileIndexes)
-                {
-                    dictionaries[fileIndex] = new Dictionary<Target, double>();
-                }
-            }
-
+            var dictionaries = Enumerable.Range(0, LibraryFiles.Count)
+                .Select(fileIndex => new Dictionary<Target, double>()).ToArray();
             foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
                 foreach (var fileData in grouping.SelectMany(spectrumInfo=>spectrumInfo.FileDatas))
                 {
                     if (fileData.Value.ApexTime.HasValue)
                     {
-                        var dictionary = dictionaries[fileData.Key];
-                        if (dictionary != null)
-                        {
-                            dictionary[grouping.Key] = fileData.Value.ApexTime.Value;
-                        }
+                        dictionaries[fileData.Key][grouping.Key] = fileData.Value.ApexTime.Value;
                     }
                 }
             }
 
-            if (fileIndexes == null)
-            {
-                return dictionaries;
-            }
-            return fileIndexes.Select(fileIndex => dictionaries[fileIndex]).ToArray();
+            return dictionaries;
         }
 
-        public override IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles, ICollection<Target> targets)
+        public override IList<double>[] GetRetentionTimesWithSequences(ICollection<Target> targets)
         {
-            var fileIndexes = spectrumSourceFiles.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList();
-            var lists = new IList<double>[LibraryFiles.Count];
-            foreach (var fileIndex in fileIndexes)
+            var lists = new List<double>[LibraryFiles.Count];
+            for (int fileIndex = 0; fileIndex < lists.Length; fileIndex++)
             {
                 lists[fileIndex] = new List<double>();
             }
-            foreach (var entry in targets.SelectMany(target =>
-                         _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false)))
+            foreach (var entry in EntriesMatching(targets))
             {
                 foreach (var fileData in entry.FileDatas)
                 {
                     if (fileData.Value.ApexTime.HasValue)
                     {
-                        lists[fileData.Key]?.Add(fileData.Value.ApexTime.Value);
+                        lists[fileData.Key].Add(fileData.Value.ApexTime.Value);
                     }
                 }
             }
 
-            return fileIndexes.Select(index => lists[index]).ToArray();
+            return lists;
+        }
+
+        public override IList<double> GetRetentionTimesWithSequences(int fileIndex, ICollection<Target> targets)
+        {
+            var times = new List<double>();
+            foreach (var entry in EntriesMatching(targets))
+            {
+                if (entry.FileDatas.TryGetValue(fileIndex, out var fileData) && fileData.ApexTime.HasValue)
+                {
+                    times.Add(fileData.ApexTime.Value);
+                }
+            }
+
+            return times;
+        }
+
+        private IEnumerable<ElibSpectrumInfo> EntriesMatching(IEnumerable<Target> targets)
+        {
+            return targets.SelectMany(target =>
+                _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false));
         }
 
         public class ElibSpectrumInfo : ICachedSpectrumInfo

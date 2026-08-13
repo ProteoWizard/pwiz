@@ -20,11 +20,14 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {
-    public class GroupComparisonDefList : SettingsList<GroupComparisonDef>
+    [LlmName("Group Comparisons")]
+    public class GroupComparisonDefList : SettingsList<GroupComparisonDef>, ISettingsListDocumentSelection
     {
         public override IEnumerable<GroupComparisonDef> GetDefaults(int revisionIndex)
         {
@@ -59,5 +62,13 @@ namespace pwiz.Skyline.Properties
         }
 
         public override bool AllowReset { get { return false; } }
+
+        public bool SingleSelect => false;
+
+        public string[] GetSelectedItems(SrmSettings settings) =>
+            GetKeys(settings.DataSettings.GroupComparisonDefs);
+
+        public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
+            settings.ChangeDataSettings(settings.DataSettings.ChangeGroupComparisonDefs(ResolveKeys(keys)));
     }
 }

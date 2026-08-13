@@ -217,7 +217,11 @@
     <value>23, 22</value>
   </data>
   <data name="spectrumBtn.ToolTipText" xml:space="preserve">
-    <value>显示二维谱图</value>
+    <value>Show Summed Spectrum</value>
+    <comment>Needs Review:English text changed
+Old English:Show 2D Spectrum
+Current English:Show Summed Spectrum
+Old Localized:显示二维谱图</comment>
   </data>
   <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -227,6 +231,18 @@
   </data>
   <data name="filterBtn.ToolTipText" xml:space="preserve">
     <value>过滤离子迁移</value>
+  </data>
+  <data name="mobilogramBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="mobilogramBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="heatmapBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="heatmapBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
   </data>
   <data name="lblScanId.Size" type="System.Drawing.Size, System.Drawing">
     <value>13, 22</value>
@@ -458,6 +474,18 @@
     <value>filterBtn</value>
   </data>
   <data name="&gt;&gt;filterBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mobilogramBtn.Name" xml:space="preserve">
+    <value>mobilogramBtn</value>
+  </data>
+  <data name="&gt;&gt;mobilogramBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;heatmapBtn.Name" xml:space="preserve">
+    <value>heatmapBtn</value>
+  </data>
+  <data name="&gt;&gt;heatmapBtn.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblScanId.Name" xml:space="preserve">

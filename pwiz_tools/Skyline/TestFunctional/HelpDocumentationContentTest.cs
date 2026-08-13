@@ -35,6 +35,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -71,19 +72,23 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestReportsHelpDocumentation()
         {
-            var srmDocument = new SrmDocument(SrmSettingsList.GetDefault());
             ForEachLanguage(() =>
             {
-                var filePath = Path.Combine(GetDocumentationHelpFolder(), "Reports.html");
-                var skylineDataSchema =
-                    SkylineDataSchema.MemoryDataSchema(srmDocument, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                var documentationGenerator = new DocumentationGenerator(
-                    ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SkylineDocument)))
+                foreach (var uiMode in UiModes.ALL)
                 {
-                    IncludeHidden = false
-                };
-                var html = documentationGenerator.GetDocumentationHtmlPage();
-                VerifyFileContents(filePath, html);
+                    var srmDocument = new SrmDocument(SrmSettingsList.GetDefault());
+                    var filePath = Path.Combine(GetDocumentationHelpFolder(), "Reports-" + uiMode + ".html");
+                    var skylineDataSchema =
+                        SkylineDataSchema.MemoryDataSchema(srmDocument,
+                            SkylineDataSchema.GetLocalizedSchemaLocalizer());
+                    var documentationGenerator = new DocumentationGenerator(
+                        ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SkylineDocument), uiMode))
+                    {
+                        IncludeHidden = false
+                    };
+                    var html = documentationGenerator.GetDocumentationHtmlPage();
+                    VerifyFileContents(filePath, html);
+                }
             });
         }
 

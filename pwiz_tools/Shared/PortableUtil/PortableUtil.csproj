@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- PortableUtil is a pure-BCL, SDK-style leaf assembly: the net8.0-capable
+       staging ground for portable pieces of CommonUtil (which is net472-only,
+       non-SDK, and GUI/web-laden). It must NOT reference CommonUtil or any other
+       pwiz assembly. Props are inlined here on purpose - a Directory.Build.props
+       under Shared/ would leak into the sibling non-SDK projects. -->
+  <PropertyGroup>
+    <!-- Pin the project identity so every solution that adds PortableUtil resolves it to the
+         same GUID. SDK-style projects carry no GUID by default, so each solution (and Visual
+         Studio) mints its own, causing solution churn. This is the long-standing GUID already
+         used by Skyline.sln, Osprey.sln, and every CommonUtil/Test* ProjectReference. -->
+    <ProjectGuid>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</ProjectGuid>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <!-- SDK-style csproj defaults to AnyCPU, but Skyline.sln/Osprey.sln use
+         x64 configurations. Declare both so the x64 sln configs map cleanly and
+         the net8.0 target can still build AnyCPU on other hosts. The sln maps its
+         x86 config rows to this project's AnyCPU (the slns have no AnyCPU). -->
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>pwiz.Common</RootNamespace>
+    <AssemblyName>pwiz.PortableUtil</AssemblyName>
+    <Company>University of Washington</Company>
+    <Copyright>Copyright (c) University of Washington 2026</Copyright>
+  </PropertyGroup>
+
+</Project>

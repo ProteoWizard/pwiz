@@ -274,6 +274,18 @@
   <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
     <value>Edit Retention Time Calculators</value>
   </data>
+  <data name="SearchSettingsPresetList_EditItem_A_settings_preset_named__0__already_exists" xml:space="preserve">
+    <value>A settings preset named '{0}' already exists.</value>
+  </data>
+  <data name="SearchSettingsPresetList_EditItem_Rename_Settings_Preset" xml:space="preserve">
+    <value>Rename Settings Preset</value>
+  </data>
+  <data name="SearchSettingsPresetList_Label_Settings_Presets" xml:space="preserve">
+    <value>Settings &amp;Presets</value>
+  </data>
+  <data name="SearchSettingsPresetList_Title_Edit_Settings_Presets" xml:space="preserve">
+    <value>Edit Settings Presets</value>
+  </data>
   <data name="SearchToolList_Label_Internal__Tools" xml:space="preserve">
     <value>Internal &amp;Tools</value>
   </data>

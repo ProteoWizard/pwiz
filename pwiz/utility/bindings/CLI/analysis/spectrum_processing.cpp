@@ -425,6 +425,22 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(msdata::SpectrumList^ inner,
     } CATCH_AND_FORWARD
 }
 
+SpectrumList_PeakPicker::SpectrumList_PeakPicker(msdata::SpectrumList^ inner,
+                                                 PeakDetector^ algorithm,
+                                                 bool preferVendorPeakPicking,
+                                                 System::String^ msLevelsToPeakPick)
+: msdata::SpectrumList(0)
+{
+    try {
+        pwiz::util::IntegerSet msLevelSet;
+        msLevelSet.parse(ToStdString(msLevelsToPeakPick));
+        base_ = new b::SpectrumList_PeakPicker(*inner->base_, *algorithm->base_, preferVendorPeakPicking, msLevelSet);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
+        System::GC::KeepAlive(algorithm);
+    } CATCH_AND_FORWARD
+}
+
 bool SpectrumList_PeakPicker::accept(msdata::SpectrumList^ inner)
 {
     return b::SpectrumList_PeakPicker::accept(*inner->base_);

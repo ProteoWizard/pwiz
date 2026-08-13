@@ -123,6 +123,7 @@ namespace pwiz.Skyline.Menus
             this.areaReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaRelativeAbundanceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaAbundanceComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsPlotsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -802,6 +803,7 @@ namespace pwiz.Skyline.Menus
             this.areaReplicateComparisonMenuItem,
             this.areaPeptideComparisonMenuItem,
             this.areaRelativeAbundanceMenuItem,
+            this.areaAbundanceComparisonMenuItem,
             this.areaCVHistogramMenuItem,
             this.areaCVHistogram2DMenuItem});
             resources.ApplyResources(this.peakAreasMenuItem, "peakAreasMenuItem");
@@ -825,7 +827,13 @@ namespace pwiz.Skyline.Menus
             this.areaRelativeAbundanceMenuItem.Name = "areaRelativeAbundanceMenuItem";
             resources.ApplyResources(this.areaRelativeAbundanceMenuItem, "areaRelativeAbundanceMenuItem");
             this.areaRelativeAbundanceMenuItem.Click += new System.EventHandler(this.areaRelativeAbundanceMenuItem_Click);
-            // 
+            //
+            // areaAbundanceComparisonMenuItem
+            //
+            this.areaAbundanceComparisonMenuItem.Name = "areaAbundanceComparisonMenuItem";
+            resources.ApplyResources(this.areaAbundanceComparisonMenuItem, "areaAbundanceComparisonMenuItem");
+            this.areaAbundanceComparisonMenuItem.Click += new System.EventHandler(this.areaAbundanceComparisonMenuItem_Click);
+            //
             // areaCVHistogramMenuItem
             // 
             this.areaCVHistogramMenuItem.Name = "areaCVHistogramMenuItem";
@@ -1017,6 +1025,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaAbundanceComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogramMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsPlotsMenuItem;

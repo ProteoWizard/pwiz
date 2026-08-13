@@ -19,7 +19,7 @@ namespace pwiz.Common.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -738,6 +738,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid filter string: {0}.
+        /// </summary>
+        public static string FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_ {
+            get {
+                return ResourceManager.GetString("FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Contains.
         /// </summary>
         public static string FilterOperations_Contains {
@@ -1019,6 +1028,15 @@ namespace pwiz.Common.Properties {
         public static string NavBar_RefreshUi__Transforming_data____ {
             get {
                 return ResourceManager.GetString("NavBar_RefreshUi__Transforming_data____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Truncated from {0}).
+        /// </summary>
+        public static string NavBar_RefreshUi__Truncated_from__0__ {
+            get {
+                return ResourceManager.GetString("NavBar_RefreshUi__Truncated_from__0__", resourceCulture);
             }
         }
         
@@ -1341,6 +1359,24 @@ namespace pwiz.Common.Properties {
         public static string RowFilter_Summary_Sort_on_ {
             get {
                 return ResourceManager.GetString("RowFilter_Summary_Sort_on_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writing row {0:#,0}.
+        /// </summary>
+        public static string RowItemEnumerator_RowItemEnumerator_Writing_row__0___0_ {
+            get {
+                return ResourceManager.GetString("RowItemEnumerator_RowItemEnumerator_Writing_row__0___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writing row {0}/{1}.
+        /// </summary>
+        public static string RowItemEnumerator_RowItemEnumerator_Writing_row__0___1_ {
+            get {
+                return ResourceManager.GetString("RowItemEnumerator_RowItemEnumerator_Writing_row__0___1_", resourceCulture);
             }
         }
         

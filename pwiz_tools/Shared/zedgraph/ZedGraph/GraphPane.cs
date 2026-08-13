@@ -161,6 +161,16 @@ namespace ZedGraph
 		}
 		public LabelLayout Layout => _labelLayout;
 
+		/// <summary>
+		/// Raised when plot changes occur that should trigger a label layout update.
+		/// </summary>
+		public event EventHandler LayoutRequested;
+
+		internal void OnLayoutRequested()
+		{
+			LayoutRequested?.Invoke(this, EventArgs.Empty);
+		}
+
 	#endregion
 
 	#region Defaults
@@ -1530,93 +1540,33 @@ namespace ZedGraph
 
 		#region General Utility Methods
 
-		/// <summary>
-		/// Performs the graph label layout. Places the labels into the coordinates specified in the savedLayoutString parameter
-		/// and performs the layout algorithm for the points that are not found there or whose user coordinates have changed.
-		/// Ignores the points not visible in the chart rectangle.
-		/// </summary>
-		/// <param name="labPoints">List of LabeledPoints objects prepared by the user graph. These should have
-		/// Point and Label components assigned.</param>
-		/// <param name="existingLayout">the list of saved label layout information. If provided, the points on the list
-		/// will be placed at the specified coordinates and layout optimization will not be performed for them.</param>
-		public void AdjustLabelSpacings(List<LabeledPoint> labPoints, List<LabeledPoint.PointLayout> existingLayout = null)
+        public bool ApplyLabelLayout(LabelLayout labelLayout, LabelLayout.LayoutResult result, Graphics g)
         {
-			// DigitalRune docking panel sometimes is resized with negative chart width, which crashes the layout algorithm.
-            if (!labPoints.Any() || Chart.Rect.Width <= 0 || Chart.Rect.Height <= 0)
-                return;
-            // Need this to make sure the coordinate transforms work correctly.
-            XAxis.Scale.SetupScaleData(this, XAxis);
-            YAxis.Scale.SetupScaleData(this, YAxis);
+            if (labelLayout == null || result == null)
+                return false;
 
-            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
-            { 
-                var heights = labPoints.Select(p => GetRectScreen(p.Label, g).Height).ToList();
-                if (!heights.Any(h => h > 0))
-                    return; 
-                var minLabelHeight = heights.FindAll(h => h > 0).Min(); 
-                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
-                var visiblePoints = new List<LabeledPoint>();
-                foreach (var labeledPoint in labPoints)
-                {
-                    if (_labelLayout.IsPointVisible(labeledPoint.Point))
-                    {
-						labeledPoint.Label.IsDraggable = true;
-                        visiblePoints.Add(labeledPoint);
-                        labeledPoint.Label.IsVisible = true;
-                    }
-                    else
-                    {
-                        labeledPoint.Label.IsVisible = false;
-                        GraphObjList.Remove(labeledPoint.Connector);
-                    }
-                }
-				
-                if (visiblePoints.Any())
-                {
-                    var savedLayout = existingLayout ?? new List<LabeledPoint.PointLayout>();
-					var newPoints = new List<LabeledPoint>();
-                    foreach (var point in visiblePoints)
-                    {
-                        // if we already have a saved point layout for this peptide we do not need to re-adjust it
-						// CONSIDER: There is no stable persistent protein ID, so we cannot match the points using identityPath
-                        //var savedPoint = savedLayout.FirstOrDefault(p => p.Identity.Equals(point.UniqueID.ToString()));
-                        var savedPoint = savedLayout.FirstOrDefault(p => point.Point.Equals(p.PointLocation));
-                        if (savedPoint != null)
-                        {
-                            _labelLayout.AddLabel(point, savedPoint.LabelLocation);
-                            GraphObjList.Remove(point.Connector);
-                            _labelLayout.DrawConnector(point, g);
-                        }
-						else // we should add all the existing points first to make sure the layout algorithm takes them into account when placing the new ones.
-                            newPoints.Add(point);
-                    }
-                    foreach (var point in newPoints)
-                    {
-                        if (_labelLayout.PlaceLabel(point, g))
-                        {
-                            GraphObjList.Remove(point.Connector);
-                            _labelLayout.DrawConnector(point, g);
-                        }
-					}
-				}
-            }
-        }
-
-        public void UpdateConnectors()
-        {
-			if (_labelLayout == null)
-				return;
-            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            if (_labelLayout != null)
             {
-
-                foreach (var labPointPair in _labelLayout.LabeledPoints)
-                { 
-                    _labelLayout.UpdateConnector(labPointPair.Value, g);
+                foreach (var existing in _labelLayout.LabeledPoints.Values)
+                {
+                    GraphObjList.Remove(existing.Connector);
                 }
             }
 
+            _labelLayout = labelLayout;
+            if (!_labelLayout.ApplyPlacements(result, g))
+                return false;
+
+            foreach (var labPoint in _labelLayout.LabeledPoints.Values)
+            {
+                GraphObjList.Remove(labPoint.Connector);
+                _labelLayout.DrawConnector(labPoint, g);
+            }
+
+            return true;
         }
-			public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
+
+        public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
         {
             isOverBoundary = false;
             if (_labelLayout != null)
@@ -1637,32 +1587,6 @@ namespace ZedGraph
             return null;
         }
         
-        public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
-        {
-            labPoint = OverLabel(mousePt, out _);
-            return labPoint !=	null;
-        }
-
-        public RectangleF GetRect(TextObj obj, Graphics g)
-        {
-            PointF pix = obj.Location.Transform(this);
-            var points = obj.FontSpec.GetBox(g, obj.Text, pix.X, pix.Y, obj.Location.AlignH,
-                obj.Location.AlignV, CalcScaleFactor(), new SizeF());
-            double x0;
-            double y0;
-            ReverseTransform(points[0], out x0, out y0);
-
-            double x1;
-            double y1;
-            ReverseTransform(points[2], out x1, out y1);
-
-            float width = (float)(x1 - x0);
-            float height = (float)(y0 - y1);
-            var rect = new RectangleF((float)x0, (float)y0, width, height);
-
-            return rect;
-        }
-
         public RectangleF GetRectScreen(TextObj obj, Graphics g)
         {
             PointF pix = obj.Location.Transform(this);

@@ -84,13 +84,16 @@ namespace pwiz.SkylineTestUtil
             AssertEx.AreEqual(0, unexpectedOpenForms.Count, $@"Can't open a document when other dialogs are still open: {CommonTextUtil.LineSeparate(unexpectedOpenForms)}");
 
             string documentFile = documentPath; // Default to assuming an absolute path
-            // Check for relative path in test files dirs
-            foreach (var testFileDir in TestFilesDirs)
+            if (!Path.IsPathRooted(documentFile))
             {
-                documentFile = testFileDir.GetTestPath(documentPath);
-                if (File.Exists(documentFile))
+                // Check for relative path in test files dirs
+                foreach (var testFileDir in TestFilesDirs)
                 {
-                    break;
+                    documentFile = testFileDir.GetTestPath(documentPath);
+                    if (File.Exists(documentFile))
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -385,7 +388,7 @@ namespace pwiz.SkylineTestUtil
 
         public void WaitForVolcanoPlotPointCount(FoldChangeGrid grid, int expected)
         {
-            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.DataboundGridControl.IsComplete,
+            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.IsComplete,
                 string.Format("Expecting {0} points found {1}", expected, GetRowCount(grid)));
         }
 
@@ -597,8 +600,28 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
-            MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
-            RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
+            // Move the mouse and click in a single UI action, and click only if that move produced
+            // the tracking dot. The clicked time comes from the dot rather than from these
+            // coordinates, and a graph update landing between the move and the click recreates the
+            // curve holding it, which resets its position and leaves the click nothing to read.
+            bool clicked = false;
+            const int sleepCycles = 20;
+            const int sleepInterval = 100;
+            for (int i = 0; i < sleepCycles && !clicked; i++)
+            {
+                RunUI(() =>
+                {
+                    graphChromatogram.TestMouseMove(x, y, paneKey);
+                    if (!graphChromatogram.IsOverHighlightPoint(x, y, paneKey))
+                        return;
+                    graphChromatogram.TestMouseDown(x, y, paneKey);
+                    clicked = true;
+                });
+                if (!clicked)
+                    Thread.Sleep(sleepInterval);
+            }
+            AssertEx.IsTrue(clicked, string.Format("Full-scan dot not present after {0} tries in {1} seconds",
+                sleepCycles, sleepInterval * sleepCycles / 1000.0));
             WaitForGraphs();
             CheckFullScanSelection(graphName, x, y, paneKey, titleTime);
         }
@@ -1000,7 +1023,7 @@ namespace pwiz.SkylineTestUtil
                 DocViewer = ShowDialog<DocumentationViewer>(showViewer);
 
                 // Wait for the document to load completely in WebView2
-                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Length > 0);
+                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Contains("<table"));
             }
             
             public DocumentationViewer DocViewer { get; }

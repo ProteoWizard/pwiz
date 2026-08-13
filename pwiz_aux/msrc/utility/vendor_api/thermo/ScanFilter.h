@@ -83,6 +83,7 @@ class PWIZ_API_DECL ScanFilter
 	int msLevel_; // n, in MSn: >0; msLevel == -1 for precursor ion scans
 	ActivationType activationType_;
     double compensationVoltage_;
+    double sourceOffsetVoltage_; // sid=NNN in filter string
     bool multiplePrecursorMode_; // true for "MSX"
     bool constantNeutralLoss_; // true for "CNL"
     double analyzer_scan_offset_; // found with CNL

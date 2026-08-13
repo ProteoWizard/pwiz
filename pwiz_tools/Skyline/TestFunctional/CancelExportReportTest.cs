@@ -112,9 +112,9 @@ namespace pwiz.SkylineTestFunctional
             bool triedToCancel = RunAndMaybeTryCancel(() =>
             {
                 var skylineViewContext = (SkylineViewContext)databoundGridControl.NavBar.ViewContext;
-                skylineViewContext.ExportToFile(databoundGridControl, databoundGridControl.BindingListSource.ViewInfo,
+                skylineViewContext.ExportToFile(databoundGridControl, databoundGridControl.BindingListSource,
                     filename, SEPARATOR_TO_USE);
-            }, true);
+            }, maybeTryToCancel);
             if (!triedToCancel)
             {
                 Assert.IsTrue(File.Exists(filename));
@@ -135,12 +135,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (tryToCancel)
                 {
-                    var longWaitDlg = FindOpenForm<LongWaitDlg>();
-                    if (longWaitDlg != null)
+                    RunUI(() =>
                     {
-                        RunUI(longWaitDlg.Close);
-                        triedToCancel = true;
-                    }
+                        var longWaitDlg = FindOpenForm<LongWaitDlg>();
+                        if (longWaitDlg != null)
+                        {
+                            longWaitDlg.Close();
+                            triedToCancel = true;
+                        }
+                    });
                 }
                 Thread.Sleep(0);
             }

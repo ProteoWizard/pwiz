@@ -501,6 +501,78 @@ namespace pwiz.Skyline.Alerts {
                 return ResourceManager.GetString("MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading DIA-NN {0}.
+        /// </summary>
+        public static string DiannDownloadDlg_Downloading_DIA_NN__0_ {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Downloading_DIA_NN__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Extracting DIA-NN installation files.
+        /// </summary>
+        public static string DiannDownloadDlg_Installing_DIA_NN {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Installing_DIA_NN", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN installation failed. The extractor did not produce a diann.exe file.
+        /// </summary>
+        public static string DiannDownloadDlg_Installation_failed {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Installation_failed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A different DIA-NN installation is already registered with Skyline:...
+        /// </summary>
+        public static string DiannDownloadDlg_Replace_existing_registration__0__with__1__ {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Replace_existing_registration__0__with__1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to academic license.
+        /// </summary>
+        public static string DiannDownloadDlg_academic_license {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_academic_license", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Download.
+        /// </summary>
+        public static string EnsureDiannInstalled_Download {
+            get {
+                return ResourceManager.GetString("EnsureDiannInstalled_Download", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Use Existing.
+        /// </summary>
+        public static string EnsureDiannInstalled_Use_Existing {
+            get {
+                return ResourceManager.GetString("EnsureDiannInstalled_Use_Existing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN is already installed at:{newline}{newline}{0}{newline}{newline}Use this installation, or download DIA-NN {1} from GitHub?.
+        /// </summary>
+        public static string EnsureDiannInstalled_Use_existing_or_download__0____1__ {
+            get {
+                return ResourceManager.GetString("EnsureDiannInstalled_Use_existing_or_download__0____1__", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Contacting MS Fragger download server.
@@ -708,6 +780,51 @@ namespace pwiz.Skyline.Alerts {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Allow.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Allow {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Allow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Deny.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Deny {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Deny", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Do not ask me again.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_DoNotAskAgain {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_DoNotAskAgain", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to An AI assistant is requesting to capture a screenshot of the Skyline window. Non-Skyline content will be automatically redacted..
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Message {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Message", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Screen Capture Permission.
+        /// </summary>
+        public static string ScreenCapturePermissionDlg_Title {
+            get {
+                return ResourceManager.GetString("ScreenCapturePermissionDlg_Title", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Maybe &amp;Later.
         /// </summary>

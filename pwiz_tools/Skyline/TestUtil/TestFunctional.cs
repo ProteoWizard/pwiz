@@ -62,6 +62,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
@@ -379,6 +380,14 @@ namespace pwiz.SkylineTestUtil
         protected virtual bool ShowStartPage {get { return false; }}
         protected virtual List<string> SetMru { get { return new List<string>(); } }
 
+        /// <summary>
+        /// Command-line arguments passed to <see cref="Program.Main"/> for this test
+        /// run. Default null -- behave like an unargumented Skyline.exe launch.
+        /// Override to exercise the Program.Main argument-parsing path (e.g. --opendoc,
+        /// --start-page=true|false).
+        /// </summary>
+        protected virtual string[] LaunchArgs => null;
+
         private static void SkylineInvoke(Action act)
         {
             var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
@@ -420,6 +429,64 @@ namespace pwiz.SkylineTestUtil
                 showDlgActionCompleted = true;
             });
             OkDialog(dlg, () => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
+        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the
+        /// driver of a native dialog, so the wait lives here in the test rather than baked into the dialog itself.
+        /// </summary>
+        protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
+        {
+            TDlg dlg = null;
+            WaitForCondition(() => null != (dlg = NativeDialog.GetOpenDialogs(CancellationToken.None)
+                .OfType<TDlg>().FirstOrDefault()));
+            return dlg;
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the UI (event) thread -- for a simple,
+        /// single fire-and-forget gesture (e.g. <see cref="NativeFileDialog.EnterPath"/> then
+        /// <see cref="NativeOpenFileDialog.Accept"/>). A gesture that has to interleave with the dialog's own modal
+        /// loop -- a multi-step navigation, or one that waits on the dialog (a DismissWith... verb) -- must run on
+        /// the test thread instead; use <see cref="RunLongNativeDlg{TDlg}"/> for that (the analog of
+        /// <see cref="RunLongDlg{TDlg}"/>).
+        /// </summary>
+        protected static void RunNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = WaitForNativeDlg<TDlg>();
+            SkylineBeginInvoke(() => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the TEST thread -- the native-dialog
+        /// analog of <see cref="RunLongDlg{TDlg}"/>. Use this when the action does more than a single gesture: a
+        /// native dialog is driven by thread-agnostic Win32 messages that its modal loop (running on the UI thread)
+        /// pumps, so a multi-step interaction -- navigate a multiselect Open dialog to a folder and then select
+        /// files in it, or read the dialog's state (GetControls) between steps, or wait on it (a DismissWith...
+        /// verb) -- has to run off the UI thread, leaving that loop free to pump each step. (An action marshaled
+        /// onto the UI thread would block the loop and could never pump between steps.)
+        /// </summary>
+        protected static void RunLongNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = WaitForNativeDlg<TDlg>();
+            exerciseDlgAction(dlg);
             WaitForConditionUI(() => showDlgActionCompleted);
         }
 
@@ -470,20 +537,43 @@ namespace pwiz.SkylineTestUtil
             ShowAndDismissDlg<TDlg>(showAction, dlg=>dlg.CancelButton.PerformClick());
         }
 
+        /// <summary>
+        /// Opens a document the way a user would: by bringing up the native Open dialog via
+        /// the same code path as the File &gt; Open menu command, then driving that dialog with
+        /// UI Automation to type the path and click Open. Use this in place of calling
+        /// <see cref="SkylineWindow"/>.OpenFile directly when a test should exercise the real
+        /// open-file UI. Waits for the document to finish loading before returning.
+        /// </summary>
+        public static void FileOpen(string path)
+        {
+            RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            {
+                dlg.EnterPath(path);
+                dlg.Accept();
+            });
+        }
+
         protected static void FocusDocument()
         {
             RunUI(SkylineWindow.FocusDocument);
         }
 
-        public static void JiggleSelection()
+        public static void JiggleSelection(bool up = false)
         {
             if (!IsPauseForScreenShots)
                 return;
 
             // Node change apparently required to get x-axis labels in peak areas view the way they should be
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
+            MoveSelection(up);
             WaitForGraphs();
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
+            MoveSelection(!up);
+        }
+
+        private static void MoveSelection(bool up)
+        {
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = up
+                ? SkylineWindow.SelectedNode.PrevVisibleNode
+                : SkylineWindow.SelectedNode.NextVisibleNode);
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)
@@ -709,15 +799,23 @@ namespace pwiz.SkylineTestUtil
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
-            foreach (var form in OpenForms)
-            {
-                var tForm = form as TDlg;
-                if (tForm != null && tForm.Created)
-                {
-                    return tForm;
-                }
-            }
-            return null;
+            return (TDlg) FindOpenForm(typeof(TDlg));
+        }
+
+        /// <summary>
+        /// Returns the first open form of type T without asserting uniqueness.
+        /// Use only when multiple forms of the same type are expected.
+        /// </summary>
+        public static TDlg FindAnyOpenForm<TDlg>() where TDlg : Form
+        {
+            return FindOpenForms<TDlg>().FirstOrDefault();
+        }
+
+        private static string FormatFormForError(Form form)
+        {
+            return form is CommonAlertDlg alertDlg
+                ? string.Format("{0}: {1}", form.GetType().Name, alertDlg.Message)
+                : form.GetType().Name;
         }
 
         public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
@@ -731,16 +829,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static Form FindOpenForm(Type formType) 
+        public static Form FindOpenForm(Type formType)
+        {
+            var forms = FindOpenForms(formType).ToArray();
+            Assert.IsTrue(forms.Length <= 1,
+                "Multiple {0} forms open simultaneously: [{1}]",
+                formType.Name, string.Join("] and [", forms.Select(FormatFormForError)));
+            return forms.FirstOrDefault();
+        }
+
+        public static IEnumerable<Form> FindOpenForms(Type formType)
         {
             foreach (var form in OpenForms)
             {
-                if (((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form))) && form.Created)
+                if ((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form)) && form.Created)
                 {
-                    return form;
+                    yield return form;
                 }
             }
-            return null;
         }
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
@@ -965,7 +1071,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        private static string GetTextForForm(Control form)
+        public static string GetTextForForm(Control form)
         {
             var result = form.Text;
             var threadExceptionDialog = form as ThreadExceptionDialog;
@@ -1186,15 +1292,17 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
 
+            using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                hangDetection.InterruptAfter(
+                    () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
                     maxInvokeDuration);
-                
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -1238,7 +1346,7 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
-            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => pane.IsComplete);
         }
 
         private static void WaitForBackgroundLoaders()
@@ -1378,12 +1486,19 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
+        /// <summary>
+        /// The folder under Documentation that holds this tutorial's screenshots. Published tutorials live in
+        /// "Tutorials"; a tutorial still under development overrides this to return "Tutorial-Drafts", and the
+        /// override is removed when the tutorial is published.
+        /// </summary>
+        protected virtual string TutorialDocumentationFolder => "Tutorials";
+
         protected string TutorialPath
         {
             get
             {
                 return IsTutorial
-                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
+                    ? TestContext.GetProjectDirectory($"Documentation\\{TutorialDocumentationFolder}\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
                     : null;
             }
         }
@@ -1744,6 +1859,59 @@ namespace pwiz.SkylineTestUtil
                 .FirstOrDefault(graphSummary => graphSummary.TryGetGraphPane(out TGraphPane _));
         }
 
+        /// <summary>
+        /// When set, the next PauseForScreenShot call captures a screenshot to this
+        /// path regardless of screenshot mode. Consumed (set to null) after use.
+        /// </summary>
+        public string NextScreenShotOverridePath { get; set; }
+
+        /// <summary>
+        /// Captures a screenshot of the Skyline main window to the specified path.
+        /// </summary>
+        public void TakeScreenShot(string pathToFile)
+        {
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot();
+        }
+
+        /// <summary>
+        /// Captures a screenshot of a specific form/control to the specified path.
+        /// </summary>
+        public void TakeScreenShot(string pathToFile, Control screenshotForm)
+        {
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot(screenshotForm);
+        }
+
+        /// <summary>
+        /// Captures a screenshot of an arbitrary screen rectangle to the specified path.
+        /// Use <see cref="ScreenshotManager.GetWindowRectangle"/> and
+        /// <see cref="Rectangle.Union"/> to compute a bounding rectangle around multiple forms.
+        /// </summary>
+        public void TakeScreenShot(string pathToFile, Rectangle screenRect)
+        {
+            if (Program.SkylineOffscreen)
+            {
+                Console.Error.WriteLine(
+                    @"[SCREENSHOT] SKIPPED (offscreen, use -ShowUI): " + pathToFile);
+                return;
+            }
+
+            _shotManager ??= new ScreenshotManager(SkylineWindow, null);
+            Thread.Sleep(1500);
+            _shotManager.TakeShot(screenRect, pathToFile);
+            Console.WriteLine(@"[SCREENSHOT] " + pathToFile);
+        }
+
+        /// <summary>
+        /// Captures a screenshot of the entire screen containing the Skyline window.
+        /// </summary>
+        public void TakeScreenShotFullScreen(string pathToFile)
+        {
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot<ScreenForm>(null);
+        }
+
         public void PauseForScreenShot(string description = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             PauseForScreenShotInternal(description, null, null, timeout, processShot);
@@ -1887,7 +2055,9 @@ namespace pwiz.SkylineTestUtil
             }
 
             PauseForScreenShot(allChromGraph, description,
-                processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChromGraph.ProgressBarTotal));
+                processShot: bmp => bmp.CleanupBorder()
+                    .FillProgressBar(allChromGraph.ProgressBarTotal)
+                    .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
             allChromGraph.ReleaseFrozenProgress();
 
             if (IsTestingResultsProgressOnly)
@@ -1942,6 +2112,9 @@ namespace pwiz.SkylineTestUtil
                 var form = !fullScreen ? TryWaitForOpenForm(formType) : SkylineWindow;
                 Assert.IsNotNull(form);
             }
+            if (TakeOverrideScreenShot(formType, screenshotForm, fullScreen, processShot))
+                return;
+
             if (Program.SkylineOffscreen)
                 return;
 
@@ -1952,27 +2125,15 @@ namespace pwiz.SkylineTestUtil
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingScreenshot, Program.PauseStartingScreenshot) <= ScreenshotCounter)
             {
                 WaitForGraphs();    // Screenshots always need graphs to be fully updated
-
-                if (screenshotForm == null)
-                {
-                    if (!fullScreen && formType != null)
-                    {
-                        screenshotForm = TryWaitForOpenForm(formType);
-                    }
-                    screenshotForm ??= SkylineWindow;
-
-                    RunUI(() => screenshotForm.Update());
-                }
+                screenshotForm = ResolveScreenShotForm(screenshotForm, formType, fullScreen);
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
-                    _shotManager.ActivateScreenshotForm(screenshotForm);
-                    var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
-                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
+                    CaptureScreenShot(screenshotForm, fullScreen,
+                        _shotManager.ScreenshotDestFile(ScreenshotCounter), processShot);
                 }
                 else
                 {
@@ -1985,6 +2146,81 @@ namespace pwiz.SkylineTestUtil
                 PauseForForm(formType);
             }
 
+            ScreenshotCounter++;
+        }
+
+        /// <summary>
+        /// Handles a one-shot screenshot override. If <see cref="NextScreenShotOverridePath"/>
+        /// is set, captures the screenshot and returns true. Handles the offscreen case
+        /// by logging a warning and consuming the override.
+        /// </summary>
+        private bool TakeOverrideScreenShot(Type formType, Control screenshotForm,
+            bool fullScreen, Func<Bitmap, Bitmap> processShot)
+        {
+            if (NextScreenShotOverridePath == null)
+                return false;
+
+            var overridePath = NextScreenShotOverridePath;
+            NextScreenShotOverridePath = null; // Consume before taking shot
+
+            if (Program.SkylineOffscreen)
+            {
+                Console.Error.WriteLine(
+                    @"[SCREENSHOT] SKIPPED (offscreen, use -ShowUI): " + overridePath);
+                return false;
+            }
+
+            _shotManager ??= new ScreenshotManager(SkylineWindow, null);
+            WaitForGraphs();
+            screenshotForm = ResolveScreenShotForm(screenshotForm, formType, fullScreen);
+            CaptureScreenShot(screenshotForm, fullScreen, overridePath, processShot);
+            Console.WriteLine(@"[SCREENSHOT] " + overridePath);
+            ScreenshotCounter++;
+            return true;
+        }
+
+        private Control ResolveScreenShotForm(Control screenshotForm, Type formType, bool fullScreen)
+        {
+            if (screenshotForm != null)
+                return screenshotForm;
+
+            if (!fullScreen && formType != null)
+                screenshotForm = TryWaitForOpenForm(formType);
+            screenshotForm ??= SkylineWindow;
+            RunUI(() => screenshotForm.Update());
+            return screenshotForm;
+        }
+
+        private void CaptureScreenShot(Control screenshotForm, bool fullScreen,
+            string filePath, Func<Bitmap, Bitmap> processShot)
+        {
+            Thread.Sleep(1500); // Wait for UI to settle down
+            _shotManager.ActivateScreenshotForm(screenshotForm);
+            _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
+        }
+
+        /// <summary>
+        /// Saves a screenshot captured through the connector (IFormElement.CaptureImage) as the next numbered
+        /// tutorial screenshot (s-NN.png), advancing the screenshot counter. The image is taken (via the passed
+        /// delegate) only when recording screenshots; the counter advances either way so numbering stays stable.
+        /// This is the connector-driven counterpart to <see cref="PauseForScreenShot(string,int?,Func{Bitmap,Bitmap})"/>,
+        /// used by JsonTutorialTest so a tutorial can be captured through the JSON tool service rather than the
+        /// screen-grab path.
+        /// </summary>
+        protected void SaveMcpConnectorScreenShot(Func<Bitmap> captureImage)
+        {
+            if (IsRecordingScreenShots)
+            {
+                _shotManager ??= new ScreenshotManager(SkylineWindow, TutorialPath);
+                using (var bitmap = captureImage())
+                {
+                    // The connector returns no image data when there is no desktop to capture. Say that,
+                    // rather than letting the null reach SaveToFile as a NullReferenceException.
+                    AssertEx.IsNotNull(bitmap,
+                        $@"No image captured for screenshot {ScreenshotCounter}. The connector returned no image data, which happens when no desktop is available to capture.");
+                    ScreenCapture.SaveToFile(_shotManager.ScreenshotDestFile(ScreenshotCounter), bitmap);
+                }
+            }
             ScreenshotCounter++;
         }
 
@@ -2179,6 +2415,7 @@ namespace pwiz.SkylineTestUtil
             Program.FunctionalTest = true;
             Program.DefaultUiMode = defaultUiMode;
             Program.TestExceptions = new List<Exception>();
+            Program.GcTracker = new GcTrackerAdapter();
             LocalizationHelper.InitThread();
 
             UnzipTestFiles();
@@ -2194,7 +2431,7 @@ namespace pwiz.SkylineTestUtil
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
-            Program.Main();
+            Program.Main(LaunchArgs);
             threadTest.Join();
 
             // Were all windows disposed?
@@ -2252,6 +2489,14 @@ namespace pwiz.SkylineTestUtil
         private string AuditLogTutorialDir
         {
             get { return TestContext.GetProjectDirectory(@"TestTutorial\TutorialAuditLogs"); }
+        }
+
+        /// <summary>
+        /// The file this test records its audit log entries to, for tests that need to manipulate it.
+        /// </summary>
+        protected string RecordedAuditLogFilePath
+        {
+            get { return GetLogFilePath(AuditLogDir); }
         }
 
         private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
@@ -2425,6 +2670,13 @@ namespace pwiz.SkylineTestUtil
             var recordedFile = GetLogFilePath(AuditLogDir);
             if (File.Exists(recordedFile))
                 TryHelper.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
+            // Release audit log entries that may hold undo action closures
+            // capturing SkylineWindow, preventing GC after test cleanup
+            lock (_setSeenEntries)
+            {
+                _setSeenEntries.Clear();
+            }
+            _lastLoggedEntries.Clear();
         }
 
         private string GetLogFilePath(string folderPath)
@@ -2439,14 +2691,7 @@ namespace pwiz.SkylineTestUtil
 
         private void WriteDiffEntryToFile(string folderPath, AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
         {
-            var filePath = GetLogFilePath(folderPath);
-            using (var fs = File.Open(filePath, FileMode.Append))
-            {
-                using (var sw = new StreamWriter(fs))
-                {
-                    sw.Write(AuditLogEntryDiffToString(entry, lastLoggedEntry));
-                }
-            }
+            AppendToLogFile(GetLogFilePath(folderPath), AuditLogEntryDiffToString(entry, lastLoggedEntry));
         }
 
         private string AuditLogEntryDiffToString(AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
@@ -2474,13 +2719,37 @@ namespace pwiz.SkylineTestUtil
 
         private void WriteEntryToFile(string folderPath, AuditLogEntry entry)
         {
-            var filePath = GetLogFilePath(folderPath);
-            using (var fs = File.Open(filePath, FileMode.Append))
+            AppendToLogFile(GetLogFilePath(folderPath), AuditLogEntryToString(entry) + Environment.NewLine);
+        }
+
+        /// <summary>
+        /// Appends to the audit log recorded for this test. The file is opened and closed once per
+        /// logged entry, which invites transient sharing violations from virus scanners and file
+        /// indexers, so share the file with them and retry when they get there first.
+        /// </summary>
+        private void AppendToLogFile(string filePath, string text)
+        {
+            // Write in a single call so that a retry cannot append what a partial write already recorded
+            var bytes = Encoding.UTF8.GetBytes(text);
+            try
             {
-                using (var sw = new StreamWriter(fs))
+                // Short retry interval because this runs on the UI thread during SetDocument
+                TryHelper.TryTwice(() =>
                 {
-                    sw.WriteLine(AuditLogEntryToString(entry));
-                }
+                    using (var fs = File.Open(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                    {
+                        fs.Write(bytes, 0, bytes.Length);
+                    }
+                }, 3, 100, nameof(AppendToLogFile));
+            }
+            catch (Exception x)
+            {
+                // This runs during SetDocument, so the exception ends up in a message box shown by
+                // SkylineWindow.ModifyDocument. Name the process holding the lock while it is still known.
+                var described = FileLockingProcessFinder.ToFileLockingException(x, Path.GetDirectoryName(filePath));
+                if (ReferenceEquals(described, x))
+                    throw;  // Nothing to add, so keep the original stack trace
+                throw described;
             }
         }
 
@@ -2499,11 +2768,12 @@ namespace pwiz.SkylineTestUtil
             return result.ToString();
         }
 
-        // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
-        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
-
         private void WaitForSkyline()
         {
+            using var restoreTracking = new ScopedAction(
+                FileStreamManager.Default.StartTrackingHistory,
+                FileStreamManager.Default.EndTrackingHistory);
+
             try
             {
                 int waitCycles = GetWaitCycles();
@@ -2531,29 +2801,9 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                // if it's a file locking issue, wrap the exception to report the locking process
-                if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
-                {
-                    var match = Regex.Match(ioException.Message, "'(.*)'");
-                    if (match.Success)
-                    {
-                        string lockedFilepath = match.Captures[0].Value.Trim('\'');
-                        if (!File.Exists(lockedFilepath))
-                        {
-                            x = new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
-                        }
-                        else
-                        {
-                            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
-                            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
-                            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
-                            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-                            x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
-                        }
-                    }
-                }
-                // Save exception for reporting from main thread.
-                Program.AddTestException(x);
+                // Save exception for reporting from main thread, naming the locking process if that is the issue.
+                // The exception message carries a full path here, so no containing directory is needed.
+                Program.AddTestException(FileLockingProcessFinder.ToFileLockingException(x, null));
             }
 
             EndTest();
@@ -2648,18 +2898,19 @@ namespace pwiz.SkylineTestUtil
                 // Try twice, because this operation can fail due to active background processing
                 RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
-                WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
-                if (FileStreamManager.Default.HasPooledStreams)
-                {
-                    // Just write to console to provide more information. This should cause a failure
-                    // trying to remove the test directory, which will provide a path to the problem file
-                    Console.WriteLine(TextUtil.LineSeparate("Streams left open:", string.Empty,
-                        FileStreamManager.Default.ReportPooledStreams()));
-                }
-
                 WaitForGraphs(false);
-                // Wait for any background loaders to notice the change and stop what they're doing
+                // Wait for background loaders first - CloseRemovedStreams runs inside
+                // BackgroundLoaders, so the pool cannot drain until they finish
                 WaitForBackgroundLoaders();
+
+                WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
+                var report = FileStreamManager.Default.ReportPooledStreams();
+                if (report != null)
+                {
+                    var message = TextUtil.LineSeparate("Streams left open:", string.Empty, report);
+                    Console.WriteLine(message);
+                    Program.AddTestException(new IOException(message));
+                }
                 // Wait for FileSystemWatchers to be completely shut down before test cleanup
                 // This prevents race conditions where watchers might access directories during cleanup
                 // Note: FilesTree may be null if already destroyed, in which case watching is already complete
@@ -2728,6 +2979,45 @@ namespace pwiz.SkylineTestUtil
                     CloseOpenForm(ownedForm, openForms);
                 }
 
+                if (formToClose.IsDisposed)
+                {
+                    // Already gone - skip the Close() call which would re-trigger WmClose and could
+                    // hit a SafeWaitHandle race during EventWaitHandle.Set in the modal-event path.
+                    return;
+                }
+
+                // ThreadExceptionDialog is a reentrant-modal form whose internal modal-event
+                // SafeWaitHandle has been observed to throw ObjectDisposedException during
+                // Form.Close -> WmClose -> EventWaitHandle.Set on perf-test teardown (see
+                // HangDetection.DismissThreadExceptionDialogs). Dismiss via DialogResult so
+                // WinForms uses the asynchronous PostMessage path, not synchronous SendMessage
+                // from this stack.
+                if (formToClose is ThreadExceptionDialog teDlg)
+                {
+                    // ReSharper disable LocalizableElement
+                    Console.WriteLine("\n\nDismissing open ThreadExceptionDialog during teardown\n"); // Not L10N
+                    // ReSharper restore LocalizableElement
+                    Program.AddTestException(new InvalidOperationException(
+                        @"ThreadExceptionDialog was open at end of test - earlier exception escaped Application.ThreadException handler"));
+                    RunUI(() =>
+                    {
+                        try
+                        {
+                            if (!teDlg.IsDisposed)
+                                teDlg.DialogResult = DialogResult.Cancel;
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Already gone - fine
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Handle destroyed mid-close - fine
+                        }
+                    });
+                    return;
+                }
+
                 var messageDlg = formToClose as CommonAlertDlg;
                 // ReSharper disable LocalizableElement
                 if (messageDlg == null)
@@ -2740,11 +3030,20 @@ namespace pwiz.SkylineTestUtil
                 {
                     try
                     {
-                        formToClose.Close();
+                        if (!formToClose.IsDisposed)
+                            formToClose.Close();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Race: form was disposed between IsDisposed check and Close
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Handle was destroyed mid-close
                     }
                     catch
                     {
-                        // Ignore exceptions
+                        // Ignore other exceptions
                     }
                 });
             }
@@ -3347,7 +3646,7 @@ namespace pwiz.SkylineTestUtil
                 importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null));
             RunUI(() =>
             {
-                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dirPath);
+                openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(dirPath));
                 openDataSourceDialog.SelectAllFileType(ext, path => filter == null || path.Contains(filter));
                 openDataSourceDialog.Open();
             });
@@ -3411,5 +3710,17 @@ namespace pwiz.SkylineTestUtil
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Bridges <see cref="IGarbageCollectionTracker"/> (Skyline) to
+    /// <see cref="GarbageCollectionTracker"/> (TestRunnerLib).
+    /// </summary>
+    internal class GcTrackerAdapter : IGarbageCollectionTracker
+    {
+        public void Register<T>(T target)
+        {
+            GarbageCollectionTracker.Register(typeof(T), target);
+        }
     }
 }

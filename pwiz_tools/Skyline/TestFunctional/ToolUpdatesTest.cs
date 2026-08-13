@@ -556,9 +556,9 @@ namespace pwiz.SkylineTestFunctional
             return _unpackZipTool.Invoke(pathToZip, unpackSupport);
         }
 
-        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver, string downloadUrl = null)
         {
-            _client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, fileSaver);
+            _client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, fileSaver, downloadUrl);
         }
 
         public void Dispose()

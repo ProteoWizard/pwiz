@@ -197,7 +197,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnNormalizeOptionChanged()
         {
-            if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */)
+            if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() ||
+                GraphSummary.GraphPanes.OfType<AreaAbundanceComparisonGraphPane>().Any())
                 GraphSummary.UpdateUI();
         }
 
@@ -220,6 +221,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.abundance:
                     if (!(pane is AreaRelativeAbundanceGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary) };
+                    break;
+                case GraphTypeSummary.abundance_comparison:
+                    if (!(pane is AreaAbundanceComparisonGraphPane))
+                        GraphSummary.GraphPanes = new[] { new AreaAbundanceComparisonGraphPane(GraphSummary) };
                     break;
                 case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))

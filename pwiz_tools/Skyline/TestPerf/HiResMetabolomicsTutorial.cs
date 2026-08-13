@@ -222,7 +222,8 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         importResultsDlg1.GetDataSourcePathsFile(null));
                     RunUI(() =>
                     {
-                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
+                        openDataSourceDialog1.SetCurrentDirectory(
+                            new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder())));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form");

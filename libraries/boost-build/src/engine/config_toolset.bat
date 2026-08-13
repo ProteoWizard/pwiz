@@ -97,7 +97,7 @@ goto :eof
 
 :Config_VC141
 if not defined CXX ( set "CXX=cl" )
-call vswhere_usability_wrapper.cmd
+call .\vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
 ver > nul 2> nul
 if "_%B2_TOOLSET_ROOT%_" == "__" (
@@ -119,7 +119,7 @@ goto :eof
 
 :Config_VC142
 if not defined CXX ( set "CXX=cl" )
-call vswhere_usability_wrapper.cmd
+call .\vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
 ver > nul 2> nul
 if "_%B2_TOOLSET_ROOT%_" == "__" (
@@ -142,7 +142,7 @@ goto :eof
 :Config_VC145
 :Config_VC143
 if not defined CXX ( set "CXX=cl" )
-call vswhere_usability_wrapper.cmd
+call .\vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
 ver > nul 2> nul
 if "_%B2_TOOLSET_ROOT%_" == "__" (
@@ -164,7 +164,7 @@ goto :eof
 
 :Config_VCUNK
 if NOT "_%B2_TOOLSET%_" == "_vcunk_" goto Skip_VCUNK
-call vswhere_usability_wrapper.cmd
+call .\vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
 ver > nul 2> nul
 if "_%B2_TOOLSET_ROOT%_" == "__" (
@@ -187,7 +187,7 @@ goto :eof
 :Config_BORLAND
 if not defined CXX ( set "CXX=bcc32c" )
 if "_%B2_TOOLSET_ROOT%_" == "__" (
-    call guess_toolset.bat test_path bcc32c.exe )
+    call .\guess_toolset.bat test_path bcc32c.exe )
 if "_%B2_TOOLSET_ROOT%_" == "__" (
     if not errorlevel 1 (
         set "B2_TOOLSET_ROOT=%FOUND_PATH%..\"

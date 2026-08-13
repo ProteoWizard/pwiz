@@ -115,6 +115,9 @@ local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
 local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
 
+local default_zstd_src = "$(libraries_path)/zstd-1.5.7" ;
+local zstd_src = [ MATCH --zstd-src=(.*) : [ modules.peek : ARGV ] ] ;
+zstd_src ?= $(default_zstd_src) ; # set default path in absence of command-line path
 
 # TODO: get version from boost/version.hpp
 import regex ;
@@ -593,12 +596,14 @@ if ! [ without-mz5 ]
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
+path-constant ZSTD_SOURCE : $(zstd_src) ;
 path-constant GD_SOURCE : $(PWIZ_LIBRARIES_PATH)/libgd-2.1.0alpha ;
 path-constant PNG_SOURCE : $(PWIZ_LIBRARIES_PATH)/libpng-1.5.6 ;
 path-constant FREETYPE_SOURCE : $(PWIZ_LIBRARIES_PATH)/freetype-VER-2-13-3 ;
 path-constant EXPAT_SOURCE : $(PWIZ_LIBRARIES_PATH)/expat-2.0.1 ;
 
 using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+using ext-zstd : 1.5.7 : $(ZSTD_SOURCE) ;
 
 if [ modules.peek : NT ]
 {
@@ -626,6 +631,26 @@ if [ modules.peek : NT ]
             echo "NOTICE: not extracting vendor APIs; use --i-agree-to-the-vendor-licenses to extract and use them." ;
         }
      }
+
+    # AI tooling is opt-in via --ai flag (initialize once, don't update on every build)
+    if --ai in $(args)
+    {
+        if ! [ path.exists $(PWIZ_ROOT_PATH)/ai ]
+        {
+            echo "Initializing AI tooling (--ai flag detected)..." ;
+            SHELL "git clone https://github.com/ProteoWizard/pwiz-ai.git ai && cmd /c mklink /J .claude ai\\claude" ;
+        }
+
+        # Create .claude junction if ai exists but junction doesn't (e.g., manual clone)
+        if [ path.exists $(PWIZ_ROOT_PATH)/ai/claude ]
+        {
+            if ! [ path.exists $(PWIZ_ROOT_PATH)/.claude ]
+            {
+                echo "Creating .claude junction to ai/claude..." ;
+                SHELL "cmd /c mklink /J .claude ai\\claude" ;
+            }
+        }
+    }
 
     # overwrite the original header files because of MSVC looking in the current header's path with #include "foo"
 
@@ -1243,7 +1268,17 @@ rule msparser-path ( properties * )
     }
     else if <toolset>msvc in $(properties)
     {
-        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
+        if <address-model>32 in $(properties)
+        {
+            # Only a 64-bit Mascot Parser library is bundled, so disable Mascot support in 32-bit builds.
+            if ! $(.warn-once-mascot32)
+            {
+                .warn-once-mascot32 = true ;
+                echo "Note: Not using Mascot Parser in 32-bit builds (only a 64-bit msparser library is bundled)." ;
+            }
+            lib-location = "" ;
+        }
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
         {
             lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64\\vs2015" ;
         }
@@ -1724,7 +1759,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/BiblioSpec"
     "exclude:pwiz_tools/Shared/Crawdad"
     "exclude:pwiz_tools/Shared/ProteomeDb"
-    "exclude:pwiz_tools/Shared/ProteowizardWrapper"
+    # ProteowizardWrapper is needed by MSConvertGUI.sln (shared remote dialog refactor)
     "exclude:pwiz_tools/Shared/Lib/Microsoft.Diagnostics.Runtime"
     "exclude:pwiz_tools/Shared/Lib/MSAmanda"
     "exclude:pwiz_tools/Shared/Lib/DotNetZip"
@@ -1783,7 +1818,7 @@ constant .common-sources :
     $(PWIZ_LIBRARIES_PATH)/SQLite
     $(PWIZ_LIBRARIES_PATH)/Eigen
     $(PWIZ_LIBRARIES_PATH)/CSpline
-    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.h *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 msparser*.7z ]
+    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.h *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 zstd*.tar.bz2 hdf5*.tar.bz2 msparser*.7z ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     "path-anchor:$(BOOST_SUBSET_PATH)"

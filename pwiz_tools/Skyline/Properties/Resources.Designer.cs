@@ -942,47 +942,7 @@ namespace pwiz.Skyline.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap ImsDB {
-            get {
-                object obj = ResourceManager.GetObject("ImsDB", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap IrtCalculator {
-            get {
-                object obj = ResourceManager.GetObject("IrtCalculator", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap OptDB {
-            get {
-                object obj = ResourceManager.GetObject("OptDB", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap ProtDB {
-            get {
-                object obj = ResourceManager.GetObject("ProtDB", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Start value must be less than End value..
         /// </summary>
@@ -3582,6 +3542,16 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Edit_Item {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Item", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap Edit_Redo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
@@ -5388,6 +5358,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ImsDB {
+            get {
+                object obj = ResourceManager.GetObject("ImsDB", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The calculator {0} requires all of its standard peptides in order to determine a regression..
         /// </summary>
         public static string IncompleteStandardException_IncompleteStandardException_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression {
@@ -5453,6 +5433,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_li" +
                         "brary_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap IonMobilityHeatmap {
+            get {
+                object obj = ResourceManager.GetObject("IonMobilityHeatmap", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -5573,6 +5563,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Ions_Z {
             get {
                 object obj = ResourceManager.GetObject("Ions_Z", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap IrtCalculator {
+            get {
+                object obj = ResourceManager.GetObject("IrtCalculator", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -6165,6 +6165,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Mobilogram {
+            get {
+                object obj = ResourceManager.GetObject("Mobilogram", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to   Would you like to create a new empty document?.
         /// </summary>
         public static string ModeUIAwareFormHelper_EnableNeededButtonsForModeUI___Would_you_like_to_create_a_new_empty_document_ {
@@ -6485,6 +6495,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap OpenFolder {
             get {
                 object obj = ResourceManager.GetObject("OpenFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap OptDB {
+            get {
+                object obj = ResourceManager.GetObject("OptDB", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -7284,6 +7304,27 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The replicate &quot;{0}&quot; on line {1} contains multiple files, so the replicate name alone is ambiguous. Add a SampleName column to select a single file within the replicate, or use a FileName column instead..
+        /// </summary>
+        public static string PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__conta" +
+                        "ins_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName" +
+                        "__and_optionally_a_SampleName__to_identify_a_single_file_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The sample &quot;{0}&quot; on line {1} does not match a single file in the replicate &quot;{2}&quot;..
+        /// </summary>
+        public static string PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not_match_a_single_file_in_the_replicate___2__ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not" +
+                        "_match_a_single_file_in_the_replicate___2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Failed to find the necessary headers {0} in the first line.
         /// </summary>
         public static string PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line {
@@ -7973,6 +8014,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Properties_Button {
             get {
                 object obj = ResourceManager.GetObject("Properties_Button", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ProtDB {
+            get {
+                object obj = ResourceManager.GetObject("ProtDB", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

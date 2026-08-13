@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -8,6 +9,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -53,6 +55,59 @@ namespace pwiz.SkylineTestFunctional
                 VerifyDotpLine(replicates, expectedRDotp1, @"rdotp");
                 AssertCutoffLine(false);
             });
+
+            // Bug (skyline.ms support thread 75064): the rdotp line must follow the replicate
+            // ordering, not stay in document order. Add a numeric replicate annotation whose
+            // values reverse the document order, order by it, and re-verify that each replicate
+            // still maps to its own rdotp value at its displayed position.
+            var sortKeys = replicates
+                .Select((name, i) => (name, key: (replicates.Length - i).ToString(CultureInfo.InvariantCulture)))
+                .ToDictionary(t => t.name, t => t.key);
+            AddReplicateAnnotation(@"SortKey", AnnotationDef.AnnotationType.number, sortKeys);
+            OrderPeakAreaByReplicateAnnotation(@"SortKey");
+            RunUI(() =>
+            {
+                var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[0];
+                Assert.IsFalse(replicates.SequenceEqual(pane.GetOriginalXAxisLabels()),
+                    "Test setup: ordering by SortKey did not change the replicate order.");
+                VerifyDotpLine(replicates, expectedRDotp1, @"rdotp");
+            });
+
+            // Reset ordering so the rest of the test runs in document order.
+            RunUI(() =>
+            {
+                SummaryReplicateGraphPane.OrderByReplicateAnnotation = null;
+                SkylineWindow.UpdatePeakAreaGraph();
+            });
+            WaitForGraphs();
+
+            // Grouping the replicates into two pairs must aggregate the rdotp line to the group
+            // means, matching the grouped bars (Nick's note on the same thread). Compute the
+            // expected means from the ungrouped line so display rounding matches exactly.
+            double[] ungroupedRdotp = null;
+            RunUI(() => ungroupedRdotp = replicates.Select(r => GetRdotpLineValue(r)).ToArray());
+            var pairGroups = new Dictionary<string, string>
+            {
+                {replicates[0], @"G1"}, {replicates[1], @"G1"},
+                {replicates[2], @"G2"}, {replicates[3], @"G2"},
+            };
+            AddReplicateAnnotation(@"PairGroup", AnnotationDef.AnnotationType.text, pairGroups);
+            RunUI(() => SkylineWindow.GroupByReplicateAnnotation(@"PairGroup"));
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                var expectedG1 = Math.Round((ungroupedRdotp[0] + ungroupedRdotp[1]) / 2, 2);
+                var expectedG2 = Math.Round((ungroupedRdotp[2] + ungroupedRdotp[3]) / 2, 2);
+                VerifyDotpLine(new[] {@"G1", @"G2"}, new[] {expectedG1, expectedG2}, @"rdotp");
+            });
+
+            // Reset grouping so the rest of the test runs ungrouped, in document order.
+            RunUI(() =>
+            {
+                SummaryReplicateGraphPane.GroupByReplicateAnnotation = null;
+                SkylineWindow.UpdatePeakAreaGraph();
+            });
+            WaitForGraphs();
 
             var propertyDialog = ShowDialog<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
             RunUI(() =>
@@ -109,6 +164,39 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        // Adds a replicate annotation of the given type with an explicit value per replicate
+        // (keyed by replicate name), so ordering or grouping by it is fully deterministic.
+        private void AddReplicateAnnotation(string name, AnnotationDef.AnnotationType type,
+            IDictionary<string, string> valuesByReplicate)
+        {
+            RunUI(() => SkylineWindow.ModifyDocument(@"Add replicate annotation", doc =>
+            {
+                var annotationDef = new AnnotationDef(name,
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
+                    type, new string[0]);
+                var dataSettings = doc.Settings.DataSettings.ChangeAnnotationDefs(
+                    ImmutableList.ValueOf(doc.Settings.DataSettings.AnnotationDefs.Append(annotationDef)));
+                doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettings));
+                var measuredResults = doc.MeasuredResults;
+                var chromatograms = measuredResults.Chromatograms
+                    .Select(c => c.ChangeAnnotations(c.Annotations.ChangeAnnotation(name, valuesByReplicate[c.Name])))
+                    .ToArray();
+                return doc.ChangeMeasuredResults(measuredResults.ChangeChromatograms(chromatograms));
+            }));
+        }
+
+        private void OrderPeakAreaByReplicateAnnotation(string annotationTitle)
+        {
+            RunUI(() =>
+            {
+                var replicateValue = ReplicateValue.GetGroupableReplicateValues(SkylineWindow.Document)
+                    .First(v => v.Title == annotationTitle);
+                SummaryReplicateGraphPane.OrderByReplicateAnnotation = replicateValue.ToPersistedString();
+                SkylineWindow.UpdatePeakAreaGraph();
+            });
+            WaitForGraphs();
+        }
+
         private static void NormalizeGraphToHeavy()
         {
             SkylineWindow.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
@@ -143,6 +231,17 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
                 Assert.AreEqual(dotps[i], Math.Round(dotpLine.Points[repIndex].Y, 2));
             }
+        }
+
+        // Returns the unrounded rdotp line value at the given replicate's displayed position.
+        // Must be called on the UI thread.
+        private double GetRdotpLineValue(string replicate, int paneIndex = 0)
+        {
+            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
+            var dotpLine = pane.CurveList.OfType<LineItem>().First(line => line.Label.Text.Equals(@"rdotp"));
+            var repIndex = pane.GetOriginalXAxisLabels().ToList().FindIndex(label => replicate.Equals(label));
+            Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
+            return dotpLine.Points[repIndex].Y;
         }
 
         private void AssertCutoffLine(bool isPresent, int pointsBelowCutoff = 0, int paneIndex = 0)

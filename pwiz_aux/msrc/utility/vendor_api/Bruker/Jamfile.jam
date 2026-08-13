@@ -183,6 +183,7 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             <library>baf2sql
             <library>timsdata
             <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
+            <define>PWIZ_READER_BRUKER
         : # default-build
         : # usage-requirements
             <conditional>@vendor-api-requirements

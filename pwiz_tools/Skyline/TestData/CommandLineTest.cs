@@ -33,6 +33,9 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline;
+using pwiz.Common.CommandLine;
+using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
+using ArgumentGroup = pwiz.Common.CommandLine.ArgumentGroup<pwiz.Skyline.CommandArgs>;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -829,7 +832,7 @@ namespace pwiz.SkylineTestData
                     Resources.PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_, printErrors);
 
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-variable=X" },
-                    new CommandArgs.ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
+                    new ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
 
                 // Variable failure on loss-only modification
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Water Loss (D, E, S, T)", "--pep-add-mod-variable=true" },
@@ -891,8 +894,7 @@ namespace pwiz.SkylineTestData
             DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             StringWriter writer = new StringWriter();
-            IProgressStatus status = new ProgressStatus("Exporting report");
-            viewContext.Export(CancellationToken.None, null, ref status, viewInfo, writer, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
+            viewContext.ExportViewToWriter(viewInfo, writer, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
             var programmaticReport = writer.ToString();
 
             RunCommand("--in=" + docPath,
@@ -1235,7 +1237,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + badDecoyMethod);
             var arg = CommandArgs.ARG_DECOYS_ADD;
-            AssertEx.Contains(output, new CommandArgs.ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
+            AssertEx.Contains(output, new ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
 
             output = RunCommand("--in=" + outPath,
                                        "--decoys-add");
@@ -1565,7 +1567,7 @@ namespace pwiz.SkylineTestData
             };
             string output = RunCommand(args);
 
-            AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
+            AssertEx.Contains(output, new ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
             args[args.Length - 1] = "--exp-primary-count=1";
             output = RunCommand(args);
 
@@ -1825,7 +1827,7 @@ namespace pwiz.SkylineTestData
 
             //Test value lists for failing values
             const string bogusValue = "BOGUS";
-            CommandArgs.Argument[] valueListArgs = 
+            Argument[] valueListArgs = 
             {
                 CommandArgs.ARG_REPORT_FORMAT,
                 CommandArgs.ARG_EXP_STRATEGY,
@@ -1837,7 +1839,7 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueListArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
+                AssertEx.Contains(output, new ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
             }
 
             // Transition list, isolation list, and method export
@@ -1863,7 +1865,7 @@ namespace pwiz.SkylineTestData
                 TextUtil.LineSeparate(ExportInstrumentType.METHOD_TYPES),
                 SkylineResources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
 
-            CommandArgs.Argument[] valueIntArguments =
+            Argument[] valueIntArguments =
             {
                 CommandArgs.ARG_EXP_MAX_TRANS,
                 CommandArgs.ARG_EXP_DWELL_TIME
@@ -1872,10 +1874,10 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueIntArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(valueIntArg, bogusValue).Message);
+                AssertEx.Contains(output, new ValueInvalidIntException(valueIntArg, bogusValue).Message);
             }
 
-            CommandArgs.Argument[] valueDoubleArguments =
+            Argument[] valueDoubleArguments =
             {
                 CommandArgs.ARG_EXP_RUN_LENGTH,
                 CommandArgs.ARG_IMPORT_LOCKMASS_POSITIVE,
@@ -1886,25 +1888,27 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueDoubleArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
+                AssertEx.Contains(output, new ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
             }
             const int bigValue = 100000000;
             args[3] = "--exp-dwell-time=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue,
+            AssertEx.Contains(output, new ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue,
                 AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX).Message);
             args[3] = "--exp-run-length=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue,
+            AssertEx.Contains(output, new ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue,
                 AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX).Message);
 
 
-            //This test uses a broken Skyline file to test the InvalidDataException catch
+            //This test uses a broken Skyline file to test the "not a Skyline document" pre-validation
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
 
             output = RunCommand("--in=" + brokenFile);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, brokenFile));
-            AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 2, 7));
+            AssertEx.Contains(output, string.Format(
+                ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                brokenFile, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP));
 
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
@@ -3810,7 +3814,7 @@ namespace pwiz.SkylineTestData
 
         private static void CheckUsageOutput(string output)
         {
-            foreach (CommandArgs.ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is CommandArgs.ArgumentGroup))
+            foreach (ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is ArgumentGroup))
             {
                 if (group.IncludeInUsage)
                 {
@@ -3960,6 +3964,59 @@ namespace pwiz.SkylineTestData
                     .Contains(string.Format(PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
             TestOutputHasErrorLine(buffer.ToString());
+        }
+
+        [TestMethod]
+        public void ConsoleNewDocumentNoPathTest()
+        {
+            // --new without a path should fail in CLI mode.
+            // The DocArgument validation catches it as "no document specified".
+            string output = AbstractUnitTestEx.RunCommand(false, CommandArgs.ARG_NEW);
+            AssertEx.Contains(output, new ValueMissingException(CommandArgs.ARG_NEW).Message);
+        }
+
+        [TestMethod]
+        public void ConsoleSettingsArgumentsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+
+            // Create a test document
+            string docPath = TestFilesDir.GetTestPath(@"settings_test.sky");
+            RunCommand(CommandArgs.ARG_NEW + docPath);
+
+            // --settings-name=Default should apply default settings
+            string output = RunCommand(CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_DOC_SETTINGS_NAME + @"Default",
+                CommandArgs.ARG_OUT + docPath);
+            AssertEx.Contains(output, string.Format(SkylineResources.CommandLine_ApplySettings_Settings___0___applied_to_document_, @"Default"));
+
+            // Verify the document has default settings applied
+            var doc = ResultsUtil.DeserializeDocument(docPath);
+            var defaultSettings = SrmSettingsList.GetDefault();
+            Assert.AreEqual(defaultSettings.PeptideSettings.Filter.ExcludeNTermAAs,
+                doc.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+
+            // --settings-name with nonexistent name should fail
+            const string nonexistentSettings = @"NonexistentSettings_12345";
+            string output2 = AbstractUnitTestEx.RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_DOC_SETTINGS_NAME + nonexistentSettings);
+            AssertEx.Contains(output2,
+                string.Format(SkylineResources.CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_,
+                    nonexistentSettings));
+
+            // --settings-add with nonexistent file should fail
+            string badPath = TestFilesDir.GetTestPath(@"nonexistent.skys");
+            string output3 = AbstractUnitTestEx.RunCommand(false,
+                CommandArgs.ARG_DOC_SETTINGS_ADD + badPath);
+            AssertEx.Contains(output3,
+                string.Format(SkylineResources.CommandLine_AddSettings_Error__The_settings_file__0__does_not_exist_, badPath));
+
+            // --discard-changes is accepted alongside --new (no-op in CLI since Dirty is always false)
+            string discardPath = TestFilesDir.GetTestPath(@"discard_test.sky");
+            string output4 = RunCommand(CommandArgs.ARG_NEW + discardPath, CommandArgs.ARG_DISCARD_CHANGES);
+            AssertEx.Contains(output4, Path.GetFileName(discardPath));
+            Assert.IsFalse(output4.Contains(SkylineResources.CommandLine_RunInner_Error__The_document_has_unsaved_changes__Use___save____out__or___discard_changes_before___new_or___in_));
+            Assert.IsTrue(File.Exists(discardPath));
         }
 
         [TestMethod]

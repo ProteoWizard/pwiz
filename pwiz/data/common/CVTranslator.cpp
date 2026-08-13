@@ -96,13 +96,15 @@ namespace {
 inline char alnum_lower(char c)
 {
     // c -> lower-case, whitespace, or +
-    return isalnum(c) ? static_cast<char>(tolower(c)) : c == '+' ? c : ' ';
+    unsigned char uc = static_cast<unsigned char>(c); // Watch out for unicode etc
+    return isalnum(uc) ? static_cast<char>(tolower(uc)) : c == '+' ? c : ' ';
 }
 
 inline char alnum_lower_regex(char c)
 {
     // c -> lower-case, whitespace, +, or _ for things that appear to be part of a regex
-    return isalnum(c) ? static_cast<char>(tolower(c)) : c == '+' ? c : '_';    
+    unsigned char uc = static_cast<unsigned char>(c); // Watch out for unicode etc
+    return isalnum(uc) ? static_cast<char>(tolower(uc)) : c == '+' ? c : '_';    
 }
 
 string preprocess(const string& s)

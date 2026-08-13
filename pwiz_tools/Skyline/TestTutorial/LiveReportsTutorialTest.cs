@@ -69,6 +69,7 @@ namespace pwiz.SkylineTestTutorial
                 @"TestTutorial\LiveReportsViews.zip"
             };
 
+            using (new TestTimeProvider(new DateTime(2025, 1, 1, 10, 10, 0, DateTimeKind.Local)))
             using (new AuditLogList.IgnoreTestChecksScope())
                 RunFunctionalTest();
         }
@@ -80,11 +81,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            RunUI(()=>
-            {
-                SkylineWindow.OpenFile(GetTestPath("Rat_plasma.sky"));
-                SkylineWindow.ShowAuditLog();
-            });
+            FileOpen(GetTestPath("Rat_plasma.sky"));
+            RunUI(() => SkylineWindow.ShowAuditLog());
             var auditLogForm = FindOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
             PauseForScreenShot(auditLogForm, "Audit log view empty");

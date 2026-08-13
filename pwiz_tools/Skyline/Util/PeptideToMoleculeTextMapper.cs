@@ -212,7 +212,8 @@ namespace pwiz.Skyline.Util
 
             // For all items in a menu, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if menu item is not purely proteomic
             // Update keyboard accelerators as needed
-            public static void TranslateMenuItems(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
+            // When recurse is true, also translates submenu items (e.g. "Peptide Comparison" under Graph submenu)
+            public static void TranslateMenuItems(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender, bool recurse = false)
             {
                 var mapper = new PeptideToMoleculeTextMapper(modeUI, extender);
                 if (items != null)
@@ -256,6 +257,14 @@ namespace pwiz.Skyline.Util
                         item.Visible = isActive;
                     }
                     mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
+
+                    if (recurse)
+                    {
+                        foreach (var menuItem in activeItems.OfType<ToolStripMenuItem>().Where(m => m.HasDropDownItems))
+                        {
+                            TranslateMenuItems(menuItem.DropDownItems, modeUI, extender, true);
+                        }
+                    }
                 }
             }
 

@@ -26,9 +26,11 @@ using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
+using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {
+    [LlmName("Remote Accounts")]
     public sealed class RemoteAccountList : SettingsList<RemoteAccount>
     {
         public override IEnumerable<RemoteAccount> GetDefaults(int revisionIndex)

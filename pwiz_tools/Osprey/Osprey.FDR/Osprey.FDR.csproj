@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.FDR</RootNamespace>
+    <AssemblyName>Osprey.FDR</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />
+    <ProjectReference Include="..\Osprey.Chromatography\Osprey.Chromatography.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -130,6 +130,14 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /// <summary>
+        /// Version string without git hash suffix (e.g. "26.1.1.238").
+        /// </summary>
+        public static string BareVersion
+        {
+            get { return Version.Split('-')[0]; }
+        }
+
         public static string Version
         {
             get;
@@ -137,7 +145,7 @@ namespace pwiz.Skyline.Util
 
         private static int VersionPart(int index)
         {
-            string[] versionParts = Version.Split('-')[0].Split('.');
+            string[] versionParts = BareVersion.Split('.');
             return (versionParts.Length > index ? Convert.ToInt32(versionParts[index]) : 0);
         }
 

@@ -30,9 +30,12 @@ using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -48,7 +51,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
-    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogModifier<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
+    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogModifier<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer, ILongWaitForm
     {
         public enum Pages
         {
@@ -70,12 +73,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             dia_raw
         }
 
+        // Alias for the model-layer SearchWorkflowType enum to avoid churn in existing references
         public enum Workflow
         {
-            dda,
-            prm,
-            dia,
-            feature_detection
+            dda = SearchWorkflowType.dda,
+            prm = SearchWorkflowType.prm,
+            dia = SearchWorkflowType.dia,
+            feature_detection = SearchWorkflowType.feature_detection
         }
 
         public class SpectraPage : IFormView { }
@@ -98,6 +102,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private readonly Stack<SrmDocument> _documents;
         public bool IsAutomatedTest; // Testing support
+
+        private SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
+        private SearchSettingsPreset _lastAppliedPreset;
+        private bool _suppressPresetWarning;
+        private MsDataFileUri[] _originalDdaSearchDataSources;
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool isRunPeptideSearch, Workflow? workflowType, bool useExistingLibrary = false)
         {
@@ -176,6 +185,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SearchControl.SetProgressBarDisplayStyle(ProgressBarDisplayText.CustomText);
             }
 
+            // Initialize settings preset controls at the bottom-left of the dialog (Run Peptide Search only)
+            if (isRunPeptideSearch && !isFeatureDetection && !useExistingLibrary)
+            {
+                InitSettingsPresetControls();
+            }
+            else
+            {
+                lblSettingsPreset.Visible = false;
+                cbSettingsPreset.Visible = false;
+                btnSavePreset.Visible = false;
+            }
+
             _pagesToSkip = new HashSet<Pages>();
 
             if (workflowType.HasValue)
@@ -201,6 +222,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (isFeatureDetection || isRunPeptideSearch)
             {
                 label14.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
+            }
+
+            if (isRunPeptideSearch)
+            {
+                label19.Text = PeptideSearchResources.ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction;
             }
         }
 
@@ -228,6 +254,311 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             pageControl.Height = tabPage.Height - header - border;
             tabPage.Controls.Add(pageControl);
         }
+
+        #region Settings Preset
+
+        private void InitSettingsPresetControls()
+        {
+            // DIA-NN presets are owned by Settings.Default.DiannSearchSettingsPresets and
+            // surface only in DiannSearchDlg's dropdown; this list is DDA/DIA engines only.
+            _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
+                cbSettingsPreset,
+                Settings.Default.SearchSettingsPresets,
+                true);
+            LoadPresetList(null);
+
+            cbSettingsPreset.SelectedIndexChanged += cbSettingsPreset_SelectedIndexChanged;
+            btnSavePreset.Click += btnSavePreset_Click;
+            btnSavePreset.Enabled = false; // Enable once search settings page is reached
+        }
+
+        private static void EnsureDefaultPresets()
+        {
+            var presets = Settings.Default.SearchSettingsPresets;
+            foreach (var defaultPreset in presets.GetDefaults())
+            {
+                if (!presets.Any(p => p.Name == defaultPreset.Name))
+                    presets.Insert(0, defaultPreset);
+            }
+        }
+
+        private void LoadPresetList(string selectedName)
+        {
+            EnsureDefaultPresets();
+            _suppressPresetWarning = true;
+            try
+            {
+                _settingsPresetDriver.LoadList(selectedName);
+            }
+            finally
+            {
+                _suppressPresetWarning = false;
+            }
+        }
+
+        private void cbSettingsPreset_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_settingsPresetDriver.SelectedIndexChangedEvent(sender, e))
+            {
+                LoadPresetList(_settingsPresetDriver.SelectedItem?.Name);
+                return;
+            }
+
+            var preset = _settingsPresetDriver.SelectedItem;
+            if (preset != null)
+            {
+                // Warn when changing preset on a page other than the first
+                if (CurrentPage != Pages.spectra_page && !WarnAndConfirmPresetChange())
+                {
+                    // User cancelled - restore previous selection
+                    LoadPresetList(_lastAppliedPreset?.Name);
+                    return;
+                }
+                ApplyPreset(preset);
+            }
+        }
+
+        private bool WarnAndConfirmPresetChange()
+        {
+            if (!Settings.Default.WarnOnPresetChange || _suppressPresetWarning)
+                return true;
+
+            using (var dlg = new WarnOnPresetChangeDlg())
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return false;
+
+                if (dlg.DontShowAgain)
+                    Settings.Default.WarnOnPresetChange = false;
+
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Called by SearchSettingsControl when a params file is imported as a preset.
+        /// </summary>
+        public void AddImportedPreset(SearchSettingsPreset preset)
+        {
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            LoadPresetList(preset.Name);
+            ApplyPreset(preset);
+        }
+
+        private void ApplyPreset(SearchSettingsPreset preset)
+        {
+            _lastAppliedPreset = preset;
+
+            // Apply search engine settings
+            SearchSettingsControl?.ApplySearchSettingsPreset(preset);
+
+            // Apply FASTA settings.
+            //   null  -> preset doesn't touch FASTA (legacy preset without the attribute)
+            //   ""    -> preset explicitly cleared FASTA
+            //   path  -> preset specifies a FASTA to load
+            if (preset.FastaFilePath == string.Empty)
+                ImportFastaControl.ClearFastaContent();
+            else if (!string.IsNullOrEmpty(preset.FastaFilePath))
+                ImportFastaControl.SetFastaContent(preset.FastaFilePath, true);
+            if (!string.IsNullOrEmpty(preset.EnzymeName))
+            {
+                var enzyme = Settings.Default.GetEnzymeByName(preset.EnzymeName);
+                if (enzyme != null && enzyme.Name == preset.EnzymeName)
+                    ImportFastaControl.Enzyme = enzyme;
+                else
+                {
+                    // Enzyme not in current list; look it up from defaults
+                    var defaultEnzyme = new EnzymeList().GetDefaults(0)
+                        .FirstOrDefault(e => e.Name == preset.EnzymeName);
+                    if (defaultEnzyme != null)
+                    {
+                        if (!Settings.Default.EnzymeList.ContainsKey(preset.EnzymeName))
+                            Settings.Default.EnzymeList.Add(defaultEnzyme);
+                        ImportFastaControl.Enzyme = defaultEnzyme;
+                    }
+                }
+            }
+            ImportFastaControl.MaxMissedCleavages = preset.MaxMissedCleavages;
+
+            // Apply modification settings immediately if we're on the mods page
+            if (CurrentPage == Pages.match_modifications_page)
+                MatchModificationsControl.Initialize(Document, preset);
+
+            // Apply workflow and IRT settings (null means reset to defaults)
+            BuildPepSearchLibControl.WorkflowType = preset.Workflow.HasValue
+                ? (Workflow)preset.Workflow.Value
+                : Workflow.dda;
+            if (!string.IsNullOrEmpty(preset.IrtStandardName))
+            {
+                var irtStandard = IrtStandard.ALL.FirstOrDefault(s => s.Name == preset.IrtStandardName);
+                if (irtStandard != null)
+                    BuildPepSearchLibControl.IrtStandards = irtStandard;
+            }
+            else
+            {
+                BuildPepSearchLibControl.IrtStandards = IrtStandard.EMPTY;
+            }
+        }
+
+        private void btnSavePreset_Click(object sender, EventArgs e)
+        {
+            var currentPreset = _settingsPresetDriver.SelectedItem;
+            var isDefault = currentPreset != null &&
+                            Settings.Default.SearchSettingsPresets.GetDefaults(0).Any(d => d.Name == currentPreset.Name);
+            var suggestedName = currentPreset != null && !isDefault
+                ? currentPreset.Name
+                : SearchSettingsControl != null
+                    ? $@"{SearchSettingsControl.SelectedSearchEngine} - "
+                    : string.Empty;
+
+            string name;
+            using (var dlg = new PresetNameDlg(suggestedName))
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                name = dlg.PresetName;
+            }
+
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
+            {
+                var result = MessageDlg.Show(this,
+                    string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, name),
+                    false, MessageBoxButtons.YesNo);
+                if (result != DialogResult.Yes)
+                    return;
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+            }
+
+            var preset = BuildPresetFromCurrentSettings(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            LoadPresetList(name);
+        }
+
+        private static MzTolerance GetToleranceSafe(Func<MzTolerance> getter)
+        {
+            try { return getter() ?? new MzTolerance(0, MzTolerance.Units.ppm); }
+            catch (FormatException) { return new MzTolerance(0, MzTolerance.Units.ppm); }
+        }
+
+        private SearchSettingsPreset BuildPresetFromCurrentSettings(string name)
+        {
+            // Determine mod state based on context:
+            // - On the mods page: read directly from the listbox (user may have changed checkboxes)
+            // - Off the mods page with an applied preset: use the preset's mods (document may have
+            //   been reverted by back-navigation popping the document stack)
+            // - Off the mods page with no preset: use document mods (reflects last UpdateModificationSettings)
+            IEnumerable<StaticMod> structuralMods;
+            IEnumerable<StaticMod> heavyMods;
+            if (CurrentPage == Pages.match_modifications_page)
+            {
+                var checkedModNames = MatchModificationsControl?.CheckedModificationNames?.ToList() ?? new List<string>();
+                structuralMods = checkedModNames
+                    .Select(modName => Settings.Default.StaticModList.FirstOrDefault(m => m.Name == modName))
+                    .Where(m => m != null);
+                heavyMods = checkedModNames
+                    .Select(modName => Settings.Default.HeavyModList.FirstOrDefault(m => m.Name == modName))
+                    .Where(m => m != null);
+            }
+            else if (_lastAppliedPreset != null && _lastAppliedPreset.HasExplicitModifications)
+            {
+                structuralMods = _lastAppliedPreset.StructuralModifications;
+                heavyMods = _lastAppliedPreset.HeavyModifications;
+            }
+            else
+            {
+                var docMods = Document.Settings.PeptideSettings.Modifications;
+                structuralMods = docMods.StaticModifications;
+                heavyMods = docMods.AllHeavyModifications;
+            }
+
+            return new SearchSettingsPreset(
+                name,
+                SearchSettingsControl?.SelectedSearchEngine ?? SearchEngine.MSAmanda,
+                GetToleranceSafe(() => SearchSettingsControl?.PrecursorTolerance),
+                GetToleranceSafe(() => SearchSettingsControl?.FragmentTolerance),
+                SearchSettingsControl?.MaxVariableMods ?? 2,
+                SearchSettingsControl?.FragmentIons,
+                SearchSettingsControl?.Ms2Analyzer,
+                SearchSettingsControl?.CutoffScore ?? 0.01,
+                SearchSettingsPreset.SerializeAdditionalSettings(ImportPeptideSearch.SearchEngine?.AdditionalSettings),
+                ImportFastaControl?.FastaFile,
+                ImportFastaControl?.Enzyme?.Name,
+                ImportFastaControl?.MaxMissedCleavages ?? 0,
+                structuralModifications: structuralMods,
+                heavyModifications: heavyMods,
+                workflowType: (SearchWorkflowType)BuildPepSearchLibControl.WorkflowType,
+                irtStandardName: BuildPepSearchLibControl.IrtStandards?.Name,
+                hasExplicitModifications: true);
+        }
+
+        // Test helpers
+        public bool SettingsPresetVisible => cbSettingsPreset?.Visible ?? false;
+
+        public void SelectEditList()
+        {
+            for (int i = 0; i < cbSettingsPreset.Items.Count; i++)
+            {
+                if (cbSettingsPreset.Items[i].ToString() ==
+                    Resources.SettingsListComboDriver_Edit_list)
+                {
+                    cbSettingsPreset.SelectedIndex = i;
+                    return;
+                }
+            }
+        }
+
+        public string SelectedPresetName
+        {
+            get => _settingsPresetDriver?.SelectedItem?.Name;
+            set
+            {
+                if (_settingsPresetDriver == null)
+                    return;
+                for (int i = 0; i < cbSettingsPreset.Items.Count; i++)
+                {
+                    if (cbSettingsPreset.Items[i].ToString() == value)
+                    {
+                        cbSettingsPreset.SelectedIndex = i;
+                        return;
+                    }
+                }
+                if (string.IsNullOrEmpty(value))
+                    _settingsPresetDriver.LoadList(null);
+            }
+        }
+
+        public IEnumerable<string> PresetNames => Settings.Default.SearchSettingsPresets.Select(w => w.Name);
+
+        public void SaveSettingsPreset(string name)
+        {
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+
+            var preset = BuildPresetFromCurrentSettings(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            LoadPresetList(name);
+        }
+
+        public void ImportSettingsPreset(string filePath, string presetName)
+        {
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == presetName);
+            if (existingPreset != null)
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+
+            var preset = SearchSettingsParamsFileParser.ImportFromFile(filePath, presetName);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            LoadPresetList(presetName);
+            ApplyPreset(preset);
+        }
+
+        public SearchSettingsPreset LastAppliedPreset => _lastAppliedPreset;
+
+        #endregion
 
         private UserControl GetPageControl(TabPage tabPage)
         {
@@ -452,6 +783,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private SkylineWindow SkylineWindow { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
+
+        /// <summary>
+        /// Seed the chromatograms page's spectrum-source map with files we already know
+        /// the paths of (e.g. DiannSearchDlg passes the same DIA files that were just
+        /// searched). The key and display Name both use the filename without extension,
+        /// matching the BlibBuild library's stored fileName so the doc-library scan in
+        /// <see cref="ImportPeptideSearch.InitializeSpectrumSourceFiles"/> finds these
+        /// entries (via ContainsKey) and leaves them in place rather than emitting a
+        /// second, unpopulated entry that would trigger a rename / prefix-suffix dialog.
+        /// </summary>
+        public void PrefillFoundResultsFiles(IEnumerable<ImportPeptideSearch.FoundResultsFile> files)
+        {
+            foreach (var f in files)
+            {
+                string name = Path.GetFileNameWithoutExtension(f.Path);
+                ImportPeptideSearch.SpectrumSourceFiles[name] =
+                    new ImportPeptideSearch.FoundResultsFilePossibilities(name, f.Path);
+            }
+        }
+
         public TransitionSettings TransitionSettings { get { return Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
 
@@ -592,25 +943,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
                     }
 
-                    var eCancel = new CancelEventArgs();
-                    if (!BuildPepSearchLibControl.PerformDDASearch && !BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
-                    {
-                        if (eCancel.Cancel)
-                        {
-                            // Page has shown an error and canceled further progress
-                            return;
-                        }
-                        // A failure has occurred
-                        // CONSIDER(brendanx): This looks suspicious to me. It closes the entire wizard
-                        // when BuildPeptideSearchLibrary has failed but eCancel.Cancel is not set, which
-                        // makes it unclear if the user has seen an error message before the UI disappears.
-                        // I am not ready to dig into this further as it has been this way for years,
-                        // passing most tests. It is hard to imagine how the wizard could continue if
-                        // it fails to create a library, and it is not performing a search.
-                        CloseWizard(DialogResult.Cancel);
-                        // Not a good idea to continue once the wizard has been closed
+                    if (!BuildPeptideSearchLibraryOrCloseWizard())
                         return;
-                    }
 
                     // The user had the option to finish right after 
                     // building the peptide search library, but they
@@ -707,7 +1041,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, libIonMobilities);
                     AdjustHeightForFullScanSettings();
 
-                    bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
+                    bool hasMatchedMods = MatchModificationsControl.Initialize(Document, _lastAppliedPreset);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides && !BuildPepSearchLibControl.PerformDDASearch)
                         _pagesToSkip.Add(Pages.import_fasta_page);
                     if (!BuildPepSearchLibControl.PerformDDASearch)
@@ -860,6 +1194,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 case Pages.dda_search_page: // this is really the last page
                     var eCancel2 = new CancelEventArgs();
+                    // Save original data sources before replacing with search result files
+                    _originalDdaSearchDataSources = BuildPepSearchLibControl.DdaSearchDataSources;
                     //change search files to result files
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
                     var scoreThreshold = SearchSettingsControl.CutoffScore;
@@ -923,7 +1259,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Add the library molecules to the document, in natural sort order
             var status = new ProgressStatus(PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document);
             progressMonitor.UpdateProgress(status);
-            Assume.AreNotEqual(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs);
+            if (Equals(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs))
+            {
+                MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_No_features_detected);
+                return;
+            }
             var docNew = Document;
             foreach (var lib in Document.Settings.PeptideSettings.Libraries.Libraries.Where(l =>
                          !_existingLibraries.Libraries.Contains(l)))
@@ -1012,6 +1352,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        // True while a DDA/DIA/feature-detection search is running on its background thread and streaming
+        // progress into the SearchControl's log text box (which has its own Cancel button, not a LongWaitDlg).
+        // Set when the search is launched (InitiateSearch) and cleared when it finishes (SearchControlSearchFinished).
+        private bool _searchRunning;
+
+        // ILongWaitForm: the wizard is "busy" (and the connector's no-progress watchdog must not trip) while it
+        // is driving a long-running background operation in its own progress display rather than a LongWaitDlg.
+        // The one such operation the wizard runs itself is the search on the DDA search page; every other long
+        // operation it performs (FASTA import, feature detection, etc.) is shown in a LongWaitDlg, which the
+        // watchdog already rides through.
+        public bool IsBusy => _searchRunning;
+
         private void InitiateSearch()
         {
             ImportFastaControl.UpdateDigestSettings();
@@ -1064,6 +1416,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _expandedDdaSearchLog = true;
             }
 
+            _searchRunning = true;
             SearchControl.RunSearch();
         }
 
@@ -1118,6 +1471,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void SearchControlSearchFinished(bool success)
         {
+            _searchRunning = false;
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
             btnNext.Enabled = success;
@@ -1154,6 +1508,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         _documents.Pop();
                         _modificationSettingsChanged = false;
                     }
+                    // Re-apply preset mods after document stack pop
+                    if (_lastAppliedPreset != null)
+                        MatchModificationsControl.Initialize(Document, _lastAppliedPreset);
                     break;
                 case Pages.transition_settings_page:
                     if (_transitionSettingsChanged)
@@ -1172,6 +1529,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
                 case Pages.dda_search_settings_page:
                     btnNext.Enabled = true;
+                    // Restore original data sources if they were replaced by search result filenames
+                    if (_originalDdaSearchDataSources != null)
+                    {
+                        BuildPepSearchLibControl.DdaSearchDataSources = _originalDdaSearchDataSources;
+                        _originalDdaSearchDataSources = null;
+                    }
                     break;
                 case Pages.dda_search_page:
                     SearchControl.SearchFinished -= SearchControlSearchFinished;
@@ -1200,6 +1563,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Text = CurrentPage != LastPage
                 ? PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next
                 : PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Finish;
+
+            // Enable save button only once search settings have been configured
+            if (btnSavePreset.Visible)
+                btnSavePreset.Enabled = CurrentPage >= Pages.dda_search_settings_page;
         }
 
         private void UpdateMinimumSize()
@@ -1450,29 +1817,66 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        /// <summary>
+        /// Builds the peptide search library if not performing a DDA search.
+        /// Closes the wizard on unexpected failure; returns true to continue to the next page.
+        /// </summary>
+        private bool BuildPeptideSearchLibraryOrCloseWizard()
+        {
+            if (BuildPepSearchLibControl.PerformDDASearch)
+                return true;
+
+            var eCancel = new CancelEventArgs();
+            if (BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
+                return true;
+
+            if (eCancel.Cancel)
+                return false; // Page has shown an error and canceled further progress
+
+            // CONSIDER(brendanx): This looks suspicious to me. It closes the entire wizard
+            // when BuildPeptideSearchLibrary has failed but eCancel.Cancel is not set, which
+            // makes it unclear if the user has seen an error message before the UI disappears.
+            // I am not ready to dig into this further as it has been this way for years,
+            // passing most tests. It is hard to imagine how the wizard could continue if
+            // it fails to create a library, and it is not performing a search.
+            CloseWizard(DialogResult.Cancel);
+            return false;
+        }
+
         private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool isFeatureDetection, bool showWarnings = true)
         {
-            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings, isFeatureDetection);
-            if (result)
+            try
             {
-                Func<SrmDocumentPair, AuditLogEntry> logFunc;
-                if (BuildPepSearchLibControl.UseExistingLibrary)
+                var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings, isFeatureDetection);
+                if (result)
                 {
-                    logFunc = AuditLogEntry.SettingsLogFunction;
+                    Func<SrmDocumentPair, AuditLogEntry> logFunc;
+                    if (BuildPepSearchLibControl.UseExistingLibrary)
+                    {
+                        logFunc = AuditLogEntry.SettingsLogFunction;
+                    }
+                    else
+                    {
+                        logFunc = BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create;
+                    }
+                    SkylineWindow.ModifyDocument(!isFeatureDetection ?
+                            PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library:
+                            PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library
+                        ,
+                        doc => Document, logFunc);
+                    SetDocument(SkylineWindow.Document, _documents.Peek());
                 }
-                else
-                {
-                    logFunc = BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create;
-                }
-                SkylineWindow.ModifyDocument(!isFeatureDetection ?
-                        PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library:
-                        PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library
-                    ,
-                    doc => Document, logFunc);
-                SetDocument(SkylineWindow.Document, _documents.Peek());
-            }
 
-            return result;
+                return result;
+            }
+            catch (Exception x)
+            {
+                ExceptionUtil.DisplayOrReportException(this, x,
+                    string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                        Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath))));
+                e.Cancel = true;
+                return false;
+            }
         }
 
         private bool AddExistingLibrary(string libraryPath)
@@ -1574,6 +1978,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Cancel and dispose DDA SearchEngine
             SearchControl?.Cancel();
             ImportPeptideSearch.SearchEngine?.Dispose();
+
+            // Stop (and join) any background score-type detection the build-library grid started when files
+            // were added, so no background work -- or the temp file it feeds to BlibBuild -- outlives this wizard.
+            BuildPepSearchLibControl?.Grid?.CancelScoreTypeDetection();
 
             base.OnFormClosing(e);
         }

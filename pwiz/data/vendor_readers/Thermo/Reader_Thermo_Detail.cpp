@@ -79,24 +79,32 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Velos:                 return MS_LTQ_Velos;
         case InstrumentModelType_LTQ_Velos_ETD:             return MS_LTQ_Velos_ETD;
         case InstrumentModelType_LTQ_Velos_Plus:            return MS_Velos_Plus;
+        case InstrumentModelType_Velos_Pro:                 return MS_Velos_Pro;
         case InstrumentModelType_LTQ_Orbitrap_Velos:        return MS_LTQ_Orbitrap_Velos;
         case InstrumentModelType_LTQ_Orbitrap_Velos_Pro:    return MS_LTQ_Orbitrap_Velos_Pro;
+        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD:    return MS_LTQ_Orbitrap_Velos_ETD;
         case InstrumentModelType_LTQ_Orbitrap_Elite:        return MS_LTQ_Orbitrap_Elite;
         case InstrumentModelType_LXQ:                       return MS_LXQ;
         case InstrumentModelType_ITQ_700:                   return MS_ITQ_700;
         case InstrumentModelType_ITQ_900:                   return MS_ITQ_900;
         case InstrumentModelType_ITQ_1100:                  return MS_ITQ_1100;
         case InstrumentModelType_GC_Quantum:                return MS_GC_Quantum;
+        case InstrumentModelType_ITQ:                       return MS_ITQ;
         case InstrumentModelType_LTQ_XL:                    return MS_LTQ_XL;
         case InstrumentModelType_LTQ_XL_ETD:                return MS_LTQ_XL_ETD;
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:       return MS_LTQ_Orbitrap_XL_ETD;
         case InstrumentModelType_DFS:                       return MS_DFS;
         case InstrumentModelType_DSQ_II:                    return MS_DSQ_II;
         case InstrumentModelType_ISQ:                       return MS_ISQ;
+        case InstrumentModelType_ISQ_7000:                  return MS_ISQ_7000;
+        case InstrumentModelType_ISQ_LT:                    return MS_ISQ_LT;
         case InstrumentModelType_MALDI_LTQ_XL:              return MS_MALDI_LTQ_XL;
         case InstrumentModelType_MALDI_LTQ_Orbitrap:        return MS_MALDI_LTQ_Orbitrap;
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL:     return MS_MALDI_LTQ_Orbitrap_XL;
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery: return MS_MALDI_LTQ_Orbitrap_Discovery;
         case InstrumentModelType_TSQ_Quantum:               return MS_TSQ_Quantum;
         case InstrumentModelType_TSQ_Quantum_Access:        return MS_TSQ_Quantum_Access;
+        case InstrumentModelType_TSQ_Quantum_Access_MAX:    return MS_TSQ_Quantum_Access_MAX;
         case InstrumentModelType_TSQ_Quantum_Ultra:         return MS_TSQ_Quantum_Ultra;
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:      return MS_TSQ_Quantum_Ultra_AM;
         case InstrumentModelType_TSQ_Vantage_Standard:      return MS_TSQ_Vantage;
@@ -113,12 +121,14 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Q_Exactive_HF_X:           return MS_Q_Exactive_HF_X;
         case InstrumentModelType_Q_Exactive_UHMR:           return MS_Q_Exactive_UHMR;
         case InstrumentModelType_Q_Exactive_Focus:          return MS_Q_Exactive_Focus;
+        case InstrumentModelType_Q_Exactive_GC_Orbitrap:    return MS_Q_Exactive_GC_Orbitrap;
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
         case InstrumentModelType_Orbitrap_Fusion:           return MS_Orbitrap_Fusion;
         case InstrumentModelType_Orbitrap_Fusion_Lumos:     return MS_Orbitrap_Fusion_Lumos;
         case InstrumentModelType_Orbitrap_Fusion_ETD:       return MS_Orbitrap_Fusion_ETD;
         case InstrumentModelType_Orbitrap_Ascend:           return MS_Orbitrap_Ascend;
+        case InstrumentModelType_Orbitrap_Excedion_Pro:     return MS_Orbitrap_Excedion_Pro;
         case InstrumentModelType_Orbitrap_ID_X:             return MS_Orbitrap_ID_X;
         case InstrumentModelType_Orbitrap_IQ_X:             return MS_Orbitrap_IQ_X;
         case InstrumentModelType_TSQ_Quantiva:              return MS_TSQ_Quantiva;
@@ -126,6 +136,8 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_TSQ_Altis:                 return MS_TSQ_Altis;
         case InstrumentModelType_TSQ_Altis_Plus:            return MS_TSQ_Altis_Plus;
         case InstrumentModelType_TSQ_Quantis:               return MS_TSQ_Quantis;
+        case InstrumentModelType_TSQ_8000:                  return MS_TSQ_8000;
+        case InstrumentModelType_TSQ_Quantum_XLS:           return MS_TSQ_Quantum_XLS;
         case InstrumentModelType_TSQ_8000_Evo:              return MS_TSQ_8000_Evo;
         case InstrumentModelType_TSQ_9000:                  return MS_TSQ_9000;
         case InstrumentModelType_Orbitrap_Exploris_120:     return MS_Orbitrap_Exploris_120;
@@ -137,7 +149,10 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Orbitrap_GC:               return MS_Orbitrap_Exploris_480;
         case InstrumentModelType_Orbitrap_Astral:           return MS_Orbitrap_Astral;
         case InstrumentModelType_Orbitrap_Astral_Zoom:      return MS_Orbitrap_Astral_Zoom;
+        case InstrumentModelType_TSQ_Certis:                return MS_TSQ_Certis;
         case InstrumentModelType_Stellar:                   return MS_Stellar;
+        case InstrumentModelType_DeltaPlus_IRMS:            return MS_DeltaPlus_IRMS;
+        case InstrumentModelType_ThermoQuest_Voyager:       return MS_ThermoQuest_Voyager;
 
         default:
             throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
@@ -245,12 +260,14 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Q_Exactive_Focus:
+        case InstrumentModelType_Q_Exactive_GC_Orbitrap:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
         case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_GC:
+        case InstrumentModelType_Orbitrap_Excedion_Pro:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -320,8 +337,11 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Velos_Pro:
+        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD:
         case InstrumentModelType_LTQ_Orbitrap_Elite:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -342,6 +362,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_PolarisQ:
         case InstrumentModelType_ITQ_700:
         case InstrumentModelType_ITQ_900:
+        case InstrumentModelType_ITQ:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
@@ -357,6 +378,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Velos_Pro:
         case InstrumentModelType_Stellar:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -369,8 +391,11 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_DSQ:
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_ISQ:
+        case InstrumentModelType_ISQ_7000:
+        case InstrumentModelType_ISQ_LT:
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_IsoLink:
+        case InstrumentModelType_ThermoQuest_Voyager:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -378,13 +403,16 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
             break;
 
         case InstrumentModelType_TSQ_7000:
+        case InstrumentModelType_TSQ_8000:
         case InstrumentModelType_TSQ_8000_Evo:
         case InstrumentModelType_TSQ_9000:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Access_MAX:
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Quantum_XLS:
         case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_TSQ_Vantage_AM:
@@ -394,6 +422,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
+        case InstrumentModelType_TSQ_Certis:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -408,6 +437,12 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_MAT900XP_Trap:
         case InstrumentModelType_MAT95XP:
         case InstrumentModelType_MAT95XP_Trap:
+        case InstrumentModelType_Element_2:
+        case InstrumentModelType_Element_XR:
+        case InstrumentModelType_Element_GD:
+        case InstrumentModelType_DeltaPlus_IRMS:
+        case InstrumentModelType_Delta_Plus_Advantage:
+        case InstrumentModelType_Delta_Plus_XP:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_magnetic_sector, 2));
@@ -415,11 +450,6 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
             break;
 
         case InstrumentModelType_Tempus_TOF:
-        case InstrumentModelType_Element_2:
-        case InstrumentModelType_Element_XR:
-        case InstrumentModelType_Element_GD:
-        case InstrumentModelType_Delta_Plus_Advantage:
-        case InstrumentModelType_Delta_Plus_XP:
         case InstrumentModelType_Neptune:
         case InstrumentModelType_Triton:
             // TODO: figure out these configurations
@@ -709,3 +739,4 @@ AcylCarnitine 12:0|  |  (no adduct) | 344.3 | 1 | 84.1 | 1.5 | 0.4 | 24 | Negati
 } // detail
 } // msdata
 } // pwiz
+

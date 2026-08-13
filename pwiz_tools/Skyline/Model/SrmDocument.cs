@@ -1315,9 +1315,25 @@ namespace pwiz.Skyline.Model
                         var probeString = Encoding.UTF8.GetString(probeBuf);
                         if (!probeString.Contains(@"<srm_settings"))
                         {
-                            explained = string.Format(
-                                ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
-                                path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                            if (!PathEx.HasExtension(path, EXT) &&
+                                !PathEx.HasExtension(path, SrmDocumentSharing.EXT_SKY_ZIP))
+                            {
+                                // Check if this is a known mass spec data file format
+                                var sourceType = DataSourceUtil.GetSourceType(path);
+                                if (!Equals(sourceType, DataSourceUtil.UNKNOWN_TYPE) &&
+                                    !Equals(sourceType, DataSourceUtil.FOLDER_TYPE))
+                                {
+                                    explained = string.Format(
+                                        ModelResources.SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file,
+                                        Path.GetFileName(path), sourceType);
+                                }
+                            }
+                            if (string.IsNullOrEmpty(explained))
+                            {
+                                explained = string.Format(
+                                    ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                                    path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                            }
                         }
                     }
                 }
@@ -1597,7 +1613,7 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(ModelResources.SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides);
             }
             var dbPath = calculator.DatabasePath;
-            var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+            var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath) : IrtDb.CreateIrtDb(dbPath);
             var oldPeptides = db.ReadPeptides().Select(p => new DbIrtPeptide(p)).ToList();
             var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out var conflicts);
             if (peptidesCombined == null)
@@ -2193,6 +2209,8 @@ namespace pwiz.Skyline.Model
             Settings = Settings.ChangePeptideSettings(Settings.PeptideSettings.ChangeIntegration(
                 Settings.PeptideSettings.Integration.ChangeScoreQValueMap(
                     ScoreQValueMap.FromMoleculeGroups(MoleculeGroups))));
+            Settings = Settings.ChangeDocumentRetentionTimes(Settings.DocumentRetentionTimes
+                .UpdateFromDeserializedDocument(this));
 
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
 

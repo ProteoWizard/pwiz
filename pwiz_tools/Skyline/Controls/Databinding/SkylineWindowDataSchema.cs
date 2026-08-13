@@ -97,5 +97,25 @@ namespace pwiz.Skyline.Controls.Databinding
                 result = ReferenceEquals(SkylineWindow.DocumentUI, SkylineWindow.Document)));
             return result;
         }
+
+        public override void SelectDocNode(IdentityPath identityPath)
+        {
+            SkylineWindow.SelectedPath = identityPath;
+        }
+
+        public override void ShowCalibrationCurve(Model.Databinding.Entities.Peptide peptide)
+        {
+            SelectDocNode(peptide.IdentityPath);
+            var calibrationForm = SkylineWindow.ShowCalibrationForm();
+            if (calibrationForm != null)
+            {
+                if (peptide.DocNode.HasPrecursorConcentrations &&
+                    Properties.Settings.Default.CalibrationCurveOptions.SingleBatch)
+                {
+                    Properties.Settings.Default.CalibrationCurveOptions = Properties.Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(false);
+                    calibrationForm.UpdateUI(false);
+                }
+            }
+        }
     }
 }

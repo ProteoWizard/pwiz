@@ -738,15 +738,16 @@ namespace pwiz.SkylineTestTutorial
             {
                 // TODO: Figure out why the minimize fails to unlock the .skyd file, if not minimized to current file
                 RunUI(() => SkylineWindow.SaveDocument(minimizedFile));
+                WaitForDocumentLoaded(); // Save As triggers reload of libraries and .skyd from new paths
 
                 var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                 var minimizeResultsDlg = ShowDialog<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults);
-                RunUI(() =>
-                {
-                    minimizeResultsDlg.LimitNoiseTime = true;
-                    minimizeResultsDlg.NoiseTimeRange = 2; // Not L10N
-                });
+                RunUI(() => minimizeResultsDlg.SetNoiseLimit(true, 2));
                 WaitForConditionUI(() => minimizeResultsDlg.IsComplete);
+                // Compression ratio differs: .wiff files extend to 118.8 min while mzML is truncated
+                // at 50 min (see PreferWiff), so noise trimming removes different proportions
+                int expectedCompression = PreferWiff ? 55 : 36;
+                RunUI(() => Assert.AreEqual(expectedCompression, minimizeResultsDlg.PercentOfTotalCompression, 1));
                 PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form");   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));
@@ -1055,7 +1056,8 @@ namespace pwiz.SkylineTestTutorial
                 },
                 {"MzCount",37828.ToString(@"N0", CultureInfo.CurrentCulture)},
                 {"TotalIonCurrent", 692070},
-                {"IsCentroided","False"},
+                {"IsCentroided",FullScanPropertiesRes.False},
+                {"Polarity",FullScanPropertiesRes.Polarity_Positive},
                 {"idotp",0.73.ToString(CultureInfo.CurrentCulture)}
             };
             var expectedProperties = new FullScanProperties();

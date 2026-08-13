@@ -2090,9 +2090,9 @@ namespace pwiz.Skyline.Model.Lib
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result * 397) ^ Id.GetHashCode();
-                result = (result * 397) ^ Revision.GetHashCode();
-                result = (result * 397) ^ (FilePath != null ? FilePath.GetHashCode() : 0);
+                result = (result * 397) ^ (Id?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (Revision?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (FilePath?.GetHashCode() ?? 0);
                 return result;
             }
         }

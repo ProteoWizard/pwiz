@@ -852,14 +852,20 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public IList<FilesTreeNode> FindNodesByFilePath(string targetPath)
         {
-            var normalizedTargetPath = FileSystemUtil.Normalize(targetPath);
-
             var matchingNodes = new List<FilesTreeNode>();
+
+            var normalizedTargetPath = FileSystemUtil.Normalize(targetPath);
+            if (normalizedTargetPath == null)
+                return matchingNodes;
+
             Traverse(Root, filesTreeNode =>
             {
                 if (filesTreeNode.Model.IsBackedByFile && filesTreeNode.LocalFilePath != null)
                 {
-                    var normalizedCurrentPath = FileSystemUtil.Normalize(filesTreeNode.LocalFilePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    var normalizedCurrentPath = FileSystemUtil.Normalize(filesTreeNode.LocalFilePath);
+                    if (normalizedCurrentPath == null)
+                        return true; // skip this node, continue traversal
+                    normalizedCurrentPath = normalizedCurrentPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
                     // Check for exact match - if found, this is the target node
                     if (FileSystemUtil.PathEquals(normalizedCurrentPath, normalizedTargetPath))

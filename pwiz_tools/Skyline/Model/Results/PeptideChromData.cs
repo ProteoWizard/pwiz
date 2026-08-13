@@ -220,7 +220,8 @@ namespace pwiz.Skyline.Model.Results
 
             // Merge where possible and pick peak groups at the peptide level
             _listListPeakSets.Clear();
-            foreach (var dataSets in ComparableDataSets)
+            var comparableDataSets = ComparableDataSets.ToList();
+            foreach (var dataSets in comparableDataSets)
                 _listListPeakSets.Add(PickPeptidePeaks(dataSets.ToArray()));
 
             // Adjust peak dimensions based on peak picking
@@ -248,8 +249,14 @@ namespace pwiz.Skyline.Model.Results
             UpdatePrecursorsFromPeptidePeaks();
 
             // Sort transition group level peaks by retention time and record the best peak
-            foreach (var chromDataSet in _dataSets)
-                chromDataSet.StorePeaks();
+            for (int iComparableDataSet = 0; iComparableDataSet < comparableDataSets.Count; iComparableDataSet++)
+            {
+                var bestScore = (float) (_listListPeakSets[iComparableDataSet].FirstOrDefault()?.CombinedScore ?? 0);
+                foreach (var dataSet in comparableDataSets[iComparableDataSet])
+                {
+                    dataSet.StorePeaks(bestScore);
+                }
+            }
         }
 
         private MaxPossibleShift GetMaxPossibleShift(IList<PeptideChromDataPeakList> listPeakSets)
@@ -1033,7 +1040,8 @@ namespace pwiz.Skyline.Model.Results
             if (nodeGroup1 == null || nodeGroup2 == null)
                 return false;
             return Equals(nodeGroup1.TransitionGroup.PrecursorAdduct, nodeGroup2.TransitionGroup.PrecursorAdduct) &&
-                   ReferenceEquals(nodeGroup1.TransitionGroup.LabelType, nodeGroup2.TransitionGroup.LabelType);
+                   ReferenceEquals(nodeGroup1.TransitionGroup.LabelType, nodeGroup2.TransitionGroup.LabelType) &&
+                   Equals(nodeGroup1.SpectrumClassFilter, nodeGroup2.SpectrumClassFilter);
         }
 
         public IEnumerable<ChromatogramGroupInfo> MakeChromatogramGroupInfos()

@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Util
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
         public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java, Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe"));
-        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java, JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3));
+        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java, DefaultJavaMaxHeap);
 
         // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
         public static FileDownloadInfo[] FilesToDownload => new[]
@@ -149,6 +149,7 @@ namespace pwiz.Skyline.Util
             }
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
 
+        public static string DefaultJavaMaxHeap => TryHelper.IsParallelClient ? JavaMaxHeapArg(8L * 1024 * 1024 * 1024) : JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3);
         public static string JavaMaxHeapArg(long maxHeapBytes) => $@"-Xmx{maxHeapBytes / 1024 / 1024}M";
     }
 
@@ -181,10 +182,22 @@ namespace pwiz.Skyline.Util
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
-            string requiredFilePath = requiredFile.Unzip
-                ? requiredFile.CheckInstalledPath ?? requiredFile.InstallPath
-                : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
-            requiredFilePath = Settings.Default.SearchToolList.GetToolPathOrDefault(requiredFile.ToolType, requiredFilePath);
+            string requiredFilePath;
+            if (requiredFile.CheckInstalledPath != null)
+            {
+                // Caller pinned the exact location to verify (e.g. version-specific
+                // binary). Don't let the SearchToolList registry remap us to a sibling
+                // install of the same ToolType — that's how a registered DIA-NN 2.5.0
+                // entry would mask the absence of a freshly-requested 1.9.1.
+                requiredFilePath = requiredFile.CheckInstalledPath;
+            }
+            else
+            {
+                requiredFilePath = requiredFile.Unzip
+                    ? requiredFile.InstallPath
+                    : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
+                requiredFilePath = Settings.Default.SearchToolList.GetToolPathOrDefault(requiredFile.ToolType, requiredFilePath);
+            }
 
             bool alreadyDownloaded = File.Exists(requiredFilePath) || Directory.Exists(requiredFilePath);
 

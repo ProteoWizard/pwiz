@@ -274,6 +274,15 @@
   <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
     <value>保持時間カルキュレータを編集</value>
   </data>
+  <data name="SearchToolList_Label_Internal__Tools" xml:space="preserve">
+    <value>内部ツール(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Label_Search__Tools" xml:space="preserve">
+    <value>検索ツール(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Title_Edit_Search_Tools" xml:space="preserve">
+    <value>検索ツールを編集</value>
+  </data>
   <data name="ServerList_Label__Servers" xml:space="preserve">
     <value>サーバー(&amp;S)</value>
   </data>

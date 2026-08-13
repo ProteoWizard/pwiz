@@ -22,7 +22,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections;
@@ -76,6 +75,11 @@ namespace pwiz.Skyline.Model.Results
                 Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0, 0)};
                 SimProductFilters = Ms1ProductFilters;  // We want TIC and BPC for all scans, even if they have narrow machine settings and look like SIM
             }
+
+            if (false == precursorTextId.ChromatogramGroupId?.SpectrumClassFilter.IsEmpty)
+            {
+                SpectrumMetadataPredicate = precursorTextId.ChromatogramGroupId.SpectrumClassFilter.MakePredicate();
+            }
         }
 
         public int Id { get; private set; }
@@ -83,7 +87,8 @@ namespace pwiz.Skyline.Model.Results
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
         public ChromatogramGroupId ChromatogramGroupId { get; }
-        public SpectrumClassFilter SpectrumClassFilter => ChromatogramGroupId?.SpectrumClassFilter ?? default;
+        public Predicate<SpectrumMetadata> SpectrumMetadataPredicate { get; }
+
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
         public double? MinTime
@@ -219,6 +224,7 @@ namespace pwiz.Skyline.Model.Results
             float[] extractedIntensities = new float[targetCount];
             float[] massErrors = highAcc ? new float[targetCount] : null;
             double[] meanErrors = highAcc ? new double[targetCount] : null;
+            bool[] hasScanWindowCoverage = null; // Lazily initialized when narrow scan windows are detected
 
             int spectrumCount = 0;
             int rtCount = 0;
@@ -295,6 +301,31 @@ namespace pwiz.Skyline.Model.Results
                             useIonMobilityHighEnergyOffset ? productFilter.HighEnergyIonMobilityValueOffsetHigh : 0))
                     {
                         continue;
+                    }
+
+                    // Track per-target scan window coverage for narrow scan windows.
+                    // Only activate for genuinely narrow scan windows (e.g. SCIEX TOFMSMS with
+                    // ~20 m/z product scan windows that cycle across different mass ranges).
+                    // Most instruments report scan window metadata for broad windows (e.g. 400-1400 m/z)
+                    // where this filtering would incorrectly remove valid zero-intensity points.
+                    if (spectrum.Metadata?.ScanWindowLowerLimit != null &&
+                        spectrum.Metadata?.ScanWindowUpperLimit != null &&
+                        spectrum.Metadata.ScanWindowUpperLimit.Value - spectrum.Metadata.ScanWindowLowerLimit.Value <
+                            SpectrumFilter.NARROW_SCAN_WINDOW_CUTOFF)
+                    {
+                        if (hasScanWindowCoverage == null)
+                            hasScanWindowCoverage = new bool[targetCount];
+                        double scanWindowStart = productFilter.TargetMz - productFilter.FilterWidth / 2;
+                        double scanWindowEnd = productFilter.TargetMz + productFilter.FilterWidth / 2;
+                        if (scanWindowEnd < spectrum.Metadata.ScanWindowLowerLimit.Value ||
+                            scanWindowStart > spectrum.Metadata.ScanWindowUpperLimit.Value)
+                            continue;
+                        hasScanWindowCoverage[targetIndex] = true;
+                    }
+                    else if (hasScanWindowCoverage != null)
+                    {
+                        // Spectrum without narrow scan window covers all targets
+                        hasScanWindowCoverage[targetIndex] = true;
                     }
 
                     // Look for the first peak that is greater than the start of the filter
@@ -376,15 +407,19 @@ namespace pwiz.Skyline.Model.Results
                     extractedIntensities[i] *= scale;
             }
             var dtFilter = GetIonMobilityWindow();
-            return new ExtractedSpectrum(ChromatogramGroupId,
+            var result = new ExtractedSpectrum(ChromatogramGroupId,
                 PeptideColor,
                 Q1,
-                dtFilter, 
+                dtFilter,
                 Extractor,
                 Id,
                 productFilters,
                 extractedIntensities,
                 massErrors);
+            // Only set coverage if some targets were not covered (i.e. not all true)
+            if (hasScanWindowCoverage != null && hasScanWindowCoverage.Any(c => !c))
+                result.HasScanWindowCoverage = hasScanWindowCoverage;
+            return result;
         }
 
         public int CompareTo(SpectrumFilterPair other)
@@ -560,12 +595,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool MatchesSpectrum(SpectrumMetadata spectrumMetadata)
         {
-            if (SpectrumClassFilter.IsEmpty)
-            {
-                return true;
-            }
-
-            return SpectrumClassFilter.MakePredicate()(spectrumMetadata);
+            return false != SpectrumMetadataPredicate?.Invoke(spectrumMetadata);
         }
 
         public override string ToString() // For debug convenience

@@ -55,7 +55,7 @@ PWIZ_API_DECL size_t ChromatogramList_Agilent::size() const
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Agilent::chromatogramIdentity(size_t index) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Agilent::createIndex, this));
-    if (index>size())
+    if (index>=size())
         throw runtime_error(("[ChromatogramList_Agilent::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return reinterpret_cast<const ChromatogramIdentity&>(index_[index]);
@@ -82,7 +82,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, DetailLevel detailLevel) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Agilent::createIndex, this));
-    if (index>size())
+    if (index>=size())
         throw runtime_error(("[ChromatogramList_Agilent::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
