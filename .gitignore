@@ -493,3 +493,5 @@ mt_tools/copy_lib.cmd
 mt_tools/pwiz-config-version.cmake
 mt_tools/pwiz-config.cmake
 
+/libraries/zstd-1.5.7/
+
