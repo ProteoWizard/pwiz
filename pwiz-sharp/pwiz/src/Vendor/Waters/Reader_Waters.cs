@@ -55,7 +55,7 @@ public sealed class Reader_Waters : IReader
             "Waters .raw reading requires the vendor SDK. Rebuild pwiz-sharp with --i-agree-to-the-vendor-licenses to enable.");
 #else
         int preferOnlyMsLevel = config?.PreferOnlyMsLevel ?? 0;
-        bool srmAsSpectra = false; // Phase 1 doesn't expose this through ReaderConfig.
+        bool srmAsSpectra = config?.SrmAsSpectra ?? false;
         bool ddaProcessing = config?.DdaProcessing ?? false;
         bool combineIms = config?.CombineIonMobilitySpectra ?? false;
         bool globalChromMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
@@ -148,7 +148,11 @@ public sealed class Reader_Waters : IReader
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 
+        // srmAsSpectra has to reach BOTH lists: cpp ChromatogramList_Waters.cpp:314 drops the SRM
+        // chromatograms when the transitions have moved into the spectrum list. The list already
+        // implemented that; the flag was simply never passed, so the SRM data came out twice.
         var chromatogramList = new ChromatogramList_Waters(data, preferOnlyMsLevel,
+            srmAsSpectra: srmAsSpectra,
             globalChromatogramsAreMs1Only: globalChromatogramsAreMs1Only)
         { Dp = dpReader };
         result.Run.ChromatogramList = chromatogramList;

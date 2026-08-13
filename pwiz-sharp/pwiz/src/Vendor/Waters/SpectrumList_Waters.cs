@@ -551,19 +551,35 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
 
             var precursor = new Precursor();
             var (lo, hi) = _data.GetAcquisitionMassRange(ie.Function);
-            if (offsets is { } o)
+            if (spectrumType == CVID.MS_SRM_spectrum)
             {
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, o.Lower, CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, o.Upper, CVID.MS_m_z);
+                // cpp SpectrumList_Waters.cpp:297-301. An SRM spectrum takes its isolation target
+                // from the function's own precursor list - scan 1 of the function, the same read
+                // the chromatogram index uses - not from the SET_MASS scan stat, and it skips
+                // both the mid-range fallback and the DDA offsets below. Only reachable with
+                // srmAsSpectra, which is why this had no C# counterpart until the flag was wired
+                // up. Pass the float through unwidened so it formats at float precision, as
+                // cpp's CVParam(float) overload does.
+                var (precursorMzs, _) = _data.ReadMrmTransitions(ie.Function);
+                if (precursorMzs.Length > 0)
+                    precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, precursorMzs[0], CVID.MS_m_z);
             }
-            else if (setMass == 0)
+            else
             {
-                setMass = (lo + hi) / 2.0;
-                precursorMass = setMass;
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, hi - setMass, CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, hi - setMass, CVID.MS_m_z);
+                if (offsets is { } o)
+                {
+                    precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, o.Lower, CVID.MS_m_z);
+                    precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, o.Upper, CVID.MS_m_z);
+                }
+                else if (setMass == 0)
+                {
+                    setMass = (lo + hi) / 2.0;
+                    precursorMass = setMass;
+                    precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, hi - setMass, CVID.MS_m_z);
+                    precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, hi - setMass, CVID.MS_m_z);
+                }
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, setMass, CVID.MS_m_z);
             }
-            precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, setMass, CVID.MS_m_z);
 
             precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation);
             if (collisionEnergy > 0)
