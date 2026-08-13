@@ -326,7 +326,11 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
                 catch { }
                 if (onlyMs1 && level != 1) continue;
                 times.Add(rt);
-                intensities.Add(tic);
+                // cpp caches TIC intensities as BinaryData<float> (MassHunterData.cpp:144)
+                // and assigns them straight into the mzML double array, so every value it
+                // writes is float-rounded. Keeping the SDK double left all eight
+                // single-diff Agilent files off by ~5e-08 relative - float32 epsilon.
+                intensities.Add((float)tic);
                 msLevels.Add(level);
             }
         }
@@ -340,7 +344,11 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
                 int level = rec.MSLevel == MSLevel.MSMS ? 2 : 1;
                 if (onlyMs1 && level != 1) continue;
                 times.Add(rec.RetentionTime);
-                intensities.Add(rec.Tic);
+                // cpp caches TIC intensities as BinaryData<float> (MassHunterData.cpp:144)
+                // and assigns them straight into the mzML double array, so every value it
+                // writes is float-rounded. Keeping the SDK double left all eight
+                // single-diff Agilent files off by ~5e-08 relative - float32 epsilon.
+                intensities.Add((float)rec.Tic);
                 msLevels.Add(level);
             }
         }
