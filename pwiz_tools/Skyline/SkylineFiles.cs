@@ -1478,29 +1478,6 @@ namespace pwiz.Skyline
             }
         }
 
-        /// <summary>The current layout as a stream, so <see cref="ImportLayout"/> can put it back.</summary>
-        private MemoryStream SaveLayoutToStream()
-        {
-            var layoutStream = new MemoryStream();
-            // UTF-8 without BOM, and leave the stream open to read back
-            dockPanel.SaveAsXml(layoutStream, new UTF8Encoding(false), true);
-            layoutStream.Position = 0;
-            return layoutStream;
-        }
-
-        private void RestoreLayout(MemoryStream restoreStream)
-        {
-            try
-            {
-                LoadLayout(restoreStream);
-            }
-            catch (Exception)
-            {
-                // The layout that was already showing will not reload either. There is nothing
-                // better left to try, and the failure that got us here is the one worth reporting.
-            }
-        }
-
         public const string EXT_SKY_VIEW = ".sky.view";
         public static string FILTER_SKY_VIEW
         {
@@ -1575,26 +1552,37 @@ namespace pwiz.Skyline
 
         public void ImportLayout(string viewFilePath)
         {
-            // Capture the arrangement the user has now, because LoadLayoutLocked destroys every
-            // dockable form before it rebuilds from the XML: a file that is not a usable layout
-            // would otherwise leave them with no windows at all. Only Import needs this. Opening a
-            // document also loads a layout, but the outgoing arrangement belongs to the document
-            // being closed and is no better for the new one, and nothing is at risk there anyway
-            // since the user can just quit.
-            //
-            // No check of the file up front either. A pre-flight check would only hide whatever
-            // else the loader cannot cope with, which is what we would want to hear about.
-            var restoreStream = SaveLayoutToStream();
+            MemoryStream previousLayout = null;
             try
             {
-                using (var stream = File.OpenRead(viewFilePath))
+                using var stream = File.OpenRead(viewFilePath);
+                try
                 {
-                    LoadLayout(stream);
+                    MemoryStream memoryStream = new MemoryStream();
+                    // Remember the current layout in case something goes wrong.
+                    dockPanel.SaveAsXml(memoryStream, Encoding.UTF8, true);
+                    memoryStream.Position = 0;
+                    previousLayout = memoryStream;
                 }
+                catch
+                {
+                    // Failed to save the current layout (maybe too big). Continue without a backup.
+                }
+                LoadLayout(stream);
             }
             catch (Exception x)
             {
-                RestoreLayout(restoreStream);
+                if (previousLayout != null)
+                {
+                    try
+                    {
+                        LoadLayout(previousLayout);
+                    }
+                    catch
+                    {
+                        // Ignore
+                    }
+                }
                 MessageDlg.ShowWithException(this,
                     string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
             }
