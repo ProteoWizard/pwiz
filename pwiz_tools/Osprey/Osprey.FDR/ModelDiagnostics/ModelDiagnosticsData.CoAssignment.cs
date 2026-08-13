@@ -565,10 +565,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // scope while `>= _experimentCutoff` drops it at experiment scope, so one panel
                 // would contradict itself. An entry with no finite score is better absent:
                 // SealRunCutoff skips what it never sees and ExperimentBest returns -Infinity.
-                if (double.IsNaN(score))
-                    return;
-                if (!_fileBest.TryGetValue(entryId, out double cur) || double.IsNaN(cur) || cur == 0.0 ||
-                    (score != 0.0 && score > cur))
+                // Skip only the run-scope WRITE. An early return here would also skip the
+                // experiment reduction below and both acceptance-set additions, so a NaN row
+                // would silently remove its precursor from the accepted counts that set the
+                // experiment boundary - a worse fault than the one being guarded against.
+                if (!double.IsNaN(score) &&
+                    (!_fileBest.TryGetValue(entryId, out double cur) || double.IsNaN(cur) || cur == 0.0 ||
+                     (score != 0.0 && score > cur)))
                     _fileBest[entryId] = score;
                 // Every row of an entry carries the same persisted aggregate, so this is a read,
                 // not a reduction. The only real decision is which row wins when one of them never

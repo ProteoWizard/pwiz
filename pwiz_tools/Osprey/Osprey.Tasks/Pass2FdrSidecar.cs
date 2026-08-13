@@ -996,14 +996,25 @@ namespace pwiz.Osprey.Tasks
                     }
                     if (wanted.Count == 0)
                         return;
-                    FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
+                    // The result matters here as much as at the other read sites: ReadRecords
+                    // returns false AFTER invoking the callback, so a partial read leaves
+                    // pass1ExpQByKey holding SOME of this file's off-stratum q-values. Those are
+                    // carried forward verbatim by the off-stratum branch, so a silent partial
+                    // fill gives a subset of survivors their pass-1 q and the rest a default -
+                    // a per-entry mix no downstream check can see.
+                    if (!FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
                     {
                         if (wanted.Contains(rec.EntryId))
                         {
                             pass1ExpQByKey[(fileKey, rec.EntryId)] =
                                 (rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
                         }
-                    });
+                    }))
+                    {
+                        throw new IOException(
+                            @"1st-pass sidecar could not be read in full while stashing off-stratum experiment q-values: " +
+                            sidecarPath);
+                    }
                 }
 
                 competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(

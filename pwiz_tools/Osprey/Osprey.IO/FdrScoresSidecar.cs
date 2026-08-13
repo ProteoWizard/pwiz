@@ -210,6 +210,18 @@ namespace pwiz.Osprey.IO
             {
                 return false;
             }
+            catch (ArgumentException)
+            {
+                // new FileInfo(path) throws this on a null, empty or malformed path, and
+                // NotSupportedException on a bad drive spec - neither is an IOException. The
+                // "never throws" contract above is what five gating call sites rely on to stay
+                // simple, so it has to cover the argument faults too.
+                return false;
+            }
+            catch (NotSupportedException)
+            {
+                return false;
+            }
         }
 
         private static string ScoresPath(string inputPath, string passLabel)
