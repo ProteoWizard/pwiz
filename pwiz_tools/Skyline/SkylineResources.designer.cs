@@ -2054,6 +2054,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure attempting to save the window layout file {0}..
+        /// </summary>
+        public static string SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Window Layout Files.
+        /// </summary>
+        public static string SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Background Proteome.
         /// </summary>
         public static string SkylineWindow_FindBackgroundProteome_Background_Proteome {

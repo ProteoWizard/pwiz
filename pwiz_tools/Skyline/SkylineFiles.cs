@@ -75,6 +75,7 @@ namespace pwiz.Skyline
             return fileName + @".view";
         }
 
+
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
         {
             ToolStripMenuItem menu = fileToolStripMenuItem;
@@ -1462,13 +1463,140 @@ namespace pwiz.Skyline
 
         private void SaveLayout(string fileName)
         {
-            using (var saverUser = new FileSaver(GetViewFile(fileName)))
+            SaveLayoutToFile(GetViewFile(fileName));
+        }
+
+        private void SaveLayoutToFile(string viewFilePath)
+        {
+            using (var saverUser = new FileSaver(viewFilePath))
             {
                 if (saverUser.CanSave())
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
                     saverUser.Commit();
                 }
+            }
+        }
+
+        /// <summary>The current layout as a stream, so <see cref="ImportLayout"/> can put it back.</summary>
+        private MemoryStream SaveLayoutToStream()
+        {
+            var layoutStream = new MemoryStream();
+            // UTF-8 without BOM, and leave the stream open to read back
+            dockPanel.SaveAsXml(layoutStream, new UTF8Encoding(false), true);
+            layoutStream.Position = 0;
+            return layoutStream;
+        }
+
+        private void RestoreLayout(MemoryStream restoreStream)
+        {
+            try
+            {
+                LoadLayout(restoreStream);
+            }
+            catch (Exception)
+            {
+                // The layout that was already showing will not reload either. There is nothing
+                // better left to try, and the failure that got us here is the one worth reporting.
+            }
+        }
+
+        public const string EXT_SKY_VIEW = ".sky.view";
+        public static string FILTER_SKY_VIEW
+        {
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW); }
+        }
+
+        private void exportLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportLayoutDlg();
+        }
+
+        public void ShowExportLayoutDlg()
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.DefaultExt = EXT_SKY_VIEW;
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                var exportPath = dlg.FileName;
+                if (exportPath.EndsWith(EXT_SKY_VIEW + EXT_SKY_VIEW))
+                {
+                    // If the path ends in ".sky.view.sky.view" strip off the last ".sky.view";
+                    var stripped = exportPath.Substring(0, exportPath.Length - EXT_SKY_VIEW.Length);
+                    // Only strip off the extension if neither form of the file existed.
+                    // If the stripped filename had exists, the dialog would not have added the extra extension, and
+                    // we also would need to prompt the user again to overwrite.
+                    // If the duplicated filename exists, the user was already prompted to overwrite so we should not change the name.
+                    if (!File.Exists(exportPath) && !File.Exists(stripped))
+                    {
+                        exportPath = stripped;
+                    }
+                }
+                ExportLayout(exportPath);
+            }
+        }
+
+
+        public void ExportLayout(string viewFilePath)
+        {
+            try
+            {
+                SaveLayoutToFile(viewFilePath);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__, viewFilePath), x);
+            }
+        }
+
+        private void importLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportLayoutDlg();
+        }
+
+        public void ShowImportLayoutDlg()
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ImportLayout(dlg.FileName);
+            }
+        }
+
+        public void ImportLayout(string viewFilePath)
+        {
+            // Capture the arrangement the user has now, because LoadLayoutLocked destroys every
+            // dockable form before it rebuilds from the XML: a file that is not a usable layout
+            // would otherwise leave them with no windows at all. Only Import needs this. Opening a
+            // document also loads a layout, but the outgoing arrangement belongs to the document
+            // being closed and is no better for the new one, and nothing is at risk there anyway
+            // since the user can just quit.
+            //
+            // No check of the file up front either. A pre-flight check would only hide whatever
+            // else the loader cannot cope with, which is what we would want to hear about.
+            var restoreStream = SaveLayoutToStream();
+            try
+            {
+                using (var stream = File.OpenRead(viewFilePath))
+                {
+                    LoadLayout(stream);
+                }
+            }
+            catch (Exception x)
+            {
+                RestoreLayout(restoreStream);
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
             }
         }
 

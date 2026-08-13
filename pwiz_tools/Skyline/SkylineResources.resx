@@ -713,6 +713,12 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_thread" xml:space="preserve">
     <value>The DocumentUI property may only be accessed on the UI thread.</value>
   </data>
+  <data name="SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__" xml:space="preserve">
+    <value>Failure attempting to save the window layout file {0}.</value>
+  </data>
+  <data name="SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files" xml:space="preserve">
+    <value>Window Layout Files</value>
+  </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
     <value>Background Proteome</value>
   </data>
