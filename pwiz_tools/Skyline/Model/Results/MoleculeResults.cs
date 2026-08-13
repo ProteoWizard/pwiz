@@ -297,27 +297,87 @@ namespace pwiz.Skyline.Model.Results
                 return default;
             }
 
+            // Everything a PeptideChromInfo holds is in the columnar results too - the peak count
+            // ratio and the retention time are the precursors', the label ratios are worked out
+            // from the transitions' areas - so a document whose chromatograms cannot be read still
+            // answers. The .skyd is preferred where it can be read, because the columnar values of
+            // a node which has just been added are not filled in until a results pass runs.
             var listCalculator = new PeptideDocNode.PeptideChromInfoListCalculator(Settings, replicateIndex);
             int transitionGroupCount = 0;
+            bool fromChromatograms = HasChromatograms;
             foreach (var nodeGroup in PeptideDocNode.TransitionGroups)
             {
                 transitionGroupCount++;
-                var groupChromInfos = GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex);
-                if (groupChromInfos.Count == 0)
+                if (fromChromatograms)
                 {
-                    continue;
+                    AddChromInfos(listCalculator, nodeGroup, replicateIndex);
                 }
-
-                listCalculator.AddChromInfoList(nodeGroup, groupChromInfos);
-                foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
+                else
                 {
-                    listCalculator.AddChromInfoList(nodeGroup, nodeTran,
-                        GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition, replicateIndex));
+                    AddColumnarPeaks(listCalculator, nodeGroup, replicateIndex);
                 }
             }
 
             return new ChromInfoList<PeptideChromInfo>(
                 CarryPeptideAttributes(listCalculator.CalcChromInfoList(transitionGroupCount), replicateIndex));
+        }
+
+        /// <summary>
+        /// One precursor's contribution to the molecule level, from the chrom infos rebuilt out of
+        /// the .skyd.
+        /// </summary>
+        private void AddChromInfos(PeptideDocNode.PeptideChromInfoListCalculator listCalculator,
+            TransitionGroupDocNode nodeGroup, int replicateIndex)
+        {
+            var groupChromInfos = GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex);
+            if (groupChromInfos.Count == 0)
+            {
+                return;
+            }
+
+            listCalculator.AddChromInfoList(nodeGroup, groupChromInfos);
+            foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
+            {
+                listCalculator.AddChromInfoList(nodeGroup, nodeTran,
+                    GetTransitionChromInfos(nodeGroup.TransitionGroup, nodeTran.Transition, replicateIndex));
+            }
+        }
+
+        /// <summary>
+        /// The same, from the columnar results, which reads no chromatogram. This is what a
+        /// document that was only deserialized has.
+        /// </summary>
+        private void AddColumnarPeaks(PeptideDocNode.PeptideChromInfoListCalculator listCalculator,
+            TransitionGroupDocNode nodeGroup, int replicateIndex)
+        {
+            var groupResults = nodeGroup.AbbreviatedResults;
+            if (groupResults == null)
+            {
+                return;
+            }
+
+            bool integrateAll = Settings.TransitionSettings.Integration.IsIntegrateAll;
+            foreach (int position in groupResults.GetPositions(replicateIndex))
+            {
+                var fileId = groupResults.ChromFileIds.FileIds[position].Value;
+                var peakCountRatio = nodeGroup.GetPeakCountRatio(replicateIndex, fileId, integrateAll);
+                if (!peakCountRatio.HasValue)
+                {
+                    continue;
+                }
+
+                var calc = listCalculator.GetCalculator(fileId);
+                calc.AddPrecursorPeak(fileId, (float) peakCountRatio.Value,
+                    groupResults.GetRetentionTime(position), groupResults.GetUserSet(position));
+                foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
+                {
+                    if (groupResults.TryGetTransitionPeak(nodeTran.Transition, replicateIndex, fileId,
+                            out var peak) && !peak.IsEmpty)
+                    {
+                        calc.AddTransitionArea(nodeGroup, nodeTran, peak.Area);
+                    }
+                }
+            }
         }
 
         /// <summary>

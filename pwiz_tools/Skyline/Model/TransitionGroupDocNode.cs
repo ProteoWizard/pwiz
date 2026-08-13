@@ -667,6 +667,35 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// What fraction of the precursor's transitions have a good peak in one file, which is what
+        /// a <see cref="TransitionGroupChromInfo"/> held per file. Null when the precursor has no
+        /// peak in that file at all.
+        /// </summary>
+        public double? GetPeakCountRatio(int replicateIndex, ChromFileInfoId fileId, bool integrateAll)
+        {
+            var results = AbbreviatedResults;
+            if (results == null)
+                return null;
+
+            int goodPeaks = 0;
+            int transitionCount = 0;
+            bool measuredHere = false;
+            foreach (var nodeTran in Transitions)
+            {
+                if (!results.HasTransitionResults(nodeTran.Transition))
+                    continue;
+                transitionCount++;
+                if (!results.TryGetTransitionPeak(nodeTran.Transition, replicateIndex, fileId, out var peak))
+                    continue;
+                measuredHere = true;
+                if (peak.IsGoodPeak(integrateAll))
+                    goodPeaks++;
+            }
+
+            return transitionCount == 0 || !measuredHere ? (double?) null : (double) goodPeaks / transitionCount;
+        }
+
+        /// <summary>
         /// The library dot product of one replicate, worked out from the transitions' areas in the
         /// columnar results and the library intensities the transitions carry, so this reads no
         /// chromatogram. The same arithmetic the results pass does - see

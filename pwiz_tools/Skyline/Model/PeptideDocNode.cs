@@ -1667,6 +1667,22 @@ namespace pwiz.Skyline.Model
                 }
             }
 
+            /// <summary>
+            /// The calculator gathering one file's values, made on first use. What a caller working
+            /// from the columnar results uses, since it has the file rather than a chrom info to
+            /// find it by.
+            /// </summary>
+            public PeptideChromInfoCalculator GetCalculator(ChromFileInfoId fileId)
+            {
+                if (!TryGetCalculator(fileId.GlobalIndex, out var calc))
+                {
+                    calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
+                    AddCalculator(fileId.GlobalIndex, calc);
+                }
+
+                return calc;
+            }
+
             private void AddCalculator(int fileIndex, PeptideChromInfoCalculator calc)
             {
                 if (CalculatorFirst == null)
@@ -1771,7 +1787,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private sealed class PeptideChromInfoCalculator
+        internal sealed class PeptideChromInfoCalculator
         {
             public PeptideChromInfoCalculator(SrmSettings settings, int resultsIndex)
             {
@@ -1805,9 +1821,20 @@ namespace pwiz.Skyline.Model
                 if (info == null)
                     return;
 
-                Assume.IsTrue(FileId == null || ReferenceEquals(info.FileId, FileId));
+                AddPrecursorPeak(info.FileId, info.PeakCountRatio, info.RetentionTime, info.UserSet);
+            }
+
+            /// <summary>
+            /// One precursor's peak in this file. Everything the molecule level takes from a
+            /// precursor is here - the peak count ratio, the retention time and the user set - and
+            /// the columnar results keep all three, so the caller need not have a chrom info.
+            /// </summary>
+            public void AddPrecursorPeak(ChromFileInfoId fileId, float peakCountRatio, float? retentionTime,
+                UserSet userSet)
+            {
+                Assume.IsTrue(FileId == null || ReferenceEquals(fileId, FileId));
                 var fileIdPrevious = FileId;
-                FileId = info.FileId;
+                FileId = fileId;
                 FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
 
                 // First time through calculate the global standard area for this file
@@ -1815,14 +1842,14 @@ namespace pwiz.Skyline.Model
                     GlobalStandardArea = Settings.CalcGlobalStandardArea(ResultsIndex, Settings.MeasuredResults.Chromatograms[ResultsIndex].MSDataFileInfos[FileOrder]);
 
                 ResultsCount++;
-                PeakCountRatioTotal += info.PeakCountRatio;
-                if (info.RetentionTime.HasValue)
+                PeakCountRatioTotal += peakCountRatio;
+                if (retentionTime.HasValue)
                 {
                     RetentionTimesMeasured++;
-                    RetentionTimeTotal += info.RetentionTime.Value;
+                    RetentionTimeTotal += retentionTime.Value;
                 }
 
-                if (info.UserSet == UserSet.MATCHED)
+                if (userSet == UserSet.MATCHED)
                     IsSetMatching = true;
             }
 
@@ -1831,13 +1858,23 @@ namespace pwiz.Skyline.Model
                 if (info.IsEmpty)
                     return;
 
+                AddTransitionArea(nodeGroup, nodeTran, info.Area);
+            }
+
+            /// <summary>
+            /// One transition's area, which is all the label ratios are worked out from. The
+            /// columnar results keep it, so the caller need not have a chrom info - an empty peak
+            /// is not added at all, the same as before.
+            /// </summary>
+            public void AddTransitionArea(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, float area)
+            {
                 var key = new TransitionKey(nodeGroup, nodeTran.Key(nodeGroup), nodeGroup.TransitionGroup.LabelType);
                 if (TranAreas.ContainsKey(key))
                 {
                     return;
                 }
 
-                TranAreas.Add(key, info.Area);
+                TranAreas.Add(key, area);
                 TranTypes.Add(nodeGroup.TransitionGroup.LabelType);
             }
 
