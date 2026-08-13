@@ -700,8 +700,21 @@ namespace pwiz.Osprey.Tasks
                 if (!inputByName.TryGetValue(kvp.Key, out string inputFile))
                     continue;
                 string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                // Two gates, deliberately, because ABSENT and UNUSABLE are different outcomes
+                // here and IsCurrentFormat alone cannot tell them apart (it is false for both).
+                // A file with no reconciled parquet legitimately has no 2nd-pass sidecar, so
+                // absent is a silent skip; a sidecar that IS present but carries a foreign magic,
+                // a different FormatVersion, the wrong pass byte or a length its own header
+                // contradicts is a real problem, and it is exactly what the warning below exists
+                // to name. Collapsing these into one IsCurrentFormat call would either report
+                // every legitimately-absent file or silently swallow the stale one.
                 if (!File.Exists(pass2Path))
                     continue;
+                if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
+                {
+                    failed.Add(kvp.Key);
+                    continue;
+                }
 
                 var byEntryId = new Dictionary<uint, double>(kvp.Value.Count);
                 foreach (var e in kvp.Value)
