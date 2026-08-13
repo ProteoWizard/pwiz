@@ -334,6 +334,79 @@ public sealed class AgilentRawData : IDisposable
                 + "this msconvert-sharp build targets .NET 8 and cannot open Agilent .d files. "
                 + "Run under a .NET Framework 4.8 host (e.g. Skyline) instead.", ex);
         }
+
+        InitializeChromatograms();
+    }
+
+    private float[] _ticIntensities = Array.Empty<float>();
+    private float[] _bpcIntensities = Array.Empty<float>();
+
+    /// <summary>
+    /// Per-row TIC and base-peak intensities: the SDK's TotalIon and BasePeak chromatograms
+    /// fetched with <c>DoCycleSum = false</c>, kept as float. NOT interchangeable with
+    /// <c>IMSScanRecord.Tic</c> / <c>.BasePeakIntensity</c> - on centroided QTOF runs the two
+    /// disagree by as much as 12%. cpp indexes these by row for a spectrum's total ion current
+    /// and base peak intensity (SpectrumList_Agilent.cpp:215-216).
+    /// </summary>
+    public (float[] Tic, float[] Bpc) ChromatogramIntensities => (_ticIntensities, _bpcIntensities);
+
+    /// <summary>
+    /// Fetches the TIC/BPC arrays, mirroring cpp <c>MassHunterDataImpl</c>'s constructor
+    /// (<c>MassHunterData.cpp:330-344</c>).
+    /// </summary>
+    /// <remarks>
+    /// Done EAGERLY, at open, because it must happen before anything else queries
+    /// <c>GetChromatogram</c>. The Agilent SDK carries state across those calls - the same
+    /// reason <see cref="HasProfileData"/> reads MSProfile.bin off disk instead of trusting
+    /// <c>SpectraFormat</c>, which flips to Mixed once a DAD chromatogram has been fetched. Our
+    /// own index build calls <see cref="GetNonMsScanCount"/> (a DAD <c>GetChromatogram</c>), so
+    /// a lazy TIC fetch would run after it and return different numbers than cpp's.
+    /// </remarks>
+    private void InitializeChromatograms()
+    {
+        // Fetched through a SEPARATE reader, not _reader, and that is a deliberate deviation
+        // from cpp - which uses one reader for everything.
+        //
+        // The Agilent SDK carries state across GetChromatogram: whatever calls a reader has
+        // seen changes what its later spectrum reads return, down to ~5e-10 in the m/z axis.
+        // Fetching on _reader moved every m/z on mix-with-variable.d and
+        // pepmix-with-variable-transients.d (highest observed m/z 1821.983406545172 ->
+        // ...558446) and took both off byte parity, while fixing AE_30Apr19_negESI_0001.d and
+        // BSA050-r001.d, whose cpp TIC values embed that same perturbation. Replicating cpp's
+        // full four-fetch sequence exactly (TIC, BPC, then both again under MSLevelFilter = MS)
+        // reproduces cpp on those two and still breaks the other two, so there is no single
+        // shared-reader state that satisfies both groups.
+        //
+        // A private reader keeps the spectrum path bit-for-bit as it was before this array
+        // existed, which is the safer half of the trade: four files (BSA-ms2-centroid,
+        // ST-100fmol-03, mix-std, blank01) drop from 81 diffs to 1 and nothing regresses.
+        // AE_30Apr19 and BSA050 keep their TIC/base-peak diffs as a known remainder.
+        IMsdrDataReader? chromReader = null;
+        try
+        {
+            chromReader = new MassSpecDataReader();
+            chromReader.OpenDataFile(Path);
+
+            IBDAChromFilter filter = new BDAChromFilter();
+            // cpp: "cycle summing can make the full file chromatograms have the wrong number of points"
+            filter.DoCycleSum = false;
+
+            filter.ChromatogramType = ChromType.TotalIon;
+            var tic = chromReader.GetChromatogram(filter);
+            if (tic is { Length: > 0 }) _ticIntensities = tic[0].YArray ?? Array.Empty<float>();
+
+            filter.ChromatogramType = ChromType.BasePeak;
+            var bpc = chromReader.GetChromatogram(filter);
+            if (bpc is { Length: > 0 }) _bpcIntensities = bpc[0].YArray ?? Array.Empty<float>();
+        }
+        catch { /* leave empty; callers fall back to the scan record */ }
+        finally
+        {
+            if (chromReader is not null)
+            {
+                try { chromReader.CloseDataFile(); } catch { }
+            }
+        }
     }
 
     /// <summary>Returns the lightweight scan record for row <paramref name="rowIndex"/> (0-based).</summary>
