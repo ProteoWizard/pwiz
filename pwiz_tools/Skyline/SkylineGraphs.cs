@@ -767,9 +767,10 @@ namespace pwiz.Skyline
                 return RestoreView(_resultsGridForm ?? CreateResultsGrid(),
                     LiveResultsGrid.GetViewName(persistentString));
             }
-            if (Equals(persistentString, typeof(CandidatePeakForm).ToString()))
+            if (persistentString.StartsWith(typeof(CandidatePeakForm).ToString()))
             {
-                return _candidatePeakForm ?? CreateCandidatePeakForm();
+                return RestoreView(_candidatePeakForm ?? CreateCandidatePeakForm(),
+                    CandidatePeakForm.GetViewName(persistentString));
             }
             if (persistentString.StartsWith(typeof (DocumentGridForm).ToString()))
             {

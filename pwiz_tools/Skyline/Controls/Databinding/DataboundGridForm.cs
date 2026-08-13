@@ -80,11 +80,27 @@ namespace pwiz.Skyline.Controls.Databinding
         /// <summary>
         /// Appends the report currently showing, for a subclass's <see cref="GetPersistentString"/>.
         /// Always appended LAST, so parts a subclass adds of its own keep their positions.
+        ///
+        /// <para>The DEFAULT report is left off. That is what keeps the persistent string of a grid on
+        /// its default report the bare window type, which is what Skyline versions before this change
+        /// require: they match the window type with an exact comparison rather than a prefix, so a
+        /// layout with anything appended does not restore that window at all. Leaving the default off
+        /// makes the common case of a ".sky.view" still work in those versions.</para>
         /// </summary>
         protected PersistentString AppendViewName(PersistentString persistentString)
         {
             var viewName = GetViewName();
-            return viewName.HasValue ? persistentString.Append(viewName.Value.ToString()) : persistentString;
+            if (!viewName.HasValue || Equals(viewName, GetDefaultViewName()))
+                return persistentString;
+            return persistentString.Append(viewName.Value.ToString());
+        }
+
+        /// <summary>The report a grid shows when nothing else has been chosen: the first built-in view.</summary>
+        private ViewName? GetDefaultViewName()
+        {
+            var defaultViewSpec = BindingListSource?.ViewContext
+                ?.GetViewSpecList(ViewGroup.BUILT_IN.Id).ViewSpecs.FirstOrDefault();
+            return defaultViewSpec == null ? (ViewName?) null : ViewGroup.BUILT_IN.Id.ViewName(defaultViewSpec.Name);
         }
 
         /// <summary>

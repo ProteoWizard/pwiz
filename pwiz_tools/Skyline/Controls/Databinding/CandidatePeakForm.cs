@@ -47,6 +47,17 @@ namespace pwiz.Skyline.Controls.Databinding
         private readonly DocumentChangeListener _documentChangeListener;
         private bool _updatePending;
 
+        /// <summary>Remembers the report showing, so a restored layout comes back on it.</summary>
+        protected override string GetPersistentString()
+        {
+            return AppendViewName(PersistentString.FromParts(base.GetPersistentString())).ToString();
+        }
+
+        public static ViewName? GetViewName(string persistentString)
+        {
+            return ParsePersistedViewName(persistentString, 1);
+        }
+
         public CandidatePeakForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();

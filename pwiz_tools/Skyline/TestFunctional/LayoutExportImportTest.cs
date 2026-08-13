@@ -76,7 +76,8 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// A restored layout brings the Document Grid back on the report it was showing, not on
-        /// whatever report the global setting happens to hold.
+        /// whatever report the global setting happens to hold - and a grid on its DEFAULT report
+        /// still writes only the bare window type.
         /// </summary>
         private void TestGridReportRestored()
         {
@@ -86,17 +87,29 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => documentGrid.IsComplete);
             RunUI(() => exportedView = documentGrid.GetViewName());
 
+            // A report other than the default is written into the layout
             var layoutPath = ExportLayout(@"GridReport");
+            AssertEx.Contains(File.ReadAllText(layoutPath), PersistStringStart<DocumentGridForm>() + '|');
 
-            // Move it off that report, so restoring it is something that has to actually happen
+            // The default report is deliberately NOT written, so the persistent string stays the bare
+            // window type and the layout still restores in Skyline versions that match it exactly
             RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins));
             WaitForConditionUI(() => documentGrid.IsComplete);
             RunUI(() => Assert.AreNotEqual(exportedView, documentGrid.GetViewName()));
+            AssertEx.Contains(File.ReadAllText(ExportLayout(@"DefaultReport")),
+                PersistStringStart<DocumentGridForm>() + '"');
 
+            // Restoring has to actually put the grid back on the report it left
             ImportLayout(layoutPath);
             var restoredGrid = WaitForOpenForm<DocumentGridForm>();
             WaitForConditionUI(() => restoredGrid.IsComplete);
             RunUI(() => Assert.AreEqual(exportedView, restoredGrid.GetViewName()));
+        }
+
+        /// <summary>The start of a window's PersistString attribute as it appears in a ".sky.view".</summary>
+        private static string PersistStringStart<TForm>()
+        {
+            return @"PersistString=""" + typeof(TForm);
         }
 
         /// <summary>
