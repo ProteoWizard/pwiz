@@ -723,12 +723,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     {
                         targets++;
                     }
-                    if (targets > 0 && (double)decoys / targets >= runFdr)
+                    // The DEEPEST point still within the FDR, not the first point that exceeds
+                    // it. The head of the ranking is noisy - one decoy among the first few
+                    // entries drives the ratio to 1.0 and would stop the walk immediately,
+                    // reporting a meaningless threshold off a 1-versus-1 count (observed:
+                    // stellar-libdecoy pass 2 stopping at 14.84 with decoys=1, nonDecoys=1).
+                    // Continuing and keeping the last score that satisfies the constraint gives
+                    // the most permissive threshold meeting it, which is what "the score this
+                    // pool reaches the target FDR at" means.
+                    if (targets > 0 && (double)decoys / targets <= runFdr)
                     {
                         ExperimentFdrCrossing = kv.Value;
                         ExperimentFdrCrossingDecoys = (int)decoys;
                         ExperimentFdrCrossingNonDecoys = (int)targets;
-                        return;
                     }
                 }
             }
