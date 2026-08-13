@@ -337,12 +337,23 @@ public sealed class Reader_Thermo : IReader
             }
         }
 
-        // Append a separate "PDA" IC when a PDA controller is present (mirror of cpp
+        // Append a separate IC when a PDA controller is present (mirror of cpp
         // Reader_Thermo_Detail.cpp:198-203). Single component: MS_PDA detector, order 1.
+        //
+        // cpp builds it with the placeholder id "PDA", but that id never reaches the output:
+        // initializeInstrumentConfigurationPtrs (Reader_Thermo.cpp:110-117) renames EVERY
+        // configuration to IC{n} in order and gives each one the common param group and the
+        // Xcalibur software ref. We treated "PDA" as the final id and skipped both refs, so a
+        // PDA run's scans referenced instrumentConfigurationRef="PDA" where cpp writes "IC2" or
+        // "IC3", the configuration carried no ref:CommonInstrumentParams, and it had no
+        // softwareRef child.
         pdaIc = null;
         if (raw.PdaControllerCount > 0)
         {
-            pdaIc = new InstrumentConfiguration("PDA");
+            pdaIc = new InstrumentConfiguration("IC" +
+                (result.InstrumentConfigurations.Count + 1).ToString(CultureInfo.InvariantCulture));
+            pdaIc.ParamGroups.Add(common);
+            pdaIc.Software = xcalibur;
             pdaIc.ComponentList.Add(new Component(CVID.MS_PDA, 1));
             result.InstrumentConfigurations.Add(pdaIc);
         }
