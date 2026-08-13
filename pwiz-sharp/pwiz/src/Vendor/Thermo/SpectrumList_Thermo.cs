@@ -583,6 +583,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         if (resolvingPower > 0)
             scan.Set(CVID.MS_mass_resolving_power, resolvingPower);
 
+        // Note: cpp's older RawFileReader (5.0.0.93 vs our 8.0.6.0) renders half-way precursor
+        // m/z values one ulp higher here - 598.125 becomes "598.13" there and "598.12" for us.
+        // Both sides call IScanFilter.ToString(); v8's GetScanEventStringForScanNumber agrees
+        // with its ToString(), so the difference is inside the SDK and cannot be closed from
+        // this side while the two trees ship different RawFileReader versions.
         string filterString = filter.ToString() ?? string.Empty;
         if (!string.IsNullOrEmpty(filterString))
             scan.Set(CVID.MS_filter_string, filterString);

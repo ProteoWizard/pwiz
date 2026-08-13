@@ -237,6 +237,23 @@ public sealed class ThermoRawFile : IDisposable
     // them to fill in the gap — port of RawFile.cpp parseInstrumentMethod (1921+).
     private Dictionary<int, Dictionary<int, double>>? _widthBySegmentAndEvent;
     private Dictionary<int, Dictionary<int, double>>? _defaultWidthBySegmentAndMsLevel;
+    private string _methodInstrumentModel = string.Empty;
+
+    /// <summary>
+    /// Instrument model named by an "Instrument model - X" line in the instrument method or
+    /// status log, or empty when there is none.
+    /// </summary>
+    /// <remarks>
+    /// cpp resolves the model from three sources in priority order (RawFile.cpp:361-399): this
+    /// line first (parseInstrumentMethod runs before the rest of the constructor and sets
+    /// instrumentModel_ at RawFile.cpp:1976), then InstrumentData.Model, then
+    /// InstrumentData.Name. Older instruments leave BOTH SDK properties empty -
+    /// MAT95XP-File001.RAW is one - and are identifiable only from the method text.
+    /// </remarks>
+    public string MethodInstrumentModel
+    {
+        get { EnsureMethodParsed(); return _methodInstrumentModel; }
+    }
 
     /// <summary>Per-scan-event isolation width parsed from the instrument method; 0 if unknown.</summary>
     public double GetMethodIsolationWidth(int scanSegment, int scanEvent)
@@ -316,7 +333,8 @@ public sealed class ThermoRawFile : IDisposable
         }
         catch { }
 
-        ParseInstrumentMethodText(sb.ToString(), _widthBySegmentAndEvent, _defaultWidthBySegmentAndMsLevel);
+        ParseInstrumentMethodText(sb.ToString(), _widthBySegmentAndEvent, _defaultWidthBySegmentAndMsLevel,
+            out _methodInstrumentModel);
     }
 
     // Regex patterns ported from RawFile.cpp:1939-1949. Kept internal + static for cheap init.
@@ -332,14 +350,19 @@ public sealed class ThermoRawFile : IDisposable
         new(@"^\s*Scan Event (\d+) repeated for top (\d+)\s*$", System.Text.RegularExpressions.RegexOptions.Compiled);
     private static readonly System.Text.RegularExpressions.Regex s_defaultIsoWidthRegex =
         new(@"^\s*MS(\d+) Isolation Width:\s*(\S+)\s*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+    // RawFile.cpp:1958 - the status-log/method line that names the instrument model.
+    private static readonly System.Text.RegularExpressions.Regex s_methodInstrumentModelRegex =
+        new(@"^\s*Instrument model\s*-\s*(.+?)\s*$", System.Text.RegularExpressions.RegexOptions.Compiled);
     private static readonly System.Text.RegularExpressions.Regex s_defaultIsoWindowRegex =
         new(@"^\s*Isolation Window \(m/z\) =\s*(\S+)\s*$", System.Text.RegularExpressions.RegexOptions.Compiled);
 
     internal static void ParseInstrumentMethodText(
         string text,
         Dictionary<int, Dictionary<int, double>> widthBySegmentAndEvent,
-        Dictionary<int, Dictionary<int, double>> defaultWidthBySegmentAndMsLevel)
+        Dictionary<int, Dictionary<int, double>> defaultWidthBySegmentAndMsLevel,
+        out string instrumentModel)
     {
+        instrumentModel = string.Empty;
         int segment = 1, scanEvent = 0;
         bool inScanEventDetails = false;
         bool inDataDependentSettings = false;
@@ -354,6 +377,14 @@ public sealed class ThermoRawFile : IDisposable
             if ((m = s_segmentRegex.Match(line)).Success)
             {
                 segment = int.Parse(m.Groups[1].Value, ci);
+                continue;
+            }
+
+            // cpp RawFile.cpp:1974 tests this before anything scan-event related, and takes
+            // the LAST occurrence since it overwrites instrumentModel_ on each match.
+            if ((m = s_methodInstrumentModelRegex.Match(line)).Success)
+            {
+                instrumentModel = m.Groups[1].Value;
                 continue;
             }
 

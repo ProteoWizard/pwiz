@@ -267,6 +267,26 @@ public sealed class Reader_Thermo : IReader
                 model = nameProp;
             }
         }
+        // Third source, and cpp's FIRST: an "Instrument model - X" line in the instrument method
+        // or status log. cpp parses it in parseInstrumentMethod, which runs before the
+        // Model/Name fallbacks and wins over both (RawFile.cpp:361-399). Older instruments leave
+        // both SDK properties empty and are identifiable only this way - MAT95XP-File001.RAW
+        // reported neither a Model nor a Name, so it fell through to the generic
+        // "Thermo Electron instrument model" and, with no model to drive the recipe, was given a
+        // linear ion trap where cpp reports a magnetic sector.
+        if (modelCv == CVID.MS_Thermo_Electron_instrument_model)
+        {
+            string methodModel = raw.MethodInstrumentModel;
+            if (!string.IsNullOrEmpty(methodModel))
+            {
+                CVID methodCv = TranslateInstrumentModel(methodModel);
+                if (methodCv != CVID.MS_Thermo_Electron_instrument_model)
+                {
+                    modelCv = methodCv;
+                    model = methodModel;
+                }
+            }
+        }
         if (modelCv == CVID.MS_Thermo_Electron_instrument_model && !string.IsNullOrEmpty(model))
             common.UserParams.Add(new UserParam("instrument model", model));
         common.Set(modelCv);
