@@ -1881,6 +1881,13 @@ namespace pwiz.SkylineTestUtil
             converted = Serializable(converted, testDir, SkylineVersion.CURRENT, true,  true); // Force a full load to verify library correctness
             document = Serializable(document, testDir, SkylineVersion.CURRENT, true,  true); // Force a full load to verify library correctness
 
+            // Each was loaded separately, so they hold a different ChromFileInfoId for each of
+            // their files and the columnar results tell those apart. What follows means "the same
+            // results", and says so - see SrmDocument.ClearChromFileIds. Only the comparison below
+            // sees these: nothing writes them out again.
+            converted = converted.ClearChromFileIds();
+            document = document.ClearChromFileIds();
+
             using (var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator())
             {
                 foreach (var peptideGroupDocNode in document.MoleculeGroups)
