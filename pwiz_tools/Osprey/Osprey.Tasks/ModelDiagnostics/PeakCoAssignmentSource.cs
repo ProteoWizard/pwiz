@@ -119,43 +119,63 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // no parquet, no library, no allocation per row). Decoys have no meaningful q of
             // their own, so the population that belongs beside the accepted targets is the one
             // scoring at least as well as the worst accepted target/entrapment precursor.
-            for (int f = 0; f < fileNames.Count; f++)
+            //
+            // Reported for the same reason the apex-RT join below is: this loop streams EVERY
+            // record of every 1st-pass sidecar and it ran silent. On the 82-file SEA-AD run of
+            // 2026-08-12 that was a 138 s gap ending at the experiment boundary line, with
+            // managed memory falling 23.0 -> 12.5 GB across it - real work, but indistinguishable
+            // from a hang for over two minutes. The join below already had a ProgressReporter;
+            // it is scoped to the per-file pass AFTER this one, so it did not cover the
+            // expensive half.
+            using (var scanProgress = new ProgressReporter(
+                string.Format(@"Peak co-assignment: scanning 1st-pass sidecars over {0} file(s)", fileNames.Count),
+                fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                string sidecar = ResolveSidecarPath(fileNames[f], perFileParquetPaths, config);
-                if (sidecar == null)
-                    continue;   // phase 2 reports the missing input and abandons the panel
-                int fileIdx = f;   // a for-loop variable is captured by reference, not per iteration
-                // ReadRecords returns false AFTER having invoked the callback, with the partial
-                // effects the caller must discard - the sibling RestorePass1Scalars stages into a
-                // buffer and applies only `if (ok)` for exactly this reason. Discarding the bool
-                // here meant a truncated or mid-write sidecar streamed N of M records into
-                // ObserveCutoff and then had SealRunCutoff called on the partial bests. Because
-                // the cutoff is a MIN over accepted precursors, the boundary came out too HIGH
-                // and the admitted decoy set too small, and both were then LOGGED as the run's
-                // acceptance boundary. The `admitted != tallied` self-check cannot catch it -
-                // both sides shrink together - so refuse the panel instead of publishing it.
-                bool readOk = FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
+                for (int f = 0; f < fileNames.Count; f++)
                 {
-                    bool dec = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
-                    builder.ObserveCutoff(fileIdx,
-                        ModelDiagnosticsData.ClassifyEntry(dec, rec.EntryId, classByBaseId), rec.EntryId, rec.Score,
-                        rec.ExperimentAggregateScore,
-                        EffectiveQvalue(rec, config.FdrLevel, true),
-                        EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
-                });
-                if (!readOk)
-                {
-                    logInfo(string.Format(
-                        @"[MODEL-DIAGNOSTICS] peak co-assignment: 1st-pass sidecar for {0} could not be read in full; the acceptance boundary would be drawn from a partial pool, so the panel is not built",
-                        fileNames[f]));
-                    return null;
+                    scanProgress.Report(f + 1);
+                    string sidecar = ResolveSidecarPath(fileNames[f], perFileParquetPaths, config);
+                    if (sidecar == null)
+                        continue;   // phase 2 reports the missing input and abandons the panel
+                    int fileIdx = f;   // a for-loop variable is captured by reference, not per iteration
+                    // ReadRecords returns false AFTER having invoked the callback, with the partial
+                    // effects the caller must discard - the sibling RestorePass1Scalars stages into a
+                    // buffer and applies only `if (ok)` for exactly this reason. Discarding the bool
+                    // here meant a truncated or mid-write sidecar streamed N of M records into
+                    // ObserveCutoff and then had SealRunCutoff called on the partial bests. Because
+                    // the cutoff is a MIN over accepted precursors, the boundary came out too HIGH
+                    // and the admitted decoy set too small, and both were then LOGGED as the run's
+                    // acceptance boundary. The `admitted != tallied` self-check cannot catch it -
+                    // both sides shrink together - so refuse the panel instead of publishing it.
+                    bool readOk = FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
+                    {
+                        bool dec = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
+                        builder.ObserveCutoff(fileIdx,
+                            ModelDiagnosticsData.ClassifyEntry(dec, rec.EntryId, classByBaseId), rec.EntryId, rec.Score,
+                            rec.ExperimentAggregateScore,
+                            EffectiveQvalue(rec, config.FdrLevel, true),
+                            EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
+                    });
+                    if (!readOk)
+                    {
+                        logInfo(string.Format(
+                            @"[MODEL-DIAGNOSTICS] peak co-assignment: 1st-pass sidecar for {0} could not be read in full; the acceptance boundary would be drawn from a partial pool, so the panel is not built",
+                            fileNames[f]));
+                        return null;
+                    }
+                    // Reduce this file's per-precursor bests to its run cutoff and the decoys
+                    // clearing it, then let them go. Holding every file's bests to the end was
+                    // O(files x distinct entry ids) - 4.18M per file on the full entrapment
+                    // library, i.e. ~79 GB at the 500-file target.
+                    builder.SealRunCutoff(fileIdx);
                 }
-                // Reduce this file's per-precursor bests to its run cutoff and the decoys
-                // clearing it, then let them go. Holding every file's bests to the end was
-                // O(files x distinct entry ids) - 4.18M per file on the full entrapment
-                // library, i.e. ~79 GB at the 500-file target.
-                builder.SealRunCutoff(fileIdx);
             }
+            // Also reported: SealCutoffs walks the whole experiment population in score order to
+            // find where this pass's own count reaches the target FDR, which is the other half of
+            // the silence the 138 s gap covered.
+            logInfo(string.Format(
+                @"[MODEL-DIAGNOSTICS] peak co-assignment: reducing the experiment boundary over {0} file(s)...",
+                fileNames.Count));
             builder.SealCutoffs();
 
             // Name the acceptance boundary in the log. The decoy row is the only class on this
