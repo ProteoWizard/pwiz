@@ -469,5 +469,11 @@ public sealed class Converter
         // separate types, so the copy has to be explicit; without it the flag Skyline passes on
         // every Hardklor / msconvert-DDA / DIA-Umpire / EncyclopeDIA conversion was inert.
         AcceptZeroLengthSpectra = _config.AcceptZeroLengthSpectra,
+        // Always on for conversion, and not exposed as a CLI option: cpp has no flag for it
+        // because cpp always probes. A conversion pays the index-time read once and gets cpp's
+        // exact Sciex spectrum set; the interactive callers that cannot afford it (Skyline
+        // reopening a .wiff for the full-scan graph) leave the default off. See
+        // ReaderConfig.VerifyNonEmptySpectraAtIndex.
+        VerifyNonEmptySpectraAtIndex = true,
     };
 }

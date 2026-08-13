@@ -206,10 +206,12 @@ public sealed class Reader_Sciex : IReader, IMultiSampleReader
         // cpp SpectrumList_ABI.cpp:240/:298 — acceptZeroLengthSpectra changes both which cycles
         // get indexed and whether the base-peak cvParams are emitted.
         bool acceptZeroLengthSpectra = config?.AcceptZeroLengthSpectra ?? false;
+        // Not a cpp config field - cpp always probes. See ReaderConfig.VerifyNonEmptySpectraAtIndex.
+        bool verifyNonEmptySpectra = config?.VerifyNonEmptySpectraAtIndex ?? false;
         // SpectrumList owns the underlying wiff handle; ChromatogramList shares the same
         // reference so we can iterate both lists during conversion. cpp uses the same pattern
         // (one shared WiffFilePtr).
-        result.Run.SpectrumList = new SpectrumList_Sciex(wiff, ownsWiff: true, ic, simAsSpectra, srmAsSpectra, ignoreZeroIntensityPoints, acceptZeroLengthSpectra)
+        result.Run.SpectrumList = new SpectrumList_Sciex(wiff, ownsWiff: true, ic, simAsSpectra, srmAsSpectra, ignoreZeroIntensityPoints, acceptZeroLengthSpectra, verifyNonEmptySpectra)
         {
             Dp = dpReader,
         };

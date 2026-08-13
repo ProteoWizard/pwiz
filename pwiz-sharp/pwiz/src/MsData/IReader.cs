@@ -139,6 +139,28 @@ public sealed class ReaderConfig
     public bool AcceptZeroLengthSpectra { get; set; }
 
     /// <summary>
+    /// When true, the Sciex reader confirms at index-build time that each cycle it is about to
+    /// index has readable points, and drops the ones that do not. Off by default.
+    /// </summary>
+    /// <remarks>
+    /// Not a cpp <c>Reader::Config</c> field: cpp always does this
+    /// (<c>SpectrumList_ABI.cpp:314</c> requires
+    /// <c>getSpectrum(...)-&gt;getDataSize(false, true) &gt; 0</c> as well as a positive BPC
+    /// intensity). It is a flag here because the probe reads the file's entire spectral payload
+    /// on every open, which on .NET 8 made a large TripleTOF <c>.wiff</c> exceed Skyline
+    /// GraphFullScan's scan-load reopen timeout. Conversion wants cpp's exact spectrum set and
+    /// pays once, so msconvert-sharp turns it on; Skyline leaves it off and keeps the fast open.
+    /// <para>
+    /// The cheap half of cpp's test - requiring the cycle TIC to be positive, which catches
+    /// cycles whose BPC reports a sentinel base peak - is unconditional and needs no flag. This
+    /// covers only the residue: cycles whose BPC *and* TIC both look like real data and which
+    /// still read back empty (448 of them in <c>20061108_CPTAC_1B468.wiff</c>). Nothing short of
+    /// the read distinguishes those.
+    /// </para>
+    /// </remarks>
+    public bool VerifyNonEmptySpectraAtIndex { get; set; }
+
+    /// <summary>
     /// When true, MS2+ spectra without precursor info are kept rather than dropped. The
     /// default (false) drops them, matching pwiz cpp. Port of
     /// <c>pwiz::msdata::Reader::Config::allowMsMsWithoutPrecursor</c>.

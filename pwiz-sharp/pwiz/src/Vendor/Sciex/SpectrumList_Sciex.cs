@@ -23,6 +23,7 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
     private readonly bool _srmAsSpectra;
     private readonly bool _ignoreZeroIntensityPoints;
     private readonly bool _acceptZeroLengthSpectra;
+    private readonly bool _verifyNonEmptySpectra;
     private readonly List<IndexEntry> _index = new();
 
     /// <summary>DataProcessing emitted as the document's <c>defaultDataProcessingRef</c>.</summary>
@@ -38,11 +39,14 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
     /// flanking zero samples around profile peaks. <paramref name="acceptZeroLengthSpectra"/>
     /// is cpp <c>Reader::Config::acceptZeroLengthSpectra</c> (msconvert
     /// <c>--acceptZeroLengthSpectra</c>): when set, the index is built from the TIC without
-    /// probing each cycle for content, so empty cycles survive into the output.</summary>
+    /// probing each cycle for content, so empty cycles survive into the output.
+    /// <paramref name="verifyNonEmptySpectra"/> is
+    /// <c>ReaderConfig.VerifyNonEmptySpectraAtIndex</c> - cpp's per-cycle read, which is optional
+    /// here because of its cost.</summary>
     public SpectrumList_Sciex(AbstractWiffFile wiff, bool ownsWiff,
         InstrumentConfiguration? defaultInstrumentConfiguration,
         bool simAsSpectra, bool srmAsSpectra, bool ignoreZeroIntensityPoints = false,
-        bool acceptZeroLengthSpectra = false)
+        bool acceptZeroLengthSpectra = false, bool verifyNonEmptySpectra = false)
     {
         ArgumentNullException.ThrowIfNull(wiff);
         _wiff = wiff;
@@ -52,6 +56,7 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         _srmAsSpectra = srmAsSpectra;
         _ignoreZeroIntensityPoints = ignoreZeroIntensityPoints;
         _acceptZeroLengthSpectra = acceptZeroLengthSpectra;
+        _verifyNonEmptySpectra = verifyNonEmptySpectra;
         CreateIndex();
     }
 
@@ -93,6 +98,7 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             if (expType == WiffExperimentType.SIM && !_simAsSpectra) continue;
 
             double[] times, intensities;
+            double[] cycleTics = Array.Empty<double>();
             if (_acceptZeroLengthSpectra)
             {
                 // cpp SpectrumList_ABI.cpp:298-306: the flag's whole point is to skip the
@@ -104,6 +110,9 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             {
                 (times, intensities) = exp.GetBpc();
                 if (times.Length == 0) (times, intensities) = exp.GetTic();
+                // Second axis for the emptiness test below. Already materialized - the BPC
+                // fetch initializes the TIC to get its time axis - so this costs nothing.
+                cycleTics = exp.GetTic().Intensities;
             }
 
             int n = Math.Min(times.Length, intensities.Length);
@@ -121,16 +130,31 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                         && exp.GetSpectrum(i + 1, addZeros: false, centroid: false)?.HasPrecursorInfo != true)
                         continue;
                 }
-                // cpp SpectrumList_ABI::createIndex drops empty cycles purely on the per-cycle
-                // BPC (fallback TIC) intensity being > 0 — it does NOT read each spectrum. An
-                // earlier port revision added a per-cycle exp.GetSpectrum(...) peak probe here to
-                // "approximate" ignoreZeroIntensityPoints, but that reads the file's entire
-                // spectral payload at index-build time — on EVERY open, including GraphFullScan's
-                // scan-load reopen — which made opening a large TripleTOF MS1 .wiff exceed the
-                // full-scan graph's load timeout on .NET 8. The probe was also redundant:
-                // intensities[i] is the cycle's base-peak (or TIC) value, so intensities[i] > 0
-                // already guarantees the spectrum has a point > 0. Match cpp: intensity check only.
-                else if (intensities[i] <= 0) continue;
+                // cpp SpectrumList_ABI.cpp:314 drops a cycle unless BOTH the per-cycle BPC
+                // (fallback TIC) intensity is > 0 AND getSpectrum(...)->getDataSize(false, true)
+                // is > 0. Do NOT restore that second half literally: it reads the file's entire
+                // spectral payload at index-build time, on EVERY open including GraphFullScan's
+                // scan-load reopen, which made opening a large TripleTOF MS1 .wiff exceed the
+                // full-scan graph's load timeout on .NET 8.
+                //
+                // The BPC test alone is not sufficient, though - it was once assumed to imply the
+                // other, and it does not. On wine yeast sampleA_2.wiff 834 MS2 cycles report a
+                // base peak of exactly 1.0 at m/z 2.35e-07, a sentinel, while carrying no points
+                // at all; we emitted 834 empty spectra cpp never indexes. Test the cycle TIC
+                // instead: it is Spectrum::getSumY (cpp WiffFile.cpp:740), i.e. the sum over the
+                // very points getDataSize counts, so TIC > 0 and "has a point above zero" are the
+                // same condition - reproduced from an array that is already in memory rather than
+                // by reading every spectrum.
+                else if (intensities[i] <= 0 || (i < cycleTics.Length && cycleTics[i] <= 0))
+                    continue;
+                // The other half of cpp's test, off by default because of what it costs. Some
+                // cycles look like real data on both chromatograms and still read back empty -
+                // 448 of them in 20061108_CPTAC_1B468.wiff - and only the read can tell.
+                // addZeros:false is cpp's ignoreZeroIntensityPoints:true, so this counts the same
+                // points getDataSize(false, true) counts.
+                else if (_verifyNonEmptySpectra
+                         && (exp.GetSpectrum(i + 1, addZeros: false, centroid: false)?.XValues.Length ?? 0) == 0)
+                    continue;
 
                 if (!sortedByTime.TryGetValue(times[i], out var list))
                 {
