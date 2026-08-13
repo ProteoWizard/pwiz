@@ -510,7 +510,10 @@ public sealed class MzmlWriter
 
         MzmlXml.WriteParams(w, run);
 
-        if (run.SpectrumList is not null)
+        // An empty list is omitted entirely rather than written as count="0" - cpp IO.cpp:3261
+        // gates both lists on `ptr && size() > 0`. Chromatogram-only files (an Agilent .d with
+        // nothing but SRM traces, say) otherwise carry a spectrumList cpp never writes.
+        if (run.SpectrumList is not null && run.SpectrumList.Count > 0)
             WriteSpectrumList(w, run.SpectrumList);
 
         if (run.ChromatogramList is not null && run.ChromatogramList.Count > 0)
