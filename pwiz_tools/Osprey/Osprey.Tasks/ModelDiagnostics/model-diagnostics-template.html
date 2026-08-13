@@ -491,6 +491,13 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="vbtns" id="caScope"></div>
     <div class="kpis" id="caKpis"></div>
     <div id="caTable" style="overflow-x:auto"></div>
+    <div id="caCutoff" style="overflow-x:auto;margin-top:10px"></div>
+    <div class="cap">The composite score is a per-precursor property and does not change between
+      passes; the score at which the target-decoy competition reaches the target FDR is a
+      property of the population being counted, so it can. The two agree when the pool is intact.
+      A large gap means the pool the decoys are drawn from has been selected - read it as a
+      warning about the pool, <b>not</b> as a bar to lower: the target+entrapment and decoy counts
+      beside it rise together, so a lower score buys IDs at the error rate it buys decoys.</div>
     <p class="note" id="caNote"></p>
     <div class="grid2" style="margin-top:16px">
       <div>
@@ -1683,6 +1690,34 @@ function renderCoAssignment(ca){
   if(s.entrapment)kpi(kp,"entrapment enrichment",isFinite(s.enrichment)?fmt(s.enrichment,1)+"×":"–",
     isFinite(s.enrichment)&&s.enrichment>1.5?"bad":"");
   kpi(kp,"target IDs with no distinguishing evidence",fmt(s.target.nBetter,0),"");
+
+  // ---- the composite acceptance score, and what this pass's own pool needs to reach the FDR ----
+  // Two numbers, because they answer different questions and their DIVERGENCE is the signal.
+  // The per-entry composite score does not change between passes, but the score at which the
+  // target-decoy competition reaches a given q is a property of the POPULATION counted - so a
+  // pass whose pool has been compacted needs a different score for the same q. They agree at
+  // pass 1; a large gap at pass 2 says the pool the decoys are drawn from has been selected.
+  // NOT a threshold to adopt: the decoy and non-decoy counts beside it move TOGETHER, so a
+  // lower crossing buys targets and entrapment at the same error rate it buys decoys.
+  const cut=document.getElementById("caCutoff");
+  if(cut){
+    cut.innerHTML="";
+    if(isFinite(ca.experimentCutoff)){
+      const t=H(cut,"table"),h=H(H(t,"thead"),"tr");
+      ["Composite acceptance score","Score","Target + entrapment","Decoys"]
+        .forEach((x,i)=>H(h,"th",{class:i===0?"l":""},x));
+      const tb2=H(t,"tbody");
+      const r1=H(tb2,"tr");
+      H(r1,"td",{class:"l"},"worst accepted precursor (the bar in use)");
+      H(r1,"td",{class:"num"},fmt(ca.experimentCutoff,4));
+      H(r1,"td",{class:"num"},"–");H(r1,"td",{class:"num"},"–");
+      const r2=H(tb2,"tr");
+      H(r2,"td",{class:"l"},"where this pass's own pool reaches the target FDR");
+      H(r2,"td",{class:"num"},isFinite(ca.experimentFdrCrossing)?fmt(ca.experimentFdrCrossing,4):"–");
+      H(r2,"td",{class:"num"},fmt(ca.experimentFdrCrossingNonDecoys,0));
+      H(r2,"td",{class:"num"},fmt(ca.experimentFdrCrossingDecoys,0));
+    }
+  }
 
   // ---- per-class table ----
   const host=document.getElementById("caTable");host.innerHTML="";

@@ -244,6 +244,7 @@ namespace pwiz.Osprey.Test
 
             TestCoAssignmentEnrichmentAndOffenderDedup();
             TestCoAssignmentAggregateStubDoesNotOutrankRealScore();
+            TestCoAssignmentExactTieGoesToTheDecoy();
         }
 
         // A row still carrying the ResetScores 0.0 default must NOT outrank the entry's real
@@ -299,6 +300,49 @@ namespace pwiz.Osprey.Test
             // the aggregate reduction rather than to the acceptance set.
             Assert.IsNotNull(data.Experiment.Target);
             Assert.AreEqual(2, data.Experiment.Target.N);
+        }
+
+        // An EXACT target/decoy tie goes to the DECOY, matching what the competition that
+        // produced the q-values actually does: StreamingFdr computes
+        // `decoyWins = hasT && hasD ? !(t.score > d.score) : !hasT`, so a tied decoy is inside
+        // the FDR estimate that set the acceptance boundary. The panel used to require
+        // `decoyBest > targetBest` (and `tgt >= kv.Value` at run scope), which excluded exactly
+        // those decoys from the row the boundary is meant to admit.
+        //
+        // The fixture is built so the two rules give opposite answers:
+        //
+        //   target A   accepted, aggregate -1.0                 <- the only accepted target
+        //   decoy  X   aggregate -1.0, tied with its own target 5
+        //   target 5   aggregate -1.0                           <- NOT accepted (q = 0.5)
+        //
+        // decoy-wins-ties: X won its pair, clears the -1.0 boundary, and IS admitted.
+        // target-wins-ties: X "lost", is excluded, and the decoy class comes back null.
+        private static void TestCoAssignmentExactTieGoesToTheDecoy()
+        {
+            var mz = new Dictionary<uint, double>
+            {
+                { 1, 500.000 }, { 5, 500.006 }, { 5 | DECOY_BIT, 500.006 },
+            };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 5, EntrapmentClass.Target },
+            };
+            var file = new List<FdrEntry>
+            {
+                CoEntry(1, false, 9.0, 0.001, @"A", 2, 10.000, -1.0),
+                // Rejected, so it does not move the boundary - it exists only to be the decoy's
+                // tied competitor.
+                CoEntry(5, false, 4.0, 0.500, @"T5", 2, 10.004, -1.0),
+                CoEntry(5 | DECOY_BIT, true, 4.0, 0.500, @"T5", 2, 10.008, -1.0),
+            };
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(file), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+            Assert.IsNotNull(data.Experiment.Decoy,
+                @"an exact target/decoy tie was resolved against the decoy, dropping it from the row the boundary admits - StreamingFdr gives the tie to the decoy");
+            Assert.AreEqual(1, data.Experiment.Decoy.N);
         }
 
         // Enrichment arithmetic above MIN_N_FOR_ENRICHMENT, and one offender ROW per precursor

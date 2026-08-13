@@ -182,6 +182,15 @@ function Get-DiagnosticsMetrics {
             # change in the pool.
             Add-Metric "pass$p.coAssign.$scope.enrichment" $(if ($s) { $s.enrichment } else { $null })
         }
+        # The acceptance boundary in use, and the score this pass's OWN population needs to reach
+        # the target FDR. Pinned because their divergence is the pool-selection signal: they agree
+        # at pass 1 and separate at pass 2 when compaction has stripped the winning decoys, and a
+        # change in that separation is a change in how the second pass is built. The counts are
+        # pinned beside the score so a drift shows whether it moved the IDs, the decoys, or both.
+        Add-Metric "pass$p.coAssign.cutoff"             $(if ($ca) { $ca.experimentCutoff } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossing"        $(if ($ca) { $ca.experimentFdrCrossing } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossingDecoys"  $(if ($ca) { $ca.experimentFdrCrossingDecoys } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossingNonDecoys" $(if ($ca) { $ca.experimentFdrCrossingNonDecoys } else { $null })
     }
 
     # --- FDP at the reported-q threshold (entrapment only) -----------------

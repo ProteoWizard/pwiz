@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using pwiz.Osprey.Core;
 
@@ -99,6 +100,40 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// because it carries no entrapment - that measurement needs the full library.</para>
             /// </summary>
             public bool PostReconciliation { get; set; }
+
+            /// <summary>
+            /// The composite (experiment aggregate) score of the WORST accepted precursor - the
+            /// acceptance boundary the decoy row is counted against. NaN when nothing was
+            /// accepted.
+            /// </summary>
+            public double ExperimentCutoff { get; set; }
+            /// <summary>
+            /// The composite score at which THIS pass's own population reaches the target FDR by
+            /// its own target-decoy count, or NaN if it never does.
+            ///
+            /// <para>Reported beside <see cref="ExperimentCutoff"/> because the two answer
+            /// different questions and their DIVERGENCE is the signal. The per-entry score does
+            /// not change between passes, but the score at which the competition reaches a given
+            /// q is a property of the POPULATION being counted - so a pass whose pool has been
+            /// compacted needs a different score for the same q. Measured on
+            /// stellar-gendecoy-entrap: pass 1 agrees closely (0.2106 vs 0.2957) while pass 2
+            /// inherits pass 1's 0.2106 against its own 1% point of -0.9092, i.e. its accepted set
+            /// sits at 0.207% observed FDR rather than 1%.</para>
+            ///
+            /// <para><b>This is a number to READ, not a threshold to adopt.</b> Lowering the bar
+            /// to it does not recover real detections: judged against the uncompacted pass-1 null
+            /// that score is a ~7% FDR, and the band between the two admits ~3,000 precursors at
+            /// an 8.3% local error rate. A large gap says the pool the count is drawn from has
+            /// been selected, not that the acceptance bar is too strict.</para>
+            /// </summary>
+            public double ExperimentFdrCrossing { get; set; }
+            /// <summary>Winners-only decoys clearing <see cref="ExperimentFdrCrossing"/> - the
+            /// decoy count the target FDR actually corresponds to in this pass's population.</summary>
+            public int ExperimentFdrCrossingDecoys { get; set; }
+            /// <summary>Target + entrapment precursors clearing <see cref="ExperimentFdrCrossing"/>.
+            /// Reported beside the decoy count because the two move together: a lower crossing
+            /// admits targets and entrapment in the same proportion as decoys.</summary>
+            public int ExperimentFdrCrossingNonDecoys { get; set; }
 
             /// <summary>Detection gated on the RUN-level q value.</summary>
             public CoAssignmentScope Run { get; set; }
@@ -513,6 +548,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                     _fileIdx = fileIdx;
                 }
+                // Every caller passes the same target FDR; kept so SealCutoffs can walk the
+                // population against it without threading the value through a second parameter.
+                _runFdr = runFdr;
                 // Same rule as the experiment reduction below, for the same reason. The run-scope
                 // discriminant carries the identical 0.0 reset default, and 2nd-pass discriminants
                 // are 93.2% negative with the boundary near -2.33, so a plain max() would let one
@@ -620,10 +658,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
                 _acceptedForCutoff = _experimentAccepted.Count;
                 _experimentAccepted.Clear();
+                ComputeExperimentFdrCrossing(_runFdr);
                 _sealed = true;
             }
 
             private int _acceptedForCutoff;
+            private double _runFdr = double.NaN;
 
             /// <summary>
             /// The experiment-scope acceptance boundary and the number of accepted
@@ -637,6 +677,61 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// distribution by eye.</para>
             /// </summary>
             public double ExperimentCutoff => _experimentCutoff;
+
+            /// <summary>
+            /// The score at which this pass's own population reaches <see cref="_runFdr"/> by its
+            /// own target-decoy count, or NaN if it never does. Counted with the SAME rules the
+            /// panel admits on - winners only, per distinct precursor - so it is directly
+            /// comparable to <see cref="ExperimentCutoff"/>. See the field it is serialized into
+            /// for what a large divergence means and why it must not be adopted as a threshold.
+            /// </summary>
+            public double ExperimentFdrCrossing { get; private set; } = double.NaN;
+
+            /// <summary>Winners-only decoys clearing <see cref="ExperimentFdrCrossing"/>.</summary>
+            public int ExperimentFdrCrossingDecoys { get; private set; }
+
+            /// <summary>
+            /// Target + entrapment precursors clearing <see cref="ExperimentFdrCrossing"/>. Read
+            /// beside the decoy count: the two move TOGETHER, and that is the point. A lower
+            /// crossing score does not admit decoys alone - it admits targets and entrapment in
+            /// the same proportion, which is what makes the decoy count above it the honest FDR
+            /// of that enlarged set rather than an artefact.
+            /// </summary>
+            public int ExperimentFdrCrossingNonDecoys { get; private set; }
+
+            /// <summary>
+            /// Walk every precursor by DESCENDING composite score, accumulating the winners-only
+            /// decoy count against the non-decoy count, and record the first score at which the
+            /// ratio reaches the target FDR. Diagnostic only: nothing downstream is gated on it.
+            /// </summary>
+            private void ComputeExperimentFdrCrossing(double runFdr)
+            {
+                // Stable and TOTAL: ties broken on the entry id so the crossing point cannot
+                // depend on hash order. A plain List.Sort is introsort and would reorder ties
+                // differently from Rust's stable sort, which is exactly what TestNoUnstableSort
+                // forbids in this tree.
+                long targets = 0, decoys = 0;
+                foreach (var kv in _experimentBest.OrderByDescending(x => x.Value).ThenBy(x => x.Key))
+                {
+                    if ((kv.Key & ~BASE_ID_MASK) != 0)
+                    {
+                        if (!WonItsPair(kv.Key))
+                            continue;
+                        decoys++;
+                    }
+                    else
+                    {
+                        targets++;
+                    }
+                    if (targets > 0 && (double)decoys / targets >= runFdr)
+                    {
+                        ExperimentFdrCrossing = kv.Value;
+                        ExperimentFdrCrossingDecoys = (int)decoys;
+                        ExperimentFdrCrossingNonDecoys = (int)targets;
+                        return;
+                    }
+                }
+            }
 
             /// <summary>Accepted precursor count behind <see cref="ExperimentCutoff"/>.</summary>
             public int AcceptedForCutoff => _acceptedForCutoff;
@@ -821,6 +916,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     HeadlineToleranceIndex = CoAssignmentAccumulator.HeadlineToleranceIndex(),
                     MinNForEnrichment = CoAssignmentAccumulator.MIN_N_FOR_ENRICHMENT,
                     DeltaRtEdges = CoAssignmentAccumulator.BuildDeltaRtEdges(),
+                    ExperimentCutoff = ExperimentCutoff,
+                    ExperimentFdrCrossing = ExperimentFdrCrossing,
+                    ExperimentFdrCrossingDecoys = ExperimentFdrCrossingDecoys,
+                    ExperimentFdrCrossingNonDecoys = ExperimentFdrCrossingNonDecoys,
                     Run = _run.Build(),
                     Experiment = _experiment.Build(),
                 };
