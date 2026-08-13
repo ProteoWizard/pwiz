@@ -125,7 +125,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 if (sidecar == null)
                     continue;   // phase 2 reports the missing input and abandons the panel
                 int fileIdx = f;   // a for-loop variable is captured by reference, not per iteration
-                FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
+                // ReadRecords returns false AFTER having invoked the callback, with the partial
+                // effects the caller must discard - the sibling RestorePass1Scalars stages into a
+                // buffer and applies only `if (ok)` for exactly this reason. Discarding the bool
+                // here meant a truncated or mid-write sidecar streamed N of M records into
+                // ObserveCutoff and then had SealRunCutoff called on the partial bests. Because
+                // the cutoff is a MIN over accepted precursors, the boundary came out too HIGH
+                // and the admitted decoy set too small, and both were then LOGGED as the run's
+                // acceptance boundary. The `admitted != tallied` self-check cannot catch it -
+                // both sides shrink together - so refuse the panel instead of publishing it.
+                bool readOk = FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
                 {
                     bool dec = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                     builder.ObserveCutoff(fileIdx,
@@ -134,6 +143,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                         EffectiveQvalue(rec, config.FdrLevel, true),
                         EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
                 });
+                if (!readOk)
+                {
+                    logInfo(string.Format(
+                        @"[MODEL-DIAGNOSTICS] peak co-assignment: 1st-pass sidecar for {0} could not be read in full; the acceptance boundary would be drawn from a partial pool, so the panel is not built",
+                        fileNames[f]));
+                    return null;
+                }
                 // Reduce this file's per-precursor bests to its run cutoff and the decoys
                 // clearing it, then let them go. Holding every file's bests to the end was
                 // O(files x distinct entry ids) - 4.18M per file on the full entrapment
