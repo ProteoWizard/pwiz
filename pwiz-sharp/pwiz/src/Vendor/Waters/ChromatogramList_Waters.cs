@@ -226,8 +226,8 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
 
     private Chromatogram FillSimChromatogram(Chromatogram chrom, IndexEntry ie, bool getBinaryData)
     {
-        // pwiz C++ sets only the isolation window target + CID activation for SIM chromatograms
-        // (no polarity tag, no product side). Mirror that exactly so msdiff stays clean.
+        // pwiz C++ sets the isolation window target + CID activation for SIM chromatograms, and
+        // no product side. The polarity is set by the caller, as in cpp.
         chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ie.Q1, CVID.MS_m_z);
         chrom.Precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
 
@@ -256,9 +256,6 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
 
     private Chromatogram FillSrmChromatogram(Chromatogram chrom, IndexEntry ie, bool getBinaryData)
     {
-        // Polarity tag inside the chromatogram (the id-prefix is set elsewhere).
-        if (ie.Polarity != CVID.CVID_Unknown) chrom.Params.Set(ie.Polarity);
-
         // Precursor / product isolation windows + activation. pwiz C++ adds only the target
         // m/z (no offsets) and a CID activation — we mirror that exactly.
         chrom.Precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ie.Q1, CVID.MS_m_z);
@@ -320,6 +317,18 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         var ie = _index[index];
         var chrom = new Chromatogram { Index = ie.Index, Id = ie.Id };
         chrom.Params.Set(ie.Kind);
+
+        // cpp ChromatogramList_Waters.cpp:109-114 sets the polarity for every chromatogram whose
+        // entry has a function, before the per-type switch - so SIM carries it too. We set it
+        // only on SRM, on the mistaken belief that cpp skipped SIM, which left "positive scan"
+        // missing from every SIM SIC in six corpus files.
+        //
+        // Test for the polarity terms themselves rather than for "not CVID_Unknown": only the
+        // SRM/SIM entries assign Polarity, and CVID_Unknown is -1, so an entry that never set it
+        // holds default(CVID) == 0 - which is a real term, the PSI vocabulary root, and emits as
+        // <cvParam accession="MS:0000000"/>. That is exactly what the aggregate TIC did.
+        if (ie.Polarity is CVID.MS_positive_scan or CVID.MS_negative_scan)
+            chrom.Params.Set(ie.Polarity);
 
         if (ie.Kind == CVID.MS_SRM_chromatogram)
             return FillSrmChromatogram(chrom, ie, getBinaryData);
