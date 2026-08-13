@@ -185,7 +185,8 @@ namespace pwiz.Osprey.Tasks
                     totalFiles++;
                     if (!inputByFileName.TryGetValue(kvp.Key, out string probeInput))
                         continue;
-                    if (!File.Exists(FdrScoresSidecar.Pass2Path(probeInput)))
+                    if (!FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass2Path(probeInput),
+                                                          FdrScoresSidecar.Pass.SecondPass))
                         missingPass2++;
                 }
                 if (missingPass2 > 0)
@@ -289,7 +290,7 @@ namespace pwiz.Osprey.Tasks
                             if (!inputByFileName.TryGetValue(fileName, out string inputFileFlush))
                                 return;
                             string pass2PathFlush = FdrScoresSidecar.Pass2Path(inputFileFlush);
-                            if (File.Exists(pass2PathFlush))
+                            if (FdrScoresSidecar.IsCurrentFormat(pass2PathFlush, FdrScoresSidecar.Pass.SecondPass))
                             {
                                 pass2Tally.AlreadyOnDisk++;
                                 return;
@@ -419,7 +420,7 @@ namespace pwiz.Osprey.Tasks
                             if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
                                 continue;
                             string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
-                            if (File.Exists(pass2Path))
+                            if (FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                             {
                                 pass2Tally.AlreadyOnDisk++;
                                 continue;
@@ -504,7 +505,7 @@ namespace pwiz.Osprey.Tasks
                         if (!inputByName.TryGetValue(kvp.Key, out string inputFile4))
                             continue;
                         string pass2Path = FdrScoresSidecar.Pass2Path(inputFile4);
-                        if (!File.Exists(pass2Path))
+                        if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                         {
                             filesMissing++;
                             continue;

@@ -1702,14 +1702,18 @@ function renderCoAssignment(ca){
   const cut=document.getElementById("caCutoff");
   if(cut){
     cut.innerHTML="";
-    if(isFinite(ca.experimentCutoff)){
+    // Either number can be present without the other: the crossing is computed from the
+    // whole population while the cutoff needs an accepted precursor, so a run with none has a
+    // NaN cutoff and a finite crossing. Gating the table on the cutoff hid a value the golden
+    // pins and the caption below discusses.
+    if(isFinite(ca.experimentCutoff)||isFinite(ca.experimentFdrCrossing)){
       const t=H(cut,"table"),h=H(H(t,"thead"),"tr");
       ["Composite acceptance score","Score","Target + entrapment","Decoys"]
         .forEach((x,i)=>H(h,"th",{class:i===0?"l":""},x));
       const tb2=H(t,"tbody");
       const r1=H(tb2,"tr");
       H(r1,"td",{class:"l"},"worst accepted precursor (the bar in use)");
-      H(r1,"td",{class:"num"},fmt(ca.experimentCutoff,4));
+      H(r1,"td",{class:"num"},isFinite(ca.experimentCutoff)?fmt(ca.experimentCutoff,4):"–");
       H(r1,"td",{class:"num"},"–");H(r1,"td",{class:"num"},"–");
       const r2=H(tb2,"tr");
       H(r2,"td",{class:"l"},"where this pass's own pool reaches the target FDR");

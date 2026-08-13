@@ -401,9 +401,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // ends in an `as` cast that yields null for a float or nullable-double column. Every
             // row then carries ApexRt = 0.0, deltaRt is 0 for every same-m/z pair, and the report
             // claims ~100% co-assignment at the tightest tolerance for all three classes - a
-            // plausible page built from no data at all. The streaming producer refuses exactly
-            // this case in TryReadEntryIdsAndApexRts; the resident path, which produces the
-            // pass-2 numbers users actually receive, did not.
+            // plausible page built from no data at all. TryReadEntryIdsAndApexRts on the
+            // streaming producer refuses only a MISSING or wrongly-typed apex_rt column, not a
+            // present one whose every value is identical, so this guard is the only thing
+            // covering that case on either producer. This path produces the pass-2 numbers
+            // users actually receive.
             bool anyDistinctApexRt = false;
             double firstApexRt = double.NaN;
             for (int f = 0; f < perFileEntries.Count; f++)
@@ -556,7 +558,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // are 93.2% negative with the boundary near -2.33, so a plain max() would let one
                 // stub row outrank every real score for this entry. Closing the hazard at
                 // experiment scope and leaving it open here is the asymmetry Copilot flagged.
-                if (!_fileBest.TryGetValue(entryId, out double cur) || cur == 0.0 ||
+                // NaN is excluded from BOTH sides. A stored NaN would be permanently sticky -
+                // `cur == 0.0` is false and `real > NaN` is false, so no later real score could
+                // replace it - and it then defeats every downstream filter, because `value < min`
+                // and `tgt > value` are both false for NaN. That admits the precursor at run
+                // scope while `>= _experimentCutoff` drops it at experiment scope, so one panel
+                // would contradict itself. An entry with no finite score is better absent:
+                // SealRunCutoff skips what it never sees and ExperimentBest returns -Infinity.
+                if (double.IsNaN(score))
+                    return;
+                if (!_fileBest.TryGetValue(entryId, out double cur) || double.IsNaN(cur) || cur == 0.0 ||
                     (score != 0.0 && score > cur))
                     _fileBest[entryId] = score;
                 // Every row of an entry carries the same persisted aggregate, so this is a read,
@@ -572,8 +583,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // at -2.33, and 0.0 is an extreme upper outlier. Under max() a stub would therefore
                 // WIN every time it appeared, and handing a decoy 0.0 against a negative boundary
                 // admits it - the same collapse-toward-zero that produced a 542,368-decoy golden.
-                if (!_experimentBest.TryGetValue(entryId, out double e) || e == 0.0 ||
-                    (experimentAggregateScore != 0.0 && experimentAggregateScore > e))
+                // NaN excluded on both sides, for the reason given at the run-scope reduction.
+                if (!double.IsNaN(experimentAggregateScore) &&
+                    (!_experimentBest.TryGetValue(entryId, out double e) || double.IsNaN(e) || e == 0.0 ||
+                     (experimentAggregateScore != 0.0 && experimentAggregateScore > e)))
                     _experimentBest[entryId] = experimentAggregateScore;
                 if (IsDecoyClass(cls))
                     return;   // decoys define the boundary; they do not set it

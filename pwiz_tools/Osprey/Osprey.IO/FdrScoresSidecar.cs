@@ -191,7 +191,16 @@ namespace pwiz.Osprey.IO
                     if (header[i] != Magic[i])
                         return false;
                 }
-                return header[8] == FormatVersion && header[9] == (byte)expectedPass;
+                if (header[8] != FormatVersion || header[9] != (byte)expectedPass)
+                    return false;
+                // And the length must match the header's own entry_count, exactly as TryRead,
+                // TryReadOverlay, ReadRecords and PatchRunProteinQvalues all require. Without it
+                // this pre-flight passed a file truncated mid-record - which is precisely what
+                // ReadScalars throws on, so the caller that added this gate to refuse BEFORE
+                // mutating any survivor would still have thrown mid-stream with the pool half
+                // written. A gate that admits what the reader rejects is not a gate.
+                ulong headerCount = BitConverter.ToUInt64(header, 16);
+                return TryComputeExpectedLen(headerCount, out int expectedLen) && info.Length == expectedLen;
             }
             catch (IOException)
             {
