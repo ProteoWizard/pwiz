@@ -48,8 +48,6 @@ set(pwiz_LIBS_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_obo.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_proteome.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_proteome_version.lib
-    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_tradata.lib
-    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_tradata_version.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_data_vendor_readers.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_reader_abi.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libpwiz_reader_abi_t2d.lib
@@ -84,6 +82,8 @@ set(pwiz_LIBS_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/MBI_SDK.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/timsdata.lib
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msparserD.lib
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libzstd-vc143-mt-gd.lib
+
     )
 
 set(pwiz_LIBS_RELEASE
@@ -127,8 +127,6 @@ set(pwiz_LIBS_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_obo.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_proteome.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_proteome_version.lib
-    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_tradata.lib
-    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_tradata_version.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_data_vendor_readers.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_reader_abi.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/libpwiz_reader_abi_t2d.lib
@@ -163,6 +161,9 @@ set(pwiz_LIBS_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msconvert.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msparser.lib
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/timsdata.lib
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msparser.lib
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/libzstd-vc143-mt.lib
+
     )
 
 set(pwiz_REDISTR_DEBUG
