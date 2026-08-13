@@ -40,6 +40,17 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
     if (!bfs::is_directory(filename))
         return result;
 
+    // An acquisition is a directory named with a .raw extension, and the name has to be part
+    // of what identifies it: a directory that merely holds _FUNC files - an extracted
+    // acquisition, or a flat copy of several - is not one, and taking it for one leaves a
+    // file open dialog offering it as a source instead of letting the user navigate into it.
+    // Also spares every other directory the pathmask below, which walks it to answer.
+    bfs::path sourcePath(filename);
+    if (sourcePath.filename() == ".") // A trailing separator leaves "." as the filename
+        sourcePath = sourcePath.parent_path();
+    if (!bal::iequals(BFS_STRING(sourcePath.extension()), ".raw"))
+        return result;
+
     // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
     string functionPathmask = filename + "/_FUNC*.DAT";
     vector<bfs::path> functionFilepaths;

@@ -31,6 +31,16 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::stri
 {
     if (bfs::is_directory(filename))
     {
+        // The name is part of what identifies an acquisition, as it already is for the file
+        // case below: a directory that merely holds an AcqData is not one, and taking it for
+        // one leaves a file open dialog offering it as a source rather than letting the user
+        // navigate into it
+        bfs::path sourcePath(filename);
+        if (sourcePath.filename() == ".") // A trailing separator leaves "." as the filename
+            sourcePath = sourcePath.parent_path();
+        if (!bal::iequals(BFS_STRING(sourcePath.extension()), ".d"))
+            return "";
+
         auto filepath = bfs::path(filename) / "AcqData";
         if (bfs::exists(filepath) &&
             (bfs::exists(filepath / "mspeak.bin") ||

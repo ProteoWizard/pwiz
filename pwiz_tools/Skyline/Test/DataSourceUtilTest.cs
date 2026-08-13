@@ -68,16 +68,31 @@ namespace pwiz.SkylineTest
             CreateDataFile(Path.Combine(plainFolder, @"Subfolder", @"1", @"notes.txt"));
             AssertNotDataSource(plainFolder);
 
-            // A directory holding neither subdirectories nor any file that could make it a data
-            // source is answered as a folder without asking the reader. The formats that are a
-            // flat directory of files, and so are decided by a file name, have to survive that.
-            var bafSource = Path.Combine(root, @"BafWithoutTellingExtension");
+            // The formats that are a flat directory of files are decided by a file name, but
+            // only within a directory named as an acquisition. A flattened copy of one, holding
+            // the same files under an ordinary name, has to stay a folder - otherwise it is
+            // offered as a source and there is no way to navigate into it.
+            var bafSource = Path.Combine(root, @"BafSource.d");
             CreateDataFile(Path.Combine(bafSource, @"analysis.baf"));
             AssertDataSource(DataSourceUtil.TYPE_BRUKER, bafSource);
+
+            var bafCopy = Path.Combine(root, @"FlatCopyOfBaf");
+            CreateDataFile(Path.Combine(bafCopy, @"analysis.baf"));
+            AssertNotDataSource(bafCopy);
 
             var u2Source = Path.Combine(root, @"U2Source.d");
             CreateDataFile(Path.Combine(u2Source, @"U2Source.u2"));
             AssertDataSource(DataSourceUtil.TYPE_BRUKER, u2Source);
+
+            // The same for the directory formats the naming rules recognize on their own: a
+            // directory holding loose _FUNC files, or an AcqData, is not an acquisition
+            var watersCopy = Path.Combine(root, @"FlatCopyOfWaters");
+            CreateDataFile(Path.Combine(watersCopy, @"_FUNC001.DAT"));
+            AssertNotDataSource(watersCopy);
+
+            var agilentCopy = Path.Combine(root, @"FlatCopyOfAgilent");
+            CreateDataFile(Path.Combine(agilentCopy, @"AcqData", @"mspeak.bin"));
+            AssertNotDataSource(agilentCopy);
 
             // A folder of ordinary files, with nothing below it, is not a data source
             var leafFolder = Path.Combine(root, @"LeafFolder");
