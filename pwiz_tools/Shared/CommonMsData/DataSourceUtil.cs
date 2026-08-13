@@ -69,12 +69,13 @@ namespace pwiz.CommonMsData
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
 
         /// <summary>
-        /// The reader names each Bruker format separately where <see cref="TYPE_BRUKER"/> lumps
-        /// them together, so its answers have to be translated before they reach a caller. The
-        /// types are matched by equality - to filter what the open dialogs list, and to
-        /// decide vendor specific behavior - so an untranslated name reads as neither a
-        /// known type nor a folder, and the source disappears from the dialog. Names that
-        /// already agree, "Agilent MassHunter" and "Waters RAW" among them, are left out.
+        /// What the reader is allowed to make a data source of, and the type each of its answers
+        /// becomes: it names each Bruker format separately where <see cref="TYPE_BRUKER"/> lumps
+        /// them together. An answer outside this set is not taken - see
+        /// <see cref="GetSourceTypeFromReader"/> - so this is the whole list of formats reached
+        /// by looking inside a directory rather than by its name. Types are matched by equality,
+        /// to filter what the open dialogs list and to decide vendor specific behavior, so a name
+        /// that reached a caller untranslated would read as neither a known type nor a folder.
         /// </summary>
         private static readonly IDictionary<string, string> READER_TYPES_TO_TYPES = new Dictionary<string, string>
         {
@@ -294,6 +295,12 @@ namespace pwiz.CommonMsData
         /// Asks the reader what it makes of a directory, for the formats that cannot be
         /// recognized from names alone. Returns <see cref="FOLDER_TYPE"/> when it makes
         /// nothing of it, which is what callers expect for "not a data source".
+        /// Only the answers in <see cref="READER_TYPES_TO_TYPES"/> are taken. The reader is
+        /// asked here about the Bruker directory formats and nothing else - every other
+        /// directory format is named for what it is, and decided before this is reached - so
+        /// an answer outside that set is a directory resembling a format rather than being
+        /// one. Taking it would leave a folder that cannot be navigated into and whose type
+        /// matches nothing the dialogs filter by.
         /// </summary>
         private static string GetSourceTypeFromReader(string directoryPath)
         {
@@ -302,7 +309,7 @@ namespace pwiz.CommonMsData
                 var readerType = MsDataFileImpl.IdentifyReaderType(directoryPath);
                 if (string.IsNullOrEmpty(readerType))
                     return FOLDER_TYPE;
-                return READER_TYPES_TO_TYPES.TryGetValue(readerType, out var sourceType) ? sourceType : readerType;
+                return READER_TYPES_TO_TYPES.TryGetValue(readerType, out var sourceType) ? sourceType : FOLDER_TYPE;
             }
             catch (Exception)
             {

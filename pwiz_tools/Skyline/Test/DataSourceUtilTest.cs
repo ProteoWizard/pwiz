@@ -94,6 +94,14 @@ namespace pwiz.SkylineTest
             CreateDataFile(Path.Combine(agilentCopy, @"AcqData", @"mspeak.bin"));
             AssertNotDataSource(agilentCopy);
 
+            // The reader is asked about the Bruker directory formats and nothing else, so a
+            // directory it recognizes as something else stays a folder. A T2D acquisition is
+            // an arbitrarily named directory of .t2d files, leaving nothing but the reader's
+            // word for it, and its word here would cost the user a folder they cannot open.
+            var t2dShaped = Path.Combine(root, @"FolderHoldingT2dSpectra");
+            CreateDataFile(Path.Combine(t2dShaped, @"MS", @"spectrum001.t2d"));
+            AssertNotDataSource(t2dShaped);
+
             // A folder of ordinary files, with nothing below it, is not a data source
             var leafFolder = Path.Combine(root, @"LeafFolder");
             CreateDataFile(Path.Combine(leafFolder, @"notes.txt"));
