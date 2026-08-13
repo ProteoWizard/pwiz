@@ -214,11 +214,12 @@ public sealed class ReaderConfig
     /// </param>
     /// <remarks>
     /// Mirrors cpp <c>ShimadzuReader.cpp:365-388</c> / <c>WiffFile.cpp::getSampleAcquisitionTime</c>:
-    /// take the SDK's <see cref="DateTime"/> (typically <c>Kind=Local</c> on the host), convert
-    /// to UTC via <see cref="DateTime.ToUniversalTime"/>, and — if the flag is set — add
-    /// <c>universal_time - local_time</c> back, producing the local wall-clock value tagged
-    /// with a <c>Z</c> suffix. cpp's logic is questionable as a "real" UTC value but it's the
-    /// canonical msconvert behavior, so we match byte-for-byte.
+    /// take the SDK's <see cref="DateTime"/> as a naive wall clock and - if the flag is set - add
+    /// <c>universal_time - local_time</c>, producing the local wall-clock value tagged with a
+    /// <c>Z</c> suffix. cpp's logic is questionable as a "real" UTC value but it's the canonical
+    /// msconvert behavior, so we match byte-for-byte. Note the conversion to UTC is NOT done
+    /// here: <c>ShimadzuReader.cpp:370</c> is the only cpp vendor reader that calls
+    /// <c>ToUniversalTime</c>, and it does so before this point, so only Shimadzu's caller does.
     /// </remarks>
     public static string? FormatStartTimeStamp(DateTime sdkDate, bool adjustToHostTimeZone)
     {
@@ -228,7 +229,8 @@ public sealed class ReaderConfig
         // zone) and adds the offset to it. Converting first with ToUniversalTime would apply
         // the offset a second time whenever the SDK hands back Kind=Local/Unspecified - which
         // is what made Mobilion timestamps land 8 hours out instead of 4.
-        DateTime stamp = DateTime.SpecifyKind(sdkDate, DateTimeKind.Unspecified);
+        // cpp clamps before it builds the ptime, i.e. before the host-zone shift below.
+        DateTime stamp = ClampToBoostDateRange(DateTime.SpecifyKind(sdkDate, DateTimeKind.Unspecified));
         if (adjustToHostTimeZone)
         {
             // cpp: pt + (universal_time() - local_time()), i.e. plus the host's current offset
@@ -240,6 +242,25 @@ public sealed class ReaderConfig
         }
         return $"{stamp.Year:D4}-{stamp.Month:D2}-{stamp.Day:D2}T{stamp.Hour:D2}:{stamp.Minute:D2}:{stamp.Second:D2}Z";
     }
+
+    /// <summary>
+    /// Floors a vendor timestamp at the year 1400, preserving month, day and time of day.
+    /// </summary>
+    /// <param name="value">A vendor acquisition time, possibly corrupt.</param>
+    /// <remarks>
+    /// Five cpp vendor APIs apply exactly this, with the same <c>AddYears(1400 - Year)</c>
+    /// arithmetic and the same comment about a corrupt date in a test file:
+    /// <c>MassHunterData.cpp:487</c>, <c>MidacData.cpp:217</c>, <c>ShimadzuReader.cpp:375</c>,
+    /// <c>UIMFReader.cpp:220</c>, <c>UnifiData.cpp:1055</c>. 1400-01-01 is the earliest
+    /// <c>boost::gregorian::date</c> can represent and constructing one below it throws, so cpp
+    /// has to clamp before it can encode. A corrupt date therefore surfaces in cpp as
+    /// 1400-MM-DD with the rest intact: an Agilent file reading 0412-01-11T05:31:47 comes out as
+    /// 1400-01-11T05:31:47, and a Mobilion file whose ACQ_TIMESTAMP was never set (0001-01-01)
+    /// as 1400-01-01. cpp also caps the year at 10000; <see cref="DateTime"/> stops at 9999, so
+    /// that half cannot arise here.
+    /// </remarks>
+    public static DateTime ClampToBoostDateRange(DateTime value) =>
+        value.Year < 1400 ? value.AddYears(1400 - value.Year) : value;
 
     /// <summary>
     /// For multi-run input files (multi-sample WIFF, multi-run MGF), the zero-based run index

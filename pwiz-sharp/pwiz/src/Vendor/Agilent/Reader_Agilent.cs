@@ -229,7 +229,10 @@ public sealed class Reader_Agilent : IReader
         // cpp's MidacDataImpl::getAcquisitionTime / MassHunterDataImpl::getAcquisitionTime split.
         try
         {
-            var t = raw.AcquisitionTime;
+            // MassHunterData.cpp:487 / MidacData.cpp:217 floor the year at 1400 before boost
+            // sees it; Test_BsaFromUimf.d carries a corrupt 0412-01-11 that cpp reports as
+            // 1400-01-11.
+            var t = ReaderConfig.ClampToBoostDateRange(raw.AcquisitionTime);
             result.Run.StartTimeStamp =
                 $"{t.Year:D4}-{t.Month:D2}-{t.Day:D2}T{t.Hour:D2}:{t.Minute:D2}:{t.Second:D2}Z";
         }
