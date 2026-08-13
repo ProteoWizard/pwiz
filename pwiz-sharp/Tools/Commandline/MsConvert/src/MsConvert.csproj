@@ -99,11 +99,18 @@
            vendor_api_ABI.7z's vendor_api\ABI\x64\ subfolder and flattened into
            vendor-assemblies/Sciex/. -->
       <_SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</_SciexAssembliesDir>
+      <!-- MSBuild appends the trailing slash to OutputPath inside the project, which cannot
+           touch a GLOBAL property, so `dotnet build -o <dir>` leaves it slash-less and
+           "$(OutputPath)wiff2" resolves to the SIBLING directory "<dir>wiff2". The plugin
+           directory then does not exist beside msconvert.exe, Wiff2LoadContext falls back to
+           the default-ALC SQLite/Unity, and EVERY .wiff2 fails to open. That silently produced
+           4 bogus conversion failures in the C++-vs-C# parity sweep. -->
+      <_Wiff2OutDir>$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))wiff2</_Wiff2OutDir>
     </PropertyGroup>
-    <MakeDir Directories="$(OutputPath)wiff2" />
-    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll" DestinationFiles="$(OutputPath)wiff2\SQLite.Interop.dll" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(OutputPath)wiff2\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
+    <MakeDir Directories="$(_Wiff2OutDir)" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(_Wiff2OutDir)\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll" DestinationFiles="$(_Wiff2OutDir)\SQLite.Interop.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(_Wiff2OutDir)\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
   </Target>
 
 </Project>
