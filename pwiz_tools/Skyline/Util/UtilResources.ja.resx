@@ -312,7 +312,7 @@
     <value>DSVファイルにヘッダー{0}がありません。</value>
   </data>
   <data name="DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_" xml:space="preserve">
-    <value>ストリームがヌルまたは空です。</value>
+    <value>ストリームが存在しないか、中身が空です。</value>
   </data>
   <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
     <value>空のストリーム。</value>

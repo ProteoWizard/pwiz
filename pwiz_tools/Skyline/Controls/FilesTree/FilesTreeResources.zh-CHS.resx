@@ -139,10 +139,10 @@
     <value>删除重复测定节点</value>
   </data>
   <data name="FilesTreeForm_Confirm_Remove_Replicate" xml:space="preserve">
-    <value>是否确定要删除此重复测定？</value>
+    <value>确定要删除此重复测定？</value>
   </data>
   <data name="FilesTreeForm_Confirm_Remove_Replicates" xml:space="preserve">
-    <value>是否确定要删除这些重复测定？</value>
+    <value>确定要删除这些重复测定？</value>
   </data>
   <data name="Remove_All_Spectral_Libraries" xml:space="preserve">
     <value>删除所有谱图库</value>
@@ -151,13 +151,13 @@
     <value>删除谱图库</value>
   </data>
   <data name="FilesTreeForm_Confirm_Remove_Spectral_Library" xml:space="preserve">
-    <value>是否确定要删除此库？</value>
+    <value>确定要删除此库？</value>
   </data>
   <data name="FilesTreeForm_Confirm_Remove_Spectral_Libraries" xml:space="preserve">
-    <value>是否确定要删除这些库？</value>
+    <value>确定要删除这些库？</value>
   </data>
   <data name="FilesTreeForm_Error_Renaming_Replicate" xml:space="preserve">
-    <value>已存在名称为“{0}”的重复测定。请选择其它名称。</value>
+    <value>名称为“{0}”的重复测定已存在。请选择其它名称。</value>
   </data>
   <data name="Change_SpectralLibraryName" xml:space="preserve">
     <value>更改谱图库名称</value>

@@ -143,19 +143,19 @@
     <value>库{0}</value>
   </data>
   <data name="MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times" xml:space="preserve">
-    <value>液相色谱峰时间中位数</value>
+    <value>液相色谱峰时间的中位数</value>
   </data>
   <data name="MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time" xml:space="preserve">
-    <value>归一化保留时间</value>
+    <value>归一化的保留时间</value>
   </data>
   <data name="MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_" xml:space="preserve">
-    <value>归一化 {0}</value>
+    <value>归一化的 {0}</value>
   </data>
   <data name="MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Retention_Times" xml:space="preserve">
-    <value>校准到中位文档保留时间</value>
+    <value>校准到文档保留时间的中位数</value>
   </data>
   <data name="MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time" xml:space="preserve">
-    <value>中位液相色谱峰时间</value>
+    <value>液相色谱峰时间的中位数</value>
   </data>
   <data name="AlignmentTargetSpec_GetLabel_Default__None_" xml:space="preserve">
     <value>默认 (无)</value>
@@ -176,7 +176,7 @@
     <value>库的中位数时间 {0}</value>
   </data>
   <data name="AlignmentTargetSpec_GetTooltip_Retention_time_values_will_be_unchanged_when_mapping_between_runs" xml:space="preserve">
-    <value>进行运行间映射时，保留时间值将保持不变</value>
+    <value>在进行不同运行之间的映射时，保留时间值将保持不变</value>
   </data>
   <data name="AlignmentTargetSpec_GetTooltip_Use_the_retention_time_calculator_if_there_is_one_or_the_first_library" xml:space="preserve">
     <value>如果存在保留时间计算器，则使用该计算器；否则使用第一个库</value>
@@ -185,10 +185,10 @@
     <value>无效</value>
   </data>
   <data name="AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_peptides_in_calculator__2_" xml:space="preserve">
-    <value>针对计算器 {2} 中的标准肽段 {1} 进行回归 {0}</value>
+    <value>针对计算器 {2} 中的标准肽段 {1} 进行 {0} 回归</value>
   </data>
   <data name="AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_molecules_in_calculator__2_" xml:space="preserve">
-    <value>针对计算器 {2} 中的标准分子 {1} 进行回归 {0}</value>
+    <value>针对计算器 {2} 中的标准分子 {1} 进行 {0} 回归</value>
   </data>
   <data name="AlignmentTargetSpec_GetTooltip__0__regression_against_all_peptides_in_calculator__1_" xml:space="preserve">
     <value>{0} 针对计算器中的所有肽段进行回归 {1}</value>

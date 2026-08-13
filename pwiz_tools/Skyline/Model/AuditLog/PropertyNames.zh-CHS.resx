@@ -1821,16 +1821,16 @@
     <value>查询</value>
   </data>
   <data name="ImputationSettings_ImputeMissingPeaks" xml:space="preserve">
-    <value>插补缺失峰</value>
+    <value>划定缺失峰</value>
   </data>
   <data name="ImputationSettings_MaxPeakWidthVariation" xml:space="preserve">
-    <value>最大峰宽度变化</value>
+    <value>最大峰宽变化</value>
   </data>
   <data name="ImputationSettings_MaxRtShift" xml:space="preserve">
     <value>最大 RT 偏移</value>
   </data>
   <data name="PeptideSettings_Imputation" xml:space="preserve">
-    <value>插补</value>
+    <value>划定</value>
   </data>
   <data name="AlignmentTargetSpec_Type" xml:space="preserve">
     <value>类型</value>
