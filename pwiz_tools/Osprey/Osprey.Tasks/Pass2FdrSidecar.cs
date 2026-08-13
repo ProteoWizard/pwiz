@@ -185,7 +185,8 @@ namespace pwiz.Osprey.Tasks
                     totalFiles++;
                     if (!inputByFileName.TryGetValue(kvp.Key, out string probeInput))
                         continue;
-                    if (!File.Exists(FdrScoresSidecar.Pass2Path(probeInput)))
+                    if (!FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass2Path(probeInput),
+                                                          FdrScoresSidecar.Pass.SecondPass))
                         missingPass2++;
                 }
                 if (missingPass2 > 0)
@@ -289,7 +290,7 @@ namespace pwiz.Osprey.Tasks
                             if (!inputByFileName.TryGetValue(fileName, out string inputFileFlush))
                                 return;
                             string pass2PathFlush = FdrScoresSidecar.Pass2Path(inputFileFlush);
-                            if (File.Exists(pass2PathFlush))
+                            if (FdrScoresSidecar.IsCurrentFormat(pass2PathFlush, FdrScoresSidecar.Pass.SecondPass))
                             {
                                 pass2Tally.AlreadyOnDisk++;
                                 return;
@@ -419,7 +420,7 @@ namespace pwiz.Osprey.Tasks
                             if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
                                 continue;
                             string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
-                            if (File.Exists(pass2Path))
+                            if (FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                             {
                                 pass2Tally.AlreadyOnDisk++;
                                 continue;
@@ -504,7 +505,7 @@ namespace pwiz.Osprey.Tasks
                         if (!inputByName.TryGetValue(kvp.Key, out string inputFile4))
                             continue;
                         string pass2Path = FdrScoresSidecar.Pass2Path(inputFile4);
-                        if (!File.Exists(pass2Path))
+                        if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                         {
                             filesMissing++;
                             continue;
@@ -605,6 +606,13 @@ namespace pwiz.Osprey.Tasks
                         pair.Key.Score = pair.Value.Score;
                         pair.Key.Pep = pair.Value.Pep;
                         pair.Key.RunProteinQvalue = pair.Value.RunProteinQvalue;
+                        // The FOURTH field of the same five-of-eight gap (sidecar v4, issue
+                        // #4522). ResetScores clears it with Score, and no frozen 2nd-pass mode
+                        // writes it back, so it lands in the 2nd-pass sidecar at 0.0 for every
+                        // peak Stage 6 touched. That is the whole population this method exists
+                        // to repair, and it is why the seed should follow the record rather than
+                        // an enumerated list: the list has now grown twice.
+                        pair.Key.ExperimentAggregateScore = pair.Value.ExperimentAggregateScore;
                     }
                     filesRead++;
                     nRestored += staged.Count;
@@ -631,15 +639,15 @@ namespace pwiz.Osprey.Tasks
             if (unreadable.Count > 0)
             {
                 ctx.LogWarning(string.Format(
-                    "1st-pass Score/Pep/RunProteinQvalue could not be restored for {0} file(s) " +
-                    "(no readable 1st-pass sidecar): [{1}]. Peaks Stage 6 changed in those files " +
-                    "keep reset defaults, so their 2nd-pass sidecars are wrong AND a Score of 0 " +
-                    "enters the second-pass protein FDR null unfiltered. Treat this run's " +
-                    "protein-level numbers as unreliable.",
+                    "1st-pass Score/Pep/RunProteinQvalue/ExperimentAggregateScore could not be " +
+                    "restored for {0} file(s) (no readable 1st-pass sidecar): [{1}]. Peaks Stage 6 " +
+                    "changed in those files keep reset defaults, so their 2nd-pass sidecars are " +
+                    "wrong AND a Score of 0 enters the second-pass protein FDR null unfiltered. " +
+                    "Treat this run's protein-level numbers as unreliable.",
                     unreadable.Count, string.Join(", ", unreadable)));
             }
             ctx.LogVerbose(string.Format(
-                "Restored 1st-pass Score/Pep/RunProteinQvalue onto {0} survivor(s) across {1} file(s).",
+                "Restored 1st-pass Score/Pep/RunProteinQvalue/ExperimentAggregateScore onto {0} survivor(s) across {1} file(s).",
                 nRestored, filesRead));
         }
 
@@ -728,24 +736,37 @@ namespace pwiz.Osprey.Tasks
                 perFileEntries.Count, StringComparer.Ordinal);
             var survivorEntryIds = new HashSet<uint>();
             long survivorObservations = 0;
-            foreach (var kvp in perFileEntries)
+            // Reported because this walks EVERY survivor observation - 89,068,375 of them on the
+            // 82-file SEA-AD run - into a HashSet before anything downstream logs a word. It sat
+            // inside a 195 s silence between "Released library fragments" and the
+            // OSPREY_PASS2_QVALUE banner, which reads as a hung run at the very end of a
+            // multi-hour search. The two steps after it (sidecar path validation and the protein
+            // stratum build) are in the same silence and are NOT yet reported - see the TODO.
+            using (var mergeProgress = new ProgressReporter(
+                string.Format(@"Collecting pass-2 survivors from {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                if (entriesByFile.TryGetValue(kvp.Key, out var merged))
+                int mergeIdx = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    // New list, never AddRange onto the caller's: perFileEntries is the live
-                    // Stage 7 survivor buffer and must not gain entries as a side effect.
-                    var combined = new List<FdrEntry>(merged.Count + kvp.Value.Count);
-                    combined.AddRange(merged);
-                    combined.AddRange(kvp.Value);
-                    entriesByFile[kvp.Key] = combined;
+                    mergeProgress.Report(++mergeIdx);
+                    if (entriesByFile.TryGetValue(kvp.Key, out var merged))
+                    {
+                        // New list, never AddRange onto the caller's: perFileEntries is the live
+                        // Stage 7 survivor buffer and must not gain entries as a side effect.
+                        var combined = new List<FdrEntry>(merged.Count + kvp.Value.Count);
+                        combined.AddRange(merged);
+                        combined.AddRange(kvp.Value);
+                        entriesByFile[kvp.Key] = combined;
+                    }
+                    else
+                    {
+                        entriesByFile[kvp.Key] = kvp.Value;
+                    }
+                    survivorObservations += kvp.Value.Count;
+                    foreach (var e in kvp.Value)
+                        survivorEntryIds.Add(e.EntryId);
                 }
-                else
-                {
-                    entriesByFile[kvp.Key] = kvp.Value;
-                }
-                survivorObservations += kvp.Value.Count;
-                foreach (var e in kvp.Value)
-                    survivorEntryIds.Add(e.EntryId);
             }
 
             // 2. Per-file scalar sidecar paths. Validate every sidecar up front so we fail fast
@@ -770,6 +791,20 @@ namespace pwiz.Osprey.Tasks
                 if (!File.Exists(sidecarPath))
                 {
                     ctx.LogWarning("transfer-compete: 1st-pass scalar sidecar not found: " + sidecarPath);
+                    return false;
+                }
+                // Existence was never enough. ReadScalars THROWS on bad magic, a stale version, a
+                // wrong pass byte or a partial record, and its only call site is inside the
+                // streaming closure below - which has already written e.Score = frozenScore for
+                // files 1..N by the time file N+1 is rejected. That aborts a multi-hour run on a
+                // raw IOException with the survivor pool half-mutated, contradicting this method's
+                // own contract that "every return false is placed BEFORE any survivor is mutated".
+                // Checking the header here keeps the refusal where the contract says it is.
+                if (!FdrScoresSidecar.IsCurrentFormat(sidecarPath, FdrScoresSidecar.Pass.FirstPass))
+                {
+                    ctx.LogWarning(
+                        "transfer-compete: 1st-pass scalar sidecar is not a readable v" +
+                        FdrScoresSidecar.FormatVersion + " first-pass file: " + sidecarPath);
                     return false;
                 }
                 fileKeys.Add(kvp.Key);
@@ -919,7 +954,8 @@ namespace pwiz.Osprey.Tasks
                     }
                     nScored += fileScores.Count;
 
-                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], out uint[] eids, out double[] scs);
+                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], FdrScoresSidecar.Pass.FirstPass,
+                        out uint[] eids, out double[] scs);
                     if (stratumBaseIds != null)
                         StashOffStratumPass1ExperimentQ(fileKey, sidecarByKey[fileKey], eids, scs, fileScores);
                     progress.Report(++nRead);
@@ -960,14 +996,25 @@ namespace pwiz.Osprey.Tasks
                     }
                     if (wanted.Count == 0)
                         return;
-                    FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
+                    // The result matters here as much as at the other read sites: ReadRecords
+                    // returns false AFTER invoking the callback, so a partial read leaves
+                    // pass1ExpQByKey holding SOME of this file's off-stratum q-values. Those are
+                    // carried forward verbatim by the off-stratum branch, so a silent partial
+                    // fill gives a subset of survivors their pass-1 q and the rest a default -
+                    // a per-entry mix no downstream check can see.
+                    if (!FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
                     {
                         if (wanted.Contains(rec.EntryId))
                         {
                             pass1ExpQByKey[(fileKey, rec.EntryId)] =
                                 (rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
                         }
-                    });
+                    }))
+                    {
+                        throw new IOException(
+                            @"1st-pass sidecar could not be read in full while stashing off-stratum experiment q-values: " +
+                            sidecarPath);
+                    }
                 }
 
                 competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
@@ -1009,6 +1056,21 @@ namespace pwiz.Osprey.Tasks
                     // reported set (peptide-level FDR is not the target here).
                     e.ExperimentPeptideQvalue = eq;
                     e.Pep = competition.Pep(kvp.Key, e.EntryId);
+                    // The aggregate MUST move with the q above. This mode recomputes experiment q
+                    // from a fresh full-population competition, so the pass-1 aggregate
+                    // RestorePass1Scalars seeded is no longer the score that q was ranked on -
+                    // and this is the DEFAULT mode, so leaving it stale is not an edge case.
+                    // Measured cost of the omission: the co-assignment panel's experiment
+                    // boundary is a minimum over accepted precursors' aggregates, so entries
+                    // still holding the ResetScores 0.0 default dragged it to 0.0 and admitted
+                    // the entire decoy pool - 542,368 decoys against 117,783 targets on astral,
+                    // 183x the pass-1 count, from a rule meant to admit about 1%.
+                    // null means the entry never entered the experiment fold (off-stratum under
+                    // protein-compact); those keep the pass-1 value, which is correct because
+                    // they keep the pass-1 experiment q too - the branch above.
+                    double? agg = competition.ExperimentAggregateScore(e.EntryId);
+                    if (agg.HasValue)
+                        e.ExperimentAggregateScore = agg.Value;
                     nMapped++;
                 }
             ctx.LogInfo(string.Format(
@@ -1542,6 +1604,14 @@ namespace pwiz.Osprey.Tasks
             // retrain -- hard-fail over warn-and-proceed on silently-invalid output.
             var globalExpPrecQ = new Dictionary<uint, double>();
             var globalExpPepQ = new Dictionary<uint, double>();
+            // The experiment aggregate score belongs with the experiment q above: it is the score
+            // that q's competition ranked on, and a gap-fill that takes one without the other
+            // persists a q paired with a score it was never computed from - the exact pairing this
+            // field exists to guarantee. Reduced by MAX rather than the q-values' MIN because
+            // higher is better here, and because 0.0 is FdrEntry.ResetScores' default and sits mid
+            // distribution for a signed discriminant, so max also keeps a reset stub from
+            // displacing a real negative score.
+            var globalExpAgg = new Dictionary<uint, double>();
             // Per-file progress: reading every file's 1st-pass sidecar ran silently for minutes on
             // an 82-file join. Console-only; disposed on every exit (including the fallback return).
             using (var scanProgress = new ProgressReporter(
@@ -1564,6 +1634,17 @@ namespace pwiz.Osprey.Tasks
                         if (!globalExpPepQ.TryGetValue(rec.EntryId, out double curPep) ||
                             rec.ExperimentPeptideQvalue < curPep)
                             globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
+                        // Prefer a REAL aggregate over the 0.0 ResetScores default, rather than
+                        // taking the max - 0.0 sits above 93-99% of measured aggregates, so a max
+                        // would let a single default row outrank every real (negative) one for
+                        // this entry. Same rule, and the same reasoning, as
+                        // CoAssignmentAccumulator.ObserveCutoff; see the comment there for the
+                        // measurement. No 1st-pass sidecar record carries a 0.0 today (0 of 24.7M
+                        // over six SEA-AD files), so this is prophylactic here and essential
+                        // there, where the pass-2 pool does carry stubs.
+                        if (!globalExpAgg.TryGetValue(rec.EntryId, out double curAgg) || curAgg == 0.0 ||
+                            (rec.ExperimentAggregateScore != 0.0 && rec.ExperimentAggregateScore > curAgg))
+                            globalExpAgg[rec.EntryId] = rec.ExperimentAggregateScore;
                     });
                     if (!readOk)
                     {
@@ -1641,8 +1722,12 @@ namespace pwiz.Osprey.Tasks
                     // them at the precursor's best-run q; a precursor with no record anywhere -> 1.
                     double gapExpPrecQ = globalExpPrecQ.TryGetValue(entry.EntryId, out double gPrec) ? gPrec : 1.0;
                     double gapExpPepQ = globalExpPepQ.TryGetValue(entry.EntryId, out double gPep) ? gPep : 1.0;
+                    // 0.0 when the precursor has no record anywhere, which pairs with the q = 1.0
+                    // above: never competed, never accepted, so nothing reads it.
+                    double gapExpAgg = globalExpAgg.TryGetValue(entry.EntryId, out double gAgg) ? gAgg : 0.0;
                     switch (AssignPerRunQ(entry, newScore, rec1,
-                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, gapExpPrecQ, gapExpPepQ))
+                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc,
+                        gapExpPrecQ, gapExpPepQ, gapExpAgg))
                     {
                         case PerRunClass.Unchanged: nUnchanged++; break;
                         case PerRunClass.Moved: nMoved++; break;
@@ -1691,7 +1776,9 @@ namespace pwiz.Osprey.Tasks
         /// full 1st-pass record verbatim.</item>
         /// <item>MOVED: run q re-mapped from the tables; experiment q + PEP carried from the record.</item>
         /// <item>GAP-FILL (no record): run q from the tables; experiment q =
-        /// <paramref name="gapFillExpPrecQ"/> / <paramref name="gapFillExpPepQ"/>.</item>
+        /// <paramref name="gapFillExpPrecQ"/> / <paramref name="gapFillExpPepQ"/>, and the
+        /// experiment aggregate score = <paramref name="gapFillExpAgg"/> from the same cross-file
+        /// source, so the persisted score and the q it ranked for stay paired.</item>
         /// </list>
         /// </summary>
         internal static PerRunClass AssignPerRunQ(
@@ -1703,7 +1790,8 @@ namespace pwiz.Osprey.Tasks
             double[] pepScoresDesc,
             double[] pepQDesc,
             double gapFillExpPrecQ,
-            double gapFillExpPepQ)
+            double gapFillExpPepQ,
+            double gapFillExpAgg)
         {
             if (firstPass.HasValue)
             {
@@ -1721,6 +1809,7 @@ namespace pwiz.Osprey.Tasks
                     entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
                     entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
                     entry.Pep = rec1.Pep;
+                    entry.ExperimentAggregateScore = rec1.ExperimentAggregateScore;
                     return PerRunClass.Unchanged;
                 }
                 entry.Score = newScore;
@@ -1730,6 +1819,11 @@ namespace pwiz.Osprey.Tasks
                 entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
                 entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
                 entry.Pep = rec1.Pep;
+                // Carried with the experiment q for the same reason, and NOT re-derived from
+                // newScore: it is the score that pass-1 experiment q was computed from, so
+                // re-mapping it to the rescored value would break the pairing that is the
+                // whole point of persisting it.
+                entry.ExperimentAggregateScore = rec1.ExperimentAggregateScore;
                 return PerRunClass.Moved;
             }
             entry.Score = newScore;
@@ -1737,6 +1831,13 @@ namespace pwiz.Osprey.Tasks
             entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
             entry.ExperimentPrecursorQvalue = gapFillExpPrecQ;
             entry.ExperimentPeptideQvalue = gapFillExpPepQ;
+            // Carried for the same reason as the experiment q beside it, and from the same
+            // cross-file source: the aggregate is a per-entry roll-up, identical in every file's
+            // record for that entry, so a gap-fill is entitled to it even with no record of its
+            // own. Leaving it at ResetScores' 0.0 would persist a real experiment q next to a
+            // score that q was not computed from, and a score-space acceptance boundary built
+            // from the 2nd-pass sidecar would then be drawn from the wrong ranking.
+            entry.ExperimentAggregateScore = gapFillExpAgg;
             return PerRunClass.GapFill;
         }
 

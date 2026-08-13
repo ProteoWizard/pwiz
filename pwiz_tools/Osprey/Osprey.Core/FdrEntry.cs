@@ -78,6 +78,17 @@ namespace pwiz.Osprey.Core
         public string ModifiedSequence { get; set; }
 
         /// <summary>
+        /// The per-entry score the EXPERIMENT-scope competitions ranked this entry on (sidecar
+        /// v4, issue #4522): max over the entry's rows across runs under the default
+        /// aggregation, <c>TargetDecoyCompetition.ComputeBaseIdMeanBestN</c>'s value under
+        /// mean-best-N. <see cref="Score"/> is the per-ROW discriminant the RUN-scope q-values
+        /// compete on; this is its experiment-scope counterpart, persisted beside the
+        /// experiment q-values so a consumer can re-gate at that scope without rebuilding the
+        /// roll-up and branching on <c>OSPREY_EXPERIMENT_AGG</c>.
+        /// </summary>
+        public double ExperimentAggregateScore { get; set; }
+
+        /// <summary>
         /// Full PIN feature vector (21 features) computed during coelution scoring.
         /// Used by Percolator FDR. Null if features have not been computed yet
         /// (e.g., for stubs loaded from a Parquet cache without features).
@@ -157,9 +168,10 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Reset the discriminant fields to the Rust <c>to_fdr_entry</c> defaults: Score 0,
-        /// every q-value and Pep 1.0. This is the state a Stage 6 rescore target is left in
-        /// for the 2nd pass to fill, and the state a fresh gap-fill stub is appended in.
+        /// Reset the discriminant fields to the Rust <c>to_fdr_entry</c> defaults: Score and
+        /// <see cref="ExperimentAggregateScore"/> 0, every q-value and Pep 1.0. This is the
+        /// state a Stage 6 rescore target is left in for the 2nd pass to fill, and the state a
+        /// fresh gap-fill stub is appended in.
         ///
         /// <para>One method because the same eight assignments had been written out five
         /// times - the rescore overlay, both gap-fill passes, and the rebuild-from-disk - and
@@ -169,6 +181,7 @@ namespace pwiz.Osprey.Core
         public void ResetScores()
         {
             Score = 0.0;
+            ExperimentAggregateScore = 0.0;
             RunPrecursorQvalue = 1.0;
             RunPeptideQvalue = 1.0;
             RunProteinQvalue = 1.0;

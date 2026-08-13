@@ -84,6 +84,30 @@ namespace pwiz.Osprey.Tasks
         {
             if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
                 yield return ctx.Config.OutputBlib;
+            // The --model-diagnostics report is an output of THIS task (it is finalized in
+            // WritePass2AndFinalize), so declare it and let ordinary task validity regenerate
+            // it. Task validity requires every declared output to exist, so a deleted or
+            // renamed report invalidates this task alone - Stages 1-5 stay cached and the
+            // pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars, the same path
+            // regression mode 5 already covers.
+            //
+            // CONDITIONAL ON THE FLAG, deliberately. Declaring it unconditionally would make
+            // every run that never asked for diagnostics permanently invalid, re-running
+            // SecondPassFDR forever.
+            //
+            // Without this the flag was inert on a completed directory: --model-diagnostics is
+            // in no validity key and the HTML was in no Outputs list, so adding it to a re-run
+            // changed nothing, every task reported "outputs valid", and no report was produced.
+            //
+            // AND conditional on FirstPassFDR being in this graph. WritePass2AndFinalize needs
+            // the pass-1 .data.json hand-off sidecar, which only FirstPassFdrTask writes - so
+            // under `--task SecondPassFDR --model-diagnostics` no report can ever be produced.
+            // Declaring it there recreated the very loop the paragraph above set out to avoid,
+            // one step later: CanRehydrate requires every declared output to exist, so the task
+            // was never skippable and every invocation re-ran pass-2 Percolator, protein FDR and
+            // the whole .blib write, still producing no report.
+            if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
+                yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
             // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
             // (independent of protein FDR -- the second Percolator pass runs on the
             // reconciled features), so declare them on that same condition.
@@ -104,7 +128,10 @@ namespace pwiz.Osprey.Tasks
             // The 2nd-pass mode decides the q this task writes into the .blib and the 2nd-pass
             // sidecars, so it invalidates them by exactly the argument the aggregation suffix
             // makes above - one arm's .blib must never be reused as another's.
+            // And the sidecar format version, for the same reason FirstPassFdrTask carries it:
+            // this task writes the 2nd-pass sidecars, so a record-layout change invalidates them.
             return base.ValidityKey(ctx)
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()

@@ -21,9 +21,11 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Test
 {
@@ -49,6 +51,54 @@ namespace pwiz.Osprey.Test
             AssertEachArmKeysDifferently();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
+            AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+        }
+
+        /// <summary>
+        /// The <c>--model-diagnostics</c> report must be a DECLARED OUTPUT of the task that
+        /// finalizes it, and only when the flag is on.
+        ///
+        /// <para>Declared, because that is the whole mechanism by which a completed run can
+        /// regenerate a deleted report: task validity requires every declared output to exist,
+        /// so a missing HTML invalidates SecondPassFDR alone, Stages 1-5 stay cached, and the
+        /// pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars. Before this the flag
+        /// was INERT on a cached directory - it is in no validity key, the HTML was in no
+        /// Outputs list, so re-running with it added skipped every task and produced no
+        /// report at all.</para>
+        ///
+        /// <para>Only when asked, because declaring it unconditionally would leave every run
+        /// that never wanted diagnostics permanently invalid, re-running SecondPassFDR on
+        /// every resume forever.</para>
+        /// </summary>
+        private static void AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked()
+        {
+            foreach (bool wanted in new[] { false, true })
+            {
+                var config = new OspreyConfig
+                {
+                    OutputBlib = @"C:\runs\out.blib",
+                    ModelDiagnostics = wanted
+                };
+                var tasks = AnalysisPipeline.CanonicalPipeline();
+                var ctx = new PipelineContext(config, tasks, null, null, null);
+                OspreyTask second = null;
+                foreach (var t in tasks)
+                {
+                    if (t.Name == @"SecondPassFDR")
+                        second = t;
+                }
+                Assert.IsNotNull(second, @"SecondPassFDR must be in the canonical pipeline");
+
+                bool declared = false;
+                foreach (string o in second.Outputs(ctx))
+                {
+                    if (o != null && o.EndsWith(ModelDiagnosticsReport.HtmlSuffix, StringComparison.Ordinal))
+                        declared = true;
+                }
+                Assert.AreEqual(wanted, declared, wanted
+                    ? @"the report must be a declared output when --model-diagnostics is on, or a deleted report cannot be regenerated"
+                    : @"the report must NOT be declared when --model-diagnostics is off, or every plain run is permanently invalid");
+            }
         }
 
         /// <summary>

@@ -193,7 +193,13 @@ namespace pwiz.Osprey.Tasks
             // The Stage 6 handoff arm joins them: the streamed and resident arms are supposed
             // to write byte-identical reconciled parquets, and an in-place A/B that silently
             // adopted the other arm's outputs would report that identity without testing it.
+            // The sidecar format version belongs here too, not only in FirstPassFdrTask: this
+            // task WRITES the 2nd-pass sidecar, so a record-layout change (v3 -> v4) invalidates
+            // its output exactly as it invalidates the 1st-pass one. Without it, FirstPassFDR
+            // re-ran and rewrote v4 while this task and SecondPassFDR considered themselves
+            // valid against v3 files.
             return base.ValidityKey(ctx)
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
@@ -255,7 +261,12 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var inputFile in ctx.Config.InputFiles)
                 {
-                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    // Presence is not readability. A bare File.Exists cannot see a version, so a
+                    // sidecar left by a build before the v3 -> v4 record change satisfied this
+                    // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
+                    // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
+                    if (FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass2Path(inputFile),
+                                                         FdrScoresSidecar.Pass.SecondPass))
                     {
                         anyPass2Present = true;
                         break;
