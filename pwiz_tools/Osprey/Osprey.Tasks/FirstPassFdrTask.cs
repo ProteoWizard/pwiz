@@ -237,8 +237,16 @@ namespace pwiz.Osprey.Tasks
             // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
             // under transfer carries no stratum, so a protein-compact re-run that adopted it
             // would be reading an artifact that cannot answer its question.
+            // The sidecar FORMAT VERSION belongs here because this task's output is the
+            // .1st-pass.fdr_scores.bin every later stage reads back. Resuming a directory written
+            // before a format bump would find this task still valid, skip it, and then have every
+            // v4 reader refuse the v3 file by version - leaving RestorePass1Scalars to seed
+            // nothing and write ResetScores defaults into the 2nd-pass sidecars under only a
+            // warning. Including the version turns that silent-wrong-output path into a clean
+            // recompute.
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
@@ -1128,14 +1136,33 @@ namespace pwiz.Osprey.Tasks
                 // Same file order either way: the accumulator was seeded with the input-file
                 // order and perFileEntries keeps every file's key even once compacted.
                 var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
+                var libraryById = ctx.Get<LibraryById>().Value;
                 if (mdiagAccumulator != null)
                 {
+                    // The peak co-assignment panel (issue #4522) is built from the per-file FDR
+                    // sidecars, NOT from perFileEntries - the same source the projection path
+                    // uses, so there is one implementation of this panel rather than two.
+                    //
+                    // A non-null mdiagAccumulator means this is the bounded rehydrate path, and
+                    // the remarks on this method say what that implies: perFileEntries "has
+                    // already lost the ~52x non-survivors - mostly the decoys and entrapment",
+                    // so building the report off it "would silently produce a plausible WRONG
+                    // page". That is precisely what the earlier resident build did here. It
+                    // agreed with the sidecar build on the acceptance boundary (0.0120) and on
+                    // the accepted count (28,926) and still reported 72 detected decoys against
+                    // 468, because compaction had already dropped the rest - target denominators
+                    // intact, decoy class quietly gutted. The regression then overwrote the
+                    // straight-through report with this one, so every measurement taken after a
+                    // full run was the wrong page.
+                    var coAssignment = PeakCoAssignmentSource.Build(
+                        perFileEntries.ConvertAll(kv => kv.Key),
+                        ctx.Get<PerFileParquetPaths>().Value, config,
+                        mdiagAccumulator.ClassByBaseId, libraryById, ctx.LogInfo);
                     ModelDiagnosticsReport.WriteFromAccumulator(
-                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo);
+                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment);
                 }
                 else
                 {
-                    var libraryById = ctx.Get<LibraryById>().Value;
                     ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
                 }
             }
@@ -2396,8 +2423,16 @@ namespace pwiz.Osprey.Tasks
             if (mdiagAccumulator != null)
             {
                 var cal = BuildCalibrationData(ctx, projections.PerFile.ConvertAll(kv => kv.Key));
+                // The peak co-assignment panel (issue #4522) needs each row's DETECTION apex RT,
+                // which the streamed fold never sees: this path carries no RT at all. Rebuild it
+                // from the per-file sidecars just flushed by the score pass, joined to their
+                // parquet apex_rt. Reusing the accumulator's classification avoids re-running the
+                // multi-minute library classification for the same answer.
+                var coAssignment = PeakCoAssignmentSource.Build(
+                    projections.PerFile.ConvertAll(kv => kv.Key), perFileParquetPaths, config,
+                    mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value, ctx.LogInfo);
                 ModelDiagnosticsReport.WriteFromAccumulator(
-                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo);
+                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment);
             }
 
             // First-pass protein FDR streamed off the per-file sidecar + parquet scalars

@@ -19,9 +19,10 @@ they agreed on the wrong value and nothing was red.
 This compares the sidecars themselves, which is where the distributed tasks' per-file
 output actually lands.
 
-Record layout (Osprey.IO\FdrScoresSidecar.cs): 32-byte header, 60-byte records,
+Record layout (Osprey.IO\FdrScoresSidecar.cs), v4: 32-byte header, 68-byte records,
   entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20,
-  experiment_precursor_q @28, experiment_peptide_q @36, pep @44, run_protein_q @52.
+  experiment_precursor_q @28, experiment_peptide_q @36, pep @44, run_protein_q @52,
+  experiment_aggregate_score @60 (issue #4522).
 Header: magic @0..8, version @8, pass @9, record count u64 @16.
 
 The decode + compare runs as compiled C#, not PowerShell. A per-record PowerShell loop
@@ -67,8 +68,8 @@ public class FdrSidecarDiff
 public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
-    private const int RecordLen = 60;
-    private const byte ExpectedVersion = 3;
+    private const int RecordLen = 68;
+    private const byte ExpectedVersion = 4;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     /// Name and byte offset in ONE table. They were parallel arrays whose lengths separately
@@ -85,6 +86,7 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_peptide_qvalue",   Offset = 36 },
         new FdrSidecarField { Name = "pep",                         Offset = 44 },
         new FdrSidecarField { Name = "run_protein_qvalue",          Offset = 52 },
+        new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 60 },
     };
 
     public static FdrSidecarDiff Compare(
@@ -169,7 +171,12 @@ public static class OspreyFdrSidecarComparer
     /// (FdrScoresSidecar.TryRead returns false on a pass mismatch) while a filename-only
     /// comparison would happily call the two sides equal.
     ///
-    /// The size arithmetic is checked: 60 divides many lengths, so a corrupt count can
+    /// The version check matters for the same reason: a writer whose record width differs from
+    /// ExpectedVersion's must be REFUSED by name rather than decoded at the wrong stride. The
+    /// size check alone rejected the v3 -> v4 growth only because 68 and 60 happen not to divide
+    /// alike, which is luck, not a guard.
+    ///
+    /// The size arithmetic is checked: 68 divides many lengths, so a corrupt count can
     /// satisfy the size test by wrapping mod 2^64 and then walk off the end of the buffer.
     /// The canonical reader wraps the identical expression for the identical reason.
     private static byte[] ReadIfValid(string path, int expectedPass, out long count, out string problem)

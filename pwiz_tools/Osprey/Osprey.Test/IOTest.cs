@@ -3162,23 +3162,29 @@ namespace pwiz.Osprey.Test
             try
             {
                 // Finalized records with a distinct real run_protein_qvalue each (the
-                // last arg). entry_ids are non-sequential so a positional patch would
-                // land the wrong value.
+                // second-to-last arg). entry_ids are non-sequential so a positional patch
+                // would land the wrong value. Each record also carries a DISTINCT
+                // experiment_aggregate_score in the trailing [60..68] field, which the patch
+                // must leave untouched -- a patch that miscomputed the record stride would
+                // corrupt it and break the byte comparison below.
                 var real = new List<FdrScoreRecord>
                 {
-                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.0012, 0.0013, 0.02, 0.0042),
-                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.0022, 0.0023, 0.05, 0.0123),
-                    new FdrScoreRecord(42, -3.3, 0.003, 0.0031, 0.0032, 0.0033, 0.08, 0.95),
-                    new FdrScoreRecord(3,  -3.2, 0.004, 0.0041, 0.0042, 0.0043, 0.11, 1.0),
+                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.0012, 0.0013, 0.02, 0.0042, -1.25),
+                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.0022, 0.0023, 0.05, 0.0123, -0.75),
+                    new FdrScoreRecord(42, -3.3, 0.003, 0.0031, 0.0032, 0.0033, 0.08, 0.95,    0.5),
+                    new FdrScoreRecord(3,  -3.2, 0.004, 0.0041, 0.0042, 0.0043, 0.11, 1.0,     2.125),
                 };
 
-                // Phase-1 partial records: identical EXCEPT run_protein_qvalue = 1.0.
+                // Phase-1 partial records: identical EXCEPT run_protein_qvalue = 1.0. The
+                // aggregate score is already final at phase 1 (it comes from the score pass,
+                // not from protein FDR), so it is carried through unchanged.
                 var partial = new List<FdrScoreRecord>(real.Count);
                 foreach (var r in real)
                 {
                     partial.Add(new FdrScoreRecord(
                         r.EntryId, r.Score, r.RunPrecursorQvalue, r.RunPeptideQvalue,
-                        r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue, r.Pep, 1.0));
+                        r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue, r.Pep, 1.0,
+                        r.ExperimentAggregateScore));
                 }
 
                 // Map entry_id -> finalized run_protein_qvalue, inserted out of record
