@@ -18,8 +18,8 @@ resume mechanisms the port adds (a per-task `.osprey.task` validity sidecar and 
 | `<stem>.spectra.bin` | Custom binary v3 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload |
 | `<stem>.scores.parquet` | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | Custom binary v3 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + run_protein_qvalue after first-pass Percolator |
-| `<stem>.2nd-pass.fdr_scores.bin` | Custom binary v3 | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.1st-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + run_protein_qvalue + experiment_aggregate_score after first-pass Percolator |
+| `<stem>.2nd-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.reconciliation.json` | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
 | `<output>.<TaskName>.osprey.task` | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
@@ -299,19 +299,19 @@ Per-file persistence of FDR state at the Stage 5 → Stage 6 boundary (first pas
 second-pass FDR. Carries the SVM discriminant plus every q-value needed for downstream filtering
 and protein-FDR-aware compaction.
 
-### Format (v3) — byte-identical to Rust
+### Format (v4) — byte-identical to Rust
 
-`FdrScoresSidecar` writes a 32-byte header + fixed 60-byte records (`FdrScoresSidecar.cs:97`):
+`FdrScoresSidecar` writes a 32-byte header + fixed 68-byte records (`FdrScoresSidecar.cs:97`):
 
 ```
 Header (32 bytes):
   [0..8]   magic         = "OSPRYFDR"
-  [8]      version       = 3
+  [8]      version       = 4
   [9]      pass          = 1 (first) | 2 (second)
   [10..16] reserved (zero)
   [16..24] entry_count   u64 LE
   [24..32] reserved (zero)
-Record (60 bytes):
+Record (68 bytes):
   [0..4]   entry_id                     u32 LE
   [4..12]  svm_score                    f64 LE
   [12..20] run_precursor_qvalue         f64 LE
@@ -320,6 +320,7 @@ Record (60 bytes):
   [36..44] experiment_peptide_qvalue    f64 LE
   [44..52] pep                          f64 LE
   [52..60] run_protein_qvalue           f64 LE
+  [60..68] experiment_aggregate_score   f64 LE
 ```
 
 Field order and offsets are single-sourced in `WriteRecord` (`FdrScoresSidecar.cs:390`).
@@ -329,6 +330,24 @@ The v2→v3 bump (dated 2026-05-02 in the C# comment, `FdrScoresSidecar.cs:82`) 
 post first-pass protein FDR so the value is real, not the default 1.0. Cross-impl byte parity is
 checked by a harness via the `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` hook (`FdrScoresSidecar.cs:43`).
 
+The v3→v4 bump (2026-08-10, issue #4522) appended `experiment_aggregate_score`. `svm_score` is
+the per-ROW discriminant, which is what the RUN-scope q-values compete on; the EXPERIMENT-scope
+q-values compete on a per-entry roll-up across runs instead, and that quantity was never
+persisted — so a consumer re-gating at experiment scope had to rebuild the roll-up itself and
+branch on `OSPREY_EXPERIMENT_AGG`, which is silently wrong on exactly the arms where the
+aggregation is under study. The new field is that roll-up: max over the entry's rows across runs
+under the default aggregation, `ComputeBaseIdMeanBestN`'s value under mean-best-N, produced by
+`PercolatorQValues.ComputeExperimentAggregateScoreMap` (resident/flat) and
+`StreamingFdr.StreamingFirstPassQ.BuildExperimentAggregateScoreMap` (streaming), which
+`FdrTest.TestStreamingFirstPassQMatchesFlat` pins against each other. Every row of an entry
+carries the same value.
+
+Two caveats worth keeping straight. It is **not** a general q→score inverse: the best-of-runs
+clamp (`ClampExperimentQToBestRunFlat`, issue #4390) floors an experiment q up to a run q, so
+after clamping the experiment q is not a monotone function of this score. And the field was
+appended at the END specifically so every v3 offset is unchanged, which is what keeps
+`PatchRunProteinQvalues`'s `[52..60]` patch valid without modification.
+
 A two-phase write exists for the lean projection path (issue #4355): phase 1 writes records with
 a 1.0 placeholder `run_protein_qvalue`; `PatchRunProteinQvalues` (`FdrScoresSidecar.cs:247`)
 then streams the file one record at a time and overwrites only bytes `[52..60]` per entry_id,
@@ -336,10 +355,14 @@ producing a file byte-identical to a single-phase write.
 
 ### Validation and record→entry matching
 
-`TryRead` (`FdrScoresSidecar.cs:437`) rejects: missing file, wrong magic, `version != 3`, a
+`TryRead` (`FdrScoresSidecar.cs:437`) rejects: missing file, wrong magic, `version != 4`, a
 `pass` byte that disagrees with `expectedPass`, and a file length that does not equal
-`32 + 60 × header_count` (with checked arithmetic to reject an overflowing count,
+`32 + 68 × header_count` (with checked arithmetic to reject an overflowing count,
 `FdrScoresSidecar.cs:120`).
+
+`ReadScalars` validates magic + version too, as of v4. It previously did not, which was
+harmless only while the record width was fixed: at a changed `RecordLength` a stale v3 sidecar
+would otherwise be re-cut at the new stride and yield plausible garbage rather than an error.
 
 **Records are matched to entries by `entry_id`, not by position** (`FdrScoresSidecar.cs:484`).
 This deliberately diverges from the Rust doc's stated "entry_count must match entries.len();

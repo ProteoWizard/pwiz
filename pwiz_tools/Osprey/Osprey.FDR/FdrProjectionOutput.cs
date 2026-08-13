@@ -119,16 +119,26 @@ namespace pwiz.Osprey.FDR
         /// Accept one scored row. <paramref name="fileIdx"/> / <paramref name="rowIdx"/>
         /// locate the row within its per-file list; <paramref name="entryId"/> /
         /// <paramref name="isDecoy"/> / <paramref name="charge"/> / <paramref name="peptide"/>
-        /// identify it; <paramref name="score"/> + <paramref name="q"/> are the freshly
+        /// identify it; <paramref name="score"/> +
+        /// <paramref name="experimentAggregateScore"/> + <paramref name="q"/> are the freshly
         /// computed outputs. Called once per row, in nested (file, row) order == the flat
         /// score-pass index order. <paramref name="charge"/> / <paramref name="peptide"/> are
         /// passed in (not read off a resident row) so the sink's [COUNT] tally + streaming
         /// --model-diagnostics accumulator work whether the caller holds a resident projection
         /// (2nd pass) or streams the rows straight from parquet with no resident buffer at all
         /// (1st-pass streaming, issue #4355 struct-shrink S3 Stage B).
+        ///
+        /// <para><paramref name="experimentAggregateScore"/> is the per-entry score the
+        /// experiment-scope competitions ranked this row's entry on (sidecar v4, issue #4522)
+        /// - constant across every row of an entry, and equal to <paramref name="score"/> only
+        /// on a single-file run whose precursors carry one row each. It rides the sink rather
+        /// than <see cref="FdrQValues"/> because it is a score, not a q-value, and rather than
+        /// <see cref="FdrProjection"/> because that struct is deliberately lean (issue #4355
+        /// S0/S1) and guarded against regrowth.</para>
         /// </summary>
         void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
-            byte charge, string peptide, double score, in FdrQValues q);
+            byte charge, string peptide, double score, double experimentAggregateScore,
+            in FdrQValues q);
 
         /// <summary>
         /// Finalize the pass: emit the tail <c>[COUNT]</c> lines (per-file pass counts,
