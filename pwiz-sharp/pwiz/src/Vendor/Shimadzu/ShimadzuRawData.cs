@@ -166,12 +166,19 @@ public sealed class ShimadzuRawData : IDisposable
             try { SystemName = _dataObject.IO.SystemName() ?? string.Empty; }
             catch { SystemName = string.Empty; }
 
-            // cpp reads SampleInfo.AnalysisDate (ShimadzuReader.cpp:370). Under .NET 8 the C#
-            // SDK leaves it at DateTime.MinValue (loader depends on BinaryFormatter paths whose
-            // default behavior changed in .NET Core), so fall back to FilePropTag.GeneratedDateTime
-            // — the file-level "generated" timestamp the SDK does populate. The two are typically
-            // tens of seconds apart on the same .lcd; the harness ignores startTimeStamp diffs
-            // so the reference mzMLs don't drift either way.
+            // cpp reads SampleInfo.AnalysisDate (ShimadzuReader.cpp:370). Under .NET 8 the C# SDK
+            // leaves it at DateTime.MinValue, so fall back to FilePropTag.GeneratedDateTime - the
+            // file-level "generated" timestamp the SDK does populate.
+            //
+            // This is what keeps every Shimadzu file off byte parity: on Shimadzu8060RX.lcd the
+            // two fields are 15 s apart, so cpp writes ...T07:30:23Z and we write ...T07:30:08Z,
+            // and for six corpus files that lone attribute is the ONLY difference from cpp.
+            // BinaryFormatter is NOT the reason, despite what this comment used to say:
+            // EnableUnsafeBinaryFormatterSerialization is already set in MsConvert.csproj and
+            // AnalysisDate still comes back default (measured 2026-08-12 - Kind=Unspecified,
+            // 0001-01-01), so re-enabling it is not the fix and no future session should spend
+            // time there. Whatever populates SampleInfo under .NET Framework is doing something
+            // else this SDK build does not do on Core.
             try
             {
                 var sdkDate = _dataObject.SampleInfo.AnalysisDate;

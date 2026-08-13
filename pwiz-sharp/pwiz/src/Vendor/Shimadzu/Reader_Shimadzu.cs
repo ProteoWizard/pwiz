@@ -150,8 +150,18 @@ public sealed class Reader_Shimadzu : IReader
         // on ReaderConfig so every vendor reader can share the same logic + flag wiring.
         // Shimadzu is one of the three readers where cpp gates the shift on the config flag
         // (Reader_Shimadzu.cpp: getAnalysisDate(config.adjustUnknownTimeZonesToHostTimeZone)).
+        //
+        // The conversion to UTC, though, is Shimadzu's alone: ShimadzuReader.cpp:370 reads
+        // `SampleInfo->AnalysisDate.ToUniversalTime()`, and it is the ONLY ToUniversalTime call
+        // in any cpp vendor reader - every other one formats the SDK's naive wall clock. That is
+        // why the shared helper does not convert (doing so there put Mobilion 8 hours out), and
+        // why leaving it out here put every Shimadzu stamp one host offset behind cpp: 4 hours
+        // on the EDT files, 5 on the one acquired in January.
+        var analysisDate = raw.AnalysisDateRaw;
+        if (analysisDate != default)
+            analysisDate = analysisDate.ToUniversalTime();
         string? startTime = ReaderConfig.FormatStartTimeStamp(
-            raw.AnalysisDateRaw, config.AdjustUnknownTimeZonesToHostTimeZone);
+            analysisDate, config.AdjustUnknownTimeZonesToHostTimeZone);
         if (startTime is not null)
             result.Run.StartTimeStamp = startTime;
 
