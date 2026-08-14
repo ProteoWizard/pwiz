@@ -357,7 +357,7 @@ namespace pwiz.Osprey.Test
                 entryId: 1, score: 10.0,
                 runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002,
                 experimentPrecursorQvalue: 0.0005, experimentPeptideQvalue: 0.0006,
-                pep: 0.03, runProteinQvalue: 0.004, experimentAggregateScore: 12.5);
+                pep: 0.03, experimentProteinQvalue: 0.004, experimentAggregateScore: 12.5);
 
             // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
             var unchanged = new FdrEntry { EntryId = 1 };

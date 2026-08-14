@@ -25,12 +25,12 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// One <c>.fdr_scores.bin</c> record's payload (entry_id + SVM score + 4 q-values +
-    /// PEP + run_protein_qvalue + experiment_aggregate_score), decoupled from any resident
+    /// PEP + experiment_protein_qvalue + experiment_aggregate_score), decoupled from any resident
     /// buffer (issue #4355 struct-shrink S0). Since the lean <c>FdrProjection</c> no longer
     /// carries the q-value outputs, the projection sidecar writers assemble records of this
     /// shape -- the 1st pass from the lean row's <c>EntryId</c>/<c>Score</c> plus the parallel
     /// outputs array, the 2nd pass from the streamed q-values plus the survivor's
-    /// <c>RunProteinQvalue</c> lookup -- and hand them to
+    /// <c>ExperimentProteinQvalue</c> lookup -- and hand them to
     /// <see cref="FdrScoresSidecar.Write(string, System.Collections.Generic.IReadOnlyList{FdrScoreRecord}, FdrScoresSidecar.Pass)"/>.
     /// The 68-byte byte layout stays single-sourced through
     /// <c>FdrScoresSidecar.WriteRecord</c>.
@@ -44,7 +44,7 @@ namespace pwiz.Osprey.IO
         public readonly double ExperimentPrecursorQvalue;
         public readonly double ExperimentPeptideQvalue;
         public readonly double Pep;
-        public readonly double RunProteinQvalue;
+        public readonly double ExperimentProteinQvalue;
 
         /// <summary>
         /// The per-entry score the EXPERIMENT-scope competitions ranked this entry on, beside
@@ -75,7 +75,7 @@ namespace pwiz.Osprey.IO
             uint entryId, double score,
             double runPrecursorQvalue, double runPeptideQvalue,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
-            double pep, double runProteinQvalue, double experimentAggregateScore)
+            double pep, double experimentProteinQvalue, double experimentAggregateScore)
         {
             EntryId = entryId;
             Score = score;
@@ -84,7 +84,7 @@ namespace pwiz.Osprey.IO
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
             ExperimentPeptideQvalue = experimentPeptideQvalue;
             Pep = pep;
-            RunProteinQvalue = runProteinQvalue;
+            ExperimentProteinQvalue = experimentProteinQvalue;
             ExperimentAggregateScore = experimentAggregateScore;
         }
     }

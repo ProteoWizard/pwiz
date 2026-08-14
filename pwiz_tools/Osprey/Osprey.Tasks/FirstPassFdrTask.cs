@@ -417,7 +417,7 @@ namespace pwiz.Osprey.Tasks
 
                 // First-pass protein FDR: runs on the full pre-compaction
                 // peptide pool so target and decoy proteins compete on a
-                // symmetric set. Sets RunProteinQvalue on every FdrEntry,
+                // symmetric set. Sets ExperimentProteinQvalue on every FdrEntry,
                 // which Stage 6 reconciliation reads via the protein-rescue
                 // gate in ConsensusRts.Compute. Runs unconditionally (not gated
                 // on --protein-fdr), matching Rust where config.protein_fdr is a
@@ -1444,7 +1444,7 @@ namespace pwiz.Osprey.Tasks
                             // last clause admits present-protein peptides that failed 1st-pass
                             // FDR so they get reconciled + rescored + reported.
                             if (entry.RunPeptideQvalue <= peptideGate ||
-                                entry.RunProteinQvalue <= proteinGate ||
+                                entry.ExperimentProteinQvalue <= proteinGate ||
                                 (_proteinCompactStratum != null && _proteinCompactStratum.Contains(baseId)))
                             {
                                 firstPassBaseIds.Add(baseId);
@@ -2108,9 +2108,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// First-pass protein FDR run BEFORE Stage 6 reconciliation, on the
-        /// full pre-compaction peptide pool. Sets only RunProteinQvalue
-        /// (leaves ExperimentProteinQvalue at its 1.0 default for the
-        /// second-pass to overwrite). Detected-peptide filter uses
+        /// full pre-compaction peptide pool. Sets the one experiment-wide
+        /// ExperimentProteinQvalue; the second-pass protein FDR overwrites it
+        /// later, and PatchPass2ProteinQvalues writes that pass-2 value into
+        /// the 2nd-pass sidecar (#4559). Detected-peptide filter uses
         /// run_peptide_qvalue, the strict peptide-level gate, matching Rust
         /// pipeline.rs:3045-3049 exactly. Protein-FDR gate is config.RunFdr
         /// (1x), the Savitski-2015 convention applied at first pass, NOT the
@@ -2301,7 +2302,7 @@ namespace pwiz.Osprey.Tasks
             //
             // Two-phase 1st-pass sidecar (issue #4355 struct-shrink S1). Phase 1: the
             // StoringSink writes each file's PARTIAL .1st-pass.fdr_scores.bin during the
-            // score pass (run_protein_qvalue = 1.0 placeholder), so the four streamed
+            // score pass (experiment_protein_qvalue = 1.0 placeholder), so the four streamed
             // q-values are never held resident. This flush resolves the per-file sidecar
             // path the same way the pre-S1 single-phase write did, so the survivor reload
             // and the Stage 6 worker read identical bytes; it returns a per-file failure
@@ -2439,7 +2440,7 @@ namespace pwiz.Osprey.Tasks
             // (issue #4355 struct-shrink S2): read each file's Score / run_peptide_qvalue
             // from the just-written .1st-pass.fdr_scores.bin, joined by entry_id with the
             // modseq / IsDecoy from the parquet scalars, run the identical parsimony +
-            // picked-protein FDR, and patch each row's run_protein_qvalue [52..60] straight
+            // picked-protein FDR, and patch each row's experiment_protein_qvalue [52..60] straight
             // back onto the sidecar -- so the resident FdrProjectionOutputs array is gone.
             // The Stage-6 diagnostic dump reads the returned artifacts, exactly as the
             // FdrEntry path's RunFirstPassProteinFdr does. Runs unconditionally (not gated
@@ -2472,7 +2473,7 @@ namespace pwiz.Osprey.Tasks
                     BuildAndPublishProteinCompactStratum(proteinResult, fullLibrary, ctx);
             }
 
-            // The streaming protein FDR above already patched run_protein_qvalue [52..60]
+            // The streaming protein FDR above already patched experiment_protein_qvalue [52..60]
             // onto each file's sidecar (folding the pre-S2 resident-outputs propagate + the
             // separate phase-2 patch into one streaming pass). Combine the phase-1
             // partial-write failures the sink accumulated during the score pass with those
@@ -2556,13 +2557,13 @@ namespace pwiz.Osprey.Tasks
         /// run_peptide_qvalue keyed by entry_id) joined with the parquet scalars (the modseq
         /// PeptideById was interned from + IsDecoy) into a pure
         /// <see cref="FirstPassProteinFdrAccumulator"/>, which runs the identical parsimony +
-        /// picked-protein FDR. Pass 2 patches each file's <c>run_protein_qvalue</c>
+        /// picked-protein FDR. Pass 2 patches each file's <c>experiment_protein_qvalue</c>
         /// <c>[52..60]</c> from the reducer's peptide -> q map (folding the resident
-        /// <c>PropagateRunProteinQvalues</c> + the old phase-2 patch into one streaming pass).
+        /// <c>PropagateProteinQvalues</c> + the old phase-2 patch into one streaming pass).
         /// Returns <c>null</c> (ExitCode set) on any sidecar / parquet read fault -- the task
         /// just wrote these files, so a read failure is a genuine fault (the survivor reload
         /// below would fail on the same file). <paramref name="patchFailures"/> counts files
-        /// whose run_protein_qvalue patch failed, for the StopAfterStage5 boundary gate.
+        /// whose experiment_protein_qvalue patch failed, for the StopAfterStage5 boundary gate.
         /// </summary>
         private FirstPassProteinFdrResult RunFirstPassProteinFdrStreaming(
             FdrProjectionSet projections,
@@ -2594,9 +2595,9 @@ namespace pwiz.Osprey.Tasks
             var result = accumulator.Finish(fullLibrary, config);
             ProteinFdrEngine.LogFirstPassSummary(result, config, ctx.LogInfo);
 
-            // Pass 2: patch each file's run_protein_qvalue from peptide -> q. entry_id is
+            // Pass 2: patch each file's experiment_protein_qvalue from peptide -> q. entry_id is
             // unique within a file, so a per-file entry_id -> q map (one file resident at a
-            // time; bounded) reproduces the resident PropagateRunProteinQvalues + the phase-2
+            // time; bounded) reproduces the resident PropagateProteinQvalues + the phase-2
             // patch byte-for-byte. The modseq MUST come from the parquet scalars (the same
             // value the pass-1 PeptideQvalues keys were built from), not re-derived from the
             // library, so the peptide -> q lookup matches.
@@ -2614,7 +2615,7 @@ namespace pwiz.Osprey.Tasks
                 string parquetPath = perFileParquetPaths[fileName];  // present: pass 1 read it
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
 
-                var runProteinByEntryId = new Dictionary<uint, double>();
+                var proteinQByEntryId = new Dictionary<uint, double>();
                 try
                 {
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
@@ -2626,13 +2627,13 @@ namespace pwiz.Osprey.Tasks
                             // a null Dictionary key would otherwise throw. See StreamFirstPassFileScores.
                             if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                 q = 1.0;
-                            runProteinByEntryId[entryId] = q;
+                            proteinQByEntryId[entryId] = q;
                         });
-                    if (!FdrScoresSidecar.PatchRunProteinQvalues(
-                            fdrPath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass))
+                    if (!FdrScoresSidecar.PatchProteinQvalues(
+                            fdrPath, proteinQByEntryId, FdrScoresSidecar.Pass.FirstPass, out _))
                     {
                         ctx.LogWarning(string.Format(
-                            "Failed to patch run_protein_qvalue in 1st-pass fdr_scores.bin for {0} " +
+                            "Failed to patch experiment_protein_qvalue in 1st-pass fdr_scores.bin for {0} " +
                             "(expected at {1})", fileName, fdrPath));
                         patchFailures++;
                     }
@@ -2744,7 +2745,7 @@ namespace pwiz.Osprey.Tasks
             // Protein-rescue gate is always active (default 0.01), matching Rust
             // pipeline.rs:4651/4658 (protein_compaction_gate = config.protein_fdr, a
             // plain f64, never a null switch). First-pass protein FDR runs unconditionally
-            // on this path too, so run_protein_qvalue is populated in the finalized sidecar.
+            // on this path too, so experiment_protein_qvalue is populated in the finalized sidecar.
             double proteinGate = config.EffectiveProteinFdr;
             int compactFiles = 0;
             using (var compactProgress = new ProgressReporter(string.Format(
@@ -2774,7 +2775,7 @@ namespace pwiz.Osprey.Tasks
                             // (>=2 first-pass-detected-peptide proteins) that failed 1st-pass FDR --
                             // identical to the legacy CompactFirstPass twin.
                             if (record.RunPeptideQvalue <= peptideGate ||
-                                record.RunProteinQvalue <= proteinGate ||
+                                record.ExperimentProteinQvalue <= proteinGate ||
                                 (stratum != null && stratum.Contains(baseId)))
                             {
                                 firstPassBaseIds.Add(baseId);

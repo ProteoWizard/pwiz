@@ -45,7 +45,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Per-file <see cref="FdrEntry"/> stubs from
         /// <c>&lt;stem&gt;.scores.parquet</c>, with SVM scores + 4 q-values
-        /// + PEP + <c>RunProteinQvalue</c> overlaid from the
+        /// + PEP + <c>ExperimentProteinQvalue</c> overlaid from the
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> sidecar. File order
         /// matches the order of <c>parquetPaths</c> passed to
         /// <see cref="RescoreHydration.HydrateForRescore"/>.
@@ -563,7 +563,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Overlay SVM scores + 4 q-values + PEP + RunProteinQvalue from
+        /// Overlay SVM scores + 4 q-values + PEP + ExperimentProteinQvalue from
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> v3 onto <paramref name="stubs"/>.
         /// <c>expected_pass = FirstPass</c>: the planner's actions were computed against
         /// first-pass FDR, and the compaction predicate uses first-pass q-values. The stub

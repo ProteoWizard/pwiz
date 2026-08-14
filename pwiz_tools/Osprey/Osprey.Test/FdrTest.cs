@@ -921,7 +921,7 @@ namespace pwiz.Osprey.Test
                 Score = -2.5,
                 RunPrecursorQvalue = 0.011,
                 RunPeptideQvalue = 0.022,
-                RunProteinQvalue = 0.033,
+                ExperimentProteinQvalue = 0.033,
                 ExperimentPrecursorQvalue = 0.044,
                 ExperimentPeptideQvalue = 0.055,
                 Pep = 0.066,
